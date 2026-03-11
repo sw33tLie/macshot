@@ -73,7 +73,7 @@ macshot requires **Screen Recording** permission. macOS will prompt you on first
 
 ## Requirements
 
-- macOS 15.0 (Sequoia) or later
+- macOS 14.0 (Sonoma) or later
 
 ## License
 

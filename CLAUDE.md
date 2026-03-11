@@ -6,7 +6,7 @@ Native macOS screenshot tool inspired by Flameshot. Built with Swift + Storyboar
 
 - **Language:** Swift 5.0
 - **UI:** AppKit + Storyboard (Main.storyboard)
-- **Min Target:** macOS 15.0+
+- **Min Target:** macOS 14.0+
 - **Bundle ID:** com.sw33tlie.macshot.macshot
 - **Sandbox:** Disabled (required for ScreenCaptureKit)
 - **LSUIElement:** YES (menu bar only app, no dock icon)
