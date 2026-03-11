@@ -13,6 +13,8 @@ enum ToolbarButtonAction {
     case save
     case pin
     case ocr
+    case beautify
+    case beautifyStyle
     case cancel
     case moveSelection
 }
@@ -42,7 +44,7 @@ class ToolbarLayout {
     static let cornerRadius: CGFloat = 6
 
     // Bottom toolbar items (drawing tools + colors + undo/redo + size)
-    static func bottomButtons(selectedTool: AnnotationTool, selectedColor: NSColor) -> [ToolbarButton] {
+    static func bottomButtons(selectedTool: AnnotationTool, selectedColor: NSColor, beautifyEnabled: Bool = false, beautifyStyleIndex: Int = 0) -> [ToolbarButton] {
         var buttons: [ToolbarButton] = []
 
         let tools: [(AnnotationTool, String, String)] = [
@@ -74,6 +76,17 @@ class ToolbarLayout {
         buttons.append(ToolbarButton(action: .redo, sfSymbol: "arrow.uturn.forward", label: nil, tooltip: "Redo"))
         buttons.append(ToolbarButton(action: .pin, sfSymbol: "pin.fill", label: nil, tooltip: "Pin"))
         buttons.append(ToolbarButton(action: .ocr, sfSymbol: "doc.text.viewfinder", label: nil, tooltip: "OCR Text"))
+
+        // Beautify toggle
+        var beautifyBtn = ToolbarButton(action: .beautify, sfSymbol: "sparkles", label: nil, tooltip: "Beautify")
+        beautifyBtn.isSelected = beautifyEnabled
+        buttons.append(beautifyBtn)
+
+        // Beautify style picker (only shown when beautify is on)
+        if beautifyEnabled {
+            let styleName = BeautifyRenderer.styles[beautifyStyleIndex % BeautifyRenderer.styles.count].name
+            buttons.append(ToolbarButton(action: .beautifyStyle, sfSymbol: "paintpalette.fill", label: nil, tooltip: "Style: \(styleName)"))
+        }
 
         // Copy / Save
         buttons.append(ToolbarButton(action: .copy, sfSymbol: "doc.on.doc", label: nil, tooltip: "Copy"))

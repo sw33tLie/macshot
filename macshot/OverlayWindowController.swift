@@ -79,6 +79,22 @@ class OverlayWindowController {
         }
     }
 
+    private func applyBeautifyIfNeeded(_ image: NSImage?) -> NSImage? {
+        guard let image = image, let view = overlayView, view.beautifyEnabled else { return image }
+        return BeautifyRenderer.render(image: image, styleIndex: view.beautifyStyleIndex)
+    }
+
+    private func copyImageToClipboard(_ image: NSImage) {
+        guard let tiffData = image.tiffRepresentation else { return }
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setData(tiffData, forType: .tiff)
+        if let bitmap = NSBitmapImageRep(data: tiffData),
+           let pngData = bitmap.representation(using: .png, properties: [:]) {
+            pasteboard.setData(pngData, forType: .png)
+        }
+    }
+
     static func formattedTimestamp() -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
@@ -102,18 +118,23 @@ extension OverlayWindowController: OverlayViewDelegate {
 
     func overlayViewDidConfirm() {
         let autoCopy = UserDefaults.standard.object(forKey: "autoCopyToClipboard") as? Bool ?? true
-        if autoCopy {
-            overlayView?.copyToClipboard()
-        }
+
         // Capture image BEFORE dismiss destroys the view
-        let capturedImage = overlayView?.captureSelectedRegion()
+        var capturedImage = overlayView?.captureSelectedRegion()
+        capturedImage = applyBeautifyIfNeeded(capturedImage)
+
+        if autoCopy, let image = capturedImage {
+            copyImageToClipboard(image)
+        }
+
         playCopySound()
         dismiss()
         overlayDelegate?.overlayDidConfirm(self, capturedImage: capturedImage)
     }
 
     func overlayViewDidRequestPin() {
-        guard let image = overlayView?.captureSelectedRegion() else { return }
+        guard var image = overlayView?.captureSelectedRegion() else { return }
+        image = applyBeautifyIfNeeded(image) ?? image
         playCopySound()
         dismiss()
         overlayDelegate?.overlayDidRequestPin(self, image: image)
@@ -150,7 +171,8 @@ extension OverlayWindowController: OverlayViewDelegate {
     }
 
     func overlayViewDidRequestSave() {
-        guard let image = overlayView?.captureSelectedRegion() else { return }
+        guard var image = overlayView?.captureSelectedRegion() else { return }
+        image = applyBeautifyIfNeeded(image) ?? image
         guard let tiffData = image.tiffRepresentation,
               let bitmap = NSBitmapImageRep(data: tiffData),
               let pngData = bitmap.representation(using: .png, properties: [:]) else { return }

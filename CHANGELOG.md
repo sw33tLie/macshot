@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.3] - 2026-03-11
+
+### Added
+- **Beautify Mode**: Wrap screenshots in a macOS-style window frame with traffic light buttons, drop shadow, and gradient background. Toggle with the sparkles button in the toolbar, cycle through 6 gradient styles (Ocean, Sunset, Forest, Midnight, Candy, Snow). Applied on copy, save, and pin — OCR always uses the raw image.
+
 ## [1.0.2] - 2026-03-11
 
 ### Added

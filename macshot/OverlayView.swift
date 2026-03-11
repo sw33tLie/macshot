@@ -71,6 +71,10 @@ class OverlayView: NSView {
     private var sizeLabelRect: NSRect = .zero
     private var sizeInputField: NSTextField?
 
+    // Beautify
+    private(set) var beautifyEnabled: Bool = false
+    private(set) var beautifyStyleIndex: Int = 0
+
     // Color picker popover
     private var showColorPicker: Bool = false
     private var colorPickerRect: NSRect = .zero
@@ -494,7 +498,7 @@ class OverlayView: NSView {
     // MARK: - Toolbar Layout
 
     private func rebuildToolbarLayout() {
-        bottomButtons = ToolbarLayout.bottomButtons(selectedTool: currentTool, selectedColor: currentColor)
+        bottomButtons = ToolbarLayout.bottomButtons(selectedTool: currentTool, selectedColor: currentColor, beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex)
         rightButtons = ToolbarLayout.rightButtons()
         bottomBarRect = ToolbarLayout.layoutBottom(buttons: &bottomButtons, selectionRect: selectionRect, viewBounds: bounds)
         rightBarRect = ToolbarLayout.layoutRight(buttons: &rightButtons, selectionRect: selectionRect, viewBounds: bounds)
@@ -811,6 +815,12 @@ class OverlayView: NSView {
             overlayDelegate?.overlayViewDidRequestPin()
         case .ocr:
             overlayDelegate?.overlayViewDidRequestOCR()
+        case .beautify:
+            beautifyEnabled.toggle()
+            needsDisplay = true
+        case .beautifyStyle:
+            beautifyStyleIndex = (beautifyStyleIndex + 1) % BeautifyRenderer.styles.count
+            needsDisplay = true
         case .cancel:
             overlayDelegate?.overlayViewDidCancel()
         }
@@ -1403,6 +1413,8 @@ class OverlayView: NSView {
         showToolbars = false
         showColorPicker = false
         moveMode = false
+        beautifyEnabled = false
+        beautifyStyleIndex = 0
         textScrollView?.removeFromSuperview()
         textScrollView = nil
         textEditView = nil
