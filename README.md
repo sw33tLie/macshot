@@ -39,6 +39,11 @@ brew install sw33tlie/macshot/macshot
 
 Download the latest `.zip` from [Releases](https://github.com/sw33tLie/macshot/releases), unzip, and drag `macshot.app` to `/Applications`.
 
+> **Note:** The app is not notarized. If macOS says it's damaged or from an unidentified developer, run:
+> ```bash
+> xattr -cr /Applications/macshot.app
+> ```
+
 ### Build from source
 
 Requires Xcode 16+ and macOS 15+.
