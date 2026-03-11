@@ -89,10 +89,17 @@ class OverlayView: NSView {
     private var showColorPicker: Bool = false
     private var colorPickerRect: NSRect = .zero
     private let availableColors: [NSColor] = [
-        .systemRed, .systemOrange, .systemYellow, .systemGreen,
-        .systemBlue, .systemPurple, .systemPink, .white,
-        .black, .darkGray, .systemTeal, .systemIndigo,
+        .systemRed, .systemOrange, .systemYellow, .systemGreen, .systemBlue, .systemPurple,
+        .systemPink, .systemTeal, .systemIndigo, .systemBrown, .systemMint, .systemCyan,
+        .white, .lightGray, .gray, .darkGray, .black,
+        NSColor(calibratedRed: 0.8, green: 0.2, blue: 0.2, alpha: 1),  // dark red
+        NSColor(calibratedRed: 1.0, green: 0.6, blue: 0.0, alpha: 1),  // warm orange
+        NSColor(calibratedRed: 0.0, green: 0.5, blue: 0.0, alpha: 1),  // dark green
+        NSColor(calibratedRed: 0.0, green: 0.3, blue: 0.7, alpha: 1),  // navy
+        NSColor(calibratedRed: 0.6, green: 0.2, blue: 0.6, alpha: 1),  // plum
+        NSColor(calibratedRed: 1.0, green: 1.0, blue: 0.6, alpha: 1),  // cream
     ]
+    private var customPickerSwatchRect: NSRect = .zero
 
     // Handle
     private let handleSize: CGFloat = 10
@@ -566,8 +573,9 @@ class OverlayView: NSView {
     }
 
     private func drawColorPicker() {
-        let cols = 4
-        let rows = (availableColors.count + cols - 1) / cols
+        let cols = 6
+        let totalItems = availableColors.count + 1  // +1 for custom picker
+        let rows = (totalItems + cols - 1) / cols
         let swatchSize: CGFloat = 24
         let padding: CGFloat = 6
         let pickerWidth = CGFloat(cols) * (swatchSize + padding) + padding
@@ -596,7 +604,7 @@ class OverlayView: NSView {
         ToolbarLayout.bgColor.setFill()
         NSBezierPath(roundedRect: colorPickerRect, xRadius: 6, yRadius: 6).fill()
 
-        // Swatches
+        // Preset swatches
         for (i, color) in availableColors.enumerated() {
             let col = i % cols
             let row = i / cols
@@ -614,6 +622,29 @@ class OverlayView: NSView {
                 border.stroke()
             }
         }
+
+        // Custom color picker swatch (rainbow gradient + "..." label)
+        let customIdx = availableColors.count
+        let customCol = customIdx % cols
+        let customRow = customIdx / cols
+        let cx = colorPickerRect.minX + padding + CGFloat(customCol) * (swatchSize + padding)
+        let cy = colorPickerRect.maxY - padding - swatchSize - CGFloat(customRow) * (swatchSize + padding)
+        let customRect = NSRect(x: cx, y: cy, width: swatchSize, height: swatchSize)
+        customPickerSwatchRect = customRect
+
+        // Draw a rainbow gradient
+        let gradient = NSGradient(colors: [.systemRed, .systemYellow, .systemGreen, .systemBlue, .systemPurple, .systemRed])
+        let path = NSBezierPath(roundedRect: customRect, xRadius: 4, yRadius: 4)
+        gradient?.draw(in: path, angle: 45)
+
+        // "+" label
+        let plusAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 14, weight: .bold),
+            .foregroundColor: NSColor.white,
+        ]
+        let plusStr = "+" as NSString
+        let plusSize = plusStr.size(withAttributes: plusAttrs)
+        plusStr.draw(at: NSPoint(x: customRect.midX - plusSize.width / 2, y: customRect.midY - plusSize.height / 2), withAttributes: plusAttrs)
     }
 
     // MARK: - Toolbar Layout
@@ -997,9 +1028,11 @@ class OverlayView: NSView {
         }
     }
 
+    /// Returns a color if a preset swatch was clicked, or opens the system color panel
+    /// if the custom picker swatch was clicked. Returns nil if nothing was hit.
     private func hitTestColorPicker(at point: NSPoint) -> NSColor? {
         guard showColorPicker else { return nil }
-        let cols = 4
+        let cols = 6
         let swatchSize: CGFloat = 24
         let padding: CGFloat = 6
 
@@ -1013,7 +1046,38 @@ class OverlayView: NSView {
                 return color
             }
         }
+
+        // Custom color picker swatch
+        if customPickerSwatchRect.contains(point) {
+            openSystemColorPicker()
+            return nil  // don't close picker yet, color panel will handle it
+        }
+
         return nil
+    }
+
+    private func openSystemColorPicker() {
+        showColorPicker = false
+        let panel = NSColorPanel.shared
+        panel.color = currentColor
+        panel.setTarget(self)
+        panel.setAction(#selector(systemColorPicked(_:)))
+        panel.level = .statusBar + 2
+        panel.makeKeyAndOrderFront(nil)
+        needsDisplay = true
+    }
+
+    @objc private func systemColorPicked(_ sender: NSColorPanel) {
+        currentColor = sender.color
+        if let tv = textEditView {
+            let range = selectedOrAllRange()
+            if range.length > 0 {
+                tv.textStorage?.addAttribute(.foregroundColor, value: currentColor, range: range)
+            }
+            tv.insertionPointColor = currentColor
+            tv.typingAttributes[.foregroundColor] = currentColor
+        }
+        needsDisplay = true
     }
 
     // MARK: - Annotation Creation

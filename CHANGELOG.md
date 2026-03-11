@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.2] - 2026-03-11
+
+### Improved
+- **Color picker**: Expanded from 12 to 23 preset colors in a 6-column grid, with extra shades and grayscale options. Added a rainbow "+" swatch that opens the macOS system color panel for picking any custom color.
+
 ## [1.2.1] - 2026-03-11
 
 ### Improved
