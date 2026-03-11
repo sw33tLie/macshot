@@ -7,6 +7,8 @@ protocol OverlayViewDelegate: AnyObject {
     func overlayViewDidCancel()
     func overlayViewDidConfirm()
     func overlayViewDidRequestSave()
+    func overlayViewDidRequestPin()
+    func overlayViewDidRequestOCR()
 }
 
 class OverlayView: NSView {
@@ -64,6 +66,10 @@ class OverlayView: NSView {
     private var rightBarRect: NSRect = .zero
     private var showToolbars: Bool = false
     private var hoveredButtonIndex: Int = -1  // -1 = none, 0..N bottom, 1000+ right
+
+    // Size label
+    private var sizeLabelRect: NSRect = .zero
+    private var sizeInputField: NSTextField?
 
     // Color picker popover
     private var showColorPicker: Bool = false
@@ -196,6 +202,11 @@ class OverlayView: NSView {
             }
         }
 
+        // Size label — pointer cursor to indicate clickable
+        if sizeLabelRect.width > 0 && sizeInputField == nil {
+            addCursorRect(sizeLabelRect, cursor: .pointingHand)
+        }
+
         // Inside selection — crosshair for drawing
         let innerRect = r.insetBy(dx: edgeThickness, dy: edgeThickness)
         if innerRect.width > 0 && innerRect.height > 0 {
@@ -244,6 +255,9 @@ class OverlayView: NSView {
             borderPath.lineWidth = 2.0
             ToolbarLayout.accentColor.setStroke()
             borderPath.stroke()
+
+            // Size label above/below selection
+            drawSizeLabel()
 
             // Resize handles
             if state == .selected {
@@ -317,6 +331,106 @@ class OverlayView: NSView {
         ToolbarLayout.bgColor.setFill()
         NSBezierPath(roundedRect: tipRect, xRadius: 4, yRadius: 4).fill()
         str.draw(at: NSPoint(x: tipRect.minX + padding, y: tipRect.minY + padding / 2), withAttributes: attrs)
+    }
+
+    private func drawSizeLabel() {
+        guard sizeInputField == nil else { return }  // don't draw while editing
+
+        // Get pixel dimensions (account for Retina)
+        let scale = window?.backingScaleFactor ?? 2.0
+        let pixelW = Int(selectionRect.width * scale)
+        let pixelH = Int(selectionRect.height * scale)
+        let text = "\(pixelW) \u{00D7} \(pixelH)"
+
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium),
+            .foregroundColor: NSColor.white,
+        ]
+        let textSize = (text as NSString).size(withAttributes: attrs)
+        let padding: CGFloat = 6
+        let labelW = textSize.width + padding * 2
+        let labelH = textSize.height + padding
+
+        let labelX = selectionRect.midX - labelW / 2
+
+        // Default: above selection. If toolbar is above (bottomBarRect is above selection), go below toolbar area.
+        // If no room above, go below.
+        let above = selectionRect.maxY + 4
+        let below = selectionRect.minY - labelH - 4
+        let labelY: CGFloat
+        if above + labelH < bounds.maxY - 2 {
+            labelY = above
+        } else if below >= bounds.minY + 2 {
+            labelY = below
+        } else {
+            labelY = above  // fallback
+        }
+
+        let rect = NSRect(x: labelX, y: labelY, width: labelW, height: labelH)
+        sizeLabelRect = rect
+
+        ToolbarLayout.bgColor.setFill()
+        NSBezierPath(roundedRect: rect, xRadius: 4, yRadius: 4).fill()
+        (text as NSString).draw(at: NSPoint(x: rect.minX + padding, y: rect.minY + padding / 2), withAttributes: attrs)
+    }
+
+    private func showSizeInput() {
+        let scale = window?.backingScaleFactor ?? 2.0
+        let pixelW = Int(selectionRect.width * scale)
+        let pixelH = Int(selectionRect.height * scale)
+
+        let fieldWidth: CGFloat = 120
+        let fieldHeight: CGFloat = 22
+        let fieldX = sizeLabelRect.midX - fieldWidth / 2
+        let fieldY = sizeLabelRect.minY + (sizeLabelRect.height - fieldHeight) / 2
+
+        let field = NSTextField(frame: NSRect(x: fieldX, y: fieldY, width: fieldWidth, height: fieldHeight))
+        field.stringValue = "\(pixelW) \u{00D7} \(pixelH)"
+        field.font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium)
+        field.alignment = .center
+        field.isBezeled = true
+        field.bezelStyle = .roundedBezel
+        field.backgroundColor = NSColor(white: 0.15, alpha: 0.95)
+        field.textColor = .white
+        field.focusRingType = .none
+        field.delegate = self
+        field.tag = 888
+
+        addSubview(field)
+        sizeInputField = field
+        window?.makeFirstResponder(field)
+        field.selectText(nil)
+        needsDisplay = true
+    }
+
+    private func commitSizeInputIfNeeded() {
+        guard let field = sizeInputField else { return }
+        let input = field.stringValue.trimmingCharacters(in: .whitespaces)
+
+        // Parse "W × H", "WxH", "W*H", "W H"
+        let separators = CharacterSet(charactersIn: "\u{00D7}xX*").union(.whitespaces)
+        let parts = input.components(separatedBy: separators).filter { !$0.isEmpty }
+
+        if parts.count == 2, let w = Int(parts[0]), let h = Int(parts[1]), w > 0, h > 0 {
+            let scale = window?.backingScaleFactor ?? 2.0
+            let newW = CGFloat(w) / scale
+            let newH = CGFloat(h) / scale
+
+            // Resize from center of current selection
+            let centerX = selectionRect.midX
+            let centerY = selectionRect.midY
+            selectionRect = NSRect(
+                x: centerX - newW / 2,
+                y: centerY - newH / 2,
+                width: newW,
+                height: newH
+            )
+        }
+
+        field.removeFromSuperview()
+        sizeInputField = nil
+        window?.makeFirstResponder(self)
+        needsDisplay = true
     }
 
     private func drawResizeHandles() {
@@ -497,6 +611,7 @@ class OverlayView: NSView {
         }
 
         commitTextFieldIfNeeded()
+        commitSizeInputIfNeeded()
 
         switch state {
         case .idle:
@@ -509,6 +624,15 @@ class OverlayView: NSView {
             break
 
         case .selected:
+            // Check size label click
+            if sizeLabelRect.contains(point) && sizeInputField == nil {
+                showSizeInput()
+                return
+            }
+            if let field = sizeInputField, field.frame.contains(point) {
+                return  // let the text field handle it
+            }
+
             // Check toolbar hit first
             if showToolbars {
                 if let action = ToolbarLayout.hitTest(point: point, buttons: bottomButtons) {
@@ -683,6 +807,10 @@ class OverlayView: NSView {
             overlayDelegate?.overlayViewDidConfirm()
         case .save:
             overlayDelegate?.overlayViewDidRequestSave()
+        case .pin:
+            overlayDelegate?.overlayViewDidRequestPin()
+        case .ocr:
+            overlayDelegate?.overlayViewDidRequestOCR()
         case .cancel:
             overlayDelegate?.overlayViewDidCancel()
         }
@@ -1280,7 +1408,29 @@ class OverlayView: NSView {
         textEditView = nil
         textControlBar?.removeFromSuperview()
         textControlBar = nil
+        sizeInputField?.removeFromSuperview()
+        sizeInputField = nil
         needsDisplay = true
+    }
+}
+
+// MARK: - NSTextFieldDelegate
+
+extension OverlayView: NSTextFieldDelegate {
+    func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+        guard control.tag == 888 else { return false }
+        if commandSelector == #selector(NSResponder.insertNewline(_:)) {
+            commitSizeInputIfNeeded()
+            return true
+        }
+        if commandSelector == #selector(NSResponder.cancelOperation(_:)) {
+            sizeInputField?.removeFromSuperview()
+            sizeInputField = nil
+            window?.makeFirstResponder(self)
+            needsDisplay = true
+            return true
+        }
+        return false
     }
 }
 

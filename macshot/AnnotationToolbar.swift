@@ -11,6 +11,8 @@ enum ToolbarButtonAction {
     case redo
     case copy
     case save
+    case pin
+    case ocr
     case cancel
     case moveSelection
 }
@@ -67,12 +69,11 @@ class ToolbarLayout {
         colorBtn.bgColor = selectedColor
         buttons.append(colorBtn)
 
-        // Size display
-        buttons.append(ToolbarButton(action: .sizeDisplay, sfSymbol: nil, label: nil, tooltip: "Size"))
-
-        // Undo / Redo
+        // Undo / Redo / Pin
         buttons.append(ToolbarButton(action: .undo, sfSymbol: "arrow.uturn.backward", label: nil, tooltip: "Undo"))
         buttons.append(ToolbarButton(action: .redo, sfSymbol: "arrow.uturn.forward", label: nil, tooltip: "Redo"))
+        buttons.append(ToolbarButton(action: .pin, sfSymbol: "pin.fill", label: nil, tooltip: "Pin"))
+        buttons.append(ToolbarButton(action: .ocr, sfSymbol: "doc.text.viewfinder", label: nil, tooltip: "OCR Text"))
 
         // Copy / Save
         buttons.append(ToolbarButton(action: .copy, sfSymbol: "doc.on.doc", label: nil, tooltip: "Copy"))

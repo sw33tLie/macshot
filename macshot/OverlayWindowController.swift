@@ -1,9 +1,12 @@
 import Cocoa
 import UniformTypeIdentifiers
+import Vision
 
 protocol OverlayWindowControllerDelegate: AnyObject {
     func overlayDidCancel(_ controller: OverlayWindowController)
-    func overlayDidConfirm(_ controller: OverlayWindowController)
+    func overlayDidConfirm(_ controller: OverlayWindowController, capturedImage: NSImage?)
+    func overlayDidRequestPin(_ controller: OverlayWindowController, image: NSImage)
+    func overlayDidRequestOCR(_ controller: OverlayWindowController, text: String)
 }
 
 /// Manages one fullscreen overlay per screen.
@@ -31,7 +34,7 @@ class OverlayWindowController {
         window.ignoresMouseEvents = false
         window.acceptsMouseMovedEvents = true
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        window.isReleasedWhenClosed = false  // ARC manages lifetime
+        window.isReleasedWhenClosed = false
 
         let view = OverlayView()
         let nsImage = NSImage(cgImage: capture.image, size: screen.frame.size)
@@ -55,21 +58,32 @@ class OverlayWindowController {
     }
 
     func dismiss() {
-        // 1. Tear down view contents (annotations, subviews, images)
         overlayView?.reset()
         overlayView?.screenshotImage = nil
         overlayView?.overlayDelegate = nil
-
-        // 2. Detach view from window
         overlayWindow?.contentView = nil
         overlayView = nil
-
-        // 3. Close and release the window (frees backing store)
         overlayWindow?.orderOut(nil)
         overlayWindow?.close()
         overlayWindow = nil
     }
 
+    private func playCopySound() {
+        let soundEnabled = UserDefaults.standard.object(forKey: "playCopySound") as? Bool ?? true
+        guard soundEnabled else { return }
+        let path = "/System/Library/Components/CoreAudio.component/Contents/SharedSupport/SystemSounds/system/Screen Capture.aif"
+        if let sound = NSSound(contentsOfFile: path, byReference: true) {
+            sound.play()
+        } else {
+            NSSound(named: "Tink")?.play()
+        }
+    }
+
+    static func formattedTimestamp() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
+        return formatter.string(from: Date())
+    }
 }
 
 // MARK: - OverlayViewDelegate
@@ -91,8 +105,48 @@ extension OverlayWindowController: OverlayViewDelegate {
         if autoCopy {
             overlayView?.copyToClipboard()
         }
+        // Capture image BEFORE dismiss destroys the view
+        let capturedImage = overlayView?.captureSelectedRegion()
+        playCopySound()
         dismiss()
-        overlayDelegate?.overlayDidConfirm(self)
+        overlayDelegate?.overlayDidConfirm(self, capturedImage: capturedImage)
+    }
+
+    func overlayViewDidRequestPin() {
+        guard let image = overlayView?.captureSelectedRegion() else { return }
+        playCopySound()
+        dismiss()
+        overlayDelegate?.overlayDidRequestPin(self, image: image)
+    }
+
+    func overlayViewDidRequestOCR() {
+        guard let image = overlayView?.captureSelectedRegion() else { return }
+        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return }
+
+        let request = VNRecognizeTextRequest { [weak self] request, error in
+            guard let self = self else { return }
+            var lines: [String] = []
+            if let observations = request.results as? [VNRecognizedTextObservation] {
+                for observation in observations {
+                    if let candidate = observation.topCandidates(1).first {
+                        lines.append(candidate.string)
+                    }
+                }
+            }
+            let text = lines.joined(separator: "\n")
+            DispatchQueue.main.async {
+                self.playCopySound()
+                self.dismiss()
+                self.overlayDelegate?.overlayDidRequestOCR(self, text: text)
+            }
+        }
+        request.recognitionLevel = .accurate
+        request.usesLanguageCorrection = true
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+            try? handler.perform([request])
+        }
     }
 
     func overlayViewDidRequestSave() {
@@ -117,22 +171,16 @@ extension OverlayWindowController: OverlayViewDelegate {
             if response == .OK, let url = savePanel.url {
                 try? pngData.write(to: url)
                 UserDefaults.standard.set(url.deletingLastPathComponent().path, forKey: "saveDirectory")
+                self.playCopySound()
                 self.dismiss()
-                self.overlayDelegate?.overlayDidConfirm(self)
+                self.overlayDelegate?.overlayDidConfirm(self, capturedImage: nil)
             } else {
-                // User cancelled save — restore overlay focus
                 self.overlayWindow?.makeKeyAndOrderFront(nil)
                 if let view = self.overlayView {
                     self.overlayWindow?.makeFirstResponder(view)
                 }
             }
         }
-    }
-
-    private static func formattedTimestamp() -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
-        return formatter.string(from: Date())
     }
 }
 

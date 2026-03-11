@@ -8,6 +8,8 @@ class PreferencesWindowController: NSWindowController {
     private var hotkeyButton: NSButton!
     private var savePathField: NSTextField!
     private var autoCopyCheckbox: NSButton!
+    private var copySoundCheckbox: NSButton!
+    private var thumbnailCheckbox: NSButton!
     private var launchAtLoginCheckbox: NSButton!
     private var isRecordingHotkey = false
     private var localMonitor: Any?
@@ -16,7 +18,7 @@ class PreferencesWindowController: NSWindowController {
 
     init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 420, height: 240),
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 345),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -38,7 +40,7 @@ class PreferencesWindowController: NSWindowController {
         guard let contentView = window?.contentView else { return }
 
         let padding: CGFloat = 20
-        var y: CGFloat = 190
+        var y: CGFloat = 295
 
         // Hotkey
         let hotkeyLabel = NSTextField(labelWithString: "Global Shortcut:")
@@ -84,10 +86,53 @@ class PreferencesWindowController: NSWindowController {
 
         y -= 35
 
+        // Copy sound
+        copySoundCheckbox = NSButton(checkboxWithTitle: "Play sound on copy", target: self, action: #selector(copySoundChanged(_:)))
+        copySoundCheckbox.frame = NSRect(x: padding, y: y, width: 300, height: 22)
+        contentView.addSubview(copySoundCheckbox)
+
+        y -= 35
+
+        // Floating thumbnail
+        thumbnailCheckbox = NSButton(checkboxWithTitle: "Show floating thumbnail after capture", target: self, action: #selector(thumbnailChanged(_:)))
+        thumbnailCheckbox.frame = NSRect(x: padding, y: y, width: 300, height: 22)
+        contentView.addSubview(thumbnailCheckbox)
+
+        y -= 35
+
         // Launch at login
         launchAtLoginCheckbox = NSButton(checkboxWithTitle: "Launch at login", target: self, action: #selector(launchAtLoginChanged(_:)))
         launchAtLoginCheckbox.frame = NSRect(x: padding, y: y, width: 300, height: 22)
         contentView.addSubview(launchAtLoginCheckbox)
+
+        // Separator
+        let separator = NSBox(frame: NSRect(x: padding, y: 40, width: 380, height: 1))
+        separator.boxType = .separator
+        contentView.addSubview(separator)
+
+        // Footer: Made by sw33tLie + GitHub link
+        let madeBy = NSTextField(labelWithString: "Made by sw33tLie")
+        madeBy.frame = NSRect(x: padding, y: 12, width: 110, height: 18)
+        madeBy.font = NSFont.systemFont(ofSize: 11)
+        madeBy.textColor = .secondaryLabelColor
+        contentView.addSubview(madeBy)
+
+        let linkButton = NSButton(frame: NSRect(x: 130, y: 10, width: 200, height: 20))
+        linkButton.title = "github.com/sw33tLie/macshot"
+        linkButton.bezelStyle = .inline
+        linkButton.isBordered = false
+        linkButton.font = NSFont.systemFont(ofSize: 11)
+        linkButton.contentTintColor = .linkColor
+        linkButton.target = self
+        linkButton.action = #selector(openGitHub)
+        // Underline the link text
+        let linkAttrs = NSMutableAttributedString(string: linkButton.title, attributes: [
+            .font: NSFont.systemFont(ofSize: 11),
+            .foregroundColor: NSColor.linkColor,
+            .underlineStyle: NSUnderlineStyle.single.rawValue,
+        ])
+        linkButton.attributedTitle = linkAttrs
+        contentView.addSubview(linkButton)
     }
 
     private func loadPreferences() {
@@ -101,6 +146,12 @@ class PreferencesWindowController: NSWindowController {
 
         let autoCopy = UserDefaults.standard.object(forKey: "autoCopyToClipboard") as? Bool ?? true
         autoCopyCheckbox.state = autoCopy ? .on : .off
+
+        let copySound = UserDefaults.standard.object(forKey: "playCopySound") as? Bool ?? true
+        copySoundCheckbox.state = copySound ? .on : .off
+
+        let thumbnail = UserDefaults.standard.object(forKey: "showFloatingThumbnail") as? Bool ?? true
+        thumbnailCheckbox.state = thumbnail ? .on : .off
 
         let launchAtLogin = UserDefaults.standard.bool(forKey: "launchAtLogin")
         launchAtLoginCheckbox.state = launchAtLogin ? .on : .off
@@ -172,6 +223,20 @@ class PreferencesWindowController: NSWindowController {
 
     @objc private func autoCopyChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "autoCopyToClipboard")
+    }
+
+    @objc private func copySoundChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: "playCopySound")
+    }
+
+    @objc private func thumbnailChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: "showFloatingThumbnail")
+    }
+
+    @objc private func openGitHub() {
+        if let url = URL(string: "https://github.com/sw33tLie/macshot") {
+            NSWorkspace.shared.open(url)
+        }
     }
 
     @objc private func launchAtLoginChanged(_ sender: NSButton) {

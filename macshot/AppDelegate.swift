@@ -5,6 +5,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
     private var overlayControllers: [OverlayWindowController] = []
     private var preferencesController: PreferencesWindowController?
+    private var pinControllers: [PinWindowController] = []
+    private var thumbnailController: FloatingThumbnailController?
+    private var ocrController: OCRResultController?
     private var isCapturing = false
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
@@ -43,7 +46,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         if let button = statusItem.button {
-            // Try multiple SF Symbol names for compatibility
             let symbolNames = ["camera.viewfinder", "camera.fill", "viewfinder"]
             var found = false
             for name in symbolNames {
@@ -51,16 +53,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     img.isTemplate = true
                     button.image = img
                     found = true
-                    NSLog("macshot: using SF Symbol '\(name)'")
                     break
                 }
             }
             if !found {
                 button.title = "macshot"
-                NSLog("macshot: no SF Symbol found, using text title")
             }
-        } else {
-            NSLog("macshot: WARNING - statusItem.button is nil")
         }
 
         let menu = NSMenu()
@@ -111,11 +109,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard !isCapturing else { return }
         isCapturing = true
 
-        // Dismiss any existing overlays
+        // Dismiss any existing thumbnail
+        thumbnailController?.dismiss()
+        thumbnailController = nil
+
         dismissOverlays()
 
         if fromMenu {
-            // Short delay to let menu dismiss so it's not captured
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
                 self?.performCapture()
             }
@@ -127,8 +127,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func performCapture() {
         ScreenCaptureManager.captureAllScreens { [weak self] captures in
             guard let self = self else { return }
-
-            NSLog("macshot: captureAllScreens returned \(captures.count) captures")
 
             if captures.isEmpty {
                 self.isCapturing = false
@@ -168,6 +166,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         isCapturing = false
     }
 
+    private func showFloatingThumbnail(image: NSImage) {
+        let enabled = UserDefaults.standard.object(forKey: "showFloatingThumbnail") as? Bool ?? true
+        guard enabled else { return }
+
+        thumbnailController?.dismiss()
+        let controller = FloatingThumbnailController(image: image)
+        thumbnailController = controller
+        controller.show()
+    }
+
     // MARK: - Preferences
 
     @objc private func openPreferences() {
@@ -195,7 +203,34 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         dismissOverlays()
     }
 
-    func overlayDidConfirm(_ controller: OverlayWindowController) {
+    func overlayDidConfirm(_ controller: OverlayWindowController, capturedImage: NSImage?) {
         dismissOverlays()
+        if let image = capturedImage {
+            showFloatingThumbnail(image: image)
+        }
+    }
+
+    func overlayDidRequestPin(_ controller: OverlayWindowController, image: NSImage) {
+        dismissOverlays()
+        let pin = PinWindowController(image: image)
+        pin.delegate = self
+        pin.show()
+        pinControllers.append(pin)
+    }
+
+    func overlayDidRequestOCR(_ controller: OverlayWindowController, text: String) {
+        dismissOverlays()
+        ocrController?.close()
+        let ocr = OCRResultController(text: text)
+        ocrController = ocr
+        ocr.show()
+    }
+}
+
+// MARK: - PinWindowControllerDelegate
+
+extension AppDelegate: PinWindowControllerDelegate {
+    func pinWindowDidClose(_ controller: PinWindowController) {
+        pinControllers.removeAll { $0 === controller }
     }
 }
