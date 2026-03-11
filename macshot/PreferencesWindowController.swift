@@ -1,0 +1,200 @@
+import Cocoa
+import Carbon
+import ServiceManagement
+
+class PreferencesWindowController: NSWindowController {
+
+    private var hotkeyField: NSTextField!
+    private var hotkeyButton: NSButton!
+    private var savePathField: NSTextField!
+    private var autoCopyCheckbox: NSButton!
+    private var launchAtLoginCheckbox: NSButton!
+    private var isRecordingHotkey = false
+    private var localMonitor: Any?
+
+    var onHotkeyChanged: (() -> Void)?
+
+    init() {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 240),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "macshot Preferences"
+        window.center()
+        window.isReleasedWhenClosed = false
+
+        super.init(window: window)
+        setupUI()
+        loadPreferences()
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    private func setupUI() {
+        guard let contentView = window?.contentView else { return }
+
+        let padding: CGFloat = 20
+        var y: CGFloat = 190
+
+        // Hotkey
+        let hotkeyLabel = NSTextField(labelWithString: "Global Shortcut:")
+        hotkeyLabel.frame = NSRect(x: padding, y: y, width: 120, height: 22)
+        contentView.addSubview(hotkeyLabel)
+
+        hotkeyField = NSTextField(frame: NSRect(x: 150, y: y, width: 140, height: 22))
+        hotkeyField.isEditable = false
+        hotkeyField.isSelectable = false
+        hotkeyField.alignment = .center
+        hotkeyField.backgroundColor = NSColor(white: 0.95, alpha: 1)
+        contentView.addSubview(hotkeyField)
+
+        hotkeyButton = NSButton(title: "Record", target: self, action: #selector(recordHotkey(_:)))
+        hotkeyButton.frame = NSRect(x: 300, y: y, width: 90, height: 24)
+        hotkeyButton.bezelStyle = .rounded
+        contentView.addSubview(hotkeyButton)
+
+        y -= 45
+
+        // Save path
+        let saveLabel = NSTextField(labelWithString: "Save Folder:")
+        saveLabel.frame = NSRect(x: padding, y: y, width: 120, height: 22)
+        contentView.addSubview(saveLabel)
+
+        savePathField = NSTextField(frame: NSRect(x: 150, y: y, width: 170, height: 22))
+        savePathField.isEditable = false
+        savePathField.isSelectable = false
+        savePathField.lineBreakMode = .byTruncatingMiddle
+        contentView.addSubview(savePathField)
+
+        let browseButton = NSButton(title: "Browse...", target: self, action: #selector(browseSavePath(_:)))
+        browseButton.frame = NSRect(x: 325, y: y, width: 70, height: 24)
+        browseButton.bezelStyle = .rounded
+        contentView.addSubview(browseButton)
+
+        y -= 40
+
+        // Auto-copy
+        autoCopyCheckbox = NSButton(checkboxWithTitle: "Auto-copy to clipboard on confirm", target: self, action: #selector(autoCopyChanged(_:)))
+        autoCopyCheckbox.frame = NSRect(x: padding, y: y, width: 300, height: 22)
+        contentView.addSubview(autoCopyCheckbox)
+
+        y -= 35
+
+        // Launch at login
+        launchAtLoginCheckbox = NSButton(checkboxWithTitle: "Launch at login", target: self, action: #selector(launchAtLoginChanged(_:)))
+        launchAtLoginCheckbox.frame = NSRect(x: padding, y: y, width: 300, height: 22)
+        contentView.addSubview(launchAtLoginCheckbox)
+    }
+
+    private func loadPreferences() {
+        hotkeyField.stringValue = HotkeyManager.shortcutDisplayString()
+
+        if let savePath = UserDefaults.standard.string(forKey: "saveDirectory") {
+            savePathField.stringValue = savePath
+        } else {
+            savePathField.stringValue = "~/Desktop"
+        }
+
+        let autoCopy = UserDefaults.standard.object(forKey: "autoCopyToClipboard") as? Bool ?? true
+        autoCopyCheckbox.state = autoCopy ? .on : .off
+
+        let launchAtLogin = UserDefaults.standard.bool(forKey: "launchAtLogin")
+        launchAtLoginCheckbox.state = launchAtLogin ? .on : .off
+    }
+
+    // MARK: - Actions
+
+    @objc private func recordHotkey(_ sender: NSButton) {
+        if isRecordingHotkey {
+            stopRecording()
+            return
+        }
+
+        isRecordingHotkey = true
+        hotkeyButton.title = "Press keys..."
+        hotkeyField.stringValue = "Waiting..."
+
+        localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self = self else { return event }
+
+            let modifiers = event.modifierFlags
+            var carbonMods: UInt32 = 0
+            if modifiers.contains(.command) { carbonMods |= UInt32(cmdKey) }
+            if modifiers.contains(.shift) { carbonMods |= UInt32(shiftKey) }
+            if modifiers.contains(.option) { carbonMods |= UInt32(optionKey) }
+            if modifiers.contains(.control) { carbonMods |= UInt32(controlKey) }
+
+            // Require at least one modifier
+            if carbonMods == 0 { return nil }
+
+            let keyCode = UInt32(event.keyCode)
+
+            UserDefaults.standard.set(Int(keyCode), forKey: "hotkeyKeyCode")
+            UserDefaults.standard.set(Int(carbonMods), forKey: "hotkeyModifiers")
+
+            self.hotkeyField.stringValue = HotkeyManager.modifierString(from: carbonMods) + HotkeyManager.keyString(from: keyCode)
+            self.stopRecording()
+            self.onHotkeyChanged?()
+
+            return nil // consume the event
+        }
+    }
+
+    private func stopRecording() {
+        isRecordingHotkey = false
+        hotkeyButton.title = "Record"
+        if let monitor = localMonitor {
+            NSEvent.removeMonitor(monitor)
+            localMonitor = nil
+        }
+    }
+
+    @objc private func browseSavePath(_ sender: NSButton) {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = false
+
+        if let currentPath = UserDefaults.standard.string(forKey: "saveDirectory") {
+            panel.directoryURL = URL(fileURLWithPath: currentPath)
+        }
+
+        panel.begin { [weak self] response in
+            guard response == .OK, let url = panel.url else { return }
+            UserDefaults.standard.set(url.path, forKey: "saveDirectory")
+            self?.savePathField.stringValue = url.path
+        }
+    }
+
+    @objc private func autoCopyChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: "autoCopyToClipboard")
+    }
+
+    @objc private func launchAtLoginChanged(_ sender: NSButton) {
+        let enabled = sender.state == .on
+        UserDefaults.standard.set(enabled, forKey: "launchAtLogin")
+
+        if #available(macOS 13.0, *) {
+            do {
+                if enabled {
+                    try SMAppService.mainApp.register()
+                } else {
+                    try SMAppService.mainApp.unregister()
+                }
+            } catch {
+                print("Failed to update login item: \(error)")
+            }
+        }
+    }
+
+    func showWindow() {
+        loadPreferences()
+        window?.center()
+        window?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+}

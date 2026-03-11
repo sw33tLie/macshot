@@ -1,0 +1,9 @@
+build/
+.DS_Store
+*.xcuserstate
+xcuserdata/
+DerivedData/
+*.swp
+*.swo
+*~
+.claude/
