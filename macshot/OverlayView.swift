@@ -105,6 +105,14 @@ class OverlayView: NSView {
         window?.acceptsMouseMovedEvents = true
         let area = NSTrackingArea(rect: .zero, options: [.mouseMoved, .activeAlways, .inVisibleRect], owner: self, userInfo: nil)
         addTrackingArea(area)
+
+        // Force crosshair cursor immediately so it doesn't stay as arrow
+        // from the previously focused app (cursor rects are passive and may
+        // not evaluate until the mouse moves).
+        if window != nil {
+            NSCursor.crosshair.push()
+            window?.invalidateCursorRects(for: self)
+        }
     }
 
     override func mouseMoved(with event: NSEvent) {
@@ -1422,6 +1430,7 @@ class OverlayView: NSView {
         textControlBar = nil
         sizeInputField?.removeFromSuperview()
         sizeInputField = nil
+        NSCursor.pop()
         needsDisplay = true
     }
 }

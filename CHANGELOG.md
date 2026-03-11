@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.6] - 2026-03-11
+
+### Fixed
+- **Crosshair cursor**: The cursor now immediately switches to a crosshair when capture starts. Previously it could stay as a normal pointer until the mouse moved, especially when triggered via hotkey.
+
 ## [1.0.5] - 2026-03-11
 
 ### Fixed
