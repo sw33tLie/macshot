@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.3.1] - 2026-03-11
+
+### Added
+- **Full-screen capture via single click**: Left-click without dragging instantly selects the entire screen for annotation. Right-click without dragging performs a quick save/copy of the full screen.
+- **Smart toolbar placement**: Toolbars now independently detect when they would go off-screen and move inside the selection. Works for any selection shape — full-width, full-height, or full-screen — not just full-screen rectangles.
+- **Draggable toolbars**: Drag toolbar backgrounds to reposition them so they don't block areas you want to annotate.
+
+### Changed
+- Updated helper text to reflect single-click full-screen shortcuts.
+
 ## [1.3.0] - 2026-03-11
 
 ### Added

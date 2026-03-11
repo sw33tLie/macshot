@@ -146,6 +146,64 @@ class ToolbarLayout {
         return barRect
     }
 
+    // Layout bottom toolbar inside the selection (for full-screen selections)
+    static func layoutBottomInside(buttons: inout [ToolbarButton], selectionRect: NSRect, viewBounds: NSRect) -> NSRect {
+        let count = CGFloat(buttons.count)
+        let totalWidth = count * buttonSize + (count - 1) * buttonSpacing + toolbarPadding * 2
+        let totalHeight = buttonSize + toolbarPadding * 2
+
+        var barX = selectionRect.midX - totalWidth / 2
+        let barY = selectionRect.minY + 10  // inside, near bottom edge
+
+        // Clamp horizontal
+        barX = max(viewBounds.minX + 4, min(barX, viewBounds.maxX - totalWidth - 4))
+
+        let barRect = NSRect(x: barX, y: barY, width: totalWidth, height: totalHeight)
+
+        var x = barRect.minX + toolbarPadding
+        let y = barRect.minY + toolbarPadding
+
+        for i in 0..<buttons.count {
+            buttons[i].rect = NSRect(x: x, y: y, width: buttonSize, height: buttonSize)
+            x += buttonSize + buttonSpacing
+        }
+
+        return barRect
+    }
+
+    // Layout right toolbar inside the selection (for full-screen selections)
+    static func layoutRightInside(buttons: inout [ToolbarButton], selectionRect: NSRect, viewBounds: NSRect, bottomBarRect: NSRect = .zero) -> NSRect {
+        let count = CGFloat(buttons.count)
+        let totalWidth = buttonSize + toolbarPadding * 2
+        let totalHeight = count * buttonSize + (count - 1) * buttonSpacing + toolbarPadding * 2
+
+        let barX = selectionRect.maxX - totalWidth - 10  // inside, near right edge
+        var barY = selectionRect.maxY - totalHeight - 10  // near top-right
+
+        // Avoid overlapping with bottom toolbar
+        if bottomBarRect.width > 0 {
+            let rightBarRect = NSRect(x: barX, y: barY, width: totalWidth, height: totalHeight)
+            if rightBarRect.intersects(bottomBarRect) {
+                barY = bottomBarRect.maxY + 4
+            }
+        }
+
+        // Clamp vertical
+        barY = max(viewBounds.minY + 4, min(barY, viewBounds.maxY - totalHeight - 4))
+
+        let barRect = NSRect(x: barX, y: barY, width: totalWidth, height: totalHeight)
+
+        let x = barRect.minX + toolbarPadding
+        var y = barRect.maxY - toolbarPadding - buttonSize
+
+        for i in 0..<buttons.count {
+            buttons[i].rect = NSRect(x: x, y: y, width: buttonSize, height: buttonSize)
+            y -= buttonSize + buttonSpacing
+        }
+
+        return barRect
+    }
+
     // Layout right toolbar rects
     static func layoutRight(buttons: inout [ToolbarButton], selectionRect: NSRect, viewBounds: NSRect, bottomBarRect: NSRect = .zero) -> NSRect {
         let count = CGFloat(buttons.count)

@@ -85,6 +85,13 @@ class OverlayView: NSView {
     // Delay capture
     private var delaySeconds: Int = 0  // 0 = off, 3, 5, 10
 
+    // Draggable toolbars
+    private var bottomBarDragOffset: NSPoint = .zero
+    private var rightBarDragOffset: NSPoint = .zero
+    private var isDraggingBottomBar: Bool = false
+    private var isDraggingRightBar: Bool = false
+    private var toolbarDragStart: NSPoint = .zero
+
     // Color picker popover
     private var showColorPicker: Bool = false
     private var colorPickerRect: NSRect = .zero
@@ -394,11 +401,11 @@ class OverlayView: NSView {
     }
 
     private func drawIdleHelperText() {
-        let line1 = "Left-click and drag to select and annotate"
+        let line1 = "Drag to select  ·  Click for full screen"
         let copyMode = UserDefaults.standard.object(forKey: "quickModeCopyToClipboard") as? Bool ?? false
         let line2 = copyMode
-            ? "Right-click and drag to quick-copy to clipboard"
-            : "Right-click and drag to quick-save to file"
+            ? "Right-click: drag to select, click to copy full screen"
+            : "Right-click: drag to select, click to save full screen"
 
         let font = NSFont.systemFont(ofSize: 13, weight: .medium)
         let textColor = NSColor.white
@@ -800,11 +807,56 @@ class OverlayView: NSView {
 
     // MARK: - Toolbar Layout
 
+    /// Whether the selection covers (nearly) the full screen
+    private var isFullScreenSelection: Bool {
+        let margin: CGFloat = 50
+        return selectionRect.minX < bounds.minX + margin &&
+               selectionRect.minY < bounds.minY + margin &&
+               selectionRect.maxX > bounds.maxX - margin &&
+               selectionRect.maxY > bounds.maxY - margin
+    }
+
     private func rebuildToolbarLayout() {
         bottomButtons = ToolbarLayout.bottomButtons(selectedTool: currentTool, selectedColor: currentColor, beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex)
         rightButtons = ToolbarLayout.rightButtons(delaySeconds: delaySeconds)
-        bottomBarRect = ToolbarLayout.layoutBottom(buttons: &bottomButtons, selectionRect: selectionRect, viewBounds: bounds)
-        rightBarRect = ToolbarLayout.layoutRight(buttons: &rightButtons, selectionRect: selectionRect, viewBounds: bounds, bottomBarRect: bottomBarRect)
+
+        // Place each toolbar inside if it would go off-screen
+        let bottomMargin: CGFloat = 50  // toolbar height + gap
+        let rightMargin: CGFloat = 50
+
+        let bottomFits = selectionRect.minY > bounds.minY + bottomMargin
+        let topFits = selectionRect.maxY < bounds.maxY - bottomMargin
+        let bottomOutside = bottomFits || topFits  // layoutBottom handles flipping above if below doesn't fit
+
+        if bottomOutside {
+            bottomBarRect = ToolbarLayout.layoutBottom(buttons: &bottomButtons, selectionRect: selectionRect, viewBounds: bounds)
+        } else {
+            bottomBarRect = ToolbarLayout.layoutBottomInside(buttons: &bottomButtons, selectionRect: selectionRect, viewBounds: bounds)
+        }
+
+        let rightFits = selectionRect.maxX < bounds.maxX - rightMargin
+        let leftFits = selectionRect.minX > bounds.minX + rightMargin
+        let rightOutside = rightFits || leftFits  // layoutRight handles flipping to left if right doesn't fit
+
+        if rightOutside {
+            rightBarRect = ToolbarLayout.layoutRight(buttons: &rightButtons, selectionRect: selectionRect, viewBounds: bounds, bottomBarRect: bottomBarRect)
+        } else {
+            rightBarRect = ToolbarLayout.layoutRightInside(buttons: &rightButtons, selectionRect: selectionRect, viewBounds: bounds, bottomBarRect: bottomBarRect)
+        }
+
+        // Apply drag offsets
+        if bottomBarDragOffset != .zero {
+            bottomBarRect = bottomBarRect.offsetBy(dx: bottomBarDragOffset.x, dy: bottomBarDragOffset.y)
+            for i in 0..<bottomButtons.count {
+                bottomButtons[i].rect = bottomButtons[i].rect.offsetBy(dx: bottomBarDragOffset.x, dy: bottomBarDragOffset.y)
+            }
+        }
+        if rightBarDragOffset != .zero {
+            rightBarRect = rightBarRect.offsetBy(dx: rightBarDragOffset.x, dy: rightBarDragOffset.y)
+            for i in 0..<rightButtons.count {
+                rightButtons[i].rect = rightButtons[i].rect.offsetBy(dx: rightBarDragOffset.x, dy: rightBarDragOffset.y)
+            }
+        }
 
         // Apply hover state
         for i in 0..<bottomButtons.count {
@@ -967,9 +1019,15 @@ class OverlayView: NSView {
                     handleToolbarAction(action, mousePoint: point)
                     return
                 }
-                // Don't start new selection if clicking toolbar area
-                if ToolbarLayout.hitTestBar(point: point, barRect: bottomBarRect) ||
-                   ToolbarLayout.hitTestBar(point: point, barRect: rightBarRect) {
+                // Clicking on toolbar background — start dragging toolbar
+                if ToolbarLayout.hitTestBar(point: point, barRect: bottomBarRect) {
+                    isDraggingBottomBar = true
+                    toolbarDragStart = point
+                    return
+                }
+                if ToolbarLayout.hitTestBar(point: point, barRect: rightBarRect) {
+                    isDraggingRightBar = true
+                    toolbarDragStart = point
                     return
                 }
             }
@@ -993,6 +1051,8 @@ class OverlayView: NSView {
             annotations.removeAll()
             redoStack.removeAll()
             numberCounter = 0
+            bottomBarDragOffset = .zero
+            rightBarDragOffset = .zero
             selectionStart = point
             selectionRect = NSRect(origin: point, size: .zero)
             state = .selecting
@@ -1002,6 +1062,24 @@ class OverlayView: NSView {
 
     override func mouseDragged(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
+
+        // Handle toolbar dragging
+        if isDraggingBottomBar {
+            let dx = point.x - toolbarDragStart.x
+            let dy = point.y - toolbarDragStart.y
+            bottomBarDragOffset = NSPoint(x: bottomBarDragOffset.x + dx, y: bottomBarDragOffset.y + dy)
+            toolbarDragStart = point
+            needsDisplay = true
+            return
+        }
+        if isDraggingRightBar {
+            let dx = point.x - toolbarDragStart.x
+            let dy = point.y - toolbarDragStart.y
+            rightBarDragOffset = NSPoint(x: rightBarDragOffset.x + dx, y: rightBarDragOffset.y + dy)
+            toolbarDragStart = point
+            needsDisplay = true
+            return
+        }
 
         // Handle HSB gradient dragging
         if isDraggingHSBGradient {
@@ -1045,6 +1123,14 @@ class OverlayView: NSView {
     }
 
     override func mouseUp(with event: NSEvent) {
+        if isDraggingBottomBar {
+            isDraggingBottomBar = false
+            return
+        }
+        if isDraggingRightBar {
+            isDraggingRightBar = false
+            return
+        }
         if isDraggingHSBGradient {
             isDraggingHSBGradient = false
             return
@@ -1061,8 +1147,11 @@ class OverlayView: NSView {
                 showToolbars = true
                 overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
             } else {
-                state = .idle
-                selectionRect = .zero
+                // Single click — expand to full screen
+                selectionRect = bounds
+                state = .selected
+                showToolbars = true
+                overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
             }
             needsDisplay = true
 
@@ -1114,9 +1203,10 @@ class OverlayView: NSView {
             state = .selected
             overlayDelegate?.overlayViewDidRequestQuickSave()
         } else {
-            state = .idle
-            selectionRect = .zero
-            needsDisplay = true
+            // Single right-click — full screen quick save
+            selectionRect = bounds
+            state = .selected
+            overlayDelegate?.overlayViewDidRequestQuickSave()
         }
     }
 
@@ -2070,6 +2160,10 @@ class OverlayView: NSView {
         customHSBCachedImage = nil
         isDraggingHSBGradient = false
         isDraggingBrightnessSlider = false
+        isDraggingBottomBar = false
+        isDraggingRightBar = false
+        bottomBarDragOffset = .zero
+        rightBarDragOffset = .zero
         needsDisplay = true
     }
 }
