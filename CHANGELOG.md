@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.1] - 2026-03-11
+
+### Added
+- **Right-click mode toggle**: New "Right-click action" setting in Preferences — choose between "Save to file" (default) or "Copy to clipboard". Helper text on the capture screen updates to reflect the selected mode.
+
 ## [1.1.0] - 2026-03-11
 
 ### Added

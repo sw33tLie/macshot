@@ -367,7 +367,10 @@ class OverlayView: NSView {
 
     private func drawIdleHelperText() {
         let line1 = "Left-click and drag to select and annotate"
-        let line2 = "Right-click and drag to quick-save to file"
+        let copyMode = UserDefaults.standard.object(forKey: "quickModeCopyToClipboard") as? Bool ?? false
+        let line2 = copyMode
+            ? "Right-click and drag to quick-copy to clipboard"
+            : "Right-click and drag to quick-save to file"
 
         let font = NSFont.systemFont(ofSize: 13, weight: .medium)
         let textColor = NSColor.white
@@ -405,15 +408,20 @@ class OverlayView: NSView {
 
         let text: String
         if isRightClickSelecting {
-            let dirURL: URL
-            if let savedPath = UserDefaults.standard.string(forKey: "saveDirectory") {
-                dirURL = URL(fileURLWithPath: savedPath)
+            let copyMode = UserDefaults.standard.object(forKey: "quickModeCopyToClipboard") as? Bool ?? false
+            if copyMode {
+                text = "Release to copy to clipboard"
             } else {
-                dirURL = FileManager.default.urls(for: .picturesDirectory, in: .userDomainMask).first
-                    ?? FileManager.default.homeDirectoryForCurrentUser
+                let dirURL: URL
+                if let savedPath = UserDefaults.standard.string(forKey: "saveDirectory") {
+                    dirURL = URL(fileURLWithPath: savedPath)
+                } else {
+                    dirURL = FileManager.default.urls(for: .picturesDirectory, in: .userDomainMask).first
+                        ?? FileManager.default.homeDirectoryForCurrentUser
+                }
+                let folderName = dirURL.lastPathComponent
+                text = "Release to save to \(folderName)/"
             }
-            let folderName = dirURL.lastPathComponent
-            text = "Release to save to \(folderName)/"
         } else {
             text = "Release to annotate and edit"
         }

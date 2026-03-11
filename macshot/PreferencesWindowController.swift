@@ -13,6 +13,7 @@ class PreferencesWindowController: NSWindowController {
     private var launchAtLoginCheckbox: NSButton!
     private var historySizeField: NSTextField!
     private var historySizeStepper: NSStepper!
+    private var quickModePopup: NSPopUpButton!
     private var isRecordingHotkey = false
     private var localMonitor: Any?
 
@@ -20,7 +21,7 @@ class PreferencesWindowController: NSWindowController {
 
     init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 420, height: 385),
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 420),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -42,7 +43,7 @@ class PreferencesWindowController: NSWindowController {
         guard let contentView = window?.contentView else { return }
 
         let padding: CGFloat = 20
-        var y: CGFloat = 335
+        var y: CGFloat = 370
 
         // Hotkey
         let hotkeyLabel = NSTextField(labelWithString: "Global Shortcut:")
@@ -99,6 +100,19 @@ class PreferencesWindowController: NSWindowController {
         thumbnailCheckbox = NSButton(checkboxWithTitle: "Show floating thumbnail after capture", target: self, action: #selector(thumbnailChanged(_:)))
         thumbnailCheckbox.frame = NSRect(x: padding, y: y, width: 300, height: 22)
         contentView.addSubview(thumbnailCheckbox)
+
+        y -= 35
+
+        // Quick mode (right-click)
+        let quickModeLabel = NSTextField(labelWithString: "Right-click action:")
+        quickModeLabel.frame = NSRect(x: padding, y: y, width: 120, height: 22)
+        contentView.addSubview(quickModeLabel)
+
+        quickModePopup = NSPopUpButton(frame: NSRect(x: 150, y: y - 2, width: 200, height: 26), pullsDown: false)
+        quickModePopup.addItems(withTitles: ["Save to file", "Copy to clipboard"])
+        quickModePopup.target = self
+        quickModePopup.action = #selector(quickModeChanged(_:))
+        contentView.addSubview(quickModePopup)
 
         y -= 35
 
@@ -189,6 +203,9 @@ class PreferencesWindowController: NSWindowController {
         let historySize = UserDefaults.standard.object(forKey: "historySize") as? Int ?? 10
         historySizeField.integerValue = historySize
         historySizeStepper.integerValue = historySize
+
+        let quickModeCopy = UserDefaults.standard.object(forKey: "quickModeCopyToClipboard") as? Bool ?? false
+        quickModePopup.selectItem(at: quickModeCopy ? 1 : 0)
     }
 
     // MARK: - Actions
@@ -265,6 +282,10 @@ class PreferencesWindowController: NSWindowController {
 
     @objc private func thumbnailChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "showFloatingThumbnail")
+    }
+
+    @objc private func quickModeChanged(_ sender: NSPopUpButton) {
+        UserDefaults.standard.set(sender.indexOfSelectedItem == 1, forKey: "quickModeCopyToClipboard")
     }
 
     @objc private func openGitHub() {

@@ -176,28 +176,36 @@ extension OverlayWindowController: OverlayViewDelegate {
             overlayDelegate?.overlayDidCancel(self)
             return
         }
-        guard let tiffData = image.tiffRepresentation,
-              let bitmap = NSBitmapImageRep(data: tiffData),
-              let pngData = bitmap.representation(using: .png, properties: [:]) else {
-            dismiss()
-            overlayDelegate?.overlayDidCancel(self)
-            return
-        }
 
-        let dirURL: URL
-        if let savedPath = UserDefaults.standard.string(forKey: "saveDirectory") {
-            dirURL = URL(fileURLWithPath: savedPath)
+        let copyMode = UserDefaults.standard.object(forKey: "quickModeCopyToClipboard") as? Bool ?? false
+
+        if copyMode {
+            copyImageToClipboard(image)
         } else {
-            dirURL = FileManager.default.urls(for: .picturesDirectory, in: .userDomainMask).first
-                ?? FileManager.default.homeDirectoryForCurrentUser
+            guard let tiffData = image.tiffRepresentation,
+                  let bitmap = NSBitmapImageRep(data: tiffData),
+                  let pngData = bitmap.representation(using: .png, properties: [:]) else {
+                dismiss()
+                overlayDelegate?.overlayDidCancel(self)
+                return
+            }
+
+            let dirURL: URL
+            if let savedPath = UserDefaults.standard.string(forKey: "saveDirectory") {
+                dirURL = URL(fileURLWithPath: savedPath)
+            } else {
+                dirURL = FileManager.default.urls(for: .picturesDirectory, in: .userDomainMask).first
+                    ?? FileManager.default.homeDirectoryForCurrentUser
+            }
+
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd 'at' HH.mm.ss"
+            let filename = "Screenshot \(formatter.string(from: Date())).png"
+            let fileURL = dirURL.appendingPathComponent(filename)
+
+            try? pngData.write(to: fileURL)
         }
 
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd 'at' HH.mm.ss"
-        let filename = "Screenshot \(formatter.string(from: Date())).png"
-        let fileURL = dirURL.appendingPathComponent(filename)
-
-        try? pngData.write(to: fileURL)
         playCopySound()
         dismiss()
         overlayDelegate?.overlayDidConfirm(self, capturedImage: image)
