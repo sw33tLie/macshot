@@ -7,7 +7,7 @@ macshot lives in your menu bar and lets you capture, annotate, and share screens
 ## Features
 
 - **Instant capture** — global hotkey (default: `Cmd+Shift+X`) freezes your screen and lets you select a region
-- **Annotation tools** — arrow, line, rectangle, filled rectangle, ellipse, pencil, marker/highlighter, text, numbered markers, pixelate/redact
+- **Annotation tools** — arrow, line, rectangle, filled rectangle, ellipse, pencil, marker/highlighter, text, numbered markers, pixelate, Gaussian blur
 - **Rich text** — bold, italic, underline, strikethrough, adjustable font size, color
 - **Shift-constrain** — hold Shift while drawing for straight lines, perfect circles, and squares
 - **Secure redaction** — pixelate tool is irreversible (multi-pass downscale, not a reversible blur)

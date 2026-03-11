@@ -11,6 +11,7 @@ enum AnnotationTool: Int, CaseIterable {
     case text            // text annotation
     case number          // auto-incrementing numbered circle
     case pixelate        // pixelate/blur region
+    case blur            // gaussian blur region
 }
 
 class Annotation {
@@ -73,6 +74,8 @@ class Annotation {
             drawNumber()
         case .pixelate:
             drawPixelate(in: context)
+        case .blur:
+            drawBlur(in: context)
         }
     }
 
@@ -216,9 +219,13 @@ class Annotation {
         str.draw(at: NSPoint(x: center.x - size.width / 2, y: center.y - size.height / 2), withAttributes: attrs)
     }
 
-    /// Bake the pixelated image from source, then release the source screenshot reference.
+    /// Bake the processed image from source, then release the source screenshot reference.
     /// Called once when the annotation is finalized (mouseUp).
     func bakePixelate() {
+        if tool == .blur {
+            bakeBlur()
+            return
+        }
         guard tool == .pixelate, bakedPixelateImage == nil, let sourceImage = sourceImage else { return }
 
         let rect = boundingRect
@@ -369,5 +376,99 @@ class Annotation {
         cgCtx.scaleBy(x: 1, y: -1)
         cgCtx.draw(pixelated, in: CGRect(x: 0, y: 0, width: rect.width, height: rect.height))
         cgCtx.restoreGState()
+    }
+
+    // MARK: - Blur
+
+    private func cropFromSource() -> CGImage? {
+        guard let sourceImage = sourceImage else { return nil }
+        let rect = boundingRect
+        guard rect.width > 4, rect.height > 4 else { return nil }
+
+        var cgImage: CGImage?
+        if let imgRef = sourceImage.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+            cgImage = imgRef
+        } else if let tiffData = sourceImage.tiffRepresentation,
+                  let bitmap = NSBitmapImageRep(data: tiffData) {
+            cgImage = bitmap.cgImage
+        }
+        guard let srcCG = cgImage else { return nil }
+
+        let imgW = CGFloat(srcCG.width)
+        let imgH = CGFloat(srcCG.height)
+        let boundsW = sourceImageBounds.width
+        let boundsH = sourceImageBounds.height
+        let scaleX = imgW / boundsW
+        let scaleY = imgH / boundsH
+
+        let pixelX = Int((rect.minX - sourceImageBounds.minX) * scaleX)
+        let pixelY = Int((boundsH - (rect.maxY - sourceImageBounds.minY)) * scaleY)
+        let pixelW = Int(rect.width * scaleX)
+        let pixelH = Int(rect.height * scaleY)
+        guard pixelW > 0, pixelH > 0 else { return nil }
+
+        let cropRect = CGRect(
+            x: max(0, pixelX), y: max(0, pixelY),
+            width: min(pixelW, Int(imgW) - max(0, pixelX)),
+            height: min(pixelH, Int(imgH) - max(0, pixelY))
+        )
+        guard cropRect.width > 0, cropRect.height > 0 else { return nil }
+        return srcCG.cropping(to: cropRect)
+    }
+
+    private func applyGaussianBlur(to cgImage: CGImage) -> CGImage? {
+        let ciImage = CIImage(cgImage: cgImage)
+        let extent = ciImage.extent
+        let radius = max(10.0, min(Double(cgImage.width), Double(cgImage.height)) * 0.03)
+
+        // Clamp edges to avoid dark border artifacts from blur sampling beyond image bounds
+        guard let clamp = CIFilter(name: "CIAffineClamp") else { return nil }
+        clamp.setValue(ciImage, forKey: kCIInputImageKey)
+        clamp.setValue(NSAffineTransform(), forKey: kCIInputTransformKey)
+        guard let clamped = clamp.outputImage else { return nil }
+
+        guard let blur = CIFilter(name: "CIGaussianBlur") else { return nil }
+        blur.setValue(clamped, forKey: kCIInputImageKey)
+        blur.setValue(radius, forKey: kCIInputRadiusKey)
+        guard let output = blur.outputImage else { return nil }
+
+        // Crop back to original extent (blur expands the image)
+        let cropped = output.cropped(to: extent)
+        let ciContext = CIContext()
+        return ciContext.createCGImage(cropped, from: extent)
+    }
+
+    private func bakeBlur() {
+        guard tool == .blur, bakedPixelateImage == nil else { return }
+        guard let cropped = cropFromSource() else { return }
+        bakedPixelateImage = applyGaussianBlur(to: cropped)
+        self.sourceImage = nil
+    }
+
+    private func drawBlur(in context: NSGraphicsContext) {
+        let rect = boundingRect
+        guard rect.width > 4, rect.height > 4 else { return }
+
+        if let baked = bakedPixelateImage {
+            let cgCtx = context.cgContext
+            cgCtx.saveGState()
+            cgCtx.translateBy(x: rect.minX, y: rect.maxY)
+            cgCtx.scaleBy(x: 1, y: -1)
+            cgCtx.draw(baked, in: CGRect(x: 0, y: 0, width: rect.width, height: rect.height))
+            cgCtx.restoreGState()
+            return
+        }
+
+        // Live preview while dragging: frosted overlay indicator (real blur applied on mouseUp)
+        NSColor.white.withAlphaComponent(0.35).setFill()
+        NSBezierPath(rect: rect).fill()
+
+        // Dashed border to show the blur region
+        let border = NSBezierPath(rect: rect)
+        border.lineWidth = 1.5
+        let pattern: [CGFloat] = [4, 4]
+        border.setLineDash(pattern, count: 2, phase: 0)
+        NSColor.white.withAlphaComponent(0.7).setStroke()
+        border.stroke()
     }
 }

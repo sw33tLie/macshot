@@ -870,7 +870,7 @@ class OverlayView: NSView {
         if currentTool == .pencil || currentTool == .marker {
             annotation.points = [point]
         }
-        if currentTool == .pixelate {
+        if currentTool == .pixelate || currentTool == .blur {
             annotation.sourceImage = screenshotImage
             annotation.sourceImageBounds = bounds
         }
@@ -899,7 +899,7 @@ class OverlayView: NSView {
                     x: start.x + distance * cos(snapped),
                     y: start.y + distance * sin(snapped)
                 )
-            case .rectangle, .filledRectangle, .ellipse, .pixelate:
+            case .rectangle, .filledRectangle, .ellipse, .pixelate, .blur:
                 // Constrain to square/circle: use the larger dimension
                 let side = max(abs(dx), abs(dy))
                 clampedPoint = NSPoint(

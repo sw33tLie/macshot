@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.4] - 2026-03-11
+
+### Added
+- **Blur Tool**: Real Gaussian blur annotation tool (next to Pixelate in the toolbar). Drag to select a region, blur is applied on release. Uses CIGaussianBlur with edge clamping for clean results.
+
 ## [1.0.3] - 2026-03-11
 
 ### Added

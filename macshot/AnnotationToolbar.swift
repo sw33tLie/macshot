@@ -58,6 +58,7 @@ class ToolbarLayout {
             (.text,            "character.textbox",         "Text"),
             (.number,          "1.circle.fill",             "Number"),
             (.pixelate,        "squareshape.split.2x2",    "Pixelate"),
+            (.blur,            "aqi.medium",               "Blur"),
         ]
 
         for (tool, symbol, tip) in tools {
