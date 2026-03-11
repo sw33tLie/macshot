@@ -26,7 +26,7 @@ class Annotation {
     var points: [NSPoint]?
     var sourceImage: NSImage?    // for pixelate: temporary reference during drawing (cleared after bake)
     var sourceImageBounds: NSRect = .zero  // the bounds the image was drawn into
-    var bakedPixelateImage: CGImage?  // baked pixelated result (sourceImage released after bake)
+    var bakedBlurNSImage: NSImage?    // baked result for pixelate/blur (NSImage avoids CGImage flip issues)
     var fontSize: CGFloat = 16
     var isBold: Bool = false
     var isItalic: Bool = false
@@ -219,6 +219,26 @@ class Annotation {
         str.draw(at: NSPoint(x: center.x - size.width / 2, y: center.y - size.height / 2), withAttributes: attrs)
     }
 
+    // MARK: - Shared region crop
+
+    /// Render the source image region matching boundingRect into a new NSImage.
+    /// Uses NSImage drawing which handles all coordinate transforms correctly.
+    private func cropRegionFromSource() -> NSImage? {
+        guard let sourceImage = sourceImage else { return nil }
+        let rect = boundingRect
+        guard rect.width > 4, rect.height > 4 else { return nil }
+
+        let regionImage = NSImage(size: rect.size)
+        regionImage.lockFocus()
+        sourceImage.draw(in: NSRect(x: -rect.minX, y: -rect.minY,
+                                     width: sourceImageBounds.width, height: sourceImageBounds.height),
+                         from: .zero, operation: .copy, fraction: 1.0)
+        regionImage.unlockFocus()
+        return regionImage
+    }
+
+    // MARK: - Pixelate
+
     /// Bake the processed image from source, then release the source screenshot reference.
     /// Called once when the annotation is finalized (mouseUp).
     func bakePixelate() {
@@ -226,44 +246,19 @@ class Annotation {
             bakeBlur()
             return
         }
-        guard tool == .pixelate, bakedPixelateImage == nil, let sourceImage = sourceImage else { return }
+        guard tool == .pixelate, bakedBlurNSImage == nil, let _ = sourceImage else { return }
 
+        guard let regionImage = cropRegionFromSource() else { return }
         let rect = boundingRect
-        guard rect.width > 4, rect.height > 4 else { return }
 
-        var cgImage: CGImage?
-        if let imgRef = sourceImage.cgImage(forProposedRect: nil, context: nil, hints: nil) {
-            cgImage = imgRef
-        } else if let tiffData = sourceImage.tiffRepresentation,
-                  let bitmap = NSBitmapImageRep(data: tiffData) {
-            cgImage = bitmap.cgImage
-        }
-        guard let srcCG = cgImage else { return }
-
-        let imgW = CGFloat(srcCG.width)
-        let imgH = CGFloat(srcCG.height)
-        let boundsW = sourceImageBounds.width
-        let boundsH = sourceImageBounds.height
-        let scaleX = imgW / boundsW
-        let scaleY = imgH / boundsH
-
-        let pixelX = Int((rect.minX - sourceImageBounds.minX) * scaleX)
-        let pixelY = Int((boundsH - (rect.maxY - sourceImageBounds.minY)) * scaleY)
-        let pixelW = Int(rect.width * scaleX)
-        let pixelH = Int(rect.height * scaleY)
-        guard pixelW > 0, pixelH > 0 else { return }
-
-        let cropRect = CGRect(
-            x: max(0, pixelX), y: max(0, pixelY),
-            width: min(pixelW, Int(imgW) - max(0, pixelX)),
-            height: min(pixelH, Int(imgH) - max(0, pixelY))
-        )
-        guard cropRect.width > 0, cropRect.height > 0,
-              let cropped = srcCG.cropping(to: cropRect) else { return }
+        // Convert to CGImage for pixelation
+        guard let tiffData = regionImage.tiffRepresentation,
+              let bitmap = NSBitmapImageRep(data: tiffData),
+              let cropped = bitmap.cgImage else { return }
 
         let blockSize = max(10, Int(min(rect.width, rect.height) / 6))
-        let tinyW = max(1, Int(cropRect.width) / blockSize)
-        let tinyH = max(1, Int(cropRect.height) / blockSize)
+        let tinyW = max(1, cropped.width / blockSize)
+        let tinyH = max(1, cropped.height / blockSize)
         let cs = CGColorSpaceCreateDeviceRGB()
         let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue
 
@@ -281,16 +276,15 @@ class Annotation {
         ctx2.draw(tiny1, in: CGRect(x: 0, y: 0, width: tinyW2, height: tinyH2))
         guard let tiny2 = ctx2.makeImage() else { return }
 
-        let finalW = max(1, Int(rect.width * 2))  // store at 2x for quality
+        let finalW = max(1, Int(rect.width * 2))
         let finalH = max(1, Int(rect.height * 2))
         guard let ctx3 = CGContext(data: nil, width: finalW, height: finalH,
                                     bitsPerComponent: 8, bytesPerRow: 0, space: cs, bitmapInfo: bitmapInfo) else { return }
         ctx3.interpolationQuality = .none
         ctx3.draw(tiny2, in: CGRect(x: 0, y: 0, width: finalW, height: finalH))
 
-        bakedPixelateImage = ctx3.makeImage()
-
-        // Release the full screenshot reference
+        guard let pixelatedCG = ctx3.makeImage() else { return }
+        bakedBlurNSImage = NSImage(cgImage: pixelatedCG, size: rect.size)
         self.sourceImage = nil
     }
 
@@ -299,129 +293,35 @@ class Annotation {
         guard rect.width > 4, rect.height > 4 else { return }
 
         // Use baked image if available (finalized annotation)
-        if let baked = bakedPixelateImage {
-            let cgCtx = context.cgContext
-            cgCtx.saveGState()
-            cgCtx.translateBy(x: rect.minX, y: rect.maxY)
-            cgCtx.scaleBy(x: 1, y: -1)
-            cgCtx.draw(baked, in: CGRect(x: 0, y: 0, width: rect.width, height: rect.height))
-            cgCtx.restoreGState()
+        if let baked = bakedBlurNSImage {
+            baked.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1.0)
             return
         }
 
-        // Live preview while drawing — use sourceImage directly
-        guard let sourceImage = sourceImage else { return }
+        // Live preview while drawing: frosted overlay indicator (real pixelation applied on mouseUp)
+        NSColor.black.withAlphaComponent(0.3).setFill()
+        NSBezierPath(rect: rect).fill()
 
-        var cgImage: CGImage?
-        if let imgRef = sourceImage.cgImage(forProposedRect: nil, context: nil, hints: nil) {
-            cgImage = imgRef
-        } else if let tiffData = sourceImage.tiffRepresentation,
-                  let bitmap = NSBitmapImageRep(data: tiffData) {
-            cgImage = bitmap.cgImage
-        }
-        guard let srcCG = cgImage else { return }
-
-        let imgW = CGFloat(srcCG.width)
-        let imgH = CGFloat(srcCG.height)
-        let boundsW = sourceImageBounds.width
-        let boundsH = sourceImageBounds.height
-        let scaleX = imgW / boundsW
-        let scaleY = imgH / boundsH
-
-        let pixelX = Int((rect.minX - sourceImageBounds.minX) * scaleX)
-        let pixelY = Int((boundsH - (rect.maxY - sourceImageBounds.minY)) * scaleY)
-        let pixelW = Int(rect.width * scaleX)
-        let pixelH = Int(rect.height * scaleY)
-        guard pixelW > 0, pixelH > 0 else { return }
-
-        let cropRect = CGRect(
-            x: max(0, pixelX), y: max(0, pixelY),
-            width: min(pixelW, Int(imgW) - max(0, pixelX)),
-            height: min(pixelH, Int(imgH) - max(0, pixelY))
-        )
-        guard cropRect.width > 0, cropRect.height > 0,
-              let cropped = srcCG.cropping(to: cropRect) else { return }
-
-        let blockSize = max(10, Int(min(rect.width, rect.height) / 6))
-        let tinyW = max(1, Int(cropRect.width) / blockSize)
-        let tinyH = max(1, Int(cropRect.height) / blockSize)
-        let cs = CGColorSpaceCreateDeviceRGB()
-        let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue
-
-        guard let ctx1 = CGContext(data: nil, width: tinyW, height: tinyH,
-                                    bitsPerComponent: 8, bytesPerRow: 0, space: cs, bitmapInfo: bitmapInfo) else { return }
-        ctx1.interpolationQuality = .low
-        ctx1.draw(cropped, in: CGRect(x: 0, y: 0, width: tinyW, height: tinyH))
-        guard let tiny1 = ctx1.makeImage() else { return }
-
-        let tinyW2 = max(1, tinyW / 2)
-        let tinyH2 = max(1, tinyH / 2)
-        guard let ctx2 = CGContext(data: nil, width: tinyW2, height: tinyH2,
-                                    bitsPerComponent: 8, bytesPerRow: 0, space: cs, bitmapInfo: bitmapInfo) else { return }
-        ctx2.interpolationQuality = .low
-        ctx2.draw(tiny1, in: CGRect(x: 0, y: 0, width: tinyW2, height: tinyH2))
-        guard let tiny2 = ctx2.makeImage() else { return }
-
-        let finalW = max(1, Int(rect.width))
-        let finalH = max(1, Int(rect.height))
-        guard let ctx3 = CGContext(data: nil, width: finalW, height: finalH,
-                                    bitsPerComponent: 8, bytesPerRow: 0, space: cs, bitmapInfo: bitmapInfo) else { return }
-        ctx3.interpolationQuality = .none
-        ctx3.draw(tiny2, in: CGRect(x: 0, y: 0, width: finalW, height: finalH))
-        guard let pixelated = ctx3.makeImage() else { return }
-
-        let cgCtx = context.cgContext
-        cgCtx.saveGState()
-        cgCtx.translateBy(x: rect.minX, y: rect.maxY)
-        cgCtx.scaleBy(x: 1, y: -1)
-        cgCtx.draw(pixelated, in: CGRect(x: 0, y: 0, width: rect.width, height: rect.height))
-        cgCtx.restoreGState()
+        let border = NSBezierPath(rect: rect)
+        border.lineWidth = 1.5
+        let pattern: [CGFloat] = [4, 4]
+        border.setLineDash(pattern, count: 2, phase: 0)
+        NSColor.white.withAlphaComponent(0.5).setStroke()
+        border.stroke()
     }
 
     // MARK: - Blur
 
-    private func cropFromSource() -> CGImage? {
-        guard let sourceImage = sourceImage else { return nil }
-        let rect = boundingRect
-        guard rect.width > 4, rect.height > 4 else { return nil }
-
-        var cgImage: CGImage?
-        if let imgRef = sourceImage.cgImage(forProposedRect: nil, context: nil, hints: nil) {
-            cgImage = imgRef
-        } else if let tiffData = sourceImage.tiffRepresentation,
-                  let bitmap = NSBitmapImageRep(data: tiffData) {
-            cgImage = bitmap.cgImage
-        }
-        guard let srcCG = cgImage else { return nil }
-
-        let imgW = CGFloat(srcCG.width)
-        let imgH = CGFloat(srcCG.height)
-        let boundsW = sourceImageBounds.width
-        let boundsH = sourceImageBounds.height
-        let scaleX = imgW / boundsW
-        let scaleY = imgH / boundsH
-
-        let pixelX = Int((rect.minX - sourceImageBounds.minX) * scaleX)
-        let pixelY = Int((boundsH - (rect.maxY - sourceImageBounds.minY)) * scaleY)
-        let pixelW = Int(rect.width * scaleX)
-        let pixelH = Int(rect.height * scaleY)
-        guard pixelW > 0, pixelH > 0 else { return nil }
-
-        let cropRect = CGRect(
-            x: max(0, pixelX), y: max(0, pixelY),
-            width: min(pixelW, Int(imgW) - max(0, pixelX)),
-            height: min(pixelH, Int(imgH) - max(0, pixelY))
-        )
-        guard cropRect.width > 0, cropRect.height > 0 else { return nil }
-        return srcCG.cropping(to: cropRect)
-    }
+    private static let ciContext = CIContext()
 
     private func applyGaussianBlur(to cgImage: CGImage) -> CGImage? {
-        let ciImage = CIImage(cgImage: cgImage)
-        let extent = ciImage.extent
-        let radius = max(10.0, min(Double(cgImage.width), Double(cgImage.height)) * 0.03)
+        let w = cgImage.width
+        let h = cgImage.height
+        let radius = max(10.0, min(Double(w), Double(h)) * 0.03)
 
-        // Clamp edges to avoid dark border artifacts from blur sampling beyond image bounds
+        let ciImage = CIImage(cgImage: cgImage)
+
+        // Clamp edges to avoid dark border artifacts
         guard let clamp = CIFilter(name: "CIAffineClamp") else { return nil }
         clamp.setValue(ciImage, forKey: kCIInputImageKey)
         clamp.setValue(NSAffineTransform(), forKey: kCIInputTransformKey)
@@ -432,16 +332,23 @@ class Annotation {
         blur.setValue(radius, forKey: kCIInputRadiusKey)
         guard let output = blur.outputImage else { return nil }
 
-        // Crop back to original extent (blur expands the image)
-        let cropped = output.cropped(to: extent)
-        let ciContext = CIContext()
-        return ciContext.createCGImage(cropped, from: extent)
+        // Render exactly at the original pixel dimensions
+        let outputRect = CGRect(x: 0, y: 0, width: w, height: h)
+        return Annotation.ciContext.createCGImage(output, from: outputRect)
     }
 
     private func bakeBlur() {
-        guard tool == .blur, bakedPixelateImage == nil else { return }
-        guard let cropped = cropFromSource() else { return }
-        bakedPixelateImage = applyGaussianBlur(to: cropped)
+        guard tool == .blur, bakedBlurNSImage == nil, let _ = sourceImage else { return }
+
+        guard let regionImage = cropRegionFromSource() else { return }
+        let rect = boundingRect
+
+        guard let tiffData = regionImage.tiffRepresentation,
+              let bitmap = NSBitmapImageRep(data: tiffData),
+              let cgImage = bitmap.cgImage,
+              let blurredCG = applyGaussianBlur(to: cgImage) else { return }
+
+        bakedBlurNSImage = NSImage(cgImage: blurredCG, size: rect.size)
         self.sourceImage = nil
     }
 
@@ -449,13 +356,8 @@ class Annotation {
         let rect = boundingRect
         guard rect.width > 4, rect.height > 4 else { return }
 
-        if let baked = bakedPixelateImage {
-            let cgCtx = context.cgContext
-            cgCtx.saveGState()
-            cgCtx.translateBy(x: rect.minX, y: rect.maxY)
-            cgCtx.scaleBy(x: 1, y: -1)
-            cgCtx.draw(baked, in: CGRect(x: 0, y: 0, width: rect.width, height: rect.height))
-            cgCtx.restoreGState()
+        if let blurred = bakedBlurNSImage {
+            blurred.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1.0)
             return
         }
 
@@ -463,7 +365,6 @@ class Annotation {
         NSColor.white.withAlphaComponent(0.35).setFill()
         NSBezierPath(rect: rect).fill()
 
-        // Dashed border to show the blur region
         let border = NSBezierPath(rect: rect)
         border.lineWidth = 1.5
         let pattern: [CGFloat] = [4, 4]
