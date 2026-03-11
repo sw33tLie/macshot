@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.6] - 2026-03-11
+
+### Fixed
+- **Color picker cursor**: The cursor now switches to an arrow over the color picker popup (presets and HSB gradient) instead of staying as a crosshair.
+- **Color picker indicator**: The crosshair ring on the HSB gradient now tracks the actual mouse position instead of reverse-computing from the selected color, which caused drift due to color space conversions.
+
 ## [1.2.5] - 2026-03-11
 
 ### Fixed

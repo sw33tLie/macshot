@@ -107,6 +107,8 @@ class OverlayView: NSView {
     private var customPickerBrightnessRect: NSRect = .zero
     private var isDraggingHSBGradient: Bool = false
     private var isDraggingBrightnessSlider: Bool = false
+    private var customPickerHue: CGFloat = 0
+    private var customPickerSaturation: CGFloat = 1
 
     // Handle
     private let handleSize: CGFloat = 10
@@ -246,6 +248,11 @@ class OverlayView: NSView {
             }
         }
 
+        // Color picker popup — arrow cursor
+        if showColorPicker && colorPickerRect.width > 0 {
+            addCursorRect(colorPickerRect, cursor: .arrow)
+        }
+
         // Size label — pointer cursor to indicate clickable
         if sizeLabelRect.width > 0 && sizeInputField == nil {
             addCursorRect(sizeLabelRect, cursor: .pointingHand)
@@ -267,6 +274,8 @@ class OverlayView: NSView {
         super.draw(dirtyRect)
 
         guard let context = NSGraphicsContext.current else { return }
+
+        window?.invalidateCursorRects(for: self)
 
         // Draw screenshot
         if let image = screenshotImage {
@@ -704,12 +713,9 @@ class OverlayView: NSView {
             drawHSBGradient(in: gradRect, brightness: customBrightness)
 
             // Crosshair indicator for current color
-            let hsb = currentColor.usingColorSpace(.deviceRGB)
-            if let hsb = hsb {
-                var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-                hsb.getHue(&h, saturation: &s, brightness: &b, alpha: &a)
-                let cx = gradRect.minX + h * gradRect.width
-                let cy = gradRect.minY + s * gradRect.height
+            do {
+                let cx = gradRect.minX + customPickerHue * gradRect.width
+                let cy = gradRect.minY + customPickerSaturation * gradRect.height
                 let crossSize: CGFloat = 10
                 // Outer ring (dark)
                 NSColor.black.withAlphaComponent(0.6).setStroke()
@@ -729,8 +735,8 @@ class OverlayView: NSView {
             customPickerBrightnessRect = bSliderRect
 
             // Draw brightness gradient: black to current HS color at full brightness
-            let currentHS = NSColor(calibratedHue: hsb?.hueComponent ?? 0,
-                                     saturation: hsb?.saturationComponent ?? 1,
+            let currentHS = NSColor(calibratedHue: customPickerHue,
+                                     saturation: customPickerSaturation,
                                      brightness: 1.0, alpha: 1.0)
             let bPath = NSBezierPath(roundedRect: bSliderRect, xRadius: 4, yRadius: 4)
             let bGrad = NSGradient(starting: .black, ending: currentHS)
@@ -1236,6 +1242,16 @@ class OverlayView: NSView {
         // Custom color picker toggle swatch
         if customPickerSwatchRect.contains(point) {
             showCustomColorPicker.toggle()
+            if showCustomColorPicker {
+                // Initialize tracked position from current color
+                if let hsb = currentColor.usingColorSpace(.deviceRGB) {
+                    var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+                    hsb.getHue(&h, saturation: &s, brightness: &b, alpha: &a)
+                    customPickerHue = h
+                    customPickerSaturation = s
+                    customBrightness = b
+                }
+            }
             customHSBCachedImage = nil  // force redraw
             needsDisplay = true
             return nil
@@ -1259,19 +1275,16 @@ class OverlayView: NSView {
     private func colorFromHSBGradient(at point: NSPoint) -> NSColor {
         let hue = max(0, min(1, (point.x - customPickerGradientRect.minX) / customPickerGradientRect.width))
         let sat = max(0, min(1, (point.y - customPickerGradientRect.minY) / customPickerGradientRect.height))
+        customPickerHue = hue
+        customPickerSaturation = sat
         return NSColor(calibratedHue: hue, saturation: sat, brightness: customBrightness, alpha: 1.0)
     }
 
     private func updateBrightnessFromPoint(_ point: NSPoint) {
         customBrightness = max(0, min(1, (point.x - customPickerBrightnessRect.minX) / customPickerBrightnessRect.width))
         customHSBCachedImage = nil  // brightness changed, redraw gradient
-        // Update current color with new brightness
-        if let hsb = currentColor.usingColorSpace(.deviceRGB) {
-            var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-            hsb.getHue(&h, saturation: &s, brightness: &b, alpha: &a)
-            currentColor = NSColor(calibratedHue: h, saturation: s, brightness: customBrightness, alpha: 1.0)
-            applyColorToTextIfEditing()
-        }
+        currentColor = NSColor(calibratedHue: customPickerHue, saturation: customPickerSaturation, brightness: customBrightness, alpha: 1.0)
+        applyColorToTextIfEditing()
         needsDisplay = true
     }
 
