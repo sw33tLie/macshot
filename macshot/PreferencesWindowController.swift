@@ -11,6 +11,8 @@ class PreferencesWindowController: NSWindowController {
     private var copySoundCheckbox: NSButton!
     private var thumbnailCheckbox: NSButton!
     private var launchAtLoginCheckbox: NSButton!
+    private var historySizeField: NSTextField!
+    private var historySizeStepper: NSStepper!
     private var isRecordingHotkey = false
     private var localMonitor: Any?
 
@@ -18,7 +20,7 @@ class PreferencesWindowController: NSWindowController {
 
     init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 420, height: 345),
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 385),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -40,7 +42,7 @@ class PreferencesWindowController: NSWindowController {
         guard let contentView = window?.contentView else { return }
 
         let padding: CGFloat = 20
-        var y: CGFloat = 295
+        var y: CGFloat = 335
 
         // Hotkey
         let hotkeyLabel = NSTextField(labelWithString: "Global Shortcut:")
@@ -105,6 +107,34 @@ class PreferencesWindowController: NSWindowController {
         launchAtLoginCheckbox.frame = NSRect(x: padding, y: y, width: 300, height: 22)
         contentView.addSubview(launchAtLoginCheckbox)
 
+        y -= 40
+
+        // History size
+        let historyLabel = NSTextField(labelWithString: "History size:")
+        historyLabel.frame = NSRect(x: padding, y: y, width: 120, height: 22)
+        contentView.addSubview(historyLabel)
+
+        historySizeField = NSTextField(frame: NSRect(x: 150, y: y, width: 40, height: 22))
+        historySizeField.isEditable = false
+        historySizeField.isSelectable = false
+        historySizeField.alignment = .center
+        historySizeField.backgroundColor = NSColor(white: 0.95, alpha: 1)
+        contentView.addSubview(historySizeField)
+
+        historySizeStepper = NSStepper(frame: NSRect(x: 194, y: y, width: 19, height: 22))
+        historySizeStepper.minValue = 0
+        historySizeStepper.maxValue = 50
+        historySizeStepper.increment = 1
+        historySizeStepper.target = self
+        historySizeStepper.action = #selector(historySizeChanged(_:))
+        contentView.addSubview(historySizeStepper)
+
+        let historyNote = NSTextField(labelWithString: "screenshots kept in memory (0 = off)")
+        historyNote.frame = NSRect(x: 220, y: y, width: 200, height: 22)
+        historyNote.font = NSFont.systemFont(ofSize: 11)
+        historyNote.textColor = .secondaryLabelColor
+        contentView.addSubview(historyNote)
+
         // Separator
         let separator = NSBox(frame: NSRect(x: padding, y: 40, width: 380, height: 1))
         separator.boxType = .separator
@@ -155,6 +185,10 @@ class PreferencesWindowController: NSWindowController {
 
         let launchAtLogin = UserDefaults.standard.bool(forKey: "launchAtLogin")
         launchAtLoginCheckbox.state = launchAtLogin ? .on : .off
+
+        let historySize = UserDefaults.standard.object(forKey: "historySize") as? Int ?? 10
+        historySizeField.integerValue = historySize
+        historySizeStepper.integerValue = historySize
     }
 
     // MARK: - Actions
@@ -237,6 +271,13 @@ class PreferencesWindowController: NSWindowController {
         if let url = URL(string: "https://github.com/sw33tLie/macshot") {
             NSWorkspace.shared.open(url)
         }
+    }
+
+    @objc private func historySizeChanged(_ sender: NSStepper) {
+        let value = sender.integerValue
+        historySizeField.integerValue = value
+        UserDefaults.standard.set(value, forKey: "historySize")
+        ScreenshotHistory.shared.pruneToMax()
     }
 
     @objc private func launchAtLoginChanged(_ sender: NSButton) {

@@ -13,6 +13,11 @@ macshot lives in your menu bar and lets you capture, annotate, and share screens
 - **Secure redaction** — pixelate tool is irreversible (multi-pass downscale, not a reversible blur)
 - **Color picker** — 12 preset colors, one click to switch
 - **Undo/Redo** — `Cmd+Z` / `Cmd+Shift+Z`
+- **OCR text extraction** — extract text from any selected area using Apple Vision, with copy and search
+- **Pin to screen** — pin a screenshot as a floating always-on-top window, movable and resizable
+- **Floating thumbnail** — thumbnail slides in after capture for quick drag-and-drop (toggleable)
+- **Screenshot history** — re-copy recent captures from the menu bar "Recent Captures" submenu (configurable, in-memory)
+- **Pixel dimensions** — always-visible size label above the selection, click to type an exact resolution
 - **Output options** — copy to clipboard (`Enter` or `Cmd+C`), save to file (`Cmd+S`)
 - **Multi-monitor support** — captures all screens simultaneously
 - **Configurable hotkey** — change it in Preferences

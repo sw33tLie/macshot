@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.2] - 2026-03-11
+
+### Added
+- **Screenshot History**: Recent captures are kept in memory and accessible from the "Recent Captures" submenu in the menu bar. Click any entry to re-copy it to clipboard. Configurable size (0–50, default 10). Set to 0 to disable.
+
 ## [1.0.1] - 2026-03-11
 
 ### Added

@@ -8,6 +8,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var pinControllers: [PinWindowController] = []
     private var thumbnailController: FloatingThumbnailController?
     private var ocrController: OCRResultController?
+    private var historyMenu: NSMenu?
     private var isCapturing = false
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
@@ -68,6 +69,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         captureItem.target = self
         captureItem.toolTip = shortcutStr
         menu.addItem(captureItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        // Recent Captures submenu
+        let historyItem = NSMenuItem(title: "Recent Captures", action: nil, keyEquivalent: "")
+        let historySubmenu = NSMenu()
+        historySubmenu.delegate = self
+        historyItem.submenu = historySubmenu
+        self.historyMenu = historySubmenu
+        menu.addItem(historyItem)
 
         menu.addItem(NSMenuItem.separator())
 
@@ -206,11 +217,13 @@ extension AppDelegate: OverlayWindowControllerDelegate {
     func overlayDidConfirm(_ controller: OverlayWindowController, capturedImage: NSImage?) {
         dismissOverlays()
         if let image = capturedImage {
+            ScreenshotHistory.shared.add(image: image)
             showFloatingThumbnail(image: image)
         }
     }
 
     func overlayDidRequestPin(_ controller: OverlayWindowController, image: NSImage) {
+        ScreenshotHistory.shared.add(image: image)
         dismissOverlays()
         let pin = PinWindowController(image: image)
         pin.delegate = self
@@ -232,5 +245,58 @@ extension AppDelegate: OverlayWindowControllerDelegate {
 extension AppDelegate: PinWindowControllerDelegate {
     func pinWindowDidClose(_ controller: PinWindowController) {
         pinControllers.removeAll { $0 === controller }
+    }
+}
+
+// MARK: - NSMenuDelegate (Recent Captures)
+
+extension AppDelegate: NSMenuDelegate {
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        // Only rebuild the history submenu, not the main status bar menu
+        guard menu == historyMenu else { return }
+
+        menu.removeAllItems()
+
+        let entries = ScreenshotHistory.shared.entries
+        if entries.isEmpty {
+            let emptyItem = NSMenuItem(title: "No recent captures", action: nil, keyEquivalent: "")
+            emptyItem.isEnabled = false
+            menu.addItem(emptyItem)
+            return
+        }
+
+        for (i, entry) in entries.enumerated() {
+            let title = "\(entry.pixelWidth) \u{00D7} \(entry.pixelHeight)  —  \(entry.timeAgoString)"
+            let item = NSMenuItem(title: title, action: #selector(copyHistoryEntry(_:)), keyEquivalent: "")
+            item.target = self
+            item.tag = i
+            item.image = entry.thumbnail
+            menu.addItem(item)
+        }
+
+        menu.addItem(NSMenuItem.separator())
+
+        let clearItem = NSMenuItem(title: "Clear History", action: #selector(clearHistory), keyEquivalent: "")
+        clearItem.target = self
+        clearItem.tag = 9000
+        menu.addItem(clearItem)
+    }
+
+    @objc private func copyHistoryEntry(_ sender: NSMenuItem) {
+        let index = sender.tag
+        ScreenshotHistory.shared.copyEntry(at: index)
+
+        // Play copy sound
+        let soundEnabled = UserDefaults.standard.object(forKey: "playCopySound") as? Bool ?? true
+        if soundEnabled {
+            let path = "/System/Library/Components/CoreAudio.component/Contents/SharedSupport/SystemSounds/system/Screen Capture.aif"
+            if let sound = NSSound(contentsOfFile: path, byReference: true) {
+                sound.play()
+            }
+        }
+    }
+
+    @objc private func clearHistory() {
+        ScreenshotHistory.shared.clear()
     }
 }
