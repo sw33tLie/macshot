@@ -1,7 +1,7 @@
 import Cocoa
 
 struct HistoryEntry {
-    let image: NSImage
+    let pngData: Data
     let thumbnail: NSImage
     let timestamp: Date
     let pixelWidth: Int
@@ -38,11 +38,16 @@ class ScreenshotHistory {
         let max = maxEntries
         guard max > 0 else { return }  // history disabled
 
+        // Compress to PNG immediately to avoid holding raw bitmap in memory
+        guard let tiffData = image.tiffRepresentation,
+              let bitmap = NSBitmapImageRep(data: tiffData),
+              let pngData = bitmap.representation(using: .png, properties: [:]) else { return }
+
         let thumb = makeThumbnail(image: image, maxWidth: 36)
         let size = image.size
         let scale = NSScreen.main?.backingScaleFactor ?? 2.0
         let entry = HistoryEntry(
-            image: image,
+            pngData: pngData,
             thumbnail: thumb,
             timestamp: Date(),
             pixelWidth: Int(size.width * scale),
@@ -72,14 +77,13 @@ class ScreenshotHistory {
 
     func copyEntry(at index: Int) {
         guard index >= 0, index < entries.count else { return }
-        let image = entries[index].image
-        guard let tiffData = image.tiffRepresentation else { return }
+        let pngData = entries[index].pngData
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
-        pasteboard.setData(tiffData, forType: .tiff)
-        if let bitmap = NSBitmapImageRep(data: tiffData),
-           let pngData = bitmap.representation(using: .png, properties: [:]) {
-            pasteboard.setData(pngData, forType: .png)
+        pasteboard.setData(pngData, forType: .png)
+        // Also provide TIFF for apps that prefer it
+        if let image = NSImage(data: pngData), let tiffData = image.tiffRepresentation {
+            pasteboard.setData(tiffData, forType: .tiff)
         }
     }
 

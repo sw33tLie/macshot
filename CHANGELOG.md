@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.7] - 2026-03-11
+
+### Fixed
+- **Memory usage**: Screenshot history now stores compressed PNG data instead of raw bitmaps, reducing memory from ~400 MB to ~30-50 MB with 10 entries. Floating thumbnail controller is also released after auto-dismiss instead of holding the full-res image until the next capture.
+- **Color picker cursor**: Arrow cursor now shown over the color picker popup instead of crosshair.
+- **Color picker indicator**: HSB gradient crosshair ring now tracks the actual mouse position accurately.
+- **Selection visibility**: Fixed remaining case where the "Release to annotate" helper text disappeared at 1px selection dimensions.
+
 ## [1.2.6] - 2026-03-11
 
 ### Fixed

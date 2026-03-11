@@ -186,6 +186,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         thumbnailController?.dismiss()
         let controller = FloatingThumbnailController(image: image)
+        controller.onDismiss = { [weak self] in
+            self?.thumbnailController = nil
+        }
         thumbnailController = controller
         controller.show()
     }

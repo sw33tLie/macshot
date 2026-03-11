@@ -6,6 +6,7 @@ class FloatingThumbnailController: NSObject, NSDraggingSource {
     private var dismissTask: DispatchWorkItem?
     private let image: NSImage
     private var thumbnailView: ThumbnailView?
+    var onDismiss: (() -> Void)?
 
     init(image: NSImage) {
         self.image = image
@@ -81,6 +82,8 @@ class FloatingThumbnailController: NSObject, NSDraggingSource {
         window?.close()
         window = nil
         thumbnailView = nil
+        onDismiss?()
+        onDismiss = nil
     }
 
     private func animateOut() {
