@@ -1614,7 +1614,7 @@ class OverlayView: NSView {
             annotation.points = [point]
         }
         if currentTool == .pixelate || currentTool == .blur {
-            annotation.sourceImage = screenshotImage
+            annotation.sourceImage = compositedImage()
             annotation.sourceImageBounds = bounds
         }
         currentAnnotation = annotation
@@ -2288,6 +2288,26 @@ class OverlayView: NSView {
     }
 
     // MARK: - Output
+
+    /// Render screenshot + all existing annotations into a full-size image.
+    /// Used as source for pixelate/blur so they operate on the composited result.
+    private func compositedImage() -> NSImage? {
+        guard let screenshot = screenshotImage else { return nil }
+        if annotations.isEmpty { return screenshot }
+
+        let image = NSImage(size: bounds.size)
+        image.lockFocus()
+        guard let context = NSGraphicsContext.current else {
+            image.unlockFocus()
+            return screenshot
+        }
+        screenshot.draw(in: bounds, from: .zero, operation: .copy, fraction: 1.0)
+        for annotation in annotations {
+            annotation.draw(in: context)
+        }
+        image.unlockFocus()
+        return image
+    }
 
     func captureSelectedRegion() -> NSImage? {
         guard selectionRect.width > 0, selectionRect.height > 0 else { return nil }
