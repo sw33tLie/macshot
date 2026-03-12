@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.4.3] - 2026-03-12
+
+### Fixed
+- **Blur/Pixelate stacking**: Blurring or pixelating an already-blurred area now correctly operates on the composited image (including previous annotations) instead of the raw screenshot. Re-blurring now properly increases the blur effect instead of partially reverting it.
+
 ## [1.4.2] - 2026-03-12
 
 ### Added
