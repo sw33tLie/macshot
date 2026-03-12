@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.2] - 2026-03-12
+
+### Added
+- **Right-click color wheel**: Right-click inside the selection while drawing to open a radial color picker centered on the cursor. Drag toward a color to select it, release to confirm. 12 preset colors arranged in a ring.
+- **Middle-click move toggle**: Middle mouse button toggles Move Object mode on/off for quick access without clicking the toolbar.
+- **Move Object cursor**: Open hand cursor when in Move Object mode instead of crosshair.
+
+### Changed
+- Move Object button moved to leftmost position in the toolbar with a subtle background tint to visually distinguish it from drawing tools.
+
 ## [1.4.1] - 2026-03-12
 
 ### Added

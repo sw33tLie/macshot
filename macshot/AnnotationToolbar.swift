@@ -50,6 +50,13 @@ class ToolbarLayout {
     static func bottomButtons(selectedTool: AnnotationTool, selectedColor: NSColor, beautifyEnabled: Bool = false, beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false) -> [ToolbarButton] {
         var buttons: [ToolbarButton] = []
 
+        // Move tool first (only when annotations exist)
+        if hasAnnotations {
+            var selectBtn = ToolbarButton(action: .tool(.select), sfSymbol: "cursor.rays", label: nil, tooltip: "Move Object")
+            selectBtn.isSelected = (selectedTool == .select)
+            buttons.append(selectBtn)
+        }
+
         let tools: [(AnnotationTool, String, String)] = [
             (.pencil,          "scribble",                "Pencil (Draw)"),
             (.line,            "line.diagonal",            "Line"),
@@ -75,13 +82,6 @@ class ToolbarLayout {
         var colorBtn = ToolbarButton(action: .color, sfSymbol: nil, label: nil, tooltip: "Color")
         colorBtn.bgColor = selectedColor
         buttons.append(colorBtn)
-
-        // Move tool (only when annotations exist)
-        if hasAnnotations {
-            var selectBtn = ToolbarButton(action: .tool(.select), sfSymbol: "arrow.up.and.down.and.arrow.left.and.right", label: nil, tooltip: "Move Object")
-            selectBtn.isSelected = (selectedTool == .select)
-            buttons.append(selectBtn)
-        }
 
         // Undo / Redo / Pin
         buttons.append(ToolbarButton(action: .undo, sfSymbol: "arrow.uturn.backward", label: nil, tooltip: "Undo"))
@@ -330,12 +330,19 @@ class ToolbarLayout {
     static func drawButton(_ btn: ToolbarButton, selectionSize: NSSize?) {
         let rect = btn.rect
 
+        // Distinct background for Move Object button
+        let isMoveButton: Bool
+        if case .tool(let tool) = btn.action, tool == .select { isMoveButton = true } else { isMoveButton = false }
+
         // Selected highlight
         if btn.isSelected {
             selectedBg.setFill()
             NSBezierPath(roundedRect: rect.insetBy(dx: 1, dy: 1), xRadius: 4, yRadius: 4).fill()
         } else if btn.isHovered {
             NSColor.white.withAlphaComponent(0.15).setFill()
+            NSBezierPath(roundedRect: rect.insetBy(dx: 1, dy: 1), xRadius: 4, yRadius: 4).fill()
+        } else if isMoveButton {
+            NSColor.white.withAlphaComponent(0.08).setFill()
             NSBezierPath(roundedRect: rect.insetBy(dx: 1, dy: 1), xRadius: 4, yRadius: 4).fill()
         }
 

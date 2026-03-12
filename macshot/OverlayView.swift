@@ -58,6 +58,7 @@ class OverlayView: NSView {
     private var selectedAnnotation: Annotation?
     private var isDraggingAnnotation: Bool = false
     private var annotationDragStart: NSPoint = .zero
+    private var toolBeforeSelect: AnnotationTool?  // for middle-click toggle
 
     // Text editing
     private var textEditView: NSTextView?
@@ -122,6 +123,18 @@ class OverlayView: NSView {
     private var isDraggingBrightnessSlider: Bool = false
     private var customPickerHue: CGFloat = 0
     private var customPickerSaturation: CGFloat = 1
+
+    // Radial color wheel (right-click in drawing mode)
+    private var showColorWheel: Bool = false
+    private var colorWheelCenter: NSPoint = .zero
+    private var colorWheelHoveredIndex: Int = -1  // -1 = none
+    private let colorWheelRadius: CGFloat = 60
+    private let colorWheelSwatchRadius: CGFloat = 14
+    private let colorWheelColors: [NSColor] = [
+        .systemRed, .systemOrange, .systemYellow, .systemGreen,
+        .systemTeal, .systemBlue, .systemIndigo, .systemPurple,
+        .systemPink, .white, .gray, .black,
+    ]
 
     // Handle
     private let handleSize: CGFloat = 10
@@ -271,10 +284,11 @@ class OverlayView: NSView {
             addCursorRect(sizeLabelRect, cursor: .pointingHand)
         }
 
-        // Inside selection — crosshair for drawing
+        // Inside selection — crosshair for drawing, open hand for move mode
         let innerRect = r.insetBy(dx: edgeThickness, dy: edgeThickness)
         if innerRect.width > 0 && innerRect.height > 0 {
-            addCursorRect(innerRect, cursor: .crosshair)
+            let selectionCursor: NSCursor = currentTool == .select ? .openHand : .crosshair
+            addCursorRect(innerRect, cursor: selectionCursor)
         }
 
         // Outside selection — crosshair for new selection
@@ -355,6 +369,11 @@ class OverlayView: NSView {
 
                 // Tooltip for hovered button
                 drawHoveredTooltip()
+            }
+
+            // Radial color wheel
+            if showColorWheel {
+                drawColorWheel()
             }
         }
 
@@ -604,6 +623,95 @@ class OverlayView: NSView {
             ToolbarLayout.handleColor.setFill()
             NSBezierPath(ovalIn: rect).fill()
         }
+    }
+
+    private func drawColorWheel() {
+        let center = colorWheelCenter
+        let count = colorWheelColors.count
+        let angleStep = (2 * CGFloat.pi) / CGFloat(count)
+
+        // Dim background
+        NSColor.black.withAlphaComponent(0.3).setFill()
+        let bgCircle = NSBezierPath(ovalIn: NSRect(
+            x: center.x - colorWheelRadius - colorWheelSwatchRadius - 8,
+            y: center.y - colorWheelRadius - colorWheelSwatchRadius - 8,
+            width: (colorWheelRadius + colorWheelSwatchRadius + 8) * 2,
+            height: (colorWheelRadius + colorWheelSwatchRadius + 8) * 2
+        ))
+        bgCircle.fill()
+
+        // Draw each color swatch in a circle
+        for (i, color) in colorWheelColors.enumerated() {
+            // Start from top (–π/2) and go clockwise
+            let angle = -CGFloat.pi / 2 + CGFloat(i) * angleStep
+            let sx = center.x + colorWheelRadius * cos(angle)
+            let sy = center.y + colorWheelRadius * sin(angle)
+
+            let isHovered = (i == colorWheelHoveredIndex)
+            let radius = isHovered ? colorWheelSwatchRadius + 4 : colorWheelSwatchRadius
+            let swatchRect = NSRect(x: sx - radius, y: sy - radius, width: radius * 2, height: radius * 2)
+
+            // Shadow for depth
+            if isHovered {
+                NSColor.black.withAlphaComponent(0.4).setFill()
+                NSBezierPath(ovalIn: swatchRect.insetBy(dx: -2, dy: -2)).fill()
+            }
+
+            color.setFill()
+            NSBezierPath(ovalIn: swatchRect).fill()
+
+            // Border
+            let borderColor: NSColor = isHovered ? .white : .white.withAlphaComponent(0.5)
+            borderColor.setStroke()
+            let border = NSBezierPath(ovalIn: swatchRect.insetBy(dx: 0.5, dy: 0.5))
+            border.lineWidth = isHovered ? 2.5 : 1.0
+            border.stroke()
+
+            // Check mark for current color
+            if color == currentColor && !isHovered {
+                let checkSize: CGFloat = 8
+                let checkPath = NSBezierPath()
+                checkPath.lineWidth = 2
+                checkPath.lineCapStyle = .round
+                checkPath.lineJoinStyle = .round
+                // Simple check mark
+                let cx = sx - checkSize / 3
+                let cy = sy
+                checkPath.move(to: NSPoint(x: cx - checkSize / 3, y: cy))
+                checkPath.line(to: NSPoint(x: cx, y: cy - checkSize / 3))
+                checkPath.line(to: NSPoint(x: cx + checkSize / 2, y: cy + checkSize / 3))
+                NSColor.white.setStroke()
+                checkPath.stroke()
+            }
+        }
+
+        // Center dot showing current color
+        let centerRadius: CGFloat = 12
+        let centerRect = NSRect(x: center.x - centerRadius, y: center.y - centerRadius, width: centerRadius * 2, height: centerRadius * 2)
+        currentColor.setFill()
+        NSBezierPath(ovalIn: centerRect).fill()
+        NSColor.white.withAlphaComponent(0.6).setStroke()
+        let centerBorder = NSBezierPath(ovalIn: centerRect.insetBy(dx: 0.5, dy: 0.5))
+        centerBorder.lineWidth = 1.5
+        centerBorder.stroke()
+    }
+
+    private func colorWheelIndexAt(_ point: NSPoint) -> Int {
+        let dx = point.x - colorWheelCenter.x
+        let dy = point.y - colorWheelCenter.y
+        let dist = hypot(dx, dy)
+
+        // Must be reasonably close to the ring
+        if dist < colorWheelRadius * 0.3 || dist > colorWheelRadius + colorWheelSwatchRadius + 15 {
+            return -1
+        }
+
+        let count = colorWheelColors.count
+        let angleStep = (2 * CGFloat.pi) / CGFloat(count)
+        var angle = atan2(dy, dx) + CGFloat.pi / 2  // offset so 0 is at top
+        if angle < 0 { angle += 2 * CGFloat.pi }
+        let index = Int((angle + angleStep / 2) / angleStep) % count
+        return index
     }
 
     private func drawColorPicker() {
@@ -1197,8 +1305,18 @@ class OverlayView: NSView {
     // MARK: - Right-click quick save
 
     override func rightMouseDown(with event: NSEvent) {
-        guard state == .idle else { return }
         let point = convert(event.locationInWindow, from: nil)
+
+        if state == .selected && selectionRect.contains(point) && currentTool != .select {
+            // Show radial color wheel
+            showColorWheel = true
+            colorWheelCenter = point
+            colorWheelHoveredIndex = -1
+            needsDisplay = true
+            return
+        }
+
+        guard state == .idle else { return }
         selectionStart = point
         selectionRect = NSRect(origin: point, size: .zero)
         isRightClickSelecting = true
@@ -1207,6 +1325,12 @@ class OverlayView: NSView {
     }
 
     override func rightMouseDragged(with event: NSEvent) {
+        if showColorWheel {
+            let point = convert(event.locationInWindow, from: nil)
+            colorWheelHoveredIndex = colorWheelIndexAt(point)
+            needsDisplay = true
+            return
+        }
         guard isRightClickSelecting else { return }
         let point = convert(event.locationInWindow, from: nil)
         let x = min(selectionStart.x, point.x)
@@ -1218,6 +1342,15 @@ class OverlayView: NSView {
     }
 
     override func rightMouseUp(with event: NSEvent) {
+        if showColorWheel {
+            if colorWheelHoveredIndex >= 0 && colorWheelHoveredIndex < colorWheelColors.count {
+                currentColor = colorWheelColors[colorWheelHoveredIndex]
+            }
+            showColorWheel = false
+            colorWheelHoveredIndex = -1
+            needsDisplay = true
+            return
+        }
         guard isRightClickSelecting else { return }
         isRightClickSelecting = false
         if selectionRect.width > 5 && selectionRect.height > 5 {
@@ -1229,6 +1362,26 @@ class OverlayView: NSView {
             state = .selected
             overlayDelegate?.overlayViewDidRequestQuickSave()
         }
+    }
+
+    // MARK: - Middle Mouse (toggle move mode)
+
+    override func otherMouseDown(with event: NSEvent) {
+        guard event.buttonNumber == 2, state == .selected else { return }
+        let hasMovable = annotations.contains { $0.isMovable }
+        guard hasMovable else { return }
+
+        if currentTool == .select {
+            // Toggle back to previous tool
+            currentTool = toolBeforeSelect ?? .arrow
+            toolBeforeSelect = nil
+            selectedAnnotation = nil
+        } else {
+            // Toggle into select mode
+            toolBeforeSelect = currentTool
+            currentTool = .select
+        }
+        needsDisplay = true
     }
 
     // MARK: - Selection Resizing
@@ -2191,6 +2344,8 @@ class OverlayView: NSView {
         moveMode = false
         selectedAnnotation = nil
         isDraggingAnnotation = false
+        toolBeforeSelect = nil
+        showColorWheel = false
         isRightClickSelecting = false
         delaySeconds = 0
         beautifyEnabled = UserDefaults.standard.bool(forKey: "beautifyEnabled")
