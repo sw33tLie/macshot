@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.4.1] - 2026-03-12
+
+### Added
+- **Move Object tool**: Select and reposition existing annotations. Click to select, drag to move. Works with lines, arrows, rectangles, ellipses, pencil, marker, text, numbers, and measure lines. Button only appears when there are movable annotations. Pixelate and blur are excluded (position-dependent).
+
 ## [1.4.0] - 2026-03-12
 
 ### Added

@@ -54,6 +54,11 @@ class OverlayView: NSView {
     private var currentStrokeWidth: CGFloat = 3.0
     private var numberCounter: Int = 0
 
+    // Select/move mode
+    private var selectedAnnotation: Annotation?
+    private var isDraggingAnnotation: Bool = false
+    private var annotationDragStart: NSPoint = .zero
+
     // Text editing
     private var textEditView: NSTextView?
     private var textScrollView: NSScrollView?
@@ -315,6 +320,11 @@ class OverlayView: NSView {
                 annotation.draw(in: context)
             }
             currentAnnotation?.draw(in: context)
+
+            // Draw selection highlight for selected annotation
+            if let selected = selectedAnnotation, currentTool == .select {
+                selected.drawSelectionHighlight()
+            }
 
             context.restoreGraphicsState()
 
@@ -818,7 +828,8 @@ class OverlayView: NSView {
     }
 
     private func rebuildToolbarLayout() {
-        bottomButtons = ToolbarLayout.bottomButtons(selectedTool: currentTool, selectedColor: currentColor, beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex)
+        let movableAnnotations = annotations.contains { $0.isMovable }
+        bottomButtons = ToolbarLayout.bottomButtons(selectedTool: currentTool, selectedColor: currentColor, beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex, hasAnnotations: movableAnnotations)
         rightButtons = ToolbarLayout.rightButtons(delaySeconds: delaySeconds)
 
         // Place each toolbar inside if it would go off-screen
@@ -1106,7 +1117,13 @@ class OverlayView: NSView {
             needsDisplay = true
 
         case .selected:
-            if isDraggingSelection {
+            if isDraggingAnnotation, let annotation = selectedAnnotation {
+                let dx = point.x - annotationDragStart.x
+                let dy = point.y - annotationDragStart.y
+                annotation.move(dx: dx, dy: dy)
+                annotationDragStart = point
+                needsDisplay = true
+            } else if isDraggingSelection {
                 selectionRect.origin = NSPoint(x: point.x - dragOffset.x, y: point.y - dragOffset.y)
                 needsDisplay = true
             } else if isResizingSelection {
@@ -1157,7 +1174,10 @@ class OverlayView: NSView {
             needsDisplay = true
 
         case .selected:
-            if isDraggingSelection {
+            if isDraggingAnnotation {
+                isDraggingAnnotation = false
+                needsDisplay = true
+            } else if isDraggingSelection {
                 isDraggingSelection = false
                 moveMode = false
                 needsDisplay = true
@@ -1398,6 +1418,27 @@ class OverlayView: NSView {
 
     private func startAnnotation(at point: NSPoint) {
         guard selectionRect.contains(point) else { return }
+
+        // Select/move tool: find annotation under cursor
+        if currentTool == .select {
+            // Search in reverse (topmost first)
+            for annotation in annotations.reversed() {
+                if annotation.isMovable && annotation.hitTest(point: point) {
+                    selectedAnnotation = annotation
+                    isDraggingAnnotation = true
+                    annotationDragStart = point
+                    needsDisplay = true
+                    return
+                }
+            }
+            // Clicked empty space — deselect
+            selectedAnnotation = nil
+            needsDisplay = true
+            return
+        }
+
+        // Deselect when using other tools
+        selectedAnnotation = nil
 
         switch currentTool {
         case .text:
@@ -2148,6 +2189,8 @@ class OverlayView: NSView {
         showToolbars = false
         showColorPicker = false
         moveMode = false
+        selectedAnnotation = nil
+        isDraggingAnnotation = false
         isRightClickSelecting = false
         delaySeconds = 0
         beautifyEnabled = UserDefaults.standard.bool(forKey: "beautifyEnabled")

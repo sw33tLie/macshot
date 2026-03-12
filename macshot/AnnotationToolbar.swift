@@ -47,7 +47,7 @@ class ToolbarLayout {
     static let cornerRadius: CGFloat = 6
 
     // Bottom toolbar items (drawing tools + colors + undo/redo + size)
-    static func bottomButtons(selectedTool: AnnotationTool, selectedColor: NSColor, beautifyEnabled: Bool = false, beautifyStyleIndex: Int = 0) -> [ToolbarButton] {
+    static func bottomButtons(selectedTool: AnnotationTool, selectedColor: NSColor, beautifyEnabled: Bool = false, beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false) -> [ToolbarButton] {
         var buttons: [ToolbarButton] = []
 
         let tools: [(AnnotationTool, String, String)] = [
@@ -75,6 +75,13 @@ class ToolbarLayout {
         var colorBtn = ToolbarButton(action: .color, sfSymbol: nil, label: nil, tooltip: "Color")
         colorBtn.bgColor = selectedColor
         buttons.append(colorBtn)
+
+        // Move tool (only when annotations exist)
+        if hasAnnotations {
+            var selectBtn = ToolbarButton(action: .tool(.select), sfSymbol: "arrow.up.and.down.and.arrow.left.and.right", label: nil, tooltip: "Move Object")
+            selectBtn.isSelected = (selectedTool == .select)
+            buttons.append(selectBtn)
+        }
 
         // Undo / Redo / Pin
         buttons.append(ToolbarButton(action: .undo, sfSymbol: "arrow.uturn.backward", label: nil, tooltip: "Undo"))

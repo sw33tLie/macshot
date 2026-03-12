@@ -13,6 +13,7 @@ enum AnnotationTool: Int, CaseIterable {
     case pixelate        // pixelate/blur region
     case blur            // gaussian blur region
     case measure         // pixel ruler / measurement line
+    case select          // select & move existing annotations
 }
 
 class Annotation {
@@ -52,6 +53,121 @@ class Annotation {
         )
     }
 
+    /// Whether this annotation type can be moved
+    var isMovable: Bool {
+        switch tool {
+        case .pixelate, .blur, .select:
+            return false
+        default:
+            return true
+        }
+    }
+
+    /// Hit-test: returns true if the point is close enough to this annotation
+    func hitTest(point: NSPoint, threshold: CGFloat = 8) -> Bool {
+        switch tool {
+        case .pencil, .marker:
+            guard let points = points else { return false }
+            for p in points {
+                if hypot(p.x - point.x, p.y - point.y) < threshold { return true }
+            }
+            return false
+        case .line, .arrow, .measure:
+            return distanceToLineSegment(point: point, from: startPoint, to: endPoint) < threshold
+        case .rectangle, .filledRectangle:
+            let rect = boundingRect
+            if tool == .filledRectangle {
+                return rect.insetBy(dx: -threshold, dy: -threshold).contains(point)
+            }
+            // For outlined rect, check proximity to edges
+            let outer = rect.insetBy(dx: -threshold, dy: -threshold)
+            let inner = rect.insetBy(dx: threshold, dy: threshold)
+            return outer.contains(point) && (inner.width < 0 || inner.height < 0 || !inner.contains(point))
+        case .ellipse:
+            let rect = boundingRect
+            guard rect.width > 0, rect.height > 0 else { return false }
+            let cx = rect.midX, cy = rect.midY
+            let rx = rect.width / 2, ry = rect.height / 2
+            let nx = (point.x - cx) / rx, ny = (point.y - cy) / ry
+            let d = nx * nx + ny * ny
+            // Close to the ellipse border
+            let rNorm = threshold / min(rx, ry)
+            return abs(d - 1.0) < rNorm * 2
+        case .text:
+            guard let text = attributedText ?? (text.map { NSAttributedString(string: $0) }) else { return false }
+            let size = text.size()
+            let rect = NSRect(origin: startPoint, size: size)
+            return rect.insetBy(dx: -threshold, dy: -threshold).contains(point)
+        case .number:
+            let radius = max(14, strokeWidth * 4) + threshold
+            return hypot(point.x - startPoint.x, point.y - startPoint.y) < radius
+        default:
+            return false
+        }
+    }
+
+    /// Move this annotation by a delta
+    func move(dx: CGFloat, dy: CGFloat) {
+        startPoint.x += dx
+        startPoint.y += dy
+        endPoint.x += dx
+        endPoint.y += dy
+        if var pts = points {
+            for i in 0..<pts.count {
+                pts[i].x += dx
+                pts[i].y += dy
+            }
+            points = pts
+        }
+    }
+
+    /// Draw a selection highlight around this annotation
+    func drawSelectionHighlight() {
+        let highlightRect: NSRect
+        switch tool {
+        case .pencil, .marker:
+            guard let points = points, !points.isEmpty else { return }
+            var minX = CGFloat.greatestFiniteMagnitude, minY = CGFloat.greatestFiniteMagnitude
+            var maxX = -CGFloat.greatestFiniteMagnitude, maxY = -CGFloat.greatestFiniteMagnitude
+            for p in points {
+                minX = min(minX, p.x); minY = min(minY, p.y)
+                maxX = max(maxX, p.x); maxY = max(maxY, p.y)
+            }
+            highlightRect = NSRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+        case .text:
+            let text = attributedText ?? self.text.map { NSAttributedString(string: $0, attributes: [.font: NSFont.systemFont(ofSize: fontSize)]) }
+            let size = text?.size() ?? NSSize(width: 50, height: 20)
+            highlightRect = NSRect(origin: startPoint, size: size)
+        case .number:
+            let radius = max(14, strokeWidth * 4)
+            highlightRect = NSRect(x: startPoint.x - radius, y: startPoint.y - radius, width: radius * 2, height: radius * 2)
+        default:
+            highlightRect = boundingRect
+        }
+
+        let padded = highlightRect.insetBy(dx: -4, dy: -4)
+        let path = NSBezierPath(roundedRect: padded, xRadius: 3, yRadius: 3)
+        path.lineWidth = 1.5
+        let pattern: [CGFloat] = [4, 4]
+        path.setLineDash(pattern, count: 2, phase: 0)
+        NSColor.white.withAlphaComponent(0.8).setStroke()
+        path.stroke()
+        ToolbarLayout.accentColor.withAlphaComponent(0.3).setFill()
+        NSBezierPath(roundedRect: padded, xRadius: 3, yRadius: 3).fill()
+    }
+
+    // MARK: - Geometry helpers
+
+    private func distanceToLineSegment(point: NSPoint, from a: NSPoint, to b: NSPoint) -> CGFloat {
+        let dx = b.x - a.x, dy = b.y - a.y
+        let lenSq = dx * dx + dy * dy
+        if lenSq < 0.001 { return hypot(point.x - a.x, point.y - a.y) }
+        var t = ((point.x - a.x) * dx + (point.y - a.y) * dy) / lenSq
+        t = max(0, min(1, t))
+        let proj = NSPoint(x: a.x + t * dx, y: a.y + t * dy)
+        return hypot(point.x - proj.x, point.y - proj.y)
+    }
+
     func draw(in context: NSGraphicsContext) {
         NSGraphicsContext.current = context
 
@@ -80,6 +196,8 @@ class Annotation {
             drawBlur(in: context)
         case .measure:
             drawMeasure()
+        case .select:
+            break  // not a drawable tool
         }
     }
 
