@@ -17,6 +17,7 @@ class PreferencesWindowController: NSWindowController {
     private var imageFormatPopup: NSPopUpButton!
     private var qualitySlider: NSSlider!
     private var qualityLabel: NSTextField!
+    private var imgbbKeyField: NSTextField!
     private var isRecordingHotkey = false
     private var localMonitor: Any?
 
@@ -24,7 +25,7 @@ class PreferencesWindowController: NSWindowController {
 
     init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 420, height: 500),
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 570),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -46,7 +47,7 @@ class PreferencesWindowController: NSWindowController {
         guard let contentView = window?.contentView else { return }
 
         let padding: CGFloat = 20
-        var y: CGFloat = 450
+        var y: CGFloat = 520
 
         // Hotkey
         let hotkeyLabel = NSTextField(labelWithString: "Global Shortcut:")
@@ -185,6 +186,26 @@ class PreferencesWindowController: NSWindowController {
         qualityLabel.alignment = .left
         contentView.addSubview(qualityLabel)
 
+        y -= 40
+
+        // imgbb API key
+        let imgbbLabel = NSTextField(labelWithString: "imgbb API key:")
+        imgbbLabel.frame = NSRect(x: padding, y: y, width: 120, height: 22)
+        contentView.addSubview(imgbbLabel)
+
+        imgbbKeyField = NSTextField(frame: NSRect(x: 150, y: y, width: 240, height: 22))
+        imgbbKeyField.placeholderString = "Leave empty to use default"
+        imgbbKeyField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        imgbbKeyField.target = self
+        imgbbKeyField.action = #selector(imgbbKeyChanged(_:))
+        contentView.addSubview(imgbbKeyField)
+
+        let imgbbNote = NSTextField(wrappingLabelWithString: "The upload button uses imgbb.com to host images. A shared API key is included. If you hit rate limits, get your own free key at imgbb.com/api.")
+        imgbbNote.frame = NSRect(x: 150, y: y - 45, width: 240, height: 42)
+        imgbbNote.font = NSFont.systemFont(ofSize: 10)
+        imgbbNote.textColor = .secondaryLabelColor
+        contentView.addSubview(imgbbNote)
+
         // Separator
         let separator = NSBox(frame: NSRect(x: padding, y: 40, width: 380, height: 1))
         separator.boxType = .separator
@@ -251,6 +272,8 @@ class PreferencesWindowController: NSWindowController {
         qualityLabel.stringValue = "\(quality)%"
 
         updateQualityVisibility()
+
+        imgbbKeyField.stringValue = UserDefaults.standard.string(forKey: "imgbbAPIKey") ?? ""
     }
 
     private func updateQualityVisibility() {
@@ -355,6 +378,15 @@ class PreferencesWindowController: NSWindowController {
         let value = sender.integerValue
         qualityLabel.stringValue = "\(value)%"
         UserDefaults.standard.set(Double(value) / 100.0, forKey: "imageQuality")
+    }
+
+    @objc private func imgbbKeyChanged(_ sender: NSTextField) {
+        let key = sender.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        if key.isEmpty {
+            UserDefaults.standard.removeObject(forKey: "imgbbAPIKey")
+        } else {
+            UserDefaults.standard.set(key, forKey: "imgbbAPIKey")
+        }
     }
 
     @objc private func historySizeChanged(_ sender: NSStepper) {

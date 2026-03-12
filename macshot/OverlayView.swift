@@ -12,6 +12,7 @@ protocol OverlayViewDelegate: AnyObject {
     func overlayViewDidRequestOCR()
     func overlayViewDidRequestQuickSave()
     func overlayViewDidRequestDelayCapture(seconds: Int, selectionRect: NSRect)
+    func overlayViewDidRequestUpload()
 }
 
 class OverlayView: NSView {
@@ -76,8 +77,8 @@ class OverlayView: NSView {
     private var sizeInputField: NSTextField?
 
     // Beautify
-    private(set) var beautifyEnabled: Bool = false
-    private(set) var beautifyStyleIndex: Int = 0
+    private(set) var beautifyEnabled: Bool = UserDefaults.standard.bool(forKey: "beautifyEnabled")
+    private(set) var beautifyStyleIndex: Int = UserDefaults.standard.integer(forKey: "beautifyStyleIndex")
 
     // Cursor enforcement timer — forces crosshair until selection is made
     private var cursorTimer: Timer?
@@ -1279,6 +1280,8 @@ class OverlayView: NSView {
             overlayDelegate?.overlayViewDidConfirm()
         case .save:
             overlayDelegate?.overlayViewDidRequestSave()
+        case .upload:
+            overlayDelegate?.overlayViewDidRequestUpload()
         case .pin:
             overlayDelegate?.overlayViewDidRequestPin()
         case .ocr:
@@ -1287,9 +1290,11 @@ class OverlayView: NSView {
             performAutoRedact()
         case .beautify:
             beautifyEnabled.toggle()
+            UserDefaults.standard.set(beautifyEnabled, forKey: "beautifyEnabled")
             needsDisplay = true
         case .beautifyStyle:
             beautifyStyleIndex = (beautifyStyleIndex + 1) % BeautifyRenderer.styles.count
+            UserDefaults.standard.set(beautifyStyleIndex, forKey: "beautifyStyleIndex")
             needsDisplay = true
         case .delayCapture:
             // Cycle: 0 → 3 → 5 → 10 → 0
@@ -1434,7 +1439,7 @@ class OverlayView: NSView {
             let dy = clampedPoint.y - start.y
 
             switch annotation.tool {
-            case .line, .arrow:
+            case .line, .arrow, .measure:
                 // Snap to nearest 45° angle
                 let angle = atan2(dy, dx)
                 let snapped = (angle / (.pi / 4)).rounded() * (.pi / 4)
@@ -2145,8 +2150,8 @@ class OverlayView: NSView {
         moveMode = false
         isRightClickSelecting = false
         delaySeconds = 0
-        beautifyEnabled = false
-        beautifyStyleIndex = 0
+        beautifyEnabled = UserDefaults.standard.bool(forKey: "beautifyEnabled")
+        beautifyStyleIndex = UserDefaults.standard.integer(forKey: "beautifyStyleIndex")
         textScrollView?.removeFromSuperview()
         textScrollView = nil
         textEditView = nil

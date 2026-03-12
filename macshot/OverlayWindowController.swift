@@ -8,6 +8,7 @@ protocol OverlayWindowControllerDelegate: AnyObject {
     func overlayDidRequestPin(_ controller: OverlayWindowController, image: NSImage)
     func overlayDidRequestOCR(_ controller: OverlayWindowController, text: String)
     func overlayDidRequestDelayCapture(_ controller: OverlayWindowController, seconds: Int, selectionRect: NSRect)
+    func overlayDidRequestUpload(_ controller: OverlayWindowController, image: NSImage)
 }
 
 /// Manages one fullscreen overlay per screen.
@@ -170,6 +171,14 @@ extension OverlayWindowController: OverlayViewDelegate {
 
     func overlayViewDidRequestDelayCapture(seconds: Int, selectionRect: NSRect) {
         overlayDelegate?.overlayDidRequestDelayCapture(self, seconds: seconds, selectionRect: selectionRect)
+    }
+
+    func overlayViewDidRequestUpload() {
+        guard var image = overlayView?.captureSelectedRegion() else { return }
+        image = applyBeautifyIfNeeded(image) ?? image
+        playCopySound()
+        dismiss()
+        overlayDelegate?.overlayDidRequestUpload(self, image: image)
     }
 
     func overlayViewDidRequestQuickSave() {

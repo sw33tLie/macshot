@@ -12,6 +12,7 @@ enum AnnotationTool: Int, CaseIterable {
     case number          // auto-incrementing numbered circle
     case pixelate        // pixelate/blur region
     case blur            // gaussian blur region
+    case measure         // pixel ruler / measurement line
 }
 
 class Annotation {
@@ -77,6 +78,8 @@ class Annotation {
             drawPixelate(in: context)
         case .blur:
             drawBlur(in: context)
+        case .measure:
+            drawMeasure()
         }
     }
 
@@ -218,6 +221,85 @@ class Annotation {
         let str = "\(number)" as NSString
         let size = str.size(withAttributes: attrs)
         str.draw(at: NSPoint(x: center.x - size.width / 2, y: center.y - size.height / 2), withAttributes: attrs)
+    }
+
+    private func drawMeasure() {
+        let dx = endPoint.x - startPoint.x
+        let dy = endPoint.y - startPoint.y
+        let distance = hypot(dx, dy)
+        guard distance > 1 else { return }
+
+        let scale = NSScreen.main?.backingScaleFactor ?? 2.0
+        let pixelDistance = Int(distance * scale)
+
+        // Main measurement line
+        let lineColor = color
+        let path = NSBezierPath()
+        path.lineWidth = 1.5
+        path.lineCapStyle = .round
+        lineColor.setStroke()
+        path.move(to: startPoint)
+        path.line(to: endPoint)
+        path.stroke()
+
+        // Perpendicular end caps (small ticks at each end)
+        let angle = atan2(dy, dx)
+        let perpAngle = angle + .pi / 2
+        let capLength: CGFloat = 6
+        let capDx = capLength * cos(perpAngle)
+        let capDy = capLength * sin(perpAngle)
+
+        let capPath = NSBezierPath()
+        capPath.lineWidth = 1.5
+        capPath.lineCapStyle = .round
+        lineColor.setStroke()
+        // Start cap
+        capPath.move(to: NSPoint(x: startPoint.x - capDx, y: startPoint.y - capDy))
+        capPath.line(to: NSPoint(x: startPoint.x + capDx, y: startPoint.y + capDy))
+        // End cap
+        capPath.move(to: NSPoint(x: endPoint.x - capDx, y: endPoint.y - capDy))
+        capPath.line(to: NSPoint(x: endPoint.x + capDx, y: endPoint.y + capDy))
+        capPath.stroke()
+
+        // Dimension label
+        let pxWidth = Int(abs(dx) * scale)
+        let pxHeight = Int(abs(dy) * scale)
+        let labelText: String
+        if pxWidth < 3 {
+            labelText = "\(pxHeight)px"
+        } else if pxHeight < 3 {
+            labelText = "\(pxWidth)px"
+        } else {
+            labelText = "\(pixelDistance)px (\(pxWidth) × \(pxHeight))"
+        }
+
+        let fontSize: CGFloat = 11
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.monospacedDigitSystemFont(ofSize: fontSize, weight: .semibold),
+            .foregroundColor: NSColor.white,
+        ]
+        let str = labelText as NSString
+        let strSize = str.size(withAttributes: attrs)
+
+        // Position label at midpoint, offset perpendicular to the line
+        let midX = (startPoint.x + endPoint.x) / 2
+        let midY = (startPoint.y + endPoint.y) / 2
+        let offsetDist: CGFloat = 12
+        let labelX = midX + offsetDist * cos(perpAngle) - strSize.width / 2
+        let labelY = midY + offsetDist * sin(perpAngle) - strSize.height / 2
+
+        // Background pill for readability
+        let padding: CGFloat = 4
+        let bgRect = NSRect(
+            x: labelX - padding,
+            y: labelY - padding / 2,
+            width: strSize.width + padding * 2,
+            height: strSize.height + padding
+        )
+        NSColor(white: 0.0, alpha: 0.75).setFill()
+        NSBezierPath(roundedRect: bgRect, xRadius: 4, yRadius: 4).fill()
+
+        str.draw(at: NSPoint(x: labelX, y: labelY), withAttributes: attrs)
     }
 
     // MARK: - Shared region crop

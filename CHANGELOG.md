@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.0] - 2026-03-12
+
+### Added
+- **Upload to cloud**: Upload screenshots to imgbb with one click. Link auto-copied to clipboard, toast shows clickable link + delete button. Configurable API key in Preferences.
+- **Measure tool**: Pixel ruler for measuring distances. Drag to measure, shows pixel dimensions with a label. Hold Shift to snap to horizontal, vertical, or 45° angles. Shows width × height breakdown for diagonal measurements.
+- **Colored beautify style icon**: The style picker icon now matches the selected gradient theme color for quick visual identification.
+
+### Changed
+- Beautify mode and style now persist across sessions (remembered after toggling).
+
 ## [1.3.1] - 2026-03-11
 
 ### Added

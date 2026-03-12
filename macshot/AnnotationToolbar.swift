@@ -19,6 +19,7 @@ enum ToolbarButtonAction {
     case cancel
     case moveSelection
     case delayCapture
+    case upload
 }
 
 struct ToolbarButton {
@@ -61,6 +62,7 @@ class ToolbarLayout {
             (.number,          "1.circle.fill",             "Number"),
             (.pixelate,        "squareshape.split.2x2",    "Pixelate"),
             (.blur,            "aqi.medium",               "Blur"),
+            (.measure,         "ruler",                    "Measure (px)"),
         ]
 
         for (tool, symbol, tip) in tools {
@@ -88,11 +90,31 @@ class ToolbarLayout {
 
         // Beautify style picker (only shown when beautify is on)
         if beautifyEnabled {
-            let styleName = BeautifyRenderer.styles[beautifyStyleIndex % BeautifyRenderer.styles.count].name
-            buttons.append(ToolbarButton(action: .beautifyStyle, sfSymbol: "paintpalette.fill", label: nil, tooltip: "Style: \(styleName)"))
+            let style = BeautifyRenderer.styles[beautifyStyleIndex % BeautifyRenderer.styles.count]
+            var styleBtn = ToolbarButton(action: .beautifyStyle, sfSymbol: "paintpalette.fill", label: nil, tooltip: "Style: \(style.name)")
+            // Use the brighter of the two gradient colors, and lighten if still too dark
+            let c1 = style.colors.0
+            let c2 = style.colors.1
+            let b1 = c1.redComponent * 0.299 + c1.greenComponent * 0.587 + c1.blueComponent * 0.114
+            let b2 = c2.redComponent * 0.299 + c2.greenComponent * 0.587 + c2.blueComponent * 0.114
+            var color = b2 > b1 ? c2 : c1
+            let brightness = max(b1, b2)
+            if brightness < 0.35 {
+                // Lighten: blend toward white
+                let factor: CGFloat = 0.5
+                color = NSColor(
+                    calibratedRed: color.redComponent + (1 - color.redComponent) * factor,
+                    green: color.greenComponent + (1 - color.greenComponent) * factor,
+                    blue: color.blueComponent + (1 - color.blueComponent) * factor,
+                    alpha: 1.0
+                )
+            }
+            styleBtn.tintColor = color
+            buttons.append(styleBtn)
         }
 
-        // Copy / Save
+        // Upload / Copy / Save
+        buttons.append(ToolbarButton(action: .upload, sfSymbol: "icloud.and.arrow.up", label: nil, tooltip: "Upload"))
         buttons.append(ToolbarButton(action: .copy, sfSymbol: "doc.on.doc", label: nil, tooltip: "Copy"))
         buttons.append(ToolbarButton(action: .save, sfSymbol: "square.and.arrow.down", label: nil, tooltip: "Save"))
 
@@ -250,6 +272,20 @@ class ToolbarLayout {
         iconCache.removeAll()
     }
 
+    private static func tintedIconUncached(symbolName: String, tooltip: String, tint: NSColor) -> NSImage? {
+        guard let baseImg = NSImage(systemSymbolName: symbolName, accessibilityDescription: tooltip)?.withSymbolConfiguration(symbolConfig) else {
+            return nil
+        }
+        let imgSize = baseImg.size
+        let tintedImg = NSImage(size: imgSize)
+        tintedImg.lockFocus()
+        baseImg.draw(in: NSRect(origin: .zero, size: imgSize), from: .zero, operation: .sourceOver, fraction: 1.0)
+        tint.setFill()
+        NSRect(origin: .zero, size: imgSize).fill(using: .sourceAtop)
+        tintedImg.unlockFocus()
+        return tintedImg
+    }
+
     private static func tintedIcon(symbolName: String, tooltip: String, selected: Bool) -> NSImage? {
         if let cached = iconCache[symbolName]?[selected] {
             return cached
@@ -322,9 +358,13 @@ class ToolbarLayout {
             return
         }
 
-        // SF Symbol icon (cached)
+        // SF Symbol icon (cached for default tint, uncached for custom)
         if let symbolName = btn.sfSymbol {
-            if let img = tintedIcon(symbolName: symbolName, tooltip: btn.tooltip, selected: btn.isSelected) {
+            let customTint = btn.tintColor != .white
+            let img: NSImage? = customTint
+                ? tintedIconUncached(symbolName: symbolName, tooltip: btn.tooltip, tint: btn.tintColor)
+                : tintedIcon(symbolName: symbolName, tooltip: btn.tooltip, selected: btn.isSelected)
+            if let img = img {
                 let imgSize = img.size
                 let imgRect = NSRect(
                     x: rect.midX - imgSize.width / 2,

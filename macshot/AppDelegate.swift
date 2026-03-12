@@ -13,6 +13,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var delayCountdownWindow: NSWindow?
     private var delayTimer: Timer?
     private var pendingDelaySelection: NSRect = .zero
+    private var uploadToastController: UploadToastController?
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         setupMainMenu()
@@ -193,6 +194,40 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         controller.show()
     }
 
+    // MARK: - Upload
+
+    private func showUploadProgress(image: NSImage) {
+        uploadToastController?.dismiss()
+        let toast = UploadToastController()
+        uploadToastController = toast
+        toast.onDismiss = { [weak self] in
+            self?.uploadToastController = nil
+        }
+        toast.show(status: "Uploading...")
+
+        ImageUploader.upload(image: image) { result in
+            switch result {
+            case .success(let uploadResult):
+                // Copy link to clipboard
+                let pasteboard = NSPasteboard.general
+                pasteboard.clearContents()
+                pasteboard.setString(uploadResult.link, forType: .string)
+
+                // Store delete URL in UserDefaults for future deletion
+                var uploads = UserDefaults.standard.array(forKey: "imgbbUploads") as? [[String: String]] ?? []
+                uploads.append([
+                    "deleteURL": uploadResult.deleteURL,
+                    "link": uploadResult.link,
+                ])
+                UserDefaults.standard.set(uploads, forKey: "imgbbUploads")
+
+                toast.showSuccess(link: uploadResult.link, deleteURL: uploadResult.deleteURL)
+            case .failure(let error):
+                toast.showError(message: error.localizedDescription)
+            }
+        }
+    }
+
     // MARK: - Preferences
 
     @objc private func openPreferences() {
@@ -243,6 +278,12 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         let ocr = OCRResultController(text: text)
         ocrController = ocr
         ocr.show()
+    }
+
+    func overlayDidRequestUpload(_ controller: OverlayWindowController, image: NSImage) {
+        ScreenshotHistory.shared.add(image: image)
+        dismissOverlays()
+        showUploadProgress(image: image)
     }
 
     func overlayDidRequestDelayCapture(_ controller: OverlayWindowController, seconds: Int, selectionRect: NSRect) {
