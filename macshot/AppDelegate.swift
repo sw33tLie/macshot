@@ -53,8 +53,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let button = statusItem.button {
             let symbolNames = ["camera.viewfinder", "camera.fill", "viewfinder"]
             var found = false
+            let config = NSImage.SymbolConfiguration(scale: .large)
             for name in symbolNames {
-                if let img = NSImage(systemSymbolName: name, accessibilityDescription: "macshot") {
+                if let img = NSImage(systemSymbolName: name, accessibilityDescription: "macshot")?.withSymbolConfiguration(config) {
                     img.isTemplate = true
                     button.image = img
                     found = true

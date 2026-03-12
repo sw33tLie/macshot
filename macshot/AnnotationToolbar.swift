@@ -32,6 +32,7 @@ struct ToolbarButton {
     var isHovered: Bool = false
     var tintColor: NSColor = .white
     var bgColor: NSColor? = nil  // for color swatches
+    var hasContextMenu: Bool = false  // draw small corner triangle to indicate right-click options
 }
 
 class ToolbarLayout {
@@ -65,7 +66,7 @@ class ToolbarLayout {
             (.filledRectangle, "rectangle.fill",           "Filled Rect"),
             (.ellipse,         "oval",                     "Ellipse"),
             (.marker,          "paintbrush.pointed.fill",  "Marker"),
-            (.text,            "character.textbox",         "Text"),
+            (.text,            "textformat",               "Text"),
             (.number,          "1.circle.fill",             "Number"),
             (.pixelate,        "squareshape.split.2x2",    "Pixelate"),
             (.blur,            "aqi.medium",               "Blur"),
@@ -75,6 +76,12 @@ class ToolbarLayout {
         for (tool, symbol, tip) in tools {
             var btn = ToolbarButton(action: .tool(tool), sfSymbol: symbol, label: nil, tooltip: tip)
             btn.isSelected = (tool == selectedTool)
+            switch tool {
+            case .pencil, .line, .arrow, .rectangle, .ellipse, .marker, .number:
+                btn.hasContextMenu = true
+            default:
+                break
+            }
             buttons.append(btn)
         }
 
@@ -93,32 +100,8 @@ class ToolbarLayout {
         // Beautify toggle
         var beautifyBtn = ToolbarButton(action: .beautify, sfSymbol: "sparkles", label: nil, tooltip: "Beautify — wrap in window frame")
         beautifyBtn.isSelected = beautifyEnabled
+        beautifyBtn.hasContextMenu = true
         buttons.append(beautifyBtn)
-
-        // Beautify style picker (only shown when beautify is on)
-        if beautifyEnabled {
-            let style = BeautifyRenderer.styles[beautifyStyleIndex % BeautifyRenderer.styles.count]
-            var styleBtn = ToolbarButton(action: .beautifyStyle, sfSymbol: "paintpalette.fill", label: nil, tooltip: "Style: \(style.name)")
-            // Use the brighter of the two gradient colors, and lighten if still too dark
-            let c1 = style.colors.0
-            let c2 = style.colors.1
-            let b1 = c1.redComponent * 0.299 + c1.greenComponent * 0.587 + c1.blueComponent * 0.114
-            let b2 = c2.redComponent * 0.299 + c2.greenComponent * 0.587 + c2.blueComponent * 0.114
-            var color = b2 > b1 ? c2 : c1
-            let brightness = max(b1, b2)
-            if brightness < 0.35 {
-                // Lighten: blend toward white
-                let factor: CGFloat = 0.5
-                color = NSColor(
-                    calibratedRed: color.redComponent + (1 - color.redComponent) * factor,
-                    green: color.greenComponent + (1 - color.greenComponent) * factor,
-                    blue: color.blueComponent + (1 - color.blueComponent) * factor,
-                    alpha: 1.0
-                )
-            }
-            styleBtn.tintColor = color
-            buttons.append(styleBtn)
-        }
 
         // Upload / Copy / Save
         buttons.append(ToolbarButton(action: .upload, sfSymbol: "icloud.and.arrow.up", label: nil, tooltip: "Upload"))
@@ -396,6 +379,20 @@ class ToolbarLayout {
                 let size = str.size(withAttributes: attrs)
                 str.draw(at: NSPoint(x: rect.midX - size.width / 2, y: rect.midY - size.height / 2), withAttributes: attrs)
             }
+        }
+
+        // Right-click context menu indicator (small bottom-right triangle)
+        if btn.hasContextMenu {
+            let triSize: CGFloat = 4.5
+            let tx = rect.maxX - 2
+            let ty = rect.minY + 2
+            let triPath = NSBezierPath()
+            triPath.move(to: NSPoint(x: tx - triSize, y: ty))
+            triPath.line(to: NSPoint(x: tx, y: ty + triSize))
+            triPath.line(to: NSPoint(x: tx, y: ty))
+            triPath.close()
+            NSColor.white.withAlphaComponent(0.6).setFill()
+            triPath.fill()
         }
     }
 

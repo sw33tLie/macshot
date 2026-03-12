@@ -185,7 +185,7 @@ class Annotation {
         case .ellipse:
             drawEllipse()
         case .marker:
-            drawFreeform(alpha: 0.35, width: max(20, strokeWidth * 6))
+            drawFreeform(alpha: 0.35, width: strokeWidth * 6)
         case .text:
             drawText()
         case .number:
@@ -458,7 +458,7 @@ class Annotation {
               let cropped = bitmap.cgImage else { return }
 
         // Fixed block size of ~8px on screen (scaled for Retina)
-        let pixelBlock = 16
+        let pixelBlock = 8
         let tinyW = max(1, cropped.width / pixelBlock)
         let tinyH = max(1, cropped.height / pixelBlock)
         let cs = CGColorSpaceCreateDeviceRGB()

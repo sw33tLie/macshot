@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.5.0] - 2026-03-12
+
+### Added
+- **Text Tool Overhaul**: Replaced basic text entry with an auto-resizing native text field that is single-line by default. Added `Shift+Enter` for multiline support.
+- **Context Menus**: Added context menu support for toolbar tools. Right-click on drawing tools (pencil, line, etc.) or the beautify button to access their settings (stroke, color, or beautify styles), indicated by a small corner triangle.
+
+### Improved
+- **Square Selection Constrain**: Holding `Shift` while selecting an area now correctly constrains the selection to a perfect square.
+- **Icon Updates**: Replaced the text tool icon with a cleaner `textformat` symbol. Also improved the main menu bar app icon with a larger scale.
+- **UI Polish**: Vertically aligned the font size label with the +/- buttons for better aesthetics.
+- **Marker Adjustments**: Fine-tuned the marker tool thickness and fixed text crop block sizing.
+
 ## [1.4.3] - 2026-03-12
 
 ### Fixed

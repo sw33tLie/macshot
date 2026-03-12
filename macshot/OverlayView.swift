@@ -102,6 +102,16 @@ class OverlayView: NSView {
     // Color picker popover
     private var showColorPicker: Bool = false
     private var colorPickerRect: NSRect = .zero
+
+    // Beautify style picker popover
+    private var showBeautifyPicker: Bool = false
+    private var beautifyPickerRect: NSRect = .zero
+    private var hoveredBeautifyRow: Int = -1
+
+    // Stroke width picker popover
+    private var showStrokePicker: Bool = false
+    private var strokePickerRect: NSRect = .zero
+    private var hoveredStrokeRow: Int = -1
     private let availableColors: [NSColor] = [
         .systemRed, .systemOrange, .systemYellow, .systemGreen, .systemBlue, .systemPurple,
         .systemPink, .systemTeal, .systemIndigo, .systemBrown, .systemMint, .systemCyan,
@@ -195,8 +205,13 @@ class OverlayView: NSView {
             }
         }
 
+        var needsRedraw = false
         if newHovered != hoveredButtonIndex {
             hoveredButtonIndex = newHovered
+            needsRedraw = true
+        }
+
+        if needsRedraw {
             needsDisplay = true
         }
     }
@@ -277,6 +292,24 @@ class OverlayView: NSView {
         // Color picker popup — arrow cursor
         if showColorPicker && colorPickerRect.width > 0 {
             addCursorRect(colorPickerRect, cursor: .arrow)
+        }
+
+        // Beautify/Stroke pickers — pointing hand for rows
+        let popups: [(Bool, NSRect, Int)] = [
+            (showBeautifyPicker, beautifyPickerRect, BeautifyRenderer.styles.count),
+            (showStrokePicker, strokePickerRect, 7) // 7 widths
+        ]
+        for (isVisible, rect, count) in popups {
+            if isVisible && rect.width > 0 {
+                addCursorRect(rect, cursor: .arrow) // default arrow for background
+                let rowH: CGFloat = 28
+                let padding: CGFloat = 6
+                for i in 0..<count {
+                    let rowY = rect.maxY - padding - rowH * CGFloat(i + 1)
+                    let rowRect = NSRect(x: rect.minX, y: rowY, width: rect.width, height: rowH)
+                    addCursorRect(rowRect, cursor: .pointingHand)
+                }
+            }
         }
 
         // Size label — pointer cursor to indicate clickable
@@ -365,6 +398,16 @@ class OverlayView: NSView {
                 // Color picker popover
                 if showColorPicker {
                     drawColorPicker()
+                }
+
+                // Beautify style picker popover
+                if showBeautifyPicker {
+                    drawBeautifyPicker()
+                }
+
+                // Stroke width picker popover
+                if showStrokePicker {
+                    drawStrokePicker()
                 }
 
                 // Tooltip for hovered button
@@ -924,6 +967,145 @@ class OverlayView: NSView {
         NSGraphicsContext.restoreGraphicsState()
     }
 
+    private func drawBeautifyPicker() {
+        let styles = BeautifyRenderer.styles
+        let rowH: CGFloat = 28
+        let pickerWidth: CGFloat = 130
+        let padding: CGFloat = 6
+        let pickerHeight = rowH * CGFloat(styles.count) + padding * 2
+
+        // Anchor to the beautify button
+        var anchorX = bottomBarRect.midX
+        var anchorRect = NSRect.zero
+        for btn in bottomButtons {
+            if case .beautify = btn.action {
+                anchorX = btn.rect.midX
+                anchorRect = btn.rect
+                break
+            }
+        }
+
+        let pickerX = max(bounds.minX + 4, min(anchorX - pickerWidth / 2, bounds.maxX - pickerWidth - 4))
+        var pickerY = anchorRect.maxY + 4  // default: above button
+        if pickerY + pickerHeight > bounds.maxY - 4 {
+            pickerY = anchorRect.minY - pickerHeight - 4  // flip below if no room above
+        }
+
+        let pickerRect = NSRect(x: pickerX, y: pickerY, width: pickerWidth, height: pickerHeight)
+        beautifyPickerRect = pickerRect
+
+        // Background
+        ToolbarLayout.bgColor.setFill()
+        NSBezierPath(roundedRect: pickerRect, xRadius: 6, yRadius: 6).fill()
+
+        // Rows — drawn top-to-bottom (index 0 at top)
+        let textAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 12, weight: .medium),
+            .foregroundColor: NSColor.white,
+        ]
+
+        for (i, style) in styles.enumerated() {
+            let rowY = pickerRect.maxY - padding - rowH * CGFloat(i + 1)
+            let rowRect = NSRect(x: pickerRect.minX, y: rowY, width: pickerRect.width, height: rowH)
+
+            // Highlight selected row
+            if i == beautifyStyleIndex % styles.count {
+                ToolbarLayout.accentColor.withAlphaComponent(0.5).setFill()
+                NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
+            } else if i == hoveredBeautifyRow {
+                // Hover highlight
+                NSColor.white.withAlphaComponent(0.15).setFill()
+                NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
+            }
+
+            // Gradient swatch (mini 2-color pill)
+            let swatchRect = NSRect(x: rowRect.minX + 8, y: rowRect.midY - 7, width: 20, height: 14)
+            let swatchPath = NSBezierPath(roundedRect: swatchRect, xRadius: 3, yRadius: 3)
+            if let grad = NSGradient(starting: style.colors.0, ending: style.colors.1) {
+                grad.draw(in: swatchPath, angle: 45)
+            }
+
+            // Style name
+            let nameStr = style.name as NSString
+            let nameSize = nameStr.size(withAttributes: textAttrs)
+            nameStr.draw(at: NSPoint(x: rowRect.minX + 36, y: rowRect.midY - nameSize.height / 2), withAttributes: textAttrs)
+        }
+    }
+
+    private func drawStrokePicker() {
+        let widths: [CGFloat] = [1, 2, 3, 5, 8, 12, 20]
+        let rowH: CGFloat = 28
+        let pickerWidth: CGFloat = 135
+        let padding: CGFloat = 6
+        let pickerHeight = rowH * CGFloat(widths.count) + padding * 2
+
+        // Anchor to the current tool button
+        var anchorX = bottomBarRect.midX
+        var anchorRect = NSRect.zero
+        for btn in bottomButtons {
+            if case .tool(let t) = btn.action, t == currentTool {
+                anchorX = btn.rect.midX
+                anchorRect = btn.rect
+                break
+            }
+        }
+
+        let pickerX = max(bounds.minX + 4, min(anchorX - pickerWidth / 2, bounds.maxX - pickerWidth - 4))
+        var pickerY = anchorRect.maxY + 4  // default: above button
+        if pickerY + pickerHeight > bounds.maxY - 4 {
+            pickerY = anchorRect.minY - pickerHeight - 4  // flip below if no room above
+        }
+
+        let pickerRect = NSRect(x: pickerX, y: pickerY, width: pickerWidth, height: pickerHeight)
+        strokePickerRect = pickerRect
+
+        // Background
+        ToolbarLayout.bgColor.setFill()
+        NSBezierPath(roundedRect: pickerRect, xRadius: 6, yRadius: 6).fill()
+
+        let textAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 11, weight: .medium),
+            .foregroundColor: NSColor.white,
+        ]
+
+        // Rows — drawn top-to-bottom (index 0 at top)
+        for (i, width) in widths.enumerated() {
+            let rowY = pickerRect.maxY - padding - rowH * CGFloat(i + 1)
+            let rowRect = NSRect(x: pickerRect.minX, y: rowY, width: pickerRect.width, height: rowH)
+
+            // Highlight selected row
+            if currentStrokeWidth == width {
+                ToolbarLayout.accentColor.withAlphaComponent(0.5).setFill()
+                NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
+            } else if i == hoveredStrokeRow {
+                // Hover highlight
+                NSColor.white.withAlphaComponent(0.15).setFill()
+                NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
+            }
+
+            // Draw a stroke sample
+            let lineY = rowRect.midY
+            let linePath = NSBezierPath()
+            linePath.move(to: NSPoint(x: rowRect.minX + 56, y: lineY))
+            linePath.line(to: NSPoint(x: rowRect.maxX - 12, y: lineY))
+            linePath.lineWidth = width > 14 ? 14 : width // Visual clamp
+            linePath.lineCapStyle = .round
+            NSColor.white.setStroke()
+            linePath.stroke()
+
+            // Label
+            let labelText: String
+            if currentTool == .marker {
+                labelText = "Scale \(Int(width))"
+            } else {
+                labelText = "\(Int(width))px"
+            }
+            let nameStr = labelText as NSString
+            let nameSize = nameStr.size(withAttributes: textAttrs)
+            nameStr.draw(at: NSPoint(x: rowRect.minX + 12, y: rowRect.midY - nameSize.height / 2), withAttributes: textAttrs)
+        }
+    }
+
     // MARK: - Toolbar Layout
 
     /// Whether the selection covers (nearly) the full screen
@@ -1041,6 +1223,24 @@ class OverlayView: NSView {
         return .none
     }
 
+    // New method for hit-testing text resize handles
+    private func hitTestTextResize(point: NSPoint, scrollViewFrame: NSRect) -> ResizeHandle {
+        let handleSize: CGFloat = 10
+        let r = scrollViewFrame
+        let hs = handleSize + 4 // handle hit area
+
+        // Top-left
+        if NSRect(x: r.minX - hs/2, y: r.maxY - hs/2, width: hs, height: hs).contains(point) { return .topLeft }
+        // Top-right
+        if NSRect(x: r.maxX - hs/2, y: r.maxY - hs/2, width: hs, height: hs).contains(point) { return .topRight }
+        // Bottom-left
+        if NSRect(x: r.minX - hs/2, y: r.minY - hs/2, width: hs, height: hs).contains(point) { return .bottomLeft }
+        // Bottom-right
+        if NSRect(x: r.maxX - hs/2, y: r.minY - hs/2, width: hs, height: hs).contains(point) { return .bottomRight }
+
+        return .none
+    }
+
     // MARK: - Mouse Events
 
     override func mouseDown(with event: NSEvent) {
@@ -1087,6 +1287,53 @@ class OverlayView: NSView {
             needsDisplay = true
         }
 
+        // Beautify picker dismissal / selection
+        if showBeautifyPicker {
+            if beautifyPickerRect.contains(point) {
+                // Hit-test rows inside the picker
+                let rowH: CGFloat = 28
+                let padding: CGFloat = 6
+                let styles = BeautifyRenderer.styles
+                for (i, _) in styles.enumerated() {
+                    let rowY = beautifyPickerRect.maxY - padding - rowH * CGFloat(i + 1)
+                    let rowRect = NSRect(x: beautifyPickerRect.minX, y: rowY, width: beautifyPickerRect.width, height: rowH)
+                    if rowRect.contains(point) {
+                        beautifyStyleIndex = i
+                        UserDefaults.standard.set(beautifyStyleIndex, forKey: "beautifyStyleIndex")
+                        showBeautifyPicker = false
+                        needsDisplay = true
+                        return
+                    }
+                }
+                return
+            }
+            showBeautifyPicker = false
+            needsDisplay = true
+        }
+
+        // Stroke picker dismissal / selection
+        if showStrokePicker {
+            if strokePickerRect.contains(point) {
+                let widths: [CGFloat] = [1, 2, 3, 5, 8, 12, 20]
+                let rowH: CGFloat = 28
+                let padding: CGFloat = 6
+                for (i, width) in widths.enumerated() {
+                    let rowY = strokePickerRect.maxY - padding - rowH * CGFloat(i + 1)
+                    let rowRect = NSRect(x: strokePickerRect.minX, y: rowY, width: strokePickerRect.width, height: rowH)
+                    if rowRect.contains(point) {
+                        currentStrokeWidth = width
+                        UserDefaults.standard.set(Double(width), forKey: "currentStrokeWidth")
+                        showStrokePicker = false
+                        needsDisplay = true
+                        return
+                    }
+                }
+                return
+            }
+            showStrokePicker = false
+            needsDisplay = true
+        }
+
         // If text is being edited, check if the click is on the color toolbar button
         // before committing the text field
         if isTextEditing && showToolbars {
@@ -1116,9 +1363,6 @@ class OverlayView: NSView {
             state = .selecting
             needsDisplay = true
 
-        case .selecting:
-            break
-
         case .selected:
             // Check size label click
             if sizeLabelRect.contains(point) && sizeInputField == nil {
@@ -1129,7 +1373,6 @@ class OverlayView: NSView {
                 return  // let the text field handle it
             }
 
-            // Check toolbar hit first
             if showToolbars {
                 if let action = ToolbarLayout.hitTest(point: point, buttons: bottomButtons) {
                     handleToolbarAction(action, mousePoint: point)
@@ -1177,6 +1420,9 @@ class OverlayView: NSView {
             selectionRect = NSRect(origin: point, size: .zero)
             state = .selecting
             needsDisplay = true
+        
+        case .selecting:
+            break
         }
     }
 
@@ -1217,10 +1463,13 @@ class OverlayView: NSView {
 
         switch state {
         case .selecting:
-            let x = min(selectionStart.x, point.x)
-            let y = min(selectionStart.y, point.y)
-            let w = max(1, abs(point.x - selectionStart.x))
-            let h = max(1, abs(point.y - selectionStart.y))
+            let rawW = abs(point.x - selectionStart.x)
+            let rawH = abs(point.y - selectionStart.y)
+            let shiftHeld = event.modifierFlags.contains(.shift)
+            let w = max(1, shiftHeld ? min(rawW, rawH) : rawW)
+            let h = max(1, shiftHeld ? min(rawW, rawH) : rawH)
+            let x = selectionStart.x < point.x ? selectionStart.x : selectionStart.x - w
+            let y = selectionStart.y < point.y ? selectionStart.y : selectionStart.y - h
             selectionRect = NSRect(x: x, y: y, width: w, height: h)
             needsDisplay = true
 
@@ -1306,6 +1555,36 @@ class OverlayView: NSView {
 
     override func rightMouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
+
+        // Check toolbar button right-clicks first
+        if state == .selected && showToolbars {
+            if let action = ToolbarLayout.hitTest(point: point, buttons: bottomButtons) {
+                if case .beautify = action {
+                    showBeautifyPicker.toggle()
+                    showColorPicker = false
+                    showStrokePicker = false
+                    needsDisplay = true
+                    return
+                }
+                if case .tool(let tool) = action {
+                    let toolsWithMenu: [AnnotationTool] = [.pencil, .line, .arrow, .rectangle, .ellipse, .marker, .number]
+                    if toolsWithMenu.contains(tool) {
+                        currentTool = tool // Select the tool
+                        showStrokePicker.toggle()
+                        showColorPicker = false
+                        showBeautifyPicker = false
+                        needsDisplay = true
+                        return
+                    }
+                }
+                // Handle right clicks on other buttons with context menus here in the future
+                return
+            }
+            if let action = ToolbarLayout.hitTest(point: point, buttons: rightButtons) {
+                // Future right-click actions for right toolbar
+                return
+            }
+        }
 
         if state == .selected && selectionRect.contains(point) && currentTool != .select {
             // Show radial color wheel
@@ -1684,14 +1963,17 @@ class OverlayView: NSView {
 
     private func showTextField(at point: NSPoint) {
         let height = max(28, textFontSize + 12)
-        let scrollView = NSScrollView(frame: NSRect(x: point.x, y: point.y - 10, width: 250, height: height))
+        let minW: CGFloat = 250
+        let maxW = max(minW, bounds.width - point.x - 20)
+        let scrollView = NSScrollView(frame: NSRect(x: point.x, y: point.y - height, width: maxW, height: height))
         scrollView.hasVerticalScroller = false
         scrollView.hasHorizontalScroller = false
-        scrollView.borderType = .lineBorder
-        scrollView.drawsBackground = true
-        scrollView.backgroundColor = NSColor.white.withAlphaComponent(0.9)
+        scrollView.autohidesScrollers = true
+        scrollView.borderType = .noBorder
+        scrollView.drawsBackground = false
+        scrollView.backgroundColor = .clear
 
-        let tv = NSTextView(frame: NSRect(x: 0, y: 0, width: 246, height: height - 4))
+        let tv = NSTextView(frame: NSRect(x: 0, y: 0, width: maxW, height: height))
         tv.isEditable = true
         tv.isSelectable = true
         tv.isRichText = true
@@ -1701,8 +1983,9 @@ class OverlayView: NSView {
         tv.textColor = currentColor
         tv.insertionPointColor = currentColor
         tv.isVerticallyResizable = true
-        tv.isHorizontallyResizable = false
-        tv.textContainer?.widthTracksTextView = true
+        tv.isHorizontallyResizable = true
+        tv.textContainer?.widthTracksTextView = false
+        tv.textContainer?.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
         tv.delegate = self
 
         let font = currentTextFont()
@@ -1786,9 +2069,9 @@ class OverlayView: NSView {
         bar.addSubview(minusBtn)
         btnX += 24
 
-        // Font size label
+        // Font size label (shifted down slightly for visual vertical alignment with the + / - buttons)
         let sizeLabel = NSTextField(labelWithString: "\(Int(textFontSize))")
-        sizeLabel.frame = NSRect(x: btnX, y: btnY, width: 28, height: btnH)
+        sizeLabel.frame = NSRect(x: btnX, y: btnY - 1, width: 28, height: btnH)
         sizeLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .medium)
         sizeLabel.textColor = .white
         sizeLabel.alignment = .center
@@ -2361,6 +2644,8 @@ class OverlayView: NSView {
         numberCounter = 0
         showToolbars = false
         showColorPicker = false
+        showBeautifyPicker = false
+        showStrokePicker = false
         moveMode = false
         selectedAnnotation = nil
         isDraggingAnnotation = false
@@ -2416,6 +2701,11 @@ extension OverlayView: NSTextFieldDelegate {
 extension OverlayView: NSTextViewDelegate {
     func textView(_ textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
         if commandSelector == #selector(NSResponder.insertNewline(_:)) {
+            if let event = NSApp.currentEvent, event.modifierFlags.contains(.shift) {
+                textView.insertNewlineIgnoringFieldEditor(self)
+                textDidChange(Notification(name: NSText.didChangeNotification))
+                return true
+            }
             commitTextFieldIfNeeded()
             return true
         }
@@ -2429,6 +2719,24 @@ extension OverlayView: NSTextViewDelegate {
             return true
         }
         return false
+    }
+
+    func textDidChange(_ notification: Notification) {
+        guard let tv = textEditView, let sv = textScrollView else { return }
+        guard let layoutManager = tv.layoutManager, let textContainer = tv.textContainer else { return }
+        
+        layoutManager.ensureLayout(for: textContainer)
+        let usedRect = layoutManager.usedRect(for: textContainer)
+        let extraHeight = layoutManager.extraLineFragmentRect.height
+        
+        let minH = max(28, textFontSize + 12)
+        let newWidth = max(250, ceil(usedRect.width) + 16)
+        let newHeight = max(minH, ceil(usedRect.height + extraHeight) + 10)
+        
+        // Pin the top edge, adjust origin Y downward as height grows
+        let topEdge = sv.frame.maxY
+        sv.frame = NSRect(x: sv.frame.minX, y: topEdge - newHeight, width: newWidth, height: newHeight)
+        tv.frame.size = NSSize(width: newWidth, height: newHeight)
     }
 }
 
