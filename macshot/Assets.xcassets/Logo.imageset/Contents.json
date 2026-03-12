@@ -1,0 +1,13 @@
+{
+  "images" : [
+    {
+      "filename" : "logo.svg",
+      "idiom" : "mac",
+      "scale" : "1x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

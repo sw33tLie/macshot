@@ -25,7 +25,7 @@ class PreferencesWindowController: NSWindowController {
 
     init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 420, height: 570),
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 650),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -47,7 +47,20 @@ class PreferencesWindowController: NSWindowController {
         guard let contentView = window?.contentView else { return }
 
         let padding: CGFloat = 20
-        var y: CGFloat = 520
+        let contentHeight: CGFloat = 650
+        var y: CGFloat
+
+        // Logo at top: 16pt padding above, 96pt logo, 24pt margin below
+        let logoTopPadding: CGFloat = 16
+        let logoSize: CGFloat = 96
+        let logoBottomMargin: CGFloat = 24
+        let logoX = (420 - logoSize) / 2
+        let logoY = contentHeight - logoTopPadding - logoSize
+        let logoImageView = NSImageView(frame: NSRect(x: logoX, y: logoY, width: logoSize, height: logoSize))
+        logoImageView.image = NSImage(named: "Logo")
+        logoImageView.imageScaling = .scaleProportionallyUpOrDown
+        contentView.addSubview(logoImageView)
+        y = logoY - logoBottomMargin
 
         // Hotkey
         let hotkeyLabel = NSTextField(labelWithString: "Global Shortcut:")
