@@ -5,6 +5,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
     private var overlayControllers: [OverlayWindowController] = []
     private var preferencesController: PreferencesWindowController?
+    private var onboardingController: PermissionOnboardingController?
     private var pinControllers: [PinWindowController] = []
     private var thumbnailController: FloatingThumbnailController?
     private var ocrController: OCRResultController?
@@ -19,6 +20,29 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setupMainMenu()
         setupStatusBar()
         registerHotkey()
+
+        // Check screen recording permission. If not yet granted, show the
+        // custom onboarding window instead of letting macOS throw its own dialogs.
+        PermissionOnboardingController.checkPermissionSync { [weak self] granted in
+            guard let self = self else { return }
+            if !granted {
+                self.showOnboarding()
+            }
+        }
+    }
+
+    private func showOnboarding() {
+        // If already open, just bring it to front
+        if let existing = onboardingController {
+            existing.show()
+            return
+        }
+        let oc = PermissionOnboardingController()
+        oc.onPermissionGranted = { [weak self] in
+            self?.onboardingController = nil
+        }
+        onboardingController = oc
+        oc.show()
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
@@ -146,20 +170,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
             if captures.isEmpty {
                 self.isCapturing = false
-
-                let alert = NSAlert()
-                alert.messageText = "Screen Recording Permission Required"
-                alert.informativeText = "macshot needs screen recording permission.\n\n1. Open System Settings > Privacy & Security > Screen Recording\n2. Remove macshot from the list (toggle off or minus button)\n3. Re-add macshot and enable it\n4. Restart macshot"
-                alert.alertStyle = .warning
-                alert.addButton(withTitle: "Open System Settings")
-                alert.addButton(withTitle: "Cancel")
-
-                NSApp.activate(ignoringOtherApps: true)
-                if alert.runModal() == .alertFirstButtonReturn {
-                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
-                        NSWorkspace.shared.open(url)
-                    }
-                }
+                // Permission was revoked or never granted — show onboarding instead of a generic alert
+                self.showOnboarding()
                 return
             }
 
@@ -273,10 +285,10 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         pinControllers.append(pin)
     }
 
-    func overlayDidRequestOCR(_ controller: OverlayWindowController, text: String) {
+    func overlayDidRequestOCR(_ controller: OverlayWindowController, text: String, image: NSImage?) {
         dismissOverlays()
         ocrController?.close()
-        let ocr = OCRResultController(text: text)
+        let ocr = OCRResultController(text: text, image: image)
         ocrController = ocr
         ocr.show()
     }

@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.0.0] - 2026-03-14
+
+### Added
+- **Window snap mode** — hover over any window to highlight it with a blue border; click to snap the selection to that window's exact bounds. Drag as normal for a custom area. Toggle with `Tab`, capture full screen with `F`. Right-clicking a highlighted window performs a quick save/copy instantly. State persists via UserDefaults.
+- **Live QR & barcode detection** — as soon as a selection is made or moved, macshot scans for QR codes and barcodes using Apple Vision. An inline bar appears below (or above) the selection with **Open** (URLs), **Copy**, and **Dismiss** actions. Redetects automatically when the selection changes.
+- **Translation in OCR window** — translate extracted OCR text to any language directly in the results panel. Pick a target language from the dropdown, click **Translate**, toggle back with **Show Original**. Re-translates automatically on language change.
+- **Background removal** — new toolbar action that uses Apple Vision's foreground instance mask to remove the background from a selection and copy the result as a transparent PNG (macOS 14+).
+
+### Improved
+- **Text tool** — `Enter` now inserts a new line (Shift+Enter no longer needed). Confirm text with the new green ✓ button; cancel with the red ✕. Switching to another annotation tool also commits text. Fixed long-standing position drift on multi-line text — switched to `draw(in:)` with the exact layout rect from the NSTextView layout manager.
+- **Preferences rebuilt with AutoLayout** — entire Preferences window rewritten using `NSStackView` and AutoLayout. No hardcoded Y coordinates. All three tabs (General, Tools, Uploads) size and scroll correctly.
+- **Uploads tab** — fully replaced broken scroll view with an AutoLayout-based list. Upload and delete URLs always visible and scrollable; Copy buttons aligned to the right edge.
+- **Tools tab alignment** — second-column checkboxes use a fixed column width so they always align vertically.
+- **Capture sound caching** — sound loaded once at startup (`static let`) instead of from disk on every capture, eliminating latency on quick save.
+- **OCR Cmd+C fix** — copying text in the OCR results panel now works correctly; was previously beeping due to NSPanel focus issues.
+- **Toolbar overlap fix** — bottom action bar no longer overlaps the right toolbar when the selection is near the top of the screen; repositions automatically.
+
 ## [1.5.0] - 2026-03-12
 
 ### Added

@@ -1,12 +1,13 @@
 import Cocoa
 import UniformTypeIdentifiers
 import Vision
+import CoreImage
 
 protocol OverlayWindowControllerDelegate: AnyObject {
     func overlayDidCancel(_ controller: OverlayWindowController)
     func overlayDidConfirm(_ controller: OverlayWindowController, capturedImage: NSImage?)
     func overlayDidRequestPin(_ controller: OverlayWindowController, image: NSImage)
-    func overlayDidRequestOCR(_ controller: OverlayWindowController, text: String)
+    func overlayDidRequestOCR(_ controller: OverlayWindowController, text: String, image: NSImage?)
     func overlayDidRequestDelayCapture(_ controller: OverlayWindowController, seconds: Int, selectionRect: NSRect)
     func overlayDidRequestUpload(_ controller: OverlayWindowController, image: NSImage)
 }
@@ -74,15 +75,16 @@ class OverlayWindowController {
         overlayWindow = nil
     }
 
+    private static let captureSound: NSSound? = {
+        let path = "/System/Library/Components/CoreAudio.component/Contents/SharedSupport/SystemSounds/system/Screen Capture.aif"
+        return NSSound(contentsOfFile: path, byReference: true) ?? NSSound(named: "Tink")
+    }()
+
     private func playCopySound() {
         let soundEnabled = UserDefaults.standard.object(forKey: "playCopySound") as? Bool ?? true
         guard soundEnabled else { return }
-        let path = "/System/Library/Components/CoreAudio.component/Contents/SharedSupport/SystemSounds/system/Screen Capture.aif"
-        if let sound = NSSound(contentsOfFile: path, byReference: true) {
-            sound.play()
-        } else {
-            NSSound(named: "Tink")?.play()
-        }
+        Self.captureSound?.stop()
+        Self.captureSound?.play()
     }
 
     private func applyBeautifyIfNeeded(_ image: NSImage?) -> NSImage? {
@@ -154,10 +156,11 @@ extension OverlayWindowController: OverlayViewDelegate {
                 }
             }
             let text = lines.joined(separator: "\n")
+            let capturedImage = image  // capture before dismiss
             DispatchQueue.main.async {
                 self.playCopySound()
                 self.dismiss()
-                self.overlayDelegate?.overlayDidRequestOCR(self, text: text)
+                self.overlayDelegate?.overlayDidRequestOCR(self, text: text, image: capturedImage)
             }
         }
         request.recognitionLevel = .accurate
@@ -181,6 +184,59 @@ extension OverlayWindowController: OverlayViewDelegate {
         overlayDelegate?.overlayDidRequestUpload(self, image: image)
     }
 
+    @available(macOS 14.0, *)
+    func overlayViewDidRequestRemoveBackground() {
+        guard var image = overlayView?.captureSelectedRegion() else { return }
+        image = applyBeautifyIfNeeded(image) ?? image
+        
+        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+            return
+        }
+        
+        let request = VNGenerateForegroundInstanceMaskRequest()
+        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                try handler.perform([request])
+                guard let result = request.results?.first else { throw NSError(domain: "Macshot", code: 1) }
+                
+                let maskPixelBuffer = try result.generateScaledMaskForImage(forInstances: result.allInstances, from: handler)
+                
+                let originalCIImage = CIImage(cgImage: cgImage)
+                let maskCIImage = CIImage(cvPixelBuffer: maskPixelBuffer)
+                
+                // Blend original with mask
+                guard let filter = CIFilter(name: "CIBlendWithMask") else { throw NSError(domain: "Macshot", code: 2) }
+                filter.setValue(originalCIImage, forKey: kCIInputImageKey)
+                filter.setValue(maskCIImage, forKey: kCIInputMaskImageKey)
+                filter.setValue(CIImage(color: .clear).cropped(to: originalCIImage.extent), forKey: kCIInputBackgroundImageKey)
+                
+                guard let outputCIImage = filter.outputImage else { throw NSError(domain: "Macshot", code: 3) }
+                
+                let context = CIContext()
+                guard let finalCGImage = context.createCGImage(outputCIImage, from: outputCIImage.extent) else { throw NSError(domain: "Macshot", code: 4) }
+                
+                let finalNSImage = NSImage(cgImage: finalCGImage, size: image.size)
+                
+                DispatchQueue.main.async {
+                    let autoCopy = UserDefaults.standard.object(forKey: "autoCopyToClipboard") as? Bool ?? true
+                    if autoCopy {
+                        self.copyImageToClipboard(finalNSImage)
+                    }
+                    self.playCopySound()
+                    self.dismiss()
+                    self.overlayDelegate?.overlayDidConfirm(self, capturedImage: finalNSImage)
+                }
+            } catch {
+                print("Vision background removal error: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    self.overlayView?.showOverlayError("Background removal failed — no clear subject found.")
+                }
+            }
+        }
+    }
+
     func overlayViewDidRequestQuickSave() {
         guard let image = overlayView?.captureSelectedRegion() else {
             dismiss()
@@ -192,12 +248,14 @@ extension OverlayWindowController: OverlayViewDelegate {
 
         if copyMode {
             copyImageToClipboard(image)
+            playCopySound()
+            dismiss()
+            overlayDelegate?.overlayDidConfirm(self, capturedImage: image)
         } else {
-            guard let imageData = ImageEncoder.encode(image) else {
-                dismiss()
-                overlayDelegate?.overlayDidCancel(self)
-                return
-            }
+            // Dismiss immediately for responsiveness, then save in background
+            playCopySound()
+            dismiss()
+            overlayDelegate?.overlayDidConfirm(self, capturedImage: image)
 
             let dirURL: URL
             if let savedPath = UserDefaults.standard.string(forKey: "saveDirectory") {
@@ -212,12 +270,11 @@ extension OverlayWindowController: OverlayViewDelegate {
             let filename = "Screenshot \(formatter.string(from: Date())).\(ImageEncoder.fileExtension)"
             let fileURL = dirURL.appendingPathComponent(filename)
 
-            try? imageData.write(to: fileURL)
+            DispatchQueue.global(qos: .userInitiated).async {
+                guard let imageData = ImageEncoder.encode(image) else { return }
+                try? imageData.write(to: fileURL)
+            }
         }
-
-        playCopySound()
-        dismiss()
-        overlayDelegate?.overlayDidConfirm(self, capturedImage: image)
     }
 
     func overlayViewDidRequestSave() {

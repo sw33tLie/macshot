@@ -20,6 +20,9 @@ enum ToolbarButtonAction {
     case moveSelection
     case delayCapture
     case upload
+    case removeBackground
+    case loupe
+    case translate
 }
 
 struct ToolbarButton {
@@ -30,6 +33,7 @@ struct ToolbarButton {
     var rect: NSRect = .zero
     var isSelected: Bool = false
     var isHovered: Bool = false
+    var isPressed: Bool = false
     var tintColor: NSColor = .white
     var bgColor: NSColor? = nil  // for color swatches
     var hasContextMenu: Bool = false  // draw small corner triangle to indicate right-click options
@@ -47,15 +51,32 @@ class ToolbarLayout {
     static let toolbarPadding: CGFloat = 4
     static let cornerRadius: CGFloat = 6
 
-    // Bottom toolbar items (drawing tools + colors + undo/redo + size)
+    // Bottom toolbar items (drawing tools + colors + undo/redo + processing actions)
     static func bottomButtons(selectedTool: AnnotationTool, selectedColor: NSColor, beautifyEnabled: Bool = false, beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false) -> [ToolbarButton] {
         var buttons: [ToolbarButton] = []
 
-        // Move tool first (only when annotations exist)
-        if hasAnnotations {
-            var selectBtn = ToolbarButton(action: .tool(.select), sfSymbol: "cursor.rays", label: nil, tooltip: "Move Object")
-            selectBtn.isSelected = (selectedTool == .select)
-            buttons.append(selectBtn)
+        // Move tool always present (disabled look when no annotations)
+        var selectBtn = ToolbarButton(action: .tool(.select), sfSymbol: "cursor.rays", label: nil, tooltip: "Move Object")
+        selectBtn.isSelected = (selectedTool == .select)
+        if !hasAnnotations {
+            selectBtn.tintColor = NSColor.white.withAlphaComponent(0.3)
+        }
+        buttons.append(selectBtn)
+
+        // Get enabled tools from UserDefaults — migrate: add any new tools defaulting to enabled
+        let allKnownToolRawValues = AnnotationTool.allCases
+            .filter { $0 != .select && $0 != .translateOverlay }
+            .map { $0.rawValue }
+        var enabledRawValues = UserDefaults.standard.array(forKey: "enabledTools") as? [Int]
+        if var stored = enabledRawValues {
+            var changed = false
+            for raw in allKnownToolRawValues {
+                if !stored.contains(raw) { stored.append(raw); changed = true }
+            }
+            if changed {
+                UserDefaults.standard.set(stored, forKey: "enabledTools")
+                enabledRawValues = stored
+            }
         }
 
         let tools: [(AnnotationTool, String, String)] = [
@@ -70,14 +91,19 @@ class ToolbarLayout {
             (.number,          "1.circle.fill",             "Number"),
             (.pixelate,        "squareshape.split.2x2",    "Pixelate"),
             (.blur,            "aqi.medium",               "Blur"),
+            (.loupe,           "magnifyingglass",          "Magnify (Loupe)"),
             (.measure,         "ruler",                    "Measure (px)"),
         ]
 
         for (tool, symbol, tip) in tools {
+            // Skip if disabled
+            if let enabledRawValues = enabledRawValues, !enabledRawValues.contains(tool.rawValue) {
+                continue
+            }
             var btn = ToolbarButton(action: .tool(tool), sfSymbol: symbol, label: nil, tooltip: tip)
             btn.isSelected = (tool == selectedTool)
             switch tool {
-            case .pencil, .line, .arrow, .rectangle, .ellipse, .marker, .number:
+            case .pencil, .line, .arrow, .rectangle, .ellipse, .marker, .number, .loupe:
                 btn.hasContextMenu = true
             default:
                 break
@@ -90,42 +116,110 @@ class ToolbarLayout {
         colorBtn.bgColor = selectedColor
         buttons.append(colorBtn)
 
-        // Undo / Redo / Pin
+        // Undo / Redo
         buttons.append(ToolbarButton(action: .undo, sfSymbol: "arrow.uturn.backward", label: nil, tooltip: "Undo"))
         buttons.append(ToolbarButton(action: .redo, sfSymbol: "arrow.uturn.forward", label: nil, tooltip: "Redo"))
-        buttons.append(ToolbarButton(action: .pin, sfSymbol: "pin.fill", label: nil, tooltip: "Pin"))
-        buttons.append(ToolbarButton(action: .ocr, sfSymbol: "doc.text.viewfinder", label: nil, tooltip: "OCR Text"))
-        buttons.append(ToolbarButton(action: .autoRedact, sfSymbol: "eye.slash.fill", label: nil, tooltip: "Auto-Redact sensitive data"))
 
-        // Beautify toggle
-        var beautifyBtn = ToolbarButton(action: .beautify, sfSymbol: "sparkles", label: nil, tooltip: "Beautify — wrap in window frame")
-        beautifyBtn.isSelected = beautifyEnabled
-        beautifyBtn.hasContextMenu = true
-        buttons.append(beautifyBtn)
+        // Processing actions (moved from right bar) — respect enabledActions toggles
+        let enabledActions = UserDefaults.standard.array(forKey: "enabledActions") as? [Int]
+        func actionEnabled(_ tag: Int) -> Bool {
+            return enabledActions == nil || enabledActions!.contains(tag)
+        }
 
-        // Upload / Copy / Save
-        buttons.append(ToolbarButton(action: .upload, sfSymbol: "icloud.and.arrow.up", label: nil, tooltip: "Upload"))
-        buttons.append(ToolbarButton(action: .copy, sfSymbol: "doc.on.doc", label: nil, tooltip: "Copy"))
-        buttons.append(ToolbarButton(action: .save, sfSymbol: "square.and.arrow.down", label: nil, tooltip: "Save"))
+        if actionEnabled(1006) {
+            var autoRedactBtn = ToolbarButton(action: .autoRedact, sfSymbol: "eye.slash.fill", label: nil, tooltip: "Auto-Redact")
+            autoRedactBtn.hasContextMenu = true
+            buttons.append(autoRedactBtn)
+        }
+
+        if actionEnabled(1004) {
+            var beautifyBtn = ToolbarButton(action: .beautify, sfSymbol: "sparkles", label: nil, tooltip: "Beautify")
+            beautifyBtn.isSelected = beautifyEnabled
+            beautifyBtn.hasContextMenu = true
+            buttons.append(beautifyBtn)
+        }
+
+        if #available(macOS 14.0, *), actionEnabled(1005) {
+            buttons.append(ToolbarButton(action: .removeBackground, sfSymbol: "person.crop.circle.dashed", label: nil, tooltip: "Remove Background"))
+        }
 
         return buttons
     }
 
-    // Right toolbar items (actions)
-    static func rightButtons(delaySeconds: Int = 0) -> [ToolbarButton] {
-        let delaySymbol: String
-        let delayTooltip: String
-        switch delaySeconds {
-        case 3: delaySymbol = "3.circle.fill"; delayTooltip = "Delay: 3s (click to change)"
-        case 5: delaySymbol = "5.circle.fill"; delayTooltip = "Delay: 5s (click to change)"
-        case 10: delaySymbol = "10.circle.fill"; delayTooltip = "Delay: 10s (click to change)"
-        default: delaySymbol = "timer"; delayTooltip = "Delay capture (click to set)"
+    // Right toolbar items (output actions + cancel + delay)
+    static func rightButtons(delaySeconds: Int = 0, beautifyEnabled: Bool = false, beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false, translateEnabled: Bool = false) -> [ToolbarButton] {
+        var buttons: [ToolbarButton] = []
+
+        let allKnownActionTags: [Int] = [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008]
+        // Migrate: if stored array exists but is missing new tags, add them (default enabled)
+        var enabledActions = UserDefaults.standard.array(forKey: "enabledActions") as? [Int]
+        if var stored = enabledActions {
+            var changed = false
+            for tag in allKnownActionTags {
+                if !stored.contains(tag) { stored.append(tag); changed = true }
+            }
+            if changed {
+                UserDefaults.standard.set(stored, forKey: "enabledActions")
+                enabledActions = stored
+            }
         }
-        return [
-            ToolbarButton(action: .cancel, sfSymbol: "xmark", label: nil, tooltip: "Cancel"),
-            ToolbarButton(action: .moveSelection, sfSymbol: "arrow.up.and.down.and.arrow.left.and.right", label: nil, tooltip: "Move Selection"),
-            ToolbarButton(action: .delayCapture, sfSymbol: delaySymbol, label: nil, tooltip: delayTooltip),
-        ]
+        func actionEnabled(_ tag: Int) -> Bool {
+            return enabledActions == nil || enabledActions!.contains(tag)
+        }
+
+        // Cancel and move-selection are always present (not toggleable)
+        buttons.append(ToolbarButton(action: .cancel, sfSymbol: "xmark", label: nil, tooltip: "Cancel"))
+        buttons.append(ToolbarButton(action: .moveSelection, sfSymbol: "arrow.up.and.down.and.arrow.left.and.right", label: nil, tooltip: "Move Selection"))
+
+        // Delay capture (tag 1007)
+        if actionEnabled(1007) {
+            let delaySymbol: String
+            let delayTooltip: String
+            switch delaySeconds {
+            case 1: delaySymbol = "1.circle.fill"; delayTooltip = "Delay: 1s"
+            case 2: delaySymbol = "2.circle.fill"; delayTooltip = "Delay: 2s"
+            case 3: delaySymbol = "3.circle.fill"; delayTooltip = "Delay: 3s"
+            case 5: delaySymbol = "5.circle.fill"; delayTooltip = "Delay: 5s"
+            case 10: delaySymbol = "10.circle.fill"; delayTooltip = "Delay: 10s"
+            case 30: delaySymbol = "timer"; delayTooltip = "Delay: 30s"
+            default: delaySymbol = "timer"; delayTooltip = "Delay capture"
+            }
+            var delayBtn = ToolbarButton(action: .delayCapture, sfSymbol: delaySymbol, label: nil, tooltip: delayTooltip)
+            delayBtn.hasContextMenu = true
+            if delaySeconds > 0 { delayBtn.isSelected = true }
+            buttons.append(delayBtn)
+        }
+
+        // Copy and save are always present
+        buttons.append(ToolbarButton(action: .copy, sfSymbol: "doc.on.doc", label: nil, tooltip: "Copy"))
+        buttons.append(ToolbarButton(action: .save, sfSymbol: "square.and.arrow.down.fill", label: nil, tooltip: "Save"))
+
+        // Upload (tag 1001)
+        if actionEnabled(1001) {
+            var uploadBtn = ToolbarButton(action: .upload, sfSymbol: "icloud.and.arrow.up", label: nil, tooltip: "Upload")
+            uploadBtn.hasContextMenu = true
+            buttons.append(uploadBtn)
+        }
+
+        // Pin (tag 1002)
+        if actionEnabled(1002) {
+            buttons.append(ToolbarButton(action: .pin, sfSymbol: "pin.fill", label: nil, tooltip: "Pin"))
+        }
+
+        // OCR (tag 1003)
+        if actionEnabled(1003) {
+            buttons.append(ToolbarButton(action: .ocr, sfSymbol: "doc.text.viewfinder", label: nil, tooltip: "OCR Text"))
+        }
+
+        // Translate (tag 1008)
+        if actionEnabled(1008) {
+            var translateBtn = ToolbarButton(action: .translate, sfSymbol: "translate", label: nil, tooltip: "Translate")
+            translateBtn.isSelected = translateEnabled
+            translateBtn.hasContextMenu = true
+            buttons.append(translateBtn)
+        }
+
+        return buttons
     }
 
     // Layout bottom toolbar rects
@@ -192,16 +286,23 @@ class ToolbarLayout {
         let barX = selectionRect.maxX - totalWidth - 10  // inside, near right edge
         var barY = selectionRect.maxY - totalHeight - 10  // near top-right
 
-        // Avoid overlapping with bottom toolbar
-        if bottomBarRect.width > 0 {
-            let rightBarRect = NSRect(x: barX, y: barY, width: totalWidth, height: totalHeight)
-            if rightBarRect.intersects(bottomBarRect) {
-                barY = bottomBarRect.maxY + 4
-            }
-        }
-
-        // Clamp vertical
+        // Clamp vertical first
         barY = max(viewBounds.minY + 4, min(barY, viewBounds.maxY - totalHeight - 4))
+
+        // Avoid overlapping with bottom toolbar — regardless of X position.
+        if bottomBarRect.width > 0 {
+            let rightTop = barY + totalHeight
+            let rightBot = barY
+            let bbTop    = bottomBarRect.maxY
+            let bbBot    = bottomBarRect.minY
+
+            if bbBot > selectionRect.maxY - 2 && rightTop > bbBot - 4 {
+                barY = bbBot - 4 - totalHeight
+            } else if bbTop < selectionRect.minY + 2 && rightBot < bbTop + 4 {
+                barY = bbTop + 4
+            }
+            barY = max(viewBounds.minY + 4, min(barY, viewBounds.maxY - totalHeight - 4))
+        }
 
         let barRect = NSRect(x: barX, y: barY, width: totalWidth, height: totalHeight)
 
@@ -222,24 +323,39 @@ class ToolbarLayout {
         let totalWidth = buttonSize + toolbarPadding * 2
         let totalHeight = count * buttonSize + (count - 1) * buttonSpacing + toolbarPadding * 2
 
+        // Determine horizontal position first (right or left of selection)
         var barX = selectionRect.maxX + 6
-        var barY = selectionRect.maxY - totalHeight
-
-        // If right of screen, put left
         if barX + totalWidth > viewBounds.maxX - 4 {
             barX = selectionRect.minX - totalWidth - 6
         }
+        // Clamp horizontal to screen bounds
+        barX = max(viewBounds.minX + 4, min(barX, viewBounds.maxX - totalWidth - 4))
 
-        // Avoid overlapping with bottom toolbar
-        if bottomBarRect.width > 0 {
-            let rightBarRect = NSRect(x: barX, y: barY, width: totalWidth, height: totalHeight)
-            if rightBarRect.intersects(bottomBarRect) {
-                barY = bottomBarRect.maxY + 4
-            }
-        }
+        // Preferred vertical: top of right bar aligns with top of selection
+        var barY = selectionRect.maxY - totalHeight
 
-        // Clamp vertical
+        // Clamp vertical to screen bounds
         barY = max(viewBounds.minY + 4, min(barY, viewBounds.maxY - totalHeight - 4))
+
+        // Avoid overlapping with bottom toolbar — regardless of X position.
+        // Check both directions: bottom bar can be above or below the selection.
+        if bottomBarRect.width > 0 {
+            let rightTop = barY + totalHeight   // top edge of right bar
+            let rightBot = barY                 // bottom edge of right bar
+            let bbTop    = bottomBarRect.maxY   // top edge of bottom bar
+            let bbBot    = bottomBarRect.minY   // bottom edge of bottom bar
+
+            // Bottom bar is above: right bar top must not exceed bottom bar's bottom
+            if bbBot > selectionRect.maxY - 2 && rightTop > bbBot - 4 {
+                barY = bbBot - 4 - totalHeight
+            }
+            // Bottom bar is below: right bar bottom must not go below bottom bar's top
+            else if bbTop < selectionRect.minY + 2 && rightBot < bbTop + 4 {
+                barY = bbTop + 4
+            }
+            // Clamp back to screen bounds after adjustment
+            barY = max(viewBounds.minY + 4, min(barY, viewBounds.maxY - totalHeight - 4))
+        }
 
         let barRect = NSRect(x: barX, y: barY, width: totalWidth, height: totalHeight)
 
@@ -318,14 +434,14 @@ class ToolbarLayout {
         if case .tool(let tool) = btn.action, tool == .select { isMoveButton = true } else { isMoveButton = false }
 
         // Selected highlight
-        if btn.isSelected {
+        if btn.isPressed {
+            NSColor.white.withAlphaComponent(0.5).setFill()
+            NSBezierPath(roundedRect: rect.insetBy(dx: 1, dy: 1), xRadius: 4, yRadius: 4).fill()
+        } else if btn.isSelected {
             selectedBg.setFill()
             NSBezierPath(roundedRect: rect.insetBy(dx: 1, dy: 1), xRadius: 4, yRadius: 4).fill()
         } else if btn.isHovered {
             NSColor.white.withAlphaComponent(0.15).setFill()
-            NSBezierPath(roundedRect: rect.insetBy(dx: 1, dy: 1), xRadius: 4, yRadius: 4).fill()
-        } else if isMoveButton {
-            NSColor.white.withAlphaComponent(0.08).setFill()
             NSBezierPath(roundedRect: rect.insetBy(dx: 1, dy: 1), xRadius: 4, yRadius: 4).fill()
         }
 

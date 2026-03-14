@@ -13,6 +13,8 @@ protocol OverlayViewDelegate: AnyObject {
     func overlayViewDidRequestQuickSave()
     func overlayViewDidRequestDelayCapture(seconds: Int, selectionRect: NSRect)
     func overlayViewDidRequestUpload()
+    @available(macOS 14.0, *)
+    func overlayViewDidRequestRemoveBackground()
 }
 
 class OverlayView: NSView {
@@ -51,7 +53,18 @@ class OverlayView: NSView {
     private var currentAnnotation: Annotation?
     private var currentTool: AnnotationTool = .arrow
     private var currentColor: NSColor = .systemRed
-    private var currentStrokeWidth: CGFloat = 3.0
+    private var currentStrokeWidth: CGFloat = {
+        let saved = UserDefaults.standard.object(forKey: "currentStrokeWidth") as? Double
+        return saved != nil ? CGFloat(saved!) : 3.0
+    }()
+    private var currentNumberSize: CGFloat = {
+        let saved = UserDefaults.standard.object(forKey: "numberStrokeWidth") as? Double
+        return saved != nil ? CGFloat(saved!) : 3.0
+    }()
+    private var currentMarkerSize: CGFloat = {
+        let saved = UserDefaults.standard.object(forKey: "markerStrokeWidth") as? Double
+        return saved != nil ? CGFloat(saved!) : 3.0
+    }()
     private var numberCounter: Int = 0
 
     // Select/move mode
@@ -90,7 +103,7 @@ class OverlayView: NSView {
     private var cursorTimer: Timer?
 
     // Delay capture
-    private var delaySeconds: Int = 0  // 0 = off, 3, 5, 10
+    private var delaySeconds: Int = UserDefaults.standard.integer(forKey: "lastDelaySeconds")
 
     // Draggable toolbars
     private var bottomBarDragOffset: NSPoint = .zero
@@ -112,6 +125,86 @@ class OverlayView: NSView {
     private var showStrokePicker: Bool = false
     private var strokePickerRect: NSRect = .zero
     private var hoveredStrokeRow: Int = -1
+
+    // Delay picker popover
+    private var showDelayPicker: Bool = false
+    private var delayPickerRect: NSRect = .zero
+    private var hoveredDelayRow: Int = -1
+
+    // Upload confirm picker (toggle setting via right-click)
+    private var showUploadConfirmPicker: Bool = false
+    private var uploadConfirmPickerRect: NSRect = .zero
+
+    // Upload confirm dialog (inline confirmation before uploading)
+    private var showUploadConfirmDialog: Bool = false
+    private var uploadConfirmDialogRect: NSRect = .zero
+    private var uploadConfirmOKRect: NSRect = .zero
+    private var uploadConfirmCancelRect: NSRect = .zero
+
+    // Redact type picker
+    private var showRedactTypePicker: Bool = false
+    private var redactTypePickerRect: NSRect = .zero
+    private var hoveredRedactTypeRow: Int = -1
+
+    private static let redactTypeNames: [(key: String, label: String)] = [
+        ("email", "Emails"),
+        ("phone", "Phone Numbers"),
+        ("ssn", "SSN"),
+        ("credit_card", "Credit Cards"),
+        ("cvv", "CVV Codes"),
+        ("expiry", "Expiry Dates"),
+        ("ipv4", "IP Addresses"),
+        ("aws_key", "AWS Keys"),
+        ("secret_assignment", "Secrets/Tokens"),
+        ("hex_key", "Hex Keys"),
+        ("bearer", "Bearer Tokens"),
+    ]
+
+    // Loupe size picker
+    private var currentLoupeSize: CGFloat = {
+        let saved = UserDefaults.standard.object(forKey: "loupeSize") as? Double
+        return saved != nil ? CGFloat(saved!) : 120.0
+    }()
+    private var loupeCursorPoint: NSPoint = .zero
+    private var showLoupeSizePicker: Bool = false
+    private var loupeSizePickerRect: NSRect = .zero
+    private var hoveredLoupeSizeRow: Int = -1
+
+    // Translate language picker popover
+    private var showTranslatePicker: Bool = false
+    private var translatePickerRect: NSRect = .zero
+    private var hoveredTranslateRow: Int = -1
+    private var isTranslating: Bool = false
+    private var translateEnabled: Bool = false
+
+    // Press feedback for momentary buttons
+    private var pressedButtonIndex: Int = -1
+
+    // Annotation selection/resize controls
+    private var isResizingAnnotation: Bool = false
+    private var annotationResizeHandle: ResizeHandle = .none
+    private var annotationResizeOrigStart: NSPoint = .zero
+    private var annotationResizeOrigEnd: NSPoint = .zero
+    private var annotationResizeMouseStart: NSPoint = .zero
+    private var annotationDeleteButtonRect: NSRect = .zero
+    private var annotationEditButtonRect: NSRect = .zero
+    private var annotationResizeHandleRects: [(ResizeHandle, NSRect)] = []
+
+    // Overlay error message
+    private var overlayErrorMessage: String? = nil
+    private var overlayErrorTimer: Timer? = nil
+
+    // Barcode / QR detection
+    private var detectedBarcodePayload: String? = nil
+    private var barcodeActionRects: [NSRect] = []   // [0] = primary action, [1] = dismiss
+    private var barcodeScanTask: DispatchWorkItem? = nil
+
+    // Window snapping
+    private var windowSnapEnabled: Bool {
+        get { UserDefaults.standard.object(forKey: "windowSnapEnabled") as? Bool ?? true }
+        set { UserDefaults.standard.set(newValue, forKey: "windowSnapEnabled") }
+    }
+    private var hoveredWindowRect: NSRect? = nil
     private let availableColors: [NSColor] = [
         .systemRed, .systemOrange, .systemYellow, .systemGreen, .systemBlue, .systemPurple,
         .systemPink, .systemTeal, .systemIndigo, .systemBrown, .systemMint, .systemCyan,
@@ -173,7 +266,7 @@ class OverlayView: NSView {
         // the cursor to arrow; this timer wins that race by re-setting every frame.
         if window != nil {
             cursorTimer?.invalidate()
-            cursorTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true) { [weak self] timer in
+            cursorTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true) { @MainActor [weak self] timer in
                 guard let self = self else { timer.invalidate(); return }
                 if self.state == .idle || self.state == .selecting {
                     NSCursor.crosshair.set()
@@ -186,8 +279,28 @@ class OverlayView: NSView {
     }
 
     override func mouseMoved(with event: NSEvent) {
-        guard showToolbars else { return }
         let point = convert(event.locationInWindow, from: nil)
+
+        // Window snap: highlight hovered window in idle state
+        if state == .idle && windowSnapEnabled {
+            let screenPoint = window.map { NSPoint(x: $0.frame.origin.x + point.x, y: $0.frame.origin.y + point.y) }
+            let newRect = screenPoint.flatMap { windowRect(at: $0) }
+            if newRect != hoveredWindowRect {
+                hoveredWindowRect = newRect
+                needsDisplay = true
+            }
+        }
+
+        // Track cursor for loupe live preview
+        if state == .selected && currentTool == .loupe {
+            let newPoint = convert(event.locationInWindow, from: nil)
+            if newPoint != loupeCursorPoint {
+                loupeCursorPoint = newPoint
+                needsDisplay = true
+            }
+        }
+
+        guard showToolbars else { return }
         var newHovered = -1
 
         for (i, btn) in bottomButtons.enumerated() {
@@ -214,6 +327,60 @@ class OverlayView: NSView {
         if needsRedraw {
             needsDisplay = true
         }
+
+        // Loupe size picker hover
+        if showLoupeSizePicker && loupeSizePickerRect.contains(point) {
+            let sizes = 7
+            let rowH: CGFloat = 28
+            let padding: CGFloat = 6
+            var newRow = -1
+            for i in 0..<sizes {
+                let rowY = loupeSizePickerRect.maxY - padding - rowH * CGFloat(i + 1)
+                let rowRect = NSRect(x: loupeSizePickerRect.minX, y: rowY, width: loupeSizePickerRect.width, height: rowH)
+                if rowRect.contains(point) { newRow = i; break }
+            }
+            if newRow != hoveredLoupeSizeRow { hoveredLoupeSizeRow = newRow; needsDisplay = true }
+        }
+
+        // Delay picker hover
+        if showDelayPicker && delayPickerRect.contains(point) {
+            let options = 7 // number of options
+            let rowH: CGFloat = 28
+            let padding: CGFloat = 6
+            var newRow = -1
+            for i in 0..<options {
+                let rowY = delayPickerRect.maxY - padding - rowH * CGFloat(i + 1)
+                let rowRect = NSRect(x: delayPickerRect.minX, y: rowY, width: delayPickerRect.width, height: rowH)
+                if rowRect.contains(point) { newRow = i; break }
+            }
+            if newRow != hoveredDelayRow { hoveredDelayRow = newRow; needsDisplay = true }
+        }
+
+        // Redact type picker hover
+        if showRedactTypePicker && redactTypePickerRect.contains(point) {
+            let types = OverlayView.redactTypeNames.count
+            let rowH: CGFloat = 26; let padding: CGFloat = 6
+            var newRow = -1
+            for i in 0..<types {
+                let rowY = redactTypePickerRect.maxY - padding - rowH * CGFloat(i + 1)
+                let rowRect = NSRect(x: redactTypePickerRect.minX, y: rowY, width: redactTypePickerRect.width, height: rowH)
+                if rowRect.contains(point) { newRow = i; break }
+            }
+            if newRow != hoveredRedactTypeRow { hoveredRedactTypeRow = newRow; needsDisplay = true }
+        }
+
+        // Translate language picker hover
+        if showTranslatePicker && translatePickerRect.contains(point) {
+            let langs = TranslationService.availableLanguages.count
+            let rowH: CGFloat = 26; let padding: CGFloat = 6
+            var newRow = -1
+            for i in 0..<langs {
+                let rowY = translatePickerRect.maxY - padding - rowH * CGFloat(i + 1)
+                let rowRect = NSRect(x: translatePickerRect.minX, y: rowY, width: translatePickerRect.width, height: rowH)
+                if rowRect.contains(point) { newRow = i; break }
+            }
+            if newRow != hoveredTranslateRow { hoveredTranslateRow = newRow; needsDisplay = true }
+        }
     }
 
     // Diagonal resize cursors (macOS doesn't provide these publicly)
@@ -235,6 +402,11 @@ class OverlayView: NSView {
 
     override func resetCursorRects() {
         super.resetCursorRects()
+        // When text editing, force arrow cursor everywhere
+        if textEditView != nil {
+            addCursorRect(bounds, cursor: .arrow)
+            return
+        }
         if state == .idle {
             addCursorRect(bounds, cursor: .crosshair)
             return
@@ -312,6 +484,45 @@ class OverlayView: NSView {
             }
         }
 
+        // Loupe size picker
+        if showLoupeSizePicker && loupeSizePickerRect.width > 0 {
+            addCursorRect(loupeSizePickerRect, cursor: .arrow)
+            let rowH: CGFloat = 28; let padding: CGFloat = 6
+            for i in 0..<7 {
+                let rowY = loupeSizePickerRect.maxY - padding - rowH * CGFloat(i + 1)
+                addCursorRect(NSRect(x: loupeSizePickerRect.minX, y: rowY, width: loupeSizePickerRect.width, height: rowH), cursor: .pointingHand)
+            }
+        }
+        // Delay picker
+        if showDelayPicker && delayPickerRect.width > 0 {
+            addCursorRect(delayPickerRect, cursor: .arrow)
+            let rowH: CGFloat = 28; let padding: CGFloat = 6
+            for i in 0..<7 {
+                let rowY = delayPickerRect.maxY - padding - rowH * CGFloat(i + 1)
+                addCursorRect(NSRect(x: delayPickerRect.minX, y: rowY, width: delayPickerRect.width, height: rowH), cursor: .pointingHand)
+            }
+        }
+        // Upload confirm picker (handled after bounds crosshair below)
+        // Redact type picker
+        if showRedactTypePicker && redactTypePickerRect.width > 0 {
+            addCursorRect(redactTypePickerRect, cursor: .arrow)
+            let rowH: CGFloat = 26; let padding: CGFloat = 6
+            for i in 0..<OverlayView.redactTypeNames.count {
+                let rowY = redactTypePickerRect.maxY - padding - rowH * CGFloat(i + 1)
+                addCursorRect(NSRect(x: redactTypePickerRect.minX, y: rowY, width: redactTypePickerRect.width, height: rowH), cursor: .pointingHand)
+            }
+        }
+
+        // Translate picker
+        if showTranslatePicker && translatePickerRect.width > 0 {
+            addCursorRect(translatePickerRect, cursor: .arrow)
+            let rowH: CGFloat = 26; let padding: CGFloat = 6
+            for i in 0..<TranslationService.availableLanguages.count {
+                let rowY = translatePickerRect.maxY - padding - rowH * CGFloat(i + 1)
+                addCursorRect(NSRect(x: translatePickerRect.minX, y: rowY, width: translatePickerRect.width, height: rowH), cursor: .pointingHand)
+            }
+        }
+
         // Size label — pointer cursor to indicate clickable
         if sizeLabelRect.width > 0 && sizeInputField == nil {
             addCursorRect(sizeLabelRect, cursor: .pointingHand)
@@ -324,8 +535,51 @@ class OverlayView: NSView {
             addCursorRect(innerRect, cursor: selectionCursor)
         }
 
+        // When select tool is active, layer annotation-specific cursors on top
+        if currentTool == .select, let selected = selectedAnnotation {
+            // Annotation bounding box interior → move cursor (already covered by openHand above)
+            // Resize handles → appropriate resize cursors
+            for (handle, rect) in annotationResizeHandleRects {
+                let hitRect = rect.insetBy(dx: -4, dy: -4)
+                switch handle {
+                case .topLeft, .bottomRight:
+                    addCursorRect(hitRect, cursor: Self.nwseCursor)
+                case .topRight, .bottomLeft:
+                    addCursorRect(hitRect, cursor: Self.neswCursor)
+                case .top, .bottom:
+                    addCursorRect(hitRect, cursor: .resizeUpDown)
+                case .left, .right:
+                    addCursorRect(hitRect, cursor: .resizeLeftRight)
+                default:
+                    break
+                }
+            }
+            // Delete / edit buttons → arrow
+            if annotationDeleteButtonRect.width > 0 {
+                addCursorRect(annotationDeleteButtonRect, cursor: .arrow)
+            }
+            if annotationEditButtonRect.width > 0 {
+                addCursorRect(annotationEditButtonRect, cursor: .arrow)
+            }
+        }
+
         // Outside selection — crosshair for new selection
         addCursorRect(bounds, cursor: .crosshair)
+
+        // Upload confirm picker — override crosshair with arrow (must come after bounds rect)
+        if showUploadConfirmPicker && uploadConfirmPickerRect.width > 0 {
+            addCursorRect(uploadConfirmPickerRect, cursor: .arrow)
+            let rowY = uploadConfirmPickerRect.minY + 8
+            let rowRect = NSRect(x: uploadConfirmPickerRect.minX, y: rowY, width: uploadConfirmPickerRect.width, height: 32)
+            addCursorRect(rowRect, cursor: .pointingHand)
+        }
+
+        // Upload confirm dialog — override crosshair with arrow
+        if showUploadConfirmDialog && uploadConfirmDialogRect.width > 0 {
+            addCursorRect(uploadConfirmDialogRect, cursor: .arrow)
+            if uploadConfirmOKRect.width > 0 { addCursorRect(uploadConfirmOKRect, cursor: .pointingHand) }
+            if uploadConfirmCancelRect.width > 0 { addCursorRect(uploadConfirmCancelRect, cursor: .pointingHand) }
+        }
     }
 
     // MARK: - Drawing
@@ -345,6 +599,9 @@ class OverlayView: NSView {
         // Draw dark overlay
         NSColor.black.withAlphaComponent(0.45).setFill()
         NSBezierPath(rect: bounds).fill()
+
+        // Window snap highlight (drawn before helper text so text appears on top)
+        drawWindowSnapHighlight()
 
         // Helper text
         if state == .idle {
@@ -368,9 +625,14 @@ class OverlayView: NSView {
             }
             currentAnnotation?.draw(in: context)
 
+            // Live loupe preview when loupe tool is active
+            if currentTool == .loupe && selectionRect.contains(loupeCursorPoint) && loupeCursorPoint != .zero {
+                drawLoupePreview(at: loupeCursorPoint)
+            }
+
             // Draw selection highlight for selected annotation
             if let selected = selectedAnnotation, currentTool == .select {
-                selected.drawSelectionHighlight()
+                drawAnnotationControls(for: selected)
             }
 
             context.restoreGraphicsState()
@@ -410,6 +672,31 @@ class OverlayView: NSView {
                     drawStrokePicker()
                 }
 
+                // Loupe size picker
+                if showLoupeSizePicker {
+                    drawLoupeSizePicker()
+                }
+
+                // Delay picker
+                if showDelayPicker {
+                    drawDelayPicker()
+                }
+
+                // Upload confirm picker
+                if showUploadConfirmPicker {
+                    drawUploadConfirmPicker()
+                }
+
+                // Redact type picker
+                if showRedactTypePicker {
+                    drawRedactTypePicker()
+                }
+
+                // Translate language picker
+                if showTranslatePicker {
+                    drawTranslatePicker()
+                }
+
                 // Tooltip for hovered button
                 drawHoveredTooltip()
             }
@@ -419,6 +706,33 @@ class OverlayView: NSView {
                 drawColorWheel()
             }
         }
+
+        // Upload confirm dialog — drawn on top of everything
+        if showUploadConfirmDialog {
+            drawUploadConfirmDialog()
+        }
+
+        // Overlay error message
+        if let errorMsg = overlayErrorMessage {
+            let attrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 13, weight: .medium),
+                .foregroundColor: NSColor.white,
+            ]
+            let str = errorMsg as NSString
+            let strSize = str.size(withAttributes: attrs)
+            let padding: CGFloat = 12
+            let msgW = strSize.width + padding * 2
+            let msgH = strSize.height + padding
+            let msgX = bounds.midX - msgW / 2
+            let msgY = bounds.maxY - msgH - 40
+            let msgRect = NSRect(x: msgX, y: msgY, width: msgW, height: msgH)
+            NSColor(red: 0.8, green: 0.2, blue: 0.2, alpha: 0.9).setFill()
+            NSBezierPath(roundedRect: msgRect, xRadius: 8, yRadius: 8).fill()
+            str.draw(at: NSPoint(x: msgRect.minX + padding, y: msgRect.minY + padding / 2), withAttributes: attrs)
+        }
+
+        // Barcode / QR badge
+        if state == .selected { drawBarcodeBar() }
 
         // Keep cursor rects in sync with current selection
         window?.invalidateCursorRects(for: self)
@@ -438,11 +752,17 @@ class OverlayView: NSView {
         }
         guard let button = btn, !button.tooltip.isEmpty else { return }
 
+        // While move-selection drag is active, show a contextual hint
+        var tooltipText = button.tooltip
+        if moveMode, case .moveSelection = button.action {
+            tooltipText = "Drag to reposition"
+        }
+
         let attrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: 11, weight: .medium),
             .foregroundColor: NSColor.white,
         ]
-        let str = button.tooltip as NSString
+        let str = tooltipText as NSString
         let textSize = str.size(withAttributes: attrs)
         let padding: CGFloat = 6
         let tipWidth = textSize.width + padding * 2
@@ -474,25 +794,49 @@ class OverlayView: NSView {
     }
 
     private func drawIdleHelperText() {
-        let line1 = "Drag to select  ·  Click for full screen"
+        let line1 = windowSnapEnabled
+            ? "Click a window  ·  Drag for custom area  ·  F for full screen"
+            : "Drag to select  ·  Click for full screen"
         let copyMode = UserDefaults.standard.object(forKey: "quickModeCopyToClipboard") as? Bool ?? false
-        let line2 = copyMode
-            ? "Right-click: drag to select, click to copy full screen"
-            : "Right-click: drag to select, click to save full screen"
+        let line2: String
+        if windowSnapEnabled {
+            line2 = copyMode
+                ? "Right-click a window to quick copy  ·  drag for custom area"
+                : "Right-click a window to quick save  ·  drag for custom area"
+        } else {
+            line2 = copyMode
+                ? "Right-click: drag to quick copy  ·  click to copy full screen"
+                : "Right-click: drag to quick save  ·  click to save full screen"
+        }
+        let snapOn = windowSnapEnabled
+        let line3prefix = "Window snap: "
+        let line3state = snapOn ? "ON" : "OFF"
+        let line3suffix = "  (Tab to toggle)"
 
         let font = NSFont.systemFont(ofSize: 13, weight: .medium)
+        let smallFont = NSFont.systemFont(ofSize: 12, weight: .regular)
         let textColor = NSColor.white
         let dimColor = NSColor.white.withAlphaComponent(0.7)
+        let snapColor = snapOn ? NSColor.systemGreen : NSColor.systemOrange
 
         let attrs1: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: textColor]
         let attrs2: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: dimColor]
+        let attrs3prefix: [NSAttributedString.Key: Any] = [.font: smallFont, .foregroundColor: dimColor]
+        let attrs3state: [NSAttributedString.Key: Any]  = [.font: NSFont.systemFont(ofSize: 12, weight: .semibold), .foregroundColor: snapColor]
+        let attrs3suffix: [NSAttributedString.Key: Any] = [.font: smallFont, .foregroundColor: dimColor]
 
-        let size1 = (line1 as NSString).size(withAttributes: attrs1)
-        let size2 = (line2 as NSString).size(withAttributes: attrs2)
-        let lineSpacing: CGFloat = 8
+        let size1       = (line1 as NSString).size(withAttributes: attrs1)
+        let size2       = (line2 as NSString).size(withAttributes: attrs2)
+        let size3pre    = (line3prefix as NSString).size(withAttributes: attrs3prefix)
+        let size3state  = (line3state as NSString).size(withAttributes: attrs3state)
+        let size3suf    = (line3suffix as NSString).size(withAttributes: attrs3suffix)
+        let size3total  = CGSize(width: size3pre.width + size3state.width + size3suf.width,
+                                 height: max(size3pre.height, size3state.height, size3suf.height))
+
+        let lineSpacing: CGFloat = 6
         let padding: CGFloat = 14
-        let totalTextHeight = size1.height + lineSpacing + size2.height
-        let bgWidth = max(size1.width, size2.width) + padding * 2
+        let totalTextHeight = size1.height + lineSpacing + size2.height + lineSpacing + size3total.height
+        let bgWidth = max(size1.width, size2.width, size3total.width) + padding * 2
         let bgHeight = totalTextHeight + padding * 2
 
         let bgX = bounds.midX - bgWidth / 2
@@ -502,13 +846,19 @@ class OverlayView: NSView {
         NSColor.black.withAlphaComponent(0.65).setFill()
         NSBezierPath(roundedRect: bgRect, xRadius: 8, yRadius: 8).fill()
 
-        let textX1 = bounds.midX - size1.width / 2
-        let textX2 = bounds.midX - size2.width / 2
-        let textY1 = bgY + padding + size2.height + lineSpacing
-        let textY2 = bgY + padding
+        let textY1 = bgY + padding + size2.height + lineSpacing + size3total.height + lineSpacing
+        let textY2 = bgY + padding + size3total.height + lineSpacing
+        let textY3 = bgY + padding
 
-        (line1 as NSString).draw(at: NSPoint(x: textX1, y: textY1), withAttributes: attrs1)
-        (line2 as NSString).draw(at: NSPoint(x: textX2, y: textY2), withAttributes: attrs2)
+        (line1 as NSString).draw(at: NSPoint(x: bounds.midX - size1.width / 2, y: textY1), withAttributes: attrs1)
+        (line2 as NSString).draw(at: NSPoint(x: bounds.midX - size2.width / 2, y: textY2), withAttributes: attrs2)
+
+        // Draw line3 as three segments with different colors
+        let line3startX = bounds.midX - size3total.width / 2
+        let line3Y = textY3 + (size3total.height - size3pre.height) / 2
+        (line3prefix as NSString).draw(at: NSPoint(x: line3startX, y: line3Y), withAttributes: attrs3prefix)
+        (line3state as NSString).draw(at: NSPoint(x: line3startX + size3pre.width, y: line3Y), withAttributes: attrs3state)
+        (line3suffix as NSString).draw(at: NSPoint(x: line3startX + size3pre.width + size3state.width, y: line3Y), withAttributes: attrs3suffix)
     }
 
     private func drawSelectingHelperText() {
@@ -974,22 +1324,21 @@ class OverlayView: NSView {
         let padding: CGFloat = 6
         let pickerHeight = rowH * CGFloat(styles.count) + padding * 2
 
-        // Anchor to the beautify button
-        var anchorX = bottomBarRect.midX
+        // Anchor to the beautify button in bottom bar
         var anchorRect = NSRect.zero
         for btn in bottomButtons {
             if case .beautify = btn.action {
-                anchorX = btn.rect.midX
                 anchorRect = btn.rect
                 break
             }
         }
 
-        let pickerX = max(bounds.minX + 4, min(anchorX - pickerWidth / 2, bounds.maxX - pickerWidth - 4))
-        var pickerY = anchorRect.maxY + 4  // default: above button
+        let pickerX = anchorRect.midX - pickerWidth / 2
+        var pickerY = anchorRect.maxY + 4
         if pickerY + pickerHeight > bounds.maxY - 4 {
-            pickerY = anchorRect.minY - pickerHeight - 4  // flip below if no room above
+            pickerY = anchorRect.minY - pickerHeight - 4
         }
+        pickerY = max(bounds.minY + 4, min(pickerY, bounds.maxY - pickerHeight - 4))
 
         let pickerRect = NSRect(x: pickerX, y: pickerY, width: pickerWidth, height: pickerHeight)
         beautifyPickerRect = pickerRect
@@ -1034,8 +1383,8 @@ class OverlayView: NSView {
 
     private func drawStrokePicker() {
         let widths: [CGFloat] = [1, 2, 3, 5, 8, 12, 20]
-        let rowH: CGFloat = 28
-        let pickerWidth: CGFloat = 135
+        let rowH: CGFloat = 30
+        let pickerWidth: CGFloat = 140
         let padding: CGFloat = 6
         let pickerHeight = rowH * CGFloat(widths.count) + padding * 2
 
@@ -1051,13 +1400,21 @@ class OverlayView: NSView {
         }
 
         let pickerX = max(bounds.minX + 4, min(anchorX - pickerWidth / 2, bounds.maxX - pickerWidth - 4))
-        var pickerY = anchorRect.maxY + 4  // default: above button
+        var pickerY = anchorRect.maxY + 4
         if pickerY + pickerHeight > bounds.maxY - 4 {
-            pickerY = anchorRect.minY - pickerHeight - 4  // flip below if no room above
+            pickerY = anchorRect.minY - pickerHeight - 4
         }
 
         let pickerRect = NSRect(x: pickerX, y: pickerY, width: pickerWidth, height: pickerHeight)
         strokePickerRect = pickerRect
+
+        // Current size for this tool
+        let activeWidth: CGFloat
+        switch currentTool {
+        case .number: activeWidth = currentNumberSize
+        case .marker: activeWidth = currentMarkerSize
+        default:      activeWidth = currentStrokeWidth
+        }
 
         // Background
         ToolbarLayout.bgColor.setFill()
@@ -1068,42 +1425,664 @@ class OverlayView: NSView {
             .foregroundColor: NSColor.white,
         ]
 
-        // Rows — drawn top-to-bottom (index 0 at top)
+        let labelX = pickerRect.minX + 12
+        let labelW: CGFloat = 44   // fixed label column width
+        let lineStartX = labelX + labelW + 8  // gap between label and preview
+
         for (i, width) in widths.enumerated() {
             let rowY = pickerRect.maxY - padding - rowH * CGFloat(i + 1)
             let rowRect = NSRect(x: pickerRect.minX, y: rowY, width: pickerRect.width, height: rowH)
 
-            // Highlight selected row
-            if currentStrokeWidth == width {
+            if activeWidth == width {
                 ToolbarLayout.accentColor.withAlphaComponent(0.5).setFill()
                 NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
             } else if i == hoveredStrokeRow {
-                // Hover highlight
                 NSColor.white.withAlphaComponent(0.15).setFill()
                 NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
             }
 
-            // Draw a stroke sample
+            // Label
+            let labelText = "\(Int(width))px"
+            let nameStr = labelText as NSString
+            let nameSize = nameStr.size(withAttributes: textAttrs)
+            nameStr.draw(at: NSPoint(x: labelX, y: rowRect.midY - nameSize.height / 2), withAttributes: textAttrs)
+
+            // Stroke preview line (all tools — no circle for number)
             let lineY = rowRect.midY
             let linePath = NSBezierPath()
-            linePath.move(to: NSPoint(x: rowRect.minX + 56, y: lineY))
-            linePath.line(to: NSPoint(x: rowRect.maxX - 12, y: lineY))
-            linePath.lineWidth = width > 14 ? 14 : width // Visual clamp
+            linePath.move(to: NSPoint(x: lineStartX, y: lineY))
+            linePath.line(to: NSPoint(x: pickerRect.maxX - 10, y: lineY))
+            linePath.lineWidth = min(width, 14)
             linePath.lineCapStyle = .round
             NSColor.white.setStroke()
             linePath.stroke()
-
-            // Label
-            let labelText: String
-            if currentTool == .marker {
-                labelText = "Scale \(Int(width))"
-            } else {
-                labelText = "\(Int(width))px"
-            }
-            let nameStr = labelText as NSString
-            let nameSize = nameStr.size(withAttributes: textAttrs)
-            nameStr.draw(at: NSPoint(x: rowRect.minX + 12, y: rowRect.midY - nameSize.height / 2), withAttributes: textAttrs)
         }
+    }
+
+    // MARK: - Delay Picker
+
+    private func drawDelayPicker() {
+        let options: [(label: String, seconds: Int)] = [
+            ("Off", 0), ("1s", 1), ("2s", 2), ("3s", 3), ("5s", 5), ("10s", 10), ("30s", 30)
+        ]
+        let rowH: CGFloat = 28
+        let pickerWidth: CGFloat = 90
+        let padding: CGFloat = 6
+        let pickerHeight = rowH * CGFloat(options.count) + padding * 2
+
+        var anchorRect = NSRect.zero
+        for btn in rightButtons {
+            if case .delayCapture = btn.action {
+                anchorRect = btn.rect
+                break
+            }
+        }
+
+        let pickerX = anchorRect.minX - pickerWidth - 4
+        var pickerY = anchorRect.maxY - pickerHeight
+        pickerY = max(bounds.minY + 4, min(pickerY, bounds.maxY - pickerHeight - 4))
+
+        let pickerRect = NSRect(x: pickerX, y: pickerY, width: pickerWidth, height: pickerHeight)
+        delayPickerRect = pickerRect
+
+        ToolbarLayout.bgColor.setFill()
+        NSBezierPath(roundedRect: pickerRect, xRadius: 6, yRadius: 6).fill()
+
+        let textAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 12, weight: .medium),
+            .foregroundColor: NSColor.white,
+        ]
+
+        for (i, option) in options.enumerated() {
+            let rowY = pickerRect.maxY - padding - rowH * CGFloat(i + 1)
+            let rowRect = NSRect(x: pickerRect.minX, y: rowY, width: pickerRect.width, height: rowH)
+
+            if option.seconds == delaySeconds {
+                ToolbarLayout.accentColor.withAlphaComponent(0.5).setFill()
+                NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
+            } else if i == hoveredDelayRow {
+                NSColor.white.withAlphaComponent(0.15).setFill()
+                NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
+            }
+
+            let labelStr = option.label as NSString
+            let labelSize = labelStr.size(withAttributes: textAttrs)
+            labelStr.draw(at: NSPoint(x: rowRect.midX - labelSize.width / 2, y: rowRect.midY - labelSize.height / 2), withAttributes: textAttrs)
+        }
+    }
+
+    // MARK: - Upload Confirm Picker
+
+    private func drawUploadConfirmPicker() {
+        let confirmEnabled = UserDefaults.standard.bool(forKey: "uploadConfirmEnabled")
+        let rowH: CGFloat = 32
+        let pickerWidth: CGFloat = 180
+        let padding: CGFloat = 8
+        let pickerHeight = rowH + padding * 2
+
+        var anchorRect = NSRect.zero
+        for btn in rightButtons {
+            if case .upload = btn.action { anchorRect = btn.rect; break }
+        }
+
+        var pickerX = anchorRect.minX - pickerWidth - 4
+        var pickerY = anchorRect.maxY - pickerHeight
+        pickerY = max(bounds.minY + 4, min(pickerY, bounds.maxY - pickerHeight - 4))
+        pickerX = max(bounds.minX + 4, min(pickerX, bounds.maxX - pickerWidth - 4))
+
+        let pickerRect = NSRect(x: pickerX, y: pickerY, width: pickerWidth, height: pickerHeight)
+        uploadConfirmPickerRect = pickerRect
+
+        ToolbarLayout.bgColor.setFill()
+        NSBezierPath(roundedRect: pickerRect, xRadius: 6, yRadius: 6).fill()
+
+        let rowY = pickerRect.minY + padding
+        let rowRect = NSRect(x: pickerRect.minX, y: rowY, width: pickerRect.width, height: rowH)
+
+        let checkSymbol: String = confirmEnabled ? "checkmark.circle.fill" : "circle"
+        let symbolConfig = NSImage.SymbolConfiguration(pointSize: 14, weight: .medium)
+        if let img = NSImage(systemSymbolName: checkSymbol, accessibilityDescription: nil)?.withSymbolConfiguration(symbolConfig) {
+            let tintColor: NSColor = confirmEnabled ? ToolbarLayout.accentColor : NSColor.white.withAlphaComponent(0.5)
+            let tinted = NSImage(size: img.size)
+            tinted.lockFocus()
+            img.draw(in: NSRect(origin: .zero, size: img.size))
+            tintColor.setFill()
+            NSRect(origin: .zero, size: img.size).fill(using: .sourceAtop)
+            tinted.unlockFocus()
+            let iconRect = NSRect(x: rowRect.minX + 10, y: rowRect.midY - 8, width: 16, height: 16)
+            tinted.draw(in: iconRect, from: .zero, operation: .sourceOver, fraction: 1.0)
+        }
+
+        let textAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 11, weight: .medium),
+            .foregroundColor: NSColor.white,
+        ]
+        let label = "Confirm before upload" as NSString
+        let labelSize = label.size(withAttributes: textAttrs)
+        label.draw(at: NSPoint(x: rowRect.minX + 32, y: rowRect.midY - labelSize.height / 2), withAttributes: textAttrs)
+    }
+
+    // MARK: - Upload Confirm Dialog
+
+    private func drawUploadConfirmDialog() {
+        let dialogW: CGFloat = 280
+        let dialogH: CGFloat = 110
+        let dialogX = bounds.midX - dialogW / 2
+        let dialogY = bounds.midY - dialogH / 2
+        let dialogRect = NSRect(x: dialogX, y: dialogY, width: dialogW, height: dialogH)
+        uploadConfirmDialogRect = dialogRect
+
+        // Dim the rest of the overlay
+        NSColor.black.withAlphaComponent(0.45).setFill()
+        NSBezierPath(rect: bounds).fill()
+
+        // Dialog background
+        ToolbarLayout.bgColor.setFill()
+        NSBezierPath(roundedRect: dialogRect, xRadius: 10, yRadius: 10).fill()
+
+        // Title
+        let titleAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 13, weight: .semibold),
+            .foregroundColor: NSColor.white,
+        ]
+        let title = "Upload to imgbb.com?" as NSString
+        let titleSize = title.size(withAttributes: titleAttrs)
+        title.draw(at: NSPoint(x: dialogRect.midX - titleSize.width / 2, y: dialogRect.maxY - 30), withAttributes: titleAttrs)
+
+        // Subtitle
+        let subAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 11, weight: .regular),
+            .foregroundColor: NSColor.white.withAlphaComponent(0.6),
+        ]
+        let sub = "Your screenshot will be sent to imgbb.com" as NSString
+        let subSize = sub.size(withAttributes: subAttrs)
+        sub.draw(at: NSPoint(x: dialogRect.midX - subSize.width / 2, y: dialogRect.maxY - 52), withAttributes: subAttrs)
+
+        // Buttons
+        let btnW: CGFloat = 100
+        let btnH: CGFloat = 28
+        let btnY = dialogRect.minY + 16
+        let cancelRect = NSRect(x: dialogRect.midX - btnW - 6, y: btnY, width: btnW, height: btnH)
+        let okRect = NSRect(x: dialogRect.midX + 6, y: btnY, width: btnW, height: btnH)
+        uploadConfirmCancelRect = cancelRect
+        uploadConfirmOKRect = okRect
+
+        // Cancel button
+        NSColor.white.withAlphaComponent(0.12).setFill()
+        NSBezierPath(roundedRect: cancelRect, xRadius: 6, yRadius: 6).fill()
+        let cancelAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 12, weight: .medium),
+            .foregroundColor: NSColor.white,
+        ]
+        let cancelLabel = "Cancel" as NSString
+        let cancelSize = cancelLabel.size(withAttributes: cancelAttrs)
+        cancelLabel.draw(at: NSPoint(x: cancelRect.midX - cancelSize.width / 2, y: cancelRect.midY - cancelSize.height / 2), withAttributes: cancelAttrs)
+
+        // Upload button
+        ToolbarLayout.accentColor.setFill()
+        NSBezierPath(roundedRect: okRect, xRadius: 6, yRadius: 6).fill()
+        let okAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 12, weight: .semibold),
+            .foregroundColor: NSColor.white,
+        ]
+        let okLabel = "Upload" as NSString
+        let okSize = okLabel.size(withAttributes: okAttrs)
+        okLabel.draw(at: NSPoint(x: okRect.midX - okSize.width / 2, y: okRect.midY - okSize.height / 2), withAttributes: okAttrs)
+    }
+
+    // MARK: - Redact Type Picker
+
+    private func drawRedactTypePicker() {
+        let types = OverlayView.redactTypeNames
+        let enabledTypes = UserDefaults.standard.array(forKey: "enabledRedactTypes") as? [String]
+
+        let rowH: CGFloat = 26
+        let pickerWidth: CGFloat = 165
+        let padding: CGFloat = 6
+        let pickerHeight = rowH * CGFloat(types.count) + padding * 2
+
+        var anchorRect = NSRect.zero
+        for btn in bottomButtons {
+            if case .autoRedact = btn.action { anchorRect = btn.rect; break }
+        }
+
+        let pickerX = anchorRect.midX - pickerWidth / 2
+        var pickerY = anchorRect.maxY + 4
+        if pickerY + pickerHeight > bounds.maxY - 4 {
+            pickerY = anchorRect.minY - pickerHeight - 4
+        }
+        pickerY = max(bounds.minY + 4, min(pickerY, bounds.maxY - pickerHeight - 4))
+
+        let pickerRect = NSRect(x: pickerX, y: pickerY, width: pickerWidth, height: pickerHeight)
+        redactTypePickerRect = pickerRect
+
+        ToolbarLayout.bgColor.setFill()
+        NSBezierPath(roundedRect: pickerRect, xRadius: 6, yRadius: 6).fill()
+
+        let textAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 11, weight: .medium),
+            .foregroundColor: NSColor.white,
+        ]
+
+        for (i, item) in types.enumerated() {
+            let rowY = pickerRect.maxY - padding - rowH * CGFloat(i + 1)
+            let rowRect = NSRect(x: pickerRect.minX, y: rowY, width: pickerRect.width, height: rowH)
+
+            if i == hoveredRedactTypeRow {
+                NSColor.white.withAlphaComponent(0.15).setFill()
+                NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
+            }
+
+            let isEnabled = enabledTypes == nil || enabledTypes!.contains(item.key)
+            let checkSymbol: String = isEnabled ? "checkmark.square.fill" : "square"
+            let symbolConfig = NSImage.SymbolConfiguration(pointSize: 11, weight: .medium)
+            if let img = NSImage(systemSymbolName: checkSymbol, accessibilityDescription: nil)?.withSymbolConfiguration(symbolConfig) {
+                let tintColor: NSColor = isEnabled ? ToolbarLayout.accentColor : NSColor.white.withAlphaComponent(0.5)
+                let tinted = NSImage(size: img.size)
+                tinted.lockFocus()
+                img.draw(in: NSRect(origin: .zero, size: img.size))
+                tintColor.setFill()
+                NSRect(origin: .zero, size: img.size).fill(using: .sourceAtop)
+                tinted.unlockFocus()
+                tinted.draw(in: NSRect(x: rowRect.minX + 8, y: rowRect.midY - 7, width: 14, height: 14), from: .zero, operation: .sourceOver, fraction: 1.0)
+            }
+
+            let labelStr = item.label as NSString
+            let labelSize = labelStr.size(withAttributes: textAttrs)
+            labelStr.draw(at: NSPoint(x: rowRect.minX + 28, y: rowRect.midY - labelSize.height / 2), withAttributes: textAttrs)
+        }
+    }
+
+    // MARK: - Loupe Size Picker
+
+    private func drawLoupeSizePicker() {
+        let sizes: [CGFloat] = [60, 80, 100, 120, 160, 200, 250]
+        let rowH: CGFloat = 28
+        let pickerWidth: CGFloat = 120
+        let padding: CGFloat = 6
+        let pickerHeight = rowH * CGFloat(sizes.count) + padding * 2
+
+        var anchorRect = NSRect.zero
+        for btn in bottomButtons {
+            if case .tool(let t) = btn.action, t == .loupe {
+                anchorRect = btn.rect
+                break
+            }
+        }
+
+        let pickerX = max(bounds.minX + 4, min(anchorRect.midX - pickerWidth / 2, bounds.maxX - pickerWidth - 4))
+        var pickerY = anchorRect.maxY + 4
+        if pickerY + pickerHeight > bounds.maxY - 4 {
+            pickerY = anchorRect.minY - pickerHeight - 4
+        }
+
+        let pickerRect = NSRect(x: pickerX, y: pickerY, width: pickerWidth, height: pickerHeight)
+        loupeSizePickerRect = pickerRect
+
+        ToolbarLayout.bgColor.setFill()
+        NSBezierPath(roundedRect: pickerRect, xRadius: 6, yRadius: 6).fill()
+
+        let textAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 11, weight: .medium),
+            .foregroundColor: NSColor.white,
+        ]
+
+        for (i, size) in sizes.enumerated() {
+            let rowY = pickerRect.maxY - padding - rowH * CGFloat(i + 1)
+            let rowRect = NSRect(x: pickerRect.minX, y: rowY, width: pickerRect.width, height: rowH)
+
+            if size == currentLoupeSize {
+                ToolbarLayout.accentColor.withAlphaComponent(0.5).setFill()
+                NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
+            } else if i == hoveredLoupeSizeRow {
+                NSColor.white.withAlphaComponent(0.15).setFill()
+                NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
+            }
+
+            let radius = min(12, size / 10)
+            let cx = rowRect.maxX - 20
+            let cy = rowRect.midY
+            NSColor.white.withAlphaComponent(0.7).setStroke()
+            let circlePath = NSBezierPath(ovalIn: NSRect(x: cx - radius, y: cy - radius, width: radius * 2, height: radius * 2))
+            circlePath.lineWidth = 1.5
+            circlePath.stroke()
+
+            let labelStr = "\(Int(size))px" as NSString
+            let labelSize = labelStr.size(withAttributes: textAttrs)
+            labelStr.draw(at: NSPoint(x: rowRect.minX + 12, y: rowRect.midY - labelSize.height / 2), withAttributes: textAttrs)
+        }
+    }
+
+    // MARK: - Loupe Preview
+
+    private func drawLoupePreview(at center: NSPoint) {
+        guard let screenshot = screenshotImage else { return }
+        let size = currentLoupeSize
+        let loupeRect = NSRect(x: center.x - size/2, y: center.y - size/2, width: size, height: size)
+
+        let previewAnn = Annotation(tool: .loupe, startPoint: loupeRect.origin,
+                                     endPoint: NSPoint(x: loupeRect.maxX, y: loupeRect.maxY),
+                                     color: .white, strokeWidth: 2)
+        previewAnn.sourceImage = screenshot
+        previewAnn.sourceImageBounds = bounds
+
+        guard let context = NSGraphicsContext.current else { return }
+        context.saveGraphicsState()
+        NSGraphicsContext.current?.cgContext.setAlpha(0.75)
+        previewAnn.draw(in: context)
+        context.restoreGraphicsState()
+    }
+
+    // MARK: - Annotation Controls
+
+    private func drawAnnotationControls(for annotation: Annotation) {
+        let baseRect: NSRect
+        switch annotation.tool {
+        case .pencil, .marker:
+            guard let points = annotation.points, !points.isEmpty else { return }
+            var minX = CGFloat.greatestFiniteMagnitude, minY = CGFloat.greatestFiniteMagnitude
+            var maxX = -CGFloat.greatestFiniteMagnitude, maxY = -CGFloat.greatestFiniteMagnitude
+            for p in points { minX = min(minX, p.x); minY = min(minY, p.y); maxX = max(maxX, p.x); maxY = max(maxY, p.y) }
+            baseRect = NSRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+        case .text:
+            // startPoint = top-left, endPoint = bottom-right (set at commit time)
+            if annotation.endPoint != annotation.startPoint {
+                baseRect = annotation.boundingRect
+            } else {
+                // Legacy: recompute from attributed string size
+                let text = annotation.attributedText ?? annotation.text.map { NSAttributedString(string: $0, attributes: [.font: NSFont.systemFont(ofSize: annotation.fontSize)]) }
+                let size = text?.size() ?? NSSize(width: 50, height: 20)
+                baseRect = NSRect(origin: annotation.startPoint, size: size)
+            }
+        case .number:
+            let radius = max(14, annotation.strokeWidth * 4)
+            baseRect = NSRect(x: annotation.startPoint.x - radius, y: annotation.startPoint.y - radius, width: radius * 2, height: radius * 2)
+        default:
+            baseRect = annotation.boundingRect
+        }
+
+        let padded = baseRect.insetBy(dx: -4, dy: -4)
+
+        // Draw dashed border
+        let path = NSBezierPath(roundedRect: padded, xRadius: 3, yRadius: 3)
+        path.lineWidth = 1.5
+        path.setLineDash([4, 4], count: 2, phase: 0)
+        NSColor.white.withAlphaComponent(0.8).setStroke()
+        path.stroke()
+        ToolbarLayout.accentColor.withAlphaComponent(0.3).setFill()
+        NSBezierPath(roundedRect: padded, xRadius: 3, yRadius: 3).fill()
+
+        // Draw resize handles (8 positions)
+        let handles = annotationAllHandleRects(for: padded)
+        annotationResizeHandleRects = handles
+        for (_, rect) in handles {
+            ToolbarLayout.accentColor.setFill()
+            NSBezierPath(ovalIn: rect).fill()
+            NSColor.white.withAlphaComponent(0.8).setStroke()
+            let border = NSBezierPath(ovalIn: rect.insetBy(dx: 0.5, dy: 0.5))
+            border.lineWidth = 1
+            border.stroke()
+        }
+
+        // Delete button (X) at top-right outside the box
+        let btnSize: CGFloat = 20
+        let deleteRect = NSRect(x: padded.maxX + 4, y: padded.maxY - btnSize, width: btnSize, height: btnSize)
+        annotationDeleteButtonRect = deleteRect
+        NSColor(red: 0.9, green: 0.2, blue: 0.2, alpha: 0.9).setFill()
+        NSBezierPath(ovalIn: deleteRect).fill()
+        let xAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.boldSystemFont(ofSize: 11),
+            .foregroundColor: NSColor.white,
+        ]
+        let xStr = "×" as NSString
+        let xSize = xStr.size(withAttributes: xAttrs)
+        xStr.draw(at: NSPoint(x: deleteRect.midX - xSize.width/2, y: deleteRect.midY - xSize.height/2), withAttributes: xAttrs)
+
+        // Edit button (pencil) for text annotations
+        if annotation.tool == .text {
+            let editRect = NSRect(x: padded.maxX + 4, y: padded.maxY - btnSize * 2 - 4, width: btnSize, height: btnSize)
+            annotationEditButtonRect = editRect
+            NSColor(white: 0.3, alpha: 0.9).setFill()
+            NSBezierPath(ovalIn: editRect).fill()
+            let symbolConfig = NSImage.SymbolConfiguration(pointSize: 10, weight: .medium)
+            if let img = NSImage(systemSymbolName: "pencil", accessibilityDescription: nil)?.withSymbolConfiguration(symbolConfig) {
+                let tinted = NSImage(size: img.size)
+                tinted.lockFocus()
+                img.draw(in: NSRect(origin: .zero, size: img.size))
+                NSColor.white.setFill()
+                NSRect(origin: .zero, size: img.size).fill(using: .sourceAtop)
+                tinted.unlockFocus()
+                let imgRect = NSRect(x: editRect.midX - img.size.width/2, y: editRect.midY - img.size.height/2, width: img.size.width, height: img.size.height)
+                tinted.draw(in: imgRect, from: .zero, operation: .sourceOver, fraction: 1.0)
+            }
+        } else {
+            annotationEditButtonRect = .zero
+        }
+    }
+
+    private func annotationAllHandleRects(for rect: NSRect) -> [(ResizeHandle, NSRect)] {
+        let s: CGFloat = 8
+        let r = rect
+        return [
+            (.topLeft,    NSRect(x: r.minX - s/2, y: r.maxY - s/2, width: s, height: s)),
+            (.topRight,   NSRect(x: r.maxX - s/2, y: r.maxY - s/2, width: s, height: s)),
+            (.bottomLeft, NSRect(x: r.minX - s/2, y: r.minY - s/2, width: s, height: s)),
+            (.bottomRight,NSRect(x: r.maxX - s/2, y: r.minY - s/2, width: s, height: s)),
+            (.top,        NSRect(x: r.midX - s/2, y: r.maxY - s/2, width: s, height: s)),
+            (.bottom,     NSRect(x: r.midX - s/2, y: r.minY - s/2, width: s, height: s)),
+            (.left,       NSRect(x: r.minX - s/2, y: r.midY - s/2, width: s, height: s)),
+            (.right,      NSRect(x: r.maxX - s/2, y: r.midY - s/2, width: s, height: s)),
+        ]
+    }
+
+    // MARK: - Action Equality Helper (for press feedback)
+
+    private func actionEq(_ a: ToolbarButtonAction, _ b: ToolbarButtonAction) -> Bool {
+        switch (a, b) {
+        case (.undo, .undo), (.redo, .redo), (.copy, .copy), (.save, .save), (.upload, .upload),
+             (.pin, .pin), (.ocr, .ocr), (.autoRedact, .autoRedact), (.removeBackground, .removeBackground),
+             (.cancel, .cancel):
+            return true
+        default:
+            return false
+        }
+    }
+
+    // MARK: - Overlay Error
+
+    func showOverlayError(_ message: String) {
+        overlayErrorTimer?.invalidate()
+        overlayErrorMessage = message
+        needsDisplay = true
+        overlayErrorTimer = Timer.scheduledTimer(withTimeInterval: 4.0, repeats: false) { [weak self] _ in
+            self?.overlayErrorMessage = nil
+            self?.needsDisplay = true
+        }
+    }
+
+    // MARK: - Window Snapping
+
+    /// Returns the frontmost visible window rect (in view coordinates) that contains `screenPoint`.
+    /// `screenPoint` is in AppKit screen coordinates (origin bottom-left of main screen).
+    private func windowRect(at screenPoint: NSPoint) -> NSRect? {
+        guard let windowList = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else { return nil }
+
+        // The overlay window itself — skip it
+        let overlayWindowNumber = window?.windowNumber ?? -1
+
+        for info in windowList {
+            guard let layer = info[kCGWindowLayer as String] as? Int, layer == 0,
+                  let boundsDict = info[kCGWindowBounds as String] as? [String: CGFloat],
+                  let winNum = info[kCGWindowNumber as String] as? Int,
+                  winNum != overlayWindowNumber else { continue }
+
+            // CGWindow bounds are in screen coordinates with origin top-left
+            let cgX = boundsDict["X"] ?? 0
+            let cgY = boundsDict["Y"] ?? 0
+            let cgW = boundsDict["Width"] ?? 0
+            let cgH = boundsDict["Height"] ?? 0
+            guard cgW > 10 && cgH > 10 else { continue }
+
+            // Convert CGWindow top-left origin to AppKit bottom-left origin
+            let screenH = NSScreen.screens.map { $0.frame.maxY }.max() ?? NSScreen.main?.frame.height ?? 0
+            let appKitRect = NSRect(x: cgX, y: screenH - cgY - cgH, width: cgW, height: cgH)
+
+            if appKitRect.contains(screenPoint) {
+                // Convert from global screen coords to this view's local coords
+                guard let viewWindow = self.window else { return nil }
+                let windowOrigin = viewWindow.frame.origin
+                let viewRect = NSRect(
+                    x: appKitRect.origin.x - windowOrigin.x,
+                    y: appKitRect.origin.y - windowOrigin.y,
+                    width: appKitRect.width,
+                    height: appKitRect.height
+                )
+                // Clamp to view bounds
+                return viewRect.intersection(bounds)
+            }
+        }
+        return nil
+    }
+
+    private func drawWindowSnapHighlight() {
+        guard state == .idle, windowSnapEnabled, let rect = hoveredWindowRect, !rect.isEmpty else { return }
+
+        // Tinted fill
+        NSColor.systemBlue.withAlphaComponent(0.08).setFill()
+        NSBezierPath(roundedRect: rect, xRadius: 4, yRadius: 4).fill()
+
+        // Border
+        let border = NSBezierPath(roundedRect: rect.insetBy(dx: 0.5, dy: 0.5), xRadius: 4, yRadius: 4)
+        border.lineWidth = 2
+        NSColor.systemBlue.withAlphaComponent(0.85).setStroke()
+        border.stroke()
+    }
+
+    // MARK: - Barcode / QR Detection
+
+    func scheduleBarcodeDetection() {
+        barcodeScanTask?.cancel()
+        detectedBarcodePayload = nil
+        barcodeActionRects = []
+        needsDisplay = true
+
+        guard state == .selected,
+              selectionRect.width > 20, selectionRect.height > 20,
+              let screenshot = screenshotImage else { return }
+
+        let rect = selectionRect
+        let task = DispatchWorkItem { [weak self] in
+            guard let self = self else { return }
+
+            // Crop selected region from screenshot
+            let regionImage = NSImage(size: rect.size)
+            regionImage.lockFocus()
+            screenshot.draw(in: NSRect(x: -rect.origin.x, y: -rect.origin.y,
+                                       width: self.bounds.width, height: self.bounds.height),
+                            from: .zero, operation: .copy, fraction: 1.0)
+            regionImage.unlockFocus()
+
+            guard let tiffData = regionImage.tiffRepresentation,
+                  let bitmap = NSBitmapImageRep(data: tiffData),
+                  let cgImage = bitmap.cgImage else { return }
+
+            let request = VNDetectBarcodesRequest()
+            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+            try? handler.perform([request])
+            let payload = (request.results ?? [])
+                .compactMap { $0.payloadStringValue }
+                .first(where: { !$0.isEmpty })
+
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                self.detectedBarcodePayload = payload
+                self.needsDisplay = true
+            }
+        }
+        barcodeScanTask = task
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.3, execute: task)
+    }
+
+    private func drawBarcodeBar() {
+        guard let payload = detectedBarcodePayload else { return }
+        let isURL = payload.hasPrefix("http://") || payload.hasPrefix("https://")
+
+        let barH: CGFloat = 36
+        let gap: CGFloat = 6
+        let barW: CGFloat = max(320, min(selectionRect.width - 16, 420))
+        let barX = max(bounds.minX + 4, min(selectionRect.midX - barW / 2, bounds.maxX - barW - 4))
+
+        // Prefer below the selection; if bottom toolbar is there or no room, try above;
+        // last resort: inside the selection at the top.
+        let belowY = selectionRect.minY - barH - gap
+        let aboveY = selectionRect.maxY + gap
+        let insideY = selectionRect.maxY - barH - gap
+
+        let bottomBarOccupied = bottomBarRect != .zero
+        let belowClear = belowY >= bounds.minY + 4 &&
+            !(bottomBarOccupied && NSRect(x: barX, y: belowY, width: barW, height: barH).intersects(bottomBarRect))
+        let aboveClear = aboveY + barH <= bounds.maxY - 4
+
+        let finalBarY: CGFloat
+        if belowClear {
+            finalBarY = belowY
+        } else if aboveClear {
+            finalBarY = aboveY
+        } else {
+            finalBarY = insideY
+        }
+
+        let barRect = NSRect(x: barX, y: finalBarY, width: barW, height: barH)
+
+        // Background pill
+        NSColor(white: 0.12, alpha: 0.92).setFill()
+        NSBezierPath(roundedRect: barRect, xRadius: 10, yRadius: 10).fill()
+
+        // QR icon + label
+        let icon = isURL ? "🔗" : "📋"
+        let shortPayload = payload.count > 45 ? String(payload.prefix(42)) + "…" : payload
+        let labelText = "\(icon)  \(shortPayload)"
+        let labelAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 11, weight: .regular),
+            .foregroundColor: NSColor.white,
+        ]
+        let labelStr = labelText as NSString
+        let labelSize = labelStr.size(withAttributes: labelAttrs)
+        let labelX = barRect.minX + 10
+        let labelY = barRect.midY - labelSize.height / 2
+        labelStr.draw(at: NSPoint(x: labelX, y: labelY), withAttributes: labelAttrs)
+
+        // Action button (right side)
+        let btnTitle = isURL ? "Open" : "Copy"
+        let btnAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 11, weight: .semibold),
+            .foregroundColor: NSColor.white,
+        ]
+        let btnSize = (btnTitle as NSString).size(withAttributes: btnAttrs)
+        let btnW = btnSize.width + 20
+        let dismissW: CGFloat = 22
+
+        let dismissRect = NSRect(x: barRect.maxX - dismissW - 4, y: barRect.minY + 4, width: dismissW, height: barH - 8)
+        let actionRect  = NSRect(x: dismissRect.minX - btnW - 6,  y: barRect.minY + 4, width: btnW,    height: barH - 8)
+
+        // Action button bg
+        NSColor(red: 0.2, green: 0.5, blue: 1.0, alpha: 0.9).setFill()
+        NSBezierPath(roundedRect: actionRect, xRadius: 6, yRadius: 6).fill()
+        (btnTitle as NSString).draw(
+            at: NSPoint(x: actionRect.midX - btnSize.width / 2, y: actionRect.midY - btnSize.height / 2),
+            withAttributes: btnAttrs)
+
+        // Dismiss ✕
+        let xAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 12, weight: .medium),
+            .foregroundColor: NSColor(white: 0.6, alpha: 1),
+        ]
+        let xStr = "✕" as NSString
+        let xSize = xStr.size(withAttributes: xAttrs)
+        xStr.draw(at: NSPoint(x: dismissRect.midX - xSize.width / 2, y: dismissRect.midY - xSize.height / 2),
+                  withAttributes: xAttrs)
+
+        barcodeActionRects = [actionRect, dismissRect]
     }
 
     // MARK: - Toolbar Layout
@@ -1120,7 +2099,7 @@ class OverlayView: NSView {
     private func rebuildToolbarLayout() {
         let movableAnnotations = annotations.contains { $0.isMovable }
         bottomButtons = ToolbarLayout.bottomButtons(selectedTool: currentTool, selectedColor: currentColor, beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex, hasAnnotations: movableAnnotations)
-        rightButtons = ToolbarLayout.rightButtons(delaySeconds: delaySeconds)
+        rightButtons = ToolbarLayout.rightButtons(delaySeconds: delaySeconds, beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex, hasAnnotations: movableAnnotations, translateEnabled: translateEnabled)
 
         // Place each toolbar inside if it would go off-screen
         let bottomMargin: CGFloat = 50  // toolbar height + gap
@@ -1146,6 +2125,34 @@ class OverlayView: NSView {
             rightBarRect = ToolbarLayout.layoutRightInside(buttons: &rightButtons, selectionRect: selectionRect, viewBounds: bounds, bottomBarRect: bottomBarRect)
         }
 
+        // If bottom bar overlaps right bar, push bottom bar down (or up) to clear it.
+        // This handles the case where the selection is near the top of the screen and
+        // the right bar's bottom-avoidance clamping couldn't move it far enough.
+        if bottomBarRect.intersects(rightBarRect) {
+            let rightBarXRange = rightBarRect.minX...rightBarRect.maxX
+            let bottomBarXRange = bottomBarRect.minX...bottomBarRect.maxX
+            let xOverlap = rightBarXRange.overlaps(bottomBarXRange)
+            if xOverlap {
+                // Prefer pushing bottom bar downward (below the right bar)
+                let newBarYBelow = rightBarRect.minY - bottomBarRect.height - 4
+                let newBarYAbove = rightBarRect.maxY + 4
+                let fitsBelow = newBarYBelow >= bounds.minY + 4
+                let fitsAbove = newBarYAbove + bottomBarRect.height <= bounds.maxY - 4
+                let dy: CGFloat
+                if fitsBelow {
+                    dy = newBarYBelow - bottomBarRect.minY
+                } else if fitsAbove {
+                    dy = newBarYAbove - bottomBarRect.minY
+                } else {
+                    dy = newBarYBelow - bottomBarRect.minY  // best effort
+                }
+                bottomBarRect = bottomBarRect.offsetBy(dx: 0, dy: dy)
+                for i in 0..<bottomButtons.count {
+                    bottomButtons[i].rect = bottomButtons[i].rect.offsetBy(dx: 0, dy: dy)
+                }
+            }
+        }
+
         // Apply drag offsets
         if bottomBarDragOffset != .zero {
             bottomBarRect = bottomBarRect.offsetBy(dx: bottomBarDragOffset.x, dy: bottomBarDragOffset.y)
@@ -1166,6 +2173,14 @@ class OverlayView: NSView {
         }
         for i in 0..<rightButtons.count {
             rightButtons[i].isHovered = (hoveredButtonIndex == 1000 + i)
+        }
+
+        // Apply pressed state
+        for i in 0..<bottomButtons.count {
+            bottomButtons[i].isPressed = (pressedButtonIndex == i)
+        }
+        for i in 0..<rightButtons.count {
+            rightButtons[i].isPressed = (pressedButtonIndex == 1000 + i)
         }
     }
 
@@ -1246,6 +2261,35 @@ class OverlayView: NSView {
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
 
+        // Barcode bar button hit-test
+        if detectedBarcodePayload != nil && barcodeActionRects.count == 2 {
+            if barcodeActionRects[1].contains(point) {
+                // Dismiss
+                detectedBarcodePayload = nil
+                barcodeActionRects = []
+                needsDisplay = true
+                return
+            }
+            if barcodeActionRects[0].contains(point) {
+                let payload = detectedBarcodePayload!
+                let isURL = payload.hasPrefix("http://") || payload.hasPrefix("https://")
+                detectedBarcodePayload = nil
+                barcodeActionRects = []
+                needsDisplay = true
+                if isURL, let url = URL(string: payload) {
+                    // Cancel + dismiss overlay first, then open URL on next runloop tick
+                    overlayDelegate?.overlayViewDidCancel()
+                    DispatchQueue.main.async {
+                        NSWorkspace.shared.open(url)
+                    }
+                } else {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(payload, forType: .string)
+                }
+                return
+            }
+        }
+
         let isTextEditing = textEditView != nil
 
         // Color picker swatch selection
@@ -1315,14 +2359,23 @@ class OverlayView: NSView {
         if showStrokePicker {
             if strokePickerRect.contains(point) {
                 let widths: [CGFloat] = [1, 2, 3, 5, 8, 12, 20]
-                let rowH: CGFloat = 28
+                let rowH: CGFloat = 30
                 let padding: CGFloat = 6
                 for (i, width) in widths.enumerated() {
                     let rowY = strokePickerRect.maxY - padding - rowH * CGFloat(i + 1)
                     let rowRect = NSRect(x: strokePickerRect.minX, y: rowY, width: strokePickerRect.width, height: rowH)
                     if rowRect.contains(point) {
-                        currentStrokeWidth = width
-                        UserDefaults.standard.set(Double(width), forKey: "currentStrokeWidth")
+                        switch currentTool {
+                        case .number:
+                            currentNumberSize = width
+                            UserDefaults.standard.set(Double(width), forKey: "numberStrokeWidth")
+                        case .marker:
+                            currentMarkerSize = width
+                            UserDefaults.standard.set(Double(width), forKey: "markerStrokeWidth")
+                        default:
+                            currentStrokeWidth = width
+                            UserDefaults.standard.set(Double(width), forKey: "currentStrokeWidth")
+                        }
                         showStrokePicker = false
                         needsDisplay = true
                         return
@@ -1331,6 +2384,136 @@ class OverlayView: NSView {
                 return
             }
             showStrokePicker = false
+            needsDisplay = true
+        }
+
+        // Loupe size picker dismissal / selection
+        if showLoupeSizePicker {
+            if loupeSizePickerRect.contains(point) {
+                let sizes: [CGFloat] = [60, 80, 100, 120, 160, 200, 250]
+                let rowH: CGFloat = 28
+                let padding: CGFloat = 6
+                for (i, size) in sizes.enumerated() {
+                    let rowY = loupeSizePickerRect.maxY - padding - rowH * CGFloat(i + 1)
+                    let rowRect = NSRect(x: loupeSizePickerRect.minX, y: rowY, width: loupeSizePickerRect.width, height: rowH)
+                    if rowRect.contains(point) {
+                        currentLoupeSize = size
+                        UserDefaults.standard.set(Double(size), forKey: "loupeSize")
+                        showLoupeSizePicker = false
+                        needsDisplay = true
+                        return
+                    }
+                }
+                return
+            }
+            showLoupeSizePicker = false
+            needsDisplay = true
+        }
+
+        // Delay picker dismissal / selection
+        if showDelayPicker {
+            if delayPickerRect.contains(point) {
+                let options: [(label: String, seconds: Int)] = [
+                    ("Off", 0), ("1s", 1), ("2s", 2), ("3s", 3), ("5s", 5), ("10s", 10), ("30s", 30)
+                ]
+                let rowH: CGFloat = 28
+                let padding: CGFloat = 6
+                for (i, option) in options.enumerated() {
+                    let rowY = delayPickerRect.maxY - padding - rowH * CGFloat(i + 1)
+                    let rowRect = NSRect(x: delayPickerRect.minX, y: rowY, width: delayPickerRect.width, height: rowH)
+                    if rowRect.contains(point) {
+                        delaySeconds = option.seconds
+                        UserDefaults.standard.set(delaySeconds, forKey: "lastDelaySeconds")
+                        showDelayPicker = false
+                        needsDisplay = true
+                        if delaySeconds > 0 {
+                            overlayDelegate?.overlayViewDidRequestDelayCapture(seconds: delaySeconds, selectionRect: selectionRect)
+                        }
+                        return
+                    }
+                }
+                return
+            }
+            showDelayPicker = false
+            needsDisplay = true
+        }
+
+        // Upload confirm dialog
+        if showUploadConfirmDialog {
+            if uploadConfirmOKRect.contains(point) {
+                showUploadConfirmDialog = false
+                needsDisplay = true
+                overlayDelegate?.overlayViewDidRequestUpload()
+            } else {
+                showUploadConfirmDialog = false
+                needsDisplay = true
+            }
+            return
+        }
+
+        // Upload confirm picker
+        if showUploadConfirmPicker {
+            if uploadConfirmPickerRect.contains(point) {
+                let current = UserDefaults.standard.bool(forKey: "uploadConfirmEnabled")
+                UserDefaults.standard.set(!current, forKey: "uploadConfirmEnabled")
+                showUploadConfirmPicker = false
+                needsDisplay = true
+                return
+            }
+            showUploadConfirmPicker = false
+            needsDisplay = true
+        }
+
+        // Redact type picker dismissal / selection
+        if showRedactTypePicker {
+            if redactTypePickerRect.contains(point) {
+                let types = OverlayView.redactTypeNames
+                let rowH: CGFloat = 26
+                let padding: CGFloat = 6
+                for (i, item) in types.enumerated() {
+                    let rowY = redactTypePickerRect.maxY - padding - rowH * CGFloat(i + 1)
+                    let rowRect = NSRect(x: redactTypePickerRect.minX, y: rowY, width: redactTypePickerRect.width, height: rowH)
+                    if rowRect.contains(point) {
+                        var enabledTypes = UserDefaults.standard.array(forKey: "enabledRedactTypes") as? [String] ?? types.map { $0.key }
+                        if enabledTypes.contains(item.key) {
+                            enabledTypes.removeAll { $0 == item.key }
+                        } else {
+                            enabledTypes.append(item.key)
+                        }
+                        UserDefaults.standard.set(enabledTypes, forKey: "enabledRedactTypes")
+                        needsDisplay = true
+                        return
+                    }
+                }
+                return
+            }
+            showRedactTypePicker = false
+                    showTranslatePicker = false
+            needsDisplay = true
+        }
+
+        // Translate language picker dismissal / selection
+        if showTranslatePicker {
+            if translatePickerRect.contains(point) {
+                let langs = TranslationService.availableLanguages
+                let rowH: CGFloat = 26
+                let padding: CGFloat = 6
+                for (i, lang) in langs.enumerated() {
+                    let rowY = translatePickerRect.maxY - padding - rowH * CGFloat(i + 1)
+                    let rowRect = NSRect(x: translatePickerRect.minX, y: rowY,
+                                        width: translatePickerRect.width, height: rowH)
+                    if rowRect.contains(point) {
+                        TranslationService.targetLanguage = lang.code
+                        translateEnabled = true
+                        showTranslatePicker = false
+                        needsDisplay = true
+                        performTranslate(targetLang: lang.code)
+                        return
+                    }
+                }
+                return
+            }
+            showTranslatePicker = false
             needsDisplay = true
         }
 
@@ -1358,6 +2541,7 @@ class OverlayView: NSView {
 
         switch state {
         case .idle:
+            // Always start a drag — snap is resolved in mouseUp if no real drag occurred
             selectionStart = point
             selectionRect = NSRect(origin: point, size: .zero)
             state = .selecting
@@ -1375,10 +2559,37 @@ class OverlayView: NSView {
 
             if showToolbars {
                 if let action = ToolbarLayout.hitTest(point: point, buttons: bottomButtons) {
+                    // Flash press feedback for momentary buttons
+                    let momentaryActions: [ToolbarButtonAction] = [.undo, .redo, .copy, .save, .upload, .pin, .ocr, .autoRedact, .removeBackground]
+                    let isMomentary = momentaryActions.contains { actionEq($0, action) }
+                    if isMomentary, let idx = bottomButtons.firstIndex(where: { $0.rect.contains(point) }) {
+                        pressedButtonIndex = idx
+                        needsDisplay = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) { [weak self] in
+                            self?.pressedButtonIndex = -1
+                            self?.needsDisplay = true
+                        }
+                    }
                     handleToolbarAction(action, mousePoint: point)
                     return
                 }
                 if let action = ToolbarLayout.hitTest(point: point, buttons: rightButtons) {
+                    let momentaryActions: [ToolbarButtonAction] = [.cancel, .undo, .redo, .copy, .save, .upload, .pin, .ocr, .autoRedact, .removeBackground]
+                    let isMomentary = momentaryActions.contains { actionEq($0, action) }
+                    if case .moveSelection = action {
+                        // Keep pressed/dark while dragging — cleared in mouseUp
+                        if let idx = rightButtons.firstIndex(where: { $0.rect.contains(point) }) {
+                            pressedButtonIndex = 1000 + idx
+                            needsDisplay = true
+                        }
+                    } else if isMomentary, let idx = rightButtons.firstIndex(where: { $0.rect.contains(point) }) {
+                        pressedButtonIndex = 1000 + idx
+                        needsDisplay = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) { [weak self] in
+                            self?.pressedButtonIndex = -1
+                            self?.needsDisplay = true
+                        }
+                    }
                     handleToolbarAction(action, mousePoint: point)
                     return
                 }
@@ -1474,7 +2685,58 @@ class OverlayView: NSView {
             needsDisplay = true
 
         case .selected:
-            if isDraggingAnnotation, let annotation = selectedAnnotation {
+            if isResizingAnnotation, let annotation = selectedAnnotation {
+                let dx = point.x - annotationResizeMouseStart.x
+                let dy = point.y - annotationResizeMouseStart.y
+                let origStart = annotationResizeOrigStart
+                let origEnd = annotationResizeOrigEnd
+
+                // Text annotations: dragging any handle just moves the text
+                if annotation.tool == .text {
+                    annotation.startPoint = NSPoint(x: origStart.x + dx, y: origStart.y + dy)
+                    annotation.endPoint = NSPoint(x: origEnd.x + dx, y: origEnd.y + dy)
+                    needsDisplay = true
+                    break
+                }
+
+                switch annotationResizeHandle {
+                case .topLeft:
+                    let newMinX = min(origStart.x + dx, origEnd.x - 10)
+                    let newMaxY = max(origEnd.y + dy, origStart.y + 10)
+                    annotation.startPoint = NSPoint(x: newMinX, y: origStart.y)
+                    annotation.endPoint = NSPoint(x: origEnd.x, y: newMaxY)
+                case .topRight:
+                    let newMaxX = max(origEnd.x + dx, origStart.x + 10)
+                    let newMaxY = max(origEnd.y + dy, origStart.y + 10)
+                    annotation.startPoint = origStart
+                    annotation.endPoint = NSPoint(x: newMaxX, y: newMaxY)
+                case .bottomLeft:
+                    let newMinX = min(origStart.x + dx, origEnd.x - 10)
+                    let newMinY = min(origStart.y + dy, origEnd.y - 10)
+                    annotation.startPoint = NSPoint(x: newMinX, y: newMinY)
+                    annotation.endPoint = origEnd
+                case .bottomRight:
+                    let newMaxX = max(origEnd.x + dx, origStart.x + 10)
+                    let newMinY = min(origStart.y + dy, origEnd.y - 10)
+                    annotation.startPoint = NSPoint(x: origStart.x, y: newMinY)
+                    annotation.endPoint = NSPoint(x: newMaxX, y: origEnd.y)
+                case .top:
+                    let newMaxY = max(origEnd.y + dy, origStart.y + 10)
+                    annotation.endPoint = NSPoint(x: origEnd.x, y: newMaxY)
+                case .bottom:
+                    let newMinY = min(origStart.y + dy, origEnd.y - 10)
+                    annotation.startPoint = NSPoint(x: origStart.x, y: newMinY)
+                case .left:
+                    let newMinX = min(origStart.x + dx, origEnd.x - 10)
+                    annotation.startPoint = NSPoint(x: newMinX, y: origStart.y)
+                case .right:
+                    let newMaxX = max(origEnd.x + dx, origStart.x + 10)
+                    annotation.endPoint = NSPoint(x: newMaxX, y: origEnd.y)
+                default:
+                    break
+                }
+                needsDisplay = true
+            } else if isDraggingAnnotation, let annotation = selectedAnnotation {
                 let dx = point.x - annotationDragStart.x
                 let dy = point.y - annotationDragStart.y
                 annotation.move(dx: dx, dy: dy)
@@ -1514,33 +2776,57 @@ class OverlayView: NSView {
             isDraggingBrightnessSlider = false
             return
         }
+        if isResizingAnnotation {
+            isResizingAnnotation = false
+            annotationResizeHandle = .none
+            if let ann = selectedAnnotation, ann.tool == .loupe {
+                ann.bakeLoupe()
+            }
+            needsDisplay = true
+            return
+        }
         lastDragPoint = nil
         switch state {
         case .selecting:
             if selectionRect.width > 5 && selectionRect.height > 5 {
+                // Real drag — use drawn rect as-is
+                state = .selected
+                showToolbars = true
+                overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
+            } else if windowSnapEnabled, let snapRect = hoveredWindowRect, !snapRect.isEmpty {
+                // Click (no drag) with snap on — snap to hovered window
+                selectionRect = snapRect
                 state = .selected
                 showToolbars = true
                 overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
             } else {
-                // Single click — expand to full screen
+                // Click (no drag), snap off — expand to full screen
                 selectionRect = bounds
                 state = .selected
                 showToolbars = true
                 overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
             }
+            hoveredWindowRect = nil
+            scheduleBarcodeDetection()
             needsDisplay = true
 
         case .selected:
             if isDraggingAnnotation {
                 isDraggingAnnotation = false
+                if let ann = selectedAnnotation, ann.tool == .loupe {
+                    ann.bakeLoupe()
+                }
                 needsDisplay = true
             } else if isDraggingSelection {
                 isDraggingSelection = false
                 moveMode = false
+                pressedButtonIndex = -1
+                scheduleBarcodeDetection()
                 needsDisplay = true
             } else if isResizingSelection {
                 isResizingSelection = false
                 resizeHandle = .none
+                scheduleBarcodeDetection()
                 needsDisplay = true
             } else if let annotation = currentAnnotation {
                 finishAnnotation(annotation)
@@ -1559,29 +2845,86 @@ class OverlayView: NSView {
         // Check toolbar button right-clicks first
         if state == .selected && showToolbars {
             if let action = ToolbarLayout.hitTest(point: point, buttons: bottomButtons) {
-                if case .beautify = action {
-                    showBeautifyPicker.toggle()
-                    showColorPicker = false
-                    showStrokePicker = false
-                    needsDisplay = true
-                    return
-                }
                 if case .tool(let tool) = action {
-                    let toolsWithMenu: [AnnotationTool] = [.pencil, .line, .arrow, .rectangle, .ellipse, .marker, .number]
+                    let toolsWithMenu: [AnnotationTool] = [.pencil, .line, .arrow, .rectangle, .ellipse, .marker, .number, .loupe]
                     if toolsWithMenu.contains(tool) {
                         currentTool = tool // Select the tool
-                        showStrokePicker.toggle()
-                        showColorPicker = false
-                        showBeautifyPicker = false
+                        if tool == .loupe {
+                            showLoupeSizePicker.toggle()
+                            showColorPicker = false
+                            showBeautifyPicker = false
+                            showStrokePicker = false
+                            showDelayPicker = false
+                        } else {
+                            showStrokePicker.toggle()
+                            showColorPicker = false
+                            showBeautifyPicker = false
+                            showLoupeSizePicker = false
+                            showDelayPicker = false
+                        }
                         needsDisplay = true
                         return
                     }
                 }
-                // Handle right clicks on other buttons with context menus here in the future
+                if case .beautify = action {
+                    showBeautifyPicker.toggle()
+                    showColorPicker = false
+                    showStrokePicker = false
+                    showDelayPicker = false
+                    showUploadConfirmPicker = false
+                    showRedactTypePicker = false
+                    showTranslatePicker = false
+                    showLoupeSizePicker = false
+                    needsDisplay = true
+                    return
+                }
+                if case .autoRedact = action {
+                    showRedactTypePicker.toggle()
+                    showColorPicker = false
+                    showBeautifyPicker = false
+                    showStrokePicker = false
+                    showDelayPicker = false
+                    showUploadConfirmPicker = false
+                    needsDisplay = true
+                    return
+                }
                 return
             }
             if let action = ToolbarLayout.hitTest(point: point, buttons: rightButtons) {
-                // Future right-click actions for right toolbar
+                if case .delayCapture = action {
+                    showDelayPicker.toggle()
+                    showColorPicker = false
+                    showBeautifyPicker = false
+                    showStrokePicker = false
+                    showLoupeSizePicker = false
+                    showUploadConfirmPicker = false
+                    showRedactTypePicker = false
+                    showTranslatePicker = false
+                    needsDisplay = true
+                    return
+                }
+                if case .upload = action {
+                    showUploadConfirmPicker.toggle()
+                    showColorPicker = false
+                    showBeautifyPicker = false
+                    showStrokePicker = false
+                    showDelayPicker = false
+                    showRedactTypePicker = false
+                    showTranslatePicker = false
+                    needsDisplay = true
+                    return
+                }
+                if case .translate = action {
+                    showTranslatePicker.toggle()
+                    showColorPicker = false
+                    showBeautifyPicker = false
+                    showStrokePicker = false
+                    showDelayPicker = false
+                    showRedactTypePicker = false
+                    showUploadConfirmPicker = false
+                    needsDisplay = true
+                    return
+                }
                 return
             }
         }
@@ -1633,10 +2976,17 @@ class OverlayView: NSView {
         guard isRightClickSelecting else { return }
         isRightClickSelecting = false
         if selectionRect.width > 5 && selectionRect.height > 5 {
+            // Real drag — use drawn rect
             state = .selected
             overlayDelegate?.overlayViewDidRequestQuickSave()
+        } else if windowSnapEnabled, let snapRect = hoveredWindowRect, !snapRect.isEmpty {
+            // Click (no drag) with snap on — quick save the hovered window
+            selectionRect = snapRect
+            state = .selected
+            hoveredWindowRect = nil
+            overlayDelegate?.overlayViewDidRequestQuickSave()
         } else {
-            // Single right-click — full screen quick save
+            // Click (no drag), snap off — full screen quick save
             selectionRect = bounds
             state = .selected
             overlayDelegate?.overlayViewDidRequestQuickSave()
@@ -1711,7 +3061,15 @@ class OverlayView: NSView {
     private func handleToolbarAction(_ action: ToolbarButtonAction, mousePoint: NSPoint = .zero) {
         switch action {
         case .tool(let tool):
+            if tool == .select && !annotations.contains(where: { $0.isMovable }) {
+                showOverlayError("Draw something first to use the move tool.")
+                return
+            }
+            commitTextFieldIfNeeded()
             currentTool = tool
+            needsDisplay = true
+        case .loupe:
+            currentTool = .loupe
             needsDisplay = true
         case .color:
             showColorPicker.toggle()
@@ -1733,13 +3091,23 @@ class OverlayView: NSView {
         case .save:
             overlayDelegate?.overlayViewDidRequestSave()
         case .upload:
-            overlayDelegate?.overlayViewDidRequestUpload()
+            let confirmEnabled = UserDefaults.standard.bool(forKey: "uploadConfirmEnabled")
+            if confirmEnabled {
+                showUploadConfirmDialog = true
+                needsDisplay = true
+            } else {
+                overlayDelegate?.overlayViewDidRequestUpload()
+            }
         case .pin:
             overlayDelegate?.overlayViewDidRequestPin()
         case .ocr:
             overlayDelegate?.overlayViewDidRequestOCR()
         case .autoRedact:
             performAutoRedact()
+        case .removeBackground:
+            if #available(macOS 14.0, *) {
+                overlayDelegate?.overlayViewDidRequestRemoveBackground()
+            }
         case .beautify:
             beautifyEnabled.toggle()
             UserDefaults.standard.set(beautifyEnabled, forKey: "beautifyEnabled")
@@ -1749,15 +3117,28 @@ class OverlayView: NSView {
             UserDefaults.standard.set(beautifyStyleIndex, forKey: "beautifyStyleIndex")
             needsDisplay = true
         case .delayCapture:
-            // Cycle: 0 → 3 → 5 → 10 → 0
-            switch delaySeconds {
-            case 0: delaySeconds = 3
-            case 3: delaySeconds = 5
-            case 5: delaySeconds = 10
-            default: delaySeconds = 0
+            // Toggle: 0 → last nonzero or default 3, nonzero → 0
+            if delaySeconds > 0 {
+                delaySeconds = 0
+            } else {
+                let last = UserDefaults.standard.integer(forKey: "lastDelaySeconds")
+                delaySeconds = (last > 0) ? last : 3
             }
+            UserDefaults.standard.set(delaySeconds, forKey: "lastDelaySeconds")
             if delaySeconds > 0 {
                 overlayDelegate?.overlayViewDidRequestDelayCapture(seconds: delaySeconds, selectionRect: selectionRect)
+            }
+            needsDisplay = true
+        case .translate:
+            showTranslatePicker = false
+            if translateEnabled {
+                // Toggle off: remove overlays, restore original
+                translateEnabled = false
+                annotations.removeAll { $0.tool == .translateOverlay }
+                isTranslating = false
+            } else {
+                translateEnabled = true
+                performTranslate(targetLang: TranslationService.targetLanguage)
             }
             needsDisplay = true
         case .cancel:
@@ -1853,6 +3234,38 @@ class OverlayView: NSView {
 
         // Select/move tool: find annotation under cursor
         if currentTool == .select {
+            // Check annotation control buttons first
+            if let selected = selectedAnnotation {
+                // Delete button
+                if annotationDeleteButtonRect.contains(point) {
+                    annotations.removeAll { $0 === selected }
+                    selectedAnnotation = nil
+                    needsDisplay = true
+                    return
+                }
+                // Edit button (text only)
+                if annotationEditButtonRect != .zero && annotationEditButtonRect.contains(point) {
+                    if let idx = annotations.firstIndex(where: { $0 === selected }) {
+                        annotations.remove(at: idx)
+                        selectedAnnotation = nil
+                    }
+                    showTextField(at: selected.startPoint, existingText: selected.attributedText)
+                    needsDisplay = true
+                    return
+                }
+                // Resize handles
+                for (handle, rect) in annotationResizeHandleRects {
+                    if rect.insetBy(dx: -4, dy: -4).contains(point) {
+                        isResizingAnnotation = true
+                        annotationResizeHandle = handle
+                        annotationResizeOrigStart = selected.startPoint
+                        annotationResizeOrigEnd = selected.endPoint
+                        annotationResizeMouseStart = point
+                        return
+                    }
+                }
+            }
+
             // Search in reverse (topmost first)
             for annotation in annotations.reversed() {
                 if annotation.isMovable && annotation.hitTest(point: point) {
@@ -1869,6 +3282,25 @@ class OverlayView: NSView {
             return
         }
 
+        // Loupe: click to place
+        if currentTool == .loupe {
+            let size = currentLoupeSize
+            let loupeAnnotation = Annotation(
+                tool: .loupe,
+                startPoint: NSPoint(x: point.x - size/2, y: point.y - size/2),
+                endPoint: NSPoint(x: point.x + size/2, y: point.y + size/2),
+                color: currentColor,
+                strokeWidth: currentStrokeWidth
+            )
+            loupeAnnotation.sourceImage = screenshotImage
+            loupeAnnotation.sourceImageBounds = bounds
+            loupeAnnotation.bakeLoupe()
+            annotations.append(loupeAnnotation)
+            redoStack.removeAll()
+            needsDisplay = true
+            return
+        }
+
         // Deselect when using other tools
         selectedAnnotation = nil
 
@@ -1878,7 +3310,7 @@ class OverlayView: NSView {
             return
         case .number:
             numberCounter += 1
-            let annotation = Annotation(tool: .number, startPoint: point, endPoint: point, color: currentColor, strokeWidth: currentStrokeWidth)
+            let annotation = Annotation(tool: .number, startPoint: point, endPoint: point, color: currentColor, strokeWidth: currentNumberSize)
             annotation.number = numberCounter
             annotations.append(annotation)
             redoStack.removeAll()
@@ -1888,7 +3320,8 @@ class OverlayView: NSView {
             break
         }
 
-        let annotation = Annotation(tool: currentTool, startPoint: point, endPoint: point, color: currentColor, strokeWidth: currentStrokeWidth)
+        let toolStroke: CGFloat = currentTool == .marker ? currentMarkerSize : currentStrokeWidth
+        let annotation = Annotation(tool: currentTool, startPoint: point, endPoint: point, color: currentColor, strokeWidth: toolStroke)
         if currentTool == .pencil || currentTool == .marker {
             annotation.points = [point]
         }
@@ -1912,7 +3345,7 @@ class OverlayView: NSView {
             let dy = clampedPoint.y - start.y
 
             switch annotation.tool {
-            case .line, .arrow, .measure:
+            case .line, .arrow, .measure, .loupe, .marker:
                 // Snap to nearest 45° angle
                 let angle = atan2(dy, dx)
                 let snapped = (angle / (.pi / 4)).rounded() * (.pi / 4)
@@ -1961,7 +3394,7 @@ class OverlayView: NSView {
 
     // MARK: - Text Field
 
-    private func showTextField(at point: NSPoint) {
+    private func showTextField(at point: NSPoint, existingText: NSAttributedString? = nil) {
         let height = max(28, textFontSize + 12)
         let minW: CGFloat = 250
         let maxW = max(minW, bounds.width - point.x - 20)
@@ -1998,6 +3431,10 @@ class OverlayView: NSView {
         addSubview(scrollView)
         textScrollView = scrollView
         textEditView = tv
+
+        if let existing = existingText {
+            tv.textStorage?.setAttributedString(existing)
+        }
 
         // Control bar above the text field
         let barHeight: CGFloat = 28
@@ -2099,11 +3536,26 @@ class OverlayView: NSView {
                                           active: false, action: #selector(textCancelClicked(_:)), tag: 0)
         cancelBtn.contentTintColor = .systemRed
         bar.addSubview(cancelBtn)
+        btnX += 28
+
+        // Confirm (✓) button
+        let confirmBtn = makeTextBarButton(frame: NSRect(x: btnX, y: btnY, width: 24, height: btnH),
+                                           title: "✓", font: NSFont.systemFont(ofSize: 13, weight: .medium),
+                                           active: false, action: #selector(textConfirmClicked(_:)), tag: 0)
+        confirmBtn.contentTintColor = .systemGreen
+        bar.addSubview(confirmBtn)
+        btnX += 24
+
+        // Resize bar to fit all buttons
+        var barFrame = bar.frame
+        barFrame.size.width = btnX + 4
+        bar.frame = barFrame
 
         addSubview(bar)
         textControlBar = bar
 
         window?.makeFirstResponder(tv)
+        window?.invalidateCursorRects(for: self)
     }
 
     private func currentTextFont() -> NSFont {
@@ -2282,6 +3734,11 @@ class OverlayView: NSView {
         textControlBar?.removeFromSuperview()
         textControlBar = nil
         window?.makeFirstResponder(self)
+        window?.invalidateCursorRects(for: self)
+    }
+
+    @objc private func textConfirmClicked(_ sender: Any) {
+        commitTextFieldIfNeeded()
     }
 
     private func updateSizeLabel() {
@@ -2294,8 +3751,26 @@ class OverlayView: NSView {
         guard let tv = textEditView, let sv = textScrollView else { return }
         let text = tv.string
         if !text.isEmpty {
-            let annotation = Annotation(tool: .text, startPoint: sv.frame.origin, endPoint: sv.frame.origin, color: currentColor, strokeWidth: currentStrokeWidth)
-            annotation.attributedText = NSAttributedString(attributedString: tv.textStorage!)
+            let lm = tv.layoutManager!
+            let tc = tv.textContainer!
+            lm.ensureLayout(for: tc)
+            let usedRect = lm.usedRect(for: tc)
+            let inset = tv.textContainerInset
+            // Store the draw rect in OverlayView coords. drawText() will use draw(in:)
+            // which is coordinate-system agnostic — no baseline math needed.
+            let drawRect = NSRect(
+                x: sv.frame.minX + inset.width + usedRect.minX,
+                y: sv.frame.minY + sv.frame.height - inset.height - usedRect.minY - usedRect.height,
+                width: usedRect.width,
+                height: usedRect.height
+            )
+            let attrStr = NSAttributedString(attributedString: tv.textStorage!)
+            let annotation = Annotation(tool: .text,
+                                        startPoint: drawRect.origin,
+                                        endPoint: NSPoint(x: drawRect.maxX, y: drawRect.maxY),
+                                        color: currentColor,
+                                        strokeWidth: currentStrokeWidth)
+            annotation.attributedText = attrStr
             annotation.text = text
             annotation.fontSize = textFontSize
             annotation.isBold = textBold
@@ -2308,6 +3783,7 @@ class OverlayView: NSView {
         textControlBar?.removeFromSuperview()
         textControlBar = nil
         window?.makeFirstResponder(self)
+        window?.invalidateCursorRects(for: self)
         needsDisplay = true
     }
 
@@ -2332,16 +3808,44 @@ class OverlayView: NSView {
                 textControlBar?.removeFromSuperview()
                 textControlBar = nil
                 window?.makeFirstResponder(self)
+                window?.invalidateCursorRects(for: self)
             } else if showColorPicker {
                 showColorPicker = false
                 showCustomColorPicker = false
                 needsDisplay = true
+            } else if showUploadConfirmDialog {
+                showUploadConfirmDialog = false
+                needsDisplay = true
+            } else if showBeautifyPicker || showStrokePicker || showLoupeSizePicker || showDelayPicker || showUploadConfirmPicker || showRedactTypePicker {
+                showBeautifyPicker = false
+                showStrokePicker = false
+                showLoupeSizePicker = false
+                showDelayPicker = false
+                showUploadConfirmPicker = false
+                showRedactTypePicker = false
+                    showTranslatePicker = false
+                needsDisplay = true
             } else {
                 overlayDelegate?.overlayViewDidCancel()
             }
-        case 36: // Return/Enter
-            commitTextFieldIfNeeded()
-            if state == .selected {
+        case 48: // Tab — toggle window snapping (only in idle state)
+            if state == .idle {
+                windowSnapEnabled = !windowSnapEnabled
+                hoveredWindowRect = nil
+                needsDisplay = true
+            }
+        case 3: // F — full screen capture (only in idle state with snap on)
+            if state == .idle && windowSnapEnabled {
+                selectionRect = bounds
+                state = .selected
+                showToolbars = true
+                hoveredWindowRect = nil
+                scheduleBarcodeDetection()
+                overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
+                needsDisplay = true
+            }
+        case 36: // Return/Enter — only confirm overlay when not editing text
+            if textEditView == nil, state == .selected {
                 overlayDelegate?.overlayViewDidConfirm()
             }
         default:
@@ -2493,12 +3997,17 @@ class OverlayView: NSView {
             }
 
             // Pass 1: regex matching within each observation
+            let enabledTypes = UserDefaults.standard.array(forKey: "enabledRedactTypes") as? [String]
+            let activePatterns = OverlayView.sensitivePatterns.filter { pattern in
+                enabledTypes == nil || enabledTypes!.contains(pattern.name)
+            }
+
             for (i, observation) in observations.enumerated() {
                 guard let candidate = observation.topCandidates(1).first else { continue }
                 let text = candidate.string
                 let fullRange = NSRange(location: 0, length: (text as NSString).length)
 
-                for (_, regex) in OverlayView.sensitivePatterns {
+                for (_, regex) in activePatterns {
                     let matches = regex.matches(in: text, options: [], range: fullRange)
                     for match in matches {
                         guard let swiftRange = Range(match.range, in: text) else { continue }
@@ -2568,6 +4077,248 @@ class OverlayView: NSView {
             let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
             try? handler.perform([request])
         }
+    }
+
+    // MARK: - Translate
+
+    private func drawTranslatePicker() {
+        let langs = TranslationService.availableLanguages
+        let currentCode = TranslationService.targetLanguage
+
+        let rowH: CGFloat = 26
+        let pickerWidth: CGFloat = 175
+        let padding: CGFloat = 6
+        let pickerHeight = rowH * CGFloat(langs.count) + padding * 2
+
+        // Anchor to translate button in right bar
+        var anchorRect = NSRect.zero
+        for btn in rightButtons {
+            if case .translate = btn.action { anchorRect = btn.rect; break }
+        }
+        if anchorRect == .zero {
+            anchorRect = rightBarRect
+        }
+
+        // Position to the left of the right bar
+        var pickerX = anchorRect.minX - pickerWidth - 6
+        if pickerX < bounds.minX + 4 { pickerX = anchorRect.maxX + 6 }
+
+        var pickerY = anchorRect.midY - pickerHeight / 2
+        pickerY = max(bounds.minY + 4, min(pickerY, bounds.maxY - pickerHeight - 4))
+
+        let pickerRect = NSRect(x: pickerX, y: pickerY, width: pickerWidth, height: pickerHeight)
+        translatePickerRect = pickerRect
+
+        ToolbarLayout.bgColor.setFill()
+        NSBezierPath(roundedRect: pickerRect, xRadius: 6, yRadius: 6).fill()
+
+        let textAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 11, weight: .medium),
+            .foregroundColor: NSColor.white,
+        ]
+        let dimAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 11, weight: .medium),
+            .foregroundColor: NSColor.white.withAlphaComponent(0.45),
+        ]
+
+        for (i, lang) in langs.enumerated() {
+            let rowY = pickerRect.maxY - padding - rowH * CGFloat(i + 1)
+            let rowRect = NSRect(x: pickerRect.minX, y: rowY, width: pickerRect.width, height: rowH)
+
+            let isSelected = (lang.code == currentCode)
+            if isSelected {
+                ToolbarLayout.accentColor.withAlphaComponent(0.4).setFill()
+                NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
+            } else if i == hoveredTranslateRow {
+                NSColor.white.withAlphaComponent(0.15).setFill()
+                NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
+            }
+
+            let attrs = isSelected ? textAttrs : dimAttrs
+            let label = lang.name as NSString
+            let labelSize = label.size(withAttributes: attrs)
+            label.draw(at: NSPoint(x: rowRect.minX + 10, y: rowRect.midY - labelSize.height / 2), withAttributes: attrs)
+
+            if isSelected {
+                let checkAttrs: [NSAttributedString.Key: Any] = [
+                    .font: NSFont.systemFont(ofSize: 11, weight: .bold),
+                    .foregroundColor: ToolbarLayout.accentColor,
+                ]
+                let checkStr = "✓" as NSString
+                let checkSize = checkStr.size(withAttributes: checkAttrs)
+                checkStr.draw(at: NSPoint(x: rowRect.maxX - checkSize.width - 8, y: rowRect.midY - checkSize.height / 2), withAttributes: checkAttrs)
+            }
+        }
+
+        // Show spinner if translating
+        if isTranslating {
+            let spinAttrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 10),
+                .foregroundColor: NSColor.white.withAlphaComponent(0.6),
+            ]
+            let spinStr = "Translating…" as NSString
+            let spinSize = spinStr.size(withAttributes: spinAttrs)
+            spinStr.draw(at: NSPoint(x: pickerRect.midX - spinSize.width / 2, y: pickerRect.minY - spinSize.height - 4), withAttributes: spinAttrs)
+        }
+    }
+
+    private func performTranslate(targetLang: String) {
+        guard state == .selected,
+              selectionRect.width > 1, selectionRect.height > 1,
+              let screenshot = screenshotImage else { return }
+
+        // Remove any previous translate overlays
+        annotations.removeAll { $0.tool == .translateOverlay }
+        isTranslating = true
+        needsDisplay = true
+
+        // Crop selected region for Vision
+        let regionImage = NSImage(size: selectionRect.size)
+        regionImage.lockFocus()
+        screenshot.draw(
+            in: NSRect(x: -selectionRect.origin.x, y: -selectionRect.origin.y,
+                       width: bounds.width, height: bounds.height),
+            from: .zero, operation: .copy, fraction: 1.0
+        )
+        regionImage.unlockFocus()
+
+        guard let tiffData = regionImage.tiffRepresentation,
+              let bitmap = NSBitmapImageRep(data: tiffData),
+              let cgImage = bitmap.cgImage else {
+            isTranslating = false
+            return
+        }
+
+        let selRect = self.selectionRect
+        let viewBounds = self.bounds
+
+        // Vision OCR with bounding boxes
+        let request = VNRecognizeTextRequest { [weak self] request, error in
+            guard let self = self else { return }
+            guard let observations = request.results as? [VNRecognizedTextObservation],
+                  !observations.isEmpty else {
+                DispatchQueue.main.async {
+                    self.isTranslating = false
+                    self.showOverlayError("No text found in selection.")
+                }
+                return
+            }
+
+            // Filter out low-confidence / whitespace observations
+            let blocks = observations.compactMap { obs -> (text: String, box: CGRect, h: CGFloat)? in
+                guard let top = obs.topCandidates(1).first else { return nil }
+                let t = top.string.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !t.isEmpty else { return nil }
+                return (t, obs.boundingBox, obs.boundingBox.height)
+            }
+
+            let texts = blocks.map { $0.text }
+
+            TranslationService.translateBatch(texts: texts, targetLang: targetLang) { [weak self] result in
+                guard let self = self else { return }
+                self.isTranslating = false
+
+                switch result {
+                case .failure(let error):
+                    self.showOverlayError("Translation failed: \(error.localizedDescription)")
+                    self.needsDisplay = true
+
+                case .success(let translations):
+                    var newAnnotations: [Annotation] = []
+                    let groupID = UUID()
+
+                    for (i, block) in blocks.enumerated() {
+                        guard i < translations.count else { continue }
+                        let translated = translations[i].trimmingCharacters(in: .whitespacesAndNewlines)
+                        guard !translated.isEmpty else { continue }
+
+                        // Convert Vision normalized box (origin bottom-left) → view coords
+                        let vBox = block.box
+                        let padding: CGFloat = 1
+                        let viewX = selRect.origin.x + vBox.origin.x * selRect.width - padding
+                        let viewY = selRect.origin.y + vBox.origin.y * selRect.height - padding
+                        let viewW = vBox.width * selRect.width + padding * 2
+                        let viewH = vBox.height * selRect.height + padding * 2
+
+                        // Sample average background color from the screenshot at this region
+                        let bgColor = self.sampleAverageColor(
+                            in: cgImage,
+                            region: CGRect(
+                                x: vBox.origin.x * CGFloat(cgImage.width),
+                                y: vBox.origin.y * CGFloat(cgImage.height),
+                                width: vBox.width * CGFloat(cgImage.width),
+                                height: vBox.height * CGFloat(cgImage.height)
+                            )
+                        )
+
+                        // Font size approximation from box height in view coords
+                        let approxFontSize = max(8, viewH * 0.65)
+
+                        let ann = Annotation(
+                            tool: .translateOverlay,
+                            startPoint: NSPoint(x: viewX, y: viewY),
+                            endPoint: NSPoint(x: viewX + viewW, y: viewY + viewH),
+                            color: bgColor,
+                            strokeWidth: 0
+                        )
+                        ann.text = translated
+                        ann.fontSize = approxFontSize
+                        ann.groupID = groupID
+                        newAnnotations.append(ann)
+                    }
+
+                    self.annotations.removeAll { $0.tool == .translateOverlay }
+                    self.annotations.append(contentsOf: newAnnotations)
+                    self.redoStack.removeAll()
+                    self.needsDisplay = true
+                }
+            }
+        }
+        request.recognitionLevel = .accurate
+        request.usesLanguageCorrection = true
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+            try? handler.perform([request])
+        }
+    }
+
+    /// Samples the average color of a region in a CGImage. Returns a near-match fill color.
+    private func sampleAverageColor(in cgImage: CGImage, region: CGRect) -> NSColor {
+        let sampleW = max(1, Int(region.width))
+        let sampleH = max(1, Int(region.height))
+        let clampedX = max(0, min(Int(region.origin.x), cgImage.width - 1))
+        let clampedY = max(0, min(Int(region.origin.y), cgImage.height - 1))
+        let clampedW = min(sampleW, cgImage.width - clampedX)
+        let clampedH = min(sampleH, cgImage.height - clampedY)
+        guard clampedW > 0, clampedH > 0 else { return .white }
+
+        // Downscale to 4×4 for cheap averaging
+        let thumbW = 4, thumbH = 4
+        var pixelData = [UInt8](repeating: 0, count: thumbW * thumbH * 4)
+        guard let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
+              let ctx = CGContext(data: &pixelData, width: thumbW, height: thumbH,
+                                  bitsPerComponent: 8, bytesPerRow: thumbW * 4,
+                                  space: colorSpace,
+                                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue),
+              let cropped = cgImage.cropping(to: CGRect(x: clampedX, y: clampedY,
+                                                        width: clampedW, height: clampedH))
+        else { return .white }
+
+        ctx.draw(cropped, in: CGRect(x: 0, y: 0, width: thumbW, height: thumbH))
+
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0
+        let count = CGFloat(thumbW * thumbH)
+        for i in 0..<(thumbW * thumbH) {
+            let base = i * 4
+            let a = CGFloat(pixelData[base + 3]) / 255.0
+            if a > 0 {
+                r += CGFloat(pixelData[base])     / 255.0
+                g += CGFloat(pixelData[base + 1]) / 255.0
+                b += CGFloat(pixelData[base + 2]) / 255.0
+            }
+        }
+        return NSColor(deviceRed: r / count, green: g / count, blue: b / count, alpha: 1.0)
     }
 
     // MARK: - Output
@@ -2646,13 +4397,25 @@ class OverlayView: NSView {
         showColorPicker = false
         showBeautifyPicker = false
         showStrokePicker = false
+        showLoupeSizePicker = false
+        showDelayPicker = false
+        showUploadConfirmPicker = false
+        showUploadConfirmDialog = false
+        uploadConfirmDialogRect = .zero
+        uploadConfirmOKRect = .zero
+        uploadConfirmCancelRect = .zero
+        showRedactTypePicker = false
+                    showTranslatePicker = false
+        showTranslatePicker = false
+        isTranslating = false
+        translateEnabled = false
         moveMode = false
         selectedAnnotation = nil
         isDraggingAnnotation = false
         toolBeforeSelect = nil
         showColorWheel = false
         isRightClickSelecting = false
-        delaySeconds = 0
+        delaySeconds = UserDefaults.standard.integer(forKey: "lastDelaySeconds")
         beautifyEnabled = UserDefaults.standard.bool(forKey: "beautifyEnabled")
         beautifyStyleIndex = UserDefaults.standard.integer(forKey: "beautifyStyleIndex")
         textScrollView?.removeFromSuperview()
@@ -2672,6 +4435,17 @@ class OverlayView: NSView {
         isDraggingRightBar = false
         bottomBarDragOffset = .zero
         rightBarDragOffset = .zero
+        isResizingAnnotation = false
+        pressedButtonIndex = -1
+        loupeCursorPoint = .zero
+        overlayErrorTimer?.invalidate()
+        overlayErrorTimer = nil
+        overlayErrorMessage = nil
+        barcodeScanTask?.cancel()
+        barcodeScanTask = nil
+        detectedBarcodePayload = nil
+        barcodeActionRects = []
+        hoveredWindowRect = nil
         needsDisplay = true
     }
 }
@@ -2701,12 +4475,9 @@ extension OverlayView: NSTextFieldDelegate {
 extension OverlayView: NSTextViewDelegate {
     func textView(_ textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
         if commandSelector == #selector(NSResponder.insertNewline(_:)) {
-            if let event = NSApp.currentEvent, event.modifierFlags.contains(.shift) {
-                textView.insertNewlineIgnoringFieldEditor(self)
-                textDidChange(Notification(name: NSText.didChangeNotification))
-                return true
-            }
-            commitTextFieldIfNeeded()
+            // Plain Enter = new line; Shift+Enter has no special meaning
+            textView.insertNewlineIgnoringFieldEditor(self)
+            textDidChange(Notification(name: NSText.didChangeNotification))
             return true
         }
         if commandSelector == #selector(NSResponder.cancelOperation(_:)) {

@@ -2,7 +2,7 @@ import Cocoa
 import Carbon
 import ServiceManagement
 
-class PreferencesWindowController: NSWindowController {
+class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
 
     private var hotkeyField: NSTextField!
     private var hotkeyButton: NSButton!
@@ -20,12 +20,13 @@ class PreferencesWindowController: NSWindowController {
     private var imgbbKeyField: NSTextField!
     private var isRecordingHotkey = false
     private var localMonitor: Any?
+    private weak var uploadsStack: NSStackView?
 
     var onHotkeyChanged: (() -> Void)?
 
     init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 420, height: 650),
+            contentRect: NSRect(x: 0, y: 0, width: 480, height: 660),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -33,230 +34,567 @@ class PreferencesWindowController: NSWindowController {
         window.title = "macshot Preferences"
         window.center()
         window.isReleasedWhenClosed = false
-
         super.init(window: window)
         setupUI()
         loadPreferences()
     }
 
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+    required init?(coder: NSCoder) { fatalError() }
+
+    // MARK: - Top-level layout
 
     private func setupUI() {
-        guard let contentView = window?.contentView else { return }
+        guard let cv = window?.contentView else { return }
 
-        let padding: CGFloat = 20
-        let contentHeight: CGFloat = 650
-        var y: CGFloat
+        // Logo
+        let logo = NSImageView()
+        logo.image = NSImage(named: "Logo")
+        logo.imageScaling = .scaleProportionallyUpOrDown
+        logo.translatesAutoresizingMaskIntoConstraints = false
 
-        // Logo at top: 16pt padding above, 96pt logo, 24pt margin below
-        let logoTopPadding: CGFloat = 16
-        let logoSize: CGFloat = 96
-        let logoBottomMargin: CGFloat = 24
-        let logoX = (420 - logoSize) / 2
-        let logoY = contentHeight - logoTopPadding - logoSize
-        let logoImageView = NSImageView(frame: NSRect(x: logoX, y: logoY, width: logoSize, height: logoSize))
-        logoImageView.image = NSImage(named: "Logo")
-        logoImageView.imageScaling = .scaleProportionallyUpOrDown
-        contentView.addSubview(logoImageView)
-        y = logoY - logoBottomMargin
+        // Tab view
+        let tabView = NSTabView()
+        tabView.translatesAutoresizingMaskIntoConstraints = false
+        tabView.delegate = self
 
-        // Hotkey
-        let hotkeyLabel = NSTextField(labelWithString: "Global Shortcut:")
-        hotkeyLabel.frame = NSRect(x: padding, y: y, width: 120, height: 22)
-        contentView.addSubview(hotkeyLabel)
+        let generalTab = NSTabViewItem(identifier: "general")
+        generalTab.label = "General"
+        generalTab.view = makeGeneralTabView()
+        tabView.addTabViewItem(generalTab)
 
-        hotkeyField = NSTextField(frame: NSRect(x: 150, y: y, width: 140, height: 22))
+        let toolsTab = NSTabViewItem(identifier: "tools")
+        toolsTab.label = "Tools"
+        toolsTab.view = makeToolsTabView()
+        tabView.addTabViewItem(toolsTab)
+
+        let uploadsTab = NSTabViewItem(identifier: "uploads")
+        uploadsTab.label = "Uploads"
+        uploadsTab.view = makeUploadsTabView()
+        tabView.addTabViewItem(uploadsTab)
+
+        // Footer separator
+        let sep = NSBox()
+        sep.boxType = .separator
+        sep.translatesAutoresizingMaskIntoConstraints = false
+
+        // Footer labels
+        let madeBy = NSTextField(labelWithString: "Made by sw33tLie")
+        madeBy.font = NSFont.systemFont(ofSize: 11)
+        madeBy.textColor = .secondaryLabelColor
+        madeBy.translatesAutoresizingMaskIntoConstraints = false
+
+        let linkBtn = NSButton(title: "github.com/sw33tLie/macshot", target: self, action: #selector(openGitHub))
+        linkBtn.bezelStyle = .inline
+        linkBtn.isBordered = false
+        linkBtn.font = NSFont.systemFont(ofSize: 11)
+        linkBtn.attributedTitle = NSAttributedString(string: "github.com/sw33tLie/macshot", attributes: [
+            .font: NSFont.systemFont(ofSize: 11),
+            .foregroundColor: NSColor.linkColor,
+            .underlineStyle: NSUnderlineStyle.single.rawValue,
+        ])
+        linkBtn.translatesAutoresizingMaskIntoConstraints = false
+
+        let footerStack = NSStackView(views: [madeBy, NSView(), linkBtn])
+        footerStack.orientation = .horizontal
+        footerStack.spacing = 0
+        footerStack.translatesAutoresizingMaskIntoConstraints = false
+
+        cv.addSubview(logo)
+        cv.addSubview(tabView)
+        cv.addSubview(sep)
+        cv.addSubview(footerStack)
+
+        NSLayoutConstraint.activate([
+            // Logo centered at top
+            logo.topAnchor.constraint(equalTo: cv.topAnchor, constant: 16),
+            logo.centerXAnchor.constraint(equalTo: cv.centerXAnchor),
+            logo.widthAnchor.constraint(equalToConstant: 56),
+            logo.heightAnchor.constraint(equalToConstant: 56),
+
+            // Tab view below logo, above footer
+            tabView.topAnchor.constraint(equalTo: logo.bottomAnchor, constant: 8),
+            tabView.leadingAnchor.constraint(equalTo: cv.leadingAnchor),
+            tabView.trailingAnchor.constraint(equalTo: cv.trailingAnchor),
+            tabView.bottomAnchor.constraint(equalTo: sep.topAnchor, constant: -0),
+
+            // Footer separator
+            sep.leadingAnchor.constraint(equalTo: cv.leadingAnchor),
+            sep.trailingAnchor.constraint(equalTo: cv.trailingAnchor),
+            sep.bottomAnchor.constraint(equalTo: footerStack.topAnchor, constant: -6),
+            sep.heightAnchor.constraint(equalToConstant: 1),
+
+            // Footer
+            footerStack.leadingAnchor.constraint(equalTo: cv.leadingAnchor, constant: 20),
+            footerStack.trailingAnchor.constraint(equalTo: cv.trailingAnchor, constant: -20),
+            footerStack.bottomAnchor.constraint(equalTo: cv.bottomAnchor, constant: -8),
+            footerStack.heightAnchor.constraint(equalToConstant: 20),
+        ])
+    }
+
+    // MARK: - General Tab
+
+    private func makeGeneralTabView() -> NSView {
+        let scroll = NSScrollView()
+        scroll.hasVerticalScroller = true
+        scroll.autohidesScrollers = true
+        scroll.borderType = .noBorder
+        scroll.drawsBackground = false
+        scroll.autoresizingMask = [.width, .height]
+
+        let stack = NSStackView()
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 0
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.edgeInsets = NSEdgeInsets(top: 16, left: 20, bottom: 16, right: 20)
+
+        // ── Capture ──────────────────────────────────────────
+        stack.addArrangedSubview(sectionHeader("Capture"))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        // Hotkey row
+        hotkeyField = NSTextField()
         hotkeyField.isEditable = false
         hotkeyField.isSelectable = false
         hotkeyField.alignment = .center
-        hotkeyField.backgroundColor = NSColor(white: 0.95, alpha: 1)
-        contentView.addSubview(hotkeyField)
+        hotkeyField.setContentHuggingPriority(.defaultHigh, for: .horizontal)
 
         hotkeyButton = NSButton(title: "Record", target: self, action: #selector(recordHotkey(_:)))
-        hotkeyButton.frame = NSRect(x: 300, y: y, width: 90, height: 24)
         hotkeyButton.bezelStyle = .rounded
-        contentView.addSubview(hotkeyButton)
 
-        y -= 45
+        stack.addArrangedSubview(labeledRow("Global shortcut:", controls: [hotkeyField, hotkeyButton]))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
-        // Save path
-        let saveLabel = NSTextField(labelWithString: "Save Folder:")
-        saveLabel.frame = NSRect(x: padding, y: y, width: 120, height: 22)
-        contentView.addSubview(saveLabel)
-
-        savePathField = NSTextField(frame: NSRect(x: 150, y: y, width: 170, height: 22))
-        savePathField.isEditable = false
-        savePathField.isSelectable = false
-        savePathField.lineBreakMode = .byTruncatingMiddle
-        contentView.addSubview(savePathField)
-
-        let browseButton = NSButton(title: "Browse...", target: self, action: #selector(browseSavePath(_:)))
-        browseButton.frame = NSRect(x: 325, y: y, width: 70, height: 24)
-        browseButton.bezelStyle = .rounded
-        contentView.addSubview(browseButton)
-
-        y -= 40
-
-        // Auto-copy
-        autoCopyCheckbox = NSButton(checkboxWithTitle: "Auto-copy to clipboard on confirm", target: self, action: #selector(autoCopyChanged(_:)))
-        autoCopyCheckbox.frame = NSRect(x: padding, y: y, width: 300, height: 22)
-        contentView.addSubview(autoCopyCheckbox)
-
-        y -= 35
-
-        // Copy sound
-        copySoundCheckbox = NSButton(checkboxWithTitle: "Play sound on copy", target: self, action: #selector(copySoundChanged(_:)))
-        copySoundCheckbox.frame = NSRect(x: padding, y: y, width: 300, height: 22)
-        contentView.addSubview(copySoundCheckbox)
-
-        y -= 35
-
-        // Floating thumbnail
-        thumbnailCheckbox = NSButton(checkboxWithTitle: "Show floating thumbnail after capture", target: self, action: #selector(thumbnailChanged(_:)))
-        thumbnailCheckbox.frame = NSRect(x: padding, y: y, width: 300, height: 22)
-        contentView.addSubview(thumbnailCheckbox)
-
-        y -= 35
-
-        // Quick mode (right-click)
-        let quickModeLabel = NSTextField(labelWithString: "Right-click action:")
-        quickModeLabel.frame = NSRect(x: padding, y: y, width: 120, height: 22)
-        contentView.addSubview(quickModeLabel)
-
-        quickModePopup = NSPopUpButton(frame: NSRect(x: 150, y: y - 2, width: 200, height: 26), pullsDown: false)
+        // Right-click action
+        quickModePopup = NSPopUpButton()
         quickModePopup.addItems(withTitles: ["Save to file", "Copy to clipboard"])
         quickModePopup.target = self
         quickModePopup.action = #selector(quickModeChanged(_:))
-        contentView.addSubview(quickModePopup)
 
-        y -= 35
+        stack.addArrangedSubview(labeledRow("Right-click action:", controls: [quickModePopup]))
+        stack.setCustomSpacing(12, after: stack.arrangedSubviews.last!)
 
-        // Launch at login
+        // Checkboxes
+        autoCopyCheckbox = NSButton(checkboxWithTitle: "Auto-copy to clipboard on confirm", target: self, action: #selector(autoCopyChanged(_:)))
+        copySoundCheckbox = NSButton(checkboxWithTitle: "Play sound on copy", target: self, action: #selector(copySoundChanged(_:)))
+        thumbnailCheckbox = NSButton(checkboxWithTitle: "Show floating thumbnail after capture", target: self, action: #selector(thumbnailChanged(_:)))
         launchAtLoginCheckbox = NSButton(checkboxWithTitle: "Launch at login", target: self, action: #selector(launchAtLoginChanged(_:)))
-        launchAtLoginCheckbox.frame = NSRect(x: padding, y: y, width: 300, height: 22)
-        contentView.addSubview(launchAtLoginCheckbox)
 
-        y -= 40
+        for cb in [autoCopyCheckbox!, copySoundCheckbox!, thumbnailCheckbox!, launchAtLoginCheckbox!] {
+            stack.addArrangedSubview(indented(cb))
+            stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+        }
+
+        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
+
+        // ── Output ───────────────────────────────────────────
+        stack.addArrangedSubview(sectionHeader("Output"))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        // Save folder
+        savePathField = NSTextField()
+        savePathField.isEditable = false
+        savePathField.isSelectable = false
+        savePathField.lineBreakMode = .byTruncatingMiddle
+
+        let browseBtn = NSButton(title: "Browse…", target: self, action: #selector(browseSavePath(_:)))
+        browseBtn.bezelStyle = .rounded
+
+        stack.addArrangedSubview(labeledRow("Save folder:", controls: [savePathField, browseBtn]))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        // Image format
+        imageFormatPopup = NSPopUpButton()
+        imageFormatPopup.addItems(withTitles: ["PNG", "JPEG"])
+        imageFormatPopup.target = self
+        imageFormatPopup.action = #selector(imageFormatChanged(_:))
+
+        stack.addArrangedSubview(labeledRow("Image format:", controls: [imageFormatPopup]))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        // JPEG quality
+        qualitySlider = NSSlider()
+        qualitySlider.minValue = 10
+        qualitySlider.maxValue = 100
+        qualitySlider.target = self
+        qualitySlider.action = #selector(qualityChanged(_:))
+        qualitySlider.widthAnchor.constraint(equalToConstant: 160).isActive = true
+
+        qualityLabel = NSTextField(labelWithString: "85%")
+        qualityLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .regular)
+        qualityLabel.widthAnchor.constraint(equalToConstant: 44).isActive = true
+
+        stack.addArrangedSubview(labeledRow("JPEG quality:", controls: [qualitySlider, qualityLabel]))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         // History size
-        let historyLabel = NSTextField(labelWithString: "History size:")
-        historyLabel.frame = NSRect(x: padding, y: y, width: 120, height: 22)
-        contentView.addSubview(historyLabel)
-
-        historySizeField = NSTextField(frame: NSRect(x: 150, y: y, width: 40, height: 22))
+        historySizeField = NSTextField()
         historySizeField.isEditable = false
         historySizeField.isSelectable = false
         historySizeField.alignment = .center
-        historySizeField.backgroundColor = NSColor(white: 0.95, alpha: 1)
-        contentView.addSubview(historySizeField)
+        historySizeField.widthAnchor.constraint(equalToConstant: 40).isActive = true
 
-        historySizeStepper = NSStepper(frame: NSRect(x: 194, y: y, width: 19, height: 22))
+        historySizeStepper = NSStepper()
         historySizeStepper.minValue = 0
         historySizeStepper.maxValue = 50
         historySizeStepper.increment = 1
         historySizeStepper.target = self
         historySizeStepper.action = #selector(historySizeChanged(_:))
-        contentView.addSubview(historySizeStepper)
 
-        let historyNote = NSTextField(labelWithString: "screenshots kept on disk (0 = off)")
-        historyNote.frame = NSRect(x: 220, y: y, width: 200, height: 22)
-        historyNote.font = NSFont.systemFont(ofSize: 11)
-        historyNote.textColor = .secondaryLabelColor
-        contentView.addSubview(historyNote)
+        let histNote = NSTextField(labelWithString: "screenshots kept on disk (0 = off)")
+        histNote.font = NSFont.systemFont(ofSize: 11)
+        histNote.textColor = .secondaryLabelColor
 
-        y -= 40
+        stack.addArrangedSubview(labeledRow("History size:", controls: [historySizeField, historySizeStepper, histNote]))
+        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
-        // Image format
-        let formatLabel = NSTextField(labelWithString: "Image format:")
-        formatLabel.frame = NSRect(x: padding, y: y, width: 120, height: 22)
-        contentView.addSubview(formatLabel)
+        // ── Upload ───────────────────────────────────────────
+        stack.addArrangedSubview(sectionHeader("Upload"))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
-        imageFormatPopup = NSPopUpButton(frame: NSRect(x: 150, y: y - 2, width: 100, height: 26), pullsDown: false)
-        imageFormatPopup.addItems(withTitles: ["PNG", "JPEG"])
-        imageFormatPopup.target = self
-        imageFormatPopup.action = #selector(imageFormatChanged(_:))
-        contentView.addSubview(imageFormatPopup)
-
-        y -= 35
-
-        // JPEG quality slider
-        let qualityTitleLabel = NSTextField(labelWithString: "JPEG quality:")
-        qualityTitleLabel.frame = NSRect(x: padding, y: y, width: 120, height: 22)
-        contentView.addSubview(qualityTitleLabel)
-
-        qualitySlider = NSSlider(frame: NSRect(x: 150, y: y, width: 180, height: 22))
-        qualitySlider.minValue = 10
-        qualitySlider.maxValue = 100
-        qualitySlider.target = self
-        qualitySlider.action = #selector(qualityChanged(_:))
-        contentView.addSubview(qualitySlider)
-
-        qualityLabel = NSTextField(labelWithString: "85%")
-        qualityLabel.frame = NSRect(x: 335, y: y, width: 50, height: 22)
-        qualityLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .regular)
-        qualityLabel.alignment = .left
-        contentView.addSubview(qualityLabel)
-
-        y -= 40
-
-        // imgbb API key
-        let imgbbLabel = NSTextField(labelWithString: "imgbb API key:")
-        imgbbLabel.frame = NSRect(x: padding, y: y, width: 120, height: 22)
-        contentView.addSubview(imgbbLabel)
-
-        imgbbKeyField = NSTextField(frame: NSRect(x: 150, y: y, width: 240, height: 22))
+        imgbbKeyField = NSTextField()
         imgbbKeyField.placeholderString = "Leave empty to use default"
         imgbbKeyField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
         imgbbKeyField.target = self
         imgbbKeyField.action = #selector(imgbbKeyChanged(_:))
-        contentView.addSubview(imgbbKeyField)
 
-        let imgbbNote = NSTextField(wrappingLabelWithString: "The upload button uses imgbb.com to host images. A shared API key is included. If you hit rate limits, get your own free key at imgbb.com/api.")
-        imgbbNote.frame = NSRect(x: 150, y: y - 45, width: 240, height: 42)
+        stack.addArrangedSubview(labeledRow("imgbb API key:", controls: [imgbbKeyField]))
+        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+
+        let imgbbNote = NSTextField(wrappingLabelWithString: "Uses imgbb.com. A shared key is included — get your own free key at imgbb.com/api if you hit rate limits.")
         imgbbNote.font = NSFont.systemFont(ofSize: 10)
         imgbbNote.textColor = .secondaryLabelColor
-        contentView.addSubview(imgbbNote)
+        stack.addArrangedSubview(indented(imgbbNote))
 
-        // Separator
-        let separator = NSBox(frame: NSRect(x: padding, y: 40, width: 380, height: 1))
-        separator.boxType = .separator
-        contentView.addSubview(separator)
+        // Make stack fill scroll width
+        let clipView = scroll.contentView
+        scroll.documentView = stack
 
-        // Footer: Made by sw33tLie + GitHub link
-        let madeBy = NSTextField(labelWithString: "Made by sw33tLie")
-        madeBy.frame = NSRect(x: padding, y: 12, width: 110, height: 18)
-        madeBy.font = NSFont.systemFont(ofSize: 11)
-        madeBy.textColor = .secondaryLabelColor
-        contentView.addSubview(madeBy)
-
-        let linkButton = NSButton(frame: NSRect(x: 130, y: 10, width: 200, height: 20))
-        linkButton.title = "github.com/sw33tLie/macshot"
-        linkButton.bezelStyle = .inline
-        linkButton.isBordered = false
-        linkButton.font = NSFont.systemFont(ofSize: 11)
-        linkButton.contentTintColor = .linkColor
-        linkButton.target = self
-        linkButton.action = #selector(openGitHub)
-        // Underline the link text
-        let linkAttrs = NSMutableAttributedString(string: linkButton.title, attributes: [
-            .font: NSFont.systemFont(ofSize: 11),
-            .foregroundColor: NSColor.linkColor,
-            .underlineStyle: NSUnderlineStyle.single.rawValue,
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: clipView.topAnchor),
+            stack.leadingAnchor.constraint(equalTo: clipView.leadingAnchor),
+            stack.trailingAnchor.constraint(equalTo: clipView.trailingAnchor),
+            // no bottom constraint — stack grows to fit content, scroll handles overflow
         ])
-        linkButton.attributedTitle = linkAttrs
-        contentView.addSubview(linkButton)
+
+        return scroll
     }
+
+    // MARK: - Tools Tab
+
+    private func makeToolsTabView() -> NSView {
+        let scroll = NSScrollView()
+        scroll.hasVerticalScroller = true
+        scroll.autohidesScrollers = true
+        scroll.borderType = .noBorder
+        scroll.drawsBackground = false
+        scroll.autoresizingMask = [.width, .height]
+
+        let stack = NSStackView()
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 0
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.edgeInsets = NSEdgeInsets(top: 16, left: 20, bottom: 16, right: 20)
+
+        // ── Annotation Tools ─────────────────────────────────
+        stack.addArrangedSubview(sectionHeader("Annotation Tools"))
+        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+
+        let noteA = NSTextField(labelWithString: "Hidden tools are removed from the bottom toolbar.")
+        noteA.font = NSFont.systemFont(ofSize: 11)
+        noteA.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(noteA)
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        let annotationTools: [(AnnotationTool, String)] = [
+            (.pencil, "Pencil"), (.line, "Line"), (.arrow, "Arrow"),
+            (.rectangle, "Rectangle"), (.filledRectangle, "Filled Rectangle"),
+            (.ellipse, "Ellipse"), (.marker, "Marker"), (.text, "Text"),
+            (.number, "Number / Counter"), (.pixelate, "Pixelate"),
+            (.blur, "Blur"), (.loupe, "Magnify (Loupe)"), (.measure, "Measure"),
+        ]
+        let enabledTools = UserDefaults.standard.array(forKey: "enabledTools") as? [Int]
+        let toolsGrid = makeToggleGrid(items: annotationTools.map { (tag: $0.rawValue, label: $1) },
+                                       defaultsKey: "enabledTools", enabledValues: enabledTools)
+        stack.addArrangedSubview(toolsGrid)
+        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
+
+        // ── Toolbar Actions ───────────────────────────────────
+        stack.addArrangedSubview(sectionHeader("Toolbar Actions"))
+        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+
+        let noteB = NSTextField(labelWithString: "Hidden actions are removed from the right toolbar.")
+        noteB.font = NSFont.systemFont(ofSize: 11)
+        noteB.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(noteB)
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        let actionItems: [(tag: Int, label: String)] = [
+            (1001, "Upload to imgbb"), (1002, "Pin (floating window)"),
+            (1003, "OCR (extract text)"), (1004, "Beautify"),
+            (1005, "Remove Background"), (1006, "Auto-Redact sensitive data"),
+            (1007, "Delay capture"), (1008, "Translate"),
+        ]
+        let enabledActions = UserDefaults.standard.array(forKey: "enabledActions") as? [Int]
+        let actionsGrid = makeToggleGrid(items: actionItems,
+                                         defaultsKey: "enabledActions", enabledValues: enabledActions)
+        stack.addArrangedSubview(actionsGrid)
+
+        let clipView = scroll.contentView
+        scroll.documentView = stack
+
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: clipView.topAnchor),
+            stack.leadingAnchor.constraint(equalTo: clipView.leadingAnchor),
+            stack.trailingAnchor.constraint(equalTo: clipView.trailingAnchor),
+        ])
+
+        return scroll
+    }
+
+    // MARK: - Uploads Tab
+
+    private func makeUploadsTabView() -> NSView {
+        let scroll = NSScrollView()
+        scroll.hasVerticalScroller = true
+        scroll.autohidesScrollers = true
+        scroll.borderType = .noBorder
+        scroll.drawsBackground = false
+        scroll.autoresizingMask = [.width, .height]
+
+        let stack = NSStackView()
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 6
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.edgeInsets = NSEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+
+        let clipView = scroll.contentView
+        scroll.documentView = stack
+
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: clipView.topAnchor),
+            stack.leadingAnchor.constraint(equalTo: clipView.leadingAnchor),
+            stack.trailingAnchor.constraint(equalTo: clipView.trailingAnchor),
+        ])
+
+        self.uploadsStack = stack
+        return scroll
+    }
+
+    private func reloadUploadsTab() {
+        guard let stack = uploadsStack else { return }
+        stack.arrangedSubviews.forEach { stack.removeArrangedSubview($0); $0.removeFromSuperview() }
+
+        let uploads = ((UserDefaults.standard.array(forKey: "imgbbUploads") as? [[String: String]]) ?? [])
+            .reversed() as [[String: String]]
+
+        if uploads.isEmpty {
+            let lbl = NSTextField(labelWithString: "No uploads yet.")
+            lbl.font = NSFont.systemFont(ofSize: 13)
+            lbl.textColor = .secondaryLabelColor
+            lbl.alignment = .center
+            lbl.translatesAutoresizingMaskIntoConstraints = false
+            stack.addArrangedSubview(lbl)
+        } else {
+            for (i, upload) in uploads.enumerated() {
+                let row = makeUploadRow(index: uploads.count - i,
+                                        link: upload["link"] ?? "",
+                                        deleteURL: upload["deleteURL"] ?? "")
+                stack.addArrangedSubview(row)
+                // stretch row to fill stack width (accounting for edgeInsets 12+12)
+                row.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -24).isActive = true
+            }
+        }
+    }
+
+    private func makeUploadRow(index: Int, link: String, deleteURL: String) -> NSView {
+        let box = NSView()
+        box.translatesAutoresizingMaskIntoConstraints = false
+        box.wantsLayer = true
+        box.layer?.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.5).cgColor
+        box.layer?.cornerRadius = 6
+        box.layer?.borderWidth = 0.5
+        box.layer?.borderColor = NSColor.separatorColor.cgColor
+
+        let inner = NSStackView()
+        inner.orientation = .vertical
+        inner.alignment = .leading
+        inner.spacing = 6
+        inner.translatesAutoresizingMaskIntoConstraints = false
+        inner.edgeInsets = NSEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
+        box.addSubview(inner)
+
+        NSLayoutConstraint.activate([
+            inner.topAnchor.constraint(equalTo: box.topAnchor),
+            inner.leadingAnchor.constraint(equalTo: box.leadingAnchor),
+            inner.trailingAnchor.constraint(equalTo: box.trailingAnchor),
+            inner.bottomAnchor.constraint(equalTo: box.bottomAnchor),
+        ])
+
+        inner.addArrangedSubview(urlRow(tag: "URL", value: link, copyKey: "link::\(link)"))
+        inner.addArrangedSubview(urlRow(tag: "DEL", value: deleteURL, copyKey: "link::\(deleteURL)"))
+
+        return box
+    }
+
+    private func urlRow(tag: String, value: String, copyKey: String) -> NSView {
+        let row = NSView()
+        row.translatesAutoresizingMaskIntoConstraints = false
+        row.heightAnchor.constraint(equalToConstant: 24).isActive = true
+
+        let tagLbl = NSTextField(labelWithString: tag)
+        tagLbl.font = NSFont.systemFont(ofSize: 10, weight: .semibold)
+        tagLbl.textColor = .secondaryLabelColor
+        tagLbl.translatesAutoresizingMaskIntoConstraints = false
+
+        let field = NSTextField(labelWithString: value)
+        field.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        field.textColor = tag == "URL" ? .labelColor : .secondaryLabelColor
+        field.lineBreakMode = .byTruncatingMiddle
+        field.isSelectable = true
+        field.translatesAutoresizingMaskIntoConstraints = false
+        field.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
+        let btn = NSButton(title: "Copy", target: self, action: #selector(copyUploadURL(_:)))
+        btn.bezelStyle = .rounded
+        btn.font = NSFont.systemFont(ofSize: 11)
+        btn.identifier = NSUserInterfaceItemIdentifier(copyKey)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+
+        row.addSubview(tagLbl)
+        row.addSubview(field)
+        row.addSubview(btn)
+
+        NSLayoutConstraint.activate([
+            tagLbl.leadingAnchor.constraint(equalTo: row.leadingAnchor),
+            tagLbl.widthAnchor.constraint(equalToConstant: 34),
+            tagLbl.centerYAnchor.constraint(equalTo: row.centerYAnchor),
+
+            btn.trailingAnchor.constraint(equalTo: row.trailingAnchor),
+            btn.widthAnchor.constraint(equalToConstant: 52),
+            btn.centerYAnchor.constraint(equalTo: row.centerYAnchor),
+
+            field.leadingAnchor.constraint(equalTo: tagLbl.trailingAnchor, constant: 6),
+            field.trailingAnchor.constraint(equalTo: btn.leadingAnchor, constant: -8),
+            field.centerYAnchor.constraint(equalTo: row.centerYAnchor),
+        ])
+
+        return row
+    }
+
+    // MARK: - Layout helpers
+
+    private func sectionHeader(_ text: String) -> NSTextField {
+        let lbl = NSTextField(labelWithString: text.uppercased())
+        lbl.font = NSFont.systemFont(ofSize: 10, weight: .semibold)
+        lbl.textColor = .secondaryLabelColor
+        return lbl
+    }
+
+    /// A horizontal row: right-aligned label on the left, controls on the right.
+    private func labeledRow(_ labelText: String, controls: [NSView]) -> NSView {
+        let lbl = NSTextField(labelWithString: labelText)
+        lbl.font = NSFont.systemFont(ofSize: 13)
+        lbl.alignment = .right
+        lbl.translatesAutoresizingMaskIntoConstraints = false
+        lbl.widthAnchor.constraint(equalToConstant: 140).isActive = true
+
+        let row = NSStackView(views: [lbl] + controls)
+        row.orientation = .horizontal
+        row.spacing = 8
+        row.alignment = .centerY
+        row.translatesAutoresizingMaskIntoConstraints = false
+        return row
+    }
+
+    /// Indents a view to align with the control column.
+    private func indented(_ view: NSView) -> NSView {
+        let spacer = NSView()
+        spacer.translatesAutoresizingMaskIntoConstraints = false
+        spacer.widthAnchor.constraint(equalToConstant: 148).isActive = true  // 140 label + 8 spacing
+
+        let row = NSStackView(views: [spacer, view])
+        row.orientation = .horizontal
+        row.spacing = 0
+        row.alignment = .centerY
+        row.translatesAutoresizingMaskIntoConstraints = false
+        return row
+    }
+
+    /// Two-column grid of checkboxes in a rounded box, fills parent width.
+    private func makeToggleGrid(items: [(tag: Int, label: String)],
+                                 defaultsKey: String,
+                                 enabledValues: [Int]?) -> NSView {
+        let box = NSView()
+        box.translatesAutoresizingMaskIntoConstraints = false
+        box.wantsLayer = true
+        box.layer?.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.5).cgColor
+        box.layer?.cornerRadius = 6
+        box.layer?.borderWidth = 1
+        box.layer?.borderColor = NSColor.separatorColor.cgColor
+
+        // Build rows of 2 columns using horizontal stack views inside a vertical stack
+        let vStack = NSStackView()
+        vStack.orientation = .vertical
+        vStack.spacing = 0
+        vStack.alignment = .leading
+        vStack.translatesAutoresizingMaskIntoConstraints = false
+        box.addSubview(vStack)
+
+        let pad: CGFloat = 8
+        NSLayoutConstraint.activate([
+            vStack.topAnchor.constraint(equalTo: box.topAnchor, constant: pad),
+            vStack.leadingAnchor.constraint(equalTo: box.leadingAnchor, constant: pad),
+            vStack.trailingAnchor.constraint(equalTo: box.trailingAnchor, constant: -pad),
+            vStack.bottomAnchor.constraint(equalTo: box.bottomAnchor, constant: -pad),
+        ])
+
+        let cols = 2
+        let rows = Int(ceil(Double(items.count) / Double(cols)))
+        // Fixed column width so all second-column items align vertically
+        let colWidth: CGFloat = 200
+
+        for row in 0..<rows {
+            let hStack = NSStackView()
+            hStack.orientation = .horizontal
+            hStack.distribution = .fill
+            hStack.spacing = 0
+            hStack.translatesAutoresizingMaskIntoConstraints = false
+            hStack.heightAnchor.constraint(equalToConstant: 28).isActive = true
+
+            for col in 0..<cols {
+                let idx = row * cols + col
+                if idx < items.count {
+                    let item = items[idx]
+                    let isEnabled = enabledValues == nil || enabledValues!.contains(item.tag)
+                    let cb = NSButton(checkboxWithTitle: item.label, target: self, action: #selector(toggleItemChanged(_:)))
+                    cb.state = isEnabled ? .on : .off
+                    cb.tag = item.tag
+                    cb.identifier = NSUserInterfaceItemIdentifier(defaultsKey)
+                    cb.translatesAutoresizingMaskIntoConstraints = false
+                    cb.widthAnchor.constraint(equalToConstant: colWidth).isActive = true
+                    hStack.addArrangedSubview(cb)
+                } else {
+                    let filler = NSView()
+                    filler.translatesAutoresizingMaskIntoConstraints = false
+                    filler.widthAnchor.constraint(equalToConstant: colWidth).isActive = true
+                    hStack.addArrangedSubview(filler)
+                }
+            }
+            vStack.addArrangedSubview(hStack)
+        }
+
+        return box
+    }
+
+    // MARK: - Load preferences
 
     private func loadPreferences() {
         hotkeyField.stringValue = HotkeyManager.shortcutDisplayString()
 
-        if let savePath = UserDefaults.standard.string(forKey: "saveDirectory") {
-            savePathField.stringValue = savePath
-        } else {
-            savePathField.stringValue = "~/Pictures"
-        }
+        savePathField.stringValue = UserDefaults.standard.string(forKey: "saveDirectory") ?? "~/Pictures"
 
         let autoCopy = UserDefaults.standard.object(forKey: "autoCopyToClipboard") as? Bool ?? true
         autoCopyCheckbox.state = autoCopy ? .on : .off
@@ -298,48 +636,34 @@ class PreferencesWindowController: NSWindowController {
     // MARK: - Actions
 
     @objc private func recordHotkey(_ sender: NSButton) {
-        if isRecordingHotkey {
-            stopRecording()
-            return
-        }
-
+        if isRecordingHotkey { stopRecording(); return }
         isRecordingHotkey = true
         hotkeyButton.title = "Press keys..."
         hotkeyField.stringValue = "Waiting..."
 
         localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self = self else { return event }
-
             let modifiers = event.modifierFlags
             var carbonMods: UInt32 = 0
             if modifiers.contains(.command) { carbonMods |= UInt32(cmdKey) }
-            if modifiers.contains(.shift) { carbonMods |= UInt32(shiftKey) }
-            if modifiers.contains(.option) { carbonMods |= UInt32(optionKey) }
+            if modifiers.contains(.shift)   { carbonMods |= UInt32(shiftKey) }
+            if modifiers.contains(.option)  { carbonMods |= UInt32(optionKey) }
             if modifiers.contains(.control) { carbonMods |= UInt32(controlKey) }
-
-            // Require at least one modifier
             if carbonMods == 0 { return nil }
-
             let keyCode = UInt32(event.keyCode)
-
             UserDefaults.standard.set(Int(keyCode), forKey: "hotkeyKeyCode")
             UserDefaults.standard.set(Int(carbonMods), forKey: "hotkeyModifiers")
-
             self.hotkeyField.stringValue = HotkeyManager.modifierString(from: carbonMods) + HotkeyManager.keyString(from: keyCode)
             self.stopRecording()
             self.onHotkeyChanged?()
-
-            return nil // consume the event
+            return nil
         }
     }
 
     private func stopRecording() {
         isRecordingHotkey = false
         hotkeyButton.title = "Record"
-        if let monitor = localMonitor {
-            NSEvent.removeMonitor(monitor)
-            localMonitor = nil
-        }
+        if let m = localMonitor { NSEvent.removeMonitor(m); localMonitor = nil }
     }
 
     @objc private func browseSavePath(_ sender: NSButton) {
@@ -347,11 +671,9 @@ class PreferencesWindowController: NSWindowController {
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = false
-
-        if let currentPath = UserDefaults.standard.string(forKey: "saveDirectory") {
-            panel.directoryURL = URL(fileURLWithPath: currentPath)
+        if let p = UserDefaults.standard.string(forKey: "saveDirectory") {
+            panel.directoryURL = URL(fileURLWithPath: p)
         }
-
         panel.begin { [weak self] response in
             guard response == .OK, let url = panel.url else { return }
             UserDefaults.standard.set(url.path, forKey: "saveDirectory")
@@ -362,67 +684,72 @@ class PreferencesWindowController: NSWindowController {
     @objc private func autoCopyChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "autoCopyToClipboard")
     }
-
     @objc private func copySoundChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "playCopySound")
     }
-
     @objc private func thumbnailChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "showFloatingThumbnail")
     }
-
     @objc private func quickModeChanged(_ sender: NSPopUpButton) {
         UserDefaults.standard.set(sender.indexOfSelectedItem == 1, forKey: "quickModeCopyToClipboard")
     }
-
     @objc private func openGitHub() {
-        if let url = URL(string: "https://github.com/sw33tLie/macshot") {
-            NSWorkspace.shared.open(url)
-        }
+        if let url = URL(string: "https://github.com/sw33tLie/macshot") { NSWorkspace.shared.open(url) }
     }
-
     @objc private func imageFormatChanged(_ sender: NSPopUpButton) {
-        let format: String = sender.indexOfSelectedItem == 1 ? "jpeg" : "png"
-        UserDefaults.standard.set(format, forKey: "imageFormat")
+        UserDefaults.standard.set(sender.indexOfSelectedItem == 1 ? "jpeg" : "png", forKey: "imageFormat")
         updateQualityVisibility()
     }
-
     @objc private func qualityChanged(_ sender: NSSlider) {
-        let value = sender.integerValue
-        qualityLabel.stringValue = "\(value)%"
-        UserDefaults.standard.set(Double(value) / 100.0, forKey: "imageQuality")
+        qualityLabel.stringValue = "\(sender.integerValue)%"
+        UserDefaults.standard.set(Double(sender.integerValue) / 100.0, forKey: "imageQuality")
     }
-
     @objc private func imgbbKeyChanged(_ sender: NSTextField) {
         let key = sender.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        if key.isEmpty {
-            UserDefaults.standard.removeObject(forKey: "imgbbAPIKey")
-        } else {
-            UserDefaults.standard.set(key, forKey: "imgbbAPIKey")
-        }
+        if key.isEmpty { UserDefaults.standard.removeObject(forKey: "imgbbAPIKey") }
+        else { UserDefaults.standard.set(key, forKey: "imgbbAPIKey") }
     }
-
     @objc private func historySizeChanged(_ sender: NSStepper) {
-        let value = sender.integerValue
-        historySizeField.integerValue = value
-        UserDefaults.standard.set(value, forKey: "historySize")
+        historySizeField.integerValue = sender.integerValue
+        UserDefaults.standard.set(sender.integerValue, forKey: "historySize")
         ScreenshotHistory.shared.pruneToMax()
     }
-
+    @objc private func toggleItemChanged(_ sender: NSButton) {
+        let key = sender.identifier?.rawValue ?? "enabledTools"
+        let allTools: [AnnotationTool] = [.pencil, .line, .arrow, .rectangle, .filledRectangle,
+                                          .ellipse, .marker, .text, .number, .pixelate, .blur, .loupe, .measure]
+        let allActions: [Int] = [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008]
+        let defaultValues: [Int] = key == "enabledTools" ? allTools.map { $0.rawValue } : allActions
+        var enabled = UserDefaults.standard.array(forKey: key) as? [Int] ?? defaultValues
+        if sender.state == .on { if !enabled.contains(sender.tag) { enabled.append(sender.tag) } }
+        else { enabled.removeAll { $0 == sender.tag } }
+        UserDefaults.standard.set(enabled, forKey: key)
+    }
+    @objc private func copyUploadURL(_ sender: NSButton) {
+        guard let id = sender.identifier?.rawValue, id.hasPrefix("link::") else { return }
+        let url = String(id.dropFirst(6))
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(url, forType: .string)
+        let orig = sender.title
+        sender.title = "✓"
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { sender.title = orig }
+    }
     @objc private func launchAtLoginChanged(_ sender: NSButton) {
         let enabled = sender.state == .on
         UserDefaults.standard.set(enabled, forKey: "launchAtLogin")
-
         if #available(macOS 13.0, *) {
             do {
-                if enabled {
-                    try SMAppService.mainApp.register()
-                } else {
-                    try SMAppService.mainApp.unregister()
-                }
-            } catch {
-                print("Failed to update login item: \(error)")
-            }
+                if enabled { try SMAppService.mainApp.register() }
+                else { try SMAppService.mainApp.unregister() }
+            } catch { print("Failed to update login item: \(error)") }
+        }
+    }
+
+    // MARK: - NSTabViewDelegate
+
+    func tabView(_ tabView: NSTabView, didSelect tabViewItem: NSTabViewItem?) {
+        if tabViewItem?.identifier as? String == "uploads" {
+            reloadUploadsTab()
         }
     }
 

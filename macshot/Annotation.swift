@@ -13,7 +13,9 @@ enum AnnotationTool: Int, CaseIterable {
     case pixelate        // pixelate/blur region
     case blur            // gaussian blur region
     case measure         // pixel ruler / measurement line
+    case loupe           // magnifying glass
     case select          // select & move existing annotations
+    case translateOverlay // translated text painted over original
 }
 
 class Annotation {
@@ -56,7 +58,7 @@ class Annotation {
     /// Whether this annotation type can be moved
     var isMovable: Bool {
         switch tool {
-        case .pixelate, .blur, .select:
+        case .pixelate, .blur, .select, .translateOverlay:
             return false
         default:
             return true
@@ -83,7 +85,7 @@ class Annotation {
             let outer = rect.insetBy(dx: -threshold, dy: -threshold)
             let inner = rect.insetBy(dx: threshold, dy: threshold)
             return outer.contains(point) && (inner.width < 0 || inner.height < 0 || !inner.contains(point))
-        case .ellipse:
+        case .ellipse, .loupe:
             let rect = boundingRect
             guard rect.width > 0, rect.height > 0 else { return false }
             let cx = rect.midX, cy = rect.midY
@@ -94,6 +96,10 @@ class Annotation {
             let rNorm = threshold / min(rx, ry)
             return abs(d - 1.0) < rNorm * 2
         case .text:
+            // If endPoint was set at commit time, use the stored bounding rect
+            if endPoint != startPoint {
+                return boundingRect.insetBy(dx: -threshold, dy: -threshold).contains(point)
+            }
             guard let text = attributedText ?? (text.map { NSAttributedString(string: $0) }) else { return false }
             let size = text.size()
             let rect = NSRect(origin: startPoint, size: size)
@@ -119,6 +125,11 @@ class Annotation {
             }
             points = pts
         }
+        
+        // If it's a loupe, we need to clear the baked image so it re-renders the new magnified area
+        if tool == .loupe {
+            bakedBlurNSImage = nil
+        }
     }
 
     /// Draw a selection highlight around this annotation
@@ -135,12 +146,18 @@ class Annotation {
             }
             highlightRect = NSRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
         case .text:
-            let text = attributedText ?? self.text.map { NSAttributedString(string: $0, attributes: [.font: NSFont.systemFont(ofSize: fontSize)]) }
-            let size = text?.size() ?? NSSize(width: 50, height: 20)
-            highlightRect = NSRect(origin: startPoint, size: size)
+            if endPoint != startPoint {
+                highlightRect = boundingRect
+            } else {
+                let text = attributedText ?? self.text.map { NSAttributedString(string: $0, attributes: [.font: NSFont.systemFont(ofSize: fontSize)]) }
+                let size = text?.size() ?? NSSize(width: 50, height: 20)
+                highlightRect = NSRect(origin: startPoint, size: size)
+            }
         case .number:
             let radius = max(14, strokeWidth * 4)
             highlightRect = NSRect(x: startPoint.x - radius, y: startPoint.y - radius, width: radius * 2, height: radius * 2)
+        case .loupe:
+            highlightRect = boundingRect
         default:
             highlightRect = boundingRect
         }
@@ -196,8 +213,12 @@ class Annotation {
             drawBlur(in: context)
         case .measure:
             drawMeasure()
+        case .loupe:
+            drawLoupe(in: context)
         case .select:
             break  // not a drawable tool
+        case .translateOverlay:
+            drawTranslateOverlay()
         }
     }
 
@@ -287,8 +308,10 @@ class Annotation {
 
     private func drawText() {
         // Prefer rich attributed text if available
+        // Use draw(in:) with the stored bounding rect — this is coordinate-system
+        // agnostic and matches exactly what was shown in the NSTextView editor.
         if let attrText = attributedText, attrText.length > 0 {
-            attrText.draw(at: startPoint)
+            attrText.draw(in: boundingRect)
             return
         }
 
@@ -319,7 +342,7 @@ class Annotation {
         if isStrikethrough {
             attrs[.strikethroughStyle] = NSUnderlineStyle.single.rawValue
         }
-        (text as NSString).draw(at: startPoint, withAttributes: attrs)
+        (text as NSString).draw(in: boundingRect, withAttributes: attrs)
     }
 
     private func drawNumber() {
@@ -573,5 +596,194 @@ class Annotation {
         border.setLineDash(pattern, count: 2, phase: 0)
         NSColor.white.withAlphaComponent(0.7).setStroke()
         border.stroke()
+    }
+
+    // MARK: - Loupe (Magnifying Glass)
+
+    // MARK: - Loupe (Magnifying Glass)
+
+    func bakeLoupe() {
+        guard tool == .loupe else { return }
+        if let live = generateLoupeImage() {
+            bakedBlurNSImage = live
+        }
+        // Do NOT set self.sourceImage = nil so that if the user moves it later, it can still magnify!
+    }
+
+    private func generateLoupeImage() -> NSImage? {
+        // Real-time geometric magnification of the source underlying the circle
+        guard let image = sourceImage else { return nil }
+
+        let bounds = sourceImageBounds
+        let imageSize = image.size
+        let scaleX = imageSize.width / bounds.width
+        let scaleY = imageSize.height / bounds.height
+        
+        let rect = boundingRect
+        let scale: CGFloat = 2.0 // 2x Magnification
+        
+        // Always force a perfect circle
+        let size = min(rect.width, rect.height)
+        guard size > 10 else { return nil }
+
+        let centerX = rect.origin.x + rect.width / 2
+        let centerY = rect.origin.y + rect.height / 2
+        
+        let srcSize = size / scale
+        let srcX = centerX - srcSize / 2
+        let srcY = centerY - srcSize / 2
+        
+        // Extract the original region.
+        // NSImage and the overlay view share the same coordinate system (Y=0 at bottom),
+        // so no Y-flip is needed — just scale directly.
+        let cropRect = NSRect(
+            x: srcX * scaleX,
+            y: srcY * scaleY,
+            width: srcSize * scaleX,
+            height: srcSize * scaleY
+        )
+        
+        let magnifiedImage = NSImage(size: NSSize(width: size, height: size))
+        magnifiedImage.lockFocus()
+        if let ctx = NSGraphicsContext.current {
+            ctx.imageInterpolation = .high
+        }
+        image.draw(in: NSRect(x: 0, y: 0, width: size, height: size),
+                   from: cropRect,
+                   operation: .copy,
+                   fraction: 1.0)
+        magnifiedImage.unlockFocus()
+        
+        return magnifiedImage
+    }
+
+    private func drawLoupe(in context: NSGraphicsContext) {
+        let rect = boundingRect
+        guard rect.width > 10, rect.height > 10 else { return }
+        
+        // Ensure perfect circle
+        let size = min(rect.width, rect.height)
+        let squareRect = NSRect(
+            x: rect.origin.x + (rect.width - size) / 2,
+            y: rect.origin.y + (rect.height - size) / 2,
+            width: size,
+            height: size
+        )
+
+        context.saveGraphicsState()
+
+        // 1. Draw profound outer drop shadow
+        let shadow = NSShadow()
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.4)
+        shadow.shadowOffset = NSSize(width: 0, height: -6)
+        shadow.shadowBlurRadius = 14
+        shadow.set()
+        
+        let path = NSBezierPath(ovalIn: squareRect)
+        NSColor.white.setFill() // throw shadow
+        path.fill()
+        
+        context.restoreGraphicsState()
+        
+        // 2. Clip to the perfectly circular lens
+        context.saveGraphicsState()
+        path.addClip()
+
+        // Draw live or baked magnified image
+        if let baked = bakedBlurNSImage {
+            baked.draw(in: squareRect, from: NSRect(origin: .zero, size: baked.size), operation: .sourceOver, fraction: 1.0)
+        } else if let liveImage = generateLoupeImage() {
+            liveImage.draw(in: squareRect, from: NSRect(origin: .zero, size: liveImage.size), operation: .sourceOver, fraction: 1.0)
+        } else {
+            NSColor.white.withAlphaComponent(0.1).setFill()
+            path.fill()
+        }
+        context.restoreGraphicsState()
+
+        // 3. Draw sleek glassy borders
+        
+        // Outer white border (modern, minimalist lens ring)
+        let borderPath = NSBezierPath(ovalIn: squareRect)
+        borderPath.lineWidth = 4.0
+        NSColor.white.setStroke()
+        borderPath.stroke()
+        
+        // Thin inner rim for depth
+        let innerRim = NSBezierPath(ovalIn: squareRect.insetBy(dx: 2, dy: 2))
+        innerRim.lineWidth = 1.0
+        NSColor.gray.withAlphaComponent(0.2).setStroke()
+        innerRim.stroke()
+        
+        // 4. Inner drop shadow to emulate true 3D glass refraction
+        context.saveGraphicsState()
+        let innerShadow = NSShadow()
+        innerShadow.shadowColor = NSColor.black.withAlphaComponent(0.5)
+        innerShadow.shadowOffset = NSSize(width: 0, height: -3)
+        innerShadow.shadowBlurRadius = 6
+        innerShadow.set()
+        
+        // Create an inverted bezier mask ("donut") to cast a shadow inwards onto the lens
+        let holeRadius: CGFloat = 30
+        let holeRect = squareRect.insetBy(dx: -holeRadius, dy: -holeRadius)
+        let innerHole = NSBezierPath(rect: holeRect)
+        innerHole.append(NSBezierPath(ovalIn: squareRect).reversed)
+        
+        path.addClip() // Contain the shadow inside the lens
+        NSColor.black.withAlphaComponent(0.8).setFill()
+        innerHole.fill()
+        context.restoreGraphicsState()
+    }
+
+    // MARK: - Translate overlay
+
+    private func drawTranslateOverlay() {
+        guard let translatedText = text, !translatedText.isEmpty else { return }
+
+        let rect = boundingRect
+        guard rect.width > 2, rect.height > 2 else { return }
+
+        // Background: use `color` (sampled avg color stored at creation time)
+        // with a slight blur-like fill behind text
+        let bgColor = color
+        let bgPath = NSBezierPath(roundedRect: rect, xRadius: 3, yRadius: 3)
+        bgColor.setFill()
+        bgPath.fill()
+
+        // Determine contrasting text color
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        bgColor.usingColorSpace(.deviceRGB)?.getRed(&r, green: &g, blue: &b, alpha: &a)
+        let luminance = 0.299 * r + 0.587 * g + 0.114 * b
+        let textColor: NSColor = luminance > 0.55 ? .black : .white
+
+        // Fit text into the rect — start at stored fontSize, shrink if needed
+        let hPad: CGFloat = 3
+        let vPad: CGFloat = 2
+        let availW = rect.width - hPad * 2
+        let availH = rect.height - vPad * 2
+
+        var fs = max(8, fontSize)
+        var attrStr: NSAttributedString
+        repeat {
+            let font = NSFont.systemFont(ofSize: fs, weight: .medium)
+            attrStr = NSAttributedString(string: translatedText, attributes: [
+                .font: font,
+                .foregroundColor: textColor,
+            ])
+            let needed = attrStr.boundingRect(
+                with: NSSize(width: availW, height: .greatestFiniteMagnitude),
+                options: [.usesLineFragmentOrigin, .usesFontLeading]
+            )
+            if needed.height <= availH || fs <= 8 { break }
+            fs -= 1
+        } while fs > 8
+
+        // Draw text top-aligned within the block
+        let textRect = NSRect(
+            x: rect.minX + hPad,
+            y: rect.minY + vPad,
+            width: availW,
+            height: availH
+        )
+        attrStr.draw(with: textRect, options: [.usesLineFragmentOrigin, .usesFontLeading])
     }
 }
