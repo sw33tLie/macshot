@@ -70,20 +70,27 @@ class ToolbarLayout {
         }
         buttons.append(selectBtn)
 
-        // Get enabled tools from UserDefaults — migrate: add any new tools defaulting to enabled
+        // Get enabled tools from UserDefaults — migrate: only add tools that are brand-new.
+        // Track introduced tools in `knownToolRawValues` so user-disabled tools are never re-enabled.
         let allKnownToolRawValues = AnnotationTool.allCases
             .filter { $0 != .select && $0 != .translateOverlay }
             .map { $0.rawValue }
         var enabledRawValues = UserDefaults.standard.array(forKey: "enabledTools") as? [Int]
-        if var stored = enabledRawValues {
-            var changed = false
-            for raw in allKnownToolRawValues {
-                if !stored.contains(raw) { stored.append(raw); changed = true }
+        let knownToolRawValues = UserDefaults.standard.array(forKey: "knownToolRawValues") as? [Int]
+        let newToolRaws = allKnownToolRawValues.filter { !(knownToolRawValues ?? []).contains($0) }
+        if !newToolRaws.isEmpty {
+            if enabledRawValues == nil {
+                // Fresh install: enable everything.
+                enabledRawValues = allKnownToolRawValues
+            } else if knownToolRawValues == nil {
+                // Upgrading from a version before knownToolRawValues tracking was added.
+                // Respect the existing enabledTools as-is; just mark all current tools as known.
+            } else {
+                // Normal upgrade: new tools introduced — add them enabled by default.
+                enabledRawValues = (enabledRawValues! + newToolRaws)
             }
-            if changed {
-                UserDefaults.standard.set(stored, forKey: "enabledTools")
-                enabledRawValues = stored
-            }
+            UserDefaults.standard.set(enabledRawValues, forKey: "enabledTools")
+            UserDefaults.standard.set(allKnownToolRawValues, forKey: "knownToolRawValues")
         }
 
         let tools: [(AnnotationTool, String, String)] = [
@@ -171,17 +178,25 @@ class ToolbarLayout {
         }
 
         let allKnownActionTags: [Int] = [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009]
-        // Migrate: if stored array exists but is missing new tags, add them (default enabled)
+        // Migrate: only add action tags that are brand-new (never seen before).
+        // knownActionTags tracks which tags have been introduced so user-disabled tags are
+        // never silently re-enabled when future versions add new action tags.
         var enabledActions = UserDefaults.standard.array(forKey: "enabledActions") as? [Int]
-        if var stored = enabledActions {
-            var changed = false
-            for tag in allKnownActionTags {
-                if !stored.contains(tag) { stored.append(tag); changed = true }
+        let knownActionTags = UserDefaults.standard.array(forKey: "knownActionTags") as? [Int]
+        let newTags = allKnownActionTags.filter { !(knownActionTags ?? []).contains($0) }
+        if !newTags.isEmpty {
+            if enabledActions == nil {
+                // Fresh install: enable everything.
+                enabledActions = allKnownActionTags
+            } else if knownActionTags == nil {
+                // Upgrading from a version before knownActionTags tracking was added.
+                // Respect existing enabledActions as-is; just mark all current tags as known.
+            } else {
+                // Normal upgrade path: newly added tags — enable by default.
+                enabledActions = (enabledActions! + newTags)
             }
-            if changed {
-                UserDefaults.standard.set(stored, forKey: "enabledActions")
-                enabledActions = stored
-            }
+            UserDefaults.standard.set(enabledActions, forKey: "enabledActions")
+            UserDefaults.standard.set(allKnownActionTags, forKey: "knownActionTags")
         }
         func actionEnabled(_ tag: Int) -> Bool {
             return enabledActions == nil || enabledActions!.contains(tag)

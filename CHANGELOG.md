@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.1.6] - 2026-03-15
+
+### Fixed
+- **Toolbar preferences not respected** — disabling a tool or action in Preferences → Tools would be silently overridden the next time a capture was made. Root cause: the migration code that auto-enables new tools/actions on app updates was treating any tag missing from the stored array as "new", which re-enabled anything the user had just disabled. Fixed by introducing `knownToolRawValues` and `knownActionTags` UserDefaults keys that track which tools/actions have already been introduced; the migration now only adds tags that have never appeared before, so user-disabled items stay disabled.
+- **Record screen not toggleable** — the "Record screen" button (tag 1009) was missing from Preferences → Tools → Toolbar Actions, so it could not be hidden. It is now listed alongside the other action toggles.
+
 ## [2.1.5] - 2026-03-15
 
 ### Fixed
