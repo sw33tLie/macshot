@@ -52,6 +52,9 @@ class PinWindowController {
         view.onClose = { [weak self] in
             self?.close()
         }
+        view.onEdit = { [weak self] in
+            self?.openInEditor()
+        }
 
         panel.contentView = view
         self.window = panel
@@ -69,6 +72,25 @@ class PinWindowController {
         pinView = nil
         delegate?.pinWindowDidClose(self)
     }
+
+    private func openInEditor() {
+        let state = OverlayEditorState(
+            screenshotImage: image,
+            selectionRect: NSRect(origin: .zero, size: image.size),
+            annotations: [],
+            redoStack: [],
+            currentTool: .arrow,
+            currentColor: .red,
+            currentStrokeWidth: 2,
+            currentMarkerSize: 14,
+            currentNumberSize: 20,
+            numberCounter: 1,
+            beautifyEnabled: false,
+            beautifyStyleIndex: 0
+        )
+        DetachedEditorWindowController.open(with: state, offset: .zero)
+        close()
+    }
 }
 
 // MARK: - Pin Content View
@@ -76,42 +98,55 @@ class PinWindowController {
 private class PinView: NSView {
 
     var onClose: (() -> Void)?
+    var onEdit: (() -> Void)?
 
     private let image: NSImage
     private var closeButton: NSButton?
+    private var editButton: NSButton?
     private var trackingArea: NSTrackingArea?
-    private var showingClose = false
 
     init(image: NSImage) {
         self.image = image
         super.init(frame: .zero)
-        setupCloseButton()
+        setupButtons()
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    private func setupCloseButton() {
+    private func makeOverlayButton(symbol: String, action: Selector) -> NSButton {
         let btn = NSButton(frame: NSRect(x: 0, y: 0, width: 24, height: 24))
         btn.bezelStyle = .circular
         btn.isBordered = false
         btn.wantsLayer = true
         btn.layer?.cornerRadius = 12
         btn.layer?.backgroundColor = NSColor(white: 0, alpha: 0.6).cgColor
-        btn.attributedTitle = NSAttributedString(string: "\u{2715}", attributes: [
-            .font: NSFont.systemFont(ofSize: 13, weight: .bold),
-            .foregroundColor: NSColor.white,
-        ])
+        let img = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
+        btn.image = img
+        btn.contentTintColor = .white
         btn.target = self
-        btn.action = #selector(closeClicked)
+        btn.action = action
         btn.isHidden = true
-        addSubview(btn)
-        closeButton = btn
+        return btn
+    }
+
+    private func setupButtons() {
+        let edit = makeOverlayButton(symbol: "pencil", action: #selector(editClicked))
+        addSubview(edit)
+        editButton = edit
+
+        let close = makeOverlayButton(symbol: "xmark", action: #selector(closeClicked))
+        addSubview(close)
+        closeButton = close
     }
 
     @objc private func closeClicked() {
         onClose?()
+    }
+
+    @objc private func editClicked() {
+        onEdit?()
     }
 
     override func updateTrackingAreas() {
@@ -125,18 +160,20 @@ private class PinView: NSView {
     }
 
     override func mouseEntered(with event: NSEvent) {
-        showingClose = true
+        editButton?.isHidden = false
         closeButton?.isHidden = false
     }
 
     override func mouseExited(with event: NSEvent) {
-        showingClose = false
+        editButton?.isHidden = true
         closeButton?.isHidden = true
     }
 
     override func layout() {
         super.layout()
+        // Close button top-right, edit button to its left
         closeButton?.frame = NSRect(x: bounds.maxX - 30, y: bounds.maxY - 30, width: 24, height: 24)
+        editButton?.frame  = NSRect(x: bounds.maxX - 58, y: bounds.maxY - 30, width: 24, height: 24)
     }
 
     override func draw(_ dirtyRect: NSRect) {

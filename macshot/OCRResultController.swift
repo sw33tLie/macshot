@@ -3,12 +3,12 @@ import Cocoa
 class OCRResultController: NSObject {
 
     private var window: NSPanel?
-    private weak var textView: NSTextView?
-    private weak var charCountLabel: NSTextField?
-    private weak var translateButton: NSButton?
-    private weak var langPopup: NSPopUpButton?
-    private weak var copyButton: NSButton?
-    private weak var spinnerView: NSProgressIndicator?
+    private var textView: NSTextView?
+    private var charCountLabel: NSTextField?
+    private var translateButton: NSButton?
+    private var langPopup: NSPopUpButton?
+    private var copyButton: NSButton?
+    private var spinnerView: NSProgressIndicator?
 
     private var originalText: String
     private var isShowingTranslation = false
@@ -43,6 +43,7 @@ class OCRResultController: NSObject {
         panel.level = .floating
         panel.isReleasedWhenClosed = false
         panel.becomesKeyOnlyIfNeeded = false
+        panel.hidesOnDeactivate = false
         panel.minSize = NSSize(width: 480, height: 300)
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.isMovableByWindowBackground = false
@@ -210,10 +211,11 @@ class OCRResultController: NSObject {
     func show() {
         window?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
-        if let tv = textView {
-            window?.makeFirstResponder(tv)
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self, let tv = self.textView else { return }
+            self.window?.makeFirstResponder(tv)
+            tv.selectAll(nil)
         }
-        textView?.selectAll(nil)
     }
 
     func close() {
@@ -339,4 +341,26 @@ class OCRResultController: NSObject {
 private class KeyablePanel: NSPanel {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { true }
+
+    // Ensure Cmd+C, Cmd+A, Cmd+Z etc. always reach the first responder (NSTextView).
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        // Let the first responder handle standard text editing shortcuts first.
+        if let fr = firstResponder as? NSTextView {
+            let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            if flags == .command {
+                switch event.charactersIgnoringModifiers {
+                case "c": fr.copy(nil);      return true
+                case "x": fr.cut(nil);       return true
+                case "v": fr.paste(nil);     return true
+                case "a": fr.selectAll(nil); return true
+                case "z": fr.undoManager?.undo(); return true
+                default: break
+                }
+            }
+            if flags == [.command, .shift], event.charactersIgnoringModifiers == "z" {
+                fr.undoManager?.redo(); return true
+            }
+        }
+        return super.performKeyEquivalent(with: event)
+    }
 }

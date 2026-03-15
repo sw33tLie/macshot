@@ -26,6 +26,7 @@ enum ToolbarButtonAction {
     case record
     case stopRecord
     case annotationMode
+    case detach
 }
 
 struct ToolbarButton {
@@ -56,6 +57,9 @@ class ToolbarLayout {
 
     // Bottom toolbar items (drawing tools + colors + undo/redo + processing actions)
     static func bottomButtons(selectedTool: AnnotationTool, selectedColor: NSColor, beautifyEnabled: Bool = false, beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false, isRecording: Bool = false, isAnnotating: Bool = false) -> [ToolbarButton] {
+        // Hide the bottom bar entirely while recording outside annotation mode
+        if isRecording && !isAnnotating { return [] }
+
         var buttons: [ToolbarButton] = []
 
         // Move tool always present (disabled look when no annotations)
@@ -146,15 +150,6 @@ class ToolbarLayout {
             buttons.append(ToolbarButton(action: .removeBackground, sfSymbol: "person.crop.circle.dashed", label: nil, tooltip: "Remove Background"))
         }
 
-        // Dim all buttons when recording but annotation mode is off
-        if isRecording && !isAnnotating {
-            for i in buttons.indices {
-                buttons[i].tintColor = NSColor.white.withAlphaComponent(0.3)
-                if buttons[i].bgColor != nil {
-                    buttons[i].bgColor = buttons[i].bgColor?.withAlphaComponent(0.3)
-                }
-            }
-        }
 
         return buttons
     }
@@ -195,6 +190,7 @@ class ToolbarLayout {
         // Cancel and move-selection are always present (not toggleable)
         buttons.append(ToolbarButton(action: .cancel, sfSymbol: "xmark", label: nil, tooltip: "Cancel"))
         buttons.append(ToolbarButton(action: .moveSelection, sfSymbol: "arrow.up.and.down.and.arrow.left.and.right", label: nil, tooltip: "Move Selection"))
+        buttons.append(ToolbarButton(action: .detach, sfSymbol: "arrow.up.forward.app", label: nil, tooltip: "Open in Editor Window"))
 
         // Delay capture (tag 1007)
         if actionEnabled(1007) {

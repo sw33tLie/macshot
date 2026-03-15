@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.1.3] - 2026-03-15
+
+### Added
+- **Editor window** — open any capture in a standalone editor window (`Open in Editor` button in the right toolbar). The window lives independently of the capture overlay: resize it freely, annotate, copy, save, pin, or upload without dismissing the overlay.
+- **Crop tool** — editor window only. Click the `Crop` button in the top bar, drag a rectangle over the image, and release to crop. Annotations are automatically translated to the new origin. Zoom resets to 1× after cropping.
+- **Zoom out below 1×** — in editor window mode, pinch or scroll below 1× to zoom out. Areas outside the image show a checkerboard pattern.
+- **Top bar in editor window** — shows image size (px), a `Crop` button, the zoom level (click to type an exact value), and a reset-zoom button.
+- **Dock icon while editor is open** — macshot shows a dock icon whenever one or more editor windows are open, so you can click it to bring them back. Icon disappears when all editors are closed.
+- **Edit button in pin window** — a pencil button next to the close (✕) button opens the pinned image in a new editor window and closes the pin.
+- **Smooth strokes toggle** — right-click the pencil tool to see a `Smooth strokes` toggle at the bottom of the menu (on by default). When enabled, finished pencil strokes are smoothed with Chaikin corner-cutting. Preference persists across restarts.
+
+### Improved
+- **OCR copy/paste** — `Cmd+C`, `Cmd+A`, `Cmd+X`, `Cmd+V`, and `Cmd+Z`/`Cmd+Shift+Z` now reliably work in the OCR results window.
+- **Pin ownership** — pins created from an editor window are now owned by AppDelegate and survive the editor closing.
+
 ## [2.1.2] - 2026-03-15
 
 ### Added

@@ -204,6 +204,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Upload
 
+    /// Public entry point used by DetachedEditorWindowController.
+    func uploadImage(_ image: NSImage) {
+        showUploadProgress(image: image)
+    }
+
+    /// Public entry point used by DetachedEditorWindowController.
+    func showPin(image: NSImage) {
+        let pin = PinWindowController(image: image)
+        pin.delegate = self
+        pin.show()
+        pinControllers.append(pin)
+    }
+
     private func showUploadProgress(image: NSImage) {
         uploadToastController?.dismiss()
         let toast = UploadToastController()

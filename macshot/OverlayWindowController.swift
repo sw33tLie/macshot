@@ -283,6 +283,36 @@ extension OverlayWindowController: OverlayViewDelegate {
         overlayDelegate?.overlayDidRequestStopRecording(self)
     }
 
+    func overlayViewDidRequestDetach() {
+        guard let view = overlayView else { return }
+        let state = view.snapshotEditorState()
+        let offset = state.selectionRect.origin
+
+        // Crop the screenshot to the selection rect for the detached window
+        let cropRect = state.selectionRect
+        let croppedImage: NSImage? = {
+            guard let src = state.screenshotImage,
+                  let cgSrc = src.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
+            let scale = src.size.width > 0 ? CGFloat(cgSrc.width) / src.size.width : 1.0
+            let cgCrop = CGRect(x: cropRect.origin.x * scale, y: cropRect.origin.y * scale,
+                                width: cropRect.width * scale, height: cropRect.height * scale)
+            guard let cgCropped = cgSrc.cropping(to: cgCrop) else { return src }
+            return NSImage(cgImage: cgCropped, size: cropRect.size)
+        }()
+
+        // Build translated state (annotations become relative to selection origin)
+        var detachedState = state
+        detachedState.screenshotImage = croppedImage
+        detachedState.selectionRect = NSRect(origin: .zero, size: cropRect.size)
+
+        // Dismiss overlay
+        dismiss()
+        overlayDelegate?.overlayDidCancel(self)
+
+        // Open the detached editor
+        DetachedEditorWindowController.open(with: detachedState, offset: offset)
+    }
+
     @available(macOS 14.0, *)
     func overlayViewDidRequestRemoveBackground() {
         guard var image = overlayView?.captureSelectedRegion() else { return }

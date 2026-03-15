@@ -16,6 +16,7 @@ enum AnnotationTool: Int, CaseIterable {
     case loupe           // magnifying glass
     case select          // select & move existing annotations
     case translateOverlay // translated text painted over original
+    case crop            // crop image (detached editor only)
 }
 
 class Annotation {
@@ -235,6 +236,8 @@ class Annotation {
             drawLoupe(in: context)
         case .select:
             break  // not a drawable tool
+        case .crop:
+            break  // handled separately in OverlayView
         case .translateOverlay:
             drawTranslateOverlay()
         }

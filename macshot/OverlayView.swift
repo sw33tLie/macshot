@@ -17,6 +17,23 @@ protocol OverlayViewDelegate: AnyObject {
     func overlayViewDidRequestRemoveBackground()
     func overlayViewDidRequestStartRecording(rect: NSRect)
     func overlayViewDidRequestStopRecording()
+    func overlayViewDidRequestDetach()
+}
+
+/// Snapshot of the mutable editor state used to transfer from overlay → detached window.
+struct OverlayEditorState {
+    var screenshotImage: NSImage?
+    var selectionRect: NSRect
+    var annotations: [Annotation]
+    var redoStack: [Annotation]
+    var currentTool: AnnotationTool
+    var currentColor: NSColor
+    var currentStrokeWidth: CGFloat
+    var currentMarkerSize: CGFloat
+    var currentNumberSize: CGFloat
+    var numberCounter: Int
+    var beautifyEnabled: Bool
+    var beautifyStyleIndex: Int
 }
 
 class OverlayView: NSView {
@@ -24,6 +41,17 @@ class OverlayView: NSView {
     // MARK: - Properties
 
     weak var overlayDelegate: OverlayViewDelegate?
+
+    /// When true: renders as a standalone editor (no dark overlay, no idle/selecting state, toolbars fixed outside image).
+    var isDetached: Bool = false
+    /// Toolbar strip sizes in detached mode — set by DetachedEditorWindowController to match its window padding.
+    var detachedRightPad: CGFloat = 52
+    var detachedBottomPad: CGFloat = 52
+    var detachedLeftPad: CGFloat = 52
+    var detachedTopPad: CGFloat = 36
+
+    // Hit rect for the reset-zoom button in the detached top bar
+    private var detachedResetZoomRect: NSRect = .zero
 
     var screenshotImage: NSImage? {
         didSet { needsDisplay = true }
@@ -47,7 +75,7 @@ class OverlayView: NSView {
     private var zoomFadingOut: Bool = false
     private var zoomLabelOpacity: CGFloat = 0.0
     private var zoomFadeTimer: Timer?
-    private let zoomMin: CGFloat = 1.0
+    private var zoomMin: CGFloat { isDetached ? 0.1 : 1.0 }
     private let zoomMax: CGFloat = 8.0
 
     // Selection
@@ -143,6 +171,10 @@ class OverlayView: NSView {
     private var showStrokePicker: Bool = false
     private var strokePickerRect: NSRect = .zero
     private var hoveredStrokeRow: Int = -1
+    private var strokeSmoothToggleRect: NSRect = .zero  // hit rect for the smooth toggle row
+
+    // Pencil smoothing — persisted in UserDefaults
+    private var pencilSmoothEnabled: Bool = UserDefaults.standard.object(forKey: "pencilSmoothEnabled") as? Bool ?? true
 
     // Delay picker popover
     private var showDelayPicker: Bool = false
@@ -195,6 +227,11 @@ class OverlayView: NSView {
     private var hoveredTranslateRow: Int = -1
     private var isTranslating: Bool = false
     private var translateEnabled: Bool = false
+
+    // Crop tool state (detached mode only)
+    private var isCropDragging: Bool = false
+    private var cropDragStart: NSPoint = .zero
+    private var cropDragRect: NSRect = .zero
 
     // Press feedback for momentary buttons
     private var pressedButtonIndex: Int = -1
@@ -415,6 +452,25 @@ class OverlayView: NSView {
             needsDisplay = true
         }
 
+        // Stroke picker hover (including smooth toggle row = sentinel 99)
+        if showStrokePicker && strokePickerRect.contains(point) {
+            let widths: [CGFloat] = [1, 2, 3, 5, 8, 12, 20]
+            let rowH: CGFloat = 30; let padding: CGFloat = 6
+            var newRow = -1
+            if currentTool == .pencil && strokeSmoothToggleRect.contains(point) {
+                newRow = 99
+            } else {
+                for i in 0..<widths.count {
+                    let rowY = strokePickerRect.maxY - padding - rowH * CGFloat(i + 1)
+                    let rowRect = NSRect(x: strokePickerRect.minX, y: rowY, width: strokePickerRect.width, height: rowH)
+                    if rowRect.contains(point) { newRow = i; break }
+                }
+            }
+            if newRow != hoveredStrokeRow { hoveredStrokeRow = newRow; needsDisplay = true }
+        } else if showStrokePicker && hoveredStrokeRow != -1 {
+            hoveredStrokeRow = -1; needsDisplay = true
+        }
+
         // Loupe size picker hover
         if showLoupeSizePicker && loupeSizePickerRect.contains(point) {
             let sizes = 8
@@ -614,8 +670,18 @@ class OverlayView: NSView {
             }
         }
 
-        // Size label — pointer cursor to indicate clickable
-        if sizeLabelRect.width > 0 && sizeInputField == nil {
+        // Detached top bar cursors
+        if isDetached {
+            if detachedCropButtonRect != .zero {
+                addCursorRect(detachedCropButtonRect, cursor: .pointingHand)
+            }
+            if detachedResetZoomRect != .zero {
+                addCursorRect(detachedResetZoomRect, cursor: .pointingHand)
+            }
+        }
+
+        // Size label — pointer cursor to indicate clickable (overlay mode only)
+        if !isDetached && sizeLabelRect.width > 0 && sizeInputField == nil {
             addCursorRect(sizeLabelRect, cursor: .pointingHand)
         }
 
@@ -691,6 +757,120 @@ class OverlayView: NSView {
         guard let context = NSGraphicsContext.current else { return }
 
         window?.invalidateCursorRects(for: self)
+
+        // In detached mode the view IS the editor — selectionRect is the image area (set by applySelection),
+        // with toolbar strips sitting outside it in the remaining bounds.
+        if isDetached {
+            state = .selected
+            showToolbars = true
+
+            // Recompute image rect on every draw to handle window resizing.
+            selectionRect = NSRect(x: detachedLeftPad, y: detachedBottomPad,
+                                   width: max(1, bounds.width - detachedRightPad - detachedLeftPad),
+                                   height: max(1, bounds.height - detachedBottomPad - detachedTopPad))
+
+            // Fill the whole view with a neutral background so toolbar strips look clean
+            NSColor(white: 0.15, alpha: 1.0).setFill()
+            NSBezierPath(rect: bounds).fill()
+
+            // Checkerboard in the image area (visible when zoomed out past 1×)
+            drawCheckerboard(in: selectionRect)
+
+            context.saveGraphicsState()
+            // Clip drawing to the image rect
+            NSBezierPath(rect: selectionRect).setClip()
+            applyZoomTransform(to: context)
+
+            if let image = screenshotImage {
+                image.draw(in: selectionRect, from: .zero, operation: .copy, fraction: 1.0)
+            }
+            for annotation in annotations { annotation.draw(in: context) }
+            currentAnnotation?.draw(in: context)
+            if currentTool == .loupe && selectionRect.contains(loupeCursorPoint) && loupeCursorPoint != .zero {
+                drawLoupePreview(at: loupeCursorPoint)
+            }
+            if let selected = selectedAnnotation, currentTool == .select {
+                drawAnnotationControls(for: selected)
+            }
+            context.restoreGraphicsState()
+
+            // Crop overlay: dim outside the crop rect, dashed border inside
+            if isCropDragging && cropDragRect.width > 2 && cropDragRect.height > 2 {
+                // Dim the image area outside cropDragRect
+                NSColor.black.withAlphaComponent(0.45).setFill()
+                // Top strip
+                NSBezierPath(rect: NSRect(x: selectionRect.minX, y: cropDragRect.maxY,
+                                          width: selectionRect.width,
+                                          height: selectionRect.maxY - cropDragRect.maxY)).fill()
+                // Bottom strip
+                NSBezierPath(rect: NSRect(x: selectionRect.minX, y: selectionRect.minY,
+                                          width: selectionRect.width,
+                                          height: cropDragRect.minY - selectionRect.minY)).fill()
+                // Left strip
+                NSBezierPath(rect: NSRect(x: selectionRect.minX, y: cropDragRect.minY,
+                                          width: cropDragRect.minX - selectionRect.minX,
+                                          height: cropDragRect.height)).fill()
+                // Right strip
+                NSBezierPath(rect: NSRect(x: cropDragRect.maxX, y: cropDragRect.minY,
+                                          width: selectionRect.maxX - cropDragRect.maxX,
+                                          height: cropDragRect.height)).fill()
+                // Dashed border around crop rect
+                let dashPath = NSBezierPath(rect: cropDragRect)
+                dashPath.lineWidth = 1.5
+                let pattern: [CGFloat] = [6, 4]
+                dashPath.setLineDash(pattern, count: 2, phase: 0)
+                NSColor.white.withAlphaComponent(0.9).setStroke()
+                dashPath.stroke()
+                // Corner handles
+                let hs: CGFloat = 6
+                let corners = [
+                    NSPoint(x: cropDragRect.minX, y: cropDragRect.minY),
+                    NSPoint(x: cropDragRect.maxX, y: cropDragRect.minY),
+                    NSPoint(x: cropDragRect.minX, y: cropDragRect.maxY),
+                    NSPoint(x: cropDragRect.maxX, y: cropDragRect.maxY),
+                ]
+                NSColor.white.setFill()
+                for c in corners {
+                    NSBezierPath(rect: NSRect(x: c.x - hs/2, y: c.y - hs/2, width: hs, height: hs)).fill()
+                }
+            }
+
+            drawDetachedTopBar()
+
+            rebuildToolbarLayout()
+            ToolbarLayout.drawToolbar(barRect: bottomBarRect, buttons: bottomButtons, selectionSize: selectionRect.size)
+            ToolbarLayout.drawToolbar(barRect: rightBarRect, buttons: rightButtons, selectionSize: nil)
+            if showColorPicker { drawColorPicker() }
+            if showBeautifyPicker { drawBeautifyPicker() }
+            if showStrokePicker { drawStrokePicker() }
+            if showLoupeSizePicker { drawLoupeSizePicker() }
+            if showDelayPicker { drawDelayPicker() }
+            if showUploadConfirmPicker { drawUploadConfirmPicker() }
+            if showRedactTypePicker { drawRedactTypePicker() }
+            if showTranslatePicker { drawTranslatePicker() }
+            drawHoveredTooltip()
+            if showColorWheel { drawColorWheel() }
+            if showUploadConfirmDialog { drawUploadConfirmDialog() }
+            drawBarcodeBar()
+            if let errorMsg = overlayErrorMessage {
+                let attrs: [NSAttributedString.Key: Any] = [
+                    .font: NSFont.systemFont(ofSize: 13, weight: .medium),
+                    .foregroundColor: NSColor.white,
+                ]
+                let str = errorMsg as NSString
+                let strSize = str.size(withAttributes: attrs)
+                let padding: CGFloat = 12
+                let msgW = strSize.width + padding * 2
+                let msgH = strSize.height + padding
+                let msgX = bounds.midX - msgW / 2
+                let msgY = bounds.maxY - msgH - 40
+                let msgRect = NSRect(x: msgX, y: msgY, width: msgW, height: msgH)
+                NSColor(red: 0.8, green: 0.2, blue: 0.2, alpha: 0.9).setFill()
+                NSBezierPath(roundedRect: msgRect, xRadius: 8, yRadius: 8).fill()
+                str.draw(at: NSPoint(x: msgRect.minX + padding, y: msgRect.minY + padding / 2), withAttributes: attrs)
+            }
+            return
+        }
 
         // Once annotation mode has been toggled on, never redraw the frozen screenshot —
         // it would show stale content. Keep the background transparent so live content shows through.
@@ -1076,7 +1256,7 @@ class OverlayView: NSView {
         guard sizeLabelRect != .zero, zoomInputField == nil else { return }
         let zoom = zoomLevel
         let text: String
-        if zoom < 1.005 {
+        if abs(zoom - 1.0) < 0.005 {
             text = "1×"
         } else if zoom >= 10 {
             text = String(format: "%.0f×", zoom)
@@ -1169,11 +1349,11 @@ class OverlayView: NSView {
         guard zoomLabelRect != .zero else { return }
         // Show zoom as a plain number (e.g. "2" or "3.5") so user can type a new value
         let currentText: String
-        if zoomLevel < 1.005 {
+        if abs(zoomLevel - 1.0) < 0.005 {
             currentText = "1"
         } else {
             let rounded = (zoomLevel * 10).rounded() / 10
-            currentText = rounded == rounded.rounded() ? String(Int(rounded)) : String(format: "%.1f", rounded)
+            currentText = rounded == rounded.rounded() ? String(format: "%.0f", rounded) : String(format: "%.1f", rounded)
         }
 
         let fieldWidth: CGFloat = 70
@@ -1208,7 +1388,7 @@ class OverlayView: NSView {
         let input = field.stringValue.trimmingCharacters(in: .whitespaces)
         // Strip trailing × if user typed it
         let cleaned = input.replacingOccurrences(of: "×", with: "").replacingOccurrences(of: "x", with: "").trimmingCharacters(in: .whitespaces)
-        if let value = Double(cleaned), value >= 1.0 {
+        if let value = Double(cleaned), value > 0 {
             let newLevel = max(zoomMin, min(zoomMax, CGFloat(value)))
             // Zoom toward selection center when set via text
             let center = NSPoint(x: selectionRect.midX, y: selectionRect.midY)
@@ -1596,7 +1776,10 @@ class OverlayView: NSView {
         let rowH: CGFloat = 30
         let pickerWidth: CGFloat = 140
         let padding: CGFloat = 6
-        let pickerHeight = rowH * CGFloat(widths.count) + padding * 2
+        let showSmoothToggle = (currentTool == .pencil)
+        let toggleRowH: CGFloat = showSmoothToggle ? 32 : 0
+        let separatorH: CGFloat = showSmoothToggle ? 5 : 0
+        let pickerHeight = rowH * CGFloat(widths.count) + padding * 2 + separatorH + toggleRowH
 
         // Anchor to the current tool button
         var anchorX = bottomBarRect.midX
@@ -1666,6 +1849,51 @@ class OverlayView: NSView {
             linePath.lineCapStyle = .round
             NSColor.white.setStroke()
             linePath.stroke()
+        }
+
+        // Smooth toggle row (pencil only)
+        if showSmoothToggle {
+            // Separator
+            let sepY = pickerRect.minY + toggleRowH
+            NSColor.white.withAlphaComponent(0.12).setFill()
+            NSBezierPath(rect: NSRect(x: pickerRect.minX + 8, y: sepY, width: pickerRect.width - 16, height: 1)).fill()
+
+            let toggleRowRect = NSRect(x: pickerRect.minX, y: pickerRect.minY, width: pickerRect.width, height: toggleRowH)
+            strokeSmoothToggleRect = toggleRowRect
+
+            // Hover highlight
+            if hoveredStrokeRow == 99 {
+                NSColor.white.withAlphaComponent(0.15).setFill()
+                NSBezierPath(roundedRect: toggleRowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
+            }
+
+            // Label
+            let toggleAttrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 11, weight: .medium),
+                .foregroundColor: NSColor.white,
+            ]
+            let label = "Smooth strokes" as NSString
+            let labelSize = label.size(withAttributes: toggleAttrs)
+            label.draw(at: NSPoint(x: toggleRowRect.minX + 10, y: toggleRowRect.midY - labelSize.height / 2), withAttributes: toggleAttrs)
+
+            // Checkbox
+            let checkSize: CGFloat = 14
+            let checkX = toggleRowRect.maxX - checkSize - 10
+            let checkY = toggleRowRect.midY - checkSize / 2
+            let checkRect = NSRect(x: checkX, y: checkY, width: checkSize, height: checkSize)
+            NSColor.white.withAlphaComponent(pencilSmoothEnabled ? 0.9 : 0.25).setFill()
+            NSBezierPath(roundedRect: checkRect, xRadius: 3, yRadius: 3).fill()
+            if pencilSmoothEnabled {
+                let checkAttrs: [NSAttributedString.Key: Any] = [
+                    .font: NSFont.systemFont(ofSize: 10, weight: .bold),
+                    .foregroundColor: NSColor.black,
+                ]
+                let tick = "✓" as NSString
+                let tickSize = tick.size(withAttributes: checkAttrs)
+                tick.draw(at: NSPoint(x: checkRect.midX - tickSize.width / 2, y: checkRect.midY - tickSize.height / 2), withAttributes: checkAttrs)
+            }
+        } else {
+            strokeSmoothToggleRect = .zero
         }
     }
 
@@ -1983,6 +2211,152 @@ class OverlayView: NSView {
         context.restoreGraphicsState()
     }
 
+    // MARK: - Detached top bar
+
+    // Rects for detached top-bar interactive elements
+    private var detachedCropButtonRect: NSRect = .zero
+    // detachedZoomLabelRect reuses the shared zoomLabelRect
+
+    private func drawDetachedTopBar() {
+        let barY = bounds.maxY - detachedTopPad
+        let barRect = NSRect(x: 0, y: barY, width: bounds.width, height: detachedTopPad)
+
+        // Subtle separator line at the bottom of the bar
+        NSColor.white.withAlphaComponent(0.08).setFill()
+        NSBezierPath(rect: NSRect(x: 0, y: barY, width: bounds.width, height: 1)).fill()
+
+        let scale = window?.backingScaleFactor ?? 2.0
+        let pixelW = Int(selectionRect.width * scale)
+        let pixelH = Int(selectionRect.height * scale)
+
+        let labelAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium),
+            .foregroundColor: NSColor.white.withAlphaComponent(0.6),
+        ]
+        let dimText = "\(pixelW) × \(pixelH) px" as NSString
+        let dimSize = dimText.size(withAttributes: labelAttrs)
+        let textY = barRect.midY - dimSize.height / 2
+
+        // Size label — static, non-clickable
+        dimText.draw(at: NSPoint(x: detachedLeftPad, y: textY), withAttributes: labelAttrs)
+        sizeLabelRect = .zero  // prevent the normal click-to-resize from firing
+
+        // Crop button — right after the size label
+        let cropBtnPadding: CGFloat = 8
+        let cropBtnH: CGFloat = 20
+        let isCropping = (currentTool == .crop)
+        let cropLabel = "Crop" as NSString
+        let cropLabelAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 11, weight: .medium),
+            .foregroundColor: isCropping ? NSColor.black : NSColor.white.withAlphaComponent(0.9),
+        ]
+        let cropTextSize = cropLabel.size(withAttributes: cropLabelAttrs)
+        let cropBtnW = cropTextSize.width + cropBtnPadding * 2
+        let cropBtnX = detachedLeftPad + dimSize.width + 10
+        let cropBtnY = barRect.midY - cropBtnH / 2
+        let cropBtnRect = NSRect(x: cropBtnX, y: cropBtnY, width: cropBtnW, height: cropBtnH)
+        detachedCropButtonRect = cropBtnRect
+
+        if isCropping {
+            ToolbarLayout.accentColor.setFill()
+        } else {
+            ToolbarLayout.bgColor.withAlphaComponent(0.85).setFill()
+        }
+        NSBezierPath(roundedRect: cropBtnRect, xRadius: 4, yRadius: 4).fill()
+        cropLabel.draw(at: NSPoint(x: cropBtnRect.minX + cropBtnPadding, y: cropBtnRect.midY - cropTextSize.height / 2), withAttributes: cropLabelAttrs)
+
+        // Zoom label (centre) — clickable to type zoom value
+        let zoom = zoomLevel
+        let zoomText: String
+        if abs(zoom - 1.0) < 0.005 {
+            zoomText = "1×"
+        } else if zoom >= 10 {
+            zoomText = String(format: "%.0f×", zoom)
+        } else {
+            zoomText = String(format: "%.1f×", zoom).replacingOccurrences(of: ".0×", with: "×")
+        }
+        let zoomClickAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium),
+            .foregroundColor: NSColor.white.withAlphaComponent(zoomInputField == nil ? 0.9 : 0.0),
+        ]
+        let zoomStr = zoomText as NSString
+        let zoomSize = zoomStr.size(withAttributes: zoomClickAttrs)
+        let zoomPad: CGFloat = 6
+        let zoomLabelW = zoomSize.width + zoomPad * 2
+        let zoomLabelH = dimSize.height + 4
+        let zoomLabelX = barRect.midX - zoomLabelW / 2
+        let zoomLabelY = barRect.midY - zoomLabelH / 2
+        let zRect = NSRect(x: zoomLabelX, y: zoomLabelY, width: zoomLabelW, height: zoomLabelH)
+        zoomLabelRect = zRect
+        zoomLabelOpacity = 1.0  // always visible in detached mode
+
+        ToolbarLayout.bgColor.withAlphaComponent(0.7).setFill()
+        NSBezierPath(roundedRect: zRect, xRadius: 4, yRadius: 4).fill()
+        zoomStr.draw(at: NSPoint(x: zRect.minX + zoomPad, y: zRect.midY - zoomSize.height / 2), withAttributes: zoomClickAttrs)
+
+        // Reset zoom button — right of zoom label, only when not at 1×
+        detachedResetZoomRect = .zero
+        if abs(zoom - 1.0) >= 0.005 {
+            let btnLabel = "Reset" as NSString
+            let btnAttrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 11, weight: .medium),
+                .foregroundColor: NSColor.white.withAlphaComponent(0.9),
+            ]
+            let btnSize = btnLabel.size(withAttributes: btnAttrs)
+            let btnW = btnSize.width + 16
+            let btnH: CGFloat = 20
+            let btnX = zRect.maxX + 8
+            let btnY = barRect.midY - btnH / 2
+            let btnRect = NSRect(x: btnX, y: btnY, width: btnW, height: btnH)
+            detachedResetZoomRect = btnRect
+
+            ToolbarLayout.bgColor.withAlphaComponent(0.85).setFill()
+            NSBezierPath(roundedRect: btnRect, xRadius: 4, yRadius: 4).fill()
+            btnLabel.draw(at: NSPoint(x: btnRect.minX + 8, y: btnRect.midY - btnSize.height / 2), withAttributes: btnAttrs)
+        }
+    }
+
+    // MARK: - Pencil smoothing
+
+    /// Chaikin corner-cutting: each iteration replaces every segment with two points
+    /// at 25% and 75% along it, keeping endpoints fixed. 2 passes gives gentle smoothing.
+    private func chaikinSmooth(_ pts: [NSPoint], iterations: Int) -> [NSPoint] {
+        guard pts.count > 2 else { return pts }
+        var result = pts
+        for _ in 0..<iterations {
+            var next: [NSPoint] = [result[0]]
+            for i in 0..<result.count - 1 {
+                let p0 = result[i], p1 = result[i + 1]
+                next.append(NSPoint(x: 0.75 * p0.x + 0.25 * p1.x, y: 0.75 * p0.y + 0.25 * p1.y))
+                next.append(NSPoint(x: 0.25 * p0.x + 0.75 * p1.x, y: 0.25 * p0.y + 0.75 * p1.y))
+            }
+            next.append(result[result.count - 1])
+            result = next
+        }
+        return result
+    }
+
+    // MARK: - Checkerboard (detached zoom-out background)
+
+    private func drawCheckerboard(in rect: NSRect) {
+        let size: CGFloat = 8
+        let light = NSColor(white: 0.75, alpha: 1.0)
+        let dark  = NSColor(white: 0.55, alpha: 1.0)
+        let cols = Int(ceil(rect.width  / size))
+        let rows = Int(ceil(rect.height / size))
+        for row in 0..<rows {
+            for col in 0..<cols {
+                let isLight = (row + col) % 2 == 0
+                (isLight ? light : dark).setFill()
+                let tileX = rect.minX + CGFloat(col) * size
+                let tileY = rect.minY + CGFloat(row) * size
+                let tileW = min(size, rect.maxX - tileX)
+                let tileH = min(size, rect.maxY - tileY)
+                NSBezierPath(rect: NSRect(x: tileX, y: tileY, width: tileW, height: tileH)).fill()
+            }
+        }
+    }
+
     // MARK: - Zoom helpers
 
     /// Convert a point in view space to canvas (annotation) space by reversing the zoom transform.
@@ -2011,6 +2385,7 @@ class OverlayView: NSView {
         // After zoom change, pin that canvas point to the cursor's view position
         zoomAnchorCanvas = canvasUnderCursor
         zoomAnchorView = cursorView
+        clampZoomAnchor()
         showZoomLabel()
         needsDisplay = true
     }
@@ -2022,27 +2397,116 @@ class OverlayView: NSView {
         zoomAnchorView = .zero
     }
 
+    /// Crop the screenshot to `viewRect` (view-space, within selectionRect),
+    /// translate all annotations accordingly, and reset zoom.
+    private func commitCrop(viewRect: NSRect) {
+        guard let originalImage = screenshotImage,
+              let cgOriginal = originalImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return }
+
+        // Convert viewRect corners to canvas space (accounts for zoom).
+        let canvasOrigin = viewToCanvas(viewRect.origin)
+        let canvasEnd    = viewToCanvas(NSPoint(x: viewRect.maxX, y: viewRect.maxY))
+        let canvasRect   = NSRect(x: min(canvasOrigin.x, canvasEnd.x),
+                                  y: min(canvasOrigin.y, canvasEnd.y),
+                                  width: abs(canvasEnd.x - canvasOrigin.x),
+                                  height: abs(canvasEnd.y - canvasOrigin.y))
+
+        // Map canvas rect → image pixel rect.
+        // In detached mode the image is drawn in selectionRect,
+        // so canvas coords map 1:1 to view coords (no extra scaling).
+        let imgW = originalImage.size.width
+        let imgH = originalImage.size.height
+        let scaleX = imgW / selectionRect.width
+        let scaleY = imgH / selectionRect.height
+
+        let pixelX = (canvasRect.minX - selectionRect.minX) * scaleX
+        let pixelY = (canvasRect.minY - selectionRect.minY) * scaleY
+        let pixelW = canvasRect.width  * scaleX
+        let pixelH = canvasRect.height * scaleY
+
+        // CGImage is flipped (top-left origin), NSImage is bottom-left.
+        let cgPixelRect = CGRect(
+            x: max(0, pixelX),
+            y: max(0, CGFloat(cgOriginal.height) - pixelY - pixelH),
+            width: min(pixelW, CGFloat(cgOriginal.width)  - max(0, pixelX)),
+            height: min(pixelH, CGFloat(cgOriginal.height) - max(0, CGFloat(cgOriginal.height) - pixelY - pixelH))
+        )
+
+        guard cgPixelRect.width > 0, cgPixelRect.height > 0,
+              let croppedCG = cgOriginal.cropping(to: cgPixelRect) else { return }
+
+        // Translate annotations: shift them so canvasRect.origin maps to (selectionRect.origin).
+        let dx = selectionRect.minX - canvasRect.minX
+        let dy = selectionRect.minY - canvasRect.minY
+        for ann in annotations { ann.move(dx: dx, dy: dy) }
+        for ann in redoStack   { ann.move(dx: dx, dy: dy) }
+
+        screenshotImage = NSImage(cgImage: croppedCG,
+                                  size: NSSize(width: croppedCG.width, height: croppedCG.height))
+        cachedCompositedImage = nil
+        resetZoom()
+        currentTool = .arrow
+        needsDisplay = true
+    }
+
+    /// Clamp zoomAnchorView so the zoomed content never exposes anything outside selectionRect.
+    ///
+    /// Transform: screenPos = zoomAnchorView + (canvasPos - zoomAnchorCanvas) * zoom
+    ///
+    /// For the selection edges to stay covered:
+    ///   canvas minX must map to screen X ≤ selection minX  →  anchorView.x upper bound
+    ///   canvas maxX must map to screen X ≥ selection maxX  →  anchorView.x lower bound
+    ///   (same for Y)
+    private func clampZoomAnchor() {
+        guard zoomLevel > 1.0 else { return }
+        let r = selectionRect
+        let z = zoomLevel
+        let ac = zoomAnchorCanvas
+        var av = zoomAnchorView
+
+        // X: anchorView.x must satisfy both:
+        //   av.x ≤ r.minX - (r.minX - ac.x) * z   (left edge stays covered)
+        //   av.x ≥ r.maxX - (r.maxX - ac.x) * z   (right edge stays covered)
+        let maxAVx = r.minX - (r.minX - ac.x) * z
+        let minAVx = r.maxX - (r.maxX - ac.x) * z
+        av.x = max(minAVx, min(maxAVx, av.x))
+
+        // Y: same logic
+        let maxAVy = r.minY - (r.minY - ac.y) * z
+        let minAVy = r.maxY - (r.maxY - ac.y) * z
+        av.y = max(minAVy, min(maxAVy, av.y))
+
+        zoomAnchorView = av
+    }
+
     private func showZoomLabel() {
         zoomLabelOpacity = 1.0
         zoomFadeTimer?.invalidate()
+        zoomFadeTimer = nil
         if zoomLevel == 1.0 {
-            // Fade out quickly when back at 1x
+            // Back at 1× — fade out after a short pause
             zoomFadeTimer = Timer.scheduledTimer(withTimeInterval: 0.8, repeats: false) { [weak self] _ in
                 self?.fadeOutZoomLabel()
             }
-        } else {
-            // Stay visible while zoomed
-            zoomFadeTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: false) { [weak self] _ in
-                self?.fadeOutZoomLabel()
-            }
         }
+        // While zoomed ≠ 1×: stay fully visible, no timer
     }
 
     private func fadeOutZoomLabel() {
+        // Don't fade if we're zoomed (either direction)
+        guard zoomLevel == 1.0 else { return }
         zoomFadingOut = true
         let step: CGFloat = 0.08
         Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { [weak self] t in
             guard let self = self else { t.invalidate(); return }
+            // Abort fade if user zoomed during the animation
+            if self.zoomLevel != 1.0 {
+                self.zoomLabelOpacity = 1.0
+                self.zoomFadingOut = false
+                t.invalidate()
+                self.needsDisplay = true
+                return
+            }
             self.zoomLabelOpacity -= step
             if self.zoomLabelOpacity <= 0 {
                 self.zoomLabelOpacity = 0
@@ -2481,6 +2945,16 @@ class OverlayView: NSView {
         let movableAnnotations = annotations.contains { $0.isMovable }
         bottomButtons = ToolbarLayout.bottomButtons(selectedTool: currentTool, selectedColor: currentColor, beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex, hasAnnotations: movableAnnotations, isRecording: isRecording, isAnnotating: isAnnotating)
         rightButtons = ToolbarLayout.rightButtons(delaySeconds: delaySeconds, beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex, hasAnnotations: movableAnnotations, translateEnabled: translateEnabled, isRecording: isRecording, isAnnotating: isAnnotating)
+        // In detached mode: remove buttons that only make sense in overlay (detach, delay, moveSelection, cancel→close handled by window chrome)
+        if isDetached {
+            rightButtons = rightButtons.filter {
+                if case .detach = $0.action { return false }
+                if case .moveSelection = $0.action { return false }
+                if case .delayCapture = $0.action { return false }
+                if case .cancel = $0.action { return false }
+                return true
+            }
+        }
 
         // Place each toolbar inside if it would go off-screen
         let bottomMargin: CGFloat = 50  // toolbar height + gap
@@ -2642,6 +3116,25 @@ class OverlayView: NSView {
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
 
+        // Detached top bar buttons
+        if isDetached {
+            if detachedResetZoomRect != .zero && detachedResetZoomRect.contains(point) {
+                resetZoom()
+                needsDisplay = true
+                return
+            }
+            if detachedCropButtonRect != .zero && detachedCropButtonRect.contains(point) {
+                currentTool = (currentTool == .crop) ? .arrow : .crop
+                needsDisplay = true
+                return
+            }
+            // Zoom label click — open zoom input
+            if zoomLabelRect != .zero && zoomLabelRect.contains(point) && zoomInputField == nil {
+                showZoomInput()
+                return
+            }
+        }
+
         // Barcode bar button hit-test
         if detectedBarcodePayload != nil && barcodeActionRects.count == 2 {
             if barcodeActionRects[1].contains(point) {
@@ -2741,6 +3234,13 @@ class OverlayView: NSView {
         // Stroke picker dismissal / selection
         if showStrokePicker {
             if strokePickerRect.contains(point) {
+                // Smooth toggle row (pencil only)
+                if currentTool == .pencil && strokeSmoothToggleRect.contains(point) {
+                    pencilSmoothEnabled.toggle()
+                    UserDefaults.standard.set(pencilSmoothEnabled, forKey: "pencilSmoothEnabled")
+                    needsDisplay = true
+                    return
+                }
                 let widths: [CGFloat] = [1, 2, 3, 5, 8, 12, 20]
                 let rowH: CGFloat = 30
                 let padding: CGFloat = 6
@@ -3008,15 +3508,24 @@ class OverlayView: NSView {
                 return
             }
 
+            // Crop tool drag (detached mode only)
+            if currentTool == .crop && selectionRect.contains(point) {
+                isCropDragging = true
+                cropDragStart = point
+                cropDragRect = .zero
+                needsDisplay = true
+                return
+            }
+
             // Inside selection — draw annotation (convert to canvas space for zoom)
-            if selectionRect.contains(point) {
+            if selectionRect.contains(point) && currentTool != .crop {
                 let canvasPoint = viewToCanvas(point)
                 startAnnotation(at: canvasPoint)
                 return
             }
 
-            // Outside everything - start new selection (locked during recording)
-            guard !isRecording else { return }
+            // Outside everything - start new selection (locked during recording or detached mode)
+            guard !isRecording && !isDetached else { return }
             showToolbars = false
             annotations.removeAll()
             redoStack.removeAll()
@@ -3038,6 +3547,20 @@ class OverlayView: NSView {
 
     override func mouseDragged(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
+
+        // Crop drag update
+        if isCropDragging {
+            let clampedPoint = NSPoint(
+                x: max(selectionRect.minX, min(point.x, selectionRect.maxX)),
+                y: max(selectionRect.minY, min(point.y, selectionRect.maxY))
+            )
+            let origin = NSPoint(x: min(cropDragStart.x, clampedPoint.x), y: min(cropDragStart.y, clampedPoint.y))
+            cropDragRect = NSRect(origin: origin,
+                                  size: NSSize(width: abs(clampedPoint.x - cropDragStart.x),
+                                               height: abs(clampedPoint.y - cropDragStart.y)))
+            needsDisplay = true
+            return
+        }
 
         // Handle toolbar dragging
         if isDraggingBottomBar {
@@ -3179,6 +3702,18 @@ class OverlayView: NSView {
     }
 
     override func mouseUp(with event: NSEvent) {
+        // Crop commit (detached mode only)
+        if isCropDragging {
+            isCropDragging = false
+            let rect = cropDragRect
+            cropDragRect = .zero
+            if rect.width > 4 && rect.height > 4 {
+                commitCrop(viewRect: rect)
+            }
+            needsDisplay = true
+            return
+        }
+
         if isDraggingBottomBar {
             isDraggingBottomBar = false
             return
@@ -3421,23 +3956,23 @@ class OverlayView: NSView {
         let isTrackpadPhased = event.phase != [] || event.momentumPhase != []
         let isCommandScroll = event.modifierFlags.contains(.command)
 
-        // Two-finger swipe pan (no modifier, phase-based) while zoomed in
-        if isTrackpadPhased && !isCommandScroll && zoomLevel > 1.0 {
-            // deltaX/deltaY are in points; divide by zoom so the canvas moves 1:1 with fingers
+        // Phase-based (trackpad) scroll without Cmd → pan only, never zoom
+        if isTrackpadPhased && !isCommandScroll {
+            guard zoomLevel != 1.0 || isDetached else { return }  // allow pan when zoomed or in detached mode
             let dx = event.scrollingDeltaX
             let dy = event.scrollingDeltaY
-            // Shift the view anchor — keeps anchorCanvas fixed, moves the viewport
             zoomAnchorView.x += dx
             zoomAnchorView.y -= dy  // AppKit Y is flipped vs scroll direction
+            clampZoomAnchor()
             needsDisplay = true
             return
         }
 
-        // Cmd+scroll or trackpad pinch-scroll → zoom
-        guard isTrackpadPhased || isCommandScroll else { return }
+        // Cmd+scroll → zoom
+        guard isCommandScroll else { return }
         let cursor = convert(event.locationInWindow, from: nil)
         let delta = event.deltaY
-        let factor: CGFloat = isCommandScroll ? 0.1 : 0.05
+        let factor: CGFloat = 0.1
         setZoom(zoomLevel + delta * factor, cursorView: cursor)
     }
 
@@ -3615,6 +4150,8 @@ class OverlayView: NSView {
             rebuildToolbarLayout()
         case .cancel:
             overlayDelegate?.overlayViewDidCancel()
+        case .detach:
+            overlayDelegate?.overlayViewDidRequestDetach()
         }
     }
 
@@ -3871,6 +4408,8 @@ class OverlayView: NSView {
                 // Single click: duplicate the point so drawFreeform renders a dot
                 if points.count < 3, let p = points.first {
                     annotation.points = [p, p, p]
+                } else if annotation.tool == .pencil && pencilSmoothEnabled {
+                    annotation.points = chaikinSmooth(points, iterations: 2)
                 }
                 annotation.bakePixelate()  // no-op for non-pixelate tools
                 annotations.append(annotation)
@@ -4677,14 +5216,23 @@ class OverlayView: NSView {
         isTranslating = true
         needsDisplay = true
 
-        // Crop selected region for Vision
+        // Crop selected region for Vision.
+        // In detached mode the screenshot is already the selection content, so draw it 1:1.
+        // In overlay mode the screenshot covers the full bounds, so offset to extract the selection.
         let regionImage = NSImage(size: selectionRect.size)
         regionImage.lockFocus()
-        screenshot.draw(
-            in: NSRect(x: -selectionRect.origin.x, y: -selectionRect.origin.y,
-                       width: bounds.width, height: bounds.height),
-            from: .zero, operation: .copy, fraction: 1.0
-        )
+        if isDetached {
+            screenshot.draw(
+                in: NSRect(origin: .zero, size: selectionRect.size),
+                from: .zero, operation: .copy, fraction: 1.0
+            )
+        } else {
+            screenshot.draw(
+                in: NSRect(x: -selectionRect.origin.x, y: -selectionRect.origin.y,
+                           width: bounds.width, height: bounds.height),
+                from: .zero, operation: .copy, fraction: 1.0
+            )
+        }
         regionImage.unlockFocus()
 
         guard let tiffData = regionImage.tiffRepresentation,
@@ -4887,6 +5435,45 @@ class OverlayView: NSView {
     // MARK: - Cleanup
 
     /// Pre-set a selection (used by delay capture to restore the previous region)
+    func snapshotEditorState() -> OverlayEditorState {
+        return OverlayEditorState(
+            screenshotImage: screenshotImage,
+            selectionRect: selectionRect,
+            annotations: annotations,
+            redoStack: redoStack,
+            currentTool: currentTool,
+            currentColor: currentColor,
+            currentStrokeWidth: currentStrokeWidth,
+            currentMarkerSize: currentMarkerSize,
+            currentNumberSize: currentNumberSize,
+            numberCounter: numberCounter,
+            beautifyEnabled: beautifyEnabled,
+            beautifyStyleIndex: beautifyStyleIndex
+        )
+    }
+
+    /// Restore editor state — used when transferring to a detached window.
+    /// Translates annotation coordinates by `offset` (the selection origin in the original view).
+    func applyEditorState(_ s: OverlayEditorState, translatingBy offset: NSPoint = .zero) {
+        screenshotImage = s.screenshotImage
+        // Translate annotations so they're relative to the new (0,0) origin
+        if offset != .zero {
+            for ann in s.annotations { ann.move(dx: -offset.x, dy: -offset.y) }
+            for ann in s.redoStack   { ann.move(dx: -offset.x, dy: -offset.y) }
+        }
+        annotations = s.annotations
+        redoStack = s.redoStack
+        currentTool = s.currentTool
+        currentColor = s.currentColor
+        currentStrokeWidth = s.currentStrokeWidth
+        currentMarkerSize = s.currentMarkerSize
+        currentNumberSize = s.currentNumberSize
+        numberCounter = s.numberCounter
+        beautifyEnabled = s.beautifyEnabled
+        beautifyStyleIndex = s.beautifyStyleIndex
+        cachedCompositedImage = nil
+    }
+
     func applySelection(_ rect: NSRect) {
         selectionRect = rect
         selectionStart = rect.origin
