@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.1.2] - 2026-03-15
+
+### Added
+- **Zoom to cursor** — pinch or scroll now zooms toward the pointer position instead of the selection center
+- **Pan while zoomed** — two-finger swipe pans the canvas when zoomed in
+- **Click zoom label to set zoom** — click the zoom indicator pill to type an exact zoom level (e.g. `2`, `3.5`); Enter to apply, Escape to cancel
+- **Cmd+0 resets zoom** — resets zoom to 1× from the keyboard
+
 ## [2.1.1] - 2026-03-15
 
 ### Improved

@@ -38,6 +38,18 @@ class OverlayView: NSView {
 
     private(set) var state: State = .idle
 
+    // Zoom
+    private var zoomLevel: CGFloat = 1.0
+    // The canvas point that stays pinned to zoomAnchorView on screen.
+    // Both default to selection center; updated on each scroll/pinch to be the cursor position.
+    private var zoomAnchorCanvas: NSPoint = .zero
+    private var zoomAnchorView: NSPoint = .zero
+    private var zoomFadingOut: Bool = false
+    private var zoomLabelOpacity: CGFloat = 0.0
+    private var zoomFadeTimer: Timer?
+    private let zoomMin: CGFloat = 1.0
+    private let zoomMax: CGFloat = 8.0
+
     // Selection
     private var selectionRect: NSRect = .zero
     private var selectionStart: NSPoint = .zero
@@ -50,7 +62,7 @@ class OverlayView: NSView {
     private var isRightClickSelecting: Bool = false  // right-click quick save mode
 
     // Annotations
-    private var annotations: [Annotation] = []
+    private var annotations: [Annotation] = [] { didSet { cachedCompositedImage = nil } }
     private var redoStack: [Annotation] = []
     private var currentAnnotation: Annotation?
     private var currentTool: AnnotationTool = .arrow
@@ -96,6 +108,10 @@ class OverlayView: NSView {
     // Size label
     private var sizeLabelRect: NSRect = .zero
     private var sizeInputField: NSTextField?
+
+    // Zoom label
+    private var zoomLabelRect: NSRect = .zero
+    private var zoomInputField: NSTextField?
 
     // Beautify
     private(set) var beautifyEnabled: Bool = UserDefaults.standard.bool(forKey: "beautifyEnabled")
@@ -168,6 +184,7 @@ class OverlayView: NSView {
         return saved != nil ? CGFloat(saved!) : 120.0
     }()
     private var loupeCursorPoint: NSPoint = .zero
+    private var cachedCompositedImage: NSImage? = nil  // invalidated when annotations change
     private var showLoupeSizePicker: Bool = false
     private var loupeSizePickerRect: NSRect = .zero
     private var hoveredLoupeSizeRow: Int = -1
@@ -361,9 +378,9 @@ class OverlayView: NSView {
             }
         }
 
-        // Track cursor for loupe live preview
+        // Track cursor for loupe live preview (use canvas space for zoom correctness)
         if state == .selected && currentTool == .loupe {
-            let newPoint = convert(event.locationInWindow, from: nil)
+            let newPoint = viewToCanvas(convert(event.locationInWindow, from: nil))
             if newPoint != loupeCursorPoint {
                 loupeCursorPoint = newPoint
                 needsDisplay = true
@@ -602,6 +619,11 @@ class OverlayView: NSView {
             addCursorRect(sizeLabelRect, cursor: .pointingHand)
         }
 
+        // Zoom label — pointer cursor to indicate clickable
+        if zoomLabelRect.width > 0 && zoomLabelOpacity > 0 && zoomInputField == nil {
+            addCursorRect(zoomLabelRect, cursor: .pointingHand)
+        }
+
         // Inside selection — crosshair for drawing, open hand for move mode
         let innerRect = r.insetBy(dx: edgeThickness, dy: edgeThickness)
         if innerRect.width > 0 && innerRect.height > 0 {
@@ -698,6 +720,10 @@ class OverlayView: NSView {
             // Clear area inside selection
             context.saveGraphicsState()
             NSBezierPath(rect: selectionRect).setClip()
+
+            // Apply zoom transform — scales/pans content around the selection center
+            applyZoomTransform(to: context)
+
             if !annotationModeEverUsed, let image = screenshotImage {
                 image.draw(in: bounds, from: .zero, operation: .copy, fraction: 1.0)
             }
@@ -729,6 +755,11 @@ class OverlayView: NSView {
             if !isRecording {
                 // Size label above/below selection
                 drawSizeLabel()
+
+                // Zoom label (fades in/out beside the size label)
+                if zoomLabelOpacity > 0 {
+                    drawZoomLabel()
+                }
 
                 // Resize handles
                 if state == .selected {
@@ -1041,6 +1072,40 @@ class OverlayView: NSView {
         (text as NSString).draw(at: NSPoint(x: rect.minX + padding, y: rect.minY + padding / 2), withAttributes: attrs)
     }
 
+    private func drawZoomLabel() {
+        guard sizeLabelRect != .zero, zoomInputField == nil else { return }
+        let zoom = zoomLevel
+        let text: String
+        if zoom < 1.005 {
+            text = "1×"
+        } else if zoom >= 10 {
+            text = String(format: "%.0f×", zoom)
+        } else {
+            text = String(format: "%.1f×", zoom).replacingOccurrences(of: ".0×", with: "×")
+        }
+
+        let alpha = zoomLabelOpacity
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium),
+            .foregroundColor: NSColor.white.withAlphaComponent(alpha),
+        ]
+        let textSize = (text as NSString).size(withAttributes: attrs)
+        let padding: CGFloat = 6
+        let labelW = textSize.width + padding * 2
+        let labelH = sizeLabelRect.height
+        let gap: CGFloat = 6
+        let labelX = sizeLabelRect.maxX + gap
+        let labelY = sizeLabelRect.minY
+
+        let rect = NSRect(x: labelX, y: labelY, width: labelW, height: labelH)
+        zoomLabelRect = rect
+
+        let bgColor = ToolbarLayout.bgColor.withAlphaComponent(alpha * 0.85)
+        bgColor.setFill()
+        NSBezierPath(roundedRect: rect, xRadius: 4, yRadius: 4).fill()
+        (text as NSString).draw(at: NSPoint(x: labelX + padding, y: labelY + padding / 2), withAttributes: attrs)
+    }
+
     private func showSizeInput() {
         let scale = window?.backingScaleFactor ?? 2.0
         let pixelW = Int(selectionRect.width * scale)
@@ -1096,6 +1161,62 @@ class OverlayView: NSView {
 
         field.removeFromSuperview()
         sizeInputField = nil
+        window?.makeFirstResponder(self)
+        needsDisplay = true
+    }
+
+    private func showZoomInput() {
+        guard zoomLabelRect != .zero else { return }
+        // Show zoom as a plain number (e.g. "2" or "3.5") so user can type a new value
+        let currentText: String
+        if zoomLevel < 1.005 {
+            currentText = "1"
+        } else {
+            let rounded = (zoomLevel * 10).rounded() / 10
+            currentText = rounded == rounded.rounded() ? String(Int(rounded)) : String(format: "%.1f", rounded)
+        }
+
+        let fieldWidth: CGFloat = 70
+        let fieldHeight: CGFloat = 22
+        let fieldX = zoomLabelRect.midX - fieldWidth / 2
+        let fieldY = zoomLabelRect.minY + (zoomLabelRect.height - fieldHeight) / 2
+
+        let field = NSTextField(frame: NSRect(x: fieldX, y: fieldY, width: fieldWidth, height: fieldHeight))
+        field.stringValue = currentText
+        field.font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium)
+        field.alignment = .center
+        field.isBezeled = true
+        field.bezelStyle = .roundedBezel
+        field.backgroundColor = NSColor(white: 0.15, alpha: 0.95)
+        field.textColor = .white
+        field.focusRingType = .none
+        field.delegate = self
+        field.tag = 889
+
+        addSubview(field)
+        zoomInputField = field
+        window?.makeFirstResponder(field)
+        field.selectText(nil)
+        // Keep zoom label visible while editing
+        zoomLabelOpacity = 1.0
+        zoomFadeTimer?.invalidate()
+        needsDisplay = true
+    }
+
+    private func commitZoomInputIfNeeded() {
+        guard let field = zoomInputField else { return }
+        let input = field.stringValue.trimmingCharacters(in: .whitespaces)
+        // Strip trailing × if user typed it
+        let cleaned = input.replacingOccurrences(of: "×", with: "").replacingOccurrences(of: "x", with: "").trimmingCharacters(in: .whitespaces)
+        if let value = Double(cleaned), value >= 1.0 {
+            let newLevel = max(zoomMin, min(zoomMax, CGFloat(value)))
+            // Zoom toward selection center when set via text
+            let center = NSPoint(x: selectionRect.midX, y: selectionRect.midY)
+            setZoom(newLevel, cursorView: center)
+        }
+
+        field.removeFromSuperview()
+        zoomInputField = nil
         window?.makeFirstResponder(self)
         needsDisplay = true
     }
@@ -1860,6 +1981,76 @@ class OverlayView: NSView {
         NSGraphicsContext.current?.cgContext.setAlpha(0.75)
         previewAnn.draw(in: context)
         context.restoreGraphicsState()
+    }
+
+    // MARK: - Zoom helpers
+
+    /// Convert a point in view space to canvas (annotation) space by reversing the zoom transform.
+    private func viewToCanvas(_ p: NSPoint) -> NSPoint {
+        guard zoomLevel != 1.0 else { return p }
+        return NSPoint(
+            x: zoomAnchorCanvas.x + (p.x - zoomAnchorView.x) / zoomLevel,
+            y: zoomAnchorCanvas.y + (p.y - zoomAnchorView.y) / zoomLevel
+        )
+    }
+
+    private func applyZoomTransform(to context: NSGraphicsContext) {
+        guard zoomLevel != 1.0 else { return }
+        let cgCtx = context.cgContext
+        // screen = anchorView + (canvas - anchorCanvas) * zoom
+        cgCtx.translateBy(x: zoomAnchorView.x - zoomAnchorCanvas.x * zoomLevel,
+                          y: zoomAnchorView.y - zoomAnchorCanvas.y * zoomLevel)
+        cgCtx.scaleBy(x: zoomLevel, y: zoomLevel)
+    }
+
+    /// Set zoom level, pinning the given view-space cursor point in place.
+    private func setZoom(_ level: CGFloat, cursorView: NSPoint) {
+        // Canvas point currently under cursor (before zoom change)
+        let canvasUnderCursor = viewToCanvas(cursorView)
+        zoomLevel = max(zoomMin, min(zoomMax, level))
+        // After zoom change, pin that canvas point to the cursor's view position
+        zoomAnchorCanvas = canvasUnderCursor
+        zoomAnchorView = cursorView
+        showZoomLabel()
+        needsDisplay = true
+    }
+
+    /// Reset zoom to 1× (no transform).
+    private func resetZoom() {
+        zoomLevel = 1.0
+        zoomAnchorCanvas = .zero
+        zoomAnchorView = .zero
+    }
+
+    private func showZoomLabel() {
+        zoomLabelOpacity = 1.0
+        zoomFadeTimer?.invalidate()
+        if zoomLevel == 1.0 {
+            // Fade out quickly when back at 1x
+            zoomFadeTimer = Timer.scheduledTimer(withTimeInterval: 0.8, repeats: false) { [weak self] _ in
+                self?.fadeOutZoomLabel()
+            }
+        } else {
+            // Stay visible while zoomed
+            zoomFadeTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: false) { [weak self] _ in
+                self?.fadeOutZoomLabel()
+            }
+        }
+    }
+
+    private func fadeOutZoomLabel() {
+        zoomFadingOut = true
+        let step: CGFloat = 0.08
+        Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { [weak self] t in
+            guard let self = self else { t.invalidate(); return }
+            self.zoomLabelOpacity -= step
+            if self.zoomLabelOpacity <= 0 {
+                self.zoomLabelOpacity = 0
+                self.zoomFadingOut = false
+                t.invalidate()
+            }
+            self.needsDisplay = true
+        }
     }
 
     // MARK: - Annotation Controls
@@ -2730,6 +2921,7 @@ class OverlayView: NSView {
 
         commitTextFieldIfNeeded()
         commitSizeInputIfNeeded()
+        commitZoomInputIfNeeded()
 
         switch state {
         case .idle:
@@ -2746,6 +2938,15 @@ class OverlayView: NSView {
                 return
             }
             if let field = sizeInputField, field.frame.contains(point) {
+                return  // let the text field handle it
+            }
+
+            // Check zoom label click
+            if zoomLabelRect.contains(point) && zoomInputField == nil && zoomLabelOpacity > 0 {
+                showZoomInput()
+                return
+            }
+            if let field = zoomInputField, field.frame.contains(point) {
                 return  // let the text field handle it
             }
 
@@ -2807,9 +3008,10 @@ class OverlayView: NSView {
                 return
             }
 
-            // Inside selection — draw annotation
+            // Inside selection — draw annotation (convert to canvas space for zoom)
             if selectionRect.contains(point) {
-                startAnnotation(at: point)
+                let canvasPoint = viewToCanvas(point)
+                startAnnotation(at: canvasPoint)
                 return
             }
 
@@ -2821,6 +3023,9 @@ class OverlayView: NSView {
             numberCounter = 0
             bottomBarDragOffset = .zero
             rightBarDragOffset = .zero
+            resetZoom()
+            zoomLabelOpacity = 0.0
+            zoomFadeTimer?.invalidate()
             selectionStart = point
             selectionRect = NSRect(origin: point, size: .zero)
             state = .selecting
@@ -2880,9 +3085,11 @@ class OverlayView: NSView {
             needsDisplay = true
 
         case .selected:
+            // Convert to canvas space for annotation interactions (accounts for zoom)
+            let canvasPoint = viewToCanvas(point)
             if isResizingAnnotation, let annotation = selectedAnnotation {
-                let dx = point.x - annotationResizeMouseStart.x
-                let dy = point.y - annotationResizeMouseStart.y
+                let dx = canvasPoint.x - annotationResizeMouseStart.x
+                let dy = canvasPoint.y - annotationResizeMouseStart.y
                 let origStart = annotationResizeOrigStart
                 let origEnd = annotationResizeOrigEnd
 
@@ -2945,12 +3152,14 @@ class OverlayView: NSView {
                 annotation.startPoint = NSPoint(x: newMinX, y: newMinY)
                 annotation.endPoint   = NSPoint(x: newMaxX, y: newMaxY)
                 }
+                cachedCompositedImage = nil
                 needsDisplay = true
             } else if isDraggingAnnotation, let annotation = selectedAnnotation {
-                let dx = point.x - annotationDragStart.x
-                let dy = point.y - annotationDragStart.y
+                let dx = canvasPoint.x - annotationDragStart.x
+                let dy = canvasPoint.y - annotationDragStart.y
                 annotation.move(dx: dx, dy: dy)
-                annotationDragStart = point
+                annotationDragStart = canvasPoint
+                cachedCompositedImage = nil
                 needsDisplay = true
             } else if isDraggingSelection {
                 selectionRect.origin = NSPoint(x: point.x - dragOffset.x, y: point.y - dragOffset.y)
@@ -2959,8 +3168,8 @@ class OverlayView: NSView {
                 resizeSelection(to: point)
                 needsDisplay = true
             } else if currentAnnotation != nil {
-                lastDragPoint = point
-                updateAnnotation(at: point, shiftHeld: event.modifierFlags.contains(.shift))
+                lastDragPoint = canvasPoint
+                updateAnnotation(at: canvasPoint, shiftHeld: event.modifierFlags.contains(.shift))
                 needsDisplay = true
             }
 
@@ -3203,6 +3412,39 @@ class OverlayView: NSView {
             state = .selected
             overlayDelegate?.overlayViewDidRequestQuickSave()
         }
+    }
+
+    // MARK: - Zoom (scroll wheel + trackpad pinch)
+
+    override func scrollWheel(with event: NSEvent) {
+        guard state == .selected else { return }
+        let isTrackpadPhased = event.phase != [] || event.momentumPhase != []
+        let isCommandScroll = event.modifierFlags.contains(.command)
+
+        // Two-finger swipe pan (no modifier, phase-based) while zoomed in
+        if isTrackpadPhased && !isCommandScroll && zoomLevel > 1.0 {
+            // deltaX/deltaY are in points; divide by zoom so the canvas moves 1:1 with fingers
+            let dx = event.scrollingDeltaX
+            let dy = event.scrollingDeltaY
+            // Shift the view anchor — keeps anchorCanvas fixed, moves the viewport
+            zoomAnchorView.x += dx
+            zoomAnchorView.y -= dy  // AppKit Y is flipped vs scroll direction
+            needsDisplay = true
+            return
+        }
+
+        // Cmd+scroll or trackpad pinch-scroll → zoom
+        guard isTrackpadPhased || isCommandScroll else { return }
+        let cursor = convert(event.locationInWindow, from: nil)
+        let delta = event.deltaY
+        let factor: CGFloat = isCommandScroll ? 0.1 : 0.05
+        setZoom(zoomLevel + delta * factor, cursorView: cursor)
+    }
+
+    override func magnify(with event: NSEvent) {
+        guard state == .selected else { return }
+        let cursor = convert(event.locationInWindow, from: nil)
+        setZoom(zoomLevel + event.magnification * zoomLevel, cursorView: cursor)
     }
 
     // MARK: - Middle Mouse (toggle move mode)
@@ -3461,6 +3703,7 @@ class OverlayView: NSView {
     private func applyColorToSelectedAnnotation() {
         guard let ann = selectedAnnotation else { return }
         ann.color = currentColor
+        cachedCompositedImage = nil
         needsDisplay = true
     }
 
@@ -4124,6 +4367,14 @@ class OverlayView: NSView {
                     }
                     return
                 }
+                if event.charactersIgnoringModifiers == "0" {
+                    if state == .selected && zoomLevel != 1.0 {
+                        resetZoom()
+                        showZoomLabel()
+                        needsDisplay = true
+                    }
+                    return
+                }
             }
             super.keyDown(with: event)
         }
@@ -4580,6 +4831,7 @@ class OverlayView: NSView {
     /// Render screenshot + all existing annotations into a full-size image.
     /// Used as source for pixelate/blur so they operate on the composited result.
     private func compositedImage() -> NSImage? {
+        if let cached = cachedCompositedImage { return cached }
         guard let screenshot = screenshotImage else { return nil }
         if annotations.isEmpty { return screenshot }
 
@@ -4594,7 +4846,12 @@ class OverlayView: NSView {
             annotation.draw(in: context)
         }
         image.unlockFocus()
+        cachedCompositedImage = image
         return image
+    }
+
+    private func invalidateCompositedImageCache() {
+        cachedCompositedImage = nil
     }
 
     func captureSelectedRegion() -> NSImage? {
@@ -4712,17 +4969,31 @@ class OverlayView: NSView {
 
 extension OverlayView: NSTextFieldDelegate {
     func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
-        guard control.tag == 888 else { return false }
-        if commandSelector == #selector(NSResponder.insertNewline(_:)) {
-            commitSizeInputIfNeeded()
-            return true
+        if control.tag == 888 {
+            if commandSelector == #selector(NSResponder.insertNewline(_:)) {
+                commitSizeInputIfNeeded()
+                return true
+            }
+            if commandSelector == #selector(NSResponder.cancelOperation(_:)) {
+                sizeInputField?.removeFromSuperview()
+                sizeInputField = nil
+                window?.makeFirstResponder(self)
+                needsDisplay = true
+                return true
+            }
         }
-        if commandSelector == #selector(NSResponder.cancelOperation(_:)) {
-            sizeInputField?.removeFromSuperview()
-            sizeInputField = nil
-            window?.makeFirstResponder(self)
-            needsDisplay = true
-            return true
+        if control.tag == 889 {
+            if commandSelector == #selector(NSResponder.insertNewline(_:)) {
+                commitZoomInputIfNeeded()
+                return true
+            }
+            if commandSelector == #selector(NSResponder.cancelOperation(_:)) {
+                zoomInputField?.removeFromSuperview()
+                zoomInputField = nil
+                window?.makeFirstResponder(self)
+                needsDisplay = true
+                return true
+            }
         }
         return false
     }
