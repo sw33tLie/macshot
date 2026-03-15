@@ -256,16 +256,16 @@ class ToolbarLayout {
             buttons.append(translateBtn)
         }
 
+        // Scroll Capture (tag 1010) — hidden when recording or in detached editor
+        if !isRecording && !isDetached && actionEnabled(1010) {
+            buttons.append(ToolbarButton(action: .scrollCapture, sfSymbol: "scroll", label: nil, tooltip: "Scroll Capture"))
+        }
+
         // Record (tag 1009)
         if actionEnabled(1009) {
             var recordBtn = ToolbarButton(action: .record, sfSymbol: "record.circle", label: nil, tooltip: "Record")
             recordBtn.tintColor = .systemRed
             buttons.append(recordBtn)
-        }
-
-        // Scroll Capture (tag 1010) — hidden when recording or in detached editor
-        if !isRecording && !isDetached && actionEnabled(1010) {
-            buttons.append(ToolbarButton(action: .scrollCapture, sfSymbol: "scroll", label: nil, tooltip: "Scroll Capture"))
         }
 
         return buttons

@@ -13,6 +13,7 @@ protocol OverlayWindowControllerDelegate: AnyObject {
     func overlayDidRequestStartRecording(_ controller: OverlayWindowController, rect: NSRect, screen: NSScreen)
     func overlayDidRequestStopRecording(_ controller: OverlayWindowController)
     func overlayDidRequestScrollCapture(_ controller: OverlayWindowController, rect: NSRect, screen: NSScreen)
+    func overlayDidRequestStopScrollCapture(_ controller: OverlayWindowController)
 }
 
 /// Manages one fullscreen overlay per screen.
@@ -148,10 +149,21 @@ class OverlayWindowController {
         }
     }
 
-    /// Hides the overlay window without destroying state.
-    /// Used during scroll capture so the user can scroll the content underneath.
-    func hideForScrollCapture() {
-        overlayWindow?.orderOut(nil)
+    func setScrollCaptureState(isActive: Bool, stripCount: Int = 0, pixelSize: CGSize = .zero) {
+        if isActive {
+            overlayView?.startScrollCaptureMode()
+        } else {
+            overlayView?.stopScrollCaptureMode()
+        }
+        overlayView?.scrollCaptureStripCount = stripCount
+        overlayView?.scrollCapturePixelSize  = pixelSize
+        overlayView?.needsDisplay = true
+    }
+
+    func updateScrollCaptureProgress(stripCount: Int, pixelSize: CGSize) {
+        overlayView?.scrollCaptureStripCount = stripCount
+        overlayView?.scrollCapturePixelSize  = pixelSize
+        overlayView?.needsDisplay = true
     }
 
     func dismiss() {
@@ -307,6 +319,10 @@ extension OverlayWindowController: OverlayViewDelegate {
             height: rect.height
         )
         overlayDelegate?.overlayDidRequestScrollCapture(self, rect: screenRect, screen: screen)
+    }
+
+    func overlayViewDidRequestStopScrollCapture() {
+        overlayDelegate?.overlayDidRequestStopScrollCapture(self)
     }
 
     func overlayViewDidRequestDetach() {

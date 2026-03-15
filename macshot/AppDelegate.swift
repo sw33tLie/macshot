@@ -18,8 +18,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var recordingEngine: RecordingEngine?
     private var recordingOverlayController: OverlayWindowController?
     private var scrollCaptureController: ScrollCaptureController?
-    private var scrollCaptureHUD: ScrollCaptureHUDController?
-    private var scrollCaptureScreen: NSScreen?
+    /// The overlay controller whose selection is being scroll-captured.
+    private var scrollCaptureOverlayController: OverlayWindowController?
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         setupMainMenu()
@@ -448,30 +448,20 @@ extension AppDelegate: OverlayWindowControllerDelegate {
     }
 
     func overlayDidRequestScrollCapture(_ controller: OverlayWindowController, rect: NSRect, screen: NSScreen) {
-        scrollCaptureScreen = screen
+        scrollCaptureOverlayController = controller
 
-        // Hide all overlay windows so the user can freely scroll underlying content
-        for oc in overlayControllers { oc.hideForScrollCapture() }
+        // Tell the triggering overlay to enter scroll capture mode (red border, pass-through, minimal HUD)
+        controller.setScrollCaptureState(isActive: true)
 
-        // Build HUD anchored beside the selection rect
-        let hud = ScrollCaptureHUDController(selectionRectScreen: rect, screen: screen)
-        scrollCaptureHUD = hud
-        hud.onStop = { [weak self] in
-            self?.finalizeScrollCapture()
-        }
-        hud.show()
+        // Other overlay controllers on other screens just stay visible and normal
+        // (no action needed — the scroll event monitor catches global scroll events)
 
-        // Start the capture session
         let scc = ScrollCaptureController(captureRect: rect, screen: screen)
         scrollCaptureController = scc
 
-        scc.onStripAdded = { [weak self] count in
+        scc.onStripAdded = { [weak self, weak controller] count in
             guard let self = self, let scc = self.scrollCaptureController else { return }
-            self.scrollCaptureHUD?.update(
-                stripCount: count,
-                stitchedImage: scc.stitchedImage,
-                pixelSize: scc.stitchedPixelSize
-            )
+            controller?.updateScrollCaptureProgress(stripCount: count, pixelSize: scc.stitchedPixelSize)
         }
         scc.onSessionDone = { [weak self] finalImage in
             self?.handleScrollCaptureCompleted(finalImage: finalImage)
@@ -480,18 +470,16 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         Task { await scc.startSession() }
     }
 
-    private func finalizeScrollCapture() {
+    func overlayDidRequestStopScrollCapture(_ controller: OverlayWindowController) {
         scrollCaptureController?.stopSession()
-        // onSessionDone fires asynchronously and calls handleScrollCaptureCompleted
+        // onSessionDone fires asynchronously via handleScrollCaptureCompleted
     }
 
     private func handleScrollCaptureCompleted(finalImage: NSImage?) {
-        scrollCaptureHUD?.dismiss()
-        scrollCaptureHUD = nil
+        scrollCaptureOverlayController?.setScrollCaptureState(isActive: false)
+        scrollCaptureOverlayController = nil
         scrollCaptureController = nil
-        scrollCaptureScreen = nil
 
-        // Fully tear down the overlay controllers
         dismissOverlays()
 
         guard let image = finalImage else { return }

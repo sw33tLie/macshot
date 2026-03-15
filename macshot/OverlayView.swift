@@ -19,6 +19,7 @@ protocol OverlayViewDelegate: AnyObject {
     func overlayViewDidRequestStopRecording()
     func overlayViewDidRequestDetach()
     func overlayViewDidRequestScrollCapture(rect: NSRect)
+    func overlayViewDidRequestStopScrollCapture()
 }
 
 /// An entry in the undo/redo history.
@@ -289,6 +290,13 @@ class OverlayView: NSView {
     // Recording state
     var isRecording: Bool = false
     var recordingElapsedSeconds: Int = 0
+
+    // Scroll capture state
+    var isScrollCapturing: Bool = false
+    var scrollCaptureStripCount: Int = 0
+    var scrollCapturePixelSize: CGSize = .zero
+    /// Global mouseDown monitor used to intercept Stop button clicks while ignoresMouseEvents is on.
+    private var scrollCaptureClickMonitor: Any?
     private var annotationModeEverUsed: Bool = false  // once true, never show frozen screenshot again
     /// Activate the app visible under the selection rect so the user doesn't need a warmup click.
     private func activateAppUnderSelection() {
@@ -329,6 +337,42 @@ class OverlayView: NSView {
         annotationModeEverUsed = true  // suppress frozen screenshot from the start
         activateAppUnderSelection()
         window?.ignoresMouseEvents = true
+        window?.invalidateCursorRects(for: self)
+        needsDisplay = true
+    }
+
+    func startScrollCaptureMode() {
+        isScrollCapturing = true
+        scrollCaptureStripCount = 0
+        scrollCapturePixelSize = .zero
+        scrollCaptureStopRect = .zero
+        // Pass mouse & scroll events through to the underlying app.
+        activateAppUnderSelection()
+        window?.ignoresMouseEvents = true
+        window?.invalidateCursorRects(for: self)
+        // Install a global monitor so the Stop button (drawn at scrollCaptureStopRect) is still
+        // clickable even though the overlay window ignores mouse events.
+        scrollCaptureClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: .leftMouseDown) { [weak self] _ in
+            guard let self = self, self.isScrollCapturing else { return }
+            guard let win = self.window else { return }
+            // Global monitors: use NSEvent.mouseLocation (screen coords, bottom-left origin)
+            let screenPt = NSEvent.mouseLocation
+            let winLocal = win.convertFromScreen(NSRect(origin: screenPt, size: .zero)).origin
+            let viewPt   = self.convert(winLocal, from: nil)
+            if self.scrollCaptureStopRect != .zero && self.scrollCaptureStopRect.contains(viewPt) {
+                DispatchQueue.main.async { self.overlayDelegate?.overlayViewDidRequestStopScrollCapture() }
+            }
+        }
+        needsDisplay = true
+    }
+
+    func stopScrollCaptureMode() {
+        isScrollCapturing = false
+        scrollCaptureStripCount = 0
+        scrollCapturePixelSize = .zero
+        scrollCaptureStopRect = .zero
+        if let m = scrollCaptureClickMonitor { NSEvent.removeMonitor(m); scrollCaptureClickMonitor = nil }
+        window?.ignoresMouseEvents = false
         window?.invalidateCursorRects(for: self)
         needsDisplay = true
     }
@@ -1080,13 +1124,13 @@ class OverlayView: NSView {
                 drawMarkerCursorPreview(at: markerCursorPoint)
             }
 
-            // Selection border (purple like Flameshot)
+            // Selection border — red during scroll capture, purple otherwise
             let borderPath = NSBezierPath(rect: selectionRect)
-            borderPath.lineWidth = 2.0
-            ToolbarLayout.accentColor.setStroke()
+            borderPath.lineWidth = isScrollCapturing ? 2.5 : 2.0
+            (isScrollCapturing ? NSColor.systemRed : ToolbarLayout.accentColor).setStroke()
             borderPath.stroke()
 
-            if !isRecording {
+            if !isRecording && !isScrollCapturing {
                 // Size label above/below selection
                 drawSizeLabel()
 
@@ -1102,7 +1146,7 @@ class OverlayView: NSView {
             }
 
             // Toolbars
-            if showToolbars && state == .selected {
+            if showToolbars && state == .selected && !isScrollCapturing {
                 rebuildToolbarLayout()
                 ToolbarLayout.drawToolbar(barRect: bottomBarRect, buttons: bottomButtons, selectionSize: selectionRect.size)
                 ToolbarLayout.drawToolbar(barRect: rightBarRect, buttons: rightButtons, selectionSize: nil)
@@ -1187,6 +1231,9 @@ class OverlayView: NSView {
 
         // Recording HUD
         if isRecording { drawRecordingHUD() }
+
+        // Scroll capture HUD (drawn on top of everything when active)
+        if isScrollCapturing { drawScrollCaptureHUD() }
 
         // Keep cursor rects in sync with current selection
         window?.invalidateCursorRects(for: self)
@@ -3073,6 +3120,106 @@ class OverlayView: NSView {
         let textOrigin = NSPoint(x: pillRect.minX + 12,
                                  y: pillRect.minY + (pillH - textSize.height) / 2)
         (fullStr as NSString).draw(at: textOrigin, withAttributes: attrs)
+    }
+
+    // MARK: - Scroll Capture HUD
+
+    /// Drawn directly in the overlay while scroll capture is active.
+    /// Replaces both toolbars with a minimal bar:
+    ///   [strip count + dimensions]  ·  [Stop button]
+    /// Anchored below (or above) the selection, same position logic as the bottom toolbar.
+    /// The Stop button rect is stored so mouseDown can hit-test it.
+    var scrollCaptureStopRect: NSRect = .zero
+
+    private func drawScrollCaptureHUD() {
+        let barH: CGFloat = 36
+        let pad: CGFloat  = 8
+        let gap: CGFloat  = 6
+
+        // --- Info label (left side) ---
+        let stripLabel: String
+        if scrollCaptureStripCount == 0 {
+            stripLabel = "Scroll Capture  ·  Capturing first frame…"
+        } else {
+            let pw = Int(scrollCapturePixelSize.width)
+            let ph = Int(scrollCapturePixelSize.height)
+            let ptW = Int(CGFloat(pw) / (window?.backingScaleFactor ?? 2))
+            let ptH = Int(CGFloat(ph) / (window?.backingScaleFactor ?? 2))
+            stripLabel = "Scroll Capture  ·  \(scrollCaptureStripCount) strip\(scrollCaptureStripCount == 1 ? "" : "s")  ·  \(ptW)×\(ptH)"
+        }
+
+        let infoAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 12, weight: .medium),
+            .foregroundColor: NSColor.white,
+        ]
+        let infoSize = (stripLabel as NSString).size(withAttributes: infoAttrs)
+
+        // --- Stop button ---
+        let stopText = "Stop"
+        let stopAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 12, weight: .semibold),
+            .foregroundColor: NSColor.white,
+        ]
+        let stopTextSize = (stopText as NSString).size(withAttributes: stopAttrs)
+        let stopBtnW = stopTextSize.width + 20
+        let stopBtnH: CGFloat = 24
+
+        let totalW = pad + infoSize.width + gap * 3 + stopBtnW + pad
+        let totalH = barH
+
+        // Position below selection (same logic as bottom toolbar)
+        var barX = selectionRect.midX - totalW / 2
+        var barY = selectionRect.minY - totalH - 6
+        if barY < bounds.minY + 4 {
+            barY = selectionRect.maxY + 6
+        }
+        barX = max(bounds.minX + 4, min(barX, bounds.maxX - totalW - 4))
+        let barRect = NSRect(x: barX, y: barY, width: totalW, height: totalH)
+
+        // Draw bar background
+        ToolbarLayout.bgColor.setFill()
+        NSBezierPath(roundedRect: barRect, xRadius: ToolbarLayout.cornerRadius, yRadius: ToolbarLayout.cornerRadius).fill()
+
+        // Draw info label
+        let infoX = barRect.minX + pad
+        let infoY = barRect.midY - infoSize.height / 2
+        (stripLabel as NSString).draw(at: NSPoint(x: infoX, y: infoY), withAttributes: infoAttrs)
+
+        // Draw Stop button (red pill)
+        let stopBtnX = barRect.maxX - pad - stopBtnW
+        let stopBtnY = barRect.midY - stopBtnH / 2
+        let stopRect = NSRect(x: stopBtnX, y: stopBtnY, width: stopBtnW, height: stopBtnH)
+        scrollCaptureStopRect = stopRect
+
+        // Hover tint — convert global mouse location to view coords
+        let globalMouse = NSEvent.mouseLocation
+        let viewMouse: NSPoint
+        if let win = window {
+            let winLocal = win.convertFromScreen(NSRect(origin: globalMouse, size: .zero)).origin
+            viewMouse = convert(winLocal, from: nil)
+        } else {
+            viewMouse = .zero
+        }
+        let stopHovered = stopRect.contains(viewMouse)
+        NSColor.systemRed.withAlphaComponent(stopHovered ? 1.0 : 0.85).setFill()
+        NSBezierPath(roundedRect: stopRect, xRadius: stopBtnH / 2, yRadius: stopBtnH / 2).fill()
+
+        let stopTextX = stopRect.midX - stopTextSize.width / 2
+        let stopTextY = stopRect.midY - stopTextSize.height / 2
+        (stopText as NSString).draw(at: NSPoint(x: stopTextX, y: stopTextY), withAttributes: stopAttrs)
+
+        // Hint text above the selection border (top-left corner, semi-transparent)
+        let hintStr = "Scroll to capture  ·  Esc to cancel"
+        let hintAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 11),
+            .foregroundColor: NSColor.white.withAlphaComponent(0.55),
+        ]
+        let hintSize = (hintStr as NSString).size(withAttributes: hintAttrs)
+        let hintX = selectionRect.minX + 6
+        let hintY = selectionRect.maxY + 5
+        // Clamp so it doesn't overflow top of screen
+        let clampedHintY = min(hintY, bounds.maxY - hintSize.height - 4)
+        (hintStr as NSString).draw(at: NSPoint(x: hintX, y: clampedHintY), withAttributes: hintAttrs)
     }
 
     private func drawBarcodeBar() {
@@ -5163,6 +5310,10 @@ class OverlayView: NSView {
     override func keyDown(with event: NSEvent) {
         switch event.keyCode {
         case 53: // Escape
+            if isScrollCapturing {
+                overlayDelegate?.overlayViewDidRequestStopScrollCapture()
+                return
+            }
             guard !isRecording else { return }
             if textEditView != nil {
                 textScrollView?.removeFromSuperview()
