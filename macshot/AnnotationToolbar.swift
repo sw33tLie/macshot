@@ -23,6 +23,9 @@ enum ToolbarButtonAction {
     case removeBackground
     case loupe
     case translate
+    case record
+    case stopRecord
+    case annotationMode
 }
 
 struct ToolbarButton {
@@ -52,7 +55,7 @@ class ToolbarLayout {
     static let cornerRadius: CGFloat = 6
 
     // Bottom toolbar items (drawing tools + colors + undo/redo + processing actions)
-    static func bottomButtons(selectedTool: AnnotationTool, selectedColor: NSColor, beautifyEnabled: Bool = false, beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false) -> [ToolbarButton] {
+    static func bottomButtons(selectedTool: AnnotationTool, selectedColor: NSColor, beautifyEnabled: Bool = false, beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false, isRecording: Bool = false, isAnnotating: Bool = false) -> [ToolbarButton] {
         var buttons: [ToolbarButton] = []
 
         // Move tool always present (disabled look when no annotations)
@@ -132,25 +135,47 @@ class ToolbarLayout {
             buttons.append(autoRedactBtn)
         }
 
-        if actionEnabled(1004) {
+        if !isRecording && actionEnabled(1004) {
             var beautifyBtn = ToolbarButton(action: .beautify, sfSymbol: "sparkles", label: nil, tooltip: "Beautify")
             beautifyBtn.isSelected = beautifyEnabled
             beautifyBtn.hasContextMenu = true
             buttons.append(beautifyBtn)
         }
 
-        if #available(macOS 14.0, *), actionEnabled(1005) {
+        if !isRecording, #available(macOS 14.0, *), actionEnabled(1005) {
             buttons.append(ToolbarButton(action: .removeBackground, sfSymbol: "person.crop.circle.dashed", label: nil, tooltip: "Remove Background"))
+        }
+
+        // Dim all buttons when recording but annotation mode is off
+        if isRecording && !isAnnotating {
+            for i in buttons.indices {
+                buttons[i].tintColor = NSColor.white.withAlphaComponent(0.3)
+                if buttons[i].bgColor != nil {
+                    buttons[i].bgColor = buttons[i].bgColor?.withAlphaComponent(0.3)
+                }
+            }
         }
 
         return buttons
     }
 
     // Right toolbar items (output actions + cancel + delay)
-    static func rightButtons(delaySeconds: Int = 0, beautifyEnabled: Bool = false, beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false, translateEnabled: Bool = false) -> [ToolbarButton] {
+    static func rightButtons(delaySeconds: Int = 0, beautifyEnabled: Bool = false, beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false, translateEnabled: Bool = false, isRecording: Bool = false, isAnnotating: Bool = false) -> [ToolbarButton] {
         var buttons: [ToolbarButton] = []
 
-        let allKnownActionTags: [Int] = [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008]
+        // If currently recording, show annotation mode toggle + stop
+        if isRecording {
+            var annotateBtn = ToolbarButton(action: .annotationMode, sfSymbol: "pencil.tip", label: nil, tooltip: isAnnotating ? "Stop Annotating" : "Annotate (draw on screen)")
+            annotateBtn.tintColor = .white
+            annotateBtn.isSelected = isAnnotating
+            buttons.append(annotateBtn)
+            var stopBtn = ToolbarButton(action: .stopRecord, sfSymbol: "stop.circle.fill", label: nil, tooltip: "Stop Recording")
+            stopBtn.tintColor = .systemRed
+            buttons.append(stopBtn)
+            return buttons
+        }
+
+        let allKnownActionTags: [Int] = [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009]
         // Migrate: if stored array exists but is missing new tags, add them (default enabled)
         var enabledActions = UserDefaults.standard.array(forKey: "enabledActions") as? [Int]
         if var stored = enabledActions {
@@ -217,6 +242,13 @@ class ToolbarLayout {
             translateBtn.isSelected = translateEnabled
             translateBtn.hasContextMenu = true
             buttons.append(translateBtn)
+        }
+
+        // Record (tag 1009)
+        if actionEnabled(1009) {
+            var recordBtn = ToolbarButton(action: .record, sfSymbol: "record.circle", label: nil, tooltip: "Record")
+            recordBtn.tintColor = .systemRed
+            buttons.append(recordBtn)
         }
 
         return buttons

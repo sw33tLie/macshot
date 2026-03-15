@@ -10,6 +10,8 @@ protocol OverlayWindowControllerDelegate: AnyObject {
     func overlayDidRequestOCR(_ controller: OverlayWindowController, text: String, image: NSImage?)
     func overlayDidRequestDelayCapture(_ controller: OverlayWindowController, seconds: Int, selectionRect: NSRect)
     func overlayDidRequestUpload(_ controller: OverlayWindowController, image: NSImage)
+    func overlayDidRequestStartRecording(_ controller: OverlayWindowController, rect: NSRect, screen: NSScreen)
+    func overlayDidRequestStopRecording(_ controller: OverlayWindowController)
 }
 
 /// Manages one fullscreen overlay per screen.
@@ -20,9 +22,14 @@ class OverlayWindowController {
 
     private var overlayView: OverlayView?
     private var overlayWindow: OverlayWindow?
+    private var recordingControlWindow: NSWindow?
+    private var recordingControlView: RecordingControlView?
+    var windowNumber: CGWindowID { overlayWindow.map { CGWindowID($0.windowNumber) } ?? CGWindowID.max }
+    private(set) var screen: NSScreen = NSScreen.main!
 
     init(capture: ScreenCapture) {
         let screen = capture.screen
+        self.screen = screen
 
         let window = OverlayWindow(
             contentRect: screen.frame,
@@ -49,6 +56,10 @@ class OverlayWindowController {
         window.contentView = view
         self.overlayWindow = window
         self.overlayView = view
+
+        view.onAnnotationModeChanged = { [weak self] isAnnotating in
+            self?.updateAnnotationMode(isAnnotating: isAnnotating)
+        }
     }
 
     func showOverlay() {
@@ -64,7 +75,80 @@ class OverlayWindowController {
         overlayView?.applySelection(rect)
     }
 
+    func setRecordingState(isRecording: Bool, elapsedSeconds: Int = 0) {
+        overlayView?.isRecording = isRecording
+        overlayView?.recordingElapsedSeconds = elapsedSeconds
+        if isRecording {
+            overlayView?.startPassThroughMode()
+            showRecordingControlWindow()
+        } else {
+            dismissRecordingControlWindow()
+        }
+        overlayView?.rebuildToolbarLayout()
+        overlayView?.needsDisplay = true
+    }
+
+    private func showRecordingControlWindow() {
+        guard let overlayView = overlayView, let overlayWindow = overlayWindow else { return }
+
+        // Wait one run-loop tick for rebuildToolbarLayout to compute rightBarRect
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self, let overlayView = self.overlayView else { return }
+            let rightBarLocal = overlayView.rightBarRect
+            guard rightBarLocal != .zero else { return }
+            let rightBarScreen = overlayWindow.convertToScreen(
+                overlayView.convert(rightBarLocal, to: nil)
+            )
+
+            let win = NSWindow(
+                contentRect: rightBarScreen,
+                styleMask: [.borderless],
+                backing: .buffered,
+                defer: false
+            )
+            win.level = .statusBar + 2
+            win.isOpaque = false
+            win.backgroundColor = .clear
+            win.hasShadow = false
+            win.ignoresMouseEvents = false
+            win.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+            win.isReleasedWhenClosed = false
+
+            let cv = RecordingControlView(frame: NSRect(origin: .zero, size: rightBarScreen.size))
+            cv.overlayView = overlayView
+            win.contentView = cv
+            win.orderFront(nil)
+
+            self.recordingControlWindow = win
+            self.recordingControlView = cv
+        }
+    }
+
+    private func dismissRecordingControlWindow() {
+        recordingControlWindow?.orderOut(nil)
+        recordingControlWindow?.close()
+        recordingControlWindow = nil
+        recordingControlView = nil
+    }
+
+    func updateRecordingProgress(seconds: Int) {
+        overlayView?.recordingElapsedSeconds = seconds
+        overlayView?.needsDisplay = true
+        recordingControlView?.needsDisplay = true
+    }
+
+    func updateAnnotationMode(isAnnotating: Bool) {
+        // When annotating: hide control window, show main overlay interactive
+        // When not annotating: show control window, main overlay ignores events
+        if isAnnotating {
+            recordingControlWindow?.orderOut(nil)
+        } else {
+            recordingControlWindow?.orderFront(nil)
+        }
+    }
+
     func dismiss() {
+        dismissRecordingControlWindow()
         overlayView?.reset()
         overlayView?.screenshotImage = nil
         overlayView?.overlayDelegate = nil
@@ -182,6 +266,21 @@ extension OverlayWindowController: OverlayViewDelegate {
         playCopySound()
         dismiss()
         overlayDelegate?.overlayDidRequestUpload(self, image: image)
+    }
+
+    func overlayViewDidRequestStartRecording(rect: NSRect) {
+        // Convert overlay-local rect to screen coordinates
+        let screenRect = NSRect(
+            x: screen.frame.minX + rect.minX,
+            y: screen.frame.minY + rect.minY,
+            width: rect.width,
+            height: rect.height
+        )
+        overlayDelegate?.overlayDidRequestStartRecording(self, rect: screenRect, screen: screen)
+    }
+
+    func overlayViewDidRequestStopRecording() {
+        overlayDelegate?.overlayDidRequestStopRecording(self)
     }
 
     @available(macOS 14.0, *)

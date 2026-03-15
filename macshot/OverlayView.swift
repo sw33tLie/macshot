@@ -15,6 +15,8 @@ protocol OverlayViewDelegate: AnyObject {
     func overlayViewDidRequestUpload()
     @available(macOS 14.0, *)
     func overlayViewDidRequestRemoveBackground()
+    func overlayViewDidRequestStartRecording(rect: NSRect)
+    func overlayViewDidRequestStopRecording()
 }
 
 class OverlayView: NSView {
@@ -85,9 +87,9 @@ class OverlayView: NSView {
 
     // Toolbars (drawn inline)
     private var bottomButtons: [ToolbarButton] = []
-    private var rightButtons: [ToolbarButton] = []
+    var rightButtons: [ToolbarButton] = []
     private var bottomBarRect: NSRect = .zero
-    private var rightBarRect: NSRect = .zero
+    var rightBarRect: NSRect = .zero
     private var showToolbars: Bool = false
     private var hoveredButtonIndex: Int = -1  // -1 = none, 0..N bottom, 1000+ right
 
@@ -198,6 +200,72 @@ class OverlayView: NSView {
     private var detectedBarcodePayload: String? = nil
     private var barcodeActionRects: [NSRect] = []   // [0] = primary action, [1] = dismiss
     private var barcodeScanTask: DispatchWorkItem? = nil
+
+    // Recording state
+    var isRecording: Bool = false
+    var recordingElapsedSeconds: Int = 0
+    private var annotationModeEverUsed: Bool = false  // once true, never show frozen screenshot again
+    /// Activate the app visible under the selection rect so the user doesn't need a warmup click.
+    private func activateAppUnderSelection() {
+        guard selectionRect.width > 0, let win = window else { return }
+        // Convert selection center to global screen coords
+        let centerLocal = NSPoint(x: selectionRect.midX, y: selectionRect.midY)
+        let centerScreen = win.convertToScreen(NSRect(origin: centerLocal, size: .zero)).origin
+
+        guard let windowList = CGWindowListCopyWindowInfo(
+            [.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID
+        ) as? [[String: Any]] else { return }
+
+        let overlayWindowNumber = win.windowNumber
+        let screenH = NSScreen.screens.map { $0.frame.maxY }.max() ?? 0
+
+        for info in windowList {
+            guard let layer = info[kCGWindowLayer as String] as? Int, layer == 0,
+                  let boundsDict = info[kCGWindowBounds as String] as? [String: CGFloat],
+                  let winNum = info[kCGWindowNumber as String] as? Int,
+                  let pid = info[kCGWindowOwnerPID as String] as? pid_t,
+                  winNum != overlayWindowNumber else { continue }
+
+            let cgX = boundsDict["X"] ?? 0
+            let cgY = boundsDict["Y"] ?? 0
+            let cgW = boundsDict["Width"] ?? 0
+            let cgH = boundsDict["Height"] ?? 0
+            let appKitRect = NSRect(x: cgX, y: screenH - cgY - cgH, width: cgW, height: cgH)
+
+            if appKitRect.contains(centerScreen) {
+                NSRunningApplication(processIdentifier: pid)?.activate(options: [])
+                return
+            }
+        }
+    }
+
+    /// Call once when recording begins to activate pass-through without needing a didSet transition.
+    func startPassThroughMode() {
+        annotationModeEverUsed = true  // suppress frozen screenshot from the start
+        activateAppUnderSelection()
+        window?.ignoresMouseEvents = true
+        window?.invalidateCursorRects(for: self)
+        needsDisplay = true
+    }
+
+    var onAnnotationModeChanged: ((Bool) -> Void)?
+
+    var isAnnotating: Bool = false {
+        didSet {
+            guard isAnnotating != oldValue else { return }
+            if isAnnotating { annotationModeEverUsed = true }
+            window?.ignoresMouseEvents = !isAnnotating
+            window?.invalidateCursorRects(for: self)
+            if isAnnotating {
+                window?.makeKeyAndOrderFront(nil)
+                NSApp.activate(ignoringOtherApps: true)
+            } else {
+                window?.orderFrontRegardless()
+            }
+            onAnnotationModeChanged?(isAnnotating)
+            needsDisplay = true
+        }
+    }
 
     // Window snapping
     private var windowSnapEnabled: Bool {
@@ -402,6 +470,10 @@ class OverlayView: NSView {
 
     override func resetCursorRects() {
         super.resetCursorRects()
+        if isRecording && !isAnnotating {
+            addCursorRect(bounds, cursor: .arrow)
+            return
+        }
         // When text editing, force arrow cursor everywhere
         if textEditView != nil {
             addCursorRect(bounds, cursor: .arrow)
@@ -591,14 +663,18 @@ class OverlayView: NSView {
 
         window?.invalidateCursorRects(for: self)
 
-        // Draw screenshot
-        if let image = screenshotImage {
-            image.draw(in: bounds, from: .zero, operation: .copy, fraction: 1.0)
-        }
+        // Once annotation mode has been toggled on, never redraw the frozen screenshot —
+        // it would show stale content. Keep the background transparent so live content shows through.
+        if !annotationModeEverUsed {
+            // Draw screenshot
+            if let image = screenshotImage {
+                image.draw(in: bounds, from: .zero, operation: .copy, fraction: 1.0)
+            }
 
-        // Draw dark overlay
-        NSColor.black.withAlphaComponent(0.45).setFill()
-        NSBezierPath(rect: bounds).fill()
+            // Draw dark overlay
+            NSColor.black.withAlphaComponent(0.45).setFill()
+            NSBezierPath(rect: bounds).fill()
+        }
 
         // Window snap highlight (drawn before helper text so text appears on top)
         drawWindowSnapHighlight()
@@ -615,7 +691,7 @@ class OverlayView: NSView {
             // Clear area inside selection
             context.saveGraphicsState()
             NSBezierPath(rect: selectionRect).setClip()
-            if let image = screenshotImage {
+            if !annotationModeEverUsed, let image = screenshotImage {
                 image.draw(in: bounds, from: .zero, operation: .copy, fraction: 1.0)
             }
 
@@ -643,12 +719,14 @@ class OverlayView: NSView {
             ToolbarLayout.accentColor.setStroke()
             borderPath.stroke()
 
-            // Size label above/below selection
-            drawSizeLabel()
+            if !isRecording {
+                // Size label above/below selection
+                drawSizeLabel()
 
-            // Resize handles
-            if state == .selected {
-                drawResizeHandles()
+                // Resize handles
+                if state == .selected {
+                    drawResizeHandles()
+                }
             }
 
             // Toolbars
@@ -656,6 +734,7 @@ class OverlayView: NSView {
                 rebuildToolbarLayout()
                 ToolbarLayout.drawToolbar(barRect: bottomBarRect, buttons: bottomButtons, selectionSize: selectionRect.size)
                 ToolbarLayout.drawToolbar(barRect: rightBarRect, buttons: rightButtons, selectionSize: nil)
+
 
                 // Color picker popover
                 if showColorPicker {
@@ -733,6 +812,9 @@ class OverlayView: NSView {
 
         // Barcode / QR badge
         if state == .selected { drawBarcodeBar() }
+
+        // Recording HUD
+        if isRecording { drawRecordingHUD() }
 
         // Keep cursor rects in sync with current selection
         window?.invalidateCursorRects(for: self)
@@ -2003,6 +2085,38 @@ class OverlayView: NSView {
         DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.3, execute: task)
     }
 
+    private func drawRecordingHUD() {
+        // Pill with pulsing red dot + elapsed time, anchored to top-right of selection
+        let mins = recordingElapsedSeconds / 60
+        let secs = recordingElapsedSeconds % 60
+        let timeStr = String(format: "%02d:%02d", mins, secs)
+        let fullStr = "● \(timeStr)"
+
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .semibold),
+            .foregroundColor: NSColor.white
+        ]
+        let textSize = (fullStr as NSString).size(withAttributes: attrs)
+        let pillH: CGFloat = 28
+        let pillW = textSize.width + 24
+        let pillX = selectionRect.maxX - pillW - 8
+        let pillY = selectionRect.maxY + 8
+
+        // Clamp to view bounds
+        let clampedX = max(bounds.minX + 4, min(pillX, bounds.maxX - pillW - 4))
+        let clampedY = min(pillY, bounds.maxY - pillH - 4)
+        let pillRect = NSRect(x: clampedX, y: clampedY, width: pillW, height: pillH)
+
+        // Background pill
+        NSColor(red: 0.85, green: 0.1, blue: 0.1, alpha: 0.92).setFill()
+        NSBezierPath(roundedRect: pillRect, xRadius: pillH / 2, yRadius: pillH / 2).fill()
+
+        // Text
+        let textOrigin = NSPoint(x: pillRect.minX + 12,
+                                 y: pillRect.minY + (pillH - textSize.height) / 2)
+        (fullStr as NSString).draw(at: textOrigin, withAttributes: attrs)
+    }
+
     private func drawBarcodeBar() {
         guard let payload = detectedBarcodePayload else { return }
         let isURL = payload.hasPrefix("http://") || payload.hasPrefix("https://")
@@ -2096,10 +2210,10 @@ class OverlayView: NSView {
                selectionRect.maxY > bounds.maxY - margin
     }
 
-    private func rebuildToolbarLayout() {
+    func rebuildToolbarLayout() {
         let movableAnnotations = annotations.contains { $0.isMovable }
-        bottomButtons = ToolbarLayout.bottomButtons(selectedTool: currentTool, selectedColor: currentColor, beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex, hasAnnotations: movableAnnotations)
-        rightButtons = ToolbarLayout.rightButtons(delaySeconds: delaySeconds, beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex, hasAnnotations: movableAnnotations, translateEnabled: translateEnabled)
+        bottomButtons = ToolbarLayout.bottomButtons(selectedTool: currentTool, selectedColor: currentColor, beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex, hasAnnotations: movableAnnotations, isRecording: isRecording, isAnnotating: isAnnotating)
+        rightButtons = ToolbarLayout.rightButtons(delaySeconds: delaySeconds, beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex, hasAnnotations: movableAnnotations, translateEnabled: translateEnabled, isRecording: isRecording, isAnnotating: isAnnotating)
 
         // Place each toolbar inside if it would go off-screen
         let bottomMargin: CGFloat = 50  // toolbar height + gap
@@ -2606,9 +2720,10 @@ class OverlayView: NSView {
                 }
             }
 
-            // Check handles
+            // Check handles (locked during recording)
             let handle = hitTestHandle(at: point)
             if handle != .none {
+                guard !isRecording else { return }
                 isResizingSelection = true
                 resizeHandle = handle
                 return
@@ -2620,7 +2735,8 @@ class OverlayView: NSView {
                 return
             }
 
-            // Outside everything - start new selection
+            // Outside everything - start new selection (locked during recording)
+            guard !isRecording else { return }
             showToolbars = false
             annotations.removeAll()
             redoStack.removeAll()
@@ -3058,7 +3174,17 @@ class OverlayView: NSView {
 
     // MARK: - Toolbar Actions
 
-    private func handleToolbarAction(_ action: ToolbarButtonAction, mousePoint: NSPoint = .zero) {
+    func handleToolbarAction(_ action: ToolbarButtonAction, mousePoint: NSPoint = .zero) {
+        // When recording but not in annotation mode, only allow recording-control actions
+        if isRecording && !isAnnotating {
+            switch action {
+            case .annotationMode, .stopRecord:
+                break  // allowed — fall through to main switch
+            default:
+                return
+            }
+        }
+
         switch action {
         case .tool(let tool):
             if tool == .select && !annotations.contains(where: { $0.isMovable }) {
@@ -3077,6 +3203,7 @@ class OverlayView: NSView {
         case .sizeDisplay:
             break
         case .moveSelection:
+            guard !isRecording else { break }
             // Start drag-to-move immediately (hold and drag, release to stop)
             isDraggingSelection = true
             moveMode = true
@@ -3141,6 +3268,13 @@ class OverlayView: NSView {
                 performTranslate(targetLang: TranslationService.targetLanguage)
             }
             needsDisplay = true
+        case .record:
+            overlayDelegate?.overlayViewDidRequestStartRecording(rect: selectionRect)
+        case .stopRecord:
+            overlayDelegate?.overlayViewDidRequestStopRecording()
+        case .annotationMode:
+            isAnnotating.toggle()
+            rebuildToolbarLayout()
         case .cancel:
             overlayDelegate?.overlayViewDidCancel()
         }
@@ -3245,11 +3379,12 @@ class OverlayView: NSView {
                 }
                 // Edit button (text only)
                 if annotationEditButtonRect != .zero && annotationEditButtonRect.contains(point) {
+                    let origin = selected.textFieldOrigin
                     if let idx = annotations.firstIndex(where: { $0 === selected }) {
                         annotations.remove(at: idx)
                         selectedAnnotation = nil
                     }
-                    showTextField(at: selected.startPoint, existingText: selected.attributedText)
+                    showTextField(at: origin, existingText: selected.attributedText)
                     needsDisplay = true
                     return
                 }
@@ -3774,6 +3909,9 @@ class OverlayView: NSView {
             annotation.text = text
             annotation.fontSize = textFontSize
             annotation.isBold = textBold
+            // Reconstruct the original showTextField(at:) point so re-editing places the
+            // text field at exactly the same position.
+            annotation.textFieldOrigin = NSPoint(x: sv.frame.minX, y: sv.frame.maxY)
             annotations.append(annotation)
             redoStack.removeAll()
         }
@@ -3801,6 +3939,7 @@ class OverlayView: NSView {
     override func keyDown(with event: NSEvent) {
         switch event.keyCode {
         case 53: // Escape
+            guard !isRecording else { return }
             if textEditView != nil {
                 textScrollView?.removeFromSuperview()
                 textScrollView = nil
@@ -4446,6 +4585,10 @@ class OverlayView: NSView {
         detectedBarcodePayload = nil
         barcodeActionRects = []
         hoveredWindowRect = nil
+        isRecording = false
+        recordingElapsedSeconds = 0
+        isAnnotating = false
+        annotationModeEverUsed = false
         needsDisplay = true
     }
 }

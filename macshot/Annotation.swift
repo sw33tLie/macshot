@@ -31,6 +31,7 @@ class Annotation {
     var sourceImage: NSImage?    // for pixelate: temporary reference during drawing (cleared after bake)
     var sourceImageBounds: NSRect = .zero  // the bounds the image was drawn into
     var bakedBlurNSImage: NSImage?    // baked result for pixelate/blur (NSImage avoids CGImage flip issues)
+    var textFieldOrigin: NSPoint = .zero  // original showTextField(at:) point for re-editing
     var fontSize: CGFloat = 16
     var isBold: Bool = false
     var isItalic: Bool = false

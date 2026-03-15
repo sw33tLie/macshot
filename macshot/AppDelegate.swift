@@ -15,6 +15,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var delayTimer: Timer?
     private var pendingDelaySelection: NSRect = .zero
     private var uploadToastController: UploadToastController?
+    private var recordingEngine: RecordingEngine?
+    private var recordingOverlayController: OverlayWindowController?
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         setupMainMenu()
@@ -303,6 +305,69 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         pendingDelaySelection = selectionRect
         dismissOverlays()
         startDelayCountdown(seconds: seconds)
+    }
+
+    func overlayDidRequestStartRecording(_ controller: OverlayWindowController, rect: NSRect, screen: NSScreen) {
+        let engine = RecordingEngine()
+        engine.onProgress = { [weak controller] seconds in
+            controller?.updateRecordingProgress(seconds: seconds)
+        }
+        engine.onCompletion = { [weak self] url, error in
+            guard let self = self else { return }
+            self.dismissOverlays()
+            self.recordingEngine = nil
+            self.recordingOverlayController = nil
+
+            if let url = url {
+                self.showRecordingCompletedToast(url: url)
+            } else if let error = error {
+                print("Recording failed: \(error.localizedDescription)")
+            }
+        }
+        recordingEngine = engine
+        recordingOverlayController = controller
+
+        controller.setRecordingState(isRecording: true)
+        engine.startRecording(rect: rect, screen: screen)
+    }
+
+    func overlayDidRequestStopRecording(_ controller: OverlayWindowController) {
+        recordingEngine?.stopRecording()
+    }
+
+    private func showRecordingCompletedToast(url: URL) {
+        let onStop = UserDefaults.standard.string(forKey: "recordingOnStop") ?? "finder"
+        if onStop == "finder" {
+            NSWorkspace.shared.activateFileViewerSelecting([url])
+        }
+
+        let size = NSSize(width: 320, height: 60)
+        guard let screen = NSScreen.main else { return }
+        let origin = NSPoint(
+            x: screen.frame.midX - size.width / 2,
+            y: screen.frame.minY + 60
+        )
+        let window = NSWindow(
+            contentRect: NSRect(origin: origin, size: size),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        window.isOpaque = false
+        window.backgroundColor = .clear
+        window.level = .floating + 1
+        window.hasShadow = true
+        window.ignoresMouseEvents = false
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+
+        let view = RecordingToastView(frame: NSRect(origin: .zero, size: size), url: url)
+        window.contentView = view
+        window.makeKeyAndOrderFront(nil)
+
+        // Auto-dismiss after 6 seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 6) { [weak window] in
+            window?.orderOut(nil)
+        }
     }
 
     private func startDelayCountdown(seconds: Int) {

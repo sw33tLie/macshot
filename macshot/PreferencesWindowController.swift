@@ -21,6 +21,10 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
     private var isRecordingHotkey = false
     private var localMonitor: Any?
     private weak var uploadsStack: NSStackView?
+    // Recording tab controls
+    private var recordingFormatPopup: NSPopUpButton!
+    private var recordingFPSPopup: NSPopUpButton!
+    private var recordingOnStopPopup: NSPopUpButton!
 
     var onHotkeyChanged: (() -> Void)?
 
@@ -66,6 +70,11 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         toolsTab.label = "Tools"
         toolsTab.view = makeToolsTabView()
         tabView.addTabViewItem(toolsTab)
+
+        let recordingTab = NSTabViewItem(identifier: "recording")
+        recordingTab.label = "Recording"
+        recordingTab.view = makeRecordingTabView()
+        tabView.addTabViewItem(recordingTab)
 
         let uploadsTab = NSTabViewItem(identifier: "uploads")
         uploadsTab.label = "Uploads"
@@ -146,7 +155,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         stack.alignment = .leading
         stack.spacing = 0
         stack.translatesAutoresizingMaskIntoConstraints = false
-        stack.edgeInsets = NSEdgeInsets(top: 16, left: 20, bottom: 16, right: 20)
+        stack.edgeInsets = NSEdgeInsets(top: 0, left: 20, bottom: 16, right: 20)
 
         // ── Capture ──────────────────────────────────────────
         stack.addArrangedSubview(sectionHeader("Capture"))
@@ -295,7 +304,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         stack.alignment = .leading
         stack.spacing = 0
         stack.translatesAutoresizingMaskIntoConstraints = false
-        stack.edgeInsets = NSEdgeInsets(top: 16, left: 20, bottom: 16, right: 20)
+        stack.edgeInsets = NSEdgeInsets(top: 0, left: 20, bottom: 16, right: 20)
 
         // ── Annotation Tools ─────────────────────────────────
         stack.addArrangedSubview(sectionHeader("Annotation Tools"))
@@ -353,6 +362,77 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         return scroll
     }
 
+    // MARK: - Recording Tab
+
+    private func makeRecordingTabView() -> NSView {
+        let scroll = NSScrollView()
+        scroll.hasVerticalScroller = true
+        scroll.autohidesScrollers = true
+        scroll.borderType = .noBorder
+        scroll.drawsBackground = false
+        scroll.autoresizingMask = [.width, .height]
+
+        let stack = NSStackView()
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 0
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.edgeInsets = NSEdgeInsets(top: 0, left: 20, bottom: 16, right: 20)
+
+        // ── Format ────────────────────────────────────────────
+        stack.addArrangedSubview(sectionHeader("Output"))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        recordingFormatPopup = NSPopUpButton()
+        recordingFormatPopup.addItems(withTitles: ["MP4 (H.264)", "GIF"])
+        recordingFormatPopup.target = self
+        recordingFormatPopup.action = #selector(recordingFormatChanged(_:))
+        stack.addArrangedSubview(labeledRow("Format:", controls: [recordingFormatPopup]))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        recordingFPSPopup = NSPopUpButton()
+        recordingFPSPopup.addItems(withTitles: ["15 fps", "24 fps", "30 fps", "60 fps"])
+        recordingFPSPopup.target = self
+        recordingFPSPopup.action = #selector(recordingFPSChanged(_:))
+        stack.addArrangedSubview(labeledRow("Frame rate:", controls: [recordingFPSPopup]))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        let saveNote = NSTextField(labelWithString: "Recordings are saved to the folder set in General.")
+        saveNote.font = NSFont.systemFont(ofSize: 11)
+        saveNote.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(indented(saveNote))
+        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
+
+        // ── Behavior ──────────────────────────────────────────
+        stack.addArrangedSubview(sectionHeader("Behavior"))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        recordingOnStopPopup = NSPopUpButton()
+        recordingOnStopPopup.addItems(withTitles: ["Show in Finder", "Do nothing"])
+        recordingOnStopPopup.target = self
+        recordingOnStopPopup.action = #selector(recordingOnStopChanged(_:))
+        stack.addArrangedSubview(labeledRow("When done:", controls: [recordingOnStopPopup]))
+        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
+
+        // Spacer to absorb remaining height, keeping content pinned to top
+        let spacer = NSView()
+        spacer.translatesAutoresizingMaskIntoConstraints = false
+        spacer.setContentHuggingPriority(.fittingSizeCompression, for: .vertical)
+        stack.addArrangedSubview(spacer)
+
+        let clipView = scroll.contentView
+        scroll.documentView = stack
+
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: clipView.topAnchor),
+            stack.leadingAnchor.constraint(equalTo: clipView.leadingAnchor),
+            stack.trailingAnchor.constraint(equalTo: clipView.trailingAnchor),
+            stack.heightAnchor.constraint(greaterThanOrEqualTo: clipView.heightAnchor),
+        ])
+
+        return scroll
+    }
+
     // MARK: - Uploads Tab
 
     private func makeUploadsTabView() -> NSView {
@@ -368,7 +448,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         stack.alignment = .leading
         stack.spacing = 6
         stack.translatesAutoresizingMaskIntoConstraints = false
-        stack.edgeInsets = NSEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        stack.edgeInsets = NSEdgeInsets(top: 0, left: 12, bottom: 12, right: 12)
 
         let clipView = scroll.contentView
         scroll.documentView = stack
@@ -625,6 +705,18 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         updateQualityVisibility()
 
         imgbbKeyField.stringValue = UserDefaults.standard.string(forKey: "imgbbAPIKey") ?? ""
+
+        // Recording
+        let recFormat = UserDefaults.standard.string(forKey: "recordingFormat") ?? "mp4"
+        recordingFormatPopup.selectItem(at: recFormat == "gif" ? 1 : 0)
+
+        let recFPS = UserDefaults.standard.integer(forKey: "recordingFPS")
+        let fpsOptions = [15, 24, 30, 60]
+        let fpsIdx = fpsOptions.firstIndex(of: recFPS) ?? 2
+        recordingFPSPopup.selectItem(at: fpsIdx)
+
+        let onStop = UserDefaults.standard.string(forKey: "recordingOnStop") ?? "finder"
+        recordingOnStopPopup.selectItem(at: onStop == "nothing" ? 1 : 0)
     }
 
     private func updateQualityVisibility() {
@@ -713,6 +805,17 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         historySizeField.integerValue = sender.integerValue
         UserDefaults.standard.set(sender.integerValue, forKey: "historySize")
         ScreenshotHistory.shared.pruneToMax()
+    }
+    @objc private func recordingFormatChanged(_ sender: NSPopUpButton) {
+        UserDefaults.standard.set(sender.indexOfSelectedItem == 1 ? "gif" : "mp4", forKey: "recordingFormat")
+    }
+    @objc private func recordingFPSChanged(_ sender: NSPopUpButton) {
+        let fpsOptions = [15, 24, 30, 60]
+        let fps = fpsOptions[sender.indexOfSelectedItem]
+        UserDefaults.standard.set(fps, forKey: "recordingFPS")
+    }
+    @objc private func recordingOnStopChanged(_ sender: NSPopUpButton) {
+        UserDefaults.standard.set(sender.indexOfSelectedItem == 1 ? "nothing" : "finder", forKey: "recordingOnStop")
     }
     @objc private func toggleItemChanged(_ sender: NSButton) {
         let key = sender.identifier?.rawValue ?? "enabledTools"

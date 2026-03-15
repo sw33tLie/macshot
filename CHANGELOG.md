@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.1.0] - 2026-03-15
+
+### Added
+- **Screen recording** — record any region of your screen as MP4 (H.264) or GIF. Select a region, click the record button in the right toolbar, and interact with any app normally while recording. Toggle **annotation mode** to draw on screen during recording. Stop with the stop button.
+- **Annotation mode during recording** — while recording, toggle annotation mode to draw arrows, text, shapes, and other annotations on the live screen. Annotations appear in the recorded video.
+- **Recording completed toast** — after stopping, a floating toast shows the filename with options to reveal in Finder or copy the file path. Auto-dismisses after 6 seconds.
+- **Recording preferences tab** — configure output format (MP4/GIF), frame rate (15/24/30/60 fps), and what happens when recording stops (Show in Finder or do nothing).
+
+### Improved
+- **Preferences spacing** — tab content is now packed at the top instead of being spread across the full tab height.
+
 ## [2.0.0] - 2026-03-14
 
 ### Added

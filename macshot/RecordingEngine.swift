@@ -1,0 +1,298 @@
+import Foundation
+import AVFoundation
+import ScreenCaptureKit
+import CoreGraphics
+
+// Callback types
+typealias RecordingProgressCallback = (_ seconds: Int) -> Void
+typealias RecordingCompletionCallback = (_ url: URL?, _ error: Error?) -> Void
+
+enum RecordingFormat: String {
+    case mp4 = "mp4"
+    case gif = "gif"
+}
+
+@MainActor
+final class RecordingEngine: NSObject {
+
+    // MARK: - State
+
+    enum State { case idle, countdown, recording, stopping }
+    private(set) var state: State = .idle
+
+    // MARK: - Config (read from UserDefaults at start)
+
+    private var format: RecordingFormat = .mp4
+    private var fps: Int = 30
+    private var cropRect: CGRect = .zero      // in screen coordinates (top-left origin)
+    private var screen: NSScreen = NSScreen.main!
+
+    // MARK: - SCStream
+
+    private var stream: SCStream?
+    private var streamOutput: RecordingStreamOutput?
+
+    // MARK: - MP4 writer
+
+    private var assetWriter: AVAssetWriter?
+    private var videoInput: AVAssetWriterInput?
+    private var adaptor: AVAssetWriterInputPixelBufferAdaptor?
+    private var outputURL: URL?
+    private var startTime: CMTime = .invalid
+    private var frameCount: Int64 = 0
+
+    // MARK: - GIF
+
+    private var gifEncoder: GIFEncoder?
+
+    // MARK: - Callbacks
+
+    var onProgress: RecordingProgressCallback?
+    var onCompletion: RecordingCompletionCallback?
+
+    private var progressTimer: Timer?
+    private var elapsedSeconds: Int = 0
+
+    // MARK: - Cursor highlight
+
+
+    // MARK: - Public API
+
+    /// Start recording the given rect (in NSScreen/AppKit coordinates, bottom-left origin).
+    func startRecording(rect: NSRect, screen: NSScreen) {
+        guard state == .idle else { return }
+        state = .recording
+
+        self.screen = screen
+        // Convert AppKit rect (bottom-left origin) → screen coords (top-left origin)
+        // SCStream uses top-left origin matching the display's coordinate system.
+        let displayBounds = screen.frame
+        let flippedY = displayBounds.maxY - rect.maxY
+        // Scale to points — SCStream works in points on the display
+        self.cropRect = CGRect(x: rect.minX - displayBounds.minX,
+                               y: flippedY - displayBounds.minY,
+                               width: rect.width,
+                               height: rect.height)
+
+        self.format = RecordingFormat(rawValue: UserDefaults.standard.string(forKey: "recordingFormat") ?? "mp4") ?? .mp4
+        self.fps = UserDefaults.standard.integer(forKey: "recordingFPS") > 0
+            ? UserDefaults.standard.integer(forKey: "recordingFPS") : 30
+        Task { await self.beginCapture(rect: rect) }
+    }
+
+    func stopRecording() {
+        guard state == .recording else { return }
+        state = .stopping
+        progressTimer?.invalidate()
+        progressTimer = nil
+        Task { await self.finalizeCapture() }
+    }
+
+    // MARK: - Setup
+
+    private func beginCapture(rect: NSRect) async {
+        do {
+            // Find the SCDisplay matching our screen
+            let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+            guard let display = content.displays.first(where: { d in
+                // Match by frame origin
+                abs(d.frame.origin.x - screen.frame.origin.x) < 2 &&
+                abs(d.frame.origin.y - (NSScreen.screens.map(\.frame.maxY).max() ?? 0) - screen.frame.origin.y) < 50
+            }) ?? content.displays.first else {
+                await MainActor.run { self.fail(RecordingError.noDisplay) }
+                return
+            }
+
+            let filter = SCContentFilter(display: display, excludingWindows: [])
+            let config = SCStreamConfiguration()
+            config.width = Int(cropRect.width * screen.backingScaleFactor)
+            config.height = Int(cropRect.height * screen.backingScaleFactor)
+            config.minimumFrameInterval = CMTime(value: 1, timescale: CMTimeScale(fps))
+            config.showsCursor = true   // we'll draw our own highlight on top if needed
+            config.sourceRect = cropRect
+            config.pixelFormat = kCVPixelFormatType_32BGRA
+            config.scalesToFit = false
+
+            let pixelW = config.width
+            let pixelH = config.height
+
+            // Prepare output file
+            outputURL = makeOutputURL()
+            guard let outURL = outputURL else {
+                await MainActor.run { self.fail(RecordingError.noOutput) }
+                return
+            }
+
+            if format == .mp4 {
+                try setupAssetWriter(url: outURL, width: pixelW, height: pixelH)
+            } else {
+                gifEncoder = GIFEncoder(url: outURL, fps: fps)
+            }
+
+            let output = RecordingStreamOutput()
+            output.onFrame = { [weak self] pixelBuffer, presentationTime in
+                self?.handleFrame(pixelBuffer: pixelBuffer, presentationTime: presentationTime)
+            }
+            self.streamOutput = output
+
+            let stream = SCStream(filter: filter, configuration: config, delegate: nil)
+            try stream.addStreamOutput(output, type: .screen, sampleHandlerQueue: DispatchQueue(label: "macshot.recording"))
+            try await stream.startCapture()
+            self.stream = stream
+
+            await MainActor.run {
+                self.elapsedSeconds = 0
+                self.progressTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+                    guard let self = self else { return }
+                    self.elapsedSeconds += 1
+                    self.onProgress?(self.elapsedSeconds)
+                }
+            }
+
+        } catch {
+            await MainActor.run { self.fail(error) }
+        }
+    }
+
+    private func finalizeCapture() async {
+        if let stream = stream {
+            try? await stream.stopCapture()
+            self.stream = nil
+        }
+        streamOutput = nil
+
+        if format == .mp4 {
+            await finalizeMP4()
+        } else {
+            await finalizeGIF()
+        }
+    }
+
+    // MARK: - Frame handling
+
+    private func handleFrame(pixelBuffer: CVPixelBuffer, presentationTime: CMTime) {
+        if format == .mp4 {
+            writeMP4Frame(buffer: pixelBuffer, presentationTime: presentationTime)
+        } else {
+            gifEncoder?.addFrame(pixelBuffer)
+        }
+    }
+
+    // MARK: - MP4
+
+    private func setupAssetWriter(url: URL, width: Int, height: Int) throws {
+        let writer = try AVAssetWriter(outputURL: url, fileType: .mp4)
+
+        let settings: [String: Any] = [
+            AVVideoCodecKey: AVVideoCodecType.h264,
+            AVVideoWidthKey: width,
+            AVVideoHeightKey: height,
+            AVVideoCompressionPropertiesKey: [
+                AVVideoAverageBitRateKey: width * height * fps / 8,
+                AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel,
+            ]
+        ]
+
+        let input = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
+        input.expectsMediaDataInRealTime = true
+
+        let sourceAttr: [String: Any] = [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+            kCVPixelBufferWidthKey as String: width,
+            kCVPixelBufferHeightKey as String: height,
+        ]
+        let adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: input, sourcePixelBufferAttributes: sourceAttr)
+
+        writer.add(input)
+        writer.startWriting()
+        writer.startSession(atSourceTime: .zero)
+
+        self.assetWriter = writer
+        self.videoInput = input
+        self.adaptor = adaptor
+        self.startTime = .invalid
+        self.frameCount = 0
+    }
+
+    private func writeMP4Frame(buffer: CVPixelBuffer, presentationTime: CMTime) {
+        guard let input = videoInput, let adaptor = adaptor else { return }
+        guard input.isReadyForMoreMediaData else { return }
+
+        let pts: CMTime
+        if startTime == .invalid {
+            startTime = presentationTime
+            pts = .zero
+        } else {
+            pts = CMTimeSubtract(presentationTime, startTime)
+        }
+
+        adaptor.append(buffer, withPresentationTime: pts)
+        frameCount += 1
+    }
+
+    private func finalizeMP4() async {
+        guard let writer = assetWriter, let input = videoInput else {
+            await MainActor.run { self.succeed() }
+            return
+        }
+        input.markAsFinished()
+        await writer.finishWriting()
+        await MainActor.run { self.succeed() }
+    }
+
+    // MARK: - GIF
+
+    private func finalizeGIF() async {
+        gifEncoder?.finish()
+        await MainActor.run { self.succeed() }
+    }
+
+    // MARK: - Output URL
+
+    private func makeOutputURL() -> URL? {
+        let dir: URL
+        if let saved = UserDefaults.standard.string(forKey: "saveDirectory") {
+            dir = URL(fileURLWithPath: saved)
+        } else {
+            dir = FileManager.default.urls(for: .picturesDirectory, in: .userDomainMask).first ?? URL(fileURLWithPath: NSHomeDirectory())
+        }
+        let ext = format.rawValue
+        let name = "Recording \(OverlayWindowController.formattedTimestamp()).\(ext)"
+        return dir.appendingPathComponent(name)
+    }
+
+    // MARK: - Helpers
+
+    @MainActor private func succeed() {
+        state = .idle
+        onCompletion?(outputURL, nil)
+    }
+
+    @MainActor private func fail(_ error: Error) {
+        state = .idle
+        onCompletion?(nil, error)
+    }
+
+    enum RecordingError: LocalizedError {
+        case noDisplay, noOutput
+        var errorDescription: String? {
+            switch self {
+            case .noDisplay: return "Could not find the screen to record."
+            case .noOutput: return "Could not create output file."
+            }
+        }
+    }
+}
+
+// MARK: - SCStreamOutput
+
+private class RecordingStreamOutput: NSObject, SCStreamOutput {
+    var onFrame: ((CVPixelBuffer, CMTime) -> Void)?
+
+    func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, of type: SCStreamOutputType) {
+        guard type == .screen else { return }
+        guard let pixelBuffer = sampleBuffer.imageBuffer else { return }
+        let pts = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+        onFrame?(pixelBuffer, pts)
+    }
+}
