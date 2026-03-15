@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.1.1] - 2026-03-15
+
+### Improved
+- **Select & Edit tool** — arrow and line endpoints are now individually draggable handles instead of a bounding box; drag the midpoint handle to bend arrows and lines into curves
+- **Loupe tool** — gradient border ring (light at top, darker at bottom) for a real lens look; new 320px size option; now magnifies existing annotations too (not just the raw screenshot)
+- **Color picker in edit mode** — right-click color wheel and color picker now apply color to the selected annotation; previously only changed the current draw color
+- **Font size changes** — no longer clips multi-line text or jumps the text box position; font size number in toolbar is now vertically centered
+- **Pen tool** — single click now draws a dot (previously was discarded)
+- **App icon** — regenerated all sizes from SVG at correct resolutions; no more blurriness in Finder/System Settings
+- **Menu bar icon** — replaced SF Symbol with custom icon matching the app logo (corner brackets + shutter)
+- **Liquid glass logo** — shutter blades and ring now use semi-transparent frosted glass effect with top-light gradient sheen
+
+### Fixed
+- **Circle/ellipse resize** — no longer flattens immediately when dragging a corner handle; all resize handles now work correctly regardless of draw direction
+- **Marker/pencil selection** — bounding box and hit area now account for stroke width, so thick strokes are fully selectable
+- **Color in edit mode** — right-click color wheel now shows when select tool is active; color changes apply to selected annotation
+
 ## [2.1.0] - 2026-03-15
 
 ### Added

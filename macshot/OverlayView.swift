@@ -187,6 +187,8 @@ class OverlayView: NSView {
     private var annotationResizeHandle: ResizeHandle = .none
     private var annotationResizeOrigStart: NSPoint = .zero
     private var annotationResizeOrigEnd: NSPoint = .zero
+    private var annotationResizeOrigTextOrigin: NSPoint = .zero
+    private var annotationResizeOrigControlPoint: NSPoint = .zero
     private var annotationResizeMouseStart: NSPoint = .zero
     private var annotationDeleteButtonRect: NSRect = .zero
     private var annotationEditButtonRect: NSRect = .zero
@@ -398,7 +400,7 @@ class OverlayView: NSView {
 
         // Loupe size picker hover
         if showLoupeSizePicker && loupeSizePickerRect.contains(point) {
-            let sizes = 7
+            let sizes = 8
             let rowH: CGFloat = 28
             let padding: CGFloat = 6
             var newRow = -1
@@ -560,7 +562,7 @@ class OverlayView: NSView {
         if showLoupeSizePicker && loupeSizePickerRect.width > 0 {
             addCursorRect(loupeSizePickerRect, cursor: .arrow)
             let rowH: CGFloat = 28; let padding: CGFloat = 6
-            for i in 0..<7 {
+            for i in 0..<8 {
                 let rowY = loupeSizePickerRect.maxY - padding - rowH * CGFloat(i + 1)
                 addCursorRect(NSRect(x: loupeSizePickerRect.minX, y: rowY, width: loupeSizePickerRect.width, height: rowH), cursor: .pointingHand)
             }
@@ -611,8 +613,12 @@ class OverlayView: NSView {
         if currentTool == .select, let selected = selectedAnnotation {
             // Annotation bounding box interior → move cursor (already covered by openHand above)
             // Resize handles → appropriate resize cursors
+            let isEndpointTool = selected.tool == .arrow || selected.tool == .line || selected.tool == .measure
             for (handle, rect) in annotationResizeHandleRects {
                 let hitRect = rect.insetBy(dx: -4, dy: -4)
+                if isEndpointTool {
+                    addCursorRect(hitRect, cursor: .crosshair)
+                } else {
                 switch handle {
                 case .topLeft, .bottomRight:
                     addCursorRect(hitRect, cursor: Self.nwseCursor)
@@ -624,6 +630,7 @@ class OverlayView: NSView {
                     addCursorRect(hitRect, cursor: .resizeLeftRight)
                 default:
                     break
+                }
                 }
             }
             // Delete / edit buttons → arrow
@@ -1778,7 +1785,7 @@ class OverlayView: NSView {
     // MARK: - Loupe Size Picker
 
     private func drawLoupeSizePicker() {
-        let sizes: [CGFloat] = [60, 80, 100, 120, 160, 200, 250]
+        let sizes: [CGFloat] = [60, 80, 100, 120, 160, 200, 250, 320]
         let rowH: CGFloat = 28
         let pickerWidth: CGFloat = 120
         let padding: CGFloat = 6
@@ -1838,14 +1845,14 @@ class OverlayView: NSView {
     // MARK: - Loupe Preview
 
     private func drawLoupePreview(at center: NSPoint) {
-        guard let screenshot = screenshotImage else { return }
+        guard screenshotImage != nil else { return }
         let size = currentLoupeSize
         let loupeRect = NSRect(x: center.x - size/2, y: center.y - size/2, width: size, height: size)
 
         let previewAnn = Annotation(tool: .loupe, startPoint: loupeRect.origin,
                                      endPoint: NSPoint(x: loupeRect.maxX, y: loupeRect.maxY),
                                      color: .white, strokeWidth: 2)
-        previewAnn.sourceImage = screenshot
+        previewAnn.sourceImage = compositedImage()
         previewAnn.sourceImageBounds = bounds
 
         guard let context = NSGraphicsContext.current else { return }
@@ -1858,6 +1865,68 @@ class OverlayView: NSView {
     // MARK: - Annotation Controls
 
     private func drawAnnotationControls(for annotation: Annotation) {
+        // Arrow, line, and measure: show only 2 endpoint handles, no bounding box
+        if annotation.tool == .arrow || annotation.tool == .line || annotation.tool == .measure {
+            let s: CGFloat = 10
+            let startRect = NSRect(x: annotation.startPoint.x - s/2, y: annotation.startPoint.y - s/2, width: s, height: s)
+            let endRect   = NSRect(x: annotation.endPoint.x   - s/2, y: annotation.endPoint.y   - s/2, width: s, height: s)
+
+            // Middle bend handle: use actual controlPoint if set, otherwise visual midpoint
+            let midPt = annotation.controlPoint ?? NSPoint(
+                x: (annotation.startPoint.x + annotation.endPoint.x) / 2,
+                y: (annotation.startPoint.y + annotation.endPoint.y) / 2
+            )
+            let sm: CGFloat = 8
+            let midRect = NSRect(x: midPt.x - sm/2, y: midPt.y - sm/2, width: sm, height: sm)
+
+            annotationResizeHandleRects = [(.bottomLeft, startRect), (.topRight, endRect), (.top, midRect)]
+
+            // Draw dashed line from endpoints to control point (only if bent)
+            if annotation.controlPoint != nil {
+                let guidePath = NSBezierPath()
+                guidePath.lineWidth = 1
+                guidePath.setLineDash([3, 4], count: 2, phase: 0)
+                NSColor.white.withAlphaComponent(0.35).setStroke()
+                guidePath.move(to: annotation.startPoint)
+                guidePath.line(to: midPt)
+                guidePath.line(to: annotation.endPoint)
+                guidePath.stroke()
+            }
+
+            for rect in [startRect, endRect] {
+                ToolbarLayout.accentColor.setFill()
+                NSBezierPath(ovalIn: rect).fill()
+                NSColor.white.withAlphaComponent(0.9).setStroke()
+                let border = NSBezierPath(ovalIn: rect.insetBy(dx: 0.5, dy: 0.5))
+                border.lineWidth = 1.5
+                border.stroke()
+            }
+
+            // Mid handle: slightly different style (diamond-ish via smaller circle, white fill)
+            NSColor.white.withAlphaComponent(0.9).setFill()
+            NSBezierPath(ovalIn: midRect).fill()
+            ToolbarLayout.accentColor.setStroke()
+            let midBorder = NSBezierPath(ovalIn: midRect.insetBy(dx: 0.5, dy: 0.5))
+            midBorder.lineWidth = 1.5
+            midBorder.stroke()
+
+            // Delete button near endPoint
+            let btnSize: CGFloat = 20
+            let deleteRect = NSRect(x: annotation.endPoint.x + 8, y: annotation.endPoint.y + 2, width: btnSize, height: btnSize)
+            annotationDeleteButtonRect = deleteRect
+            NSColor(red: 0.9, green: 0.2, blue: 0.2, alpha: 0.9).setFill()
+            NSBezierPath(ovalIn: deleteRect).fill()
+            let xAttrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.boldSystemFont(ofSize: 11),
+                .foregroundColor: NSColor.white,
+            ]
+            let xStr = "×" as NSString
+            let xSize = xStr.size(withAttributes: xAttrs)
+            xStr.draw(at: NSPoint(x: deleteRect.midX - xSize.width/2, y: deleteRect.midY - xSize.height/2), withAttributes: xAttrs)
+            annotationEditButtonRect = .zero
+            return
+        }
+
         let baseRect: NSRect
         switch annotation.tool {
         case .pencil, .marker:
@@ -1865,7 +1934,10 @@ class OverlayView: NSView {
             var minX = CGFloat.greatestFiniteMagnitude, minY = CGFloat.greatestFiniteMagnitude
             var maxX = -CGFloat.greatestFiniteMagnitude, maxY = -CGFloat.greatestFiniteMagnitude
             for p in points { minX = min(minX, p.x); minY = min(minY, p.y); maxX = max(maxX, p.x); maxY = max(maxY, p.y) }
-            baseRect = NSRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+            // Expand by the actual painted stroke radius so the box matches the visible stroke
+            let strokeRadius = (annotation.tool == .marker ? annotation.strokeWidth * 6 : annotation.strokeWidth) / 2
+            baseRect = NSRect(x: minX - strokeRadius, y: minY - strokeRadius,
+                              width: maxX - minX + strokeRadius * 2, height: maxY - minY + strokeRadius * 2)
         case .text:
             // startPoint = top-left, endPoint = bottom-right (set at commit time)
             if annotation.endPoint != annotation.startPoint {
@@ -1894,16 +1966,20 @@ class OverlayView: NSView {
         ToolbarLayout.accentColor.withAlphaComponent(0.3).setFill()
         NSBezierPath(roundedRect: padded, xRadius: 3, yRadius: 3).fill()
 
-        // Draw resize handles (8 positions)
-        let handles = annotationAllHandleRects(for: padded)
-        annotationResizeHandleRects = handles
-        for (_, rect) in handles {
-            ToolbarLayout.accentColor.setFill()
-            NSBezierPath(ovalIn: rect).fill()
-            NSColor.white.withAlphaComponent(0.8).setStroke()
-            let border = NSBezierPath(ovalIn: rect.insetBy(dx: 0.5, dy: 0.5))
-            border.lineWidth = 1
-            border.stroke()
+        // Draw resize handles (8 positions) — loupe/pencil/marker don't support resize
+        if annotation.tool != .loupe && annotation.tool != .pencil && annotation.tool != .marker {
+            let handles = annotationAllHandleRects(for: padded)
+            annotationResizeHandleRects = handles
+            for (_, rect) in handles {
+                ToolbarLayout.accentColor.setFill()
+                NSBezierPath(ovalIn: rect).fill()
+                NSColor.white.withAlphaComponent(0.8).setStroke()
+                let border = NSBezierPath(ovalIn: rect.insetBy(dx: 0.5, dy: 0.5))
+                border.lineWidth = 1
+                border.stroke()
+            }
+        } else {
+            annotationResizeHandleRects = []
         }
 
         // Delete button (X) at top-right outside the box
@@ -2414,6 +2490,7 @@ class OverlayView: NSView {
                 let color = colorFromHSBGradient(at: point)
                 currentColor = color
                 applyColorToTextIfEditing()
+                applyColorToSelectedAnnotation()
                 needsDisplay = true
                 return
             }
@@ -2429,6 +2506,7 @@ class OverlayView: NSView {
                 showColorPicker = false
                 showCustomColorPicker = false
                 applyColorToTextIfEditing()
+                applyColorToSelectedAnnotation()
                 if isTextEditing {
                     window?.makeFirstResponder(textEditView)
                 }
@@ -2504,7 +2582,7 @@ class OverlayView: NSView {
         // Loupe size picker dismissal / selection
         if showLoupeSizePicker {
             if loupeSizePickerRect.contains(point) {
-                let sizes: [CGFloat] = [60, 80, 100, 120, 160, 200, 250]
+                let sizes: [CGFloat] = [60, 80, 100, 120, 160, 200, 250, 320]
                 let rowH: CGFloat = 28
                 let padding: CGFloat = 6
                 for (i, size) in sizes.enumerated() {
@@ -2779,6 +2857,7 @@ class OverlayView: NSView {
             let color = colorFromHSBGradient(at: point)
             currentColor = color
             applyColorToTextIfEditing()
+            applyColorToSelectedAnnotation()
             needsDisplay = true
             return
         }
@@ -2811,45 +2890,60 @@ class OverlayView: NSView {
                 if annotation.tool == .text {
                     annotation.startPoint = NSPoint(x: origStart.x + dx, y: origStart.y + dy)
                     annotation.endPoint = NSPoint(x: origEnd.x + dx, y: origEnd.y + dy)
+                    annotation.textDrawRect.origin = NSPoint(
+                        x: annotationResizeOrigTextOrigin.x + dx,
+                        y: annotationResizeOrigTextOrigin.y + dy)
                     needsDisplay = true
                     break
                 }
 
+                // Arrow/line/measure: .bottomLeft = startPoint, .topRight = endPoint, .top = controlPoint
+                if annotation.tool == .arrow || annotation.tool == .line || annotation.tool == .measure {
+                    switch annotationResizeHandle {
+                    case .bottomLeft:
+                        annotation.startPoint = NSPoint(x: origStart.x + dx, y: origStart.y + dy)
+                    case .topRight:
+                        annotation.endPoint = NSPoint(x: origEnd.x + dx, y: origEnd.y + dy)
+                    case .top:
+                        annotation.controlPoint = NSPoint(x: annotationResizeOrigControlPoint.x + dx, y: annotationResizeOrigControlPoint.y + dy)
+                    default:
+                        break
+                    }
+                } else {
+                // Work in bounding-rect space so resize is correct regardless of draw direction
+                let origMinX = min(origStart.x, origEnd.x)
+                let origMaxX = max(origStart.x, origEnd.x)
+                let origMinY = min(origStart.y, origEnd.y)
+                let origMaxY = max(origStart.y, origEnd.y)
+                var newMinX = origMinX, newMaxX = origMaxX
+                var newMinY = origMinY, newMaxY = origMaxY
+
                 switch annotationResizeHandle {
                 case .topLeft:
-                    let newMinX = min(origStart.x + dx, origEnd.x - 10)
-                    let newMaxY = max(origEnd.y + dy, origStart.y + 10)
-                    annotation.startPoint = NSPoint(x: newMinX, y: origStart.y)
-                    annotation.endPoint = NSPoint(x: origEnd.x, y: newMaxY)
+                    newMinX = min(origMinX + dx, origMaxX - 10)
+                    newMaxY = max(origMaxY + dy, origMinY + 10)
                 case .topRight:
-                    let newMaxX = max(origEnd.x + dx, origStart.x + 10)
-                    let newMaxY = max(origEnd.y + dy, origStart.y + 10)
-                    annotation.startPoint = origStart
-                    annotation.endPoint = NSPoint(x: newMaxX, y: newMaxY)
+                    newMaxX = max(origMaxX + dx, origMinX + 10)
+                    newMaxY = max(origMaxY + dy, origMinY + 10)
                 case .bottomLeft:
-                    let newMinX = min(origStart.x + dx, origEnd.x - 10)
-                    let newMinY = min(origStart.y + dy, origEnd.y - 10)
-                    annotation.startPoint = NSPoint(x: newMinX, y: newMinY)
-                    annotation.endPoint = origEnd
+                    newMinX = min(origMinX + dx, origMaxX - 10)
+                    newMinY = min(origMinY + dy, origMaxY - 10)
                 case .bottomRight:
-                    let newMaxX = max(origEnd.x + dx, origStart.x + 10)
-                    let newMinY = min(origStart.y + dy, origEnd.y - 10)
-                    annotation.startPoint = NSPoint(x: origStart.x, y: newMinY)
-                    annotation.endPoint = NSPoint(x: newMaxX, y: origEnd.y)
+                    newMaxX = max(origMaxX + dx, origMinX + 10)
+                    newMinY = min(origMinY + dy, origMaxY - 10)
                 case .top:
-                    let newMaxY = max(origEnd.y + dy, origStart.y + 10)
-                    annotation.endPoint = NSPoint(x: origEnd.x, y: newMaxY)
+                    newMaxY = max(origMaxY + dy, origMinY + 10)
                 case .bottom:
-                    let newMinY = min(origStart.y + dy, origEnd.y - 10)
-                    annotation.startPoint = NSPoint(x: origStart.x, y: newMinY)
+                    newMinY = min(origMinY + dy, origMaxY - 10)
                 case .left:
-                    let newMinX = min(origStart.x + dx, origEnd.x - 10)
-                    annotation.startPoint = NSPoint(x: newMinX, y: origStart.y)
+                    newMinX = min(origMinX + dx, origMaxX - 10)
                 case .right:
-                    let newMaxX = max(origEnd.x + dx, origStart.x + 10)
-                    annotation.endPoint = NSPoint(x: newMaxX, y: origEnd.y)
+                    newMaxX = max(origMaxX + dx, origMinX + 10)
                 default:
                     break
+                }
+                annotation.startPoint = NSPoint(x: newMinX, y: newMinY)
+                annotation.endPoint   = NSPoint(x: newMaxX, y: newMaxY)
                 }
                 needsDisplay = true
             } else if isDraggingAnnotation, let annotation = selectedAnnotation {
@@ -3045,7 +3139,7 @@ class OverlayView: NSView {
             }
         }
 
-        if state == .selected && selectionRect.contains(point) && currentTool != .select {
+        if state == .selected && selectionRect.contains(point) {
             // Show radial color wheel
             showColorWheel = true
             colorWheelCenter = point
@@ -3083,6 +3177,8 @@ class OverlayView: NSView {
         if showColorWheel {
             if colorWheelHoveredIndex >= 0 && colorWheelHoveredIndex < colorWheelColors.count {
                 currentColor = colorWheelColors[colorWheelHoveredIndex]
+                applyColorToTextIfEditing()
+                applyColorToSelectedAnnotation()
             }
             showColorWheel = false
             colorWheelHoveredIndex = -1
@@ -3347,6 +3443,7 @@ class OverlayView: NSView {
         customHSBCachedImage = nil  // brightness changed, redraw gradient
         currentColor = NSColor(calibratedHue: customPickerHue, saturation: customPickerSaturation, brightness: customBrightness, alpha: 1.0)
         applyColorToTextIfEditing()
+        applyColorToSelectedAnnotation()
         needsDisplay = true
     }
 
@@ -3359,6 +3456,12 @@ class OverlayView: NSView {
             tv.insertionPointColor = currentColor
             tv.typingAttributes[.foregroundColor] = currentColor
         }
+    }
+
+    private func applyColorToSelectedAnnotation() {
+        guard let ann = selectedAnnotation else { return }
+        ann.color = currentColor
+        needsDisplay = true
     }
 
     // MARK: - Annotation Creation
@@ -3379,12 +3482,12 @@ class OverlayView: NSView {
                 }
                 // Edit button (text only)
                 if annotationEditButtonRect != .zero && annotationEditButtonRect.contains(point) {
-                    let origin = selected.textFieldOrigin
+                    let frame = selected.textDrawRect
                     if let idx = annotations.firstIndex(where: { $0 === selected }) {
                         annotations.remove(at: idx)
                         selectedAnnotation = nil
                     }
-                    showTextField(at: origin, existingText: selected.attributedText)
+                    showTextField(at: frame.origin, existingText: selected.attributedText, existingFrame: frame)
                     needsDisplay = true
                     return
                 }
@@ -3395,7 +3498,15 @@ class OverlayView: NSView {
                         annotationResizeHandle = handle
                         annotationResizeOrigStart = selected.startPoint
                         annotationResizeOrigEnd = selected.endPoint
+                        annotationResizeOrigTextOrigin = selected.textDrawRect.origin
                         annotationResizeMouseStart = point
+                        // For control point handle: capture current cp or visual midpoint
+                        if handle == .top {
+                            annotationResizeOrigControlPoint = selected.controlPoint ?? NSPoint(
+                                x: (selected.startPoint.x + selected.endPoint.x) / 2,
+                                y: (selected.startPoint.y + selected.endPoint.y) / 2
+                            )
+                        }
                         return
                     }
                 }
@@ -3427,7 +3538,7 @@ class OverlayView: NSView {
                 color: currentColor,
                 strokeWidth: currentStrokeWidth
             )
-            loupeAnnotation.sourceImage = screenshotImage
+            loupeAnnotation.sourceImage = compositedImage()
             loupeAnnotation.sourceImageBounds = bounds
             loupeAnnotation.bakeLoupe()
             annotations.append(loupeAnnotation)
@@ -3513,7 +3624,11 @@ class OverlayView: NSView {
         let dy = abs(annotation.endPoint.y - annotation.startPoint.y)
 
         if annotation.tool == .pencil || annotation.tool == .marker {
-            if let points = annotation.points, points.count > 2 {
+            if let points = annotation.points, points.count >= 1 {
+                // Single click: duplicate the point so drawFreeform renders a dot
+                if points.count < 3, let p = points.first {
+                    annotation.points = [p, p, p]
+                }
                 annotation.bakePixelate()  // no-op for non-pixelate tools
                 annotations.append(annotation)
                 redoStack.removeAll()
@@ -3529,11 +3644,15 @@ class OverlayView: NSView {
 
     // MARK: - Text Field
 
-    private func showTextField(at point: NSPoint, existingText: NSAttributedString? = nil) {
+    private func showTextField(at point: NSPoint, existingText: NSAttributedString? = nil, existingFrame: NSRect = .zero) {
         let height = max(28, textFontSize + 12)
         let minW: CGFloat = 250
         let maxW = max(minW, bounds.width - point.x - 20)
-        let scrollView = NSScrollView(frame: NSRect(x: point.x, y: point.y - height, width: maxW, height: height))
+        // If we have an exact frame from a previous commit, restore it; otherwise compute fresh.
+        let svFrame: NSRect = existingFrame != .zero
+            ? existingFrame
+            : NSRect(x: point.x, y: point.y - height, width: maxW, height: height)
+        let scrollView = NSScrollView(frame: svFrame)
         scrollView.hasVerticalScroller = false
         scrollView.hasHorizontalScroller = false
         scrollView.autohidesScrollers = true
@@ -3554,6 +3673,7 @@ class OverlayView: NSView {
         tv.isHorizontallyResizable = true
         tv.textContainer?.widthTracksTextView = false
         tv.textContainer?.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+        tv.textContainerInset = .zero  // eliminate inset so editing position == draw(in:) position
         tv.delegate = self
 
         let font = currentTextFont()
@@ -3641,10 +3761,14 @@ class OverlayView: NSView {
         bar.addSubview(minusBtn)
         btnX += 24
 
-        // Font size label (shifted down slightly for visual vertical alignment with the + / - buttons)
         let sizeLabel = NSTextField(labelWithString: "\(Int(textFontSize))")
-        sizeLabel.frame = NSRect(x: btnX, y: btnY - 1, width: 28, height: btnH)
-        sizeLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .medium)
+        // Use a fixed pixel size matching the font so the label is exactly as tall as the text,
+        // then center that within btnH manually — avoids NSTextField top-align quirks.
+        let labelFontSize: CGFloat = 12
+        let labelH: CGFloat = labelFontSize + 4
+        let sizeLabel_y = btnY + (btnH - labelH) / 2
+        sizeLabel.frame = NSRect(x: btnX, y: sizeLabel_y, width: 28, height: labelH)
+        sizeLabel.font = NSFont.monospacedDigitSystemFont(ofSize: labelFontSize, weight: .medium)
         sizeLabel.textColor = .white
         sizeLabel.alignment = .center
         sizeLabel.tag = 999
@@ -3851,14 +3975,7 @@ class OverlayView: NSView {
             ts.endEditing()
         }
         tv.typingAttributes[.font] = currentTextFont()
-        // Resize text view
-        let height = max(28, textFontSize + 12)
-        if let sv = textScrollView {
-            sv.frame.size.height = height
-            if let bar = textControlBar {
-                bar.frame.origin.y = sv.frame.maxY + 4
-            }
-        }
+        resizeTextViewToFit()
         window?.makeFirstResponder(tv)
     }
 
@@ -3886,32 +4003,30 @@ class OverlayView: NSView {
         guard let tv = textEditView, let sv = textScrollView else { return }
         let text = tv.string
         if !text.isEmpty {
-            let lm = tv.layoutManager!
-            let tc = tv.textContainer!
-            lm.ensureLayout(for: tc)
-            let usedRect = lm.usedRect(for: tc)
-            let inset = tv.textContainerInset
-            // Store the draw rect in OverlayView coords. drawText() will use draw(in:)
-            // which is coordinate-system agnostic — no baseline math needed.
-            let drawRect = NSRect(
-                x: sv.frame.minX + inset.width + usedRect.minX,
-                y: sv.frame.minY + sv.frame.height - inset.height - usedRect.minY - usedRect.height,
-                width: usedRect.width,
-                height: usedRect.height
-            )
+            // Render the attributed string into an NSImage using its own layout engine.
+            // NSImage.lockFocus gives a flipped context matching NSTextView, so
+            // draw(in:) lands correctly with no coordinate math.
             let attrStr = NSAttributedString(attributedString: tv.textStorage!)
+            let imgSize = sv.frame.size
+            let img = NSImage(size: imgSize)
+            img.lockFocusFlipped(true)
+            attrStr.draw(in: NSRect(origin: .zero, size: imgSize))
+            img.unlockFocus()
+
             let annotation = Annotation(tool: .text,
-                                        startPoint: drawRect.origin,
-                                        endPoint: NSPoint(x: drawRect.maxX, y: drawRect.maxY),
+                                        startPoint: sv.frame.origin,
+                                        endPoint: NSPoint(x: sv.frame.maxX, y: sv.frame.maxY),
                                         color: currentColor,
                                         strokeWidth: currentStrokeWidth)
             annotation.attributedText = attrStr
             annotation.text = text
             annotation.fontSize = textFontSize
             annotation.isBold = textBold
-            // Reconstruct the original showTextField(at:) point so re-editing places the
-            // text field at exactly the same position.
-            annotation.textFieldOrigin = NSPoint(x: sv.frame.minX, y: sv.frame.maxY)
+            annotation.isItalic = textItalic
+            annotation.isUnderline = textUnderline
+            annotation.isStrikethrough = textStrikethrough
+            annotation.textImage = img
+            annotation.textDrawRect = sv.frame
             annotations.append(annotation)
             redoStack.removeAll()
         }
@@ -4636,21 +4751,28 @@ extension OverlayView: NSTextViewDelegate {
     }
 
     func textDidChange(_ notification: Notification) {
+        resizeTextViewToFit()
+    }
+
+    private func resizeTextViewToFit() {
         guard let tv = textEditView, let sv = textScrollView else { return }
         guard let layoutManager = tv.layoutManager, let textContainer = tv.textContainer else { return }
-        
+
         layoutManager.ensureLayout(for: textContainer)
         let usedRect = layoutManager.usedRect(for: textContainer)
         let extraHeight = layoutManager.extraLineFragmentRect.height
-        
+
         let minH = max(28, textFontSize + 12)
         let newWidth = max(250, ceil(usedRect.width) + 16)
         let newHeight = max(minH, ceil(usedRect.height + extraHeight) + 10)
-        
+
         // Pin the top edge, adjust origin Y downward as height grows
         let topEdge = sv.frame.maxY
         sv.frame = NSRect(x: sv.frame.minX, y: topEdge - newHeight, width: newWidth, height: newHeight)
         tv.frame.size = NSSize(width: newWidth, height: newHeight)
+        if let bar = textControlBar {
+            bar.frame.origin.y = sv.frame.maxY + 4
+        }
     }
 }
 

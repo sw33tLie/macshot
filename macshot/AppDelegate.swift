@@ -77,18 +77,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         if let button = statusItem.button {
-            let symbolNames = ["camera.viewfinder", "camera.fill", "viewfinder"]
-            var found = false
-            let config = NSImage.SymbolConfiguration(scale: .large)
-            for name in symbolNames {
-                if let img = NSImage(systemSymbolName: name, accessibilityDescription: "macshot")?.withSymbolConfiguration(config) {
-                    img.isTemplate = true
-                    button.image = img
-                    found = true
-                    break
-                }
-            }
-            if !found {
+            if let img = NSImage(named: "StatusBarIcon") {
+                img.isTemplate = true
+                img.size = NSSize(width: 26, height: 26)
+                button.image = img
+            } else {
                 button.title = "macshot"
             }
         }

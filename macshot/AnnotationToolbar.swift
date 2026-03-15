@@ -59,7 +59,7 @@ class ToolbarLayout {
         var buttons: [ToolbarButton] = []
 
         // Move tool always present (disabled look when no annotations)
-        var selectBtn = ToolbarButton(action: .tool(.select), sfSymbol: "cursor.rays", label: nil, tooltip: "Move Object")
+        var selectBtn = ToolbarButton(action: .tool(.select), sfSymbol: "cursor.rays", label: nil, tooltip: "Select & Edit")
         selectBtn.isSelected = (selectedTool == .select)
         if !hasAnnotations {
             selectBtn.tintColor = NSColor.white.withAlphaComponent(0.3)

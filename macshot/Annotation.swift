@@ -31,13 +31,15 @@ class Annotation {
     var sourceImage: NSImage?    // for pixelate: temporary reference during drawing (cleared after bake)
     var sourceImageBounds: NSRect = .zero  // the bounds the image was drawn into
     var bakedBlurNSImage: NSImage?    // baked result for pixelate/blur (NSImage avoids CGImage flip issues)
-    var textFieldOrigin: NSPoint = .zero  // original showTextField(at:) point for re-editing
+    var textImage: NSImage?   // snapshot of the NSTextView at commit time — drawn as-is, no coord math
+    var textDrawRect: NSRect = .zero  // where to draw textImage in OverlayView coords
     var fontSize: CGFloat = 16
     var isBold: Bool = false
     var isItalic: Bool = false
     var groupID: UUID?  // for batch undo (e.g. auto-redact)
     var isUnderline: Bool = false
     var isStrikethrough: Bool = false
+    var controlPoint: NSPoint? = nil  // optional bend point for line/arrow
 
     init(tool: AnnotationTool, startPoint: NSPoint, endPoint: NSPoint, color: NSColor, strokeWidth: CGFloat) {
         self.tool = tool
@@ -71,11 +73,16 @@ class Annotation {
         switch tool {
         case .pencil, .marker:
             guard let points = points else { return false }
+            let strokeRadius = (tool == .marker ? strokeWidth * 6 : strokeWidth) / 2
+            let effectiveThreshold = max(threshold, strokeRadius)
             for p in points {
-                if hypot(p.x - point.x, p.y - point.y) < threshold { return true }
+                if hypot(p.x - point.x, p.y - point.y) < effectiveThreshold { return true }
             }
             return false
         case .line, .arrow, .measure:
+            if let cp = controlPoint {
+                return distanceToQuadCurve(point: point, from: startPoint, control: cp, to: endPoint) < threshold
+            }
             return distanceToLineSegment(point: point, from: startPoint, to: endPoint) < threshold
         case .rectangle, .filledRectangle:
             let rect = boundingRect
@@ -97,14 +104,7 @@ class Annotation {
             let rNorm = threshold / min(rx, ry)
             return abs(d - 1.0) < rNorm * 2
         case .text:
-            // If endPoint was set at commit time, use the stored bounding rect
-            if endPoint != startPoint {
-                return boundingRect.insetBy(dx: -threshold, dy: -threshold).contains(point)
-            }
-            guard let text = attributedText ?? (text.map { NSAttributedString(string: $0) }) else { return false }
-            let size = text.size()
-            let rect = NSRect(origin: startPoint, size: size)
-            return rect.insetBy(dx: -threshold, dy: -threshold).contains(point)
+            return textDrawRect.insetBy(dx: -threshold, dy: -threshold).contains(point)
         case .number:
             let radius = max(14, strokeWidth * 4) + threshold
             return hypot(point.x - startPoint.x, point.y - startPoint.y) < radius
@@ -119,6 +119,10 @@ class Annotation {
         startPoint.y += dy
         endPoint.x += dx
         endPoint.y += dy
+        if textDrawRect != .zero {
+            textDrawRect.origin.x += dx
+            textDrawRect.origin.y += dy
+        }
         if var pts = points {
             for i in 0..<pts.count {
                 pts[i].x += dx
@@ -127,6 +131,10 @@ class Annotation {
             points = pts
         }
         
+        if var cp = controlPoint {
+            cp.x += dx; cp.y += dy
+            controlPoint = cp
+        }
         // If it's a loupe, we need to clear the baked image so it re-renders the new magnified area
         if tool == .loupe {
             bakedBlurNSImage = nil
@@ -147,13 +155,7 @@ class Annotation {
             }
             highlightRect = NSRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
         case .text:
-            if endPoint != startPoint {
-                highlightRect = boundingRect
-            } else {
-                let text = attributedText ?? self.text.map { NSAttributedString(string: $0, attributes: [.font: NSFont.systemFont(ofSize: fontSize)]) }
-                let size = text?.size() ?? NSSize(width: 50, height: 20)
-                highlightRect = NSRect(origin: startPoint, size: size)
-            }
+            highlightRect = textDrawRect != .zero ? textDrawRect : boundingRect
         case .number:
             let radius = max(14, strokeWidth * 4)
             highlightRect = NSRect(x: startPoint.x - radius, y: startPoint.y - radius, width: radius * 2, height: radius * 2)
@@ -175,6 +177,21 @@ class Annotation {
     }
 
     // MARK: - Geometry helpers
+
+    private func distanceToQuadCurve(point: NSPoint, from a: NSPoint, control c: NSPoint, to b: NSPoint) -> CGFloat {
+        // Sample the quadratic bezier at N steps and find the minimum distance
+        let steps = 30
+        var minDist = CGFloat.greatestFiniteMagnitude
+        for i in 0...steps {
+            let t = CGFloat(i) / CGFloat(steps)
+            let u = 1 - t
+            let px = u*u*a.x + 2*u*t*c.x + t*t*b.x
+            let py = u*u*a.y + 2*u*t*c.y + t*t*b.y
+            let d = hypot(point.x - px, point.y - py)
+            if d < minDist { minDist = d }
+        }
+        return minDist
+    }
 
     private func distanceToLineSegment(point: NSPoint, from a: NSPoint, to b: NSPoint) -> CGFloat {
         let dx = b.x - a.x, dy = b.y - a.y
@@ -245,12 +262,23 @@ class Annotation {
         path.lineCapStyle = .round
         color.setStroke()
         path.move(to: startPoint)
-        path.line(to: endPoint)
+        if let cp = controlPoint {
+            path.curve(to: endPoint, controlPoint1: cp, controlPoint2: cp)
+        } else {
+            path.line(to: endPoint)
+        }
         path.stroke()
     }
 
     private func drawArrow() {
-        let angle = atan2(endPoint.y - startPoint.y, endPoint.x - startPoint.x)
+        // Determine the arrival angle at endPoint for the arrowhead
+        let angle: CGFloat
+        if let cp = controlPoint {
+            // Tangent of quadratic bezier at t=1 is: endPoint - controlPoint
+            angle = atan2(endPoint.y - cp.y, endPoint.x - cp.x)
+        } else {
+            angle = atan2(endPoint.y - startPoint.y, endPoint.x - startPoint.x)
+        }
         let arrowLength: CGFloat = max(14, strokeWidth * 5)
         let arrowAngle: CGFloat = .pi / 6
 
@@ -271,7 +299,11 @@ class Annotation {
         path.lineCapStyle = .round
         color.setStroke()
         path.move(to: startPoint)
-        path.line(to: lineEnd)
+        if let cp = controlPoint {
+            path.curve(to: lineEnd, controlPoint1: cp, controlPoint2: cp)
+        } else {
+            path.line(to: lineEnd)
+        }
         path.stroke()
 
         // Filled arrowhead
@@ -308,42 +340,8 @@ class Annotation {
     }
 
     private func drawText() {
-        // Prefer rich attributed text if available
-        // Use draw(in:) with the stored bounding rect — this is coordinate-system
-        // agnostic and matches exactly what was shown in the NSTextView editor.
-        if let attrText = attributedText, attrText.length > 0 {
-            attrText.draw(in: boundingRect)
-            return
-        }
-
-        guard let text = text, !text.isEmpty else { return }
-
-        var font: NSFont
-        if isBold && isItalic {
-            font = NSFontManager.shared.convert(
-                NSFont.systemFont(ofSize: fontSize, weight: .bold),
-                toHaveTrait: .italicFontMask
-            )
-        } else if isItalic {
-            font = NSFontManager.shared.convert(
-                NSFont.systemFont(ofSize: fontSize, weight: .regular),
-                toHaveTrait: .italicFontMask
-            )
-        } else {
-            font = NSFont.systemFont(ofSize: fontSize, weight: isBold ? .bold : .regular)
-        }
-
-        var attrs: [NSAttributedString.Key: Any] = [
-            .font: font,
-            .foregroundColor: color
-        ]
-        if isUnderline {
-            attrs[.underlineStyle] = NSUnderlineStyle.single.rawValue
-        }
-        if isStrikethrough {
-            attrs[.strikethroughStyle] = NSUnderlineStyle.single.rawValue
-        }
-        (text as NSString).draw(in: boundingRect, withAttributes: attrs)
+        guard let image = textImage, textDrawRect != .zero else { return }
+        image.draw(in: textDrawRect)
     }
 
     private func drawNumber() {
@@ -701,19 +699,34 @@ class Annotation {
         }
         context.restoreGraphicsState()
 
-        // 3. Draw sleek glassy borders
-        
-        // Outer white border (modern, minimalist lens ring)
-        let borderPath = NSBezierPath(ovalIn: squareRect)
-        borderPath.lineWidth = 4.0
-        NSColor.white.setStroke()
-        borderPath.stroke()
-        
-        // Thin inner rim for depth
-        let innerRim = NSBezierPath(ovalIn: squareRect.insetBy(dx: 2, dy: 2))
-        innerRim.lineWidth = 1.0
-        NSColor.gray.withAlphaComponent(0.2).setStroke()
-        innerRim.stroke()
+        // 3. Gradient border ring (light at top, darker at bottom — like a real lens rim)
+        if let cgCtx = context.cgContext as CGContext? {
+            let borderWidth: CGFloat = 4.0
+            // Clip to the ring between outer and inner circle
+            let outerPath = NSBezierPath(ovalIn: squareRect)
+            let innerPath = NSBezierPath(ovalIn: squareRect.insetBy(dx: borderWidth, dy: borderWidth))
+            let ringPath = NSBezierPath()
+            ringPath.append(outerPath)
+            ringPath.append(innerPath.reversed)
+            cgCtx.saveGState()
+            ringPath.addClip()
+            // Draw a vertical linear gradient: bright white at top, mid-gray at bottom
+            let colors = [
+                NSColor.white.withAlphaComponent(0.95).cgColor,
+                NSColor(white: 0.7, alpha: 0.85).cgColor,
+            ] as CFArray
+            let locs: [CGFloat] = [0.0, 1.0]
+            let colorSpace = CGColorSpaceCreateDeviceRGB()
+            if let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: locs) {
+                cgCtx.drawLinearGradient(
+                    gradient,
+                    start: CGPoint(x: squareRect.midX, y: squareRect.maxY),
+                    end:   CGPoint(x: squareRect.midX, y: squareRect.minY),
+                    options: []
+                )
+            }
+            cgCtx.restoreGState()
+        }
         
         // 4. Inner drop shadow to emulate true 3D glass refraction
         context.saveGraphicsState()
