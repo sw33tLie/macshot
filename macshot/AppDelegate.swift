@@ -1,5 +1,6 @@
 import Cocoa
 
+@MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var statusItem: NSStatusItem!
