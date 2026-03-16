@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.5.7] - 2026-03-17
+
+### Fixed
+- **Pencil/marker self-overlap** — drawing over the same area within a single stroke no longer causes the paint to get darker. The entire stroke now composites as one flat layer with uniform opacity.
+
 ## [2.5.6] - 2026-03-16
 
 ### Improved

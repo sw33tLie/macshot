@@ -272,16 +272,22 @@ class Annotation {
 
     private func drawFreeform(alpha: CGFloat, width: CGFloat) {
         guard let points = points, points.count > 1 else { return }
+        guard let ctx = NSGraphicsContext.current?.cgContext else { return }
+        // Use a transparency layer so self-overlapping segments don't compound alpha
+        ctx.setAlpha(alpha)
+        ctx.beginTransparencyLayer(auxiliaryInfo: nil)
         let path = NSBezierPath()
         path.lineWidth = width
         path.lineCapStyle = .round
         path.lineJoinStyle = .round
-        color.withAlphaComponent(alpha).setStroke()
+        color.withAlphaComponent(1.0).setStroke()
         path.move(to: points[0])
         for i in 1..<points.count {
             path.line(to: points[i])
         }
         path.stroke()
+        ctx.endTransparencyLayer()
+        ctx.setAlpha(1.0)
     }
 
     private func drawStraightLine() {
