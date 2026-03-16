@@ -242,13 +242,13 @@ Copy to clipboard, Save to file (PNG/JPEG), Pin (floating always-on-top), OCR wi
 - App appears as icon in menu bar (no dock icon)
 - Click menu bar icon → "Capture Screen" or use global hotkey (default: Cmd+Shift+X)
 
-## Pending Work (Uncommitted)
+## Releasing
 
-The current working tree re-introduces the **Detached Editor Window** (revamped):
-- `DetachedEditorWindowController.swift` (new file) — standalone editor with full OverlayView
-- `OverlayView.swift` — `isDetached` flag: dark background, centered image, toolbar pinning, no selection border/handles, zoom min 0.1x, blocked new-selection
-- `OverlayWindowController.swift` — detach handler: crops screenshot, clones + shifts annotations, opens editor
-- `AnnotationToolbar.swift` — "Open in Editor Window" button, hides overlay-only buttons when detached
-- `Annotation.swift` — `clone()` method for safe annotation transfer
-- `AppDelegate.swift` — thumbnail "Edit" action opens editor
-- `PinWindowController.swift` — "Edit" action opens editor
+When pushing a new version tag (e.g. `v2.6.0`):
+
+1. **Add a CHANGELOG.md entry** for the new version — CI extracts it for GitHub Release notes.
+2. **Tag and push:** `git tag v2.6.0 && git push origin main --tags`
+3. CI handles the rest: build (with `MARKETING_VERSION` injected from the tag), sign, notarize, DMG, GitHub Release, Sparkle appcast, Homebrew cask update.
+
+Note: `MARKETING_VERSION` in `project.pbxproj` is only used for local dev builds. CI always overrides it from the git tag.
+

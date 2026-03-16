@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.5.3] - 2026-03-16
+
+### Fixed
+- **Check for Updates dialog** — the Sparkle update dialog now appears immediately on first click instead of requiring a second click (LSUIElement app activation fix).
+
 ## [2.5.2] - 2026-03-16
 
 ### Added
