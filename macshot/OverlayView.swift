@@ -2,6 +2,7 @@ import Cocoa
 import UniformTypeIdentifiers
 import Vision
 
+@MainActor
 protocol OverlayViewDelegate: AnyObject {
     func overlayViewDidFinishSelection(_ rect: NSRect)
     func overlayViewSelectionDidChange(_ rect: NSRect)

@@ -1,6 +1,7 @@
 import Cocoa
 import UniformTypeIdentifiers
 
+@MainActor
 protocol PinWindowControllerDelegate: AnyObject {
     func pinWindowDidClose(_ controller: PinWindowController)
 }

@@ -3,6 +3,7 @@ import UniformTypeIdentifiers
 import Vision
 import CoreImage
 
+@MainActor
 protocol OverlayWindowControllerDelegate: AnyObject {
     func overlayDidCancel(_ controller: OverlayWindowController)
     func overlayDidConfirm(_ controller: OverlayWindowController, capturedImage: NSImage?)
