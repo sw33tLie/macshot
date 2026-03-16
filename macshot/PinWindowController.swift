@@ -5,6 +5,7 @@ protocol PinWindowControllerDelegate: AnyObject {
     func pinWindowDidClose(_ controller: PinWindowController)
 }
 
+@MainActor
 class PinWindowController {
 
     weak var delegate: PinWindowControllerDelegate?
