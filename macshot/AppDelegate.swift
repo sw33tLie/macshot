@@ -248,7 +248,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self.playCopySound()
         }
         controller.onEdit = {
-            // Editor window removed
+            DetachedEditorWindowController.open(image: image)
         }
         controller.onUpload = { [weak self] in
             guard let self = self else { return }

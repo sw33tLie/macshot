@@ -26,6 +26,7 @@ enum ToolbarButtonAction {
     case record
     case stopRecord
     case annotationMode
+    case detach
     case scrollCapture
 }
 
@@ -163,7 +164,7 @@ class ToolbarLayout {
     }
 
     // Right toolbar items (output actions + cancel + delay)
-    static func rightButtons(delaySeconds: Int = 0, beautifyEnabled: Bool = false, beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false, translateEnabled: Bool = false, isRecording: Bool = false, isAnnotating: Bool = false) -> [ToolbarButton] {
+    static func rightButtons(delaySeconds: Int = 0, beautifyEnabled: Bool = false, beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false, translateEnabled: Bool = false, isRecording: Bool = false, isAnnotating: Bool = false, isDetached: Bool = false) -> [ToolbarButton] {
         var buttons: [ToolbarButton] = []
 
         // If currently recording, show annotation mode toggle + stop
@@ -203,11 +204,14 @@ class ToolbarLayout {
             return enabledActions == nil || enabledActions!.contains(tag)
         }
 
-        // Cancel and move-selection are always present (not toggleable)
-        buttons.append(ToolbarButton(action: .cancel, sfSymbol: "xmark", label: nil, tooltip: "Cancel"))
-        buttons.append(ToolbarButton(action: .moveSelection, sfSymbol: "arrow.up.and.down.and.arrow.left.and.right", label: nil, tooltip: "Move Selection"))
-        // Delay capture (tag 1007)
-        if actionEnabled(1007) {
+        // Cancel, move-selection, editor — not shown in editor window
+        if !isDetached {
+            buttons.append(ToolbarButton(action: .cancel, sfSymbol: "xmark", label: nil, tooltip: "Cancel"))
+            buttons.append(ToolbarButton(action: .moveSelection, sfSymbol: "arrow.up.and.down.and.arrow.left.and.right", label: nil, tooltip: "Move Selection"))
+            buttons.append(ToolbarButton(action: .detach, sfSymbol: "arrow.up.forward.app", label: nil, tooltip: "Open in Editor Window"))
+        }
+        // Delay capture (tag 1007) — hidden when detached
+        if !isDetached && actionEnabled(1007) {
             let delaySymbol: String
             let delayTooltip: String
             switch delaySeconds {
@@ -254,17 +258,19 @@ class ToolbarLayout {
             buttons.append(translateBtn)
         }
 
-        // Scroll Capture (tag 1010) — hidden when recording
-        if !isRecording && actionEnabled(1010) {
+        // Scroll Capture (tag 1010) — hidden when recording or detached
+        if !isRecording && !isDetached && actionEnabled(1010) {
             buttons.append(ToolbarButton(action: .scrollCapture, sfSymbol: "scroll", label: nil, tooltip: "Scroll Capture"))
         }
 
-        // Record (tag 1009)
-        if actionEnabled(1009) {
+        // Record (tag 1009) — hidden when detached
+        if !isDetached && actionEnabled(1009) {
             var recordBtn = ToolbarButton(action: .record, sfSymbol: "record.circle", label: nil, tooltip: "Record")
             recordBtn.tintColor = .systemRed
             buttons.append(recordBtn)
         }
+
+        // Delay capture (hidden when detached) is handled above with tag 1007
 
         return buttons
     }

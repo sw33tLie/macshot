@@ -55,6 +55,9 @@ class OverlayView: NSView {
 
     weak var overlayDelegate: OverlayViewDelegate?
 
+    /// When true, hides overlay-only toolbar buttons (record, delay, cancel, move, scroll capture).
+    /// The view itself renders identically — same coordinates, same drawing, same everything.
+    var isDetached: Bool = false
 
     var screenshotImage: NSImage? {
         didSet { needsDisplay = true }
@@ -78,7 +81,7 @@ class OverlayView: NSView {
     private var zoomFadingOut: Bool = false
     private var zoomLabelOpacity: CGFloat = 0.0
     private var zoomFadeTimer: Timer?
-    private var zoomMin: CGFloat { 1.0 }
+    private var zoomMin: CGFloat { isDetached ? 0.1 : 1.0 }
     private let zoomMax: CGFloat = 8.0
 
     // Selection
@@ -99,7 +102,7 @@ class OverlayView: NSView {
     private var currentAnnotation: Annotation?
     /// Last tool the user explicitly picked — shared across overlay instances within one app session.
     private static var lastUsedTool: AnnotationTool = .arrow
-    private var currentTool: AnnotationTool = OverlayView.lastUsedTool {
+    var currentTool: AnnotationTool = OverlayView.lastUsedTool {
         didSet {
             // Persist drawing tool choices; skip transient/mode tools
             if currentTool != .select && currentTool != .loupe {
@@ -107,10 +110,10 @@ class OverlayView: NSView {
             }
         }
     }
-    private var currentColor: NSColor = .systemRed
+    var currentColor: NSColor = .systemRed
     /// currentColor with opacity applied — used for all tools except marker, loupe, measure, pixelate, blur
     private var annotationColor: NSColor { currentColor.withAlphaComponent(currentColorOpacity) }
-    private var currentStrokeWidth: CGFloat = {
+    var currentStrokeWidth: CGFloat = {
         let saved = UserDefaults.standard.object(forKey: "currentStrokeWidth") as? Double
         return saved != nil ? CGFloat(saved!) : 3.0
     }()
@@ -935,9 +938,42 @@ class OverlayView: NSView {
 
         window?.invalidateCursorRects(for: self)
 
-        // During scroll capture: make the entire window transparent so the user sees
-        // live screen content everywhere (not just inside the selection).
-        if isScrollCapturing {
+        // In editor mode: dark background, draw image centered at natural size (no stretch).
+        // Reserve padding around the image for toolbars (bottom bar + right bar).
+        if isDetached {
+            let padLeft:   CGFloat = 8
+            let padRight:  CGFloat = 52  // right toolbar width
+            let padBottom: CGFloat = 52  // bottom toolbar height
+            let padTop:    CGFloat = 8
+            let availW = bounds.width  - padLeft - padRight
+            let availH = bounds.height - padBottom - padTop
+            if let image = screenshotImage {
+                let imgW = image.size.width
+                let imgH = image.size.height
+                let cx = padLeft + max(0, (availW - imgW) / 2)
+                let cy = padBottom + max(0, (availH - imgH) / 2)
+                let newRect = NSRect(x: cx, y: cy, width: imgW, height: imgH)
+                let dx = newRect.origin.x - selectionRect.origin.x
+                let dy = newRect.origin.y - selectionRect.origin.y
+                if dx != 0 || dy != 0 {
+                    for ann in annotations { ann.move(dx: dx, dy: dy) }
+                    for entry in undoStack { entry.annotation.move(dx: dx, dy: dy) }
+                    for entry in redoStack { entry.annotation.move(dx: dx, dy: dy) }
+                }
+                selectionRect = newRect
+            }
+            NSColor(white: 0.15, alpha: 1.0).setFill()
+            NSBezierPath(rect: bounds).fill()
+            // Draw image with zoom transform applied
+            context.saveGraphicsState()
+            applyZoomTransform(to: context)
+            if let image = screenshotImage {
+                image.draw(in: selectionRect, from: .zero, operation: .copy, fraction: 1.0)
+            }
+            context.restoreGraphicsState()
+        } else if isScrollCapturing {
+            // During scroll capture: make the entire window transparent so the user sees
+            // live screen content everywhere (not just inside the selection).
             context.cgContext.clear(bounds)
         } else if !annotationModeEverUsed {
             // Draw screenshot
@@ -971,13 +1007,16 @@ class OverlayView: NSView {
             }
 
             // Draw screenshot clipped to selection (image never bleeds outside).
-            context.saveGraphicsState()
-            NSBezierPath(rect: selectionRect).setClip()
-            applyZoomTransform(to: context)
-            if !isScrollCapturing, !annotationModeEverUsed, let image = screenshotImage {
-                image.draw(in: bounds, from: .zero, operation: .copy, fraction: 1.0)
+            // In editor mode this is already handled by the detached draw block above.
+            if !isDetached {
+                context.saveGraphicsState()
+                NSBezierPath(rect: selectionRect).setClip()
+                applyZoomTransform(to: context)
+                if !isScrollCapturing, !annotationModeEverUsed, let image = screenshotImage {
+                    image.draw(in: bounds, from: .zero, operation: .copy, fraction: 1.0)
+                }
+                context.restoreGraphicsState()
             }
-            context.restoreGraphicsState()
 
             // Draw translate overlays clipped to selection (they must stay inside).
             context.saveGraphicsState()
@@ -1021,13 +1060,15 @@ class OverlayView: NSView {
 
             context.restoreGraphicsState()
 
-            // Selection border — red during scroll capture, purple otherwise
-            let borderPath = NSBezierPath(rect: selectionRect)
-            borderPath.lineWidth = isScrollCapturing ? 2.5 : 2.0
-            (isScrollCapturing ? NSColor.systemRed : ToolbarLayout.accentColor).setStroke()
-            borderPath.stroke()
+            // Selection border — hidden in editor mode, red during scroll capture, purple otherwise
+            if !isDetached {
+                let borderPath = NSBezierPath(rect: selectionRect)
+                borderPath.lineWidth = isScrollCapturing ? 2.5 : 2.0
+                (isScrollCapturing ? NSColor.systemRed : ToolbarLayout.accentColor).setStroke()
+                borderPath.stroke()
+            }
 
-            if !isRecording && !isScrollCapturing {
+            if !isRecording && !isScrollCapturing && !isDetached {
                 // Size label above/below selection
                 drawSizeLabel()
 
@@ -3224,7 +3265,7 @@ class OverlayView: NSView {
     func rebuildToolbarLayout() {
         let movableAnnotations = annotations.contains { $0.isMovable }
         bottomButtons = ToolbarLayout.bottomButtons(selectedTool: currentTool, selectedColor: currentColor, beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex, hasAnnotations: movableAnnotations, isRecording: isRecording, isAnnotating: isAnnotating)
-        rightButtons = ToolbarLayout.rightButtons(delaySeconds: delaySeconds, beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex, hasAnnotations: movableAnnotations, translateEnabled: translateEnabled, isRecording: isRecording, isAnnotating: isAnnotating)
+        rightButtons = ToolbarLayout.rightButtons(delaySeconds: delaySeconds, beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex, hasAnnotations: movableAnnotations, translateEnabled: translateEnabled, isRecording: isRecording, isAnnotating: isAnnotating, isDetached: isDetached)
 
         // Place each toolbar inside if it would go off-screen
         let bottomMargin: CGFloat = 50  // toolbar height + gap
@@ -3275,6 +3316,33 @@ class OverlayView: NSView {
                 for i in 0..<bottomButtons.count {
                     bottomButtons[i].rect = bottomButtons[i].rect.offsetBy(dx: 0, dy: dy)
                 }
+            }
+        }
+
+        // In editor mode: pin toolbars to the window edges, not relative to selectionRect.
+        if isDetached {
+            // Bottom bar: centered at the bottom of the view
+            let bw = bottomBarRect.width
+            let bh = bottomBarRect.height
+            let newBottomY: CGFloat = 6
+            let newBottomX = bounds.midX - bw / 2
+            let bdx = newBottomX - bottomBarRect.origin.x
+            let bdy = newBottomY - bottomBarRect.origin.y
+            bottomBarRect = NSRect(x: newBottomX, y: newBottomY, width: bw, height: bh)
+            for i in 0..<bottomButtons.count {
+                bottomButtons[i].rect = bottomButtons[i].rect.offsetBy(dx: bdx, dy: bdy)
+            }
+
+            // Right bar: top-right corner of the view
+            let rw = rightBarRect.width
+            let rh = rightBarRect.height
+            let newRightX = bounds.maxX - rw - 6
+            let newRightY = bounds.maxY - rh - 6
+            let rdx = newRightX - rightBarRect.origin.x
+            let rdy = newRightY - rightBarRect.origin.y
+            rightBarRect = NSRect(x: newRightX, y: newRightY, width: rw, height: rh)
+            for i in 0..<rightButtons.count {
+                rightButtons[i].rect = rightButtons[i].rect.offsetBy(dx: rdx, dy: rdy)
             }
         }
 
@@ -3782,8 +3850,8 @@ class OverlayView: NSView {
                 return
             }
 
-            // Outside everything - start new selection (locked during recording)
-            guard !isRecording else { return }
+            // Outside everything - start new selection (locked during recording or editor mode)
+            guard !isRecording && !isDetached else { return }
             showToolbars = false
             annotations.removeAll()
             undoStack.removeAll()
@@ -4426,6 +4494,8 @@ class OverlayView: NSView {
             rebuildToolbarLayout()
         case .cancel:
             overlayDelegate?.overlayViewDidCancel()
+        case .detach:
+            overlayDelegate?.overlayViewDidRequestDetach()
         case .scrollCapture:
             overlayDelegate?.overlayViewDidRequestScrollCapture(rect: selectionRect)
         }
@@ -5829,7 +5899,10 @@ class OverlayView: NSView {
         context.cgContext.translateBy(x: -selectionRect.origin.x, y: -selectionRect.origin.y)
 
         if let screenshot = screenshotImage {
-            screenshot.draw(in: bounds, from: .zero, operation: .copy, fraction: 1.0)
+            // In editor mode the image is at selectionRect (natural size);
+            // in overlay mode it fills bounds (full screen).
+            let drawRect = isDetached ? selectionRect : bounds
+            screenshot.draw(in: drawRect, from: .zero, operation: .copy, fraction: 1.0)
         }
 
         for annotation in annotations {
@@ -5888,6 +5961,14 @@ class OverlayView: NSView {
         beautifyEnabled = s.beautifyEnabled
         beautifyStyleIndex = s.beautifyStyleIndex
         cachedCompositedImage = nil
+    }
+
+    func setAnnotations(_ anns: [Annotation]) {
+        annotations = anns
+        undoStack = anns.map { .added($0) }
+        redoStack = []
+        cachedCompositedImage = nil
+        needsDisplay = true
     }
 
     func applySelection(_ rect: NSRect) {

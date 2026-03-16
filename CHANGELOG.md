@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.4.0] - 2026-03-16
+
+### Added
+- **Editor Window (revamped)** — the standalone editor window is back, rebuilt from scratch. Open any capture in a resizable, titled window via the new "Open in Editor Window" toolbar button, or from the floating thumbnail / pin window "Edit" action. Full annotation tools, zoom (0.1×–8×), copy, save, pin, OCR, upload, beautify, and background removal — all work inside the editor. Annotations transfer seamlessly from the overlay with correct coordinate mapping. Multiple editor windows can be open simultaneously; macshot shows a dock icon while any editor is open.
+- **Annotation cloning** — `Annotation.clone()` method for safe deep copies when transferring annotations between overlay and editor.
+
+### Improved
+- **Editor toolbar layout** — toolbars pin to window edges (bottom-center, top-right) instead of floating relative to the selection. Overlay-only buttons (cancel, move selection, delay, record, scroll capture) are hidden in editor mode.
+- **Editor drawing** — dark background with image centered at natural size. No selection border or resize handles. New selections blocked (image bounds are fixed).
+
 ## [2.3.0] - 2026-03-16
 
 ### Added

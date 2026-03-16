@@ -74,7 +74,8 @@ class PinWindowController {
     }
 
     private func openInEditor() {
-        // Editor window removed
+        DetachedEditorWindowController.open(image: image)
+        close()
     }
 }
 

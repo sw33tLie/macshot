@@ -326,7 +326,36 @@ extension OverlayWindowController: OverlayViewDelegate {
     }
 
     func overlayViewDidRequestDetach() {
-        // Editor window removed
+        guard let view = overlayView else { return }
+        let sel = view.selectionRect
+
+        // Crop just the raw screenshot (no annotations) to the selection area.
+        let croppedImage: NSImage? = {
+            guard let src = view.screenshotImage else { return nil }
+            let img = NSImage(size: sel.size)
+            img.lockFocus()
+            src.draw(in: NSRect(origin: .zero, size: sel.size),
+                     from: sel, operation: .copy, fraction: 1.0)
+            img.unlockFocus()
+            return img
+        }()
+        guard let image = croppedImage else { return }
+
+        // Clone annotations and shift them from overlay coords to image-relative (0,0) origin.
+        let state = view.snapshotEditorState()
+        let shiftedAnnotations = state.annotations.map { ann -> Annotation in
+            let c = ann.clone()
+            c.move(dx: -sel.origin.x, dy: -sel.origin.y)
+            return c
+        }
+
+        let tool = view.currentTool
+        let color = view.currentColor
+        let stroke = view.currentStrokeWidth
+
+        dismiss()
+        overlayDelegate?.overlayDidCancel(self)
+        DetachedEditorWindowController.open(image: image, tool: tool, color: color, strokeWidth: stroke, annotations: shiftedAnnotations)
     }
 
     @available(macOS 14.0, *)

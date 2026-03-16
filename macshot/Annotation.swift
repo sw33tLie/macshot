@@ -51,6 +51,25 @@ class Annotation {
         self.strokeWidth = strokeWidth
     }
 
+    func clone() -> Annotation {
+        let c = Annotation(tool: tool, startPoint: startPoint, endPoint: endPoint, color: color, strokeWidth: strokeWidth)
+        c.text = text
+        c.attributedText = attributedText
+        c.number = number
+        c.points = points
+        c.bakedBlurNSImage = bakedBlurNSImage
+        c.textImage = textImage
+        c.textDrawRect = textDrawRect
+        c.fontSize = fontSize
+        c.isBold = isBold
+        c.isItalic = isItalic
+        c.groupID = groupID
+        c.isUnderline = isUnderline
+        c.isStrikethrough = isStrikethrough
+        c.controlPoint = controlPoint
+        return c
+    }
+
     var boundingRect: NSRect {
         return NSRect(
             x: min(startPoint.x, endPoint.x),
