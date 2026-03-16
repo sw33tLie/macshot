@@ -27,10 +27,11 @@ class FloatingThumbnailController: NSObject, NSDraggingSource {
         let screen = NSScreen.main ?? NSScreen.screens[0]
         let screenFrame = screen.visibleFrame
 
-        // Fit thumbnail within max bounds, always preserving aspect ratio
+        // Fit image within max bounds preserving aspect ratio, then enforce
+        // a minimum window size so hover buttons always fit (letterbox if needed).
         let maxWidth: CGFloat = 320
-        let minWidth: CGFloat = 120
-        let minHeight: CGFloat = 80
+        let minWinWidth: CGFloat = 200
+        let minWinHeight: CGFloat = 120
         let padding: CGFloat = 16
         let maxHeight: CGFloat = screenFrame.height - padding * 2
 
@@ -39,27 +40,19 @@ class FloatingThumbnailController: NSObject, NSDraggingSource {
         guard imgW > 0 && imgH > 0 else { return }
         let aspect = imgW / imgH
 
-        // Scale to fit within maxWidth x maxHeight
-        var w = min(imgW, maxWidth)
-        var h = w / aspect
-        if h > maxHeight {
-            h = maxHeight
-            w = h * aspect
+        // Scale image to fit within maxWidth x maxHeight
+        var imgDrawW = min(imgW, maxWidth)
+        var imgDrawH = imgDrawW / aspect
+        if imgDrawH > maxHeight {
+            imgDrawH = maxHeight
+            imgDrawW = imgDrawH * aspect
         }
-        // Enforce minimums (still preserving aspect ratio)
-        if w < minWidth {
-            w = minWidth
-            h = w / aspect
-        }
-        if h < minHeight {
-            h = minHeight
-            w = h * aspect
-        }
-        // Final cap in case minimums pushed us over max
-        if w > maxWidth  { w = maxWidth;  h = w / aspect }
-        if h > maxHeight { h = maxHeight; w = h * aspect }
 
-        let thumbSize = NSSize(width: ceil(w), height: ceil(h))
+        // Window is at least minWinWidth x minWinHeight, or image size — whichever is larger
+        let thumbSize = NSSize(
+            width:  ceil(max(minWinWidth, imgDrawW)),
+            height: ceil(max(minWinHeight, imgDrawH))
+        )
 
         // Clamp Y so the thumbnail always fits within the visible screen
         let clampedY = min(y, screenFrame.maxY - thumbSize.height - padding)
@@ -277,10 +270,29 @@ private class ThumbnailView: NSView {
         let r = bounds
         let cr: CGFloat = 12
 
-        // Image with rounded corners
+        // Rounded clip for entire thumbnail
         let path = NSBezierPath(roundedRect: r, xRadius: cr, yRadius: cr)
         path.addClip()
-        image.draw(in: r, from: .zero, operation: .copy, fraction: 1.0)
+
+        // Dark background (visible as letterbox bars for extreme aspect ratios)
+        NSColor(white: 0.12, alpha: 1.0).setFill()
+        NSBezierPath(roundedRect: r, xRadius: cr, yRadius: cr).fill()
+
+        // Draw image centered, preserving aspect ratio (letterboxed)
+        let imgAspect = image.size.width / image.size.height
+        var drawW = r.width
+        var drawH = drawW / imgAspect
+        if drawH > r.height {
+            drawH = r.height
+            drawW = drawH * imgAspect
+        }
+        let drawRect = NSRect(
+            x: r.midX - drawW / 2,
+            y: r.midY - drawH / 2,
+            width: drawW,
+            height: drawH
+        )
+        image.draw(in: drawRect, from: .zero, operation: .copy, fraction: 1.0)
 
         // White border
         NSColor.white.withAlphaComponent(0.4).setStroke()

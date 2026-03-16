@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.5.6] - 2026-03-16
+
+### Improved
+- **Floating thumbnail letterboxing** — very thin or very tall screenshots are now shown with dark padding (letterbox bars) in the thumbnail preview, ensuring action buttons are always clickable and the image is never stretched.
+
 ## [2.5.5] - 2026-03-16
 
 ### Fixed
