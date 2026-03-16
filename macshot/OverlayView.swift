@@ -3576,9 +3576,14 @@ class OverlayView: NSView {
                 needsDisplay = true
                 return
             }
-            showColorPicker = false
-            showCustomColorPicker = false
-            needsDisplay = true
+            // If click is on the color button itself, let the toggle in handleToolbarAction handle it
+            if let action = ToolbarLayout.hitTest(point: point, buttons: bottomButtons), case .color = action {
+                // fall through — don't dismiss here, the button's .toggle() will close it
+            } else {
+                showColorPicker = false
+                showCustomColorPicker = false
+                needsDisplay = true
+            }
         }
 
         // Beautify picker dismissal / selection
@@ -4200,7 +4205,7 @@ class OverlayView: NSView {
         if state == .selected && showToolbars {
             if let action = ToolbarLayout.hitTest(point: point, buttons: bottomButtons) {
                 if case .tool(let tool) = action {
-                    let toolsWithMenu: [AnnotationTool] = [.pencil, .line, .arrow, .rectangle, .ellipse, .marker, .number, .loupe]
+                    let toolsWithMenu: [AnnotationTool] = [.pencil, .line, .arrow, .rectangle, .filledRectangle, .ellipse, .marker, .number, .loupe]
                     if toolsWithMenu.contains(tool) {
                         currentTool = tool // Select the tool
                         if tool == .loupe {

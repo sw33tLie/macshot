@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.5.2] - 2026-03-16
+
+### Added
+- **Filled rectangle right-click menu** — right-click the filled rectangle tool to access stroke width and rounded corners toggle, matching the outlined rectangle tool.
+
+### Fixed
+- **Color picker toggle** — clicking the color button when the picker is already open now closes it instead of flickering closed and reopening.
+
 ## [2.5.1] - 2026-03-16
 
 ### Added

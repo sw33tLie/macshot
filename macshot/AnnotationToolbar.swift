@@ -119,7 +119,7 @@ class ToolbarLayout {
             var btn = ToolbarButton(action: .tool(tool), sfSymbol: symbol, label: nil, tooltip: tip)
             btn.isSelected = (tool == selectedTool)
             switch tool {
-            case .pencil, .line, .arrow, .rectangle, .ellipse, .marker, .number, .loupe:
+            case .pencil, .line, .arrow, .rectangle, .filledRectangle, .ellipse, .marker, .number, .loupe:
                 btn.hasContextMenu = true
             default:
                 break
