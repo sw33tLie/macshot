@@ -589,7 +589,7 @@ class OverlayView: NSView {
                 newRow = 99
             } else if (currentTool == .rectangle || currentTool == .filledRectangle) && roundedRectToggleRect.contains(point) {
                 newRow = 99
-            } else {
+            } else if currentTool != .filledRectangle {
                 for i in 0..<widths.count {
                     let rowY = strokePickerRect.maxY - padding - rowH * CGFloat(i + 1)
                     let rowRect = NSRect(x: strokePickerRect.minX, y: rowY, width: strokePickerRect.width, height: rowH)
@@ -1985,10 +1985,12 @@ class OverlayView: NSView {
         let padding: CGFloat = 6
         let showSmoothToggle = (currentTool == .pencil)
         let showRoundedToggle = (currentTool == .rectangle || currentTool == .filledRectangle)
+        let showWidthRows = (currentTool != .filledRectangle)
         let hasToggle = showSmoothToggle || showRoundedToggle
         let toggleRowH: CGFloat = hasToggle ? 32 : 0
-        let separatorH: CGFloat = hasToggle ? 5 : 0
-        let pickerHeight = rowH * CGFloat(widths.count) + padding * 2 + separatorH + toggleRowH
+        let separatorH: CGFloat = (hasToggle && showWidthRows) ? 5 : 0
+        let widthRowsHeight = showWidthRows ? rowH * CGFloat(widths.count) : 0
+        let pickerHeight = widthRowsHeight + padding * 2 + separatorH + toggleRowH
 
         // Anchor to the current tool button
         var anchorX = bottomBarRect.midX
@@ -2031,33 +2033,35 @@ class OverlayView: NSView {
         let labelW: CGFloat = 44   // fixed label column width
         let lineStartX = labelX + labelW + 8  // gap between label and preview
 
-        for (i, width) in widths.enumerated() {
-            let rowY = pickerRect.maxY - padding - rowH * CGFloat(i + 1)
-            let rowRect = NSRect(x: pickerRect.minX, y: rowY, width: pickerRect.width, height: rowH)
+        if showWidthRows {
+            for (i, width) in widths.enumerated() {
+                let rowY = pickerRect.maxY - padding - rowH * CGFloat(i + 1)
+                let rowRect = NSRect(x: pickerRect.minX, y: rowY, width: pickerRect.width, height: rowH)
 
-            if activeWidth == width {
-                ToolbarLayout.accentColor.withAlphaComponent(0.5).setFill()
-                NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
-            } else if i == hoveredStrokeRow {
-                NSColor.white.withAlphaComponent(0.15).setFill()
-                NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
+                if activeWidth == width {
+                    ToolbarLayout.accentColor.withAlphaComponent(0.5).setFill()
+                    NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
+                } else if i == hoveredStrokeRow {
+                    NSColor.white.withAlphaComponent(0.15).setFill()
+                    NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
+                }
+
+                // Label
+                let labelText = "\(Int(width))px"
+                let nameStr = labelText as NSString
+                let nameSize = nameStr.size(withAttributes: textAttrs)
+                nameStr.draw(at: NSPoint(x: labelX, y: rowRect.midY - nameSize.height / 2), withAttributes: textAttrs)
+
+                // Stroke preview line (all tools — no circle for number)
+                let lineY = rowRect.midY
+                let linePath = NSBezierPath()
+                linePath.move(to: NSPoint(x: lineStartX, y: lineY))
+                linePath.line(to: NSPoint(x: pickerRect.maxX - 10, y: lineY))
+                linePath.lineWidth = min(width, 14)
+                linePath.lineCapStyle = .round
+                NSColor.white.setStroke()
+                linePath.stroke()
             }
-
-            // Label
-            let labelText = "\(Int(width))px"
-            let nameStr = labelText as NSString
-            let nameSize = nameStr.size(withAttributes: textAttrs)
-            nameStr.draw(at: NSPoint(x: labelX, y: rowRect.midY - nameSize.height / 2), withAttributes: textAttrs)
-
-            // Stroke preview line (all tools — no circle for number)
-            let lineY = rowRect.midY
-            let linePath = NSBezierPath()
-            linePath.move(to: NSPoint(x: lineStartX, y: lineY))
-            linePath.line(to: NSPoint(x: pickerRect.maxX - 10, y: lineY))
-            linePath.lineWidth = min(width, 14)
-            linePath.lineCapStyle = .round
-            NSColor.white.setStroke()
-            linePath.stroke()
         }
 
         // Smooth toggle row (pencil only)
@@ -3627,6 +3631,7 @@ class OverlayView: NSView {
                     needsDisplay = true
                     return
                 }
+                if currentTool == .filledRectangle { needsDisplay = true; return }
                 let widths: [CGFloat] = [1, 2, 3, 5, 8, 12, 20]
                 let rowH: CGFloat = 30
                 let padding: CGFloat = 6

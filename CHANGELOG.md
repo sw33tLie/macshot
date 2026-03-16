@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.5.4] - 2026-03-16
+
+### Fixed
+- **Filled rectangle context menu** — right-click menu now shows only the rounded corners toggle (no stroke width rows, since filled rectangles have no border).
+
 ## [2.5.3] - 2026-03-16
 
 ### Fixed
