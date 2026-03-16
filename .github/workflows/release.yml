@@ -82,6 +82,7 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
+            MARKETING_VERSION="$VERSION" \
             build
 
       # ── 5. Sign the .app with Developer ID ────────────────────────────────
