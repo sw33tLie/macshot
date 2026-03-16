@@ -44,6 +44,7 @@ macshot lives in your menu bar and lets you capture, annotate, and share screens
 - **Output options** — copy to clipboard (`Cmd+C`), save to file (`Cmd+S`)
 - **Multi-monitor support** — captures all screens simultaneously
 - **Configurable hotkey** — change it in Preferences
+- **Automatic updates** — built-in update checking via [Sparkle](https://sparkle-project.org/); checks every 30 minutes or manually from the menu bar
 - **Lightweight** — ~8 MB memory at idle, menu bar only (no dock icon)
 
 ## Install
