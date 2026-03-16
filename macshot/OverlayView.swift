@@ -4839,6 +4839,10 @@ class OverlayView: NSView {
             undoStack.append(.added(annotation))
             redoStack.removeAll()
         }
+        // Update marker preview position so it doesn't jump back to the pre-drag location
+        if annotation.tool == .marker, let lastPt = annotation.points?.last {
+            markerCursorPoint = lastPt
+        }
         currentAnnotation = nil
         needsDisplay = true
     }

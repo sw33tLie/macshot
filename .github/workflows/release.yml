@@ -163,7 +163,9 @@ jobs:
           tar -xf /tmp/Sparkle.tar.xz -C /tmp/sparkle
 
           # Sign the DMG with Sparkle's EdDSA key
-          SIGN_OUTPUT=$(/tmp/sparkle/bin/sign_update MacShot.dmg --ed-key-file <(echo "$SPARKLE_PRIVATE_KEY"))
+          echo "$SPARKLE_PRIVATE_KEY" > /tmp/sparkle_key
+          SIGN_OUTPUT=$(/tmp/sparkle/bin/sign_update MacShot.dmg --ed-key-file /tmp/sparkle_key)
+          rm -f /tmp/sparkle_key
           echo "Sparkle signature output: $SIGN_OUTPUT"
 
           # Parse: sparkle:edSignature="..." length="..."
