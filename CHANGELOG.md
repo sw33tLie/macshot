@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.4.1] - 2026-03-16
+
+### Added
+- **Tool keyboard shortcuts** — single-key shortcuts active after selecting a region: `A` arrow, `L` line, `P` pencil, `M` marker, `R` rectangle, `T` text, `N` number, `B` blur, `X` pixelate, `I` color sampler, `S` select & edit, `E` open in editor (overlay only).
+
+### Fixed
+- **Delay button stays highlighted** — after using delay capture, the delay icon appeared active on the next capture but required an extra click to actually use. Delay state now always resets to off when opening a new capture.
+
 ## [2.4.0] - 2026-03-16
 
 ### Added

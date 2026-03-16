@@ -80,6 +80,8 @@ cp -R build/Build/Products/Release/macshot.app /Applications/
 
 ### Keyboard shortcuts
 
+**General**
+
 | Shortcut | Action |
 |---|---|
 | `Cmd+Shift+X` | Capture screen (configurable) |
@@ -88,12 +90,30 @@ cp -R build/Build/Products/Release/macshot.app /Applications/
 | `Cmd+S` | Save to file |
 | `Cmd+Z` | Undo |
 | `Cmd+Shift+Z` | Redo |
-| `Esc` | Cancel |
+| `Cmd+0` | Reset zoom to 1x |
+| `Esc` | Cancel / close popover |
+| `Delete` | Remove selected or hovered annotation |
 | `Tab` | Toggle window snap mode |
 | `F` | Capture full screen (snap mode) |
-| `Right-click` | Quick save/copy snapped window (snap mode) |
-| `Right-click` + drag | Quick save to file (no annotation) |
 | `Shift` (while drawing) | Constrain to straight lines / perfect shapes |
+| `Right-click` + drag | Quick save to file (no annotation) |
+
+**Tool shortcuts** (active after selecting a region)
+
+| Key | Tool |
+|---|---|
+| `A` | Arrow |
+| `L` | Line |
+| `P` | Pencil |
+| `M` | Marker / Highlighter |
+| `R` | Rectangle |
+| `T` | Text |
+| `N` | Numbered marker |
+| `B` | Blur |
+| `X` | Pixelate |
+| `I` | Color sampler |
+| `S` | Select & Edit (move/resize annotations) |
+| `E` | Open in Editor window (overlay only) |
 
 ### Permissions
 
