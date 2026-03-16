@@ -6,6 +6,7 @@ import CoreImage
 /// The image (with any overlay annotations baked in) is displayed in a fresh OverlayView
 /// that fills the entire window. selectionRect == bounds == image size, so all coordinate
 /// systems align trivially. No translation math needed.
+@MainActor
 class DetachedEditorWindowController: NSObject, NSWindowDelegate {
 
     private var window: NSWindow?

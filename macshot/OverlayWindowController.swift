@@ -18,6 +18,7 @@ protocol OverlayWindowControllerDelegate: AnyObject {
 
 /// Manages one fullscreen overlay per screen.
 /// Does NOT subclass NSWindowController to avoid AppKit retain-cycle issues.
+@MainActor
 class OverlayWindowController {
 
     weak var overlayDelegate: OverlayWindowControllerDelegate?
