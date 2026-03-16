@@ -42,6 +42,7 @@ class Annotation {
     var isUnderline: Bool = false
     var isStrikethrough: Bool = false
     var controlPoint: NSPoint? = nil  // optional bend point for line/arrow
+    var isRounded: Bool = false       // rounded corners for rectangle/filledRectangle
 
     init(tool: AnnotationTool, startPoint: NSPoint, endPoint: NSPoint, color: NSColor, strokeWidth: CGFloat) {
         self.tool = tool
@@ -67,6 +68,7 @@ class Annotation {
         c.isUnderline = isUnderline
         c.isStrikethrough = isStrikethrough
         c.controlPoint = controlPoint
+        c.isRounded = isRounded
         return c
     }
 
@@ -345,11 +347,12 @@ class Annotation {
     private func drawRectangle(filled: Bool) {
         let rect = boundingRect
         guard rect.width > 0, rect.height > 0 else { return }
+        let cornerRadius: CGFloat = isRounded ? min(rect.width, rect.height) * 0.2 : 0
         if filled {
             color.setFill()
-            NSBezierPath(rect: rect).fill()
+            NSBezierPath(roundedRect: rect, xRadius: cornerRadius, yRadius: cornerRadius).fill()
         } else {
-            let path = NSBezierPath(rect: rect)
+            let path = NSBezierPath(roundedRect: rect, xRadius: cornerRadius, yRadius: cornerRadius)
             path.lineWidth = strokeWidth
             color.setStroke()
             path.stroke()

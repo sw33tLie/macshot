@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.5.1] - 2026-03-16
+
+### Added
+- **Rounded corners toggle** — right-click the rectangle or filled rectangle tool to toggle rounded corners on/off. Setting persists across restarts. Corner radius scales proportionally to the rectangle size.
+
+### Fixed
+- **Marker preview circle position** — the marker size preview circle no longer jumps back to the start of the stroke when releasing the mouse button without moving.
+
 ## [2.5.0] - 2026-03-16
 
 ### Added

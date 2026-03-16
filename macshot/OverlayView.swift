@@ -198,6 +198,9 @@ class OverlayView: NSView {
 
     // Pencil smoothing — persisted in UserDefaults
     private var pencilSmoothEnabled: Bool = UserDefaults.standard.object(forKey: "pencilSmoothEnabled") as? Bool ?? true
+    // Rounded rectangle corners — persisted in UserDefaults
+    private var roundedRectEnabled: Bool = UserDefaults.standard.object(forKey: "roundedRectEnabled") as? Bool ?? false
+    private var roundedRectToggleRect: NSRect = .zero
 
     // Delay picker popover
     private var showDelayPicker: Bool = false
@@ -583,6 +586,8 @@ class OverlayView: NSView {
             let rowH: CGFloat = 30; let padding: CGFloat = 6
             var newRow = -1
             if currentTool == .pencil && strokeSmoothToggleRect.contains(point) {
+                newRow = 99
+            } else if (currentTool == .rectangle || currentTool == .filledRectangle) && roundedRectToggleRect.contains(point) {
                 newRow = 99
             } else {
                 for i in 0..<widths.count {
@@ -1979,8 +1984,10 @@ class OverlayView: NSView {
         let pickerWidth: CGFloat = 140
         let padding: CGFloat = 6
         let showSmoothToggle = (currentTool == .pencil)
-        let toggleRowH: CGFloat = showSmoothToggle ? 32 : 0
-        let separatorH: CGFloat = showSmoothToggle ? 5 : 0
+        let showRoundedToggle = (currentTool == .rectangle || currentTool == .filledRectangle)
+        let hasToggle = showSmoothToggle || showRoundedToggle
+        let toggleRowH: CGFloat = hasToggle ? 32 : 0
+        let separatorH: CGFloat = hasToggle ? 5 : 0
         let pickerHeight = rowH * CGFloat(widths.count) + padding * 2 + separatorH + toggleRowH
 
         // Anchor to the current tool button
@@ -2096,6 +2103,47 @@ class OverlayView: NSView {
             }
         } else {
             strokeSmoothToggleRect = .zero
+        }
+
+        // Rounded corners toggle (rectangle / filled rectangle)
+        if showRoundedToggle {
+            let sepY = pickerRect.minY + toggleRowH
+            NSColor.white.withAlphaComponent(0.12).setFill()
+            NSBezierPath(rect: NSRect(x: pickerRect.minX + 8, y: sepY, width: pickerRect.width - 16, height: 1)).fill()
+
+            let toggleRowRect = NSRect(x: pickerRect.minX, y: pickerRect.minY, width: pickerRect.width, height: toggleRowH)
+            roundedRectToggleRect = toggleRowRect
+
+            if hoveredStrokeRow == 99 {
+                NSColor.white.withAlphaComponent(0.15).setFill()
+                NSBezierPath(roundedRect: toggleRowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
+            }
+
+            let toggleAttrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 11, weight: .medium),
+                .foregroundColor: NSColor.white,
+            ]
+            let label = "Rounded corners" as NSString
+            let labelSize = label.size(withAttributes: toggleAttrs)
+            label.draw(at: NSPoint(x: toggleRowRect.minX + 10, y: toggleRowRect.midY - labelSize.height / 2), withAttributes: toggleAttrs)
+
+            let checkSize: CGFloat = 14
+            let checkX = toggleRowRect.maxX - checkSize - 10
+            let checkY = toggleRowRect.midY - checkSize / 2
+            let checkRect = NSRect(x: checkX, y: checkY, width: checkSize, height: checkSize)
+            NSColor.white.withAlphaComponent(roundedRectEnabled ? 0.9 : 0.25).setFill()
+            NSBezierPath(roundedRect: checkRect, xRadius: 3, yRadius: 3).fill()
+            if roundedRectEnabled {
+                let checkAttrs: [NSAttributedString.Key: Any] = [
+                    .font: NSFont.systemFont(ofSize: 10, weight: .bold),
+                    .foregroundColor: NSColor.black,
+                ]
+                let tick = "✓" as NSString
+                let tickSize = tick.size(withAttributes: checkAttrs)
+                tick.draw(at: NSPoint(x: checkRect.midX - tickSize.width / 2, y: checkRect.midY - tickSize.height / 2), withAttributes: checkAttrs)
+            }
+        } else {
+            roundedRectToggleRect = .zero
         }
     }
 
@@ -3567,6 +3615,13 @@ class OverlayView: NSView {
                     needsDisplay = true
                     return
                 }
+                // Rounded corners toggle (rectangle / filled rectangle)
+                if (currentTool == .rectangle || currentTool == .filledRectangle) && roundedRectToggleRect.contains(point) {
+                    roundedRectEnabled.toggle()
+                    UserDefaults.standard.set(roundedRectEnabled, forKey: "roundedRectEnabled")
+                    needsDisplay = true
+                    return
+                }
                 let widths: [CGFloat] = [1, 2, 3, 5, 8, 12, 20]
                 let rowH: CGFloat = 30
                 let padding: CGFloat = 6
@@ -4774,6 +4829,9 @@ class OverlayView: NSView {
         if currentTool == .pixelate || currentTool == .blur {
             annotation.sourceImage = compositedImage()
             annotation.sourceImageBounds = bounds
+        }
+        if (currentTool == .rectangle || currentTool == .filledRectangle) && roundedRectEnabled {
+            annotation.isRounded = true
         }
         currentAnnotation = annotation
     }
