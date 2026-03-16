@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.5.5] - 2026-03-16
+
+### Fixed
+- **Floating thumbnail aspect ratio** — very wide or very tall screenshots no longer appear stretched in the thumbnail preview. The thumbnail now always preserves the original aspect ratio while fitting within size bounds.
+
 ## [2.5.4] - 2026-03-16
 
 ### Fixed

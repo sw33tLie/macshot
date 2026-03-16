@@ -27,18 +27,39 @@ class FloatingThumbnailController: NSObject, NSDraggingSource {
         let screen = NSScreen.main ?? NSScreen.screens[0]
         let screenFrame = screen.visibleFrame
 
-        // Max 320px wide, maintain aspect ratio, cap height to screen
+        // Fit thumbnail within max bounds, always preserving aspect ratio
         let maxWidth: CGFloat = 320
+        let minWidth: CGFloat = 120
+        let minHeight: CGFloat = 80
         let padding: CGFloat = 16
         let maxHeight: CGFloat = screenFrame.height - padding * 2
 
-        let widthScale  = min(1.0, maxWidth  / image.size.width)
-        let heightScale = min(1.0, maxHeight / (image.size.height * widthScale)) // cap if tall
-        let scale = widthScale * heightScale
-        let thumbSize = NSSize(
-            width:  max(200, image.size.width  * scale),
-            height: max(120, image.size.height * scale)
-        )
+        let imgW = image.size.width
+        let imgH = image.size.height
+        guard imgW > 0 && imgH > 0 else { return }
+        let aspect = imgW / imgH
+
+        // Scale to fit within maxWidth x maxHeight
+        var w = min(imgW, maxWidth)
+        var h = w / aspect
+        if h > maxHeight {
+            h = maxHeight
+            w = h * aspect
+        }
+        // Enforce minimums (still preserving aspect ratio)
+        if w < minWidth {
+            w = minWidth
+            h = w / aspect
+        }
+        if h < minHeight {
+            h = minHeight
+            w = h * aspect
+        }
+        // Final cap in case minimums pushed us over max
+        if w > maxWidth  { w = maxWidth;  h = w / aspect }
+        if h > maxHeight { h = maxHeight; w = h * aspect }
+
+        let thumbSize = NSSize(width: ceil(w), height: ceil(h))
 
         // Clamp Y so the thumbnail always fits within the visible screen
         let clampedY = min(y, screenFrame.maxY - thumbSize.height - padding)
