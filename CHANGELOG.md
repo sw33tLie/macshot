@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.5.0] - 2026-03-16
+
+### Added
+- **Auto-updates via Sparkle** — macshot now checks for updates automatically every 30 minutes. Right-click the menu bar icon and choose "Check for Updates..." to check manually. Updates are signed with EdDSA and verified before install.
+
 ## [2.4.1] - 2026-03-16
 
 ### Added

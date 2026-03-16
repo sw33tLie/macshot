@@ -1,9 +1,11 @@
 import Cocoa
+import Sparkle
 
 @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var statusItem: NSStatusItem!
+    private var updaterController: SPUStandardUpdaterController!
     private var overlayControllers: [OverlayWindowController] = []
     private var preferencesController: PreferencesWindowController?
     private var onboardingController: PermissionOnboardingController?
@@ -23,6 +25,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var scrollCaptureOverlayController: OverlayWindowController?
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
         setupMainMenu()
         setupStatusBar()
         registerHotkey()
@@ -113,6 +116,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let prefsItem = NSMenuItem(title: "Preferences...", action: #selector(openPreferences), keyEquivalent: ",")
         prefsItem.target = self
         menu.addItem(prefsItem)
+
+        let updateItem = NSMenuItem(title: "Check for Updates...", action: #selector(SPUStandardUpdaterController.checkForUpdates(_:)), keyEquivalent: "")
+        updateItem.target = updaterController
+        menu.addItem(updateItem)
 
         menu.addItem(NSMenuItem.separator())
 

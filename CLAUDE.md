@@ -223,7 +223,7 @@ Copy to clipboard, Save to file (PNG/JPEG), Pin (floating always-on-top), OCR wi
 
 ## Coding Conventions
 
-- Pure AppKit, no SwiftUI, no external dependencies (Apple frameworks only: ScreenCaptureKit, Vision, CoreImage, AVFoundation)
+- Pure AppKit, no SwiftUI (Apple frameworks: ScreenCaptureKit, Vision, CoreImage, AVFoundation + Sparkle for auto-updates)
 - All overlay/drawing in `draw(_:)` overrides via Core Graphics / NSBezierPath
 - Toolbars drawn inline in OverlayView (not separate NSPanel windows) — avoids z-order issues
 - SF Symbols for toolbar icons
