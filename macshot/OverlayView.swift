@@ -141,12 +141,26 @@ class OverlayView: NSView {
     // Text editing
     private var textEditView: NSTextView?
     private var textScrollView: NSScrollView?
-    private var textControlBar: NSView?
-    private var textFontSize: CGFloat = 16
+    private var textFontSize: CGFloat = 20
     private var textBold: Bool = false
     private var textItalic: Bool = false
     private var textUnderline: Bool = false
     private var textStrikethrough: Bool = false
+    private var textFontFamily: String = UserDefaults.standard.string(forKey: "textFontFamily") ?? "System"
+
+    // Text options row rects (drawn in secondary toolbar)
+    private var textBoldRect: NSRect = .zero
+    private var textItalicRect: NSRect = .zero
+    private var textUnderlineRect: NSRect = .zero
+    private var textStrikethroughRect: NSRect = .zero
+    private var textSizeDecRect: NSRect = .zero
+    private var textSizeIncRect: NSRect = .zero
+    private var textFontDropdownRect: NSRect = .zero
+    private var textConfirmRect: NSRect = .zero
+    private var textCancelRect: NSRect = .zero
+    private var showFontPicker: Bool = false
+    private var fontPickerRect: NSRect = .zero
+    private var fontPickerItemRects: [NSRect] = []
 
     // Toolbars (drawn inline)
     private var bottomButtons: [ToolbarButton] = []
@@ -167,6 +181,34 @@ class OverlayView: NSView {
     // Beautify
     private(set) var beautifyEnabled: Bool = UserDefaults.standard.bool(forKey: "beautifyEnabled")
     private(set) var beautifyStyleIndex: Int = UserDefaults.standard.integer(forKey: "beautifyStyleIndex")
+    private(set) var beautifyMode: BeautifyMode = BeautifyMode(rawValue: UserDefaults.standard.integer(forKey: "beautifyMode")) ?? .window
+    private(set) var beautifyPadding: CGFloat = {
+        let v = UserDefaults.standard.object(forKey: "beautifyPadding") as? Double
+        return v != nil ? CGFloat(v!) : 48
+    }()
+    private(set) var beautifyCornerRadius: CGFloat = {
+        let v = UserDefaults.standard.object(forKey: "beautifyCornerRadius") as? Double
+        return v != nil ? CGFloat(v!) : 10
+    }()
+    private(set) var beautifyShadowRadius: CGFloat = {
+        let v = UserDefaults.standard.object(forKey: "beautifyShadowRadius") as? Double
+        return v != nil ? CGFloat(v!) : 20
+    }()
+    private(set) var beautifyBgRadius: CGFloat = {
+        let v = UserDefaults.standard.object(forKey: "beautifyBgRadius") as? Double
+        return v != nil ? CGFloat(v!) : 8
+    }()
+
+    var beautifyConfig: BeautifyConfig {
+        BeautifyConfig(
+            mode: beautifyMode,
+            styleIndex: beautifyStyleIndex,
+            padding: beautifyPadding,
+            cornerRadius: beautifyCornerRadius,
+            shadowRadius: beautifyShadowRadius,
+            bgRadius: beautifyBgRadius
+        )
+    }
 
     // Cursor enforcement timer — forces crosshair until selection is made
     private var cursorTimer: Timer?
@@ -189,6 +231,35 @@ class OverlayView: NSView {
     private var showBeautifyPicker: Bool = false
     private var beautifyPickerRect: NSRect = .zero
     private var hoveredBeautifyRow: Int = -1
+    // Beautify panel slider hit rects and dragging state
+    private var beautifyPaddingSliderRect: NSRect = .zero
+    private var beautifyCornerSliderRect: NSRect = .zero
+    private var beautifyShadowSliderRect: NSRect = .zero
+    private var beautifyModeWindowRect: NSRect = .zero
+    private var beautifyModeRoundedRect: NSRect = .zero
+    private var isDraggingBeautifySlider: Bool = false
+    private var activeBeautifySlider: Int = -1  // 0=padding, 1=corner, 2=shadow, 3=bgRadius
+    private var beautifyBgRadiusSliderRect: NSRect = .zero
+    private var beautifySwatchRects: [NSRect] = []
+    private var beautifyToolbarAnimProgress: CGFloat = 1.0  // 0..1, 1 = fully settled
+    private var beautifyToolbarAnimTimer: Timer?
+    private var beautifyToolbarAnimTarget: Bool = false  // target beautify state
+
+    // Tool options row (second row below bottom bar)
+    private var optionsRowRect: NSRect = .zero
+    private var optionsStrokeSliderRect: NSRect = .zero
+    private var optionsSmoothToggleRect: NSRect = .zero
+    private var optionsRoundedToggleRect: NSRect = .zero
+    private var isDraggingOptionsStroke: Bool = false
+    private var showBeautifyInOptionsRow: Bool = false  // true when user clicks beautify button to adjust settings
+    private var optionsLineStyleRects: [NSRect] = []  // hit rects for line style buttons
+    private var optionsCornerRadiusSliderRect: NSRect = .zero
+    private var isDraggingOptionsCornerRadius: Bool = false
+    private var currentLineStyle: LineStyle = LineStyle(rawValue: UserDefaults.standard.integer(forKey: "currentLineStyle")) ?? .solid
+    private var currentRectCornerRadius: CGFloat = {
+        let v = UserDefaults.standard.object(forKey: "currentRectCornerRadius") as? Double
+        return v != nil ? CGFloat(v!) : 0
+    }()
 
     // Stroke width picker popover
     private var showStrokePicker: Bool = false
@@ -799,9 +870,18 @@ class OverlayView: NSView {
             addCursorRect(colorPickerRect, cursor: .arrow)
         }
 
-        // Beautify/Stroke pickers — pointing hand for rows
+        // Beautify panel — arrow cursor for entire panel
+        if showBeautifyPicker && beautifyPickerRect.width > 0 {
+            addCursorRect(beautifyPickerRect, cursor: .arrow)
+        }
+
+        // Tool options row — arrow cursor
+        if optionsRowRect.width > 0 {
+            addCursorRect(optionsRowRect, cursor: .arrow)
+        }
+
+        // Stroke pickers — pointing hand for rows
         let popups: [(Bool, NSRect, Int)] = [
-            (showBeautifyPicker, beautifyPickerRect, BeautifyRenderer.styles.count),
             (showStrokePicker, strokePickerRect, 7) // 7 widths
         ]
         for (isVisible, rect, count) in popups {
@@ -949,7 +1029,8 @@ class OverlayView: NSView {
         if isDetached {
             let padLeft:   CGFloat = 8
             let padRight:  CGFloat = 52  // right toolbar width
-            let padBottom: CGFloat = 52  // bottom toolbar height
+            let optionsRowExtra: CGFloat = toolHasOptionsRow ? 36 : 0  // 34 row + 2 gap
+            let padBottom: CGFloat = 52 + optionsRowExtra  // bottom toolbar + options row
             let padTop:    CGFloat = 8
             let availW = bounds.width  - padLeft - padRight
             let availH = bounds.height - padBottom - padTop
@@ -1066,8 +1147,26 @@ class OverlayView: NSView {
 
             context.restoreGraphicsState()
 
-            // Selection border — hidden in editor mode, red during scroll capture, purple otherwise
-            if !isDetached {
+            // Live beautify preview — draw gradient background, shadow, and rounded image around selection
+            if beautifyEnabled && state == .selected && !isDetached && !isScrollCapturing && !isRecording {
+                drawBeautifyPreview(context: context)
+
+                // Re-draw annotation controls on top of the beautify preview so they stay visible.
+                if !(isRecording && !isAnnotating) {
+                    context.saveGraphicsState()
+                    applyZoomTransform(to: context)
+                    if let selected = selectedAnnotation, currentTool == .select {
+                        drawAnnotationControls(for: selected)
+                    } else if let hovered = hoveredAnnotation, [AnnotationTool.pencil, .arrow, .line, .rectangle, .filledRectangle, .ellipse].contains(currentTool) {
+                        drawAnnotationControls(for: hovered)
+                    }
+                    context.restoreGraphicsState()
+                }
+            }
+
+            // Selection border — hidden in editor mode and when beautify preview is active,
+            // red during scroll capture, purple otherwise
+            if !isDetached && !(beautifyEnabled && state == .selected && !isScrollCapturing && !isRecording) {
                 let borderPath = NSBezierPath(rect: selectionRect)
                 borderPath.lineWidth = isScrollCapturing ? 2.5 : 2.0
                 (isScrollCapturing ? NSColor.systemRed : ToolbarLayout.accentColor).setStroke()
@@ -1095,6 +1194,12 @@ class OverlayView: NSView {
                 ToolbarLayout.drawToolbar(barRect: bottomBarRect, buttons: bottomButtons, selectionSize: selectionRect.size)
                 ToolbarLayout.drawToolbar(barRect: rightBarRect, buttons: rightButtons, selectionSize: nil)
 
+                // Tool options row (second row below/above bottom bar)
+                if toolHasOptionsRow {
+                    drawToolOptionsRow()
+                } else {
+                    optionsRowRect = .zero
+                }
 
                 // Color picker popover
                 if showColorPicker {
@@ -1185,6 +1290,12 @@ class OverlayView: NSView {
 
     private func drawHoveredTooltip() {
         guard hoveredButtonIndex >= 0 else { return }
+
+        // Hide tooltip when any picker/popover is open (they overlap)
+        if showDelayPicker || showUploadConfirmPicker || showRedactTypePicker
+            || showTranslatePicker || showStrokePicker || showLoupeSizePicker || showBeautifyPicker {
+            return
+        }
 
         // Find the hovered button
         var btn: ToolbarButton?
@@ -1916,12 +2027,23 @@ class OverlayView: NSView {
 
     private func drawBeautifyPicker() {
         let styles = BeautifyRenderer.styles
-        let rowH: CGFloat = 28
-        let pickerWidth: CGFloat = 130
-        let padding: CGFloat = 6
-        let pickerHeight = rowH * CGFloat(styles.count) + padding * 2
+        let pickerWidth: CGFloat = 200
+        let pad: CGFloat = 8
+        let labelH: CGFloat = 16
+        let sliderH: CGFloat = 22
+        let swatchSize: CGFloat = 26
+        let swatchSpacing: CGFloat = 4
+        let modeH: CGFloat = 28
+        let sectionGap: CGFloat = 8
 
-        // Anchor to the beautify button in bottom bar
+        // Calculate height: mode toggle + 4 sliders + swatch grid
+        let swatchRows = Int(ceil(Double(styles.count) / 3.0))
+        let swatchGridH = CGFloat(swatchRows) * (swatchSize + swatchSpacing)
+        let pickerHeight = pad + modeH + sectionGap
+            + (labelH + sliderH + sectionGap) * 4  // padding, corner, shadow, bg radius sliders
+            + labelH + swatchGridH + pad
+
+        // Anchor to the beautify button
         var anchorRect = NSRect.zero
         for btn in bottomButtons {
             if case .beautify = btn.action {
@@ -1930,7 +2052,7 @@ class OverlayView: NSView {
             }
         }
 
-        let pickerX = anchorRect.midX - pickerWidth / 2
+        let pickerX = max(bounds.minX + 4, min(anchorRect.midX - pickerWidth / 2, bounds.maxX - pickerWidth - 4))
         var pickerY = anchorRect.maxY + 4
         if pickerY + pickerHeight > bounds.maxY - 4 {
             pickerY = anchorRect.minY - pickerHeight - 4
@@ -1942,40 +2064,1106 @@ class OverlayView: NSView {
 
         // Background
         ToolbarLayout.bgColor.setFill()
-        NSBezierPath(roundedRect: pickerRect, xRadius: 6, yRadius: 6).fill()
+        NSBezierPath(roundedRect: pickerRect, xRadius: 8, yRadius: 8).fill()
 
-        // Rows — drawn top-to-bottom (index 0 at top)
-        let textAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 12, weight: .medium),
+        let labelAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 10, weight: .semibold),
+            .foregroundColor: NSColor.white.withAlphaComponent(0.6),
+        ]
+
+        let insetX = pickerRect.minX + pad
+        let contentW = pickerWidth - pad * 2
+        var curY = pickerRect.maxY - pad
+
+        // ── Mode toggle: Window / Rounded ──
+        curY -= modeH
+        let halfW = (contentW - 4) / 2
+        let windowBtnRect = NSRect(x: insetX, y: curY, width: halfW, height: modeH)
+        let roundedBtnRect = NSRect(x: insetX + halfW + 4, y: curY, width: halfW, height: modeH)
+        beautifyModeWindowRect = windowBtnRect
+        beautifyModeRoundedRect = roundedBtnRect
+
+        let modeAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 11, weight: .medium),
             .foregroundColor: NSColor.white,
         ]
 
+        // Window button
+        (beautifyMode == .window ? ToolbarLayout.accentColor.withAlphaComponent(0.6) : NSColor.white.withAlphaComponent(0.12)).setFill()
+        NSBezierPath(roundedRect: windowBtnRect, xRadius: 5, yRadius: 5).fill()
+        let wStr = "Window" as NSString
+        let wSize = wStr.size(withAttributes: modeAttrs)
+        wStr.draw(at: NSPoint(x: windowBtnRect.midX - wSize.width / 2, y: windowBtnRect.midY - wSize.height / 2), withAttributes: modeAttrs)
+
+        // Rounded button
+        (beautifyMode == .rounded ? ToolbarLayout.accentColor.withAlphaComponent(0.6) : NSColor.white.withAlphaComponent(0.12)).setFill()
+        NSBezierPath(roundedRect: roundedBtnRect, xRadius: 5, yRadius: 5).fill()
+        let rStr = "Rounded" as NSString
+        let rSize = rStr.size(withAttributes: modeAttrs)
+        rStr.draw(at: NSPoint(x: roundedBtnRect.midX - rSize.width / 2, y: roundedBtnRect.midY - rSize.height / 2), withAttributes: modeAttrs)
+
+        curY -= sectionGap
+
+        // ── Padding slider ──
+        curY -= labelH
+        ("Padding" as NSString).draw(at: NSPoint(x: insetX, y: curY), withAttributes: labelAttrs)
+        curY -= sliderH
+        beautifyPaddingSliderRect = NSRect(x: insetX, y: curY, width: contentW, height: sliderH)
+        drawBeautifySlider(rect: beautifyPaddingSliderRect, value: beautifyPadding, min: 16, max: 96)
+        curY -= sectionGap
+
+        // ── Corner Radius slider ──
+        curY -= labelH
+        ("Corner Radius" as NSString).draw(at: NSPoint(x: insetX, y: curY), withAttributes: labelAttrs)
+        curY -= sliderH
+        beautifyCornerSliderRect = NSRect(x: insetX, y: curY, width: contentW, height: sliderH)
+        drawBeautifySlider(rect: beautifyCornerSliderRect, value: beautifyCornerRadius, min: 0, max: 30)
+        curY -= sectionGap
+
+        // ── Shadow slider ──
+        curY -= labelH
+        ("Shadow" as NSString).draw(at: NSPoint(x: insetX, y: curY), withAttributes: labelAttrs)
+        curY -= sliderH
+        beautifyShadowSliderRect = NSRect(x: insetX, y: curY, width: contentW, height: sliderH)
+        drawBeautifySlider(rect: beautifyShadowSliderRect, value: beautifyShadowRadius, min: 0, max: 40)
+        curY -= sectionGap
+
+        // ── Background Radius slider ──
+        curY -= labelH
+        ("Background Radius" as NSString).draw(at: NSPoint(x: insetX, y: curY), withAttributes: labelAttrs)
+        curY -= sliderH
+        beautifyBgRadiusSliderRect = NSRect(x: insetX, y: curY, width: contentW, height: sliderH)
+        drawBeautifySlider(rect: beautifyBgRadiusSliderRect, value: beautifyBgRadius, min: 0, max: 30)
+        curY -= sectionGap
+
+        // ── Background swatches ──
+        curY -= labelH
+        ("Background" as NSString).draw(at: NSPoint(x: insetX, y: curY), withAttributes: labelAttrs)
+        curY -= swatchSpacing
+
+        beautifySwatchRects = []
         for (i, style) in styles.enumerated() {
-            let rowY = pickerRect.maxY - padding - rowH * CGFloat(i + 1)
-            let rowRect = NSRect(x: pickerRect.minX, y: rowY, width: pickerRect.width, height: rowH)
+            let col = i % 3
+            let row = i / 3
+            let sx = insetX + CGFloat(col) * (swatchSize + swatchSpacing)
+            let sy = curY - CGFloat(row + 1) * (swatchSize + swatchSpacing)
+            let swatchRect = NSRect(x: sx, y: sy, width: swatchSize, height: swatchSize)
+            beautifySwatchRects.append(swatchRect)
 
-            // Highlight selected row
+            let swatchPath = NSBezierPath(roundedRect: swatchRect, xRadius: 5, yRadius: 5)
+            if let grad = NSGradient(colors: style.stops.map { $0.0 }, atLocations: style.stops.map { $0.1 }, colorSpace: .deviceRGB) {
+                grad.draw(in: swatchPath, angle: style.angle - 90)  // NSGradient angle: 0=up, CG angle: 0=right
+            }
+
+            // Selection ring
             if i == beautifyStyleIndex % styles.count {
-                ToolbarLayout.accentColor.withAlphaComponent(0.5).setFill()
-                NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
-            } else if i == hoveredBeautifyRow {
-                // Hover highlight
-                NSColor.white.withAlphaComponent(0.15).setFill()
-                NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
+                ToolbarLayout.accentColor.setStroke()
+                let ring = NSBezierPath(roundedRect: swatchRect.insetBy(dx: -2, dy: -2), xRadius: 6, yRadius: 6)
+                ring.lineWidth = 2
+                ring.stroke()
             }
-
-            // Gradient swatch (mini 2-color pill)
-            let swatchRect = NSRect(x: rowRect.minX + 8, y: rowRect.midY - 7, width: 20, height: 14)
-            let swatchPath = NSBezierPath(roundedRect: swatchRect, xRadius: 3, yRadius: 3)
-            if let grad = NSGradient(starting: style.colors.0, ending: style.colors.1) {
-                grad.draw(in: swatchPath, angle: 45)
-            }
-
-            // Style name
-            let nameStr = style.name as NSString
-            let nameSize = nameStr.size(withAttributes: textAttrs)
-            nameStr.draw(at: NSPoint(x: rowRect.minX + 36, y: rowRect.midY - nameSize.height / 2), withAttributes: textAttrs)
         }
+    }
+
+    private func drawBeautifySlider(rect: NSRect, value: CGFloat, min minVal: CGFloat, max maxVal: CGFloat) {
+        let trackH: CGFloat = 4
+        let knobR: CGFloat = 7
+        let trackY = rect.midY - trackH / 2
+        let trackRect = NSRect(x: rect.minX, y: trackY, width: rect.width, height: trackH)
+
+        // Track background
+        NSColor.white.withAlphaComponent(0.2).setFill()
+        NSBezierPath(roundedRect: trackRect, xRadius: 2, yRadius: 2).fill()
+
+        // Filled portion
+        let frac = (value - minVal) / (maxVal - minVal)
+        let filledW = rect.width * frac
+        let filledRect = NSRect(x: rect.minX, y: trackY, width: filledW, height: trackH)
+        ToolbarLayout.accentColor.setFill()
+        NSBezierPath(roundedRect: filledRect, xRadius: 2, yRadius: 2).fill()
+
+        // Knob
+        let knobX = rect.minX + filledW
+        let knobCenter = NSPoint(x: knobX, y: rect.midY)
+        let knobRect = NSRect(x: knobCenter.x - knobR, y: knobCenter.y - knobR, width: knobR * 2, height: knobR * 2)
+        NSColor.white.setFill()
+        NSBezierPath(ovalIn: knobRect).fill()
+        NSColor.white.withAlphaComponent(0.4).setStroke()
+        let knobBorder = NSBezierPath(ovalIn: knobRect.insetBy(dx: 0.5, dy: 0.5))
+        knobBorder.lineWidth = 0.5
+        knobBorder.stroke()
+    }
+
+    /// The expanded rect including beautify padding (for live preview).
+    /// Returns selectionRect if beautify is off.
+    var beautifyPreviewRect: NSRect {
+        guard beautifyEnabled else { return selectionRect }
+        let config = beautifyConfig
+        let pad = config.padding
+        let shadowBleed = config.shadowRadius + min(config.shadowRadius * 0.4, 10)
+        let titleBarH: CGFloat = config.mode == .window ? 28 : 0
+        return NSRect(
+            x: selectionRect.minX - pad - shadowBleed,
+            y: selectionRect.minY - pad - shadowBleed,
+            width: selectionRect.width + pad * 2 + shadowBleed * 2,
+            height: selectionRect.height + titleBarH + pad * 2 + shadowBleed * 2
+        )
+    }
+
+    private func drawBeautifyPreview(context: NSGraphicsContext) {
+        let config = beautifyConfig
+        let pad = config.padding
+        let cornerRadius = config.cornerRadius
+        let shadowRadius = config.shadowRadius
+        let shadowOffset = min(shadowRadius * 0.4, 10)
+
+        // Compute the expanded frame around the selection.
+        // Shadow extends downward (negative Y in AppKit), so expand the origin down.
+        let shadowBleed = shadowRadius + shadowOffset
+        let expandedRect: NSRect
+        if config.mode == .window {
+            let titleBarH: CGFloat = 28
+            expandedRect = NSRect(
+                x: selectionRect.minX - pad - shadowBleed,
+                y: selectionRect.minY - pad - shadowBleed,
+                width: selectionRect.width + pad * 2 + shadowBleed * 2,
+                height: selectionRect.height + titleBarH + pad * 2 + shadowBleed * 2
+            )
+        } else {
+            expandedRect = NSRect(
+                x: selectionRect.minX - pad - shadowBleed,
+                y: selectionRect.minY - pad - shadowBleed,
+                width: selectionRect.width + pad * 2 + shadowBleed * 2,
+                height: selectionRect.height + pad * 2 + shadowBleed * 2
+            )
+        }
+
+        // Clear the dark overlay for the expanded area to make the preview visible
+        context.saveGraphicsState()
+        // Draw over the dark overlay with the screenshot in the expanded area, then gradient on top
+        // First: re-draw the screenshot in the expanded area so we erase the dark overlay
+        context.cgContext.saveGState()
+        NSBezierPath(rect: expandedRect).addClip()
+        // Redraw the full screenshot to "erase" the dark overlay in this area
+        if let image = screenshotImage {
+            image.draw(in: bounds, from: .zero, operation: .copy, fraction: 1.0)
+        }
+        // Now draw the dark overlay back (so we have a clean base)
+        NSColor.black.withAlphaComponent(0.45).setFill()
+        NSBezierPath(rect: expandedRect).fill()
+        context.cgContext.restoreGState()
+
+        // Position the image/window centered within the expanded rect (not affected by shadow bleed)
+        let innerX = selectionRect.minX - pad
+        let innerY = selectionRect.minY - pad
+
+        // Draw gradient background (inner rect without shadow bleed)
+        let bgRect: NSRect
+        if config.mode == .window {
+            let titleBarH: CGFloat = 28
+            bgRect = NSRect(x: innerX, y: innerY, width: selectionRect.width + pad * 2, height: selectionRect.height + titleBarH + pad * 2)
+        } else {
+            bgRect = NSRect(x: innerX, y: innerY, width: selectionRect.width + pad * 2, height: selectionRect.height + pad * 2)
+        }
+        context.cgContext.saveGState()
+        let bgPath = NSBezierPath(roundedRect: bgRect, xRadius: config.bgRadius, yRadius: config.bgRadius)
+        bgPath.addClip()
+        BeautifyRenderer.drawGradientBackground(in: bgRect, config: config, context: context.cgContext)
+        context.cgContext.restoreGState()
+
+        // Compute the image rect inside the expanded frame
+        let imageRect: NSRect
+        let windowRect: NSRect
+
+        if config.mode == .window {
+            let titleBarH: CGFloat = 28
+            let windowW = selectionRect.width
+            let windowH = selectionRect.height + titleBarH
+            windowRect = NSRect(
+                x: innerX + pad,
+                y: innerY + pad,
+                width: windowW,
+                height: windowH
+            )
+            imageRect = NSRect(
+                x: windowRect.minX,
+                y: windowRect.minY,
+                width: windowW,
+                height: windowH - titleBarH
+            )
+        } else {
+            imageRect = NSRect(
+                x: innerX + pad,
+                y: innerY + pad,
+                width: selectionRect.width,
+                height: selectionRect.height
+            )
+            windowRect = imageRect
+        }
+
+        // Drop shadow
+        if shadowRadius > 0 {
+            NSGraphicsContext.saveGraphicsState()
+            let shadow = NSShadow()
+            shadow.shadowColor = NSColor.black.withAlphaComponent(0.35)
+            shadow.shadowBlurRadius = shadowRadius
+            shadow.shadowOffset = NSSize(width: 0, height: -shadowOffset)
+            shadow.set()
+            NSColor.white.setFill()
+            NSBezierPath(roundedRect: windowRect, xRadius: cornerRadius, yRadius: cornerRadius).fill()
+            NSGraphicsContext.restoreGraphicsState()
+        }
+
+        if config.mode == .window {
+            // Draw window chrome
+            let titleBarH: CGFloat = 28
+
+            context.cgContext.saveGState()
+            NSBezierPath(roundedRect: windowRect, xRadius: cornerRadius, yRadius: cornerRadius).addClip()
+
+            // Window background
+            NSColor(white: 0.97, alpha: 1.0).setFill()
+            NSBezierPath(rect: windowRect).fill()
+
+            // Title bar
+            let titleBarRect = NSRect(x: windowRect.minX, y: windowRect.maxY - titleBarH, width: windowRect.width, height: titleBarH)
+            NSColor(white: 0.94, alpha: 1.0).setFill()
+            NSBezierPath(rect: titleBarRect).fill()
+
+            // Separator
+            NSColor(white: 0.82, alpha: 1.0).setFill()
+            NSBezierPath(rect: NSRect(x: windowRect.minX, y: titleBarRect.minY - 0.5, width: windowRect.width, height: 0.5)).fill()
+
+            // Traffic lights
+            let buttonY = titleBarRect.midY
+            let buttonRadius: CGFloat = 6
+            let buttonStartX = windowRect.minX + 14
+            let buttonSpacing: CGFloat = 20
+            let trafficLights: [(NSColor, NSColor)] = [
+                (NSColor(calibratedRed: 1.0, green: 0.38, blue: 0.35, alpha: 1.0),
+                 NSColor(calibratedRed: 0.85, green: 0.25, blue: 0.22, alpha: 1.0)),
+                (NSColor(calibratedRed: 1.0, green: 0.75, blue: 0.25, alpha: 1.0),
+                 NSColor(calibratedRed: 0.85, green: 0.60, blue: 0.15, alpha: 1.0)),
+                (NSColor(calibratedRed: 0.30, green: 0.80, blue: 0.35, alpha: 1.0),
+                 NSColor(calibratedRed: 0.20, green: 0.65, blue: 0.25, alpha: 1.0)),
+            ]
+            for (i, (fill, ring)) in trafficLights.enumerated() {
+                let cx = buttonStartX + CGFloat(i) * buttonSpacing
+                let circleRect = NSRect(x: cx - buttonRadius, y: buttonY - buttonRadius, width: buttonRadius * 2, height: buttonRadius * 2)
+                fill.setFill()
+                NSBezierPath(ovalIn: circleRect).fill()
+                ring.setStroke()
+                let border = NSBezierPath(ovalIn: circleRect.insetBy(dx: 0.5, dy: 0.5))
+                border.lineWidth = 0.5
+                border.stroke()
+            }
+
+            // Draw screenshot in content area (clipped to window shape)
+            if let image = screenshotImage {
+                image.draw(in: imageRect, from: selectionRect, operation: .sourceOver, fraction: 1.0)
+            }
+
+            // Draw annotations shifted to the preview position (including current live annotation)
+            let dx = imageRect.minX - selectionRect.minX
+            let dy = imageRect.minY - selectionRect.minY
+            if dx != 0 || dy != 0 {
+                context.cgContext.translateBy(x: dx, y: dy)
+            }
+            for annotation in annotations {
+                annotation.draw(in: context)
+            }
+            currentAnnotation?.draw(in: context)
+            if dx != 0 || dy != 0 {
+                context.cgContext.translateBy(x: -dx, y: -dy)
+            }
+
+            context.cgContext.restoreGState()
+        } else {
+            // Rounded mode — just rounded corners on the image
+            context.cgContext.saveGState()
+            NSBezierPath(roundedRect: imageRect, xRadius: cornerRadius, yRadius: cornerRadius).addClip()
+
+            if let image = screenshotImage {
+                image.draw(in: imageRect, from: selectionRect, operation: .copy, fraction: 1.0)
+            }
+
+            // Draw annotations shifted to preview position (including current live annotation)
+            let dx = imageRect.minX - selectionRect.minX
+            let dy = imageRect.minY - selectionRect.minY
+            if dx != 0 || dy != 0 {
+                context.cgContext.translateBy(x: dx, y: dy)
+            }
+            for annotation in annotations {
+                annotation.draw(in: context)
+            }
+            currentAnnotation?.draw(in: context)
+            if dx != 0 || dy != 0 {
+                context.cgContext.translateBy(x: -dx, y: -dy)
+            }
+
+            context.cgContext.restoreGState()
+        }
+
+        context.restoreGraphicsState()
+    }
+
+    /// Whether the current tool should show the options row
+    private var toolHasOptionsRow: Bool {
+        switch currentTool {
+        case .pencil, .line, .arrow, .rectangle, .filledRectangle, .ellipse, .marker, .number, .loupe:
+            return true
+        case .text:
+            return true
+        default:
+            return showBeautifyInOptionsRow && beautifyEnabled
+        }
+    }
+
+    private func drawToolOptionsRow() {
+        let rowH: CGFloat = 34
+        let gap: CGFloat = 2
+        let rowY: CGFloat
+        if bottomBarRect.midY < selectionRect.midY {
+            rowY = bottomBarRect.minY - rowH - gap
+        } else {
+            rowY = bottomBarRect.maxY + gap
+        }
+
+        let rowWidth = bottomBarRect.width
+        let rowX = bottomBarRect.midX - rowWidth / 2
+        let rowRect = NSRect(x: rowX, y: rowY, width: rowWidth, height: rowH)
+        optionsRowRect = rowRect
+
+        // Background — frosted glass style
+        let bgRect = rowRect
+        NSColor(white: 0.08, alpha: 0.88).setFill()
+        NSBezierPath(roundedRect: bgRect, xRadius: ToolbarLayout.cornerRadius, yRadius: ToolbarLayout.cornerRadius).fill()
+        // Subtle top highlight (liquid glass effect)
+        let highlightRect = NSRect(x: bgRect.minX + 1, y: bgRect.maxY - 1, width: bgRect.width - 2, height: 1)
+        NSColor.white.withAlphaComponent(0.08).setFill()
+        NSBezierPath(rect: highlightRect).fill()
+
+        let labelAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 9.5, weight: .medium),
+            .foregroundColor: NSColor.white.withAlphaComponent(0.4),
+        ]
+        let pad: CGFloat = 10
+        var curX = rowRect.minX + pad
+
+        optionsStrokeSliderRect = .zero
+        optionsSmoothToggleRect = .zero
+        optionsRoundedToggleRect = .zero
+        optionsLineStyleRects = []
+
+        // Reset text option rects
+        textBoldRect = .zero
+        textItalicRect = .zero
+        textUnderlineRect = .zero
+        textStrikethroughRect = .zero
+        textSizeDecRect = .zero
+        textSizeIncRect = .zero
+        textFontDropdownRect = .zero
+        textConfirmRect = .zero
+        textCancelRect = .zero
+
+        if showBeautifyInOptionsRow && beautifyEnabled {
+            drawBeautifyOptionsRow(in: rowRect)
+            return
+        }
+
+        if currentTool == .text {
+            drawTextOptionsRow(in: rowRect)
+            return
+        }
+
+        // Determine what to show
+        let showStroke: Bool
+        let showLineStyle: Bool
+        switch currentTool {
+        case .pencil:                       showStroke = true;  showLineStyle = true
+        case .marker:                       showStroke = true;  showLineStyle = false
+        case .line, .arrow:                 showStroke = true;  showLineStyle = true
+        case .rectangle, .ellipse:          showStroke = true;  showLineStyle = true
+        case .number, .loupe:               showStroke = true;  showLineStyle = false
+        case .filledRectangle:              showStroke = false; showLineStyle = false
+        default:                            showStroke = false; showLineStyle = false
+        }
+
+        // ── Stepped slider with track ──
+        if showStroke {
+            let steps: [CGFloat] = currentTool == .loupe
+                ? [60, 80, 100, 120, 160, 200, 250, 320]
+                : [1, 2, 3, 5, 8, 12, 20]
+            let activeWidth: CGFloat
+            switch currentTool {
+            case .number: activeWidth = currentNumberSize
+            case .marker: activeWidth = currentMarkerSize
+            case .loupe: activeWidth = currentLoupeSize
+            default: activeWidth = currentStrokeWidth
+            }
+
+            let sliderW: CGFloat = CGFloat(steps.count - 1) * 16 + 14  // 16pt between steps
+            let trackH: CGFloat = 2
+            let trackY = rowRect.midY - trackH / 2
+
+            // Track background
+            let trackRect = NSRect(x: curX, y: trackY, width: sliderW, height: trackH)
+            NSColor.white.withAlphaComponent(0.12).setFill()
+            NSBezierPath(roundedRect: trackRect, xRadius: 1, yRadius: 1).fill()
+
+            // Find active index
+            var activeIdx = 0
+            for (i, s) in steps.enumerated() { if s == activeWidth { activeIdx = i } }
+
+            // Filled portion
+            let filledFrac = CGFloat(activeIdx) / CGFloat(steps.count - 1)
+            let filledRect = NSRect(x: curX, y: trackY, width: sliderW * filledFrac, height: trackH)
+            ToolbarLayout.accentColor.withAlphaComponent(0.6).setFill()
+            NSBezierPath(roundedRect: filledRect, xRadius: 1, yRadius: 1).fill()
+
+            // Step ticks and knob
+            for (i, _) in steps.enumerated() {
+                let frac = CGFloat(i) / CGFloat(steps.count - 1)
+                let cx = curX + sliderW * frac
+                let isActive = i == activeIdx
+
+                // Small tick mark
+                let tickR: CGFloat = isActive ? 0 : 2
+                if tickR > 0 {
+                    let tickRect = NSRect(x: cx - tickR, y: rowRect.midY - tickR, width: tickR * 2, height: tickR * 2)
+                    NSColor.white.withAlphaComponent(i <= activeIdx ? 0.5 : 0.2).setFill()
+                    NSBezierPath(ovalIn: tickRect).fill()
+                }
+
+                // Knob for active step
+                if isActive {
+                    let knobR: CGFloat = 7
+                    let knobRect = NSRect(x: cx - knobR, y: rowRect.midY - knobR, width: knobR * 2, height: knobR * 2)
+                    // Knob shadow
+                    let shadow = NSShadow()
+                    shadow.shadowColor = NSColor.black.withAlphaComponent(0.3)
+                    shadow.shadowBlurRadius = 3
+                    shadow.shadowOffset = NSSize(width: 0, height: -1)
+                    NSGraphicsContext.saveGraphicsState()
+                    shadow.set()
+                    NSColor.white.setFill()
+                    NSBezierPath(ovalIn: knobRect).fill()
+                    NSGraphicsContext.restoreGraphicsState()
+                    // Redraw knob clean (over shadow)
+                    NSColor.white.setFill()
+                    NSBezierPath(ovalIn: knobRect).fill()
+                }
+            }
+
+            // Size label
+            // Fixed-width right-aligned size label (prevents layout shift on digit change)
+            let sizeLabel = currentTool == .loupe ? "\(Int(activeWidth))" : "\(Int(activeWidth))px"
+            let sizeStr = sizeLabel as NSString
+            let sizeAttrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.monospacedDigitSystemFont(ofSize: 9.5, weight: .medium),
+                .foregroundColor: NSColor.white.withAlphaComponent(0.5),
+            ]
+            let fixedLabelW: CGFloat = currentTool == .loupe ? 28 : 24  // fits "320" or "20px"
+            let labelX = curX + sliderW + 6
+            let sizeSize = sizeStr.size(withAttributes: sizeAttrs)
+            sizeStr.draw(at: NSPoint(x: labelX + fixedLabelW - sizeSize.width, y: rowRect.midY - sizeSize.height / 2), withAttributes: sizeAttrs)
+
+            optionsStrokeSliderRect = NSRect(x: curX - 4, y: rowRect.minY, width: sliderW + 8, height: rowH)
+            curX += sliderW + fixedLabelW + 14
+
+            // Separator
+            if showLineStyle || currentTool == .pencil || currentTool == .rectangle || currentTool == .filledRectangle {
+                NSColor.white.withAlphaComponent(0.08).setFill()
+                NSBezierPath(roundedRect: NSRect(x: curX - 6, y: rowRect.minY + 7, width: 1, height: rowH - 14), xRadius: 0.5, yRadius: 0.5).fill()
+            }
+        }
+
+        // ── Line style segment control ──
+        if showLineStyle {
+            let segH: CGFloat = 22
+            let segW: CGFloat = 36
+            let segY = rowRect.midY - segH / 2
+            let totalW = segW * CGFloat(LineStyle.allCases.count)
+
+            // Segment background
+            let segBgRect = NSRect(x: curX, y: segY, width: totalW, height: segH)
+            NSColor.white.withAlphaComponent(0.06).setFill()
+            NSBezierPath(roundedRect: segBgRect, xRadius: 5, yRadius: 5).fill()
+
+            for (i, style) in LineStyle.allCases.enumerated() {
+                let btnRect = NSRect(x: curX + CGFloat(i) * segW, y: segY, width: segW, height: segH)
+                optionsLineStyleRects.append(btnRect)
+
+                let isActive = currentLineStyle == style
+                if isActive {
+                    ToolbarLayout.accentColor.withAlphaComponent(0.45).setFill()
+                    NSBezierPath(roundedRect: btnRect.insetBy(dx: 1.5, dy: 1.5), xRadius: 4, yRadius: 4).fill()
+                }
+
+                // Line style preview
+                let previewPath = NSBezierPath()
+                previewPath.lineWidth = 2
+                previewPath.lineCapStyle = .round
+                style.apply(to: previewPath)
+                NSColor.white.withAlphaComponent(isActive ? 0.9 : 0.35).setStroke()
+                previewPath.move(to: NSPoint(x: btnRect.minX + 7, y: btnRect.midY))
+                previewPath.line(to: NSPoint(x: btnRect.maxX - 7, y: btnRect.midY))
+                previewPath.stroke()
+            }
+
+            curX += totalW + 10
+
+            // Separator
+            if currentTool == .rectangle || currentTool == .ellipse {
+                NSColor.white.withAlphaComponent(0.08).setFill()
+                NSBezierPath(roundedRect: NSRect(x: curX - 5, y: rowRect.minY + 7, width: 1, height: rowH - 14), xRadius: 0.5, yRadius: 0.5).fill()
+            }
+        }
+
+        // ── Pill toggles ──
+        if currentTool == .pencil {
+            curX = drawOptionsPillToggle(label: "Smooth", isOn: pencilSmoothEnabled, x: curX, rowRect: rowRect, targetRect: &optionsSmoothToggleRect)
+        }
+
+        // ── Corner radius slider (rect tools) ──
+        if currentTool == .rectangle || currentTool == .filledRectangle {
+            let label = "Radius" as NSString
+            let lblAttrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 9.5, weight: .medium),
+                .foregroundColor: NSColor.white.withAlphaComponent(0.4),
+            ]
+            let lSize = label.size(withAttributes: lblAttrs)
+            label.draw(at: NSPoint(x: curX, y: rowRect.midY - lSize.height / 2), withAttributes: lblAttrs)
+            curX += lSize.width + 6
+
+            let crSliderW: CGFloat = 70
+            let crSliderRect = NSRect(x: curX, y: rowRect.minY + 4, width: crSliderW, height: rowH - 8)
+            optionsCornerRadiusSliderRect = crSliderRect
+            drawOptionsSlider(rect: crSliderRect, value: currentRectCornerRadius, min: 0, max: 30)
+
+            // Value label
+            let valStr = "\(Int(currentRectCornerRadius))" as NSString
+            let valAttrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.monospacedDigitSystemFont(ofSize: 9.5, weight: .medium),
+                .foregroundColor: NSColor.white.withAlphaComponent(0.5),
+            ]
+            let valSize = valStr.size(withAttributes: valAttrs)
+            valStr.draw(at: NSPoint(x: curX + crSliderW + 4, y: rowRect.midY - valSize.height / 2), withAttributes: valAttrs)
+            curX += crSliderW + valSize.width + 12
+        }
+    }
+
+    /// Curated font families for the font picker
+    private static let fontFamilies: [String] = {
+        // "System" uses the default SF Pro; the rest are well-known macOS-bundled families
+        var families = ["System"]
+        let wanted = [
+            "Helvetica Neue", "Arial", "Avenir Next", "Futura",
+            "Georgia", "Times New Roman", "Palatino",
+            "Courier New", "Menlo", "SF Mono",
+            "Gill Sans", "Verdana", "Trebuchet MS",
+            "American Typewriter", "Didot", "Baskerville",
+            "Marker Felt", "Noteworthy", "Chalkboard SE",
+            "Copperplate", "Optima", "Phosphate",
+        ]
+        let available = Set(NSFontManager.shared.availableFontFamilies)
+        for name in wanted {
+            if available.contains(name) { families.append(name) }
+        }
+        return families
+    }()
+
+    private func drawTextOptionsRow(in rowRect: NSRect) {
+        let pad: CGFloat = 8
+        var curX = rowRect.minX + pad
+        let btnH: CGFloat = 22
+        let btnW: CGFloat = 24
+        let btnY = rowRect.midY - btnH / 2
+
+        let activeColor = ToolbarLayout.accentColor
+        let inactiveColor = NSColor.white.withAlphaComponent(0.6)
+
+        // ── Font family dropdown ──
+        let displayFamily = textFontFamily == "System" ? "System" : textFontFamily
+        let ddAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 10, weight: .medium),
+            .foregroundColor: NSColor.white.withAlphaComponent(0.85),
+        ]
+        let ddSize = (displayFamily as NSString).size(withAttributes: ddAttrs)
+        let ddW = max(60, ddSize.width + 22)  // space for text + chevron
+        let ddRect = NSRect(x: curX, y: btnY, width: ddW, height: btnH)
+        textFontDropdownRect = ddRect
+
+        // Background
+        let ddBg = showFontPicker ? activeColor.withAlphaComponent(0.3) : NSColor.white.withAlphaComponent(0.08)
+        ddBg.setFill()
+        NSBezierPath(roundedRect: ddRect, xRadius: 4, yRadius: 4).fill()
+
+        // Family name
+        (displayFamily as NSString).draw(
+            at: NSPoint(x: ddRect.minX + 6, y: ddRect.midY - ddSize.height / 2),
+            withAttributes: ddAttrs)
+
+        // Chevron
+        let chevAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 8, weight: .bold),
+            .foregroundColor: NSColor.white.withAlphaComponent(0.5),
+        ]
+        let chevStr = "▼" as NSString
+        let chevSize = chevStr.size(withAttributes: chevAttrs)
+        chevStr.draw(at: NSPoint(x: ddRect.maxX - chevSize.width - 5, y: ddRect.midY - chevSize.height / 2), withAttributes: chevAttrs)
+
+        curX += ddW + 8
+
+        // ── Separator ──
+        NSColor.white.withAlphaComponent(0.12).setFill()
+        NSBezierPath(roundedRect: NSRect(x: curX - 4, y: rowRect.minY + 7, width: 1, height: rowRect.height - 14), xRadius: 0.5, yRadius: 0.5).fill()
+
+        // ── Bold ──
+        let boldRect = NSRect(x: curX, y: btnY, width: btnW, height: btnH)
+        textBoldRect = boldRect
+        drawTextFormatButton(rect: boldRect, label: "B", font: NSFont.systemFont(ofSize: 12, weight: .bold),
+                             active: textBold, activeColor: activeColor, inactiveColor: inactiveColor)
+        curX += btnW + 2
+
+        // ── Italic ──
+        let italicRect = NSRect(x: curX, y: btnY, width: btnW, height: btnH)
+        textItalicRect = italicRect
+        let italicFont = NSFontManager.shared.convert(NSFont.systemFont(ofSize: 12), toHaveTrait: .italicFontMask)
+        drawTextFormatButton(rect: italicRect, label: "I", font: italicFont,
+                             active: textItalic, activeColor: activeColor, inactiveColor: inactiveColor)
+        curX += btnW + 2
+
+        // ── Underline ──
+        let ulRect = NSRect(x: curX, y: btnY, width: btnW, height: btnH)
+        textUnderlineRect = ulRect
+        drawTextFormatButtonAttributed(rect: ulRect, label: "U", font: NSFont.systemFont(ofSize: 12),
+                                       active: textUnderline, activeColor: activeColor, inactiveColor: inactiveColor,
+                                       extraAttrs: [.underlineStyle: NSUnderlineStyle.single.rawValue])
+        curX += btnW + 2
+
+        // ── Strikethrough ──
+        let stRect = NSRect(x: curX, y: btnY, width: btnW, height: btnH)
+        textStrikethroughRect = stRect
+        drawTextFormatButtonAttributed(rect: stRect, label: "S", font: NSFont.systemFont(ofSize: 12),
+                                       active: textStrikethrough, activeColor: activeColor, inactiveColor: inactiveColor,
+                                       extraAttrs: [.strikethroughStyle: NSUnderlineStyle.single.rawValue])
+        curX += btnW + 8
+
+        // ── Separator ──
+        NSColor.white.withAlphaComponent(0.12).setFill()
+        NSBezierPath(roundedRect: NSRect(x: curX - 4, y: rowRect.minY + 7, width: 1, height: rowRect.height - 14), xRadius: 0.5, yRadius: 0.5).fill()
+
+        // ── Font size controls ──
+        let minusRect = NSRect(x: curX, y: btnY, width: 20, height: btnH)
+        textSizeDecRect = minusRect
+        drawTextFormatButton(rect: minusRect, label: "−", font: NSFont.systemFont(ofSize: 14, weight: .medium),
+                             active: false, activeColor: activeColor, inactiveColor: inactiveColor)
+        curX += 20
+
+        // Size label
+        let sizeStr = "\(Int(textFontSize))" as NSString
+        let sizeAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .medium),
+            .foregroundColor: NSColor.white.withAlphaComponent(0.7),
+        ]
+        let sizeSize = sizeStr.size(withAttributes: sizeAttrs)
+        let sizeLabelW: CGFloat = 26
+        sizeStr.draw(at: NSPoint(x: curX + (sizeLabelW - sizeSize.width) / 2, y: rowRect.midY - sizeSize.height / 2), withAttributes: sizeAttrs)
+        curX += sizeLabelW
+
+        let plusRect = NSRect(x: curX, y: btnY, width: 20, height: btnH)
+        textSizeIncRect = plusRect
+        drawTextFormatButton(rect: plusRect, label: "+", font: NSFont.systemFont(ofSize: 14, weight: .medium),
+                             active: false, activeColor: activeColor, inactiveColor: inactiveColor)
+        curX += 20 + 8
+
+        // ── Separator ──
+        NSColor.white.withAlphaComponent(0.12).setFill()
+        NSBezierPath(roundedRect: NSRect(x: curX - 4, y: rowRect.minY + 7, width: 1, height: rowRect.height - 14), xRadius: 0.5, yRadius: 0.5).fill()
+
+        // ── Cancel / Confirm (only when editing) ──
+        if textEditView != nil {
+            let cancelRect = NSRect(x: curX, y: btnY, width: btnW, height: btnH)
+            textCancelRect = cancelRect
+            drawTextFormatButton(rect: cancelRect, label: "✕", font: NSFont.systemFont(ofSize: 11, weight: .medium),
+                                 active: false, activeColor: .systemRed, inactiveColor: .systemRed.withAlphaComponent(0.7))
+            curX += btnW + 2
+
+            let confirmRect = NSRect(x: curX, y: btnY, width: btnW, height: btnH)
+            textConfirmRect = confirmRect
+            drawTextFormatButton(rect: confirmRect, label: "✓", font: NSFont.systemFont(ofSize: 12, weight: .medium),
+                                 active: false, activeColor: .systemGreen, inactiveColor: .systemGreen.withAlphaComponent(0.7))
+        }
+
+        // ── Font picker dropdown ──
+        if showFontPicker {
+            drawFontPickerDropdown()
+        }
+    }
+
+    private func drawTextFormatButton(rect: NSRect, label: String, font: NSFont, active: Bool,
+                                      activeColor: NSColor, inactiveColor: NSColor) {
+        if active {
+            activeColor.withAlphaComponent(0.3).setFill()
+            NSBezierPath(roundedRect: rect, xRadius: 4, yRadius: 4).fill()
+        }
+        let color = active ? activeColor : inactiveColor
+        let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: color]
+        let size = (label as NSString).size(withAttributes: attrs)
+        (label as NSString).draw(at: NSPoint(x: rect.midX - size.width / 2, y: rect.midY - size.height / 2), withAttributes: attrs)
+    }
+
+    private func drawTextFormatButtonAttributed(rect: NSRect, label: String, font: NSFont, active: Bool,
+                                                activeColor: NSColor, inactiveColor: NSColor,
+                                                extraAttrs: [NSAttributedString.Key: Any]) {
+        if active {
+            activeColor.withAlphaComponent(0.3).setFill()
+            NSBezierPath(roundedRect: rect, xRadius: 4, yRadius: 4).fill()
+        }
+        let color = active ? activeColor : inactiveColor
+        var attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: color]
+        for (k, v) in extraAttrs { attrs[k] = v }
+        let str = NSAttributedString(string: label, attributes: attrs)
+        let size = str.size()
+        str.draw(at: NSPoint(x: rect.midX - size.width / 2, y: rect.midY - size.height / 2))
+    }
+
+    private func drawFontPickerDropdown() {
+        let families = OverlayView.fontFamilies
+        let itemH: CGFloat = 24
+        let pickerW: CGFloat = 180
+        let pickerH = CGFloat(families.count) * itemH + 8
+        let pickerX = textFontDropdownRect.minX
+        let pickerY: CGFloat
+        if bottomBarRect.midY < selectionRect.midY {
+            // Toolbar is below selection — try opening downward
+            let downY = optionsRowRect.minY - pickerH - 2
+            pickerY = downY >= bounds.minY + 4 ? downY : optionsRowRect.maxY + 2
+        } else {
+            // Toolbar is above selection — try opening upward
+            let upY = optionsRowRect.maxY + 2
+            pickerY = (upY + pickerH) <= bounds.maxY - 4 ? upY : optionsRowRect.minY - pickerH - 2
+        }
+
+        let pRect = NSRect(x: pickerX, y: pickerY, width: pickerW, height: pickerH)
+        fontPickerRect = pRect
+
+        // Background
+        NSColor(white: 0.10, alpha: 0.95).setFill()
+        NSBezierPath(roundedRect: pRect, xRadius: 6, yRadius: 6).fill()
+        // Border
+        NSColor.white.withAlphaComponent(0.1).setStroke()
+        let borderPath = NSBezierPath(roundedRect: pRect, xRadius: 6, yRadius: 6)
+        borderPath.lineWidth = 0.5
+        borderPath.stroke()
+
+        fontPickerItemRects = []
+        for (i, family) in families.enumerated() {
+            let itemY = pRect.maxY - 4 - CGFloat(i + 1) * itemH
+            let itemRect = NSRect(x: pRect.minX + 4, y: itemY, width: pickerW - 8, height: itemH)
+            fontPickerItemRects.append(itemRect)
+
+            let isSelected = family == textFontFamily
+
+            if isSelected {
+                ToolbarLayout.accentColor.withAlphaComponent(0.25).setFill()
+                NSBezierPath(roundedRect: itemRect, xRadius: 4, yRadius: 4).fill()
+            }
+
+            // Use the actual font family for the label so users see a preview
+            let previewFont: NSFont
+            if family == "System" {
+                previewFont = NSFont.systemFont(ofSize: 11)
+            } else {
+                previewFont = NSFont(name: family, size: 11) ?? NSFont.systemFont(ofSize: 11)
+            }
+            let attrs: [NSAttributedString.Key: Any] = [
+                .font: previewFont,
+                .foregroundColor: isSelected ? ToolbarLayout.accentColor : NSColor.white.withAlphaComponent(0.8),
+            ]
+            let nameSize = (family as NSString).size(withAttributes: attrs)
+            (family as NSString).draw(
+                at: NSPoint(x: itemRect.minX + 8, y: itemRect.midY - nameSize.height / 2),
+                withAttributes: attrs)
+
+            // Check mark for selected
+            if isSelected {
+                let checkAttrs: [NSAttributedString.Key: Any] = [
+                    .font: NSFont.systemFont(ofSize: 10, weight: .bold),
+                    .foregroundColor: ToolbarLayout.accentColor,
+                ]
+                let checkStr = "✓" as NSString
+                let checkSize = checkStr.size(withAttributes: checkAttrs)
+                checkStr.draw(at: NSPoint(x: itemRect.maxX - checkSize.width - 6, y: itemRect.midY - checkSize.height / 2), withAttributes: checkAttrs)
+            }
+        }
+    }
+
+    /// Draws a macOS-style pill toggle (like iOS switches but smaller)
+    @discardableResult
+    private func drawOptionsPillToggle(label: String, isOn: Bool, x: CGFloat, rowRect: NSRect, targetRect: inout NSRect) -> CGFloat {
+        let labelAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 10, weight: .medium),
+            .foregroundColor: NSColor.white.withAlphaComponent(0.5),
+        ]
+        var curX = x
+        let lStr = label as NSString
+        let lSize = lStr.size(withAttributes: labelAttrs)
+        lStr.draw(at: NSPoint(x: curX, y: rowRect.midY - lSize.height / 2), withAttributes: labelAttrs)
+        curX += lSize.width + 5
+
+        // Pill switch
+        let pillW: CGFloat = 28
+        let pillH: CGFloat = 16
+        let pillRect = NSRect(x: curX, y: rowRect.midY - pillH / 2, width: pillW, height: pillH)
+        targetRect = pillRect
+
+        // Track
+        let trackColor = isOn ? ToolbarLayout.accentColor : NSColor.white.withAlphaComponent(0.15)
+        trackColor.setFill()
+        NSBezierPath(roundedRect: pillRect, xRadius: pillH / 2, yRadius: pillH / 2).fill()
+
+        // Knob
+        let knobInset: CGFloat = 2
+        let knobD = pillH - knobInset * 2
+        let knobX = isOn ? pillRect.maxX - knobD - knobInset : pillRect.minX + knobInset
+        let knobRect = NSRect(x: knobX, y: pillRect.minY + knobInset, width: knobD, height: knobD)
+        NSColor.white.setFill()
+        NSBezierPath(ovalIn: knobRect).fill()
+
+        curX += pillW + 10
+        return curX
+    }
+
+    private func drawBeautifyOptionsRow(in rowRect: NSRect) {
+        let labelAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 10, weight: .medium),
+            .foregroundColor: NSColor.white.withAlphaComponent(0.7),
+        ]
+        let pad: CGFloat = 8
+        var curX = rowRect.minX + pad
+
+        // Mode toggle: W / R
+        let modeW: CGFloat = 26
+        let modeH: CGFloat = 20
+        let modeY = rowRect.midY - modeH / 2
+
+        let wRect = NSRect(x: curX, y: modeY, width: modeW, height: modeH)
+        beautifyModeWindowRect = wRect
+        (beautifyMode == .window ? ToolbarLayout.accentColor.withAlphaComponent(0.6) : NSColor.white.withAlphaComponent(0.12)).setFill()
+        NSBezierPath(roundedRect: wRect, xRadius: 4, yRadius: 4).fill()
+        let wAttrs: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: 9, weight: .semibold), .foregroundColor: NSColor.white]
+        let wStr = "W" as NSString
+        let wSize = wStr.size(withAttributes: wAttrs)
+        wStr.draw(at: NSPoint(x: wRect.midX - wSize.width / 2, y: wRect.midY - wSize.height / 2), withAttributes: wAttrs)
+        curX += modeW + 2
+
+        let rRect = NSRect(x: curX, y: modeY, width: modeW, height: modeH)
+        beautifyModeRoundedRect = rRect
+        (beautifyMode == .rounded ? ToolbarLayout.accentColor.withAlphaComponent(0.6) : NSColor.white.withAlphaComponent(0.12)).setFill()
+        NSBezierPath(roundedRect: rRect, xRadius: 4, yRadius: 4).fill()
+        let rStr = "R" as NSString
+        let rSize = rStr.size(withAttributes: wAttrs)
+        rStr.draw(at: NSPoint(x: rRect.midX - rSize.width / 2, y: rRect.midY - rSize.height / 2), withAttributes: wAttrs)
+        curX += modeW + 8
+
+        // Separator
+        NSColor.white.withAlphaComponent(0.2).setFill()
+        NSBezierPath(rect: NSRect(x: curX, y: rowRect.minY + 6, width: 1, height: rowRect.height - 12)).fill()
+        curX += 6
+
+        // Compact sliders: Pad, Radius, Shadow, BgR
+        let sliderW: CGFloat = 60
+        let sliderH: CGFloat = rowRect.height - 8
+        let sliderY = rowRect.minY + 4
+
+        let sliderDefs: [(String, CGFloat, CGFloat, CGFloat)] = [
+            ("Pad", beautifyPadding, 16, 96),
+            ("Rad", beautifyCornerRadius, 0, 30),
+            ("Shd", beautifyShadowRadius, 0, 40),
+            ("BgR", beautifyBgRadius, 0, 30),
+        ]
+
+        var sliderRects: [NSRect] = []
+        for (label, value, minV, maxV) in sliderDefs {
+            let lStr = label as NSString
+            let lSize = lStr.size(withAttributes: labelAttrs)
+            lStr.draw(at: NSPoint(x: curX, y: rowRect.midY - lSize.height / 2), withAttributes: labelAttrs)
+            curX += lSize.width + 5
+            let sr = NSRect(x: curX, y: sliderY, width: sliderW, height: sliderH)
+            sliderRects.append(sr)
+            drawOptionsSlider(rect: sr, value: value, min: minV, max: maxV)
+            curX += sliderW + 10
+        }
+        beautifyPaddingSliderRect = sliderRects[0]
+        beautifyCornerSliderRect = sliderRects[1]
+        beautifyShadowSliderRect = sliderRects[2]
+        beautifyBgRadiusSliderRect = sliderRects[3]
+
+        // Separator
+        NSColor.white.withAlphaComponent(0.2).setFill()
+        NSBezierPath(rect: NSRect(x: curX, y: rowRect.minY + 6, width: 1, height: rowRect.height - 12)).fill()
+        curX += 6
+
+        // Background swatches (small inline — sized to fit in a single row)
+        let swSize: CGFloat = 14
+        let swGap: CGFloat = 2
+        beautifySwatchRects = []
+        for (i, style) in BeautifyRenderer.styles.enumerated() {
+            let sx = curX + CGFloat(i) * (swSize + swGap)
+            let sy = rowRect.midY - swSize / 2
+            let sr = NSRect(x: sx, y: sy, width: swSize, height: swSize)
+            beautifySwatchRects.append(sr)
+            let path = NSBezierPath(roundedRect: sr, xRadius: 4, yRadius: 4)
+            if let grad = NSGradient(colors: style.stops.map { $0.0 }, atLocations: style.stops.map { $0.1 }, colorSpace: .deviceRGB) {
+                grad.draw(in: path, angle: style.angle - 90)
+            }
+            if i == beautifyStyleIndex % BeautifyRenderer.styles.count {
+                ToolbarLayout.accentColor.setStroke()
+                let ring = NSBezierPath(roundedRect: sr.insetBy(dx: -1.5, dy: -1.5), xRadius: 5, yRadius: 5)
+                ring.lineWidth = 1.5
+                ring.stroke()
+            }
+        }
+    }
+
+    private func drawOptionsSlider(rect: NSRect, value: CGFloat, min minVal: CGFloat, max maxVal: CGFloat) {
+        let trackH: CGFloat = 3
+        let knobR: CGFloat = 6
+        let trackY = rect.midY - trackH / 2
+        let trackRect = NSRect(x: rect.minX, y: trackY, width: rect.width, height: trackH)
+
+        NSColor.white.withAlphaComponent(0.2).setFill()
+        NSBezierPath(roundedRect: trackRect, xRadius: 1.5, yRadius: 1.5).fill()
+
+        let frac = max(0, min(1, (value - minVal) / (maxVal - minVal)))
+        let filledW = rect.width * frac
+        let filledRect = NSRect(x: rect.minX, y: trackY, width: filledW, height: trackH)
+        ToolbarLayout.accentColor.setFill()
+        NSBezierPath(roundedRect: filledRect, xRadius: 1.5, yRadius: 1.5).fill()
+
+        let knobX = rect.minX + filledW
+        let knobRect = NSRect(x: knobX - knobR, y: rect.midY - knobR, width: knobR * 2, height: knobR * 2)
+        NSColor.white.setFill()
+        NSBezierPath(ovalIn: knobRect).fill()
+    }
+
+    @discardableResult
+    private func drawOptionsToggle(label: String, isOn: Bool, x: CGFloat, rowRect: NSRect, targetRect: inout NSRect) -> CGFloat {
+        let labelAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 10, weight: .medium),
+            .foregroundColor: NSColor.white.withAlphaComponent(0.7),
+        ]
+        var curX = x
+        let lStr = label as NSString
+        let lSize = lStr.size(withAttributes: labelAttrs)
+        lStr.draw(at: NSPoint(x: curX, y: rowRect.midY - lSize.height / 2), withAttributes: labelAttrs)
+        curX += lSize.width + 4
+
+        let checkSize: CGFloat = 14
+        let checkRect = NSRect(x: curX, y: rowRect.midY - checkSize / 2, width: checkSize, height: checkSize)
+        targetRect = checkRect
+
+        NSColor.white.withAlphaComponent(isOn ? 0.9 : 0.25).setFill()
+        NSBezierPath(roundedRect: checkRect, xRadius: 3, yRadius: 3).fill()
+        if isOn {
+            let tickAttrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 10, weight: .bold),
+                .foregroundColor: NSColor.black,
+            ]
+            let tick = "✓" as NSString
+            let tickSize = tick.size(withAttributes: tickAttrs)
+            tick.draw(at: NSPoint(x: checkRect.midX - tickSize.width / 2, y: checkRect.midY - tickSize.height / 2), withAttributes: tickAttrs)
+        }
+        curX += checkSize + 10
+        return curX
+    }
+
+    private func updateOptionsStrokeSlider(at point: NSPoint) {
+        let steps: [CGFloat] = currentTool == .loupe
+            ? [60, 80, 100, 120, 160, 200, 250, 320]
+            : [1, 2, 3, 5, 8, 12, 20]
+
+        let sr = optionsStrokeSliderRect
+        guard sr.width > 0 else { return }
+
+        // Map position to nearest step
+        let frac = max(0, min(1, (point.x - sr.minX - 4) / (sr.width - 8)))
+        let idx = Int((frac * CGFloat(steps.count - 1)).rounded())
+        let bestIdx = max(0, min(steps.count - 1, idx))
+        let value = steps[bestIdx]
+        switch currentTool {
+        case .number:
+            currentNumberSize = value
+            UserDefaults.standard.set(Double(value), forKey: "numberStrokeWidth")
+        case .marker:
+            currentMarkerSize = value
+            UserDefaults.standard.set(Double(value), forKey: "markerStrokeWidth")
+        case .loupe:
+            currentLoupeSize = value
+            UserDefaults.standard.set(Double(value), forKey: "loupeSize")
+        default:
+            currentStrokeWidth = value
+            UserDefaults.standard.set(Double(value), forKey: "currentStrokeWidth")
+        }
+        needsDisplay = true
+    }
+
+    private func updateOptionsCornerRadius(at point: NSPoint) {
+        let sr = optionsCornerRadiusSliderRect
+        guard sr.width > 0 else { return }
+        let frac = max(0, min(1, (point.x - sr.minX) / sr.width))
+        let value = (frac * 30).rounded()
+        currentRectCornerRadius = value
+        UserDefaults.standard.set(Double(value), forKey: "currentRectCornerRadius")
+        needsDisplay = true
+    }
+
+    private func startBeautifyToolbarAnimation() {
+        beautifyToolbarAnimProgress = 0
+        beautifyToolbarAnimTarget = beautifyEnabled
+        beautifyToolbarAnimTimer?.invalidate()
+        beautifyToolbarAnimTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true) { [weak self] timer in
+            guard let self = self else { timer.invalidate(); return }
+            self.beautifyToolbarAnimProgress += 0.08  // ~12 frames = 0.2s
+            if self.beautifyToolbarAnimProgress >= 1.0 {
+                self.beautifyToolbarAnimProgress = 1.0
+                timer.invalidate()
+                self.beautifyToolbarAnimTimer = nil
+            }
+            self.needsDisplay = true
+        }
+    }
+
+    private func updateBeautifySlider(at point: NSPoint) {
+        let sliderRect: NSRect
+        let minVal: CGFloat
+        let maxVal: CGFloat
+        let key: String
+
+        switch activeBeautifySlider {
+        case 0: sliderRect = beautifyPaddingSliderRect; minVal = 16; maxVal = 96; key = "beautifyPadding"
+        case 1: sliderRect = beautifyCornerSliderRect; minVal = 0; maxVal = 30; key = "beautifyCornerRadius"
+        case 2: sliderRect = beautifyShadowSliderRect; minVal = 0; maxVal = 40; key = "beautifyShadowRadius"
+        case 3: sliderRect = beautifyBgRadiusSliderRect; minVal = 0; maxVal = 30; key = "beautifyBgRadius"
+        default: return
+        }
+
+        let frac = max(0, min(1, (point.x - sliderRect.minX) / sliderRect.width))
+        let value = minVal + frac * (maxVal - minVal)
+        let rounded = (value * 2).rounded() / 2  // snap to 0.5 increments
+
+        switch activeBeautifySlider {
+        case 0: beautifyPadding = rounded
+        case 1: beautifyCornerRadius = rounded
+        case 2: beautifyShadowRadius = rounded
+        case 3: beautifyBgRadius = rounded
+        default: break
+        }
+
+        UserDefaults.standard.set(Double(rounded), forKey: key)
+        needsDisplay = true
     }
 
     private func drawStrokePicker() {
@@ -3320,28 +4508,63 @@ class OverlayView: NSView {
         bottomButtons = ToolbarLayout.bottomButtons(selectedTool: currentTool, selectedColor: currentColor, beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex, hasAnnotations: movableAnnotations, isRecording: isRecording, isAnnotating: isAnnotating)
         rightButtons = ToolbarLayout.rightButtons(delaySeconds: delaySeconds, beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex, hasAnnotations: movableAnnotations, translateEnabled: translateEnabled, isRecording: isRecording, isAnnotating: isAnnotating, isDetached: isDetached)
 
+        // When beautify is active, anchor toolbars to the expanded preview frame
+        // so they don't overlap the gradient/shadow chrome.
+        // Animate the transition with easeOut interpolation.
+        // Always compute the expanded anchor (for animation purposes — even when beautify is off)
+        let config = beautifyConfig
+        let pad = config.padding
+        let titleBarH: CGFloat = config.mode == .window ? 28 : 0
+        let expandedAnchor = NSRect(
+            x: selectionRect.minX - pad,
+            y: selectionRect.minY - pad,
+            width: selectionRect.width + pad * 2,
+            height: selectionRect.height + titleBarH + pad * 2
+        )
+        let showBeautifyFrame = beautifyEnabled && state == .selected && !isDetached && !isScrollCapturing && !isRecording
+
+        // Interpolate between selectionRect and expandedAnchor during animation
+        let anchorRect: NSRect
+        if beautifyToolbarAnimProgress < 1.0 {
+            // EaseOut: t' = 1 - (1-t)^2
+            let t = beautifyToolbarAnimProgress
+            let eased = 1.0 - (1.0 - t) * (1.0 - t)
+            let fromRect = beautifyToolbarAnimTarget ? selectionRect : expandedAnchor
+            let toRect = beautifyToolbarAnimTarget ? expandedAnchor : selectionRect
+            anchorRect = NSRect(
+                x: fromRect.minX + (toRect.minX - fromRect.minX) * eased,
+                y: fromRect.minY + (toRect.minY - fromRect.minY) * eased,
+                width: fromRect.width + (toRect.width - fromRect.width) * eased,
+                height: fromRect.height + (toRect.height - fromRect.height) * eased
+            )
+        } else if showBeautifyFrame {
+            anchorRect = expandedAnchor
+        } else {
+            anchorRect = selectionRect
+        }
+
         // Place each toolbar inside if it would go off-screen
         let bottomMargin: CGFloat = 50  // toolbar height + gap
         let rightMargin: CGFloat = 50
 
-        let bottomFits = selectionRect.minY > bounds.minY + bottomMargin
-        let topFits = selectionRect.maxY < bounds.maxY - bottomMargin
+        let bottomFits = anchorRect.minY > bounds.minY + bottomMargin
+        let topFits = anchorRect.maxY < bounds.maxY - bottomMargin
         let bottomOutside = bottomFits || topFits  // layoutBottom handles flipping above if below doesn't fit
 
         if bottomOutside {
-            bottomBarRect = ToolbarLayout.layoutBottom(buttons: &bottomButtons, selectionRect: selectionRect, viewBounds: bounds)
+            bottomBarRect = ToolbarLayout.layoutBottom(buttons: &bottomButtons, selectionRect: anchorRect, viewBounds: bounds)
         } else {
-            bottomBarRect = ToolbarLayout.layoutBottomInside(buttons: &bottomButtons, selectionRect: selectionRect, viewBounds: bounds)
+            bottomBarRect = ToolbarLayout.layoutBottomInside(buttons: &bottomButtons, selectionRect: anchorRect, viewBounds: bounds)
         }
 
-        let rightFits = selectionRect.maxX < bounds.maxX - rightMargin
-        let leftFits = selectionRect.minX > bounds.minX + rightMargin
+        let rightFits = anchorRect.maxX < bounds.maxX - rightMargin
+        let leftFits = anchorRect.minX > bounds.minX + rightMargin
         let rightOutside = rightFits || leftFits  // layoutRight handles flipping to left if right doesn't fit
 
         if rightOutside {
-            rightBarRect = ToolbarLayout.layoutRight(buttons: &rightButtons, selectionRect: selectionRect, viewBounds: bounds, bottomBarRect: bottomBarRect)
+            rightBarRect = ToolbarLayout.layoutRight(buttons: &rightButtons, selectionRect: anchorRect, viewBounds: bounds, bottomBarRect: bottomBarRect)
         } else {
-            rightBarRect = ToolbarLayout.layoutRightInside(buttons: &rightButtons, selectionRect: selectionRect, viewBounds: bounds, bottomBarRect: bottomBarRect)
+            rightBarRect = ToolbarLayout.layoutRightInside(buttons: &rightButtons, selectionRect: anchorRect, viewBounds: bounds, bottomBarRect: bottomBarRect)
         }
 
         // If bottom bar overlaps right bar, push bottom bar down (or up) to clear it.
@@ -3593,17 +4816,49 @@ class OverlayView: NSView {
         // Beautify picker dismissal / selection
         if showBeautifyPicker {
             if beautifyPickerRect.contains(point) {
-                // Hit-test rows inside the picker
-                let rowH: CGFloat = 28
-                let padding: CGFloat = 6
-                let styles = BeautifyRenderer.styles
-                for (i, _) in styles.enumerated() {
-                    let rowY = beautifyPickerRect.maxY - padding - rowH * CGFloat(i + 1)
-                    let rowRect = NSRect(x: beautifyPickerRect.minX, y: rowY, width: beautifyPickerRect.width, height: rowH)
-                    if rowRect.contains(point) {
+                // Mode buttons
+                if beautifyModeWindowRect.contains(point) {
+                    beautifyMode = .window
+                    UserDefaults.standard.set(beautifyMode.rawValue, forKey: "beautifyMode")
+                    needsDisplay = true
+                    return
+                }
+                if beautifyModeRoundedRect.contains(point) {
+                    beautifyMode = .rounded
+                    UserDefaults.standard.set(beautifyMode.rawValue, forKey: "beautifyMode")
+                    needsDisplay = true
+                    return
+                }
+                // Sliders — start dragging
+                if beautifyPaddingSliderRect.contains(point) {
+                    isDraggingBeautifySlider = true
+                    activeBeautifySlider = 0
+                    updateBeautifySlider(at: point)
+                    return
+                }
+                if beautifyCornerSliderRect.contains(point) {
+                    isDraggingBeautifySlider = true
+                    activeBeautifySlider = 1
+                    updateBeautifySlider(at: point)
+                    return
+                }
+                if beautifyShadowSliderRect.contains(point) {
+                    isDraggingBeautifySlider = true
+                    activeBeautifySlider = 2
+                    updateBeautifySlider(at: point)
+                    return
+                }
+                if beautifyBgRadiusSliderRect.contains(point) {
+                    isDraggingBeautifySlider = true
+                    activeBeautifySlider = 3
+                    updateBeautifySlider(at: point)
+                    return
+                }
+                // Background swatches — use stored rects from draw
+                for (i, swatchRect) in beautifySwatchRects.enumerated() {
+                    if swatchRect.contains(point) {
                         beautifyStyleIndex = i
                         UserDefaults.standard.set(beautifyStyleIndex, forKey: "beautifyStyleIndex")
-                        showBeautifyPicker = false
                         needsDisplay = true
                         return
                     }
@@ -3801,10 +5056,7 @@ class OverlayView: NSView {
                     return
                 }
             }
-            // Clicking on the text control bar or text editor itself — don't commit
-            if let bar = textControlBar, bar.frame.contains(point) {
-                return
-            }
+            // Clicking on the text editor itself — don't commit
             if let sv = textScrollView, sv.frame.contains(point) {
                 return
             }
@@ -3842,6 +5094,134 @@ class OverlayView: NSView {
             }
 
             if showToolbars {
+                // Font picker dropdown click handling
+                if showFontPicker {
+                    if fontPickerRect.contains(point) {
+                        for (i, itemRect) in fontPickerItemRects.enumerated() {
+                            if itemRect.contains(point) {
+                                let family = OverlayView.fontFamilies[i]
+                                textFontFamily = family
+                                UserDefaults.standard.set(family, forKey: "textFontFamily")
+                                applyFontFamilyToSelection(family)
+                                showFontPicker = false
+                                needsDisplay = true
+                                return
+                            }
+                        }
+                        return  // clicked in picker but not on an item
+                    } else {
+                        // Clicking the dropdown button again should just close the picker
+                        showFontPicker = false
+                        needsDisplay = true
+                        if textFontDropdownRect.contains(point) {
+                            return  // consumed — don't let the toggle re-open it
+                        }
+                        // fall through to handle click normally
+                    }
+                }
+
+                // Tool options row click handling
+                if optionsRowRect.contains(point) {
+                    // Stroke slider
+                    if optionsStrokeSliderRect != .zero && optionsStrokeSliderRect.insetBy(dx: -4, dy: -4).contains(point) {
+                        isDraggingOptionsStroke = true
+                        updateOptionsStrokeSlider(at: point)
+                        return
+                    }
+                    // Smooth toggle
+                    if optionsSmoothToggleRect != .zero && optionsSmoothToggleRect.insetBy(dx: -4, dy: -4).contains(point) {
+                        pencilSmoothEnabled.toggle()
+                        UserDefaults.standard.set(pencilSmoothEnabled, forKey: "pencilSmoothEnabled")
+                        needsDisplay = true
+                        return
+                    }
+                    // Rounded toggle
+                    if optionsRoundedToggleRect != .zero && optionsRoundedToggleRect.insetBy(dx: -4, dy: -4).contains(point) {
+                        roundedRectEnabled.toggle()
+                        UserDefaults.standard.set(roundedRectEnabled, forKey: "roundedRectEnabled")
+                        needsDisplay = true
+                        return
+                    }
+                    // Corner radius slider
+                    if optionsCornerRadiusSliderRect != .zero && optionsCornerRadiusSliderRect.insetBy(dx: -4, dy: -4).contains(point) {
+                        isDraggingOptionsCornerRadius = true
+                        updateOptionsCornerRadius(at: point)
+                        return
+                    }
+                    // Line style buttons
+                    for (i, sr) in optionsLineStyleRects.enumerated() {
+                        if sr.contains(point), let style = LineStyle(rawValue: i) {
+                            currentLineStyle = style
+                            UserDefaults.standard.set(style.rawValue, forKey: "currentLineStyle")
+                            needsDisplay = true
+                            return
+                        }
+                    }
+                    // Text formatting buttons
+                    if currentTool == .text {
+                        if textBoldRect != .zero && textBoldRect.contains(point) {
+                            toggleTextBold(); return
+                        }
+                        if textItalicRect != .zero && textItalicRect.contains(point) {
+                            toggleTextItalic(); return
+                        }
+                        if textUnderlineRect != .zero && textUnderlineRect.contains(point) {
+                            toggleTextUnderline(); return
+                        }
+                        if textStrikethroughRect != .zero && textStrikethroughRect.contains(point) {
+                            toggleTextStrikethrough(); return
+                        }
+                        if textSizeDecRect != .zero && textSizeDecRect.contains(point) {
+                            textFontSize = max(10, textFontSize - 2)
+                            applyFontSizeToSelection()
+                            needsDisplay = true; return
+                        }
+                        if textSizeIncRect != .zero && textSizeIncRect.contains(point) {
+                            textFontSize = min(72, textFontSize + 2)
+                            applyFontSizeToSelection()
+                            needsDisplay = true; return
+                        }
+                        if textFontDropdownRect != .zero && textFontDropdownRect.contains(point) {
+                            showFontPicker.toggle()
+                            needsDisplay = true; return
+                        }
+                        if textCancelRect != .zero && textCancelRect.contains(point) {
+                            cancelTextEditing(); return
+                        }
+                        if textConfirmRect != .zero && textConfirmRect.contains(point) {
+                            commitTextFieldIfNeeded(); return
+                        }
+                    }
+                    // Beautify mode buttons
+                    if showBeautifyInOptionsRow && beautifyEnabled {
+                        if beautifyModeWindowRect.contains(point) {
+                            beautifyMode = .window; UserDefaults.standard.set(beautifyMode.rawValue, forKey: "beautifyMode"); needsDisplay = true; return
+                        }
+                        if beautifyModeRoundedRect.contains(point) {
+                            beautifyMode = .rounded; UserDefaults.standard.set(beautifyMode.rawValue, forKey: "beautifyMode"); needsDisplay = true; return
+                        }
+                        // Beautify sliders
+                        for (idx, sr) in [beautifyPaddingSliderRect, beautifyCornerSliderRect, beautifyShadowSliderRect, beautifyBgRadiusSliderRect].enumerated() {
+                            if sr != .zero && sr.insetBy(dx: -4, dy: -4).contains(point) {
+                                isDraggingBeautifySlider = true
+                                activeBeautifySlider = idx
+                                updateBeautifySlider(at: point)
+                                return
+                            }
+                        }
+                        // Beautify swatches
+                        for (i, sr) in beautifySwatchRects.enumerated() {
+                            if sr.insetBy(dx: -2, dy: -2).contains(point) {
+                                beautifyStyleIndex = i
+                                UserDefaults.standard.set(beautifyStyleIndex, forKey: "beautifyStyleIndex")
+                                needsDisplay = true
+                                return
+                            }
+                        }
+                    }
+                    return  // consumed by options row
+                }
+
                 if let action = ToolbarLayout.hitTest(point: point, buttons: bottomButtons) {
                     // Flash press feedback for momentary buttons
                     let momentaryActions: [ToolbarButtonAction] = [.undo, .redo, .copy, .save, .upload, .pin, .ocr, .autoRedact, .removeBackground]
@@ -3973,6 +5353,20 @@ class OverlayView: NSView {
             return
         }
 
+        // Handle options row slider dragging
+        if isDraggingOptionsStroke {
+            updateOptionsStrokeSlider(at: point)
+            return
+        }
+        if isDraggingOptionsCornerRadius {
+            updateOptionsCornerRadius(at: point)
+            return
+        }
+        // Handle beautify slider dragging
+        if isDraggingBeautifySlider {
+            updateBeautifySlider(at: point)
+            return
+        }
         // Handle opacity slider dragging
         if isDraggingOpacitySlider {
             updateOpacityFromPoint(point)
@@ -4120,6 +5514,19 @@ class OverlayView: NSView {
             isDraggingRightBar = false
             return
         }
+        if isDraggingOptionsStroke {
+            isDraggingOptionsStroke = false
+            return
+        }
+        if isDraggingOptionsCornerRadius {
+            isDraggingOptionsCornerRadius = false
+            return
+        }
+        if isDraggingBeautifySlider {
+            isDraggingBeautifySlider = false
+            activeBeautifySlider = -1
+            return
+        }
         if isDraggingOpacitySlider {
             isDraggingOpacitySlider = false
             return
@@ -4209,39 +5616,7 @@ class OverlayView: NSView {
         // Check toolbar button right-clicks first
         if state == .selected && showToolbars {
             if let action = ToolbarLayout.hitTest(point: point, buttons: bottomButtons) {
-                if case .tool(let tool) = action {
-                    let toolsWithMenu: [AnnotationTool] = [.pencil, .line, .arrow, .rectangle, .filledRectangle, .ellipse, .marker, .number, .loupe]
-                    if toolsWithMenu.contains(tool) {
-                        currentTool = tool // Select the tool
-                        if tool == .loupe {
-                            showLoupeSizePicker.toggle()
-                            showColorPicker = false
-                            showBeautifyPicker = false
-                            showStrokePicker = false
-                            showDelayPicker = false
-                        } else {
-                            showStrokePicker.toggle()
-                            showColorPicker = false
-                            showBeautifyPicker = false
-                            showLoupeSizePicker = false
-                            showDelayPicker = false
-                        }
-                        needsDisplay = true
-                        return
-                    }
-                }
-                if case .beautify = action {
-                    showBeautifyPicker.toggle()
-                    showColorPicker = false
-                    showStrokePicker = false
-                    showDelayPicker = false
-                    showUploadConfirmPicker = false
-                    showRedactTypePicker = false
-                    showTranslatePicker = false
-                    showLoupeSizePicker = false
-                    needsDisplay = true
-                    return
-                }
+                // Tool right-click menus removed — options now in the tool options row
                 if case .autoRedact = action {
                     showRedactTypePicker.toggle()
                     showColorPicker = false
@@ -4475,6 +5850,8 @@ class OverlayView: NSView {
                 return
             }
             commitTextFieldIfNeeded()
+            showBeautifyInOptionsRow = false  // switch back to tool options
+            showFontPicker = false
             currentTool = tool
             needsDisplay = true
         case .loupe:
@@ -4519,8 +5896,22 @@ class OverlayView: NSView {
                 overlayDelegate?.overlayViewDidRequestRemoveBackground()
             }
         case .beautify:
-            beautifyEnabled.toggle()
-            UserDefaults.standard.set(beautifyEnabled, forKey: "beautifyEnabled")
+            if !beautifyEnabled {
+                // OFF → ON: turn on and show settings
+                beautifyEnabled = true
+                UserDefaults.standard.set(true, forKey: "beautifyEnabled")
+                showBeautifyInOptionsRow = true
+                startBeautifyToolbarAnimation()
+            } else if showBeautifyInOptionsRow {
+                // ON + settings showing → OFF
+                beautifyEnabled = false
+                UserDefaults.standard.set(false, forKey: "beautifyEnabled")
+                showBeautifyInOptionsRow = false
+                startBeautifyToolbarAnimation()
+            } else {
+                // ON + settings hidden → show settings (don't toggle off)
+                showBeautifyInOptionsRow = true
+            }
             needsDisplay = true
         case .beautifyStyle:
             beautifyStyleIndex = (beautifyStyleIndex + 1) % BeautifyRenderer.styles.count
@@ -4700,6 +6091,13 @@ class OverlayView: NSView {
                 // Edit button (text only)
                 if annotationEditButtonRect != .zero && annotationEditButtonRect.contains(point) {
                     let frame = selected.textDrawRect
+                    // Restore formatting state from the annotation
+                    textFontSize = selected.fontSize
+                    textBold = selected.isBold
+                    textItalic = selected.isItalic
+                    textUnderline = selected.isUnderline
+                    textStrikethrough = selected.isStrikethrough
+                    textFontFamily = selected.fontFamilyName ?? "System"
                     if let idx = annotations.firstIndex(where: { $0 === selected }) {
                         annotations.remove(at: idx)
                         selectedAnnotation = nil
@@ -4840,8 +6238,11 @@ class OverlayView: NSView {
             annotation.sourceImage = compositedImage()
             annotation.sourceImageBounds = bounds
         }
-        if (currentTool == .rectangle || currentTool == .filledRectangle) && roundedRectEnabled {
-            annotation.isRounded = true
+        if currentTool == .rectangle || currentTool == .filledRectangle {
+            annotation.rectCornerRadius = currentRectCornerRadius
+        }
+        if [.pencil, .line, .arrow, .rectangle, .ellipse].contains(currentTool) {
+            annotation.lineStyle = currentLineStyle
         }
         currentAnnotation = annotation
     }
@@ -4964,140 +6365,25 @@ class OverlayView: NSView {
             tv.textStorage?.setAttributedString(existing)
         }
 
-        // Control bar above the text field
-        let barHeight: CGFloat = 28
-        let barWidth: CGFloat = 260
-        let barX = point.x
-        let barY = scrollView.frame.maxY + 4
-        let bar = NSView(frame: NSRect(x: barX, y: barY, width: barWidth, height: barHeight))
-        bar.wantsLayer = true
-        bar.layer?.backgroundColor = NSColor(white: 0.12, alpha: 0.92).cgColor
-        bar.layer?.cornerRadius = 5
-
-        let btnH: CGFloat = 24
-        let btnY: CGFloat = (barHeight - btnH) / 2
-        var btnX: CGFloat = 4
-
-        // Bold
-        let boldBtn = makeTextBarButton(frame: NSRect(x: btnX, y: btnY, width: 28, height: btnH),
-                                        title: "B", font: NSFont.boldSystemFont(ofSize: 12),
-                                        active: textBold, action: #selector(textBoldToggle(_:)), tag: 100)
-        bar.addSubview(boldBtn)
-        btnX += 28
-
-        // Italic
-        let italicFont = NSFontManager.shared.convert(NSFont.systemFont(ofSize: 12), toHaveTrait: .italicFontMask)
-        let italicBtn = makeTextBarButton(frame: NSRect(x: btnX, y: btnY, width: 28, height: btnH),
-                                          title: "I", font: italicFont,
-                                          active: textItalic, action: #selector(textItalicToggle(_:)), tag: 101)
-        bar.addSubview(italicBtn)
-        btnX += 28
-
-        // Underline
-        let uBtn = makeTextBarButton(frame: NSRect(x: btnX, y: btnY, width: 28, height: btnH),
-                                     title: "U", font: NSFont.systemFont(ofSize: 12),
-                                     active: textUnderline, action: #selector(textUnderlineToggle(_:)), tag: 102)
-        // Add underline to the button title
-        let uAttr = NSMutableAttributedString(string: "U", attributes: [
-            .font: NSFont.systemFont(ofSize: 12),
-            .foregroundColor: textUnderline ? ToolbarLayout.accentColor : NSColor.white,
-            .underlineStyle: NSUnderlineStyle.single.rawValue
-        ])
-        uBtn.attributedTitle = uAttr
-        bar.addSubview(uBtn)
-        btnX += 28
-
-        // Strikethrough
-        let sBtn = makeTextBarButton(frame: NSRect(x: btnX, y: btnY, width: 28, height: btnH),
-                                     title: "S", font: NSFont.systemFont(ofSize: 12),
-                                     active: textStrikethrough, action: #selector(textStrikethroughToggle(_:)), tag: 103)
-        let sAttr = NSMutableAttributedString(string: "S", attributes: [
-            .font: NSFont.systemFont(ofSize: 12),
-            .foregroundColor: textStrikethrough ? ToolbarLayout.accentColor : NSColor.white,
-            .strikethroughStyle: NSUnderlineStyle.single.rawValue
-        ])
-        sBtn.attributedTitle = sAttr
-        bar.addSubview(sBtn)
-        btnX += 32
-
-        // Separator
-        let sep = NSView(frame: NSRect(x: btnX, y: btnY + 2, width: 1, height: btnH - 4))
-        sep.wantsLayer = true
-        sep.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.2).cgColor
-        bar.addSubview(sep)
-        btnX += 5
-
-        // Font size decrease
-        let minusBtn = makeTextBarButton(frame: NSRect(x: btnX, y: btnY, width: 24, height: btnH),
-                                         title: "−", font: NSFont.systemFont(ofSize: 15, weight: .medium),
-                                         active: false, action: #selector(textSizeDecrease(_:)), tag: 0)
-        bar.addSubview(minusBtn)
-        btnX += 24
-
-        let sizeLabel = NSTextField(labelWithString: "\(Int(textFontSize))")
-        // Use a fixed pixel size matching the font so the label is exactly as tall as the text,
-        // then center that within btnH manually — avoids NSTextField top-align quirks.
-        let labelFontSize: CGFloat = 12
-        let labelH: CGFloat = labelFontSize + 4
-        let sizeLabel_y = btnY + (btnH - labelH) / 2
-        sizeLabel.frame = NSRect(x: btnX, y: sizeLabel_y, width: 28, height: labelH)
-        sizeLabel.font = NSFont.monospacedDigitSystemFont(ofSize: labelFontSize, weight: .medium)
-        sizeLabel.textColor = .white
-        sizeLabel.alignment = .center
-        sizeLabel.tag = 999
-        bar.addSubview(sizeLabel)
-        btnX += 28
-
-        // Font size increase
-        let plusBtn = makeTextBarButton(frame: NSRect(x: btnX, y: btnY, width: 24, height: btnH),
-                                        title: "+", font: NSFont.systemFont(ofSize: 15, weight: .medium),
-                                        active: false, action: #selector(textSizeIncrease(_:)), tag: 0)
-        bar.addSubview(plusBtn)
-        btnX += 28
-
-        // Separator
-        let sep2 = NSView(frame: NSRect(x: btnX, y: btnY + 2, width: 1, height: btnH - 4))
-        sep2.wantsLayer = true
-        sep2.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.2).cgColor
-        bar.addSubview(sep2)
-        btnX += 5
-
-        // Cancel (X) button
-        let cancelBtn = makeTextBarButton(frame: NSRect(x: btnX, y: btnY, width: 24, height: btnH),
-                                          title: "✕", font: NSFont.systemFont(ofSize: 12, weight: .medium),
-                                          active: false, action: #selector(textCancelClicked(_:)), tag: 0)
-        cancelBtn.contentTintColor = .systemRed
-        bar.addSubview(cancelBtn)
-        btnX += 28
-
-        // Confirm (✓) button
-        let confirmBtn = makeTextBarButton(frame: NSRect(x: btnX, y: btnY, width: 24, height: btnH),
-                                           title: "✓", font: NSFont.systemFont(ofSize: 13, weight: .medium),
-                                           active: false, action: #selector(textConfirmClicked(_:)), tag: 0)
-        confirmBtn.contentTintColor = .systemGreen
-        bar.addSubview(confirmBtn)
-        btnX += 24
-
-        // Resize bar to fit all buttons
-        var barFrame = bar.frame
-        barFrame.size.width = btnX + 4
-        bar.frame = barFrame
-
-        addSubview(bar)
-        textControlBar = bar
-
         window?.makeFirstResponder(tv)
+        needsDisplay = true  // trigger options row redraw with text controls
         window?.invalidateCursorRects(for: self)
     }
 
     private func currentTextFont() -> NSFont {
-        if textBold && textItalic {
-            return NSFontManager.shared.convert(NSFont.systemFont(ofSize: textFontSize, weight: .bold), toHaveTrait: .italicFontMask)
-        } else if textItalic {
-            return NSFontManager.shared.convert(NSFont.systemFont(ofSize: textFontSize), toHaveTrait: .italicFontMask)
+        let fm = NSFontManager.shared
+        let baseFont: NSFont
+        if textFontFamily == "System" {
+            baseFont = NSFont.systemFont(ofSize: textFontSize, weight: textBold ? .bold : .regular)
+        } else if let font = NSFont(name: textFontFamily, size: textFontSize) {
+            baseFont = textBold ? fm.convert(font, toHaveTrait: .boldFontMask) : font
         } else {
-            return NSFont.systemFont(ofSize: textFontSize, weight: textBold ? .bold : .regular)
+            baseFont = NSFont.systemFont(ofSize: textFontSize, weight: textBold ? .bold : .regular)
         }
+        if textItalic {
+            return fm.convert(baseFont, toHaveTrait: .italicFontMask)
+        }
+        return baseFont
     }
 
     private func selectedOrAllRange() -> NSRange {
@@ -5107,21 +6393,10 @@ class OverlayView: NSView {
         return NSRange(location: 0, length: tv.textStorage?.length ?? 0)
     }
 
-    private func makeTextBarButton(frame: NSRect, title: String, font: NSFont, active: Bool, action: Selector, tag: Int) -> HoverButton {
-        let btn = HoverButton(frame: frame)
-        btn.bezelStyle = .smallSquare
-        btn.isBordered = false
-        btn.title = title
-        btn.font = font
-        btn.contentTintColor = active ? ToolbarLayout.accentColor : .white
-        btn.target = self
-        btn.action = action
-        btn.tag = tag
-        return btn
-    }
-
-    @objc private func textBoldToggle(_ sender: NSButton) {
-        guard let tv = textEditView, let ts = tv.textStorage else { return }
+    private func toggleTextBold() {
+        guard let tv = textEditView, let ts = tv.textStorage else {
+            textBold.toggle(); needsDisplay = true; return
+        }
         let range = selectedOrAllRange()
         if range.length > 0 {
             ts.beginEditing()
@@ -5136,13 +6411,15 @@ class OverlayView: NSView {
             ts.endEditing()
         }
         textBold.toggle()
-        sender.contentTintColor = textBold ? ToolbarLayout.accentColor : .white
         tv.typingAttributes[.font] = currentTextFont()
         window?.makeFirstResponder(tv)
+        needsDisplay = true
     }
 
-    @objc private func textItalicToggle(_ sender: NSButton) {
-        guard let tv = textEditView, let ts = tv.textStorage else { return }
+    private func toggleTextItalic() {
+        guard let tv = textEditView, let ts = tv.textStorage else {
+            textItalic.toggle(); needsDisplay = true; return
+        }
         let range = selectedOrAllRange()
         if range.length > 0 {
             ts.beginEditing()
@@ -5157,13 +6434,15 @@ class OverlayView: NSView {
             ts.endEditing()
         }
         textItalic.toggle()
-        sender.contentTintColor = textItalic ? ToolbarLayout.accentColor : .white
         tv.typingAttributes[.font] = currentTextFont()
         window?.makeFirstResponder(tv)
+        needsDisplay = true
     }
 
-    @objc private func textUnderlineToggle(_ sender: NSButton) {
-        guard let tv = textEditView, let ts = tv.textStorage else { return }
+    private func toggleTextUnderline() {
+        guard let tv = textEditView, let ts = tv.textStorage else {
+            textUnderline.toggle(); needsDisplay = true; return
+        }
         let range = selectedOrAllRange()
         if range.length > 0 {
             ts.beginEditing()
@@ -5178,22 +6457,19 @@ class OverlayView: NSView {
             ts.endEditing()
         }
         textUnderline.toggle()
-        let uAttr = NSMutableAttributedString(string: "U", attributes: [
-            .font: NSFont.systemFont(ofSize: 12),
-            .foregroundColor: textUnderline ? ToolbarLayout.accentColor : NSColor.white,
-            .underlineStyle: NSUnderlineStyle.single.rawValue
-        ])
-        sender.attributedTitle = uAttr
         if textUnderline {
             tv.typingAttributes[.underlineStyle] = NSUnderlineStyle.single.rawValue
         } else {
             tv.typingAttributes.removeValue(forKey: .underlineStyle)
         }
         window?.makeFirstResponder(tv)
+        needsDisplay = true
     }
 
-    @objc private func textStrikethroughToggle(_ sender: NSButton) {
-        guard let tv = textEditView, let ts = tv.textStorage else { return }
+    private func toggleTextStrikethrough() {
+        guard let tv = textEditView, let ts = tv.textStorage else {
+            textStrikethrough.toggle(); needsDisplay = true; return
+        }
         let range = selectedOrAllRange()
         if range.length > 0 {
             ts.beginEditing()
@@ -5208,30 +6484,13 @@ class OverlayView: NSView {
             ts.endEditing()
         }
         textStrikethrough.toggle()
-        let sAttr = NSMutableAttributedString(string: "S", attributes: [
-            .font: NSFont.systemFont(ofSize: 12),
-            .foregroundColor: textStrikethrough ? ToolbarLayout.accentColor : NSColor.white,
-            .strikethroughStyle: NSUnderlineStyle.single.rawValue
-        ])
-        sender.attributedTitle = sAttr
         if textStrikethrough {
             tv.typingAttributes[.strikethroughStyle] = NSUnderlineStyle.single.rawValue
         } else {
             tv.typingAttributes.removeValue(forKey: .strikethroughStyle)
         }
         window?.makeFirstResponder(tv)
-    }
-
-    @objc private func textSizeDecrease(_ sender: Any) {
-        textFontSize = max(10, textFontSize - 2)
-        applyFontSizeToSelection()
-        updateSizeLabel()
-    }
-
-    @objc private func textSizeIncrease(_ sender: Any) {
-        textFontSize = min(72, textFontSize + 2)
-        applyFontSizeToSelection()
-        updateSizeLabel()
+        needsDisplay = true
     }
 
     private func applyFontSizeToSelection() {
@@ -5252,24 +6511,38 @@ class OverlayView: NSView {
         window?.makeFirstResponder(tv)
     }
 
-    @objc private func textCancelClicked(_ sender: Any) {
+    private func applyFontFamilyToSelection(_ family: String) {
+        guard let tv = textEditView, let ts = tv.textStorage else { return }
+        let fm = NSFontManager.shared
+        let range = selectedOrAllRange()
+        if range.length > 0 {
+            ts.beginEditing()
+            ts.enumerateAttribute(.font, in: range) { value, attrRange, _ in
+                if let font = value as? NSFont {
+                    let newFont: NSFont
+                    if family == "System" {
+                        newFont = NSFont.systemFont(ofSize: font.pointSize, weight: fm.traits(of: font).contains(.boldFontMask) ? .bold : .regular)
+                    } else {
+                        newFont = fm.convert(font, toFamily: family)
+                    }
+                    ts.addAttribute(.font, value: newFont, range: attrRange)
+                }
+            }
+            ts.endEditing()
+        }
+        tv.typingAttributes[.font] = currentTextFont()
+        resizeTextViewToFit()
+        window?.makeFirstResponder(tv)
+    }
+
+    private func cancelTextEditing() {
         textScrollView?.removeFromSuperview()
         textScrollView = nil
         textEditView = nil
-        textControlBar?.removeFromSuperview()
-        textControlBar = nil
+        showFontPicker = false
         window?.makeFirstResponder(self)
         window?.invalidateCursorRects(for: self)
-    }
-
-    @objc private func textConfirmClicked(_ sender: Any) {
-        commitTextFieldIfNeeded()
-    }
-
-    private func updateSizeLabel() {
-        guard let bar = textControlBar,
-              let label = bar.viewWithTag(999) as? NSTextField else { return }
-        label.stringValue = "\(Int(textFontSize))"
+        needsDisplay = true
     }
 
     private func commitTextFieldIfNeeded() {
@@ -5298,6 +6571,7 @@ class OverlayView: NSView {
             annotation.isItalic = textItalic
             annotation.isUnderline = textUnderline
             annotation.isStrikethrough = textStrikethrough
+            annotation.fontFamilyName = textFontFamily == "System" ? nil : textFontFamily
             annotation.textImage = img
             annotation.textDrawRect = sv.frame
             annotations.append(annotation)
@@ -5307,8 +6581,7 @@ class OverlayView: NSView {
         sv.removeFromSuperview()
         textScrollView = nil
         textEditView = nil
-        textControlBar?.removeFromSuperview()
-        textControlBar = nil
+        showFontPicker = false
         window?.makeFirstResponder(self)
         window?.invalidateCursorRects(for: self)
         needsDisplay = true
@@ -5337,10 +6610,10 @@ class OverlayView: NSView {
                 textScrollView?.removeFromSuperview()
                 textScrollView = nil
                 textEditView = nil
-                textControlBar?.removeFromSuperview()
-                textControlBar = nil
+                showFontPicker = false
                 window?.makeFirstResponder(self)
                 window?.invalidateCursorRects(for: self)
+                needsDisplay = true
             } else if showColorPicker {
                 showColorPicker = false
                 showCustomColorPicker = false
@@ -6114,11 +7387,17 @@ class OverlayView: NSView {
         delaySeconds = 0
         beautifyEnabled = UserDefaults.standard.bool(forKey: "beautifyEnabled")
         beautifyStyleIndex = UserDefaults.standard.integer(forKey: "beautifyStyleIndex")
+        beautifyMode = BeautifyMode(rawValue: UserDefaults.standard.integer(forKey: "beautifyMode")) ?? .window
+        beautifyPadding = CGFloat(UserDefaults.standard.object(forKey: "beautifyPadding") as? Double ?? 48)
+        beautifyCornerRadius = CGFloat(UserDefaults.standard.object(forKey: "beautifyCornerRadius") as? Double ?? 10)
+        beautifyShadowRadius = CGFloat(UserDefaults.standard.object(forKey: "beautifyShadowRadius") as? Double ?? 20)
+        beautifyBgRadius = CGFloat(UserDefaults.standard.object(forKey: "beautifyBgRadius") as? Double ?? 8)
+        currentLineStyle = LineStyle(rawValue: UserDefaults.standard.integer(forKey: "currentLineStyle")) ?? .solid
+        currentRectCornerRadius = CGFloat(UserDefaults.standard.object(forKey: "currentRectCornerRadius") as? Double ?? 0)
         textScrollView?.removeFromSuperview()
         textScrollView = nil
         textEditView = nil
-        textControlBar?.removeFromSuperview()
-        textControlBar = nil
+        showFontPicker = false
         sizeInputField?.removeFromSuperview()
         sizeInputField = nil
         cursorTimer?.invalidate()
@@ -6201,9 +7480,9 @@ extension OverlayView: NSTextViewDelegate {
             textScrollView?.removeFromSuperview()
             textScrollView = nil
             textEditView = nil
-            textControlBar?.removeFromSuperview()
-            textControlBar = nil
+            showFontPicker = false
             window?.makeFirstResponder(self)
+            needsDisplay = true
             return true
         }
         return false
@@ -6229,9 +7508,6 @@ extension OverlayView: NSTextViewDelegate {
         let topEdge = sv.frame.maxY
         sv.frame = NSRect(x: sv.frame.minX, y: topEdge - newHeight, width: newWidth, height: newHeight)
         tv.frame.size = NSSize(width: newWidth, height: newHeight)
-        if let bar = textControlBar {
-            bar.frame.origin.y = sv.frame.maxY + 4
-        }
     }
 }
 

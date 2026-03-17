@@ -120,7 +120,7 @@ class ToolbarLayout {
             btn.isSelected = (tool == selectedTool)
             switch tool {
             case .pencil, .line, .arrow, .rectangle, .filledRectangle, .ellipse, .marker, .number, .loupe:
-                btn.hasContextMenu = true
+                break  // options shown in the tool options row, not via right-click
             default:
                 break
             }

@@ -203,7 +203,7 @@ class OverlayWindowController {
 
     private func applyBeautifyIfNeeded(_ image: NSImage?) -> NSImage? {
         guard let image = image, let view = overlayView, view.beautifyEnabled else { return image }
-        return BeautifyRenderer.render(image: image, styleIndex: view.beautifyStyleIndex)
+        return BeautifyRenderer.render(image: image, config: view.beautifyConfig)
     }
 
     private func copyImageToClipboard(_ image: NSImage) {

@@ -30,7 +30,7 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
 
         // Toolbar padding: must match the values in OverlayView's detached draw block
         let padH: CGFloat = 8 + 52   // left + right toolbar
-        let padV: CGFloat = 52 + 8   // bottom toolbar + top
+        let padV: CGFloat = 52 + 36 + 8   // bottom toolbar + options row (34+2 gap) + top
         let minW: CGFloat = 800  // enough width for all bottom toolbar buttons
         let minH: CGFloat = 400  // enough height for right toolbar buttons
 
@@ -109,7 +109,7 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
     func overlayViewDidConfirm() {
         guard var image = overlayView?.captureSelectedRegion() else { return }
         if overlayView?.beautifyEnabled == true {
-            image = BeautifyRenderer.render(image: image, styleIndex: overlayView?.beautifyStyleIndex ?? 0) ?? image
+            image = BeautifyRenderer.render(image: image, config: overlayView?.beautifyConfig ?? BeautifyConfig()) ?? image
         }
         let autoCopy = UserDefaults.standard.object(forKey: "autoCopyToClipboard") as? Bool ?? true
         if autoCopy { ImageEncoder.copyToClipboard(image) }
@@ -121,7 +121,7 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
         guard let view = overlayView,
               var image = view.captureSelectedRegion() else { return }
         if view.beautifyEnabled {
-            image = BeautifyRenderer.render(image: image, styleIndex: view.beautifyStyleIndex) ?? image
+            image = BeautifyRenderer.render(image: image, config: view.beautifyConfig)
         }
         guard let imageData = ImageEncoder.encode(image) else { return }
         let savePanel = NSSavePanel()
@@ -144,7 +144,7 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
     func overlayViewDidRequestPin() {
         guard var image = overlayView?.captureSelectedRegion() else { return }
         if overlayView?.beautifyEnabled == true {
-            image = BeautifyRenderer.render(image: image, styleIndex: overlayView?.beautifyStyleIndex ?? 0) ?? image
+            image = BeautifyRenderer.render(image: image, config: overlayView?.beautifyConfig ?? BeautifyConfig()) ?? image
         }
         playCopySound()
         (NSApp.delegate as? AppDelegate)?.showPin(image: image)
@@ -173,7 +173,7 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
     func overlayViewDidRequestUpload() {
         guard var image = overlayView?.captureSelectedRegion() else { return }
         if overlayView?.beautifyEnabled == true {
-            image = BeautifyRenderer.render(image: image, styleIndex: overlayView?.beautifyStyleIndex ?? 0) ?? image
+            image = BeautifyRenderer.render(image: image, config: overlayView?.beautifyConfig ?? BeautifyConfig()) ?? image
         }
         playCopySound()
         (NSApp.delegate as? AppDelegate)?.uploadImage(image)
