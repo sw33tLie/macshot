@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.6.0] - 2026-03-17
+
+### Added
+- **Font family picker** — text tool now has a font dropdown in the secondary toolbar with 22 curated typefaces (System, Helvetica Neue, Arial, Avenir Next, Futura, Georgia, and more), each rendered in its own font for a live preview.
+- **Text settings in secondary toolbar** — bold, italic, underline, strikethrough, font size, and cancel/confirm controls are now drawn inline in the tool options row, replacing the old floating control bar.
+
+### Improved
+- **Beautify gradients redesigned** — 18 new gradient styles (up from 12) organized in 6 rows: warm, blues, pink/purple, greens/nature, dark/moody, and clean/neutral. Includes multi-color 4-stop gradients inspired by modern screenshot tools.
+- **Evenly-spaced dashed/dotted lines** — dash and dot patterns on rectangles, ellipses, lines, and arrows now adjust segment size to tile evenly around the shape perimeter, eliminating asymmetric bunching.
+- **Dotted freeform strokes** — dotted pencil strokes now place dots at evenly-spaced arc-length positions instead of relying on Core Graphics dash patterns, fixing uneven spacing with smoothing off.
+- **Beautify slider spacing** — increased margins between Pad/Rad/Shd/BgR sliders so labels no longer overlap adjacent controls.
+- **Default text size** — increased from 16 to 20.
+
+### Fixed
+- **Beautify annotation controls** — move/resize handles and selection highlights now draw on top of the beautify preview instead of being hidden behind it.
+- **Beautify translate overlay** — translated text overlays now render inside the beautify preview instead of being filtered out.
+- **Editor window options row clipping** — the secondary toolbar (tool options row) is now accounted for in the editor window's padding, preventing it from being cut off.
+
 ## [2.5.7] - 2026-03-17
 
 ### Fixed

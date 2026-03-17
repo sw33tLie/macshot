@@ -20,6 +20,61 @@ enum AnnotationTool: Int, CaseIterable {
     case colorSampler    // pick color from screen
 }
 
+enum LineStyle: Int, CaseIterable {
+    case solid = 0
+    case dashed = 1
+    case dotted = 2
+
+    var label: String {
+        switch self {
+        case .solid: return "Solid"
+        case .dashed: return "Dashed"
+        case .dotted: return "Dotted"
+        }
+    }
+
+    func apply(to path: NSBezierPath) {
+        switch self {
+        case .solid: break
+        case .dashed:
+            let pattern: [CGFloat] = [path.lineWidth * 3, path.lineWidth * 2]
+            path.setLineDash(pattern, count: 2, phase: 0)
+        case .dotted:
+            // Zero-length dash + round cap = perfect circles
+            path.lineCapStyle = .round
+            let gap = max(path.lineWidth * 2, 6)
+            let pattern: [CGFloat] = [0, gap]
+            path.setLineDash(pattern, count: 2, phase: 0)
+        }
+    }
+
+    /// Apply with evenly-spaced segments adjusted to fit a known path length.
+    func applyFitted(to path: NSBezierPath, pathLength: CGFloat) {
+        guard pathLength > 0 else { apply(to: path); return }
+        switch self {
+        case .solid: break
+        case .dashed:
+            let dashLen = path.lineWidth * 3
+            let gapLen = path.lineWidth * 2
+            let cycle = dashLen + gapLen
+            let count = max(1, round(pathLength / cycle))
+            let adjustedCycle = pathLength / count
+            let ratio = dashLen / cycle
+            let adjDash = adjustedCycle * ratio
+            let adjGap = adjustedCycle * (1 - ratio)
+            let pattern: [CGFloat] = [adjDash, adjGap]
+            path.setLineDash(pattern, count: 2, phase: 0)
+        case .dotted:
+            path.lineCapStyle = .round
+            let gap = max(path.lineWidth * 2, 6)
+            let count = max(1, round(pathLength / gap))
+            let adjustedGap = pathLength / count
+            let pattern: [CGFloat] = [0, adjustedGap]
+            path.setLineDash(pattern, count: 2, phase: 0)
+        }
+    }
+}
+
 class Annotation {
     let tool: AnnotationTool
     var startPoint: NSPoint
@@ -35,14 +90,17 @@ class Annotation {
     var bakedBlurNSImage: NSImage?    // baked result for pixelate/blur (NSImage avoids CGImage flip issues)
     var textImage: NSImage?   // snapshot of the NSTextView at commit time — drawn as-is, no coord math
     var textDrawRect: NSRect = .zero  // where to draw textImage in OverlayView coords
-    var fontSize: CGFloat = 16
+    var fontSize: CGFloat = 20
     var isBold: Bool = false
     var isItalic: Bool = false
     var groupID: UUID?  // for batch undo (e.g. auto-redact)
     var isUnderline: Bool = false
     var isStrikethrough: Bool = false
     var controlPoint: NSPoint? = nil  // optional bend point for line/arrow
-    var isRounded: Bool = false       // rounded corners for rectangle/filledRectangle
+    var isRounded: Bool = false       // legacy — kept for compat, see rectCornerRadius
+    var rectCornerRadius: CGFloat = 0 // 0..30, actual corner radius for rect tools
+    var lineStyle: LineStyle = .solid // line/arrow/rect/ellipse stroke style
+    var fontFamilyName: String?       // font family for text (nil = system default)
 
     init(tool: AnnotationTool, startPoint: NSPoint, endPoint: NSPoint, color: NSColor, strokeWidth: CGFloat) {
         self.tool = tool
@@ -69,6 +127,9 @@ class Annotation {
         c.isStrikethrough = isStrikethrough
         c.controlPoint = controlPoint
         c.isRounded = isRounded
+        c.rectCornerRadius = rectCornerRadius
+        c.lineStyle = lineStyle
+        c.fontFamilyName = fontFamilyName
         return c
     }
 
@@ -201,6 +262,21 @@ class Annotation {
 
     // MARK: - Geometry helpers
 
+    /// Approximate the arc length of a cubic bezier by sampling.
+    static func approxBezierLength(from p0: NSPoint, cp1: NSPoint, cp2: NSPoint, to p3: NSPoint, steps: Int = 30) -> CGFloat {
+        var length: CGFloat = 0
+        var prev = p0
+        for i in 1...steps {
+            let t = CGFloat(i) / CGFloat(steps)
+            let u = 1 - t
+            let x = u*u*u*p0.x + 3*u*u*t*cp1.x + 3*u*t*t*cp2.x + t*t*t*p3.x
+            let y = u*u*u*p0.y + 3*u*u*t*cp1.y + 3*u*t*t*cp2.y + t*t*t*p3.y
+            length += hypot(x - prev.x, y - prev.y)
+            prev = NSPoint(x: x, y: y)
+        }
+        return length
+    }
+
     private func distanceToQuadCurve(point: NSPoint, from a: NSPoint, control c: NSPoint, to b: NSPoint) -> CGFloat {
         // The curve is drawn as a cubic bezier with cp1 == cp2 == c (NSBezierPath.curve),
         // so sample the cubic formula to match the actual rendered path.
@@ -273,6 +349,53 @@ class Annotation {
     private func drawFreeform(alpha: CGFloat, width: CGFloat) {
         guard let points = points, points.count > 1 else { return }
         guard let ctx = NSGraphicsContext.current?.cgContext else { return }
+
+        // For dotted freeform, place dots at evenly-spaced arc-length positions
+        // to avoid uneven spacing caused by segment boundaries in the polyline.
+        if lineStyle == .dotted {
+            ctx.setAlpha(alpha)
+            ctx.beginTransparencyLayer(auxiliaryInfo: nil)
+            color.withAlphaComponent(1.0).setFill()
+
+            // Compute cumulative arc lengths
+            var cumLengths: [CGFloat] = [0]
+            for i in 1..<points.count {
+                cumLengths.append(cumLengths[i - 1] + hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y))
+            }
+            let totalLength = cumLengths.last!
+            guard totalLength > 0 else {
+                ctx.endTransparencyLayer()
+                ctx.setAlpha(1.0)
+                return
+            }
+
+            let gap = max(width * 2, 6)
+            let count = max(1, round(totalLength / gap))
+            let spacing = totalLength / count
+            let dotRadius = width / 2
+
+            var segIdx = 0
+            var dist: CGFloat = 0
+            while dist <= totalLength + 0.01 {
+                // Find the segment containing this distance
+                while segIdx < points.count - 2 && cumLengths[segIdx + 1] < dist {
+                    segIdx += 1
+                }
+                let segStart = cumLengths[segIdx]
+                let segLen = cumLengths[segIdx + 1] - segStart
+                let t: CGFloat = segLen > 0 ? (dist - segStart) / segLen : 0
+                let x = points[segIdx].x + t * (points[segIdx + 1].x - points[segIdx].x)
+                let y = points[segIdx].y + t * (points[segIdx + 1].y - points[segIdx].y)
+                let dotRect = NSRect(x: x - dotRadius, y: y - dotRadius, width: dotRadius * 2, height: dotRadius * 2)
+                NSBezierPath(ovalIn: dotRect).fill()
+                dist += spacing
+            }
+
+            ctx.endTransparencyLayer()
+            ctx.setAlpha(1.0)
+            return
+        }
+
         // Use a transparency layer so self-overlapping segments don't compound alpha
         ctx.setAlpha(alpha)
         ctx.beginTransparencyLayer(auxiliaryInfo: nil)
@@ -280,6 +403,7 @@ class Annotation {
         path.lineWidth = width
         path.lineCapStyle = .round
         path.lineJoinStyle = .round
+        lineStyle.apply(to: path)
         color.withAlphaComponent(1.0).setStroke()
         path.move(to: points[0])
         for i in 1..<points.count {
@@ -294,6 +418,15 @@ class Annotation {
         let path = NSBezierPath()
         path.lineWidth = strokeWidth
         path.lineCapStyle = .round
+        if lineStyle != .solid {
+            let length: CGFloat
+            if let cp = controlPoint {
+                length = Annotation.approxBezierLength(from: startPoint, cp1: cp, cp2: cp, to: endPoint)
+            } else {
+                length = hypot(endPoint.x - startPoint.x, endPoint.y - startPoint.y)
+            }
+            lineStyle.applyFitted(to: path, pathLength: length)
+        }
         color.setStroke()
         path.move(to: startPoint)
         if let cp = controlPoint {
@@ -331,6 +464,15 @@ class Annotation {
         let path = NSBezierPath()
         path.lineWidth = strokeWidth
         path.lineCapStyle = .round
+        if lineStyle != .solid {
+            let length: CGFloat
+            if let cp = controlPoint {
+                length = Annotation.approxBezierLength(from: startPoint, cp1: cp, cp2: cp, to: lineEnd)
+            } else {
+                length = hypot(lineEnd.x - startPoint.x, lineEnd.y - startPoint.y)
+            }
+            lineStyle.applyFitted(to: path, pathLength: length)
+        }
         color.setStroke()
         path.move(to: startPoint)
         if let cp = controlPoint {
@@ -353,13 +495,19 @@ class Annotation {
     private func drawRectangle(filled: Bool) {
         let rect = boundingRect
         guard rect.width > 0, rect.height > 0 else { return }
-        let cornerRadius: CGFloat = isRounded ? min(rect.width, rect.height) * 0.2 : 0
+        let cornerRadius: CGFloat = rectCornerRadius > 0 ? rectCornerRadius : (isRounded ? min(rect.width, rect.height) * 0.2 : 0)
         if filled {
             color.setFill()
             NSBezierPath(roundedRect: rect, xRadius: cornerRadius, yRadius: cornerRadius).fill()
         } else {
             let path = NSBezierPath(roundedRect: rect, xRadius: cornerRadius, yRadius: cornerRadius)
             path.lineWidth = strokeWidth
+            if lineStyle != .solid {
+                // Perimeter of rounded rect: 4 straight sides + 4 quarter-circle arcs
+                let r = min(cornerRadius, min(rect.width, rect.height) / 2)
+                let perimeter = 2 * (rect.width - 2 * r) + 2 * (rect.height - 2 * r) + 2 * .pi * r
+                lineStyle.applyFitted(to: path, pathLength: perimeter)
+            }
             color.setStroke()
             path.stroke()
         }
@@ -370,6 +518,15 @@ class Annotation {
         guard rect.width > 0, rect.height > 0 else { return }
         let path = NSBezierPath(ovalIn: rect)
         path.lineWidth = strokeWidth
+        if lineStyle != .solid {
+            // Approximate ellipse perimeter (Ramanujan's approximation)
+            let a = rect.width / 2
+            let b = rect.height / 2
+            let perimeter = .pi * (3 * (a + b) - sqrt((3 * a + b) * (a + 3 * b)))
+            lineStyle.applyFitted(to: path, pathLength: perimeter)
+        } else {
+            lineStyle.apply(to: path)
+        }
         color.setStroke()
         path.stroke()
     }
