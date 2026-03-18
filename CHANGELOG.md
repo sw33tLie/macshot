@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.8.1] - 2026-03-18
+
+### Fixed
+- **WebP encoding crash** — fixed crash when copying or saving as WebP. The encoder was using the wrong pixel format (RGBA) for ScreenCaptureKit images (BGRA). Now uses NSImage-based encoding which handles format conversion automatically.
+- **Swift-WebP compatibility** — pinned to v0.5.0 for Xcode 16.4 (Swift 6.1) compatibility. v0.6.1 requires Swift tools 6.2.
+
 ## [2.8.0] - 2026-03-18
 
 ### Added
