@@ -4,7 +4,7 @@
   <img src="assets/logo.svg" alt="macshot logo" width="256"/>
 </p>
 
-A native macOS screenshot tool inspired by [Flameshot](https://flameshot.org/). No Electron, no Qt, no bloat — just pure Swift and AppKit.
+A native macOS screenshot tool inspired by [Flameshot](https://flameshot.org/). No Electron, no Qt, no bloat — built with Swift and AppKit.
 
 macshot lives in your menu bar and lets you capture, annotate, and share screenshots with a single hotkey.
 
@@ -41,10 +41,12 @@ macshot lives in your menu bar and lets you capture, annotate, and share screens
 - **Upload to imgbb** — one-click upload; view and copy upload/delete URLs in Preferences → Uploads
 - **Pixel dimensions** — always-visible size label above the selection, click to type an exact resolution
 - **Quick save** — right-click a window (snap mode) or drag to instantly save to your configured folder
+- **Output formats** — PNG (lossless), JPEG, HEIC, and WebP with configurable quality; optional Retina downscale to 1x; sRGB color profile embedding
 - **Output options** — copy to clipboard (`Cmd+C`), save to file (`Cmd+S`)
 - **Multi-monitor support** — captures all screens simultaneously
 - **Configurable hotkey** — change it in Preferences
 - **Automatic updates** — built-in update checking via [Sparkle](https://sparkle-project.org/); checks every 30 minutes or manually from the menu bar
+- **WebP encoding** — powered by [Swift-WebP](https://github.com/ainame/Swift-WebP) (libwebp wrapper)
 - **Lightweight** — ~8 MB memory at idle, menu bar only (no dock icon)
 
 ## Install

@@ -214,6 +214,7 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
     private func playCopySound() {
         let enabled = UserDefaults.standard.object(forKey: "playCopySound") as? Bool ?? true
         guard enabled else { return }
-        (NSSound(contentsOfFile: "/System/Library/Components/CoreAudio.component/Contents/SharedSupport/SystemSounds/system/Screen Capture.aif", byReference: true) ?? NSSound(named: "Tink"))?.play()
+        AppDelegate.captureSound?.stop()
+        AppDelegate.captureSound?.play()
     }
 }

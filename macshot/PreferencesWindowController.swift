@@ -21,6 +21,9 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
     private var imageFormatPopup: NSPopUpButton!
     private var qualitySlider: NSSlider!
     private var qualityLabel: NSTextField!
+    private var qualityRowLabel: NSTextField!
+    private var downscaleRetinaCheckbox: NSButton!
+    private var embedColorProfileCheckbox: NSButton!
     private var imgbbKeyField: NSTextField!
     private var isRecordingHotkey = false
     private var localMonitor: Any?
@@ -252,14 +255,14 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
 
         // Image format
         imageFormatPopup = NSPopUpButton()
-        imageFormatPopup.addItems(withTitles: ["PNG", "JPEG"])
+        imageFormatPopup.addItems(withTitles: ["PNG", "JPEG", "HEIC", "WebP"])
         imageFormatPopup.target = self
         imageFormatPopup.action = #selector(imageFormatChanged(_:))
 
         stack.addArrangedSubview(labeledRow("Image format:", controls: [imageFormatPopup]))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
-        // JPEG quality
+        // Quality (applies to JPEG and HEIC)
         qualitySlider = NSSlider()
         qualitySlider.minValue = 10
         qualitySlider.maxValue = 100
@@ -271,7 +274,41 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         qualityLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .regular)
         qualityLabel.widthAnchor.constraint(equalToConstant: 44).isActive = true
 
-        stack.addArrangedSubview(labeledRow("JPEG quality:", controls: [qualitySlider, qualityLabel]))
+        qualityRowLabel = NSTextField(labelWithString: "Quality:")
+        qualityRowLabel.font = NSFont.systemFont(ofSize: 13)
+        qualityRowLabel.alignment = .right
+        qualityRowLabel.translatesAutoresizingMaskIntoConstraints = false
+        qualityRowLabel.widthAnchor.constraint(equalToConstant: 140).isActive = true
+
+        let qualityRow = NSStackView(views: [qualityRowLabel, qualitySlider, qualityLabel])
+        qualityRow.orientation = .horizontal
+        qualityRow.spacing = 8
+        qualityRow.alignment = .centerY
+        qualityRow.translatesAutoresizingMaskIntoConstraints = false
+
+        stack.addArrangedSubview(qualityRow)
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        // Downscale Retina
+        downscaleRetinaCheckbox = NSButton(checkboxWithTitle: "Save at standard resolution (1x)", target: self, action: #selector(downscaleRetinaChanged(_:)))
+        stack.addArrangedSubview(indented(downscaleRetinaCheckbox))
+        stack.setCustomSpacing(2, after: stack.arrangedSubviews.last!)
+
+        let downscaleNote = NSTextField(labelWithString: "Halves dimensions on Retina displays, ~4x smaller files")
+        downscaleNote.font = NSFont.systemFont(ofSize: 10)
+        downscaleNote.textColor = .tertiaryLabelColor
+        stack.addArrangedSubview(indented(downscaleNote))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+
+        // Embed color profile
+        embedColorProfileCheckbox = NSButton(checkboxWithTitle: "Embed sRGB color profile", target: self, action: #selector(embedColorProfileChanged(_:)))
+        stack.addArrangedSubview(indented(embedColorProfileCheckbox))
+        stack.setCustomSpacing(2, after: stack.arrangedSubviews.last!)
+
+        let profileNote = NSTextField(labelWithString: "Ensures consistent colors across different displays")
+        profileNote.font = NSFont.systemFont(ofSize: 10)
+        profileNote.textColor = .tertiaryLabelColor
+        stack.addArrangedSubview(indented(profileNote))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         // History size
@@ -745,11 +782,19 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         quickModePopup.selectItem(at: quickModeCopy ? 1 : 0)
 
         let format = ImageEncoder.format
-        imageFormatPopup.selectItem(at: format == .jpeg ? 1 : 0)
+        switch format {
+        case .png:  imageFormatPopup.selectItem(at: 0)
+        case .jpeg: imageFormatPopup.selectItem(at: 1)
+        case .heic: imageFormatPopup.selectItem(at: 2)
+        case .webp: imageFormatPopup.selectItem(at: 3)
+        }
 
         let quality = Int(ImageEncoder.quality * 100)
         qualitySlider.integerValue = quality
         qualityLabel.stringValue = "\(quality)%"
+
+        downscaleRetinaCheckbox.state = ImageEncoder.downscaleRetina ? .on : .off
+        embedColorProfileCheckbox.state = ImageEncoder.embedColorProfile ? .on : .off
 
         updateQualityVisibility()
 
@@ -769,9 +814,10 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
     }
 
     private func updateQualityVisibility() {
-        let isJPEG = imageFormatPopup.indexOfSelectedItem == 1
-        qualitySlider.isEnabled = isJPEG
-        qualityLabel.textColor = isJPEG ? .labelColor : .tertiaryLabelColor
+        let hasQuality = imageFormatPopup.indexOfSelectedItem >= 1  // JPEG or HEIC
+        qualitySlider.isEnabled = hasQuality
+        qualityLabel.textColor = hasQuality ? .labelColor : .tertiaryLabelColor
+        qualityRowLabel.textColor = hasQuality ? .labelColor : .tertiaryLabelColor
     }
 
     // MARK: - Actions
@@ -848,12 +894,19 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         if let url = URL(string: "https://github.com/sw33tLie/macshot") { NSWorkspace.shared.open(url) }
     }
     @objc private func imageFormatChanged(_ sender: NSPopUpButton) {
-        UserDefaults.standard.set(sender.indexOfSelectedItem == 1 ? "jpeg" : "png", forKey: "imageFormat")
+        let formats = ["png", "jpeg", "heic", "webp"]
+        UserDefaults.standard.set(formats[sender.indexOfSelectedItem], forKey: "imageFormat")
         updateQualityVisibility()
     }
     @objc private func qualityChanged(_ sender: NSSlider) {
         qualityLabel.stringValue = "\(sender.integerValue)%"
         UserDefaults.standard.set(Double(sender.integerValue) / 100.0, forKey: "imageQuality")
+    }
+    @objc private func downscaleRetinaChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: "downscaleRetina")
+    }
+    @objc private func embedColorProfileChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: "embedColorProfile")
     }
     @objc private func imgbbKeyChanged(_ sender: NSTextField) {
         let key = sender.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)

@@ -189,16 +189,11 @@ class OverlayWindowController {
         UserDefaults.standard.set(NSStringFromRect(screen.frame), forKey: "lastSelectionScreenFrame")
     }
 
-    private static let captureSound: NSSound? = {
-        let path = "/System/Library/Components/CoreAudio.component/Contents/SharedSupport/SystemSounds/system/Screen Capture.aif"
-        return NSSound(contentsOfFile: path, byReference: true) ?? NSSound(named: "Tink")
-    }()
-
     private func playCopySound() {
         let soundEnabled = UserDefaults.standard.object(forKey: "playCopySound") as? Bool ?? true
         guard soundEnabled else { return }
-        Self.captureSound?.stop()
-        Self.captureSound?.play()
+        AppDelegate.captureSound?.stop()
+        AppDelegate.captureSound?.play()
     }
 
     private func applyBeautifyIfNeeded(_ image: NSImage?) -> NSImage? {

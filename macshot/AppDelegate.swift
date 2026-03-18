@@ -24,11 +24,25 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     /// The overlay controller whose selection is being scroll-captured.
     private var scrollCaptureOverlayController: OverlayWindowController?
 
+    /// Shared capture sound — loaded once, reused everywhere.
+    static let captureSound: NSSound? = {
+        let path = "/System/Library/Components/CoreAudio.component/Contents/SharedSupport/SystemSounds/system/Screen Capture.aif"
+        return NSSound(contentsOfFile: path, byReference: true) ?? NSSound(named: "Tink")
+    }()
+
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
         setupMainMenu()
         setupStatusBar()
         registerHotkey()
+
+        // Pre-warm CoreAudio so the first capture sound doesn't stall ~1s.
+        if let sound = Self.captureSound {
+            sound.volume = 0
+            sound.play()
+            sound.stop()
+            sound.volume = 1
+        }
 
         // Check screen recording permission. If not yet granted, show the
         // custom onboarding window instead of letting macOS throw its own dialogs.
@@ -282,10 +296,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func playCopySound() {
         let soundEnabled = UserDefaults.standard.object(forKey: "playCopySound") as? Bool ?? true
         guard soundEnabled else { return }
-        let path = "/System/Library/Components/CoreAudio.component/Contents/SharedSupport/SystemSounds/system/Screen Capture.aif"
-        let sound = NSSound(contentsOfFile: path, byReference: true) ?? NSSound(named: "Tink")
-        sound?.stop()
-        sound?.play()
+        Self.captureSound?.stop()
+        Self.captureSound?.play()
     }
 
     private func saveImageToFile(_ image: NSImage) {
@@ -646,10 +658,8 @@ extension AppDelegate: NSMenuDelegate {
         // Play copy sound
         let soundEnabled = UserDefaults.standard.object(forKey: "playCopySound") as? Bool ?? true
         if soundEnabled {
-            let path = "/System/Library/Components/CoreAudio.component/Contents/SharedSupport/SystemSounds/system/Screen Capture.aif"
-            if let sound = NSSound(contentsOfFile: path, byReference: true) {
-                sound.play()
-            }
+            Self.captureSound?.stop()
+            Self.captureSound?.play()
         }
     }
 

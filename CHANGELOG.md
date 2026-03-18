@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.7.0] - 2026-03-18
+
+### Added
+- **HEIC format** — save screenshots as HEIC (High Efficiency Image Coding) for ~50% smaller files than JPEG at the same visual quality; uses macOS native encoding via CGImageDestination.
+- **WebP format** — save screenshots as WebP for ~25-35% smaller files than JPEG; powered by [Swift-WebP](https://github.com/ainame/Swift-WebP) (libwebp wrapper).
+- **Downscale Retina (1x) option** — new "Save at standard resolution (1x)" checkbox in Preferences → Output. Halves pixel dimensions on Retina displays, producing ~4x smaller files. Useful when sharing on Slack, docs, or the web where full Retina resolution is overkill.
+- **sRGB color profile embedding** — new "Embed sRGB color profile" checkbox in Preferences → Output (on by default). Ensures consistent colors when screenshots are viewed on different displays or transferred between machines.
+
+### Improved
+- **Clipboard copy performance** — eliminated redundant double-encoding (was generating TIFF twice plus the configured format). Now converts once and writes only the configured format to the pasteboard. For a full-screen Retina capture this removes ~30 MB of unnecessary TIFF data from the copy pipeline.
+- **Dropped TIFF from clipboard** — the pasteboard no longer includes an uncompressed TIFF representation alongside the configured format. Modern macOS apps all read PNG/JPEG natively; removing TIFF significantly speeds up Cmd+C. HEIC and WebP clipboard copies include a PNG fallback for compatibility.
+- **Capture sound caching** — all four code paths that played the capture sound were creating new NSSound objects from disk on every call. Consolidated into a single shared static instance (`AppDelegate.captureSound`) reused everywhere. CoreAudio is pre-warmed at app launch to eliminate the ~1s delay on the first capture after idle.
+- **Drag-to-save format** — dragging a floating thumbnail to Finder now saves in the configured format (was hardcoded to PNG).
+- **Quality slider scope** — the quality slider in Preferences now applies to JPEG, HEIC, and WebP (was JPEG-only). Disabled for PNG (always lossless).
+- **History pixel dimensions** — the "Recent Captures" menu now shows correct pixel dimensions when the Retina downscale option is enabled.
+
 ## [2.6.0] - 2026-03-17
 
 ### Added

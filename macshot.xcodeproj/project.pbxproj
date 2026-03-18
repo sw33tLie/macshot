@@ -37,6 +37,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA0000012F61B60100B71643 /* Sparkle in Frameworks */,
+				AA0000062F61B60100B71643 /* WebP in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -80,6 +81,7 @@
 			name = macshot;
 			packageProductDependencies = (
 				AA0000022F61B60100B71643 /* Sparkle */,
+				AA0000052F61B60100B71643 /* WebP */,
 			);
 			productName = macshot;
 			productReference = 2F4EB1222F61B60100B71643 /* macshot.app */;
@@ -115,6 +117,7 @@
 			projectRoot = "";
 			packageReferences = (
 				AA0000032F61B60100B71643 /* XCRemoteSwiftPackageReference "Sparkle" */,
+				AA0000042F61B60100B71643 /* XCRemoteSwiftPackageReference "Swift-WebP" */,
 			);
 			targets = (
 				2F4EB1212F61B60100B71643 /* macshot */,
@@ -357,6 +360,14 @@
 				minimumVersion = 2.6.0;
 			};
 		};
+		AA0000042F61B60100B71643 /* XCRemoteSwiftPackageReference "Swift-WebP" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ainame/Swift-WebP.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.6.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -364,6 +375,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = AA0000032F61B60100B71643 /* XCRemoteSwiftPackageReference "Sparkle" */;
 			productName = Sparkle;
+		};
+		AA0000052F61B60100B71643 /* WebP */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA0000042F61B60100B71643 /* XCRemoteSwiftPackageReference "Swift-WebP" */;
+			productName = WebP;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

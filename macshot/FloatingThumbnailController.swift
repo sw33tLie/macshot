@@ -166,13 +166,11 @@ class FloatingThumbnailController: NSObject, NSDraggingSource {
 
     private func startDrag(event: NSEvent) {
         guard let view = thumbnailView else { return }
-        guard let tiffData = image.tiffRepresentation,
-              let bitmap = NSBitmapImageRep(data: tiffData),
-              let pngData = bitmap.representation(using: .png, properties: [:]) else { return }
+        guard let encodedData = ImageEncoder.encode(image) else { return }
 
         let tempURL = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("macshot_\(OverlayWindowController.formattedTimestamp()).png")
-        do { try pngData.write(to: tempURL) } catch { return }
+            .appendingPathComponent("macshot_\(OverlayWindowController.formattedTimestamp()).\(ImageEncoder.fileExtension)")
+        do { try encodedData.write(to: tempURL) } catch { return }
 
         let draggingItem = NSDraggingItem(pasteboardWriter: tempURL as NSURL)
         draggingItem.setDraggingFrame(view.bounds, contents: image)

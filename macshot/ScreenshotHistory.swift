@@ -83,7 +83,7 @@ class ScreenshotHistory {
         }
 
         let size = image.size
-        let scale = NSScreen.main?.backingScaleFactor ?? 2.0
+        let scale: CGFloat = ImageEncoder.downscaleRetina ? 1.0 : (NSScreen.main?.backingScaleFactor ?? 2.0)
         let entry = HistoryEntry(
             id: id,
             fileExtension: ext,
