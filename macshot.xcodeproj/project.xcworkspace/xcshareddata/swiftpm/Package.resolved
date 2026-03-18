@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ainame/Swift-WebP.git",
       "state" : {
-        "revision" : "4e7310667297f066e4884b6258a3a646cac8a50b",
-        "version" : "0.6.1"
+        "revision" : "3f5895711566ee862e7cff7694867c6f77adf452",
+        "version" : "0.5.0"
       }
     }
   ],

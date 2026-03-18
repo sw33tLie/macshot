@@ -139,7 +139,7 @@ enum ImageEncoder {
         guard let cgImage = bitmap.cgImage else { return nil }
         let encoder = WebPEncoder()
         let config = WebPEncoderConfig.preset(.picture, quality: Float(quality * 100))
-        return try? encoder.encode(cgImage, config: config)
+        return try? encoder.encode(RGBA: cgImage, config: config)
     }
 
     /// Generic CGImageDestination encoder — handles sRGB profile embedding.
