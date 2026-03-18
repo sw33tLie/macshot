@@ -136,10 +136,11 @@ enum ImageEncoder {
 
     /// Encode WebP via Swift-WebP (libwebp).
     private static func encodeWebP(bitmap: NSBitmapImageRep, quality: CGFloat) -> Data? {
-        guard let cgImage = bitmap.cgImage else { return nil }
+        let image = NSImage(size: NSSize(width: bitmap.pixelsWide, height: bitmap.pixelsHigh))
+        image.addRepresentation(bitmap)
         let encoder = WebPEncoder()
         let config = WebPEncoderConfig.preset(.picture, quality: Float(quality * 100))
-        return try? encoder.encode(RGBA: cgImage, config: config)
+        return try? encoder.encode(image, config: config)
     }
 
     /// Generic CGImageDestination encoder — handles sRGB profile embedding.
