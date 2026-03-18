@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.7.1] - 2026-03-18
+
+### Added
+- **Redesigned color picker** — modern popup with always-visible HSB gradient, brightness slider, hex color display, and consistent slider thumbs. Preset colors reduced to 12 essential system colors for a cleaner layout.
+- **Custom color palette** — 7 saveable color slots that persist across app restarts. Click an empty slot to save the current color, right-click any slot to replace it with the current color (or clear it if it already matches). "Add to My Colors" button at the bottom for quick saving.
+- **Color sampler sets drawing color** — clicking with the color sampler (eyedropper) tool now sets the current drawing color to the sampled pixel, in addition to the existing C-to-copy-hex shortcut.
+
+### Fixed
+- **Stroke width slider label overlap** — the "20px" label no longer overlaps with the slider knob on the last step.
+- **Crosshair cursor over color picker** — the cursor now correctly switches to an arrow when hovering over the color picker popup.
+
 ## [2.7.0] - 2026-03-18
 
 ### Added
