@@ -499,17 +499,57 @@ class Annotation {
         if filled {
             color.setFill()
             NSBezierPath(roundedRect: rect, xRadius: cornerRadius, yRadius: cornerRadius).fill()
+        } else if lineStyle == .dotted && cornerRadius < 1 {
+            // Draw dots per-side with guaranteed dots at corners
+            drawDottedRectPerSide(rect: rect)
         } else {
             let path = NSBezierPath(roundedRect: rect, xRadius: cornerRadius, yRadius: cornerRadius)
             path.lineWidth = strokeWidth
             if lineStyle != .solid {
-                // Perimeter of rounded rect: 4 straight sides + 4 quarter-circle arcs
                 let r = min(cornerRadius, min(rect.width, rect.height) / 2)
                 let perimeter = 2 * (rect.width - 2 * r) + 2 * (rect.height - 2 * r) + 2 * .pi * r
                 lineStyle.applyFitted(to: path, pathLength: perimeter)
             }
             color.setStroke()
             path.stroke()
+        }
+    }
+
+    /// Draw a dotted rectangle with dots guaranteed at every corner.
+    /// Each side is drawn independently so dots tile evenly per-side.
+    private func drawDottedRectPerSide(rect: NSRect) {
+        let dotRadius = strokeWidth / 2
+        let idealGap = max(strokeWidth * 2, 6)
+        color.setFill()
+
+        // Corner points (bottom-left origin, clockwise: BL → TL → TR → BR)
+        let corners = [
+            NSPoint(x: rect.minX, y: rect.minY),  // bottom-left
+            NSPoint(x: rect.minX, y: rect.maxY),  // top-left
+            NSPoint(x: rect.maxX, y: rect.maxY),  // top-right
+            NSPoint(x: rect.maxX, y: rect.minY),  // bottom-right
+        ]
+
+        for i in 0..<4 {
+            let p0 = corners[i]
+            let p1 = corners[(i + 1) % 4]
+            let sideLen = hypot(p1.x - p0.x, p1.y - p0.y)
+            guard sideLen > 0 else { continue }
+
+            // Number of segments (gaps between dots). At least 1 so we get dots at both ends.
+            let n = max(1, Int(round(sideLen / idealGap)))
+            let step = sideLen / CGFloat(n)
+            let dx = (p1.x - p0.x) / sideLen
+            let dy = (p1.y - p0.y) / sideLen
+
+            // Draw dots from p0 to p1 (inclusive of p0, exclusive of p1 to avoid double-drawing corners)
+            for j in 0..<n {
+                let t = CGFloat(j) * step
+                let x = p0.x + dx * t
+                let y = p0.y + dy * t
+                let dotRect = NSRect(x: x - dotRadius, y: y - dotRadius, width: strokeWidth, height: strokeWidth)
+                NSBezierPath(ovalIn: dotRect).fill()
+            }
         }
     }
 

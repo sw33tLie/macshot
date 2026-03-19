@@ -325,6 +325,18 @@ class OverlayView: NSView {
     // Auto-measure preview (live while holding 1 or 2 key)
     private var autoMeasurePreview: Annotation?  // temporary, drawn but not in annotations[]
     private var autoMeasureVertical: Bool = true  // true = "1" key, false = "2" key
+    // Snap/alignment guides
+    private var snapGuideX: CGFloat? = nil  // vertical guide line X
+    private var snapGuideY: CGFloat? = nil  // horizontal guide line Y
+    private let snapThreshold: CGFloat = 5
+    private var snapGuidesEnabled: Bool {
+        UserDefaults.standard.object(forKey: "snapGuidesEnabled") as? Bool ?? true
+    }
+
+    // Redact options in blur/pixelate options row
+    private var redactPIIBtnRect: NSRect = .zero
+    private var redactAllTextBtnRect: NSRect = .zero
+    private var redactTypeDropdownRect: NSRect = .zero
     // Editor top bar
     private var editorTopBarRect: NSRect = .zero
     private var editorCropBtnRect: NSRect = .zero
@@ -757,7 +769,7 @@ class OverlayView: NSView {
         }
 
         // Hover-to-move: only active for the core shape/drawing tools.
-        let hoverMoveTools: Set<AnnotationTool> = [.pencil, .arrow, .line, .rectangle, .filledRectangle, .ellipse]
+        let hoverMoveTools: Set<AnnotationTool> = [.arrow, .line, .rectangle, .filledRectangle, .ellipse]
         // Hover-to-move: when a drawing tool is active and the cursor is over a movable annotation,
         // temporarily show the open-hand cursor so the user can move it without switching tools.
         // Disabled entirely in pass-through mode (recording with annotation off).
@@ -812,6 +824,50 @@ class OverlayView: NSView {
             needsDisplay = true
         }
     }
+
+    // Custom cursors
+    /// Render an SF Symbol as a cursor image: white icon with dark shadow for visibility on any background.
+    private static func cursorFromSymbol(_ name: String, pointSize: CGFloat, hotSpot: NSPoint, canvasSize: CGFloat = 22) -> NSCursor {
+        let size = canvasSize
+        let image = NSImage(size: NSSize(width: size, height: size))
+        image.lockFocus()
+        if let sym = NSImage(systemSymbolName: name, accessibilityDescription: nil) {
+            let cfg = NSImage.SymbolConfiguration(pointSize: pointSize, weight: .semibold)
+            let colored = sym.withSymbolConfiguration(cfg) ?? sym
+            let iconRect = NSRect(x: 1, y: 1, width: size - 2, height: size - 2)
+
+            // Tint to white by drawing into a separate image
+            let tinted = NSImage(size: colored.size)
+            tinted.lockFocus()
+            NSColor.white.setFill()
+            NSRect(origin: .zero, size: colored.size).fill()
+            colored.draw(in: NSRect(origin: .zero, size: colored.size), from: .zero, operation: .destinationIn, fraction: 1.0)
+            tinted.unlockFocus()
+
+            // Dark outline/shadow for contrast on light backgrounds
+            let dark = NSImage(size: colored.size)
+            dark.lockFocus()
+            NSColor(white: 0, alpha: 0.6).setFill()
+            NSRect(origin: .zero, size: colored.size).fill()
+            colored.draw(in: NSRect(origin: .zero, size: colored.size), from: .zero, operation: .destinationIn, fraction: 1.0)
+            dark.unlockFocus()
+
+            // Draw dark shadow offset in multiple directions
+            for dx: CGFloat in [-1, 0, 1] {
+                for dy: CGFloat in [-1, 0, 1] {
+                    if dx == 0 && dy == 0 { continue }
+                    dark.draw(in: iconRect.offsetBy(dx: dx, dy: dy), from: .zero, operation: .sourceOver, fraction: 1.0)
+                }
+            }
+            // Draw white icon on top
+            tinted.draw(in: iconRect, from: .zero, operation: .sourceOver, fraction: 1.0)
+        }
+        image.unlockFocus()
+        return NSCursor(image: image, hotSpot: hotSpot)
+    }
+
+    private static let penCursor: NSCursor = cursorFromSymbol("pencil", pointSize: 14, hotSpot: NSPoint(x: 2, y: 20))
+    private static let moveCursor: NSCursor = cursorFromSymbol("arrow.up.and.down.and.arrow.left.and.right", pointSize: 13, hotSpot: NSPoint(x: 11, y: 11))
 
     // Diagonal resize cursors (macOS doesn't provide these publicly)
     private static let nwseCursor: NSCursor = {
@@ -981,20 +1037,34 @@ class OverlayView: NSView {
             addCursorRect(zoomLabelRect, cursor: .pointingHand)
         }
 
-        // Inside selection — crosshair for drawing, open hand for move mode
+        // Inside selection — tool-specific cursor
         let innerRect = r.insetBy(dx: edgeThickness, dy: edgeThickness)
         if innerRect.width > 0 && innerRect.height > 0 {
-            let selectionCursor: NSCursor = currentTool == .select ? .openHand : .crosshair
+            let selectionCursor: NSCursor
+            switch currentTool {
+            case .select: selectionCursor = .arrow
+            case .pencil: selectionCursor = Self.penCursor
+            default: selectionCursor = .crosshair
+            }
             addCursorRect(innerRect, cursor: selectionCursor)
         }
 
-        // Hover-to-move: openHand over a hovered annotation when using a shape/drawing tool
-        let hoverMoveToolsForCursor: Set<AnnotationTool> = [.pencil, .arrow, .line, .rectangle, .filledRectangle, .ellipse]
+        // Select tool: move cursor only over movable annotations
+        if currentTool == .select {
+            for ann in annotations where ann.isMovable {
+                let bb = ann.boundingRect.insetBy(dx: -8, dy: -8)
+                if bb.width > 0 && bb.height > 0 {
+                    addCursorRect(bb, cursor: Self.moveCursor)
+                }
+            }
+        }
+
+        // Hover-to-move: move cursor over a hovered annotation when using a shape/drawing tool
+        let hoverMoveToolsForCursor: Set<AnnotationTool> = [.arrow, .line, .rectangle, .filledRectangle, .ellipse]
         if hoverMoveToolsForCursor.contains(currentTool), let hovered = hoveredAnnotation {
-            // Use a generous inset so the cursor rect covers the annotation's visual bounds
             let bb = hovered.boundingRect.insetBy(dx: -12, dy: -12)
             if bb.width > 0 && bb.height > 0 {
-                addCursorRect(bb, cursor: .openHand)
+                addCursorRect(bb, cursor: Self.moveCursor)
             }
         }
 
@@ -1214,7 +1284,7 @@ class OverlayView: NSView {
             if !(isRecording && !isAnnotating) {
                 if let selected = selectedAnnotation, currentTool == .select {
                     drawAnnotationControls(for: selected)
-                } else if let hovered = hoveredAnnotation, [AnnotationTool.pencil, .arrow, .line, .rectangle, .filledRectangle, .ellipse].contains(currentTool) {
+                } else if let hovered = hoveredAnnotation, [AnnotationTool.arrow, .line, .rectangle, .filledRectangle, .ellipse].contains(currentTool) {
                     drawAnnotationControls(for: hovered)
                 }
             }
@@ -1223,6 +1293,9 @@ class OverlayView: NSView {
             if currentTool == .marker && markerCursorPoint != .zero && currentAnnotation == nil {
                 drawMarkerCursorPreview(at: markerCursorPoint)
             }
+
+            // Snap alignment guides
+            drawSnapGuides()
 
             context.restoreGraphicsState()
 
@@ -1236,7 +1309,7 @@ class OverlayView: NSView {
                     applyZoomTransform(to: context)
                     if let selected = selectedAnnotation, currentTool == .select {
                         drawAnnotationControls(for: selected)
-                    } else if let hovered = hoveredAnnotation, [AnnotationTool.pencil, .arrow, .line, .rectangle, .filledRectangle, .ellipse].contains(currentTool) {
+                    } else if let hovered = hoveredAnnotation, [AnnotationTool.arrow, .line, .rectangle, .filledRectangle, .ellipse].contains(currentTool) {
                         drawAnnotationControls(for: hovered)
                     }
                     context.restoreGraphicsState()
@@ -1247,6 +1320,22 @@ class OverlayView: NSView {
                     context.saveGraphicsState()
                     applyZoomTransform(to: context)
                     drawLoupePreview(at: loupeCursorPoint)
+                    context.restoreGraphicsState()
+                }
+
+                // Re-draw color sampler preview on top of beautify
+                if currentTool == .colorSampler && colorSamplerPoint != .zero {
+                    context.saveGraphicsState()
+                    applyZoomTransform(to: context)
+                    drawColorSamplerPreview(at: colorSamplerPoint)
+                    context.restoreGraphicsState()
+                }
+
+                // Re-draw snap guides on top of beautify
+                if snapGuideX != nil || snapGuideY != nil {
+                    context.saveGraphicsState()
+                    applyZoomTransform(to: context)
+                    drawSnapGuides()
                     context.restoreGraphicsState()
                 }
             }
@@ -2660,7 +2749,7 @@ class OverlayView: NSView {
     /// Whether the current tool should show the options row
     private var toolHasOptionsRow: Bool {
         switch currentTool {
-        case .pencil, .line, .arrow, .rectangle, .filledRectangle, .ellipse, .marker, .number, .loupe, .measure:
+        case .pencil, .line, .arrow, .rectangle, .filledRectangle, .ellipse, .marker, .number, .loupe, .measure, .pixelate, .blur:
             return true
         case .text:
             return true
@@ -2738,6 +2827,11 @@ class OverlayView: NSView {
             hintStr.draw(at: NSPoint(x: rowRect.midX - hintSize.width / 2,
                                      y: rowRect.midY - hintSize.height / 2),
                          withAttributes: hintAttrs)
+            return
+        }
+
+        if currentTool == .pixelate || currentTool == .blur {
+            drawRedactOptionsRow(in: rowRect)
             return
         }
 
@@ -2937,6 +3031,68 @@ class OverlayView: NSView {
         }
         return families
     }()
+
+    private func drawRedactOptionsRow(in rowRect: NSRect) {
+        let btnH: CGFloat = 22
+        let btnY = rowRect.midY - btnH / 2
+        let btnRadius: CGFloat = 4
+        var curX = rowRect.minX + 10
+
+        let toolName = currentTool == .pixelate ? "Pixelate" : "Blur"
+        let btnFont = NSFont.systemFont(ofSize: 10, weight: .medium)
+        let btnAttrs: [NSAttributedString.Key: Any] = [.font: btnFont, .foregroundColor: NSColor.white]
+
+        // "\(tool) All Text" button (first)
+        let allLabel = "\(toolName) All Text" as NSString
+        let allSize = allLabel.size(withAttributes: btnAttrs)
+        let allBtnW = allSize.width + 14
+        let allRect = NSRect(x: curX, y: btnY, width: allBtnW, height: btnH)
+        redactAllTextBtnRect = allRect
+
+        ToolbarLayout.accentColor.withAlphaComponent(0.7).setFill()
+        NSBezierPath(roundedRect: allRect, xRadius: btnRadius, yRadius: btnRadius).fill()
+        allLabel.draw(at: NSPoint(x: allRect.midX - allSize.width / 2, y: allRect.midY - allSize.height / 2),
+                      withAttributes: btnAttrs)
+        curX += allBtnW + 6
+
+        // "Auto-Redact PII" button (second)
+        let piiLabel = "Auto-Redact PII" as NSString
+        let piiSize = piiLabel.size(withAttributes: btnAttrs)
+        let piiBtnW = piiSize.width + 14
+        let piiRect = NSRect(x: curX, y: btnY, width: piiBtnW, height: btnH)
+        redactPIIBtnRect = piiRect
+
+        NSColor.white.withAlphaComponent(0.1).setFill()
+        NSBezierPath(roundedRect: piiRect, xRadius: btnRadius, yRadius: btnRadius).fill()
+        piiLabel.draw(at: NSPoint(x: piiRect.midX - piiSize.width / 2, y: piiRect.midY - piiSize.height / 2),
+                      withAttributes: btnAttrs)
+        curX += piiBtnW + 8
+
+        // Separator
+        NSColor.white.withAlphaComponent(0.1).setFill()
+        NSBezierPath(rect: NSRect(x: curX, y: rowRect.minY + 7, width: 0.5, height: rowRect.height - 14)).fill()
+        curX += 8
+
+        // Redact type dropdown button (shows what types are active)
+        let enabledTypes = UserDefaults.standard.array(forKey: "enabledRedactTypes") as? [String]
+            ?? OverlayView.redactTypeNames.map { $0.key }
+        let activeCount = enabledTypes.count
+        let totalCount = OverlayView.redactTypeNames.count
+        let dropLabel = "\(activeCount)/\(totalCount) types ▾" as NSString
+        let dropAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 10, weight: .medium),
+            .foregroundColor: NSColor.white.withAlphaComponent(0.6),
+        ]
+        let dropSize = dropLabel.size(withAttributes: dropAttrs)
+        let dropBtnW = dropSize.width + 12
+        let dropRect = NSRect(x: curX, y: btnY, width: dropBtnW, height: btnH)
+        redactTypeDropdownRect = dropRect
+
+        NSColor.white.withAlphaComponent(0.06).setFill()
+        NSBezierPath(roundedRect: dropRect, xRadius: btnRadius, yRadius: btnRadius).fill()
+        dropLabel.draw(at: NSPoint(x: dropRect.midX - dropSize.width / 2, y: dropRect.midY - dropSize.height / 2),
+                       withAttributes: dropAttrs)
+    }
 
     private func drawTextOptionsRow(in rowRect: NSRect) {
         let pad: CGFloat = 8
@@ -3791,15 +3947,19 @@ class OverlayView: NSView {
         let padding: CGFloat = 6
         let pickerHeight = rowH * CGFloat(types.count) + padding * 2
 
-        var anchorRect = NSRect.zero
-        for btn in bottomButtons {
-            if case .autoRedact = btn.action { anchorRect = btn.rect; break }
-        }
+        // Anchor to the dropdown button in the options row (or fallback to options row center)
+        let anchorRect = redactTypeDropdownRect != .zero ? redactTypeDropdownRect : optionsRowRect
 
-        let pickerX = anchorRect.midX - pickerWidth / 2
-        var pickerY = anchorRect.maxY + 4
-        if pickerY + pickerHeight > bounds.maxY - 4 {
+        let pickerX = max(bounds.minX + 4, anchorRect.midX - pickerWidth / 2)
+        var pickerY: CGFloat
+        if optionsRowRect.minY < selectionRect.midY {
+            // Options row is below selection — open picker below dropdown
             pickerY = anchorRect.minY - pickerHeight - 4
+            if pickerY < bounds.minY + 4 { pickerY = anchorRect.maxY + 4 }
+        } else {
+            // Options row is above selection — open picker above dropdown
+            pickerY = anchorRect.maxY + 4
+            if pickerY + pickerHeight > bounds.maxY - 4 { pickerY = anchorRect.minY - pickerHeight - 4 }
         }
         pickerY = max(bounds.minY + 4, min(pickerY, bounds.maxY - pickerHeight - 4))
 
@@ -4188,6 +4348,143 @@ class OverlayView: NSView {
 
         cachedCompositedImage = nil
         needsDisplay = true
+    }
+
+    // MARK: - Snap/Alignment Guides
+
+    /// Collect all snap target X and Y values from the selection rect and existing annotations.
+    private func collectSnapTargets(excluding: Annotation? = nil) -> (xs: [CGFloat], ys: [CGFloat]) {
+        var xs: [CGFloat] = []
+        var ys: [CGFloat] = []
+
+        // Selection rect edges and center
+        xs += [selectionRect.minX, selectionRect.midX, selectionRect.maxX]
+        ys += [selectionRect.minY, selectionRect.midY, selectionRect.maxY]
+
+        // Existing annotation bounding rects
+        for ann in annotations where ann !== excluding {
+            let r = ann.boundingRect
+            guard r.width > 0 || r.height > 0 else { continue }
+            xs += [r.minX, r.midX, r.maxX]
+            ys += [r.minY, r.midY, r.maxY]
+        }
+
+        return (xs, ys)
+    }
+
+    /// Snap a point's X and Y to the nearest target within threshold. Returns snapped point and sets guide lines.
+    private func snapPoint(_ point: NSPoint, excluding: Annotation? = nil) -> NSPoint {
+        guard snapGuidesEnabled else {
+            snapGuideX = nil
+            snapGuideY = nil
+            return point
+        }
+
+        let (xs, ys) = collectSnapTargets(excluding: excluding)
+        var result = point
+        snapGuideX = nil
+        snapGuideY = nil
+
+        // Snap X
+        var bestDx: CGFloat = snapThreshold + 1
+        for tx in xs {
+            let d = abs(point.x - tx)
+            if d < bestDx {
+                bestDx = d
+                result.x = tx
+                snapGuideX = tx
+            }
+        }
+        if bestDx > snapThreshold { snapGuideX = nil; result.x = point.x }
+
+        // Snap Y
+        var bestDy: CGFloat = snapThreshold + 1
+        for ty in ys {
+            let d = abs(point.y - ty)
+            if d < bestDy {
+                bestDy = d
+                result.y = ty
+                snapGuideY = ty
+            }
+        }
+        if bestDy > snapThreshold { snapGuideY = nil; result.y = point.y }
+
+        return result
+    }
+
+    /// Snap a rect (for move operations) — checks all edges and center against targets.
+    /// Returns the delta adjustment needed.
+    private func snapRectDelta(rect: NSRect, excluding: Annotation? = nil) -> (dx: CGFloat, dy: CGFloat) {
+        guard snapGuidesEnabled else {
+            snapGuideX = nil
+            snapGuideY = nil
+            return (0, 0)
+        }
+
+        let (xs, ys) = collectSnapTargets(excluding: excluding)
+        let edgesX = [rect.minX, rect.midX, rect.maxX]
+        let edgesY = [rect.minY, rect.midY, rect.maxY]
+
+        snapGuideX = nil
+        snapGuideY = nil
+        var bestDx: CGFloat = snapThreshold + 1
+        var snapDx: CGFloat = 0
+        var bestDy: CGFloat = snapThreshold + 1
+        var snapDy: CGFloat = 0
+
+        for ex in edgesX {
+            for tx in xs {
+                let d = abs(ex - tx)
+                if d < bestDx {
+                    bestDx = d
+                    snapDx = tx - ex
+                    snapGuideX = tx
+                }
+            }
+        }
+        if bestDx > snapThreshold { snapGuideX = nil; snapDx = 0 }
+
+        for ey in edgesY {
+            for ty in ys {
+                let d = abs(ey - ty)
+                if d < bestDy {
+                    bestDy = d
+                    snapDy = ty - ey
+                    snapGuideY = ty
+                }
+            }
+        }
+        if bestDy > snapThreshold { snapGuideY = nil; snapDy = 0 }
+
+        return (snapDx, snapDy)
+    }
+
+    /// Draw snap guide lines (called from draw after annotations, before toolbars).
+    private func drawSnapGuides() {
+        guard snapGuidesEnabled else { return }
+
+        let guideColor = NSColor.systemCyan.withAlphaComponent(0.6)
+        guideColor.setStroke()
+
+        if let gx = snapGuideX {
+            let line = NSBezierPath()
+            line.move(to: NSPoint(x: gx, y: selectionRect.minY))
+            line.line(to: NSPoint(x: gx, y: selectionRect.maxY))
+            line.lineWidth = 0.5
+            let pattern: [CGFloat] = [4, 3]
+            line.setLineDash(pattern, count: 2, phase: 0)
+            line.stroke()
+        }
+
+        if let gy = snapGuideY {
+            let line = NSBezierPath()
+            line.move(to: NSPoint(x: selectionRect.minX, y: gy))
+            line.line(to: NSPoint(x: selectionRect.maxX, y: gy))
+            line.lineWidth = 0.5
+            let pattern: [CGFloat] = [4, 3]
+            line.setLineDash(pattern, count: 2, phase: 0)
+            line.stroke()
+        }
     }
 
     // MARK: - Auto Measure
@@ -5599,8 +5896,11 @@ class OverlayView: NSView {
                 return
             }
             showRedactTypePicker = false
-                    showTranslatePicker = false
             needsDisplay = true
+            // If click was on the dropdown button, consume it so the toggle below doesn't reopen
+            if redactTypeDropdownRect.contains(point) {
+                return
+            }
         }
 
         // Translate language picker dismissal / selection
@@ -5780,6 +6080,22 @@ class OverlayView: NSView {
                         }
                         if textConfirmRect != .zero && textConfirmRect.contains(point) {
                             commitTextFieldIfNeeded(); return
+                        }
+                    }
+                    // Redact buttons (blur/pixelate options row)
+                    if currentTool == .pixelate || currentTool == .blur {
+                        if redactPIIBtnRect != .zero && redactPIIBtnRect.contains(point) {
+                            performAutoRedact()
+                            return
+                        }
+                        if redactAllTextBtnRect != .zero && redactAllTextBtnRect.contains(point) {
+                            performRedactAllText()
+                            return
+                        }
+                        if redactTypeDropdownRect != .zero && redactTypeDropdownRect.contains(point) {
+                            showRedactTypePicker.toggle()
+                            needsDisplay = true
+                            return
                         }
                     }
                     // Beautify mode buttons
@@ -6009,13 +6325,35 @@ class OverlayView: NSView {
                     break
                 }
 
+                let shiftHeld = event.modifierFlags.contains(.shift)
+
                 // Arrow/line/measure: .bottomLeft = startPoint, .topRight = endPoint, .top = controlPoint
                 if annotation.tool == .arrow || annotation.tool == .line || annotation.tool == .measure {
                     switch annotationResizeHandle {
                     case .bottomLeft:
-                        annotation.startPoint = NSPoint(x: origStart.x + dx, y: origStart.y + dy)
+                        var newStart = NSPoint(x: origStart.x + dx, y: origStart.y + dy)
+                        if shiftHeld {
+                            let anchor = annotation.endPoint
+                            let ddx = newStart.x - anchor.x
+                            let ddy = newStart.y - anchor.y
+                            let angle = atan2(ddy, ddx)
+                            let snapped = (angle / (.pi / 4)).rounded() * (.pi / 4)
+                            let dist = hypot(ddx, ddy)
+                            newStart = NSPoint(x: anchor.x + dist * cos(snapped), y: anchor.y + dist * sin(snapped))
+                        }
+                        annotation.startPoint = newStart
                     case .topRight:
-                        annotation.endPoint = NSPoint(x: origEnd.x + dx, y: origEnd.y + dy)
+                        var newEnd = NSPoint(x: origEnd.x + dx, y: origEnd.y + dy)
+                        if shiftHeld {
+                            let anchor = annotation.startPoint
+                            let ddx = newEnd.x - anchor.x
+                            let ddy = newEnd.y - anchor.y
+                            let angle = atan2(ddy, ddx)
+                            let snapped = (angle / (.pi / 4)).rounded() * (.pi / 4)
+                            let dist = hypot(ddx, ddy)
+                            newEnd = NSPoint(x: anchor.x + dist * cos(snapped), y: anchor.y + dist * sin(snapped))
+                        }
+                        annotation.endPoint = newEnd
                     case .top:
                         annotation.controlPoint = NSPoint(x: annotationResizeOrigControlPoint.x + dx, y: annotationResizeOrigControlPoint.y + dy)
                     default:
@@ -6054,16 +6392,44 @@ class OverlayView: NSView {
                 default:
                     break
                 }
+
+                // Shift constraint: force square/circle for corner handles
+                if shiftHeld {
+                    let w = newMaxX - newMinX
+                    let h = newMaxY - newMinY
+                    let side = max(w, h)
+                    switch annotationResizeHandle {
+                    case .topLeft:
+                        newMinX = newMaxX - side
+                        newMaxY = newMinY + side
+                    case .topRight:
+                        newMaxX = newMinX + side
+                        newMaxY = newMinY + side
+                    case .bottomLeft:
+                        newMinX = newMaxX - side
+                        newMinY = newMaxY - side
+                    case .bottomRight:
+                        newMaxX = newMinX + side
+                        newMinY = newMaxY - side
+                    default: break
+                    }
+                }
+
                 annotation.startPoint = NSPoint(x: newMinX, y: newMinY)
                 annotation.endPoint   = NSPoint(x: newMaxX, y: newMaxY)
                 }
                 cachedCompositedImage = nil
                 needsDisplay = true
             } else if isDraggingAnnotation, let annotation = selectedAnnotation {
-                let dx = canvasPoint.x - annotationDragStart.x
-                let dy = canvasPoint.y - annotationDragStart.y
-                annotation.move(dx: dx, dy: dy)
-                annotationDragStart = canvasPoint
+                let rawDx = canvasPoint.x - annotationDragStart.x
+                let rawDy = canvasPoint.y - annotationDragStart.y
+                // Apply snap to the annotation's bounding rect after tentative move
+                var movedRect = annotation.boundingRect.offsetBy(dx: rawDx, dy: rawDy)
+                let snap = snapRectDelta(rect: movedRect, excluding: annotation)
+                let finalDx = rawDx + snap.dx
+                let finalDy = rawDy + snap.dy
+                annotation.move(dx: finalDx, dy: finalDy)
+                annotationDragStart = NSPoint(x: canvasPoint.x + snap.dx, y: canvasPoint.y + snap.dy)
                 cachedCompositedImage = nil
                 needsDisplay = true
             } else if isDraggingSelection {
@@ -6170,6 +6536,8 @@ class OverlayView: NSView {
         case .selected:
             if isDraggingAnnotation {
                 isDraggingAnnotation = false
+                snapGuideX = nil
+                snapGuideY = nil
                 if let ann = selectedAnnotation, ann.tool == .loupe {
                     ann.bakeLoupe()
                 }
@@ -6909,6 +7277,14 @@ class OverlayView: NSView {
             }
         }
 
+        // Apply snap guides for non-freeform tools
+        if annotation.tool != .pencil && annotation.tool != .marker {
+            clampedPoint = snapPoint(clampedPoint, excluding: annotation)
+        } else {
+            snapGuideX = nil
+            snapGuideY = nil
+        }
+
         annotation.endPoint = clampedPoint
 
         if annotation.tool == .pencil || annotation.tool == .marker {
@@ -6944,6 +7320,8 @@ class OverlayView: NSView {
             markerCursorPoint = lastPt
         }
         currentAnnotation = nil
+        snapGuideX = nil
+        snapGuideY = nil
         needsDisplay = true
     }
 
@@ -7566,6 +7944,9 @@ class OverlayView: NSView {
               selectionRect.width > 1, selectionRect.height > 1,
               let screenshot = screenshotImage else { return }
 
+        // Determine redact style based on current tool
+        let redactTool: AnnotationTool = (currentTool == .blur) ? .blur : (currentTool == .pixelate ? .pixelate : .filledRectangle)
+
         // Crop the selected region for Vision
         let regionImage = NSImage(size: selectionRect.size)
         regionImage.lockFocus()
@@ -7580,6 +7961,9 @@ class OverlayView: NSView {
 
         let selRect = selectionRect
         let redactColor = currentColor
+        // Capture composited image for blur/pixelate source
+        let sourceImg = (redactTool == .blur || redactTool == .pixelate) ? compositedImage() : nil
+        let sourceBounds = bounds
 
         let request = VNRecognizeTextRequest { [weak self] request, error in
             guard let self = self else { return }
@@ -7597,13 +7981,17 @@ class OverlayView: NSView {
                 let viewW = box.width * selRect.width + padding * 2
                 let viewH = box.height * selRect.height + padding * 2
                 let annotation = Annotation(
-                    tool: .filledRectangle,
+                    tool: redactTool,
                     startPoint: NSPoint(x: viewX, y: viewY),
                     endPoint: NSPoint(x: viewX + viewW, y: viewY + viewH),
                     color: redactColor,
                     strokeWidth: 0
                 )
                 annotation.groupID = groupID
+                if redactTool == .blur || redactTool == .pixelate {
+                    annotation.sourceImage = sourceImg
+                    annotation.sourceImageBounds = sourceBounds
+                }
                 redactAnnotations.append(annotation)
             }
 
@@ -7674,11 +8062,91 @@ class OverlayView: NSView {
                 }
             }
 
+            // Bake blur/pixelate annotations on background thread
+            for ann in redactAnnotations {
+                ann.bakePixelate()
+            }
+
             DispatchQueue.main.async { [weak self] in
                 guard let self = self, !redactAnnotations.isEmpty else { return }
                 self.annotations.append(contentsOf: redactAnnotations)
                 self.undoStack.append(contentsOf: redactAnnotations.map { .added($0) })
                 self.redoStack.removeAll()
+                self.cachedCompositedImage = nil
+                self.needsDisplay = true
+            }
+        }
+        request.recognitionLevel = .accurate
+        request.usesLanguageCorrection = true
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+            try? handler.perform([request])
+        }
+    }
+
+    private func performRedactAllText() {
+        guard state == .selected,
+              selectionRect.width > 1, selectionRect.height > 1,
+              let screenshot = screenshotImage else { return }
+
+        let redactTool: AnnotationTool = (currentTool == .blur) ? .blur : (currentTool == .pixelate ? .pixelate : .filledRectangle)
+
+        let regionImage = NSImage(size: selectionRect.size)
+        regionImage.lockFocus()
+        screenshot.draw(in: NSRect(x: -selectionRect.origin.x, y: -selectionRect.origin.y,
+                                    width: bounds.width, height: bounds.height),
+                        from: .zero, operation: .copy, fraction: 1.0)
+        regionImage.unlockFocus()
+
+        guard let tiffData = regionImage.tiffRepresentation,
+              let bitmap = NSBitmapImageRep(data: tiffData),
+              let cgImage = bitmap.cgImage else { return }
+
+        let selRect = selectionRect
+        let redactColor = currentColor
+        let sourceImg = (redactTool == .blur || redactTool == .pixelate) ? compositedImage() : nil
+        let sourceBounds = bounds
+
+        let request = VNRecognizeTextRequest { [weak self] request, error in
+            guard let self = self else { return }
+            guard let observations = request.results as? [VNRecognizedTextObservation] else { return }
+
+            var redactAnnotations: [Annotation] = []
+            let groupID = UUID()
+            let padding: CGFloat = 2
+
+            for observation in observations {
+                let box = observation.boundingBox
+                let viewX = selRect.origin.x + box.origin.x * selRect.width - padding
+                let viewY = selRect.origin.y + box.origin.y * selRect.height - padding
+                let viewW = box.width * selRect.width + padding * 2
+                let viewH = box.height * selRect.height + padding * 2
+                let annotation = Annotation(
+                    tool: redactTool,
+                    startPoint: NSPoint(x: viewX, y: viewY),
+                    endPoint: NSPoint(x: viewX + viewW, y: viewY + viewH),
+                    color: redactColor,
+                    strokeWidth: 0
+                )
+                annotation.groupID = groupID
+                if redactTool == .blur || redactTool == .pixelate {
+                    annotation.sourceImage = sourceImg
+                    annotation.sourceImageBounds = sourceBounds
+                }
+                redactAnnotations.append(annotation)
+            }
+
+            for ann in redactAnnotations {
+                ann.bakePixelate()
+            }
+
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self, !redactAnnotations.isEmpty else { return }
+                self.annotations.append(contentsOf: redactAnnotations)
+                self.undoStack.append(contentsOf: redactAnnotations.map { .added($0) })
+                self.redoStack.removeAll()
+                self.cachedCompositedImage = nil
                 self.needsDisplay = true
             }
         }

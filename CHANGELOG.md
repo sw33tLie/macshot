@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.9.0] - 2026-03-19
+
+### Added
+- **Snap alignment guides** — when drawing or moving annotations, edges and centers snap to the selection midlines and existing annotation edges/centers. Cyan dashed guide lines appear at snap points. Toggleable in Preferences (on by default).
+- **Auto-redact in blur/pixelate tools** — auto-redact PII and "redact all text" buttons are now in the blur/pixelate options row (removed from right toolbar). Redactions use the active tool's style (blur or pixelate) instead of always using filled rectangles.
+- **Redact all text** — new button in blur/pixelate options row that detects and redacts all text in the selection, not just PII patterns.
+- **Dotted rectangle corner dots** — dotted-style rectangles now always have a dot at every corner with evenly-spaced dots per side, instead of the previous uneven pattern.
+- **Custom cursors** — pencil tool shows a pen cursor; select/move tool shows a 4-arrow move cursor only when hovering over movable annotations (arrow cursor elsewhere). Both cursors have white fill with dark outline for visibility on any background.
+- **Shift-constrain on resize** — holding Shift while resizing existing annotations constrains lines/arrows/measure to 45° angles and rectangles/ellipses to squares/circles.
+
+### Improved
+- **Pencil hover-to-move removed** — the pencil tool no longer shows edit controls when hovering near existing annotations, preventing accidental moves when drawing close to existing strokes.
+- **Redact type dropdown toggle** — clicking the types dropdown when already open now properly closes it.
+- **Font picker** — hover highlights items in the dropdown; selecting a font no longer commits/deselects the active text field.
+- **Editor right toolbar position** — no longer overlaps the top bar.
+- **Bold/italic on system font** — now works correctly with SF Pro via font descriptor traits.
+- **Number circle sizing** — all stroke width steps produce visibly different sizes.
+- **Number text contrast** — black text on light fill colors for readability.
+- **Crop preview** — shows dimmed overlay, white border, and rule-of-thirds grid while dragging.
+- **Loupe and color sampler in beautify mode** — previews now render on top of the beautify gradient.
+- **Snap guides in beautify mode** — guide lines render on top of the beautify preview.
+
 ## [2.8.1] - 2026-03-18
 
 ### Fixed

@@ -142,11 +142,7 @@ class ToolbarLayout {
             return enabledActions == nil || enabledActions!.contains(tag)
         }
 
-        if actionEnabled(1006) {
-            var autoRedactBtn = ToolbarButton(action: .autoRedact, sfSymbol: "eye.slash.fill", label: nil, tooltip: "Auto-Redact")
-            autoRedactBtn.hasContextMenu = true
-            buttons.append(autoRedactBtn)
-        }
+        // Auto-redact moved to blur/pixelate options row
 
         if !isRecording && actionEnabled(1004) {
             var beautifyBtn = ToolbarButton(action: .beautify, sfSymbol: "sparkles", label: nil, tooltip: "Beautify")

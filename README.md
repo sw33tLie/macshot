@@ -29,7 +29,8 @@ macshot lives in your menu bar and lets you capture, annotate, and share screens
 - **Rich text** — bold, italic, underline, strikethrough, adjustable font size; `Enter` inserts a new line; confirm with ✓ button
 - **Translation** — translate extracted OCR text to any language directly in the OCR results window
 - **Shift-constrain** — hold Shift while drawing for straight lines, perfect circles, and squares
-- **Auto-redact PII** — one-click detection and redaction of emails, phone numbers, credit cards, SSNs, API keys, and more
+- **Auto-redact PII** — one-click detection and redaction of emails, phone numbers, credit cards, SSNs, API keys, and more; uses blur or pixelate style matching the active tool
+- **Snap alignment guides** — annotations snap to selection midlines and existing annotation edges with cyan guide lines (toggleable in Preferences)
 - **Delay capture** — set a 3/5/10 second timer to capture tooltips, menus, and hover states
 - **Secure redaction** — pixelate tool is irreversible (multi-pass downscale, not a reversible blur)
 - **Color picker** — 12 preset colors, one click to switch
