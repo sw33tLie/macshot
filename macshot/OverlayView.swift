@@ -8375,8 +8375,8 @@ class OverlayView: NSView {
             }
         }
 
-        // Apply snap guides for non-freeform tools
-        if annotation.tool != .pencil && annotation.tool != .marker {
+        // Apply snap guides for non-freeform tools (skip when shift-constraining)
+        if !shiftHeld && annotation.tool != .pencil && annotation.tool != .marker {
             clampedPoint = snapPoint(clampedPoint, excluding: annotation)
         } else {
             snapGuideX = nil

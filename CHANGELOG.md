@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.2] - 2026-03-20
+
+### Added
+- **History overlay** — press `Cmd+Shift+H` (or "Show History" from menu bar) to see all recent captures as a full-screen card grid. Click any card to copy it to clipboard. ESC or click outside to dismiss. Hotkey configurable in Preferences.
+- **Horizontal scroll capture** — scroll capture now auto-detects horizontal scrolling. On the first scroll, the direction (vertical or horizontal) is locked for the session. Horizontal scrolls stitch content left-to-right or right-to-left.
+
+### Fixed
+- **Shift + snap guide conflict** — holding Shift while drawing constrained shapes (straight lines, 45° angles, perfect squares) no longer gets nudged by snap alignment guides. Shift constraint now takes priority.
+- **ESC in recording mode (Record Screen)** — pressing ESC before starting capture now correctly closes the overlay. The recording control window activates macshot so it can receive keyboard events.
+- **Stop recording requires two clicks** — the recording control window now accepts the first mouse click immediately (`acceptsFirstMouse`) instead of consuming it for window activation.
+
 ## [3.0.1] - 2026-03-20
 
 ### Added

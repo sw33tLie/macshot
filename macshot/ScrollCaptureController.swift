@@ -48,6 +48,10 @@ final class ScrollCaptureController {
     // Guard: only one captureAndStitch at a time
     private var isCapturing: Bool = false
 
+    // Scroll direction: auto-detected on first stitch, then locked
+    private enum ScrollDirection { case unknown, vertical, horizontal }
+    private var scrollDirection: ScrollDirection = .unknown
+
     // Stitching state — all in points (not pixels), Vision works in normalised/point space
     private var previousStrip: NSImage?       // last captured strip (for registration)
     private var runningStitched: NSImage?     // growing stitched canvas in points
@@ -88,6 +92,7 @@ final class ScrollCaptureController {
                                size: CGSize(width:  CGFloat(firstCG.width)  / scale,
                                             height: CGFloat(firstCG.height) / scale))
         isActive        = true
+        scrollDirection = .unknown
         previousStrip   = firstImg
         runningStitched = firstImg
         stitchedImage   = firstCG
@@ -150,36 +155,55 @@ final class ScrollCaptureController {
 
         guard let prev = previousStrip else { return }
 
-        guard let offset = verticalOffset(from: newStrip, to: prev) else {
-            // Can't register — skip
+        guard let t = translationOffset(from: newStrip, to: prev) else {
             previousStrip = newStrip
             return
         }
 
-        if offset > 0 {
-            // Downward scroll: new content at the bottom
-            guard let composed = compositeBelow(base: runningStitched ?? prev,
-                                                new: newStrip,
-                                                offset: offset) else { return }
-            runningStitched = composed
-            stitchedImage   = composed.cgImage(forProposedRect: nil, context: nil, hints: nil)
-            stitchedPixelSize = CGSize(width: composed.size.width  * scale,
-                                       height: composed.size.height * scale)
-            previousStrip = newStrip
-            stripCount   += 1
-            onStripAdded?(stripCount)
-        } else if offset < 0 {
-            // Upward scroll: trim bottom of canvas
-            let crop = abs(offset)
-            if let trimmed = cropBottom(of: runningStitched ?? prev, by: crop) {
-                runningStitched = trimmed
-                stitchedImage   = trimmed.cgImage(forProposedRect: nil, context: nil, hints: nil)
-                stitchedPixelSize = CGSize(width: trimmed.size.width  * scale,
-                                           height: trimmed.size.height * scale)
+        // Auto-detect scroll direction on first real movement
+        if scrollDirection == .unknown {
+            if abs(t.tx) > abs(t.ty) && abs(t.tx) > 2 {
+                scrollDirection = .horizontal
+            } else if abs(t.ty) > 2 {
+                scrollDirection = .vertical
+            } else {
+                return  // too small to determine
             }
-            previousStrip = newStrip
         }
-        // offset == 0 → no movement, skip
+
+        let base = runningStitched ?? prev
+
+        if scrollDirection == .vertical {
+            let offset = t.ty
+            if offset > 0 {
+                guard let composed = compositeVertical(base: base, new: newStrip, offset: offset, append: true) else { return }
+                updateStitched(composed, newStrip: newStrip, scale: scale)
+            } else if offset < 0 {
+                if let trimmed = cropEdge(of: base, by: abs(offset), direction: .bottom) {
+                    updateStitched(trimmed, newStrip: newStrip, scale: scale, countStrip: false)
+                } else { previousStrip = newStrip }
+            }
+        } else {
+            let offset = t.tx
+            if offset > 0 {
+                guard let composed = compositeHorizontal(base: base, new: newStrip, offset: offset, append: true) else { return }
+                updateStitched(composed, newStrip: newStrip, scale: scale)
+            } else if offset < 0 {
+                guard let composed = compositeHorizontal(base: base, new: newStrip, offset: abs(offset), append: false) else { return }
+                updateStitched(composed, newStrip: newStrip, scale: scale)
+            }
+        }
+    }
+
+    private func updateStitched(_ image: NSImage, newStrip: NSImage, scale: CGFloat, countStrip: Bool = true) {
+        runningStitched = image
+        stitchedImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        stitchedPixelSize = CGSize(width: image.size.width * scale, height: image.size.height * scale)
+        previousStrip = newStrip
+        if countStrip {
+            stripCount += 1
+            onStripAdded?(stripCount)
+        }
     }
 
     // MARK: - Strip capture
@@ -200,11 +224,11 @@ final class ScrollCaptureController {
 
     // MARK: - Vision-based offset detection
 
-    /// Returns the vertical translation (in points) needed to align `current` onto `reference`.
-    /// Positive = current is below reference (downward scroll).
-    /// Negative = current is above reference (upward scroll).
+    /// Returns the (tx, ty) translation (in points) needed to align `current` onto `reference`.
+    /// ty positive = current is below reference (downward scroll).
+    /// tx positive = current is right of reference (rightward scroll).
     /// nil = registration failed.
-    private func verticalOffset(from current: NSImage, to reference: NSImage) -> CGFloat? {
+    private func translationOffset(from current: NSImage, to reference: NSImage) -> (tx: CGFloat, ty: CGFloat)? {
         guard let curCG = current.cgImage(forProposedRect: nil, context: nil, hints: nil),
               let refCG = reference.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
 
@@ -213,42 +237,81 @@ final class ScrollCaptureController {
         guard (try? handler.perform([request])) != nil,
               let obs = request.results?.first as? VNImageTranslationAlignmentObservation else { return nil }
 
-        let ty = obs.alignmentTransform.ty
-        // Convert Vision pixel offset → AppKit points
-        guard current.size.height > 0 else { return nil }
-        let pixelScale = CGFloat(curCG.height) / current.size.height
-        return ty / (pixelScale > 0 ? pixelScale : 1)
+        let t = obs.alignmentTransform
+        guard current.size.height > 0, current.size.width > 0 else { return nil }
+        let pixelScaleY = CGFloat(curCG.height) / current.size.height
+        let pixelScaleX = CGFloat(curCG.width) / current.size.width
+        let ty = t.ty / (pixelScaleY > 0 ? pixelScaleY : 1)
+        let tx = t.tx / (pixelScaleX > 0 ? pixelScaleX : 1)
+        return (tx, ty)
     }
 
     // MARK: - Stitching helpers
 
-    /// Composite `new` below `base`, overlapping by (new.height - offset) points.
-    private func compositeBelow(base: NSImage, new: NSImage, offset: CGFloat) -> NSImage? {
+    /// Composite `new` below/above `base` with `offset` points of new content.
+    /// `append` = true: new content at bottom (downward scroll).
+    private func compositeVertical(base: NSImage, new: NSImage, offset: CGFloat, append: Bool) -> NSImage? {
         let totalH = base.size.height + offset
-        let size   = NSSize(width: base.size.width, height: totalH)
+        let size = NSSize(width: base.size.width, height: totalH)
         let result = NSImage(size: size)
         result.lockFocus()
-        // base sits at the top
-        base.draw(in: CGRect(x: 0, y: totalH - base.size.height,
-                             width: base.size.width, height: base.size.height))
-        // new sits at the bottom (overlaps with the bottom of base by new.height - offset)
-        new.draw(in: CGRect(x: 0, y: 0, width: new.size.width, height: new.size.height))
+        if append {
+            base.draw(in: CGRect(x: 0, y: totalH - base.size.height, width: base.size.width, height: base.size.height))
+            new.draw(in: CGRect(x: 0, y: 0, width: new.size.width, height: new.size.height))
+        } else {
+            base.draw(in: CGRect(x: 0, y: 0, width: base.size.width, height: base.size.height))
+            new.draw(in: CGRect(x: 0, y: totalH - new.size.height, width: new.size.width, height: new.size.height))
+        }
         result.unlockFocus()
         return result
     }
 
-    /// Remove `amount` points from the bottom of `image` (undo an upward scroll).
-    private func cropBottom(of image: NSImage, by amount: CGFloat) -> NSImage? {
-        let newH = image.size.height - amount
-        guard newH > 0 else { return image }
-        let size   = NSSize(width: image.size.width, height: newH)
+    /// Composite `new` to the right/left of `base` with `offset` points of new content.
+    /// `append` = true: new content on the right (rightward scroll).
+    private func compositeHorizontal(base: NSImage, new: NSImage, offset: CGFloat, append: Bool) -> NSImage? {
+        let totalW = base.size.width + offset
+        let size = NSSize(width: totalW, height: base.size.height)
         let result = NSImage(size: size)
         result.lockFocus()
-        image.draw(in:   NSRect(origin: .zero, size: size),
-                   from: NSRect(x: 0, y: amount, width: image.size.width, height: newH),
-                   operation: .copy, fraction: 1)
+        if append {
+            base.draw(in: CGRect(x: 0, y: 0, width: base.size.width, height: base.size.height))
+            new.draw(in: CGRect(x: totalW - new.size.width, y: 0, width: new.size.width, height: new.size.height))
+        } else {
+            base.draw(in: CGRect(x: totalW - base.size.width, y: 0, width: base.size.width, height: base.size.height))
+            new.draw(in: CGRect(x: 0, y: 0, width: new.size.width, height: new.size.height))
+        }
         result.unlockFocus()
         return result
+    }
+
+    private enum Edge { case bottom, right }
+
+    /// Remove `amount` points from the specified edge.
+    private func cropEdge(of image: NSImage, by amount: CGFloat, direction: Edge) -> NSImage? {
+        switch direction {
+        case .bottom:
+            let newH = image.size.height - amount
+            guard newH > 0 else { return image }
+            let size = NSSize(width: image.size.width, height: newH)
+            let result = NSImage(size: size)
+            result.lockFocus()
+            image.draw(in: NSRect(origin: .zero, size: size),
+                       from: NSRect(x: 0, y: amount, width: image.size.width, height: newH),
+                       operation: .copy, fraction: 1)
+            result.unlockFocus()
+            return result
+        case .right:
+            let newW = image.size.width - amount
+            guard newW > 0 else { return image }
+            let size = NSSize(width: newW, height: image.size.height)
+            let result = NSImage(size: size)
+            result.lockFocus()
+            image.draw(in: NSRect(origin: .zero, size: size),
+                       from: NSRect(x: 0, y: 0, width: newW, height: image.size.height),
+                       operation: .copy, fraction: 1)
+            result.unlockFocus()
+            return result
+        }
     }
 
     private func copyToCPUBacked(_ src: CGImage) -> CGImage? {

@@ -14,6 +14,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var thumbnailControllers: [FloatingThumbnailController] = []
     private var ocrController: OCRResultController?
     private var historyMenu: NSMenu?
+    private var historyOverlayController: HistoryOverlayController?
     private var isCapturing = false
     private var delayCountdownWindow: NSWindow?
     private var delayTimer: Timer?
@@ -130,6 +131,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         recordScreenItem.toolTip = HotkeyManager.displayString(for: .recordScreen)
         menu.addItem(recordScreenItem)
 
+        let historyOverlayItem = NSMenuItem(title: "Show History", action: #selector(showHistoryOverlay), keyEquivalent: "")
+        historyOverlayItem.target = self
+        historyOverlayItem.toolTip = HotkeyManager.displayString(for: .historyOverlay)
+        menu.addItem(historyOverlayItem)
+
         menu.addItem(NSMenuItem.separator())
 
         // Recent Captures submenu
@@ -179,6 +185,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             },
             recordScreen: { [weak self] in
                 DispatchQueue.main.async { self?.recordFullScreen() }
+            },
+            historyOverlay: { [weak self] in
+                DispatchQueue.main.async { self?.showHistoryOverlay() }
             }
         )
     }
@@ -196,6 +205,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func captureFullScreen() {
         pendingFullScreen = true
         startCapture(fromMenu: true)
+    }
+
+    @objc private func showHistoryOverlay() {
+        // Toggle: if already showing, dismiss
+        if let existing = historyOverlayController {
+            existing.dismiss()
+            historyOverlayController = nil
+            return
+        }
+        let controller = HistoryOverlayController()
+        controller.onDismiss = { [weak self] in
+            self?.historyOverlayController = nil
+        }
+        controller.show()
+        historyOverlayController = controller
     }
 
     @objc private func recordArea() {

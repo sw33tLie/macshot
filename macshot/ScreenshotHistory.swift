@@ -133,6 +133,12 @@ class ScreenshotHistory {
         ImageEncoder.copyToClipboard(image)
     }
 
+    func loadImage(for entry: HistoryEntry) -> NSImage? {
+        let fileURL = historyDir.appendingPathComponent("\(entry.id).\(entry.fileExtension)")
+        guard let data = try? Data(contentsOf: fileURL) else { return nil }
+        return NSImage(data: data)
+    }
+
     func loadThumbnail(for entry: HistoryEntry) -> NSImage? {
         if let thumb = entry.thumbnail { return thumb }
         let thumbURL = historyDir.appendingPathComponent("\(entry.id)_thumb.png")

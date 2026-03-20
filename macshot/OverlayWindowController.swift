@@ -141,6 +141,10 @@ class OverlayWindowController {
             let cv = RecordingControlView(frame: NSRect(origin: .zero, size: rightBarScreen.size))
             cv.overlayView = overlayView
             win.contentView = cv
+            win.orderFront(nil)
+            // Briefly activate macshot so the control window can become key for ESC handling,
+            // then re-activate the app underneath so it receives mouse/keyboard for normal use.
+            NSApp.activate(ignoringOtherApps: true)
             win.makeKeyAndOrderFront(nil)
             win.makeFirstResponder(cv)
 

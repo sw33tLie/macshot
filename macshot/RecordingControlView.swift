@@ -75,6 +75,8 @@ final class RecordingControlView: NSView {
 
     override var acceptsFirstResponder: Bool { true }
 
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+
     override func keyDown(with event: NSEvent) {
         if event.keyCode == 53 { // Escape
             guard let ov = overlayView else { return }

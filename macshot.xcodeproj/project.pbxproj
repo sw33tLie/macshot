@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		2F98BCF22F6D83A1006ADDC3 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000022F61B60100B71643 /* Sparkle */; };
+		2F98BCF32F6D83A1006ADDC3 /* WebP in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000052F61B60100B71643 /* WebP */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		2F4EB1222F61B60100B71643 /* macshot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = macshot.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -36,8 +41,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AA0000012F61B60100B71643 /* Sparkle in Frameworks */,
-				AA0000062F61B60100B71643 /* WebP in Frameworks */,
+				2F98BCF32F6D83A1006ADDC3 /* WebP in Frameworks */,
+				2F98BCF22F6D83A1006ADDC3 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -111,14 +116,14 @@
 			);
 			mainGroup = 2F4EB1192F61B60100B71643;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
-			productRefGroup = 2F4EB1232F61B60100B71643 /* Products */;
-			projectDirPath = "";
-			projectRoot = "";
 			packageReferences = (
 				AA0000032F61B60100B71643 /* XCRemoteSwiftPackageReference "Sparkle" */,
 				AA0000042F61B60100B71643 /* XCRemoteSwiftPackageReference "Swift-WebP" */,
 			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 2F4EB1232F61B60100B71643 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
 			targets = (
 				2F4EB1212F61B60100B71643 /* macshot */,
 			);
@@ -283,7 +288,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 3.0.1;
+				MARKETING_VERSION = 3.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.sw33tlie.macshot.macshot;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -315,7 +320,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 3.0.1;
+				MARKETING_VERSION = 3.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.sw33tlie.macshot.macshot;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;

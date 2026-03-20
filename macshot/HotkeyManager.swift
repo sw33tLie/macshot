@@ -11,6 +11,7 @@ class HotkeyManager {
         case captureFullScreen = 2
         case recordArea = 3
         case recordScreen = 4
+        case historyOverlay = 5
 
         var keyCodeKey: String {
             switch self {
@@ -18,6 +19,7 @@ class HotkeyManager {
             case .captureFullScreen: return "hotkeyFullScreenKeyCode"
             case .recordArea: return "hotkeyRecordKeyCode"
             case .recordScreen: return "hotkeyRecordFullScreenKeyCode"
+            case .historyOverlay: return "hotkeyHistoryKeyCode"
             }
         }
 
@@ -27,6 +29,7 @@ class HotkeyManager {
             case .captureFullScreen: return "hotkeyFullScreenModifiers"
             case .recordArea: return "hotkeyRecordModifiers"
             case .recordScreen: return "hotkeyRecordFullScreenModifiers"
+            case .historyOverlay: return "hotkeyHistoryModifiers"
             }
         }
 
@@ -36,6 +39,7 @@ class HotkeyManager {
             case .captureFullScreen: return "Capture Screen"
             case .recordArea: return "Record Area"
             case .recordScreen: return "Record Screen"
+            case .historyOverlay: return "History"
             }
         }
 
@@ -45,6 +49,7 @@ class HotkeyManager {
             case .captureFullScreen: return UInt32(kVK_ANSI_F)
             case .recordArea: return UInt32(kVK_ANSI_R)
             case .recordScreen: return 0
+            case .historyOverlay: return UInt32(kVK_ANSI_H)
             }
         }
 
@@ -89,12 +94,13 @@ class HotkeyManager {
     }
 
     /// Register all hotkeys with their callbacks.
-    func registerAll(captureArea: @escaping () -> Void, captureFullScreen: @escaping () -> Void, recordArea: @escaping () -> Void, recordScreen: @escaping () -> Void) {
+    func registerAll(captureArea: @escaping () -> Void, captureFullScreen: @escaping () -> Void, recordArea: @escaping () -> Void, recordScreen: @escaping () -> Void, historyOverlay: @escaping () -> Void) {
         unregisterAll()
         register(slot: .captureArea, callback: captureArea)
         register(slot: .captureFullScreen, callback: captureFullScreen)
         register(slot: .recordArea, callback: recordArea)
         register(slot: .recordScreen, callback: recordScreen)
+        register(slot: .historyOverlay, callback: historyOverlay)
     }
 
     /// Re-register all hotkeys (e.g., after preferences change).

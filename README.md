@@ -14,7 +14,7 @@ macshot lives in your menu bar and lets you capture, annotate, and share screens
 
 ## Features
 
-- **Scroll capture** — select a region and scroll normally; macshot stitches each strip into one seamless tall image using Apple Vision for pixel-perfect alignment; works at any speed, handles upward and downward scrolling
+- **Scroll capture** — select a region and scroll normally; macshot stitches each strip into one seamless image using Apple Vision for pixel-perfect alignment; works at any speed, auto-detects horizontal or vertical scrolling
 - **Screen recording** — record any region or full screen as MP4 (H.264) or GIF; interact with apps normally while recording, or toggle annotation mode to draw on the live screen; optional mouse click highlighting; recordings saved to your configured folder
 - **Instant capture** — global hotkey (default: `Cmd+Shift+X`) freezes your screen and lets you select a region
 - **Editor window** — open any capture in a standalone resizable editor window with a top bar showing pixel dimensions, crop, flip H/V, and zoom level; annotate, crop, copy, save, pin, or upload without dismissing the overlay
@@ -42,7 +42,7 @@ macshot lives in your menu bar and lets you capture, annotate, and share screens
 - **Background removal** — remove the background from any selection using Apple Vision (macOS 14+)
 - **Pin to screen** — pin a screenshot as a floating always-on-top window, movable and resizable; open in editor with the pencil button
 - **Floating thumbnail** — thumbnail slides in after capture with Copy/Save/Pin/Edit/Upload action buttons on hover; multiple thumbnails stack vertically; configurable auto-dismiss delay (toggleable)
-- **Screenshot history** — re-copy recent captures from the menu bar "Recent Captures" submenu (configurable, in-memory)
+- **Screenshot history** — re-copy recent captures from the menu bar "Recent Captures" submenu (configurable); press `Cmd+Shift+H` for a full-screen visual history overlay
 - **Upload to imgbb** — one-click upload; view and copy upload/delete URLs in Preferences → Uploads
 - **Pixel dimensions** — always-visible size label above the selection, click to type an exact resolution
 - **Quick save** — right-click a window (snap mode) or drag to instantly save to your configured folder
