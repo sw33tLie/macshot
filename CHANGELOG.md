@@ -1,5 +1,33 @@
 # Changelog
 
+## [3.0.0] - 2026-03-20
+
+### Added
+- **Stamp / Emoji tool** — place emojis and images on your screenshots. 21 common emojis in the quick bar, a categorized emoji picker with 5 tabs (Faces, Hands, Symbols, Objects, Flags) and 100+ emojis, plus a "Load Image" button to stamp any PNG/JPEG. Stamps are placed at click position, movable and resizable with the standard 8-handle box. A semi-transparent preview follows the cursor before placement.
+- **Arrow styles** — 5 arrow head styles selectable in the secondary toolbar: single (default), thick/banner (tapered solid shape), double-headed, open/chevron, and tail (circle at start). Persisted across sessions.
+- **Shape fill modes** — rectangle and ellipse tools now have 3 fill modes in the secondary toolbar: stroke only, stroke + semi-transparent fill, and solid fill. Respects color opacity. Replaces the separate "Filled Rectangle" tool.
+- **Record Area / Record Screen** — "Record Screen" renamed to "Record Area" (select region to record). New "Record Screen" opens the recording UI with the full screen already selected, ready to press play.
+- **Mouse click highlights** — toggle in the recording toolbar to show expanding yellow rings at click positions during screen recording.
+
+### Improved
+- **Arrow scaling** — arrowheads now scale down proportionally when the arrow is short, preventing the oversized head problem at the start of a drag.
+- **Editor top bar icons** — crop, flip horizontal, and flip vertical buttons now use the same white-tinted SF Symbol style as the main toolbar (was using default system coloring that looked bad on dark backgrounds).
+- **Secondary toolbar positioning** — the options row now flips above the main toolbar when it would go off-screen (fixes full-screen selection clipping).
+- **Recording mode transition** — clicking the Record button now properly enters pass-through mode: hides the bottom toolbar and options row, activates the window underneath for interaction, and shows the recording control panel. Previously the bottom toolbar stayed visible and drawing was still possible.
+- **Recording control window cleanup** — the recording control panel is now properly dismissed when recording stops (previously could get orphaned and stuck on screen).
+- **ESC in recording mode** — pressing ESC before starting capture now correctly closes the overlay. The recording control window accepts keyboard focus for this.
+- **Paste in text tool** — Cmd+V, Cmd+C, Cmd+X, Cmd+A, and Cmd+Z now work correctly while editing text annotations.
+
+### Fixed
+- **`isCapturingVideo` not reset** — recording state flag was never cleared in `reset()`, breaking state machine invariants.
+- **State mutation in draw()** — mouse highlight pruning was happening inside `draw(_:)`, violating AppKit's drawing contract. Moved to async callback.
+- **Mouse highlight position** — click highlights now use the actual event location instead of a potentially stale `NSEvent.mouseLocation`.
+
+### Removed
+- **Filled Rectangle tool** — merged into the Rectangle tool with a fill mode selector (stroke / stroke+fill / fill).
+- **Keystroke overlay** — removed the "Show Keystrokes" recording feature.
+- **Dead code** — removed unreachable record options picker code.
+
 ## [2.9.0] - 2026-03-19
 
 ### Added

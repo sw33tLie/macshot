@@ -205,6 +205,7 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
         }
     }
 
+    func overlayViewDidRequestEnterRecordingMode() {}
     func overlayViewDidRequestStartRecording(rect: NSRect) {}
     func overlayViewDidRequestStopRecording() {}
     func overlayViewDidRequestDetach() {}

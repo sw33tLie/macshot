@@ -4,8 +4,9 @@ import ServiceManagement
 
 class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
 
-    private var hotkeyField: NSTextField!
-    private var hotkeyButton: NSButton!
+    private var hotkeyFields: [HotkeyManager.HotkeySlot: NSTextField] = [:]
+    private var hotkeyButtons: [HotkeyManager.HotkeySlot: NSButton] = [:]
+    private var recordingSlot: HotkeyManager.HotkeySlot?
     private var savePathField: NSTextField!
     private var autoCopyCheckbox: NSButton!
     private var copySoundCheckbox: NSButton!
@@ -26,7 +27,6 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
     private var downscaleRetinaCheckbox: NSButton!
     private var embedColorProfileCheckbox: NSButton!
     private var imgbbKeyField: NSTextField!
-    private var isRecordingHotkey = false
     private var localMonitor: Any?
     private weak var uploadsStack: NSStackView?
     // Recording tab controls
@@ -73,6 +73,11 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         generalTab.label = "General"
         generalTab.view = makeGeneralTabView()
         tabView.addTabViewItem(generalTab)
+
+        let shortcutsTab = NSTabViewItem(identifier: "shortcuts")
+        shortcutsTab.label = "Shortcuts"
+        shortcutsTab.view = makeShortcutsTabView()
+        tabView.addTabViewItem(shortcutsTab)
 
         let toolsTab = NSTabViewItem(identifier: "tools")
         toolsTab.label = "Tools"
@@ -168,19 +173,6 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         // ── Capture ──────────────────────────────────────────
         stack.addArrangedSubview(sectionHeader("Capture"))
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
-
-        // Hotkey row
-        hotkeyField = NSTextField()
-        hotkeyField.isEditable = false
-        hotkeyField.isSelectable = false
-        hotkeyField.alignment = .center
-        hotkeyField.setContentHuggingPriority(.defaultHigh, for: .horizontal)
-
-        hotkeyButton = NSButton(title: "Record", target: self, action: #selector(recordHotkey(_:)))
-        hotkeyButton.bezelStyle = .rounded
-
-        stack.addArrangedSubview(labeledRow("Global shortcut:", controls: [hotkeyField, hotkeyButton]))
-        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         // Right-click action
         quickModePopup = NSPopUpButton()
@@ -369,6 +361,114 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         return scroll
     }
 
+    // MARK: - Shortcuts Tab
+
+    private func makeShortcutsTabView() -> NSView {
+        let scroll = NSScrollView()
+        scroll.hasVerticalScroller = true
+        scroll.autohidesScrollers = true
+        scroll.borderType = .noBorder
+        scroll.drawsBackground = false
+        scroll.autoresizingMask = [.width, .height]
+
+        let stack = NSStackView()
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 0
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.edgeInsets = NSEdgeInsets(top: 0, left: 20, bottom: 16, right: 20)
+
+        stack.addArrangedSubview(sectionHeader("Keyboard Shortcuts"))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        for slot in HotkeyManager.HotkeySlot.allCases {
+            let field = NSTextField()
+            field.isEditable = false
+            field.isSelectable = false
+            field.alignment = .center
+            field.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+            field.widthAnchor.constraint(greaterThanOrEqualToConstant: 80).isActive = true
+            field.stringValue = HotkeyManager.displayString(for: slot)
+
+            let btn = NSButton(title: "Record", target: self, action: #selector(recordShortcut(_:)))
+            btn.bezelStyle = .rounded
+            btn.tag = slot.rawValue
+
+            hotkeyFields[slot] = field
+            hotkeyButtons[slot] = btn
+
+            stack.addArrangedSubview(labeledRow("\(slot.label):", controls: [field, btn]))
+            stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+        }
+
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        let note = NSTextField(wrappingLabelWithString: "Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut.")
+        note.font = NSFont.systemFont(ofSize: 10)
+        note.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(indented(note))
+
+        // Spacer to push content to top
+        let spacer = NSView()
+        spacer.translatesAutoresizingMaskIntoConstraints = false
+        spacer.setContentHuggingPriority(.fittingSizeCompression, for: .vertical)
+        stack.addArrangedSubview(spacer)
+
+        let clipView = scroll.contentView
+        scroll.documentView = stack
+
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: clipView.topAnchor),
+            stack.leadingAnchor.constraint(equalTo: clipView.leadingAnchor),
+            stack.trailingAnchor.constraint(equalTo: clipView.trailingAnchor),
+            stack.heightAnchor.constraint(greaterThanOrEqualTo: clipView.heightAnchor),
+        ])
+
+        return scroll
+    }
+
+    @objc private func recordShortcut(_ sender: NSButton) {
+        guard let slot = HotkeyManager.HotkeySlot(rawValue: sender.tag) else { return }
+
+        // If already recording this slot, stop
+        if recordingSlot == slot {
+            stopShortcutRecording()
+            return
+        }
+        // Stop any previous recording
+        stopShortcutRecording()
+
+        recordingSlot = slot
+        sender.title = "Press keys..."
+        hotkeyFields[slot]?.stringValue = "Waiting..."
+
+        localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self = self else { return event }
+            let modifiers = event.modifierFlags
+            var carbonMods: UInt32 = 0
+            if modifiers.contains(.command) { carbonMods |= UInt32(cmdKey) }
+            if modifiers.contains(.shift)   { carbonMods |= UInt32(shiftKey) }
+            if modifiers.contains(.option)  { carbonMods |= UInt32(optionKey) }
+            if modifiers.contains(.control) { carbonMods |= UInt32(controlKey) }
+            if carbonMods == 0 { return nil }
+
+            let keyCode = UInt32(event.keyCode)
+            HotkeyManager.saveHotkey(for: slot, keyCode: keyCode, modifiers: carbonMods)
+            self.hotkeyFields[slot]?.stringValue = HotkeyManager.displayString(for: slot)
+            self.stopShortcutRecording()
+            self.onHotkeyChanged?()
+            return nil
+        }
+    }
+
+    private func stopShortcutRecording() {
+        if let slot = recordingSlot {
+            hotkeyButtons[slot]?.title = "Record"
+        }
+        recordingSlot = nil
+        if let m = localMonitor { NSEvent.removeMonitor(m); localMonitor = nil }
+    }
+
     // MARK: - Tools Tab
 
     private func makeToolsTabView() -> NSView {
@@ -398,10 +498,10 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
 
         let annotationTools: [(AnnotationTool, String)] = [
             (.pencil, "Pencil"), (.line, "Line"), (.arrow, "Arrow"),
-            (.rectangle, "Rectangle"), (.filledRectangle, "Filled Rectangle"),
+            (.rectangle, "Rectangle"),
             (.ellipse, "Ellipse"), (.marker, "Marker"), (.text, "Text"),
             (.number, "Number / Counter"), (.pixelate, "Pixelate"),
-            (.blur, "Blur"), (.loupe, "Magnify (Loupe)"), (.colorSampler, "Color Picker"), (.measure, "Measure"),
+            (.blur, "Blur"), (.loupe, "Magnify (Loupe)"), (.stamp, "Stamp / Emoji"), (.colorSampler, "Color Picker"), (.measure, "Measure"),
         ]
         let enabledTools = UserDefaults.standard.array(forKey: "enabledTools") as? [Int]
         let toolsGrid = makeToggleGrid(items: annotationTools.map { (tag: $0.rawValue, label: $1) },
@@ -754,7 +854,10 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
     // MARK: - Load preferences
 
     private func loadPreferences() {
-        hotkeyField.stringValue = HotkeyManager.shortcutDisplayString()
+        // Load shortcut fields
+        for slot in HotkeyManager.HotkeySlot.allCases {
+            hotkeyFields[slot]?.stringValue = HotkeyManager.displayString(for: slot)
+        }
 
         savePathField.stringValue = UserDefaults.standard.string(forKey: "saveDirectory") ?? "~/Pictures"
 
@@ -829,37 +932,6 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
     }
 
     // MARK: - Actions
-
-    @objc private func recordHotkey(_ sender: NSButton) {
-        if isRecordingHotkey { stopRecording(); return }
-        isRecordingHotkey = true
-        hotkeyButton.title = "Press keys..."
-        hotkeyField.stringValue = "Waiting..."
-
-        localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            guard let self = self else { return event }
-            let modifiers = event.modifierFlags
-            var carbonMods: UInt32 = 0
-            if modifiers.contains(.command) { carbonMods |= UInt32(cmdKey) }
-            if modifiers.contains(.shift)   { carbonMods |= UInt32(shiftKey) }
-            if modifiers.contains(.option)  { carbonMods |= UInt32(optionKey) }
-            if modifiers.contains(.control) { carbonMods |= UInt32(controlKey) }
-            if carbonMods == 0 { return nil }
-            let keyCode = UInt32(event.keyCode)
-            UserDefaults.standard.set(Int(keyCode), forKey: "hotkeyKeyCode")
-            UserDefaults.standard.set(Int(carbonMods), forKey: "hotkeyModifiers")
-            self.hotkeyField.stringValue = HotkeyManager.modifierString(from: carbonMods) + HotkeyManager.keyString(from: keyCode)
-            self.stopRecording()
-            self.onHotkeyChanged?()
-            return nil
-        }
-    }
-
-    private func stopRecording() {
-        isRecordingHotkey = false
-        hotkeyButton.title = "Record"
-        if let m = localMonitor { NSEvent.removeMonitor(m); localMonitor = nil }
-    }
 
     @objc private func browseSavePath(_ sender: NSButton) {
         let panel = NSOpenPanel()
@@ -939,8 +1011,8 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
     }
     @objc private func toggleItemChanged(_ sender: NSButton) {
         let key = sender.identifier?.rawValue ?? "enabledTools"
-        let allTools: [AnnotationTool] = [.pencil, .line, .arrow, .rectangle, .filledRectangle,
-                                          .ellipse, .marker, .text, .number, .pixelate, .blur, .loupe, .measure]
+        let allTools: [AnnotationTool] = [.pencil, .line, .arrow, .rectangle,
+                                          .ellipse, .marker, .text, .number, .pixelate, .blur, .loupe, .stamp, .measure]
         let allActions: [Int] = [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010]
         let defaultValues: [Int] = key == "enabledTools" ? allTools.map { $0.rawValue } : allActions
         var enabled = UserDefaults.standard.array(forKey: key) as? [Int] ?? defaultValues

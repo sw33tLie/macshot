@@ -18,6 +18,7 @@ enum AnnotationTool: Int, CaseIterable {
     case translateOverlay // translated text painted over original
     case crop            // crop image (detached editor only)
     case colorSampler    // pick color from screen
+    case stamp           // emoji or image stamp
 }
 
 enum LineStyle: Int, CaseIterable {
@@ -75,6 +76,20 @@ enum LineStyle: Int, CaseIterable {
     }
 }
 
+enum RectFillStyle: Int, CaseIterable {
+    case stroke = 0         // outline only
+    case strokeAndFill = 1  // outline + semi-transparent fill
+    case fill = 2           // filled only (respects color opacity)
+}
+
+enum ArrowStyle: Int, CaseIterable {
+    case single = 0     // arrowhead at end only
+    case thick = 1      // solid filled banner arrow shape
+    case double = 2     // arrowheads at both ends
+    case open = 3       // open/unfilled chevron arrowhead
+    case tail = 4       // filled arrowhead at end + circle at start
+}
+
 class Annotation {
     let tool: AnnotationTool
     var startPoint: NSPoint
@@ -100,6 +115,9 @@ class Annotation {
     var isRounded: Bool = false       // legacy — kept for compat, see rectCornerRadius
     var rectCornerRadius: CGFloat = 0 // 0..30, actual corner radius for rect tools
     var lineStyle: LineStyle = .solid // line/arrow/rect/ellipse stroke style
+    var arrowStyle: ArrowStyle = .single // arrow head style
+    var rectFillStyle: RectFillStyle = .stroke // rectangle fill mode
+    var stampImage: NSImage?          // rendered emoji or loaded picture for stamp tool
     var fontFamilyName: String?       // font family for text (nil = system default)
 
     init(tool: AnnotationTool, startPoint: NSPoint, endPoint: NSPoint, color: NSColor, strokeWidth: CGFloat) {
@@ -129,6 +147,9 @@ class Annotation {
         c.isRounded = isRounded
         c.rectCornerRadius = rectCornerRadius
         c.lineStyle = lineStyle
+        c.arrowStyle = arrowStyle
+        c.rectFillStyle = rectFillStyle
+        c.stampImage = stampImage
         c.fontFamilyName = fontFamilyName
         return c
     }
@@ -163,28 +184,47 @@ class Annotation {
                 if hypot(p.x - point.x, p.y - point.y) < effectiveThreshold { return true }
             }
             return false
-        case .line, .arrow, .measure:
+        case .line, .measure:
+            if let cp = controlPoint {
+                return distanceToQuadCurve(point: point, from: startPoint, control: cp, to: endPoint) < threshold
+            }
+            return distanceToLineSegment(point: point, from: startPoint, to: endPoint) < threshold
+        case .arrow:
+            if arrowStyle == .thick {
+                return boundingRect.insetBy(dx: -threshold, dy: -threshold).contains(point)
+            }
             if let cp = controlPoint {
                 return distanceToQuadCurve(point: point, from: startPoint, control: cp, to: endPoint) < threshold
             }
             return distanceToLineSegment(point: point, from: startPoint, to: endPoint) < threshold
         case .rectangle, .filledRectangle:
             let rect = boundingRect
-            if tool == .filledRectangle {
+            if tool == .filledRectangle || rectFillStyle == .fill || rectFillStyle == .strokeAndFill {
                 return rect.insetBy(dx: -threshold, dy: -threshold).contains(point)
             }
             // For outlined rect, check proximity to edges
             let outer = rect.insetBy(dx: -threshold, dy: -threshold)
             let inner = rect.insetBy(dx: threshold, dy: threshold)
             return outer.contains(point) && (inner.width < 0 || inner.height < 0 || !inner.contains(point))
-        case .ellipse, .loupe:
+        case .ellipse:
             let rect = boundingRect
             guard rect.width > 0, rect.height > 0 else { return false }
             let cx = rect.midX, cy = rect.midY
             let rx = rect.width / 2, ry = rect.height / 2
             let nx = (point.x - cx) / rx, ny = (point.y - cy) / ry
             let d = nx * nx + ny * ny
-            // Close to the ellipse border
+            if rectFillStyle == .fill || rectFillStyle == .strokeAndFill {
+                return d <= 1.0 + (threshold / min(rx, ry))
+            }
+            let rNorm = threshold / min(rx, ry)
+            return abs(d - 1.0) < rNorm * 2
+        case .loupe:
+            let rect = boundingRect
+            guard rect.width > 0, rect.height > 0 else { return false }
+            let cx = rect.midX, cy = rect.midY
+            let rx = rect.width / 2, ry = rect.height / 2
+            let nx = (point.x - cx) / rx, ny = (point.y - cy) / ry
+            let d = nx * nx + ny * ny
             let rNorm = threshold / min(rx, ry)
             return abs(d - 1.0) < rNorm * 2
         case .text:
@@ -192,6 +232,8 @@ class Annotation {
         case .number:
             let radius = 8 + strokeWidth * 3 + threshold
             return hypot(point.x - startPoint.x, point.y - startPoint.y) < radius
+        case .stamp:
+            return boundingRect.insetBy(dx: -threshold, dy: -threshold).contains(point)
         default:
             return false
         }
@@ -314,9 +356,9 @@ class Annotation {
         case .arrow:
             drawArrow()
         case .rectangle:
-            drawRectangle(filled: false)
+            drawRectangle()
         case .filledRectangle:
-            drawRectangle(filled: true)
+            drawRectangle(forceFilled: true)
         case .ellipse:
             drawEllipse()
         case .marker:
@@ -341,6 +383,8 @@ class Annotation {
             drawTranslateOverlay()
         case .colorSampler:
             break  // preview-only tool, no annotation drawn
+        case .stamp:
+            drawStamp()
         }
     }
 
@@ -438,71 +482,246 @@ class Annotation {
     }
 
     private func drawArrow() {
-        // Determine the arrival angle at endPoint for the arrowhead
-        let angle: CGFloat
-        if let cp = controlPoint {
-            // Tangent of quadratic bezier at t=1 is: endPoint - controlPoint
-            angle = atan2(endPoint.y - cp.y, endPoint.x - cp.x)
-        } else {
-            angle = atan2(endPoint.y - startPoint.y, endPoint.x - startPoint.x)
+        // Thick style is a completely different shape — handle separately
+        if arrowStyle == .thick {
+            drawThickArrow()
+            return
         }
-        let arrowLength: CGFloat = max(14, strokeWidth * 5)
+
+        let fullArrowLen: CGFloat = max(14, strokeWidth * 5)
+        let totalLen = hypot(endPoint.x - startPoint.x, endPoint.y - startPoint.y)
+        let maxHead = totalLen * 0.45
+        let arrowLen: CGFloat = min(fullArrowLen, max(4, maxHead))
         let arrowAngle: CGFloat = .pi / 6
 
-        let p1 = NSPoint(
-            x: endPoint.x - arrowLength * cos(angle - arrowAngle),
-            y: endPoint.y - arrowLength * sin(angle - arrowAngle)
-        )
-        let p2 = NSPoint(
-            x: endPoint.x - arrowLength * cos(angle + arrowAngle),
-            y: endPoint.y - arrowLength * sin(angle + arrowAngle)
-        )
+        // End arrowhead geometry
+        let endAngle: CGFloat
+        if let cp = controlPoint {
+            endAngle = atan2(endPoint.y - cp.y, endPoint.x - cp.x)
+        } else {
+            endAngle = atan2(endPoint.y - startPoint.y, endPoint.x - startPoint.x)
+        }
+        let ep1 = NSPoint(x: endPoint.x - arrowLen * cos(endAngle - arrowAngle),
+                           y: endPoint.y - arrowLen * sin(endAngle - arrowAngle))
+        let ep2 = NSPoint(x: endPoint.x - arrowLen * cos(endAngle + arrowAngle),
+                           y: endPoint.y - arrowLen * sin(endAngle + arrowAngle))
+        let endBase = NSPoint(x: (ep1.x + ep2.x) / 2, y: (ep1.y + ep2.y) / 2)
 
-        // Line stops at the base of the arrowhead (midpoint of p1-p2)
-        let lineEnd = NSPoint(x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2)
+        // Start arrowhead geometry (for double style)
+        var startBase = startPoint
+        var sp1 = startPoint, sp2 = startPoint
+        if arrowStyle == .double {
+            let startAngle: CGFloat
+            if let cp = controlPoint {
+                startAngle = atan2(startPoint.y - cp.y, startPoint.x - cp.x)
+            } else {
+                startAngle = atan2(startPoint.y - endPoint.y, startPoint.x - endPoint.x)
+            }
+            sp1 = NSPoint(x: startPoint.x - arrowLen * cos(startAngle - arrowAngle),
+                           y: startPoint.y - arrowLen * sin(startAngle - arrowAngle))
+            sp2 = NSPoint(x: startPoint.x - arrowLen * cos(startAngle + arrowAngle),
+                           y: startPoint.y - arrowLen * sin(startAngle + arrowAngle))
+            startBase = NSPoint(x: (sp1.x + sp2.x) / 2, y: (sp1.y + sp2.y) / 2)
+        }
 
+        // Tail circle radius
+        let tailRadius: CGFloat = max(4, strokeWidth * 2)
+        let lineStart = arrowStyle == .double ? startBase : startPoint
+
+        // Draw the line shaft
         let path = NSBezierPath()
         path.lineWidth = strokeWidth
         path.lineCapStyle = .round
         if lineStyle != .solid {
             let length: CGFloat
             if let cp = controlPoint {
-                length = Annotation.approxBezierLength(from: startPoint, cp1: cp, cp2: cp, to: lineEnd)
+                length = Annotation.approxBezierLength(from: lineStart, cp1: cp, cp2: cp, to: endBase)
             } else {
-                length = hypot(lineEnd.x - startPoint.x, lineEnd.y - startPoint.y)
+                length = hypot(endBase.x - lineStart.x, endBase.y - lineStart.y)
             }
             lineStyle.applyFitted(to: path, pathLength: length)
         }
         color.setStroke()
-        path.move(to: startPoint)
+        path.move(to: lineStart)
         if let cp = controlPoint {
-            path.curve(to: lineEnd, controlPoint1: cp, controlPoint2: cp)
+            path.curve(to: endBase, controlPoint1: cp, controlPoint2: cp)
         } else {
-            path.line(to: lineEnd)
+            path.line(to: endBase)
         }
         path.stroke()
 
-        // Filled arrowhead
-        let arrowHead = NSBezierPath()
+        // Draw arrowhead(s)
         color.setFill()
-        arrowHead.move(to: endPoint)
-        arrowHead.line(to: p1)
-        arrowHead.line(to: p2)
-        arrowHead.close()
-        arrowHead.fill()
+        color.setStroke()
+        switch arrowStyle {
+        case .single, .tail:
+            let head = NSBezierPath()
+            head.move(to: endPoint)
+            head.line(to: ep1)
+            head.line(to: ep2)
+            head.close()
+            head.fill()
+        case .double:
+            let endHead = NSBezierPath()
+            endHead.move(to: endPoint)
+            endHead.line(to: ep1)
+            endHead.line(to: ep2)
+            endHead.close()
+            endHead.fill()
+            let startHead = NSBezierPath()
+            startHead.move(to: startPoint)
+            startHead.line(to: sp1)
+            startHead.line(to: sp2)
+            startHead.close()
+            startHead.fill()
+        case .open:
+            let head = NSBezierPath()
+            head.lineWidth = strokeWidth
+            head.lineCapStyle = .round
+            head.lineJoinStyle = .round
+            head.move(to: ep1)
+            head.line(to: endPoint)
+            head.line(to: ep2)
+            head.stroke()
+        case .thick:
+            break // handled by early return above
+        }
+
+        // Tail: circle at start
+        if arrowStyle == .tail {
+            let circleRect = NSRect(x: startPoint.x - tailRadius, y: startPoint.y - tailRadius,
+                                    width: tailRadius * 2, height: tailRadius * 2)
+            NSBezierPath(ovalIn: circleRect).fill()
+        }
     }
 
-    private func drawRectangle(filled: Bool) {
+    private func drawThickArrow() {
+        let totalLen = hypot(endPoint.x - startPoint.x, endPoint.y - startPoint.y)
+        guard totalLen > 1 else { return }
+
+        // Arrival angle at endPoint (accounts for bend)
+        let endAngle: CGFloat
+        if let cp = controlPoint {
+            endAngle = atan2(endPoint.y - cp.y, endPoint.x - cp.x)
+        } else {
+            endAngle = atan2(endPoint.y - startPoint.y, endPoint.x - startPoint.x)
+        }
+        let epx = -sin(endAngle), epy = cos(endAngle)
+
+        // Departure angle at startPoint
+        let startAngle: CGFloat
+        if let cp = controlPoint {
+            startAngle = atan2(cp.y - startPoint.y, cp.x - startPoint.x)
+        } else {
+            startAngle = endAngle
+        }
+        let spx = -sin(startAngle), spy = cos(startAngle)
+
+        // Sizing
+        let tailHalf = max(2, strokeWidth * 0.8)
+        let shaftHalf = max(6, strokeWidth * 2.5)
+        let headHalf = shaftHalf * 2.2
+        let headLen = min(totalLen * 0.35, headHalf * 1.8)
+        let r: CGFloat = min(headLen * 0.22, headHalf * 0.3)  // corner rounding
+
+        // Head base point
+        let headBase = NSPoint(x: endPoint.x - headLen * cos(endAngle),
+                               y: endPoint.y - headLen * sin(endAngle))
+
+        // Sample points along the shaft (tail → headBase), offset perpendicular for taper
+        // Works for both straight and bent arrows
+        let steps = 24
+        var leftPts: [NSPoint] = []
+        var rightPts: [NSPoint] = []
+
+        for i in 0...steps {
+            let t = CGFloat(i) / CGFloat(steps)
+            let bx, by, tx, ty: CGFloat
+            if let cp = controlPoint {
+                let mt = 1.0 - t
+                bx = mt * mt * startPoint.x + 2 * mt * t * cp.x + t * t * headBase.x
+                by = mt * mt * startPoint.y + 2 * mt * t * cp.y + t * t * headBase.y
+                tx = 2 * (1 - t) * (cp.x - startPoint.x) + 2 * t * (headBase.x - cp.x)
+                ty = 2 * (1 - t) * (cp.y - startPoint.y) + 2 * t * (headBase.y - cp.y)
+            } else {
+                bx = startPoint.x + t * (headBase.x - startPoint.x)
+                by = startPoint.y + t * (headBase.y - startPoint.y)
+                tx = headBase.x - startPoint.x
+                ty = headBase.y - startPoint.y
+            }
+            let tLen = max(hypot(tx, ty), 0.001)
+            let nx = -ty / tLen, ny = tx / tLen
+            let half = tailHalf + (shaftHalf - tailHalf) * t
+            leftPts.append(NSPoint(x: bx + nx * half, y: by + ny * half))
+            rightPts.append(NSPoint(x: bx - nx * half, y: by - ny * half))
+        }
+
+        // Head wing points (the 3 triangle corners)
+        let headLeft  = NSPoint(x: headBase.x + epx * headHalf, y: headBase.y + epy * headHalf)
+        let headRight = NSPoint(x: headBase.x - epx * headHalf, y: headBase.y - epy * headHalf)
+        let shaftLeftEnd  = leftPts.last!
+        let shaftRightEnd = rightPts.last!
+
+        // Helper: point along segment from A to B at distance d from A
+        func along(_ a: NSPoint, _ b: NSPoint, _ d: CGFloat) -> NSPoint {
+            let len = max(hypot(b.x - a.x, b.y - a.y), 0.001)
+            let t = min(d / len, 0.45)
+            return NSPoint(x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t)
+        }
+
+        // Build single unified path
+        let path = NSBezierPath()
+
+        // Left shaft edge (tail → head base)
+        path.move(to: leftPts[0])
+        for p in leftPts.dropFirst() { path.line(to: p) }
+
+        // Corner 1: left wing (shaftLeftEnd → headLeft → endPoint)
+        // Approach headLeft from shaft side, curve through headLeft, continue toward tip
+        let wL1 = along(headLeft, shaftLeftEnd, r)   // before the corner, on shaft→wing edge
+        let wL2 = along(headLeft, endPoint, r)        // after the corner, on wing→tip edge
+        path.line(to: wL1)
+        path.curve(to: wL2, controlPoint1: headLeft, controlPoint2: headLeft)
+
+        // Corner 2: tip (headLeft → endPoint → headRight)
+        let tL = along(endPoint, headLeft, r)         // before tip, on left wing→tip edge
+        let tR = along(endPoint, headRight, r)        // after tip, on tip→right wing edge
+        path.line(to: tL)
+        path.curve(to: tR, controlPoint1: endPoint, controlPoint2: endPoint)
+
+        // Corner 3: right wing (endPoint → headRight → shaftRightEnd)
+        let wR1 = along(headRight, endPoint, r)       // before the corner, on tip→wing edge
+        let wR2 = along(headRight, shaftRightEnd, r)  // after the corner, on wing→shaft edge
+        path.line(to: wR1)
+        path.curve(to: wR2, controlPoint1: headRight, controlPoint2: headRight)
+
+        // Right shaft edge (head base → tail)
+        path.line(to: shaftRightEnd)
+        for p in rightPts.reversed().dropFirst() { path.line(to: p) }
+
+        path.close()
+
+        color.setFill()
+        path.fill()
+    }
+
+    private func drawRectangle(forceFilled: Bool = false) {
         let rect = boundingRect
         guard rect.width > 0, rect.height > 0 else { return }
         let cornerRadius: CGFloat = rectCornerRadius > 0 ? rectCornerRadius : (isRounded ? min(rect.width, rect.height) * 0.2 : 0)
-        if filled {
+        let style = forceFilled ? RectFillStyle.fill : rectFillStyle
+
+        switch style {
+        case .fill:
             color.setFill()
             NSBezierPath(roundedRect: rect, xRadius: cornerRadius, yRadius: cornerRadius).fill()
-        } else if lineStyle == .dotted && cornerRadius < 1 {
-            // Draw dots per-side with guaranteed dots at corners
-            drawDottedRectPerSide(rect: rect)
-        } else {
+
+        case .strokeAndFill:
+            // Fill at half the color's current alpha
+            let fillAlpha = color.alphaComponent * 0.5
+            color.withAlphaComponent(fillAlpha).setFill()
+            NSBezierPath(roundedRect: rect, xRadius: cornerRadius, yRadius: cornerRadius).fill()
+            // Stroke on top
             let path = NSBezierPath(roundedRect: rect, xRadius: cornerRadius, yRadius: cornerRadius)
             path.lineWidth = strokeWidth
             if lineStyle != .solid {
@@ -512,6 +731,21 @@ class Annotation {
             }
             color.setStroke()
             path.stroke()
+
+        case .stroke:
+            if lineStyle == .dotted && cornerRadius < 1 {
+                drawDottedRectPerSide(rect: rect)
+            } else {
+                let path = NSBezierPath(roundedRect: rect, xRadius: cornerRadius, yRadius: cornerRadius)
+                path.lineWidth = strokeWidth
+                if lineStyle != .solid {
+                    let r = min(cornerRadius, min(rect.width, rect.height) / 2)
+                    let perimeter = 2 * (rect.width - 2 * r) + 2 * (rect.height - 2 * r) + 2 * .pi * r
+                    lineStyle.applyFitted(to: path, pathLength: perimeter)
+                }
+                color.setStroke()
+                path.stroke()
+            }
         }
     }
 
@@ -556,19 +790,41 @@ class Annotation {
     private func drawEllipse() {
         let rect = boundingRect
         guard rect.width > 0, rect.height > 0 else { return }
-        let path = NSBezierPath(ovalIn: rect)
-        path.lineWidth = strokeWidth
-        if lineStyle != .solid {
-            // Approximate ellipse perimeter (Ramanujan's approximation)
-            let a = rect.width / 2
-            let b = rect.height / 2
-            let perimeter = .pi * (3 * (a + b) - sqrt((3 * a + b) * (a + 3 * b)))
-            lineStyle.applyFitted(to: path, pathLength: perimeter)
-        } else {
-            lineStyle.apply(to: path)
+
+        switch rectFillStyle {
+        case .fill:
+            color.setFill()
+            NSBezierPath(ovalIn: rect).fill()
+
+        case .strokeAndFill:
+            let fillAlpha = color.alphaComponent * 0.5
+            color.withAlphaComponent(fillAlpha).setFill()
+            NSBezierPath(ovalIn: rect).fill()
+            let path = NSBezierPath(ovalIn: rect)
+            path.lineWidth = strokeWidth
+            if lineStyle != .solid {
+                let a = rect.width / 2
+                let b = rect.height / 2
+                let perimeter = CGFloat.pi * (3 * (a + b) - sqrt((3 * a + b) * (a + 3 * b)))
+                lineStyle.applyFitted(to: path, pathLength: perimeter)
+            }
+            color.setStroke()
+            path.stroke()
+
+        case .stroke:
+            let path = NSBezierPath(ovalIn: rect)
+            path.lineWidth = strokeWidth
+            if lineStyle != .solid {
+                let a = rect.width / 2
+                let b = rect.height / 2
+                let perimeter = CGFloat.pi * (3 * (a + b) - sqrt((3 * a + b) * (a + 3 * b)))
+                lineStyle.applyFitted(to: path, pathLength: perimeter)
+            } else {
+                lineStyle.apply(to: path)
+            }
+            color.setStroke()
+            path.stroke()
         }
-        color.setStroke()
-        path.stroke()
     }
 
     private func drawText() {
@@ -627,6 +883,13 @@ class Annotation {
         let str = "\(number)" as NSString
         let size = str.size(withAttributes: attrs)
         str.draw(at: NSPoint(x: center.x - size.width / 2, y: center.y - size.height / 2), withAttributes: attrs)
+    }
+
+    private func drawStamp() {
+        guard let image = stampImage else { return }
+        let rect = boundingRect
+        guard rect.width > 0, rect.height > 0 else { return }
+        image.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1.0, respectFlipped: true, hints: [.interpolation: NSNumber(value: NSImageInterpolation.high.rawValue)])
     }
 
     private func drawMeasure() {

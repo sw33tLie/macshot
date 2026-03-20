@@ -5,93 +5,179 @@ class HotkeyManager {
 
     static let shared = HotkeyManager()
 
-    private var hotKeyRef: EventHotKeyRef?
-    private var callback: (() -> Void)?
+    /// Named hotkey slots with UserDefaults keys and defaults.
+    enum HotkeySlot: Int, CaseIterable {
+        case captureArea = 1
+        case captureFullScreen = 2
+        case recordArea = 3
+        case recordScreen = 4
 
-    // Store event handler ref to keep it alive
+        var keyCodeKey: String {
+            switch self {
+            case .captureArea: return "hotkeyKeyCode"
+            case .captureFullScreen: return "hotkeyFullScreenKeyCode"
+            case .recordArea: return "hotkeyRecordKeyCode"
+            case .recordScreen: return "hotkeyRecordFullScreenKeyCode"
+            }
+        }
+
+        var modifiersKey: String {
+            switch self {
+            case .captureArea: return "hotkeyModifiers"
+            case .captureFullScreen: return "hotkeyFullScreenModifiers"
+            case .recordArea: return "hotkeyRecordModifiers"
+            case .recordScreen: return "hotkeyRecordFullScreenModifiers"
+            }
+        }
+
+        var label: String {
+            switch self {
+            case .captureArea: return "Capture Area"
+            case .captureFullScreen: return "Capture Screen"
+            case .recordArea: return "Record Area"
+            case .recordScreen: return "Record Screen"
+            }
+        }
+
+        var defaultKeyCode: UInt32 {
+            switch self {
+            case .captureArea: return UInt32(kVK_ANSI_X)
+            case .captureFullScreen: return UInt32(kVK_ANSI_F)
+            case .recordArea: return UInt32(kVK_ANSI_R)
+            case .recordScreen: return 0
+            }
+        }
+
+        var defaultModifiers: UInt32 {
+            switch self {
+            case .recordScreen: return 0  // no default hotkey
+            default: return UInt32(cmdKey | shiftKey)
+            }
+        }
+    }
+
+    private var hotKeyRefs: [HotkeySlot: EventHotKeyRef] = [:]
+    private var callbacks: [HotkeySlot: () -> Void] = [:]
     private var eventHandlerRef: EventHandlerRef?
 
     private init() {}
 
-    func register(callback: @escaping () -> Void) {
-        self.callback = callback
-        unregister()
+    /// Register a callback for a hotkey slot. Reads keyCode/modifiers from UserDefaults.
+    func register(slot: HotkeySlot, callback: @escaping () -> Void) {
+        callbacks[slot] = callback
 
-        let keyCode = UInt32(UserDefaults.standard.integer(forKey: "hotkeyKeyCode"))
-        let modifiers = UInt32(UserDefaults.standard.integer(forKey: "hotkeyModifiers"))
-
-        let finalKeyCode: UInt32
-        let finalModifiers: UInt32
-
-        if keyCode == 0 && modifiers == 0 {
-            // Default: Cmd+Shift+X
-            finalKeyCode = UInt32(kVK_ANSI_X)
-            finalModifiers = UInt32(cmdKey | shiftKey)
-        } else {
-            finalKeyCode = keyCode
-            finalModifiers = modifiers
+        // Unregister existing hotkey for this slot
+        if let ref = hotKeyRefs[slot] {
+            UnregisterEventHotKey(ref)
+            hotKeyRefs[slot] = nil
         }
 
-        registerHotKey(keyCode: finalKeyCode, modifiers: finalModifiers)
+        let (keyCode, modifiers) = Self.readHotkey(for: slot)
+        guard modifiers != 0 else { return }  // no modifiers = disabled
+
+        installEventHandler()
+        var ref: EventHotKeyRef?
+        var hotkeyID = EventHotKeyID(signature: OSType(0x4D53_4854), id: UInt32(slot.rawValue))
+
+        let status = RegisterEventHotKey(
+            keyCode, modifiers, hotkeyID,
+            GetApplicationEventTarget(), 0, &ref
+        )
+        if status == noErr, let ref = ref {
+            hotKeyRefs[slot] = ref
+        }
     }
 
-    func register(keyCode: UInt32, modifiers: UInt32, callback: @escaping () -> Void) {
-        self.callback = callback
-        unregister()
-        registerHotKey(keyCode: keyCode, modifiers: modifiers)
+    /// Register all hotkeys with their callbacks.
+    func registerAll(captureArea: @escaping () -> Void, captureFullScreen: @escaping () -> Void, recordArea: @escaping () -> Void, recordScreen: @escaping () -> Void) {
+        unregisterAll()
+        register(slot: .captureArea, callback: captureArea)
+        register(slot: .captureFullScreen, callback: captureFullScreen)
+        register(slot: .recordArea, callback: recordArea)
+        register(slot: .recordScreen, callback: recordScreen)
     }
 
-    private func registerHotKey(keyCode: UInt32, modifiers: UInt32) {
+    /// Re-register all hotkeys (e.g., after preferences change).
+    func reregisterAll() {
+        let savedCallbacks = callbacks
+        unregisterAll()
+        for (slot, cb) in savedCallbacks {
+            register(slot: slot, callback: cb)
+        }
+    }
+
+    private func installEventHandler() {
+        guard eventHandlerRef == nil else { return }
         var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
-
         let selfPtr = Unmanaged.passUnretained(self).toOpaque()
 
         InstallEventHandler(
             GetApplicationEventTarget(),
             { (_, event, userData) -> OSStatus in
-                guard let userData = userData else { return OSStatus(eventNotHandledErr) }
+                guard let userData = userData, let event = event else { return OSStatus(eventNotHandledErr) }
                 let mgr = Unmanaged<HotkeyManager>.fromOpaque(userData).takeUnretainedValue()
-                mgr.callback?()
+
+                var hotkeyID = EventHotKeyID()
+                GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID),
+                                  nil, MemoryLayout<EventHotKeyID>.size, nil, &hotkeyID)
+
+                if let slot = HotkeySlot(rawValue: Int(hotkeyID.id)) {
+                    mgr.callbacks[slot]?()
+                }
                 return noErr
             },
-            1,
-            &eventType,
-            selfPtr,
-            &eventHandlerRef
+            1, &eventType, selfPtr, &eventHandlerRef
         )
-
-        var hotkeyID = EventHotKeyID(signature: OSType(0x4D53_4854), id: 1) // 'MSHT'
-
-        let status = RegisterEventHotKey(
-            keyCode,
-            modifiers,
-            hotkeyID,
-            GetApplicationEventTarget(),
-            0,
-            &hotKeyRef
-        )
-
-        if status != noErr {
-            print("Failed to register hotkey: \(status)")
-        }
     }
 
-    func unregister() {
-        if let ref = hotKeyRef {
+    func unregisterAll() {
+        for (slot, ref) in hotKeyRefs {
             UnregisterEventHotKey(ref)
-            hotKeyRef = nil
         }
+        hotKeyRefs.removeAll()
         if let handler = eventHandlerRef {
             RemoveEventHandler(handler)
             eventHandlerRef = nil
         }
     }
 
-    deinit {
-        unregister()
+    /// Legacy — kept for backward compatibility.
+    func unregister() { unregisterAll() }
+
+    deinit { unregisterAll() }
+
+    // MARK: - UserDefaults Helpers
+
+    /// Read the stored (or default) keyCode and modifiers for a slot.
+    static func readHotkey(for slot: HotkeySlot) -> (keyCode: UInt32, modifiers: UInt32) {
+        let storedKey = UInt32(UserDefaults.standard.integer(forKey: slot.keyCodeKey))
+        let storedMods = UInt32(UserDefaults.standard.integer(forKey: slot.modifiersKey))
+
+        if storedKey == 0 && storedMods == 0 {
+            return (slot.defaultKeyCode, slot.defaultModifiers)
+        }
+        return (storedKey, storedMods)
     }
 
-    // Convert Carbon modifier flags to readable string
+    /// Save a hotkey to UserDefaults.
+    static func saveHotkey(for slot: HotkeySlot, keyCode: UInt32, modifiers: UInt32) {
+        UserDefaults.standard.set(Int(keyCode), forKey: slot.keyCodeKey)
+        UserDefaults.standard.set(Int(modifiers), forKey: slot.modifiersKey)
+    }
+
+    /// Display string for a slot's current hotkey.
+    static func displayString(for slot: HotkeySlot) -> String {
+        let (keyCode, modifiers) = readHotkey(for: slot)
+        return modifierString(from: modifiers) + keyString(from: keyCode)
+    }
+
+    /// Legacy display string (for capture area).
+    static func shortcutDisplayString() -> String {
+        return displayString(for: .captureArea)
+    }
+
+    // MARK: - String Helpers
+
     static func modifierString(from carbonModifiers: UInt32) -> String {
         var parts: [String] = []
         if carbonModifiers & UInt32(controlKey) != 0 { parts.append("\u{2303}") }
@@ -123,16 +209,5 @@ class HotkeyManager {
             UInt32(kVK_Space): "Space",
         ]
         return keyMap[keyCode] ?? "?"
-    }
-
-    static func shortcutDisplayString() -> String {
-        let keyCode = UInt32(UserDefaults.standard.integer(forKey: "hotkeyKeyCode"))
-        let modifiers = UInt32(UserDefaults.standard.integer(forKey: "hotkeyModifiers"))
-
-        if keyCode == 0 && modifiers == 0 {
-            return "\u{21E7}\u{2318}X"
-        }
-
-        return modifierString(from: modifiers) + keyString(from: keyCode)
     }
 }

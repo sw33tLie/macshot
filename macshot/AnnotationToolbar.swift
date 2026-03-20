@@ -23,9 +23,11 @@ enum ToolbarButtonAction {
     case removeBackground
     case loupe
     case translate
-    case record
+    case record          // enters recording mode (shows recording toolbar)
+    case startRecord     // actually starts recording
     case stopRecord
     case annotationMode
+    case mouseHighlight
     case detach
     case scrollCapture
 }
@@ -99,7 +101,6 @@ class ToolbarLayout {
             (.line,            "line.diagonal",            "Line"),
             (.arrow,           "arrow.up.right",           "Arrow"),
             (.rectangle,       "rectangle",                "Rectangle"),
-            (.filledRectangle, "rectangle.fill",           "Filled Rect"),
             (.ellipse,         "oval",                     "Ellipse"),
             (.marker,          "paintbrush.pointed.fill",  "Marker"),
             (.text,            "textformat",               "Text"),
@@ -107,6 +108,7 @@ class ToolbarLayout {
             (.pixelate,        "squareshape.split.2x2",    "Pixelate"),
             (.blur,            "aqi.medium",               "Blur"),
             (.loupe,           "magnifyingglass",          "Magnify (Loupe)"),
+            (.stamp,           "face.smiling",             "Stamp / Emoji"),
             (.colorSampler,    "eyedropper",               "Color Picker"),
             (.measure,         "ruler",                    "Measure (px)"),
         ]
@@ -119,7 +121,7 @@ class ToolbarLayout {
             var btn = ToolbarButton(action: .tool(tool), sfSymbol: symbol, label: nil, tooltip: tip)
             btn.isSelected = (tool == selectedTool)
             switch tool {
-            case .pencil, .line, .arrow, .rectangle, .filledRectangle, .ellipse, .marker, .number, .loupe:
+            case .pencil, .line, .arrow, .rectangle, .ellipse, .marker, .number, .loupe:
                 break  // options shown in the tool options row, not via right-click
             default:
                 break
@@ -160,18 +162,33 @@ class ToolbarLayout {
     }
 
     // Right toolbar items (output actions + cancel + delay)
-    static func rightButtons(delaySeconds: Int = 0, beautifyEnabled: Bool = false, beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false, translateEnabled: Bool = false, isRecording: Bool = false, isAnnotating: Bool = false, isDetached: Bool = false) -> [ToolbarButton] {
+    static func rightButtons(delaySeconds: Int = 0, beautifyEnabled: Bool = false, beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false, translateEnabled: Bool = false, isRecording: Bool = false, isCapturingVideo: Bool = false, isAnnotating: Bool = false, isDetached: Bool = false) -> [ToolbarButton] {
         var buttons: [ToolbarButton] = []
 
-        // If currently recording, show annotation mode toggle + stop
+        // If in recording mode (toolbar shown), show recording controls
         if isRecording {
+            if isCapturingVideo {
+                // Recording is active — show stop button
+                var stopBtn = ToolbarButton(action: .stopRecord, sfSymbol: "stop.circle.fill", label: nil, tooltip: "Stop Recording")
+                stopBtn.tintColor = .systemRed
+                buttons.append(stopBtn)
+            } else {
+                // Recording mode but not started — show play button
+                var startBtn = ToolbarButton(action: .startRecord, sfSymbol: "play.circle.fill", label: nil, tooltip: "Start Recording")
+                startBtn.tintColor = .systemGreen
+                buttons.append(startBtn)
+            }
+
             var annotateBtn = ToolbarButton(action: .annotationMode, sfSymbol: "pencil.tip", label: nil, tooltip: isAnnotating ? "Stop Annotating" : "Annotate (draw on screen)")
             annotateBtn.tintColor = .white
             annotateBtn.isSelected = isAnnotating
             buttons.append(annotateBtn)
-            var stopBtn = ToolbarButton(action: .stopRecord, sfSymbol: "stop.circle.fill", label: nil, tooltip: "Stop Recording")
-            stopBtn.tintColor = .systemRed
-            buttons.append(stopBtn)
+
+            let mouseHighlightOn = UserDefaults.standard.bool(forKey: "recordMouseHighlight")
+            var mouseBtn = ToolbarButton(action: .mouseHighlight, sfSymbol: "cursorarrow.click.2", label: nil, tooltip: "Highlight Mouse Clicks")
+            mouseBtn.isSelected = mouseHighlightOn
+            buttons.append(mouseBtn)
+
             return buttons
         }
 
@@ -259,7 +276,7 @@ class ToolbarLayout {
             buttons.append(ToolbarButton(action: .scrollCapture, sfSymbol: "scroll", label: nil, tooltip: "Scroll Capture"))
         }
 
-        // Record (tag 1009) — hidden when detached
+        // Record (tag 1009) — hidden when detached. Right-click for options.
         if !isDetached && actionEnabled(1009) {
             var recordBtn = ToolbarButton(action: .record, sfSymbol: "record.circle", label: nil, tooltip: "Record")
             recordBtn.tintColor = .systemRed

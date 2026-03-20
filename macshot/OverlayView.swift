@@ -16,6 +16,7 @@ protocol OverlayViewDelegate: AnyObject {
     func overlayViewDidRequestUpload()
     @available(macOS 14.0, *)
     func overlayViewDidRequestRemoveBackground()
+    func overlayViewDidRequestEnterRecordingMode()
     func overlayViewDidRequestStartRecording(rect: NSRect)
     func overlayViewDidRequestStopRecording()
     func overlayViewDidRequestDetach()
@@ -247,6 +248,9 @@ class OverlayView: NSView {
     private var activeBeautifySlider: Int = -1  // 0=padding, 1=corner, 2=shadow, 3=bgRadius
     private var beautifyBgRadiusSliderRect: NSRect = .zero
     private var beautifySwatchRects: [NSRect] = []
+    private var showBeautifyGradientPicker: Bool = false
+    private var beautifyGradientPickerRect: NSRect = .zero
+    private var beautifyGradientBtnRect: NSRect = .zero
     private var beautifyToolbarAnimProgress: CGFloat = 1.0  // 0..1, 1 = fully settled
     private var beautifyToolbarAnimTimer: Timer?
     private var beautifyToolbarAnimTarget: Bool = false  // target beautify state
@@ -262,6 +266,53 @@ class OverlayView: NSView {
     private var optionsCornerRadiusSliderRect: NSRect = .zero
     private var isDraggingOptionsCornerRadius: Bool = false
     private var currentLineStyle: LineStyle = LineStyle(rawValue: UserDefaults.standard.integer(forKey: "currentLineStyle")) ?? .solid
+    private var currentArrowStyle: ArrowStyle = ArrowStyle(rawValue: UserDefaults.standard.integer(forKey: "currentArrowStyle")) ?? .single
+    private var optionsArrowStyleRects: [NSRect] = []
+    private var currentRectFillStyle: RectFillStyle = RectFillStyle(rawValue: UserDefaults.standard.integer(forKey: "currentRectFillStyle")) ?? .stroke
+    private var optionsRectFillStyleRects: [NSRect] = []
+    private var currentStampImage: NSImage?  // selected emoji/image for stamp tool
+    private var stampPreviewPoint: NSPoint? // mouse position for stamp cursor preview
+    private var stampEmojiRects: [NSRect] = []
+    private var stampMoreRect: NSRect = .zero
+    private var stampLoadRect: NSRect = .zero
+    private var showEmojiPicker: Bool = false
+    private var emojiPickerRect: NSRect = .zero
+    private var emojiPickerItemRects: [NSRect] = []
+    private var emojiPickerCategoryIndex: Int = 0
+    private var emojiPickerCategoryRects: [NSRect] = []
+    private static let emojiCategories: [(String, [String])] = [
+        ("😀", [  // Faces & People
+            "😀", "😂", "🤣", "😍", "🤔", "😎", "🤯", "😱",
+            "😤", "🥳", "🤡", "💩", "👻", "🤖", "👽", "😈",
+            "🙈", "🙉", "🙊", "💪", "👏", "🙌", "🤝", "🫡",
+        ]),
+        ("👆", [  // Hands & Gestures
+            "👆", "👇", "👈", "👉", "👍", "👎", "✊", "👊",
+            "🤞", "✌️", "🤟", "🫵", "☝️", "👋", "🖐️", "✋",
+        ]),
+        ("✅", [  // Symbols & Status
+            "✅", "❌", "⚠️", "❓", "❗", "⛔", "🚫", "💯",
+            "✏️", "🗑️", "📌", "🔒", "🔓", "🏷️", "📎", "🔗",
+            "⬆️", "⬇️", "⬅️", "➡️", "↩️", "🔄", "➕", "➖",
+        ]),
+        ("🔥", [  // Objects & Reactions
+            "🔥", "💡", "⭐", "❤️", "💀", "🐛", "🎯", "🚀",
+            "🎉", "💣", "🧨", "⚡", "💥", "🔔", "📢", "🏆",
+            "🛑", "🚧", "🏗️", "🧪", "🔬", "💻", "📱", "🖥️",
+        ]),
+        ("🚩", [  // Flags & Markers
+            "🚩", "🏁", "📍", "💬", "💭", "🗯️", "👁️", "👀",
+            "🔍", "🔎", "📝", "📋", "📊", "📈", "📉", "🗂️",
+        ]),
+    ]
+    private static let commonEmojis = [
+        "👆", "👇", "👈", "👉",           // point at things
+        "✅", "❌", "⚠️", "❓",            // approve / reject / warn / question
+        "🔥", "🐛", "💀", "🎉",           // reactions: hot, bug, dead, celebrate
+        "👀", "💡", "🎯", "⭐",           // look here, idea, bullseye, star
+        "❤️", "👍", "👎", "🚀",           // love, thumbs, launch
+        "✏️",                              // edit
+    ]
     private var currentRectCornerRadius: CGFloat = {
         let v = UserDefaults.standard.object(forKey: "currentRectCornerRadius") as? Double
         return v != nil ? CGFloat(v!) : 0
@@ -384,8 +435,13 @@ class OverlayView: NSView {
     private var barcodeScanTask: DispatchWorkItem? = nil
 
     // Recording state
-    var isRecording: Bool = false
+    var isRecording: Bool = false       // true when recording toolbar is shown (mode entered)
+    var isCapturingVideo: Bool = false   // true when SCStream is actually capturing
     var recordingElapsedSeconds: Int = 0
+    var autoEnterRecordingMode: Bool = false  // set by "Record Screen" menu — enters recording mode after selection
+    // Recording overlay features
+    private var mouseHighlightPoints: [(point: NSPoint, time: Date)] = []
+    private var globalMouseMonitor: Any?
 
     // Scroll capture state
     var isScrollCapturing: Bool = false
@@ -581,6 +637,17 @@ class OverlayView: NSView {
     override func mouseMoved(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
 
+        // Stamp cursor preview — track in view coords (same as annotations)
+        if currentTool == .stamp && currentStampImage != nil && state == .selected {
+            if stampPreviewPoint == nil || hypot(point.x - (stampPreviewPoint?.x ?? 0), point.y - (stampPreviewPoint?.y ?? 0)) > 0.5 {
+                stampPreviewPoint = point
+                needsDisplay = true
+            }
+        } else if stampPreviewPoint != nil {
+            stampPreviewPoint = nil
+            needsDisplay = true
+        }
+
         // Force arrow cursor over color picker popup
         if showColorPicker && colorPickerRect.contains(point) {
             NSCursor.arrow.set()
@@ -700,9 +767,9 @@ class OverlayView: NSView {
             var newRow = -1
             if currentTool == .pencil && strokeSmoothToggleRect.contains(point) {
                 newRow = 99
-            } else if (currentTool == .rectangle || currentTool == .filledRectangle) && roundedRectToggleRect.contains(point) {
+            } else if currentTool == .rectangle && roundedRectToggleRect.contains(point) {
                 newRow = 99
-            } else if currentTool != .filledRectangle {
+            } else {
                 for i in 0..<widths.count {
                     let rowY = strokePickerRect.maxY - padding - rowH * CGFloat(i + 1)
                     let rowRect = NSRect(x: strokePickerRect.minX, y: rowY, width: strokePickerRect.width, height: rowH)
@@ -769,7 +836,7 @@ class OverlayView: NSView {
         }
 
         // Hover-to-move: only active for the core shape/drawing tools.
-        let hoverMoveTools: Set<AnnotationTool> = [.arrow, .line, .rectangle, .filledRectangle, .ellipse]
+        let hoverMoveTools: Set<AnnotationTool> = [.arrow, .line, .rectangle, .ellipse]
         // Hover-to-move: when a drawing tool is active and the cursor is over a movable annotation,
         // temporarily show the open-hand cursor so the user can move it without switching tools.
         // Disabled entirely in pass-through mode (recording with annotation off).
@@ -1060,7 +1127,7 @@ class OverlayView: NSView {
         }
 
         // Hover-to-move: move cursor over a hovered annotation when using a shape/drawing tool
-        let hoverMoveToolsForCursor: Set<AnnotationTool> = [.arrow, .line, .rectangle, .filledRectangle, .ellipse]
+        let hoverMoveToolsForCursor: Set<AnnotationTool> = [.arrow, .line, .rectangle, .ellipse]
         if hoverMoveToolsForCursor.contains(currentTool), let hovered = hoveredAnnotation {
             let bb = hovered.boundingRect.insetBy(dx: -12, dy: -12)
             if bb.width > 0 && bb.height > 0 {
@@ -1117,6 +1184,11 @@ class OverlayView: NSView {
             addCursorRect(uploadConfirmDialogRect, cursor: .arrow)
             if uploadConfirmOKRect.width > 0 { addCursorRect(uploadConfirmOKRect, cursor: .pointingHand) }
             if uploadConfirmCancelRect.width > 0 { addCursorRect(uploadConfirmCancelRect, cursor: .pointingHand) }
+        }
+
+        // Emoji picker — arrow cursor
+        if showEmojiPicker && emojiPickerRect.width > 0 {
+            addCursorRect(emojiPickerRect, cursor: .arrow)
         }
     }
 
@@ -1284,7 +1356,7 @@ class OverlayView: NSView {
             if !(isRecording && !isAnnotating) {
                 if let selected = selectedAnnotation, currentTool == .select {
                     drawAnnotationControls(for: selected)
-                } else if let hovered = hoveredAnnotation, [AnnotationTool.arrow, .line, .rectangle, .filledRectangle, .ellipse].contains(currentTool) {
+                } else if let hovered = hoveredAnnotation, [AnnotationTool.arrow, .line, .rectangle, .ellipse].contains(currentTool) {
                     drawAnnotationControls(for: hovered)
                 }
             }
@@ -1301,7 +1373,10 @@ class OverlayView: NSView {
 
             // Live beautify preview — draw gradient background, shadow, and rounded image around selection
             if beautifyEnabled && state == .selected && !isDetached && !isScrollCapturing && !isRecording {
+                context.saveGraphicsState()
+                applyZoomTransform(to: context)
                 drawBeautifyPreview(context: context)
+                context.restoreGraphicsState()
 
                 // Re-draw annotation controls on top of the beautify preview so they stay visible.
                 if !(isRecording && !isAnnotating) {
@@ -1309,7 +1384,7 @@ class OverlayView: NSView {
                     applyZoomTransform(to: context)
                     if let selected = selectedAnnotation, currentTool == .select {
                         drawAnnotationControls(for: selected)
-                    } else if let hovered = hoveredAnnotation, [AnnotationTool.arrow, .line, .rectangle, .filledRectangle, .ellipse].contains(currentTool) {
+                    } else if let hovered = hoveredAnnotation, [AnnotationTool.arrow, .line, .rectangle, .ellipse].contains(currentTool) {
                         drawAnnotationControls(for: hovered)
                     }
                     context.restoreGraphicsState()
@@ -1364,14 +1439,33 @@ class OverlayView: NSView {
                 }
             }
 
+            // Stamp cursor preview
+            if let previewPt = stampPreviewPoint, let img = currentStampImage, currentTool == .stamp {
+                let stampSize: CGFloat = 64
+                let aspect = img.size.width / max(img.size.height, 1)
+                let w = aspect >= 1 ? stampSize : stampSize * aspect
+                let h = aspect >= 1 ? stampSize / aspect : stampSize
+                let previewRect = NSRect(x: previewPt.x - w / 2, y: previewPt.y - h / 2, width: w, height: h)
+                context.saveGraphicsState()
+                applyZoomTransform(to: context)
+                img.draw(in: previewRect, from: .zero, operation: .sourceOver, fraction: 0.5, respectFlipped: true, hints: nil)
+                context.restoreGraphicsState()
+            }
+
             // Toolbars
             if showToolbars && state == .selected && !isScrollCapturing {
                 rebuildToolbarLayout()
-                ToolbarLayout.drawToolbar(barRect: bottomBarRect, buttons: bottomButtons, selectionSize: selectionRect.size)
-                ToolbarLayout.drawToolbar(barRect: rightBarRect, buttons: rightButtons, selectionSize: nil)
+                // Hide bottom bar and options row when in recording mode (not annotating)
+                // — the right bar is drawn by RecordingControlView instead
+                if !(isRecording && !isAnnotating) {
+                    ToolbarLayout.drawToolbar(barRect: bottomBarRect, buttons: bottomButtons, selectionSize: selectionRect.size)
+                }
+                if !(isRecording && !isAnnotating) {
+                    ToolbarLayout.drawToolbar(barRect: rightBarRect, buttons: rightButtons, selectionSize: nil)
+                }
 
                 // Tool options row (second row below/above bottom bar)
-                if toolHasOptionsRow {
+                if toolHasOptionsRow && !(isRecording && !isAnnotating) {
                     drawToolOptionsRow()
                 } else {
                     optionsRowRect = .zero
@@ -1412,9 +1506,19 @@ class OverlayView: NSView {
                     drawRedactTypePicker()
                 }
 
+                // Beautify gradient picker
+                if showBeautifyGradientPicker {
+                    drawBeautifyGradientPicker()
+                }
+
                 // Translate language picker
                 if showTranslatePicker {
                     drawTranslatePicker()
+                }
+
+                // Emoji picker
+                if showEmojiPicker {
+                    drawEmojiPicker()
                 }
 
                 // Tooltip for hovered button
@@ -1460,7 +1564,10 @@ class OverlayView: NSView {
         if state == .selected { drawBarcodeBar() }
 
         // Recording HUD
-        if isRecording { drawRecordingHUD() }
+        if isRecording {
+            drawRecordingHUD()
+            if UserDefaults.standard.bool(forKey: "recordMouseHighlight") { drawMouseHighlights() }
+        }
 
         // Scroll capture HUD (drawn on top of everything when active)
         if isScrollCapturing { drawScrollCaptureHUD() }
@@ -2749,7 +2856,7 @@ class OverlayView: NSView {
     /// Whether the current tool should show the options row
     private var toolHasOptionsRow: Bool {
         switch currentTool {
-        case .pencil, .line, .arrow, .rectangle, .filledRectangle, .ellipse, .marker, .number, .loupe, .measure, .pixelate, .blur:
+        case .pencil, .line, .arrow, .rectangle, .ellipse, .marker, .number, .loupe, .measure, .pixelate, .blur, .stamp:
             return true
         case .text:
             return true
@@ -2762,10 +2869,14 @@ class OverlayView: NSView {
         let rowH: CGFloat = 34
         let gap: CGFloat = 2
         let rowY: CGFloat
+        let belowY = bottomBarRect.minY - rowH - gap
+        let aboveY = bottomBarRect.maxY + gap
         if bottomBarRect.midY < selectionRect.midY {
-            rowY = bottomBarRect.minY - rowH - gap
+            // Prefer below, flip above if it would go off-screen
+            rowY = belowY >= bounds.minY + 2 ? belowY : aboveY
         } else {
-            rowY = bottomBarRect.maxY + gap
+            // Prefer above, flip below if it would go off-screen
+            rowY = aboveY + rowH <= bounds.maxY - 2 ? aboveY : belowY
         }
 
         let rowWidth = bottomBarRect.width
@@ -2793,6 +2904,8 @@ class OverlayView: NSView {
         optionsSmoothToggleRect = .zero
         optionsRoundedToggleRect = .zero
         optionsLineStyleRects = []
+        optionsArrowStyleRects = []
+        optionsRectFillStyleRects = []
 
         // Reset text option rects
         textBoldRect = .zero
@@ -2835,6 +2948,11 @@ class OverlayView: NSView {
             return
         }
 
+        if currentTool == .stamp {
+            drawStampOptionsRow(in: rowRect)
+            return
+        }
+
         // Determine what to show
         let showStroke: Bool
         let showLineStyle: Bool
@@ -2844,7 +2962,6 @@ class OverlayView: NSView {
         case .line, .arrow:                 showStroke = true;  showLineStyle = true
         case .rectangle, .ellipse:          showStroke = true;  showLineStyle = true
         case .number, .loupe:               showStroke = true;  showLineStyle = false
-        case .filledRectangle:              showStroke = false; showLineStyle = false
         default:                            showStroke = false; showLineStyle = false
         }
 
@@ -2931,7 +3048,7 @@ class OverlayView: NSView {
             curX += sliderW + 12 + fixedLabelW + 8
 
             // Separator
-            if showLineStyle || currentTool == .pencil || currentTool == .rectangle || currentTool == .filledRectangle {
+            if showLineStyle || currentTool == .pencil || currentTool == .rectangle {
                 NSColor.white.withAlphaComponent(0.08).setFill()
                 NSBezierPath(roundedRect: NSRect(x: curX - 6, y: rowRect.minY + 7, width: 1, height: rowH - 14), xRadius: 0.5, yRadius: 0.5).fill()
             }
@@ -2973,7 +3090,69 @@ class OverlayView: NSView {
             curX += totalW + 10
 
             // Separator
-            if currentTool == .rectangle || currentTool == .ellipse {
+            if currentTool == .rectangle || currentTool == .ellipse || currentTool == .arrow {
+                NSColor.white.withAlphaComponent(0.08).setFill()
+                NSBezierPath(roundedRect: NSRect(x: curX - 5, y: rowRect.minY + 7, width: 1, height: rowH - 14), xRadius: 0.5, yRadius: 0.5).fill()
+            }
+        }
+
+        // ── Arrow style segment control ──
+        if currentTool == .arrow {
+            optionsArrowStyleRects = []
+            let segH: CGFloat = 22
+            let segW: CGFloat = 36
+            let segY = rowRect.midY - segH / 2
+            let totalW = segW * CGFloat(ArrowStyle.allCases.count)
+
+            let segBgRect = NSRect(x: curX, y: segY, width: totalW, height: segH)
+            NSColor.white.withAlphaComponent(0.06).setFill()
+            NSBezierPath(roundedRect: segBgRect, xRadius: 5, yRadius: 5).fill()
+
+            for (i, style) in ArrowStyle.allCases.enumerated() {
+                let btnRect = NSRect(x: curX + CGFloat(i) * segW, y: segY, width: segW, height: segH)
+                optionsArrowStyleRects.append(btnRect)
+
+                let isActive = currentArrowStyle == style
+                if isActive {
+                    ToolbarLayout.accentColor.withAlphaComponent(0.45).setFill()
+                    NSBezierPath(roundedRect: btnRect.insetBy(dx: 1.5, dy: 1.5), xRadius: 4, yRadius: 4).fill()
+                }
+
+                drawArrowStylePreview(style: style, in: btnRect, active: isActive)
+            }
+
+            curX += totalW + 10
+        }
+
+        // ── Shape fill style segment control ──
+        if currentTool == .rectangle || currentTool == .ellipse {
+            optionsRectFillStyleRects = []
+            let segH: CGFloat = 22
+            let segW: CGFloat = 28
+            let segY = rowRect.midY - segH / 2
+            let totalW = segW * CGFloat(RectFillStyle.allCases.count)
+
+            let segBgRect = NSRect(x: curX, y: segY, width: totalW, height: segH)
+            NSColor.white.withAlphaComponent(0.06).setFill()
+            NSBezierPath(roundedRect: segBgRect, xRadius: 5, yRadius: 5).fill()
+
+            for (i, style) in RectFillStyle.allCases.enumerated() {
+                let btnRect = NSRect(x: curX + CGFloat(i) * segW, y: segY, width: segW, height: segH)
+                optionsRectFillStyleRects.append(btnRect)
+
+                let isActive = currentRectFillStyle == style
+                if isActive {
+                    ToolbarLayout.accentColor.withAlphaComponent(0.45).setFill()
+                    NSBezierPath(roundedRect: btnRect.insetBy(dx: 1.5, dy: 1.5), xRadius: 4, yRadius: 4).fill()
+                }
+
+                drawShapeFillStylePreview(style: style, in: btnRect, active: isActive, oval: currentTool == .ellipse)
+            }
+
+            curX += totalW + 10
+
+            // Separator before corner radius (rect only)
+            if currentTool == .rectangle {
                 NSColor.white.withAlphaComponent(0.08).setFill()
                 NSBezierPath(roundedRect: NSRect(x: curX - 5, y: rowRect.minY + 7, width: 1, height: rowH - 14), xRadius: 0.5, yRadius: 0.5).fill()
             }
@@ -2985,7 +3164,7 @@ class OverlayView: NSView {
         }
 
         // ── Corner radius slider (rect tools) ──
-        if currentTool == .rectangle || currentTool == .filledRectangle {
+        if currentTool == .rectangle {
             let label = "Radius" as NSString
             let lblAttrs: [NSAttributedString.Key: Any] = [
                 .font: NSFont.systemFont(ofSize: 9.5, weight: .medium),
@@ -3031,6 +3210,167 @@ class OverlayView: NSView {
         }
         return families
     }()
+
+    private func renderEmoji(_ emoji: String, size: CGFloat = 128) -> NSImage {
+        let img = NSImage(size: NSSize(width: size, height: size))
+        img.lockFocus()
+        let attrs: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: size * 0.85)]
+        let str = emoji as NSString
+        let strSize = str.size(withAttributes: attrs)
+        str.draw(at: NSPoint(x: (size - strSize.width) / 2, y: (size - strSize.height) / 2), withAttributes: attrs)
+        img.unlockFocus()
+        img.setName(emoji)
+        return img
+    }
+
+    private func loadStampImage() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.image, .png, .jpeg]
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.level = .statusBar + 3
+        panel.begin { [weak self] response in
+            guard let self = self, response == .OK, let url = panel.url,
+                  let image = NSImage(contentsOf: url) else { return }
+            self.currentStampImage = image
+            self.needsDisplay = true
+        }
+    }
+
+    private func drawEmojiPicker() {
+        let cats = Self.emojiCategories
+        guard emojiPickerCategoryIndex < cats.count else { return }
+        let emojis = cats[emojiPickerCategoryIndex].1
+        let cols = 8
+        let rows = (emojis.count + cols - 1) / cols
+        let cellSize: CGFloat = 32
+        let padding: CGFloat = 8
+        let tabH: CGFloat = 30
+        let pickerW = padding * 2 + CGFloat(cols) * cellSize
+        let pickerH = padding + tabH + CGFloat(rows) * cellSize + padding
+
+        // Position above the "More" button
+        let anchorRect = stampMoreRect.isEmpty ? optionsRowRect : stampMoreRect
+        let pickerX = max(bounds.minX + 4, min(anchorRect.midX - pickerW / 2, bounds.maxX - pickerW - 4))
+        var pickerY: CGFloat
+        if optionsRowRect.midY < selectionRect.midY {
+            pickerY = optionsRowRect.minY - pickerH - 4
+            if pickerY < bounds.minY + 4 { pickerY = optionsRowRect.maxY + 4 }
+        } else {
+            pickerY = optionsRowRect.maxY + 4
+            if pickerY + pickerH > bounds.maxY - 4 { pickerY = optionsRowRect.minY - pickerH - 4 }
+        }
+        pickerY = max(bounds.minY + 4, min(pickerY, bounds.maxY - pickerH - 4))
+
+        let pRect = NSRect(x: pickerX, y: pickerY, width: pickerW, height: pickerH)
+        emojiPickerRect = pRect
+
+        // Background
+        NSColor(white: 0.10, alpha: 0.95).setFill()
+        NSBezierPath(roundedRect: pRect, xRadius: 8, yRadius: 8).fill()
+        NSColor.white.withAlphaComponent(0.1).setStroke()
+        let border = NSBezierPath(roundedRect: pRect, xRadius: 8, yRadius: 8)
+        border.lineWidth = 0.5
+        border.stroke()
+
+        // Category tabs
+        emojiPickerCategoryRects = []
+        let tabW = (pickerW - padding * 2) / CGFloat(cats.count)
+        let tabY = pRect.maxY - padding - tabH
+        for (i, cat) in cats.enumerated() {
+            let tabRect = NSRect(x: pRect.minX + padding + CGFloat(i) * tabW, y: tabY, width: tabW, height: tabH)
+            emojiPickerCategoryRects.append(tabRect)
+
+            if i == emojiPickerCategoryIndex {
+                ToolbarLayout.accentColor.withAlphaComponent(0.3).setFill()
+                NSBezierPath(roundedRect: tabRect.insetBy(dx: 2, dy: 2), xRadius: 5, yRadius: 5).fill()
+            }
+
+            let tabStr = cat.0 as NSString
+            let tabAttrs: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: 16)]
+            let tabSize = tabStr.size(withAttributes: tabAttrs)
+            tabStr.draw(at: NSPoint(x: tabRect.midX - tabSize.width / 2, y: tabRect.midY - tabSize.height / 2), withAttributes: tabAttrs)
+        }
+
+        // Separator
+        NSColor.white.withAlphaComponent(0.08).setFill()
+        NSBezierPath(rect: NSRect(x: pRect.minX + padding, y: tabY - 1, width: pickerW - padding * 2, height: 0.5)).fill()
+
+        // Emoji grid
+        emojiPickerItemRects = []
+        for (i, emoji) in emojis.enumerated() {
+            let col = i % cols
+            let row = i / cols
+            let cx = pRect.minX + padding + CGFloat(col) * cellSize
+            let cy = tabY - 4 - cellSize - CGFloat(row) * cellSize
+            let cellRect = NSRect(x: cx, y: cy, width: cellSize, height: cellSize)
+            emojiPickerItemRects.append(cellRect)
+
+            let str = emoji as NSString
+            let attrs: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: 22)]
+            let size = str.size(withAttributes: attrs)
+            str.draw(at: NSPoint(x: cellRect.midX - size.width / 2, y: cellRect.midY - size.height / 2), withAttributes: attrs)
+        }
+    }
+
+    private func drawStampOptionsRow(in rowRect: NSRect) {
+        stampEmojiRects = []
+        stampMoreRect = .zero
+        stampLoadRect = .zero
+
+        let pad: CGFloat = 8
+        var curX = rowRect.minX + pad
+        let btnSize: CGFloat = 26
+        let gap: CGFloat = 2
+        let btnY = rowRect.midY - btnSize / 2
+
+        // Common emoji buttons
+        for emoji in Self.commonEmojis {
+            let btnRect = NSRect(x: curX, y: btnY, width: btnSize, height: btnSize)
+            stampEmojiRects.append(btnRect)
+
+            // Highlight if this emoji is the current stamp
+            if let img = currentStampImage, img.name() == emoji {
+                ToolbarLayout.accentColor.withAlphaComponent(0.45).setFill()
+                NSBezierPath(roundedRect: btnRect.insetBy(dx: 1, dy: 1), xRadius: 4, yRadius: 4).fill()
+            }
+
+            let str = emoji as NSString
+            let attrs: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: 18)]
+            let size = str.size(withAttributes: attrs)
+            str.draw(at: NSPoint(x: btnRect.midX - size.width / 2, y: btnRect.midY - size.height / 2), withAttributes: attrs)
+            curX += btnSize + gap
+        }
+
+        // Separator
+        curX += 4
+        NSColor.white.withAlphaComponent(0.08).setFill()
+        NSBezierPath(roundedRect: NSRect(x: curX - 3, y: rowRect.minY + 7, width: 1, height: rowRect.height - 14), xRadius: 0.5, yRadius: 0.5).fill()
+        curX += 4
+
+        // "More" button (opens system emoji picker)
+        let moreBtnW: CGFloat = 30
+        let moreRect = NSRect(x: curX, y: btnY, width: moreBtnW, height: btnSize)
+        stampMoreRect = moreRect
+        NSColor.white.withAlphaComponent(0.08).setFill()
+        NSBezierPath(roundedRect: moreRect, xRadius: 4, yRadius: 4).fill()
+        let moreStr = "☺︎" as NSString
+        let moreAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 16),
+            .foregroundColor: NSColor.white.withAlphaComponent(0.7),
+        ]
+        let moreSize = moreStr.size(withAttributes: moreAttrs)
+        moreStr.draw(at: NSPoint(x: moreRect.midX - moreSize.width / 2, y: moreRect.midY - moreSize.height / 2), withAttributes: moreAttrs)
+        curX += moreBtnW + gap
+
+        // "Load Image" button
+        let loadBtnW: CGFloat = 30
+        let loadRect = NSRect(x: curX, y: btnY, width: loadBtnW, height: btnSize)
+        stampLoadRect = loadRect
+        NSColor.white.withAlphaComponent(0.08).setFill()
+        NSBezierPath(roundedRect: loadRect, xRadius: 4, yRadius: 4).fill()
+        drawTopBarIcon("photo.badge.plus", in: loadRect, selected: false)
+    }
 
     private func drawRedactOptionsRow(in rowRect: NSRect) {
         let btnH: CGFloat = 22
@@ -3362,6 +3702,144 @@ class OverlayView: NSView {
         return curX
     }
 
+    private func drawArrowStylePreview(style: ArrowStyle, in rect: NSRect, active: Bool) {
+        let color = NSColor.white.withAlphaComponent(active ? 0.9 : 0.35)
+        let inset: CGFloat = 7
+        let left = NSPoint(x: rect.minX + inset, y: rect.midY)
+        let right = NSPoint(x: rect.maxX - inset, y: rect.midY)
+        let headLen: CGFloat = 6
+        let headAngle: CGFloat = .pi / 5
+
+        // Shaft
+        let shaft = NSBezierPath()
+        shaft.lineWidth = 1.5
+        shaft.lineCapStyle = .round
+        color.setStroke()
+        color.setFill()
+
+        switch style {
+        case .single:
+            let base = NSPoint(x: right.x - headLen * cos(0), y: right.y)
+            shaft.move(to: left)
+            shaft.line(to: base)
+            shaft.stroke()
+            let head = NSBezierPath()
+            head.move(to: right)
+            head.line(to: NSPoint(x: right.x - headLen * cos(headAngle), y: right.y + headLen * sin(headAngle)))
+            head.line(to: NSPoint(x: right.x - headLen * cos(headAngle), y: right.y - headLen * sin(headAngle)))
+            head.close()
+            head.fill()
+
+        case .thick:
+            let tailHalf: CGFloat = 1.5
+            let shaftHalf: CGFloat = 3
+            let headHalf: CGFloat = 7
+            let headW: CGFloat = 8
+            let headBaseX = right.x - headW
+            let ctrlX = left.x + (headBaseX - left.x) * 0.6
+            let path = NSBezierPath()
+            // Left side: narrow tail -> wide shaft (curve)
+            path.move(to: NSPoint(x: left.x, y: left.y + tailHalf))
+            path.curve(to: NSPoint(x: headBaseX, y: left.y + shaftHalf),
+                        controlPoint1: NSPoint(x: ctrlX, y: left.y + tailHalf),
+                        controlPoint2: NSPoint(x: headBaseX, y: left.y + shaftHalf))
+            // Left wing
+            path.curve(to: NSPoint(x: headBaseX, y: left.y + headHalf),
+                        controlPoint1: NSPoint(x: headBaseX - 2, y: left.y + shaftHalf),
+                        controlPoint2: NSPoint(x: headBaseX, y: left.y + headHalf))
+            path.line(to: right)
+            // Right wing
+            path.line(to: NSPoint(x: headBaseX, y: left.y - headHalf))
+            path.curve(to: NSPoint(x: headBaseX, y: left.y - shaftHalf),
+                        controlPoint1: NSPoint(x: headBaseX, y: left.y - headHalf),
+                        controlPoint2: NSPoint(x: headBaseX - 2, y: left.y - shaftHalf))
+            // Right side: wide shaft -> narrow tail (curve)
+            path.curve(to: NSPoint(x: left.x, y: left.y - tailHalf),
+                        controlPoint1: NSPoint(x: headBaseX, y: left.y - shaftHalf),
+                        controlPoint2: NSPoint(x: ctrlX, y: left.y - tailHalf))
+            path.close()
+            path.fill()
+
+        case .double:
+            let endBase = NSPoint(x: right.x - headLen, y: right.y)
+            let startBase = NSPoint(x: left.x + headLen, y: left.y)
+            shaft.move(to: startBase)
+            shaft.line(to: endBase)
+            shaft.stroke()
+            // End head
+            let endHead = NSBezierPath()
+            endHead.move(to: right)
+            endHead.line(to: NSPoint(x: right.x - headLen * cos(headAngle), y: right.y + headLen * sin(headAngle)))
+            endHead.line(to: NSPoint(x: right.x - headLen * cos(headAngle), y: right.y - headLen * sin(headAngle)))
+            endHead.close()
+            endHead.fill()
+            // Start head
+            let startHead = NSBezierPath()
+            startHead.move(to: left)
+            startHead.line(to: NSPoint(x: left.x + headLen * cos(headAngle), y: left.y + headLen * sin(headAngle)))
+            startHead.line(to: NSPoint(x: left.x + headLen * cos(headAngle), y: left.y - headLen * sin(headAngle)))
+            startHead.close()
+            startHead.fill()
+
+        case .open:
+            shaft.move(to: left)
+            shaft.line(to: right)
+            shaft.stroke()
+            let head = NSBezierPath()
+            head.lineWidth = 1.5
+            head.lineCapStyle = .round
+            head.lineJoinStyle = .round
+            head.move(to: NSPoint(x: right.x - headLen * cos(headAngle), y: right.y + headLen * sin(headAngle)))
+            head.line(to: right)
+            head.line(to: NSPoint(x: right.x - headLen * cos(headAngle), y: right.y - headLen * sin(headAngle)))
+            head.stroke()
+
+        case .tail:
+            let base = NSPoint(x: right.x - headLen, y: right.y)
+            shaft.move(to: left)
+            shaft.line(to: base)
+            shaft.stroke()
+            let head = NSBezierPath()
+            head.move(to: right)
+            head.line(to: NSPoint(x: right.x - headLen * cos(headAngle), y: right.y + headLen * sin(headAngle)))
+            head.line(to: NSPoint(x: right.x - headLen * cos(headAngle), y: right.y - headLen * sin(headAngle)))
+            head.close()
+            head.fill()
+            let r: CGFloat = 3
+            NSBezierPath(ovalIn: NSRect(x: left.x - r, y: left.y - r, width: r * 2, height: r * 2)).fill()
+        }
+    }
+
+    private func drawShapeFillStylePreview(style: RectFillStyle, in rect: NSRect, active: Bool, oval: Bool) {
+        let color = NSColor.white.withAlphaComponent(active ? 0.9 : 0.35)
+        let inset: CGFloat = 6
+        let previewRect = rect.insetBy(dx: inset, dy: inset + 1)
+
+        func shapePath() -> NSBezierPath {
+            oval ? NSBezierPath(ovalIn: previewRect) : NSBezierPath(roundedRect: previewRect, xRadius: 2, yRadius: 2)
+        }
+
+        switch style {
+        case .stroke:
+            color.setStroke()
+            let path = shapePath()
+            path.lineWidth = 1.5
+            path.stroke()
+
+        case .strokeAndFill:
+            color.withAlphaComponent((active ? 0.9 : 0.35) * 0.4).setFill()
+            shapePath().fill()
+            color.setStroke()
+            let path = shapePath()
+            path.lineWidth = 1.5
+            path.stroke()
+
+        case .fill:
+            color.setFill()
+            shapePath().fill()
+        }
+    }
+
     private func drawBeautifyOptionsRow(in rowRect: NSRect) {
         let labelAttrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: 10, weight: .medium),
@@ -3405,10 +3883,10 @@ class OverlayView: NSView {
         let sliderY = rowRect.minY + 4
 
         let sliderDefs: [(String, CGFloat, CGFloat, CGFloat)] = [
-            ("Pad", beautifyPadding, 16, 96),
-            ("Rad", beautifyCornerRadius, 0, 30),
-            ("Shd", beautifyShadowRadius, 0, 40),
-            ("BgR", beautifyBgRadius, 0, 30),
+            ("Padding", beautifyPadding, 16, 96),
+            ("Radius", beautifyCornerRadius, 0, 30),
+            ("Shadow", beautifyShadowRadius, 0, 40),
+            ("Bg Radius", beautifyBgRadius, 0, 30),
         ]
 
         var sliderRects: [NSRect] = []
@@ -3432,24 +3910,86 @@ class OverlayView: NSView {
         NSBezierPath(rect: NSRect(x: curX, y: rowRect.minY + 6, width: 1, height: rowRect.height - 12)).fill()
         curX += 6
 
-        // Background swatches (small inline — sized to fit in a single row)
-        let swSize: CGFloat = 14
-        let swGap: CGFloat = 2
+        // Gradient picker button — shows current gradient, opens grid popover on click
+        let btnSize: CGFloat = 22
+        let btnRect = NSRect(x: curX, y: rowRect.midY - btnSize / 2, width: btnSize, height: btnSize)
+        beautifyGradientBtnRect = btnRect
+
+        let currentStyle = BeautifyRenderer.styles[beautifyStyleIndex % BeautifyRenderer.styles.count]
+        let btnPath = NSBezierPath(roundedRect: btnRect, xRadius: 5, yRadius: 5)
+        if let grad = NSGradient(colors: currentStyle.stops.map { $0.0 }, atLocations: currentStyle.stops.map { $0.1 }, colorSpace: .deviceRGB) {
+            grad.draw(in: btnPath, angle: currentStyle.angle - 90)
+        }
+        // Selection ring
+        ToolbarLayout.accentColor.setStroke()
+        let ring = NSBezierPath(roundedRect: btnRect.insetBy(dx: -1.5, dy: -1.5), xRadius: 6, yRadius: 6)
+        ring.lineWidth = 1.5
+        ring.stroke()
+
+        // Dropdown triangle
+        let triAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 14, weight: .bold),
+            .foregroundColor: NSColor.white.withAlphaComponent(0.7),
+        ]
+        let triStr = "▾" as NSString
+        let triSize = triStr.size(withAttributes: triAttrs)
+        triStr.draw(at: NSPoint(x: btnRect.maxX + 6, y: btnRect.midY - triSize.height / 2), withAttributes: triAttrs)
+    }
+
+    private func drawBeautifyGradientPicker() {
+        let styles = BeautifyRenderer.styles
+        let cols = 6
+        let rows = (styles.count + cols - 1) / cols
+        let swSize: CGFloat = 28
+        let padding: CGFloat = 8
+        let gap: CGFloat = 4
+        let pickerW = padding * 2 + CGFloat(cols) * swSize + CGFloat(cols - 1) * gap
+        let pickerH = padding * 2 + CGFloat(rows) * swSize + CGFloat(rows - 1) * gap
+
+        // Position above/below the gradient button
+        let anchorRect = beautifyGradientBtnRect
+        let pickerX = max(bounds.minX + 4, min(anchorRect.midX - pickerW / 2, bounds.maxX - pickerW - 4))
+        var pickerY: CGFloat
+        if optionsRowRect.midY < selectionRect.midY {
+            pickerY = optionsRowRect.minY - pickerH - 4
+            if pickerY < bounds.minY + 4 { pickerY = optionsRowRect.maxY + 4 }
+        } else {
+            pickerY = optionsRowRect.maxY + 4
+            if pickerY + pickerH > bounds.maxY - 4 { pickerY = optionsRowRect.minY - pickerH - 4 }
+        }
+        pickerY = max(bounds.minY + 4, min(pickerY, bounds.maxY - pickerH - 4))
+
+        let pRect = NSRect(x: pickerX, y: pickerY, width: pickerW, height: pickerH)
+        beautifyGradientPickerRect = pRect
+
+        // Background
+        NSColor(white: 0.10, alpha: 0.95).setFill()
+        NSBezierPath(roundedRect: pRect, xRadius: 8, yRadius: 8).fill()
+        NSColor.white.withAlphaComponent(0.1).setStroke()
+        let border = NSBezierPath(roundedRect: pRect, xRadius: 8, yRadius: 8)
+        border.lineWidth = 0.5
+        border.stroke()
+
+        // Draw gradient swatches in grid
         beautifySwatchRects = []
-        for (i, style) in BeautifyRenderer.styles.enumerated() {
-            let sx = curX + CGFloat(i) * (swSize + swGap)
-            let sy = rowRect.midY - swSize / 2
+        for (i, style) in styles.enumerated() {
+            let col = i % cols
+            let row = i / cols
+            let sx = pRect.minX + padding + CGFloat(col) * (swSize + gap)
+            let sy = pRect.maxY - padding - swSize - CGFloat(row) * (swSize + gap)
             let sr = NSRect(x: sx, y: sy, width: swSize, height: swSize)
             beautifySwatchRects.append(sr)
-            let path = NSBezierPath(roundedRect: sr, xRadius: 4, yRadius: 4)
+
+            let path = NSBezierPath(roundedRect: sr, xRadius: 6, yRadius: 6)
             if let grad = NSGradient(colors: style.stops.map { $0.0 }, atLocations: style.stops.map { $0.1 }, colorSpace: .deviceRGB) {
                 grad.draw(in: path, angle: style.angle - 90)
             }
-            if i == beautifyStyleIndex % BeautifyRenderer.styles.count {
+
+            if i == beautifyStyleIndex % styles.count {
                 ToolbarLayout.accentColor.setStroke()
-                let ring = NSBezierPath(roundedRect: sr.insetBy(dx: -1.5, dy: -1.5), xRadius: 5, yRadius: 5)
-                ring.lineWidth = 1.5
-                ring.stroke()
+                let selRing = NSBezierPath(roundedRect: sr.insetBy(dx: -2, dy: -2), xRadius: 7, yRadius: 7)
+                selRing.lineWidth = 2
+                selRing.stroke()
             }
         }
     }
@@ -3598,8 +4138,8 @@ class OverlayView: NSView {
         let pickerWidth: CGFloat = 140
         let padding: CGFloat = 6
         let showSmoothToggle = (currentTool == .pencil)
-        let showRoundedToggle = (currentTool == .rectangle || currentTool == .filledRectangle)
-        let showWidthRows = (currentTool != .filledRectangle)
+        let showRoundedToggle = (currentTool == .rectangle)
+        let showWidthRows = true
         let hasToggle = showSmoothToggle || showRoundedToggle
         let toggleRowH: CGFloat = hasToggle ? 32 : 0
         let separatorH: CGFloat = (hasToggle && showWidthRows) ? 5 : 0
@@ -4210,20 +4750,16 @@ class OverlayView: NSView {
         curX += 12
 
         // ── Crop button ──
-        let cropLabel = "Crop" as NSString
-        let cropAttrs: [NSAttributedString.Key: Any] = [.font: labelFont, .foregroundColor: labelColor]
-        let cropSize = cropLabel.size(withAttributes: cropAttrs)
-        let cropBtnW = cropSize.width + 16
+        let isCropActive = (currentTool == .crop)
+        let cropBtnW: CGFloat = btnH
         let cropRect = NSRect(x: curX, y: btnY, width: cropBtnW, height: btnH)
         editorCropBtnRect = cropRect
 
-        let isCropActive = (currentTool == .crop)
-        let cropBg = isCropActive ? ToolbarLayout.accentColor.withAlphaComponent(0.8) : NSColor.white.withAlphaComponent(0.08)
+        let cropBg = isCropActive ? ToolbarLayout.selectedBg : NSColor.white.withAlphaComponent(0.08)
         cropBg.setFill()
         NSBezierPath(roundedRect: cropRect, xRadius: btnRadius, yRadius: btnRadius).fill()
-        cropLabel.draw(at: NSPoint(x: cropRect.midX - cropSize.width / 2, y: cropRect.midY - cropSize.height / 2),
-                       withAttributes: cropAttrs)
-        curX += cropBtnW + 8
+        drawTopBarIcon("crop", in: cropRect, selected: isCropActive)
+        curX += cropBtnW + 4
 
         // ── Flip Horizontal button ──
         let flipHBtnW: CGFloat = btnH
@@ -4232,15 +4768,7 @@ class OverlayView: NSView {
 
         NSColor.white.withAlphaComponent(0.08).setFill()
         NSBezierPath(roundedRect: flipHRect, xRadius: btnRadius, yRadius: btnRadius).fill()
-
-        if let sym = NSImage(systemSymbolName: "arrow.left.and.right.righttriangle.left.righttriangle.right", accessibilityDescription: "Flip Horizontal") {
-            let cfg = NSImage.SymbolConfiguration(pointSize: 12, weight: .medium)
-            let icon = sym.withSymbolConfiguration(cfg) ?? sym
-            let iconSize = icon.size
-            let iconRect = NSRect(x: flipHRect.midX - iconSize.width / 2, y: flipHRect.midY - iconSize.height / 2,
-                                  width: iconSize.width, height: iconSize.height)
-            icon.draw(in: iconRect, from: .zero, operation: .sourceOver, fraction: 0.85)
-        }
+        drawTopBarIcon("arrow.left.and.right.righttriangle.left.righttriangle.right", in: flipHRect, selected: false)
         curX += flipHBtnW + 4
 
         // ── Flip Vertical button ──
@@ -4250,15 +4778,7 @@ class OverlayView: NSView {
 
         NSColor.white.withAlphaComponent(0.08).setFill()
         NSBezierPath(roundedRect: flipVRect, xRadius: btnRadius, yRadius: btnRadius).fill()
-
-        if let sym = NSImage(systemSymbolName: "arrow.up.and.down.righttriangle.up.righttriangle.down", accessibilityDescription: "Flip Vertical") {
-            let cfg = NSImage.SymbolConfiguration(pointSize: 12, weight: .medium)
-            let icon = sym.withSymbolConfiguration(cfg) ?? sym
-            let iconSize = icon.size
-            let iconRect = NSRect(x: flipVRect.midX - iconSize.width / 2, y: flipVRect.midY - iconSize.height / 2,
-                                  width: iconSize.width, height: iconSize.height)
-            icon.draw(in: iconRect, from: .zero, operation: .sourceOver, fraction: 0.85)
-        }
+        drawTopBarIcon("arrow.up.and.down.righttriangle.up.righttriangle.down", in: flipVRect, selected: false)
 
         // ── Zoom label (right-aligned) ──
         let zoomStr = "\(Int(zoomLevel * 100))%" as NSString
@@ -4269,6 +4789,23 @@ class OverlayView: NSView {
         let zoomSize = zoomStr.size(withAttributes: zoomAttrs)
         zoomStr.draw(at: NSPoint(x: barRect.maxX - zoomSize.width - 12, y: barRect.midY - zoomSize.height / 2),
                      withAttributes: zoomAttrs)
+    }
+
+    private func drawTopBarIcon(_ symbolName: String, in rect: NSRect, selected: Bool) {
+        let cfg = NSImage.SymbolConfiguration(pointSize: 14, weight: .medium)
+        guard let baseImg = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
+                .withSymbolConfiguration(cfg) else { return }
+        let tint: NSColor = selected ? .white : .white.withAlphaComponent(0.85)
+        let imgSize = baseImg.size
+        let tintedImg = NSImage(size: imgSize)
+        tintedImg.lockFocus()
+        baseImg.draw(in: NSRect(origin: .zero, size: imgSize), from: .zero, operation: .sourceOver, fraction: 1.0)
+        tint.setFill()
+        NSRect(origin: .zero, size: imgSize).fill(using: .sourceAtop)
+        tintedImg.unlockFocus()
+        let iconRect = NSRect(x: rect.midX - imgSize.width / 2, y: rect.midY - imgSize.height / 2,
+                              width: imgSize.width, height: imgSize.height)
+        tintedImg.draw(in: iconRect, from: .zero, operation: .sourceOver, fraction: 1.0)
     }
 
     // MARK: - Editor Image Transforms
@@ -5161,6 +5698,63 @@ class OverlayView: NSView {
         (fullStr as NSString).draw(at: textOrigin, withAttributes: attrs)
     }
 
+    // MARK: - Recording Overlays (Mouse Highlight + Keystrokes)
+
+    private func drawMouseHighlights() {
+        let now = Date()
+
+        for entry in mouseHighlightPoints {
+            let age = now.timeIntervalSince(entry.time)
+            guard age <= 0.3 else { continue }
+            let alpha = max(0, 1.0 - age / 0.3)
+            let radius: CGFloat = 18 + CGFloat(age) * 60  // expands outward faster
+            let rect = NSRect(x: entry.point.x - radius, y: entry.point.y - radius, width: radius * 2, height: radius * 2)
+            NSColor.systemYellow.withAlphaComponent(0.35 * alpha).setFill()
+            NSBezierPath(ovalIn: rect).fill()
+            NSColor.systemYellow.withAlphaComponent(0.6 * alpha).setStroke()
+            let ring = NSBezierPath(ovalIn: rect.insetBy(dx: 2, dy: 2))
+            ring.lineWidth = 2
+            ring.stroke()
+        }
+
+        if !mouseHighlightPoints.isEmpty {
+            // Prune expired highlights and schedule redraw outside of draw()
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                self.mouseHighlightPoints.removeAll { now.timeIntervalSince($0.time) > 0.3 }
+                self.needsDisplay = true
+                self.displayIfNeeded()
+            }
+        }
+    }
+
+    func startMouseHighlightMonitor() {
+        guard globalMouseMonitor == nil else { return }
+        globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+            guard let self = self else { return }
+            // Convert screen point to view coordinates
+            // For global monitors, event.locationInWindow is in screen coordinates
+            guard let window = self.window else { return }
+            let windowPoint = window.convertPoint(fromScreen: event.locationInWindow)
+            let viewPoint = self.convert(windowPoint, from: nil)
+            DispatchQueue.main.async {
+                self.mouseHighlightPoints.append((point: viewPoint, time: Date()))
+                self.needsDisplay = true
+                self.displayIfNeeded()
+            }
+        }
+    }
+
+    func stopMouseHighlightMonitor() {
+        if let monitor = globalMouseMonitor {
+            NSEvent.removeMonitor(monitor)
+            globalMouseMonitor = nil
+        }
+        mouseHighlightPoints.removeAll()
+    }
+
+
+
     // MARK: - Scroll Capture HUD
 
     /// Drawn directly in the overlay while scroll capture is active.
@@ -5357,7 +5951,7 @@ class OverlayView: NSView {
     func rebuildToolbarLayout() {
         let movableAnnotations = annotations.contains { $0.isMovable }
         bottomButtons = ToolbarLayout.bottomButtons(selectedTool: currentTool, selectedColor: currentColor, beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex, hasAnnotations: movableAnnotations, isRecording: isRecording, isAnnotating: isAnnotating)
-        rightButtons = ToolbarLayout.rightButtons(delaySeconds: delaySeconds, beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex, hasAnnotations: movableAnnotations, translateEnabled: translateEnabled, isRecording: isRecording, isAnnotating: isAnnotating, isDetached: isDetached)
+        rightButtons = ToolbarLayout.rightButtons(delaySeconds: delaySeconds, beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex, hasAnnotations: movableAnnotations, translateEnabled: translateEnabled, isRecording: isRecording, isCapturingVideo: isCapturingVideo, isAnnotating: isAnnotating, isDetached: isDetached)
 
         // When beautify is active, anchor toolbars to the expanded preview frame
         // so they don't overlap the gradient/shadow chrome.
@@ -5402,10 +5996,14 @@ class OverlayView: NSView {
         let topFits = anchorRect.maxY < bounds.maxY - bottomMargin
         let bottomOutside = bottomFits || topFits  // layoutBottom handles flipping above if below doesn't fit
 
+        // When placing toolbars "inside", use the actual selectionRect (not the
+        // beautify-expanded anchorRect) so they stay within the visible area.
+        let insideAnchor = selectionRect
+
         if bottomOutside {
             bottomBarRect = ToolbarLayout.layoutBottom(buttons: &bottomButtons, selectionRect: anchorRect, viewBounds: bounds)
         } else {
-            bottomBarRect = ToolbarLayout.layoutBottomInside(buttons: &bottomButtons, selectionRect: anchorRect, viewBounds: bounds)
+            bottomBarRect = ToolbarLayout.layoutBottomInside(buttons: &bottomButtons, selectionRect: insideAnchor, viewBounds: bounds)
         }
 
         let rightFits = anchorRect.maxX < bounds.maxX - rightMargin
@@ -5415,7 +6013,7 @@ class OverlayView: NSView {
         if rightOutside {
             rightBarRect = ToolbarLayout.layoutRight(buttons: &rightButtons, selectionRect: anchorRect, viewBounds: bounds, bottomBarRect: bottomBarRect)
         } else {
-            rightBarRect = ToolbarLayout.layoutRightInside(buttons: &rightButtons, selectionRect: anchorRect, viewBounds: bounds, bottomBarRect: bottomBarRect)
+            rightBarRect = ToolbarLayout.layoutRightInside(buttons: &rightButtons, selectionRect: insideAnchor, viewBounds: bounds, bottomBarRect: bottomBarRect)
         }
 
         // If bottom bar overlaps right bar, push bottom bar down (or up) to clear it.
@@ -5759,13 +6357,12 @@ class OverlayView: NSView {
                     return
                 }
                 // Rounded corners toggle (rectangle / filled rectangle)
-                if (currentTool == .rectangle || currentTool == .filledRectangle) && roundedRectToggleRect.contains(point) {
+                if currentTool == .rectangle && roundedRectToggleRect.contains(point) {
                     roundedRectEnabled.toggle()
                     UserDefaults.standard.set(roundedRectEnabled, forKey: "roundedRectEnabled")
                     needsDisplay = true
                     return
                 }
-                if currentTool == .filledRectangle { needsDisplay = true; return }
                 let widths: [CGFloat] = [1, 2, 3, 5, 8, 12, 20]
                 let rowH: CGFloat = 30
                 let padding: CGFloat = 6
@@ -5900,6 +6497,57 @@ class OverlayView: NSView {
             // If click was on the dropdown button, consume it so the toggle below doesn't reopen
             if redactTypeDropdownRect.contains(point) {
                 return
+            }
+        }
+
+        // Beautify gradient picker dismissal / selection
+        if showBeautifyGradientPicker {
+            if beautifyGradientPickerRect.contains(point) {
+                for (i, sr) in beautifySwatchRects.enumerated() {
+                    if sr.insetBy(dx: -2, dy: -2).contains(point) {
+                        beautifyStyleIndex = i
+                        UserDefaults.standard.set(beautifyStyleIndex, forKey: "beautifyStyleIndex")
+                        // Don't close picker — let user try gradients quickly
+                        needsDisplay = true
+                        return
+                    }
+                }
+                return  // clicked in picker but not on a swatch
+            }
+            showBeautifyGradientPicker = false
+            needsDisplay = true
+            if beautifyGradientBtnRect.insetBy(dx: -4, dy: -4).contains(point) {
+                return  // consume so toggle doesn't reopen
+            }
+        }
+
+        // Emoji picker dismissal / selection
+        if showEmojiPicker {
+            if emojiPickerRect.contains(point) {
+                // Category tabs
+                for (i, tabRect) in emojiPickerCategoryRects.enumerated() {
+                    if tabRect.contains(point) {
+                        emojiPickerCategoryIndex = i
+                        needsDisplay = true
+                        return
+                    }
+                }
+                // Emoji cells
+                let emojis = Self.emojiCategories[emojiPickerCategoryIndex].1
+                for (i, cellRect) in emojiPickerItemRects.enumerated() {
+                    if cellRect.contains(point), i < emojis.count {
+                        currentStampImage = renderEmoji(emojis[i])
+                        showEmojiPicker = false
+                        needsDisplay = true
+                        return
+                    }
+                }
+                return  // clicked in picker but not on an item
+            }
+            showEmojiPicker = false
+            needsDisplay = true
+            if stampMoreRect.insetBy(dx: -4, dy: -4).contains(point) {
+                return  // consume so toggle doesn't reopen
             }
         }
 
@@ -6047,6 +6695,43 @@ class OverlayView: NSView {
                             return
                         }
                     }
+                    // Arrow style buttons
+                    for (i, sr) in optionsArrowStyleRects.enumerated() {
+                        if sr.contains(point), let style = ArrowStyle(rawValue: i) {
+                            currentArrowStyle = style
+                            UserDefaults.standard.set(style.rawValue, forKey: "currentArrowStyle")
+                            needsDisplay = true
+                            return
+                        }
+                    }
+                    // Rect fill style buttons
+                    for (i, sr) in optionsRectFillStyleRects.enumerated() {
+                        if sr.contains(point), let style = RectFillStyle(rawValue: i) {
+                            currentRectFillStyle = style
+                            UserDefaults.standard.set(style.rawValue, forKey: "currentRectFillStyle")
+                            needsDisplay = true
+                            return
+                        }
+                    }
+                    // Stamp emoji/load buttons
+                    if currentTool == .stamp {
+                        for (i, sr) in stampEmojiRects.enumerated() {
+                            if sr.contains(point), i < Self.commonEmojis.count {
+                                currentStampImage = renderEmoji(Self.commonEmojis[i])
+                                needsDisplay = true
+                                return
+                            }
+                        }
+                        if stampMoreRect.contains(point) {
+                            showEmojiPicker.toggle()
+                            needsDisplay = true
+                            return
+                        }
+                        if stampLoadRect.contains(point) {
+                            loadStampImage()
+                            return
+                        }
+                    }
                     // Text formatting buttons
                     if currentTool == .text {
                         if textBoldRect != .zero && textBoldRect.contains(point) {
@@ -6115,14 +6800,11 @@ class OverlayView: NSView {
                                 return
                             }
                         }
-                        // Beautify swatches
-                        for (i, sr) in beautifySwatchRects.enumerated() {
-                            if sr.insetBy(dx: -2, dy: -2).contains(point) {
-                                beautifyStyleIndex = i
-                                UserDefaults.standard.set(beautifyStyleIndex, forKey: "beautifyStyleIndex")
-                                needsDisplay = true
-                                return
-                            }
+                        // Gradient picker button
+                        if beautifyGradientBtnRect != .zero && beautifyGradientBtnRect.insetBy(dx: -4, dy: -4).contains(point) {
+                            showBeautifyGradientPicker.toggle()
+                            needsDisplay = true
+                            return
                         }
                     }
                     return  // consumed by options row
@@ -6531,6 +7213,11 @@ class OverlayView: NSView {
             }
             hoveredWindowRect = nil
             scheduleBarcodeDetection()
+            // Auto-enter recording mode if triggered from "Record Screen"
+            if autoEnterRecordingMode {
+                autoEnterRecordingMode = false
+                overlayDelegate?.overlayViewDidRequestEnterRecordingMode()
+            }
             needsDisplay = true
 
         case .selected:
@@ -6640,6 +7327,7 @@ class OverlayView: NSView {
                     needsDisplay = true
                     return
                 }
+                // Record button right-click removed — toggles are in recording toolbar
                 return
             }
         }
@@ -6812,7 +7500,7 @@ class OverlayView: NSView {
         // When recording but not in annotation mode, only allow recording-control actions
         if isRecording && !isAnnotating {
             switch action {
-            case .annotationMode, .stopRecord:
+            case .annotationMode, .startRecord, .stopRecord, .mouseHighlight:
                 break  // allowed — fall through to main switch
             default:
                 return
@@ -6828,6 +7516,7 @@ class OverlayView: NSView {
             commitTextFieldIfNeeded()
             showBeautifyInOptionsRow = false  // switch back to tool options
             showFontPicker = false
+            showEmojiPicker = false
             currentTool = tool
             needsDisplay = true
         case .loupe:
@@ -6919,11 +7608,34 @@ class OverlayView: NSView {
             }
             needsDisplay = true
         case .record:
+            // Enter recording mode — delegate handles pass-through + control window
+            overlayDelegate?.overlayViewDidRequestEnterRecordingMode()
+        case .startRecord:
+            // Actually start recording
+            isCapturingVideo = true
+            // Start monitors based on toggle state
+            if UserDefaults.standard.bool(forKey: "recordMouseHighlight") { startMouseHighlightMonitor() }
+            rebuildToolbarLayout()
             overlayDelegate?.overlayViewDidRequestStartRecording(rect: selectionRect)
         case .stopRecord:
-            overlayDelegate?.overlayViewDidRequestStopRecording()
+            if isCapturingVideo {
+                overlayDelegate?.overlayViewDidRequestStopRecording()
+            } else {
+                // Not actually recording — just exit recording mode
+                isRecording = false
+                rebuildToolbarLayout()
+                needsDisplay = true
+            }
         case .annotationMode:
             isAnnotating.toggle()
+            rebuildToolbarLayout()
+        case .mouseHighlight:
+            let current = UserDefaults.standard.bool(forKey: "recordMouseHighlight")
+            UserDefaults.standard.set(!current, forKey: "recordMouseHighlight")
+            // Start/stop monitor only if currently capturing
+            if isCapturingVideo {
+                if !current { startMouseHighlightMonitor() } else { stopMouseHighlightMonitor() }
+            }
             rebuildToolbarLayout()
         case .cancel:
             overlayDelegate?.overlayViewDidCancel()
@@ -7224,6 +7936,24 @@ class OverlayView: NSView {
             currentAnnotation = annotation
             needsDisplay = true
             return
+        case .stamp:
+            guard let img = currentStampImage else {
+                showOverlayError("Select an emoji or image first")
+                return
+            }
+            let stampSize: CGFloat = 64
+            let aspect = img.size.width / max(img.size.height, 1)
+            let w = aspect >= 1 ? stampSize : stampSize * aspect
+            let h = aspect >= 1 ? stampSize / aspect : stampSize
+            let annotation = Annotation(tool: .stamp, startPoint: NSPoint(x: point.x - w / 2, y: point.y - h / 2),
+                                        endPoint: NSPoint(x: point.x + w / 2, y: point.y + h / 2),
+                                        color: .clear, strokeWidth: 0)
+            annotation.stampImage = img
+            annotations.append(annotation)
+            undoStack.append(.added(annotation))
+            redoStack.removeAll()
+            needsDisplay = true
+            return
         default:
             break
         }
@@ -7237,11 +7967,17 @@ class OverlayView: NSView {
             annotation.sourceImage = compositedImage()
             annotation.sourceImageBounds = bounds
         }
-        if currentTool == .rectangle || currentTool == .filledRectangle {
+        if currentTool == .rectangle {
             annotation.rectCornerRadius = currentRectCornerRadius
+        }
+        if currentTool == .rectangle || currentTool == .ellipse {
+            annotation.rectFillStyle = currentRectFillStyle
         }
         if [.pencil, .line, .arrow, .rectangle, .ellipse].contains(currentTool) {
             annotation.lineStyle = currentLineStyle
+        }
+        if currentTool == .arrow {
+            annotation.arrowStyle = currentArrowStyle
         }
         currentAnnotation = annotation
     }
@@ -7265,7 +8001,7 @@ class OverlayView: NSView {
                     x: start.x + distance * cos(snapped),
                     y: start.y + distance * sin(snapped)
                 )
-            case .rectangle, .filledRectangle, .ellipse, .pixelate, .blur:
+            case .rectangle, .ellipse, .pixelate, .blur:
                 // Constrain to square/circle: use the larger dimension
                 let side = max(abs(dx), abs(dy))
                 clampedPoint = NSPoint(
@@ -7644,6 +8380,36 @@ class OverlayView: NSView {
         }
     }
 
+    /// Called by the Character Palette when the user selects an emoji.
+    override func insertText(_ insertString: Any) {
+        guard currentTool == .stamp, let str = insertString as? String, !str.isEmpty else { return }
+        currentStampImage = renderEmoji(str)
+        needsDisplay = true
+    }
+
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        // Forward Cmd shortcuts to the text view when editing — the main menu
+        // intercepts these before keyDown reaches the overlay window.
+        if let tv = textEditView, event.modifierFlags.contains(.command),
+           let char = event.charactersIgnoringModifiers {
+            switch char {
+            case "v": tv.paste(nil); return true
+            case "c": tv.copy(nil); return true
+            case "x": tv.cut(nil); return true
+            case "a": tv.selectAll(nil); return true
+            case "z":
+                if event.modifierFlags.contains(.shift) {
+                    tv.undoManager?.redo()
+                } else {
+                    tv.undoManager?.undo()
+                }
+                return true
+            default: break
+            }
+        }
+        return super.performKeyEquivalent(with: event)
+    }
+
     override func keyDown(with event: NSEvent) {
         switch event.keyCode {
         case 53: // Escape
@@ -7651,7 +8417,9 @@ class OverlayView: NSView {
                 overlayDelegate?.overlayViewDidRequestStopScrollCapture()
                 return
             }
-            guard !isRecording else { return }
+            // Block ESC only when actually capturing video; allow cancel
+            // when recording mode is entered but capture hasn't started yet.
+            guard !isCapturingVideo else { return }
             if textEditView != nil {
                 textScrollView?.removeFromSuperview()
                 textScrollView = nil
@@ -7666,14 +8434,18 @@ class OverlayView: NSView {
             } else if showUploadConfirmDialog {
                 showUploadConfirmDialog = false
                 needsDisplay = true
-            } else if showBeautifyPicker || showStrokePicker || showLoupeSizePicker || showDelayPicker || showUploadConfirmPicker || showRedactTypePicker {
+            } else if showEmojiPicker {
+                showEmojiPicker = false
+                needsDisplay = true
+            } else if showBeautifyPicker || showStrokePicker || showLoupeSizePicker || showDelayPicker || showUploadConfirmPicker || showRedactTypePicker || showBeautifyGradientPicker {
                 showBeautifyPicker = false
                 showStrokePicker = false
                 showLoupeSizePicker = false
                 showDelayPicker = false
                 showUploadConfirmPicker = false
                 showRedactTypePicker = false
-                    showTranslatePicker = false
+                showTranslatePicker = false
+                showBeautifyGradientPicker = false
                 needsDisplay = true
             } else {
                 overlayDelegate?.overlayViewDidCancel()
@@ -7764,6 +8536,23 @@ class OverlayView: NSView {
                 }
             }
             if event.modifierFlags.contains(.command) {
+                // When editing text, forward text-editing shortcuts to the text view
+                if let tv = textEditView, let char = event.charactersIgnoringModifiers {
+                    switch char {
+                    case "a": tv.selectAll(nil); return
+                    case "c": tv.copy(nil); return
+                    case "v": tv.paste(nil); return
+                    case "x": tv.cut(nil); return
+                    case "z":
+                        if event.modifierFlags.contains(.shift) {
+                            tv.undoManager?.redo()
+                        } else {
+                            tv.undoManager?.undo()
+                        }
+                        return
+                    default: break
+                    }
+                }
                 if event.charactersIgnoringModifiers == "z" {
                     if event.modifierFlags.contains(.shift) {
                         redo()
@@ -7945,7 +8734,7 @@ class OverlayView: NSView {
               let screenshot = screenshotImage else { return }
 
         // Determine redact style based on current tool
-        let redactTool: AnnotationTool = (currentTool == .blur) ? .blur : (currentTool == .pixelate ? .pixelate : .filledRectangle)
+        let redactTool: AnnotationTool = (currentTool == .blur) ? .blur : (currentTool == .pixelate ? .pixelate : .rectangle)
 
         // Crop the selected region for Vision
         let regionImage = NSImage(size: selectionRect.size)
@@ -7988,7 +8777,9 @@ class OverlayView: NSView {
                     strokeWidth: 0
                 )
                 annotation.groupID = groupID
-                if redactTool == .blur || redactTool == .pixelate {
+                if redactTool == .rectangle {
+                    annotation.rectFillStyle = .fill
+                } else if redactTool == .blur || redactTool == .pixelate {
                     annotation.sourceImage = sourceImg
                     annotation.sourceImageBounds = sourceBounds
                 }
@@ -8090,7 +8881,7 @@ class OverlayView: NSView {
               selectionRect.width > 1, selectionRect.height > 1,
               let screenshot = screenshotImage else { return }
 
-        let redactTool: AnnotationTool = (currentTool == .blur) ? .blur : (currentTool == .pixelate ? .pixelate : .filledRectangle)
+        let redactTool: AnnotationTool = (currentTool == .blur) ? .blur : (currentTool == .pixelate ? .pixelate : .rectangle)
 
         let regionImage = NSImage(size: selectionRect.size)
         regionImage.lockFocus()
@@ -8130,7 +8921,9 @@ class OverlayView: NSView {
                     strokeWidth: 0
                 )
                 annotation.groupID = groupID
-                if redactTool == .blur || redactTool == .pixelate {
+                if redactTool == .rectangle {
+                    annotation.rectFillStyle = .fill
+                } else if redactTool == .blur || redactTool == .pixelate {
                     annotation.sourceImage = sourceImg
                     annotation.sourceImageBounds = sourceBounds
                 }
@@ -8527,6 +9320,18 @@ class OverlayView: NSView {
         needsDisplay = true
     }
 
+    func applyFullScreenSelection() {
+        selectionRect = bounds
+        selectionStart = bounds.origin
+        state = .selected
+        showToolbars = true
+        cursorTimer?.invalidate()
+        cursorTimer = nil
+        scheduleBarcodeDetection()
+        overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
+        needsDisplay = true
+    }
+
     func reset() {
         state = .idle
         selectionRect = .zero
@@ -8547,8 +9352,10 @@ class OverlayView: NSView {
         uploadConfirmOKRect = .zero
         uploadConfirmCancelRect = .zero
         showRedactTypePicker = false
-                    showTranslatePicker = false
         showTranslatePicker = false
+        showBeautifyGradientPicker = false
+        showEmojiPicker = false
+        stopMouseHighlightMonitor()
         isTranslating = false
         translateEnabled = false
         moveMode = false
@@ -8570,6 +9377,8 @@ class OverlayView: NSView {
         beautifyShadowRadius = CGFloat(UserDefaults.standard.object(forKey: "beautifyShadowRadius") as? Double ?? 20)
         beautifyBgRadius = CGFloat(UserDefaults.standard.object(forKey: "beautifyBgRadius") as? Double ?? 8)
         currentLineStyle = LineStyle(rawValue: UserDefaults.standard.integer(forKey: "currentLineStyle")) ?? .solid
+        currentArrowStyle = ArrowStyle(rawValue: UserDefaults.standard.integer(forKey: "currentArrowStyle")) ?? .single
+        currentRectFillStyle = RectFillStyle(rawValue: UserDefaults.standard.integer(forKey: "currentRectFillStyle")) ?? .stroke
         currentRectCornerRadius = CGFloat(UserDefaults.standard.object(forKey: "currentRectCornerRadius") as? Double ?? 0)
         textScrollView?.removeFromSuperview()
         textScrollView = nil
@@ -8601,6 +9410,7 @@ class OverlayView: NSView {
         barcodeActionRects = []
         hoveredWindowRect = nil
         isRecording = false
+        isCapturingVideo = false
         recordingElapsedSeconds = 0
         isAnnotating = false
         annotationModeEverUsed = false

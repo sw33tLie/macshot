@@ -79,6 +79,25 @@ class OverlayWindowController {
         overlayView?.applySelection(rect)
     }
 
+    /// Auto-select the full screen (as if user clicked without dragging).
+    func applyFullScreenSelection() {
+        overlayView?.applyFullScreenSelection()
+    }
+
+    /// Set flag so overlay enters recording mode after user makes a selection.
+    func setAutoRecordMode() {
+        overlayView?.autoEnterRecordingMode = true
+    }
+
+    /// Enter recording mode — pass-through, control window, app underneath gets focus.
+    func enterRecordingMode() {
+        overlayView?.isRecording = true
+        overlayView?.startPassThroughMode()
+        overlayView?.rebuildToolbarLayout()
+        overlayView?.needsDisplay = true
+        showRecordingControlWindow()
+    }
+
     func setRecordingState(isRecording: Bool, elapsedSeconds: Int = 0) {
         overlayView?.isRecording = isRecording
         overlayView?.recordingElapsedSeconds = elapsedSeconds
@@ -93,6 +112,7 @@ class OverlayWindowController {
     }
 
     private func showRecordingControlWindow() {
+        dismissRecordingControlWindow()
         guard let overlayView = overlayView, let overlayWindow = overlayWindow else { return }
 
         // Wait one run-loop tick for rebuildToolbarLayout to compute rightBarRect
@@ -104,7 +124,7 @@ class OverlayWindowController {
                 overlayView.convert(rightBarLocal, to: nil)
             )
 
-            let win = NSWindow(
+            let win = RecordingControlWindow(
                 contentRect: rightBarScreen,
                 styleMask: [.borderless],
                 backing: .buffered,
@@ -121,7 +141,8 @@ class OverlayWindowController {
             let cv = RecordingControlView(frame: NSRect(origin: .zero, size: rightBarScreen.size))
             cv.overlayView = overlayView
             win.contentView = cv
-            win.orderFront(nil)
+            win.makeKeyAndOrderFront(nil)
+            win.makeFirstResponder(cv)
 
             self.recordingControlWindow = win
             self.recordingControlView = cv
@@ -291,6 +312,10 @@ extension OverlayWindowController: OverlayViewDelegate {
         playCopySound()
         dismiss()
         overlayDelegate?.overlayDidRequestUpload(self, image: image)
+    }
+
+    func overlayViewDidRequestEnterRecordingMode() {
+        enterRecordingMode()
     }
 
     func overlayViewDidRequestStartRecording(rect: NSRect) {

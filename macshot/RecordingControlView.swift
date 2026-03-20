@@ -1,5 +1,10 @@
 import Cocoa
 
+/// Borderless window that can become key (needed to receive ESC key events).
+final class RecordingControlWindow: NSWindow {
+    override var canBecomeKey: Bool { true }
+}
+
 /// A small transparent window view that sits over the right bar during recording
 /// (when the main overlay has ignoresMouseEvents = true). Draws the right bar buttons
 /// and forwards clicks to the overlay view's toolbar handler.
@@ -64,6 +69,18 @@ final class RecordingControlView: NSView {
 
         if let action = ToolbarLayout.hitTest(point: ovPoint, buttons: ov.rightButtons) {
             ov.handleToolbarAction(action, mousePoint: ovPoint)
+            needsDisplay = true
+        }
+    }
+
+    override var acceptsFirstResponder: Bool { true }
+
+    override func keyDown(with event: NSEvent) {
+        if event.keyCode == 53 { // Escape
+            guard let ov = overlayView else { return }
+            // Block ESC when actually capturing; allow when just in recording mode
+            guard !ov.isCapturingVideo else { return }
+            ov.overlayDelegate?.overlayViewDidCancel()
         }
     }
 

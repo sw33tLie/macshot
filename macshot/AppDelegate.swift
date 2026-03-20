@@ -1,4 +1,5 @@
 import Cocoa
+import Carbon
 import Sparkle
 
 @MainActor
@@ -109,11 +110,25 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let menu = NSMenu()
 
-        let shortcutStr = HotkeyManager.shortcutDisplayString()
-        let captureItem = NSMenuItem(title: "Capture Screen", action: #selector(captureScreen), keyEquivalent: "")
-        captureItem.target = self
-        captureItem.toolTip = shortcutStr
-        menu.addItem(captureItem)
+        let captureAreaItem = NSMenuItem(title: "Capture Area", action: #selector(captureScreen), keyEquivalent: "")
+        captureAreaItem.target = self
+        captureAreaItem.toolTip = HotkeyManager.displayString(for: .captureArea)
+        menu.addItem(captureAreaItem)
+
+        let captureFullItem = NSMenuItem(title: "Capture Screen", action: #selector(captureFullScreen), keyEquivalent: "")
+        captureFullItem.target = self
+        captureFullItem.toolTip = HotkeyManager.displayString(for: .captureFullScreen)
+        menu.addItem(captureFullItem)
+
+        let recordAreaItem = NSMenuItem(title: "Record Area", action: #selector(recordArea), keyEquivalent: "")
+        recordAreaItem.target = self
+        recordAreaItem.toolTip = HotkeyManager.displayString(for: .recordArea)
+        menu.addItem(recordAreaItem)
+
+        let recordScreenItem = NSMenuItem(title: "Record Screen", action: #selector(recordFullScreen), keyEquivalent: "")
+        recordScreenItem.target = self
+        recordScreenItem.toolTip = HotkeyManager.displayString(for: .recordScreen)
+        menu.addItem(recordScreenItem)
 
         menu.addItem(NSMenuItem.separator())
 
@@ -152,16 +167,44 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Hotkey
 
     private func registerHotkey() {
-        HotkeyManager.shared.register { [weak self] in
-            DispatchQueue.main.async {
-                self?.startCapture(fromMenu: false)
+        HotkeyManager.shared.registerAll(
+            captureArea: { [weak self] in
+                DispatchQueue.main.async { self?.startCapture(fromMenu: false) }
+            },
+            captureFullScreen: { [weak self] in
+                DispatchQueue.main.async { self?.captureFullScreen() }
+            },
+            recordArea: { [weak self] in
+                DispatchQueue.main.async { self?.recordArea() }
+            },
+            recordScreen: { [weak self] in
+                DispatchQueue.main.async { self?.recordFullScreen() }
             }
-        }
+        )
     }
+
+    private var pendingRecordMode: Bool = false
+    private var pendingFullScreen: Bool = false
+    private var pendingFullScreenRecord: Bool = false
 
     // MARK: - Capture
 
     @objc private func captureScreen() {
+        startCapture(fromMenu: true)
+    }
+
+    @objc private func captureFullScreen() {
+        pendingFullScreen = true
+        startCapture(fromMenu: true)
+    }
+
+    @objc private func recordArea() {
+        pendingRecordMode = true
+        startCapture(fromMenu: true)
+    }
+
+    @objc private func recordFullScreen() {
+        pendingFullScreenRecord = true
         startCapture(fromMenu: true)
     }
 
@@ -194,10 +237,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             for capture in captures {
                 let controller = OverlayWindowController(capture: capture)
                 controller.overlayDelegate = self
+                if self.pendingRecordMode {
+                    controller.setAutoRecordMode()
+                }
                 controller.showOverlay()
+                if self.pendingFullScreen || self.pendingFullScreenRecord {
+                    controller.applyFullScreenSelection()
+                }
+                if self.pendingFullScreenRecord {
+                    controller.enterRecordingMode()
+                }
                 self.overlayControllers.append(controller)
             }
-            self.restoreLastSelectionIfNeeded(controllers: self.overlayControllers)
+            self.pendingRecordMode = false
+            if !self.pendingFullScreen && !self.pendingFullScreenRecord {
+                self.restoreLastSelectionIfNeeded(controllers: self.overlayControllers)
+            }
+            self.pendingFullScreen = false
+            self.pendingFullScreenRecord = false
         }
     }
 
@@ -457,7 +514,12 @@ extension AppDelegate: OverlayWindowControllerDelegate {
     }
 
     func overlayDidRequestStopRecording(_ controller: OverlayWindowController) {
-        recordingEngine?.stopRecording()
+        if let engine = recordingEngine {
+            engine.stopRecording()
+        } else {
+            // Recording mode was entered but capture never started — just dismiss
+            dismissOverlays()
+        }
     }
 
     func overlayDidRequestScrollCapture(_ controller: OverlayWindowController, rect: NSRect, screen: NSScreen) {
