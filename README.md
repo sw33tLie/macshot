@@ -15,7 +15,7 @@ macshot lives in your menu bar and lets you capture, annotate, and share screens
 ## Features
 
 - **Scroll capture** — select a region and scroll normally; macshot stitches each strip into one seamless image using Apple Vision for pixel-perfect alignment; works at any speed, auto-detects horizontal or vertical scrolling
-- **Screen recording** — record any region or full screen as MP4 (H.264) or GIF; interact with apps normally while recording, or toggle annotation mode to draw on the live screen; optional mouse click highlighting; after recording, a video editor opens with trim timeline, mute audio, save, and upload to Google Drive
+- **Screen recording** — record any region or full screen as MP4 (H.264, up to 120fps) or GIF; optional system audio capture; interact with apps normally while recording, or toggle annotation mode to draw on the live screen; optional mouse click highlighting; after recording, a video editor opens with trim timeline, mute/strip audio, save, and upload to Google Drive
 - **Google Drive upload** — upload screenshots and videos directly to your Google Drive with one click; sign in once in Preferences, files go to a private "macshot" folder; automatic token refresh
 - **Instant capture** — global hotkey (default: `Cmd+Shift+X`) freezes your screen and lets you select a region
 - **Editor window** — open any capture in a standalone resizable editor window with a top bar showing pixel dimensions, crop, flip H/V, and zoom level; annotate, crop, copy, save, pin, or upload without dismissing the overlay

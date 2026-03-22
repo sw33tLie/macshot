@@ -28,6 +28,7 @@ enum ToolbarButtonAction {
     case stopRecord
     case annotationMode
     case mouseHighlight
+    case systemAudio
     case detach
     case scrollCapture
 }
@@ -173,9 +174,9 @@ class ToolbarLayout {
                 stopBtn.tintColor = .systemRed
                 buttons.append(stopBtn)
             } else {
-                // Recording mode but not started — show play button
-                var startBtn = ToolbarButton(action: .startRecord, sfSymbol: "play.circle.fill", label: nil, tooltip: "Start Recording")
-                startBtn.tintColor = .systemGreen
+                // Recording mode but not started — show red record button
+                var startBtn = ToolbarButton(action: .startRecord, sfSymbol: "record.circle", label: nil, tooltip: "Start Recording")
+                startBtn.tintColor = .systemRed
                 buttons.append(startBtn)
             }
 
@@ -188,6 +189,11 @@ class ToolbarLayout {
             var mouseBtn = ToolbarButton(action: .mouseHighlight, sfSymbol: "cursorarrow.click.2", label: nil, tooltip: "Highlight Mouse Clicks")
             mouseBtn.isSelected = mouseHighlightOn
             buttons.append(mouseBtn)
+
+            let audioOn = UserDefaults.standard.bool(forKey: "recordSystemAudio")
+            var audioBtn = ToolbarButton(action: .systemAudio, sfSymbol: audioOn ? "speaker.wave.2.fill" : "speaker.slash", label: nil, tooltip: "Record System Audio")
+            audioBtn.isSelected = audioOn
+            buttons.append(audioBtn)
 
             return buttons
         }
@@ -278,8 +284,8 @@ class ToolbarLayout {
 
         // Record (tag 1009) — hidden when detached. Right-click for options.
         if !isDetached && actionEnabled(1009) {
-            var recordBtn = ToolbarButton(action: .record, sfSymbol: "record.circle", label: nil, tooltip: "Record")
-            recordBtn.tintColor = .systemRed
+            var recordBtn = ToolbarButton(action: .record, sfSymbol: "video.fill", label: nil, tooltip: "Record")
+            recordBtn.tintColor = .white
             buttons.append(recordBtn)
         }
 

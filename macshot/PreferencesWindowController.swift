@@ -558,7 +558,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         recordingFPSPopup = NSPopUpButton()
-        recordingFPSPopup.addItems(withTitles: ["15 fps", "24 fps", "30 fps", "60 fps"])
+        recordingFPSPopup.addItems(withTitles: ["15 fps", "24 fps", "30 fps", "60 fps", "120 fps"])
         recordingFPSPopup.target = self
         recordingFPSPopup.action = #selector(recordingFPSChanged(_:))
         stack.addArrangedSubview(labeledRow("Frame rate:", controls: [recordingFPSPopup]))
@@ -1010,11 +1010,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         // Recording
         let recFormat = UserDefaults.standard.string(forKey: "recordingFormat") ?? "mp4"
         recordingFormatPopup.selectItem(at: recFormat == "gif" ? 1 : 0)
-
-        let recFPS = UserDefaults.standard.integer(forKey: "recordingFPS")
-        let fpsOptions = [15, 24, 30, 60]
-        let fpsIdx = fpsOptions.firstIndex(of: recFPS) ?? 2
-        recordingFPSPopup.selectItem(at: fpsIdx)
+        updateFPSForFormat()
 
         let onStop = UserDefaults.standard.string(forKey: "recordingOnStop") ?? "finder"
         recordingOnStopPopup.selectItem(at: onStop == "nothing" ? 1 : 0)
@@ -1095,12 +1091,33 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         ScreenshotHistory.shared.pruneToMax()
     }
     @objc private func recordingFormatChanged(_ sender: NSPopUpButton) {
-        UserDefaults.standard.set(sender.indexOfSelectedItem == 1 ? "gif" : "mp4", forKey: "recordingFormat")
+        let isGIF = sender.indexOfSelectedItem == 1
+        UserDefaults.standard.set(isGIF ? "gif" : "mp4", forKey: "recordingFormat")
+        updateFPSForFormat()
     }
     @objc private func recordingFPSChanged(_ sender: NSPopUpButton) {
-        let fpsOptions = [15, 24, 30, 60]
-        let fps = fpsOptions[sender.indexOfSelectedItem]
+        let isGIF = (UserDefaults.standard.string(forKey: "recordingFormat") ?? "mp4") == "gif"
+        let fpsOptions = isGIF ? [5, 10, 15] : [15, 24, 30, 60, 120]
+        let fps = fpsOptions[min(sender.indexOfSelectedItem, fpsOptions.count - 1)]
         UserDefaults.standard.set(fps, forKey: "recordingFPS")
+    }
+    private func updateFPSForFormat() {
+        let isGIF = (UserDefaults.standard.string(forKey: "recordingFormat") ?? "mp4") == "gif"
+        let currentFPS = UserDefaults.standard.integer(forKey: "recordingFPS")
+        recordingFPSPopup.removeAllItems()
+        if isGIF {
+            recordingFPSPopup.addItems(withTitles: ["5 fps", "10 fps", "15 fps"])
+            let gifOptions = [5, 10, 15]
+            let cappedFPS = min(currentFPS > 0 ? currentFPS : 15, 15)
+            let idx = gifOptions.firstIndex(of: cappedFPS) ?? 2
+            recordingFPSPopup.selectItem(at: idx)
+            UserDefaults.standard.set(gifOptions[idx], forKey: "recordingFPS")
+        } else {
+            recordingFPSPopup.addItems(withTitles: ["15 fps", "24 fps", "30 fps", "60 fps", "120 fps"])
+            let mp4Options = [15, 24, 30, 60, 120]
+            let idx = mp4Options.firstIndex(of: currentFPS) ?? 2
+            recordingFPSPopup.selectItem(at: idx)
+        }
     }
     @objc private func recordingOnStopChanged(_ sender: NSPopUpButton) {
         UserDefaults.standard.set(sender.indexOfSelectedItem == 1 ? "nothing" : "finder", forKey: "recordingOnStop")

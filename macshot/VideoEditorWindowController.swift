@@ -21,8 +21,29 @@ final class VideoEditorWindowController: NSObject, NSWindowDelegate {
     private func show(url: URL) {
         guard let screen = NSScreen.main else { return }
 
-        let winW: CGFloat = min(960, screen.frame.width * 0.7)
-        let winH: CGFloat = min(640, screen.frame.height * 0.7)
+        // Size window to fit content, capped at 60% of screen
+        let controlsH: CGFloat = 130
+        let maxW = screen.frame.width * 0.6
+        let maxH = screen.frame.height * 0.6
+        var contentW: CGFloat = 800
+        var contentH: CGFloat = 450
+
+        // Get content dimensions — MP4 uses AVAsset track info
+        if url.pathExtension.lowercased() != "gif" {
+            let asset = AVAsset(url: url)
+            if let track = asset.tracks(withMediaType: .video).first {
+                let size = track.naturalSize.applying(track.preferredTransform)
+                let backingScale = screen.backingScaleFactor
+                contentW = abs(size.width) / backingScale
+                contentH = abs(size.height) / backingScale
+            }
+        }
+        // GIF: keep defaults — AVFoundation can't read GIF dimensions reliably
+
+        // Scale down to fit screen, maintaining aspect ratio
+        let scale = min(1.0, min(maxW / contentW, (maxH - controlsH) / contentH))
+        let winW = max(480, contentW * scale)
+        let winH = max(360, contentH * scale + controlsH)
         let winX = screen.frame.midX - winW / 2
         let winY = screen.frame.midY - winH / 2
 
@@ -64,8 +85,10 @@ final class VideoEditorWindowController: NSObject, NSWindowDelegate {
 private final class VideoEditorView: NSView {
 
     private let videoURL: URL
+    private let isGIF: Bool
     private var player: AVPlayer?
     private var playerView: AVPlayerView?
+    private var gifImageView: NSImageView?
     private var asset: AVAsset?
     private var duration: Double = 0
 
@@ -77,6 +100,9 @@ private final class VideoEditorView: NSView {
     private var isDraggingEnd: Bool = false
     private var isDraggingScrubber: Bool = false
     private var timeObserver: Any?
+    private var gifPlaybackTimer: Timer?
+    private var gifPlaybackTime: Double = 0
+    private var gifIsPlaying: Bool = false
 
     // Button rects
     private var playBtnRect: NSRect = .zero
@@ -95,6 +121,7 @@ private final class VideoEditorView: NSView {
 
     init(frame: NSRect, videoURL: URL) {
         self.videoURL = videoURL
+        self.isGIF = videoURL.pathExtension.lowercased() == "gif"
         super.init(frame: frame)
 
         let area = NSTrackingArea(rect: .zero,
@@ -108,18 +135,80 @@ private final class VideoEditorView: NSView {
     required init?(coder: NSCoder) { fatalError() }
 
     private func setupPlayer() {
+        if isGIF {
+            setupGIFView()
+            return
+        }
+
         let asset = AVAsset(url: videoURL)
         self.asset = asset
 
         Task {
-            let dur = try? await asset.load(.duration)
-            let seconds = dur.map { CMTimeGetSeconds($0) } ?? 0
+            // Use video track duration (asset duration can be wrong when audio track is present)
+            let seconds: Double
+            if let videoTrack = asset.tracks(withMediaType: .video).first {
+                seconds = CMTimeGetSeconds(videoTrack.timeRange.duration)
+            } else if let dur = try? await asset.load(.duration) {
+                seconds = CMTimeGetSeconds(dur)
+            } else {
+                seconds = 0
+            }
             await MainActor.run {
                 self.duration = max(seconds, 0.1)
                 self.trimEnd = self.duration
                 self.buildPlayerView()
             }
         }
+    }
+
+    private func setupGIFView() {
+        guard let gifImage = NSImage(contentsOf: videoURL) else { return }
+        // Estimate duration from GIF frame count and delay
+        if let src = CGImageSourceCreateWithURL(videoURL as CFURL, nil) {
+            let count = CGImageSourceGetCount(src)
+            var totalDelay: Double = 0
+            for i in 0..<count {
+                if let props = CGImageSourceCopyPropertiesAtIndex(src, i, nil) as? [String: Any],
+                   let gifProps = props[kCGImagePropertyGIFDictionary as String] as? [String: Any],
+                   let delay = gifProps[kCGImagePropertyGIFUnclampedDelayTime as String] as? Double ?? gifProps[kCGImagePropertyGIFDelayTime as String] as? Double {
+                    totalDelay += delay
+                }
+            }
+            duration = max(totalDelay, 0.1)
+        } else {
+            duration = 1.0
+        }
+        trimEnd = duration
+
+        let iv = NSImageView()
+        iv.image = gifImage
+        iv.animates = true
+        iv.imageScaling = .scaleProportionallyDown
+        iv.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        iv.setContentHuggingPriority(.defaultLow, for: .vertical)
+        iv.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        iv.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(iv)
+
+        NSLayoutConstraint.activate([
+            iv.topAnchor.constraint(equalTo: topAnchor),
+            iv.leadingAnchor.constraint(equalTo: leadingAnchor),
+            iv.trailingAnchor.constraint(equalTo: trailingAnchor),
+            iv.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -controlsH),
+        ])
+        gifImageView = iv
+        gifIsPlaying = true
+        gifPlaybackTime = trimStart
+        gifPlaybackTimer = Timer.scheduledTimer(withTimeInterval: 1.0/30.0, repeats: true) { [weak self] _ in
+            guard let self = self, self.gifIsPlaying else { return }
+            self.gifPlaybackTime += 1.0/30.0
+            if self.gifPlaybackTime >= self.trimEnd {
+                self.gifPlaybackTime = self.trimStart
+            }
+            self.needsDisplay = true
+        }
+        needsDisplay = true
     }
 
     private func buildPlayerView() {
@@ -161,6 +250,16 @@ private final class VideoEditorView: NSView {
         player?.pause()
         player = nil
         playerView?.player = nil
+        gifPlaybackTimer?.invalidate()
+        gifPlaybackTimer = nil
+    }
+
+    private var currentPlaybackTime: Double {
+        if isGIF {
+            return gifPlaybackTime
+        } else {
+            return CMTimeGetSeconds(player?.currentTime() ?? .zero)
+        }
     }
 
     // MARK: - Drawing
@@ -218,8 +317,8 @@ private final class VideoEditorView: NSView {
         drawHandleGrip(in: endHandleRect)
 
         // Playhead
-        if let player = player {
-            let currentTime = CMTimeGetSeconds(player.currentTime())
+        if player != nil || isGIF {
+            let currentTime = currentPlaybackTime
             let playheadX = max(tlX, min(tlX + tlW, tlX + CGFloat(currentTime / duration) * tlW))
             NSColor.white.setFill()
             let playheadRect = NSRect(x: playheadX - 1, y: tlY - 2, width: 2, height: tlH + 4)
@@ -254,7 +353,7 @@ private final class VideoEditorView: NSView {
         // Left group: play, mute
         var x: CGFloat = timelinePad
 
-        let isPlaying = player?.rate ?? 0 > 0
+        let isPlaying = isGIF ? gifIsPlaying : (player?.rate ?? 0 > 0)
         playBtnRect = NSRect(x: x, y: btnY, width: iconBtnW, height: btnH)
         drawIconButton(rect: playBtnRect, symbol: isPlaying ? "pause.fill" : "play.fill", accent: true)
         x += iconBtnW + gap
@@ -271,7 +370,17 @@ private final class VideoEditorView: NSView {
         let fileSize = (try? FileManager.default.attributesOfItem(atPath: videoURL.path)[.size] as? Int) ?? 0
         let sizeStr = ByteCountFormatter.string(fromByteCount: Int64(fileSize), countStyle: .file)
         let ext = videoURL.pathExtension.uppercased()
-        let infoStr = "\(ext)  ·  \(sizeStr)" as NSString
+        let fpsValue = asset?.tracks(withMediaType: .video).first?.nominalFrameRate ?? 0
+        let fpsStr = fpsValue > 0 ? "  ·  \(Int(fpsValue.rounded()))fps" : ""
+        var resStr = ""
+        if let track = asset?.tracks(withMediaType: .video).first {
+            let size = track.naturalSize.applying(track.preferredTransform)
+            resStr = "  ·  \(Int(abs(size.width)))×\(Int(abs(size.height)))"
+        } else if isGIF, let src = CGImageSourceCreateWithURL(videoURL as CFURL, nil),
+                  let img = CGImageSourceCreateImageAtIndex(src, 0, nil) {
+            resStr = "  ·  \(img.width)×\(img.height)"
+        }
+        let infoStr = "\(ext)  ·  \(sizeStr)\(fpsStr)\(resStr)" as NSString
         let infoSize = infoStr.size(withAttributes: infoAttrs)
         infoStr.draw(at: NSPoint(x: x + 4, y: btnY + (btnH - infoSize.height) / 2), withAttributes: infoAttrs)
 
@@ -342,7 +451,7 @@ private final class VideoEditorView: NSView {
     }
 
     private func drawTimeLabels() {
-        let currentTime = CMTimeGetSeconds(player?.currentTime() ?? .zero)
+        let currentTime = currentPlaybackTime
         let trimDuration = trimEnd - trimStart
 
         let leftStr = formatTime(currentTime) as NSString
@@ -449,6 +558,15 @@ private final class VideoEditorView: NSView {
     }
 
     private func togglePlayPause() {
+        if isGIF {
+            gifIsPlaying.toggle()
+            gifImageView?.animates = gifIsPlaying
+            if gifIsPlaying {
+                gifPlaybackTime = trimStart
+            }
+            needsDisplay = true
+            return
+        }
         guard let player = player else { return }
         if player.rate > 0 {
             player.pause()
@@ -548,7 +666,10 @@ private final class VideoEditorView: NSView {
             return
         }
 
-        showStatus("Uploading to Drive...")
+        showStatus("Uploading to Drive... 0%")
+        GoogleDriveUploader.shared.onProgress = { [weak self] fraction in
+            self?.showStatus("Uploading to Drive... \(Int(fraction * 100))%")
+        }
 
         let needsTrim = trimStart > 0.01 || (duration - trimEnd) > 0.01
         let needsExport = needsTrim || isMuted

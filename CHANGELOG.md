@@ -1,5 +1,27 @@
 # Changelog
 
+## [3.0.4] - 2026-03-22
+
+### Added
+- **System audio recording** — toggle in the recording toolbar to capture system audio alongside screen video. Off by default. Recorded as AAC 48kHz stereo in MP4. macshot's own sounds are excluded. The mute toggle in the video editor can strip audio on export.
+- **120fps recording** — added 120fps option for MP4 recording on supported displays (ProMotion).
+- **GIF FPS cap in preferences** — when GIF format is selected, the FPS dropdown shows only 5/10/15fps options instead of the full range.
+- **Upload progress percentage** — Google Drive uploads in the video editor now show real-time progress ("Uploading to Drive... 47%").
+- **Video resolution display** — video editor info bar now shows pixel dimensions (e.g. "1920×1080") alongside format, file size, and FPS.
+- **GIF playback timeline** — GIF files in the video editor now have a moving playhead and time labels matching the MP4 experience.
+
+### Improved
+- **Recording toolbar icons** — screenshot mode shows a camera icon (video.fill) for "switch to record mode", recording mode shows a red circle (record.circle) for "start recording", and a red square for "stop". Clearer than the previous play/stop icons.
+- **Beautify rounded corners** — shadow is now rendered via transparency layer on the image itself, eliminating the white corner artifacts and edge lines from the previous shadow fill approach.
+- **Stamp preview suppressed during recording** — emoji cursor preview no longer follows the mouse when in recording mode.
+- **Auto-select first emoji** — switching to the stamp tool automatically selects the first emoji instead of showing an error. Highlight tracking is now reliable across all selection methods.
+
+### Fixed
+- **Recording duration shows hours** — fixed audio track causing the MP4 file to report a duration of hundreds of hours. The session now starts at the first video frame's timestamp so audio and video are properly aligned.
+- **Video editor duration** — uses video track duration instead of asset duration, so audio track length doesn't inflate the timeline.
+- **Video playback starts from trim start** — play button now always starts from trim start if the playhead is outside the trimmed range.
+- **GIF editor window sizing** — GIF editor window no longer expands to fill the screen. NSImageView compression resistance set to low so it respects the window size.
+
 ## [3.0.3] - 2026-03-22
 
 ### Added

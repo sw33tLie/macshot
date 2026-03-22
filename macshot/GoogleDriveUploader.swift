@@ -80,6 +80,9 @@ final class GoogleDriveUploader: NSObject {
         macShotFolderID = nil
     }
 
+    /// Progress callback: percentage 0.0–1.0
+    var onProgress: ((Double) -> Void)?
+
     /// Upload a file (image or video) to the macshot folder.
     func upload(data: Data, filename: String, mimeType: String, completion: @escaping (Result<String, Error>) -> Void) {
         ensureValidToken { [weak self] success in
@@ -318,9 +321,12 @@ final class GoogleDriveUploader: NSObject {
         body.append(data)
         body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
 
-        request.httpBody = body
+        // Write body to temp file for uploadTask (enables progress tracking)
+        let tmpFile = FileManager.default.temporaryDirectory.appendingPathComponent("macshot_upload_\(UUID().uuidString).tmp")
+        try? body.write(to: tmpFile)
 
-        URLSession.shared.dataTask(with: request) { data, response, error in
+        let task = URLSession.shared.uploadTask(with: request, fromFile: tmpFile) { [weak self] data, response, error in
+            try? FileManager.default.removeItem(at: tmpFile)
             if let error = error {
                 DispatchQueue.main.async { completion(.failure(error)) }
                 return
@@ -332,8 +338,22 @@ final class GoogleDriveUploader: NSObject {
                 return
             }
             let viewLink = "https://drive.google.com/file/d/\(fileID)/view"
-            DispatchQueue.main.async { completion(.success(viewLink)) }
-        }.resume()
+            DispatchQueue.main.async {
+                self?.onProgress = nil
+                completion(.success(viewLink))
+            }
+        }
+
+        // Observe upload progress
+        let observation = task.progress.observe(\.fractionCompleted) { [weak self] progress, _ in
+            DispatchQueue.main.async {
+                self?.onProgress?(progress.fractionCompleted)
+            }
+        }
+        // Store observation to keep it alive; released when task completes
+        objc_setAssociatedObject(task, "progressObservation", observation, .OBJC_ASSOCIATION_RETAIN)
+
+        task.resume()
     }
 
     // MARK: - PKCE

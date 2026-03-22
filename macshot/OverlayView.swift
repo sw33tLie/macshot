@@ -298,6 +298,7 @@ class OverlayView: NSView {
     private var currentRectFillStyle: RectFillStyle = RectFillStyle(rawValue: UserDefaults.standard.integer(forKey: "currentRectFillStyle")) ?? .stroke
     private var optionsRectFillStyleRects: [NSRect] = []
     private var currentStampImage: NSImage?  // selected emoji/image for stamp tool
+    private var currentStampEmoji: String?   // emoji string for highlight tracking
     private var stampPreviewPoint: NSPoint? // mouse position for stamp cursor preview
     private var stampEmojiRects: [NSRect] = []
     private var stampMoreRect: NSRect = .zero
@@ -665,7 +666,7 @@ class OverlayView: NSView {
         let point = convert(event.locationInWindow, from: nil)
 
         // Stamp cursor preview — track in view coords (same as annotations)
-        if currentTool == .stamp && currentStampImage != nil && state == .selected {
+        if currentTool == .stamp && currentStampImage != nil && state == .selected && !isRecording {
             if stampPreviewPoint == nil || hypot(point.x - (stampPreviewPoint?.x ?? 0), point.y - (stampPreviewPoint?.y ?? 0)) > 0.5 {
                 stampPreviewPoint = point
                 needsDisplay = true
@@ -1537,7 +1538,7 @@ class OverlayView: NSView {
             }
 
             // Stamp cursor preview
-            if let previewPt = stampPreviewPoint, let img = currentStampImage, currentTool == .stamp {
+            if let previewPt = stampPreviewPoint, let img = currentStampImage, currentTool == .stamp, !isRecording {
                 let stampSize: CGFloat = 64
                 let aspect = img.size.width / max(img.size.height, 1)
                 let w = aspect >= 1 ? stampSize : stampSize * aspect
@@ -3364,6 +3365,7 @@ class OverlayView: NSView {
             guard let self = self, response == .OK, let url = panel.url,
                   let image = NSImage(contentsOf: url) else { return }
             self.currentStampImage = image
+            self.currentStampEmoji = nil
             self.needsDisplay = true
         }
     }
@@ -3461,7 +3463,7 @@ class OverlayView: NSView {
             stampEmojiRects.append(btnRect)
 
             // Highlight if this emoji is the current stamp
-            if let img = currentStampImage, img.name() == emoji {
+            if currentStampEmoji == emoji {
                 ToolbarLayout.accentColor.withAlphaComponent(0.45).setFill()
                 NSBezierPath(roundedRect: btnRect.insetBy(dx: 1, dy: 1), xRadius: 4, yRadius: 4).fill()
             }
@@ -6752,6 +6754,7 @@ class OverlayView: NSView {
                 for (i, cellRect) in emojiPickerItemRects.enumerated() {
                     if cellRect.contains(point), i < emojis.count {
                         currentStampImage = renderEmoji(emojis[i])
+                        currentStampEmoji = emojis[i]
                         showEmojiPicker = false
                         needsDisplay = true
                         return
@@ -6972,6 +6975,7 @@ class OverlayView: NSView {
                         for (i, sr) in stampEmojiRects.enumerated() {
                             if sr.contains(point), i < Self.commonEmojis.count {
                                 currentStampImage = renderEmoji(Self.commonEmojis[i])
+                                currentStampEmoji = Self.commonEmojis[i]
                                 needsDisplay = true
                                 return
                             }
@@ -7819,7 +7823,7 @@ class OverlayView: NSView {
         // When recording but not in annotation mode, only allow recording-control actions
         if isRecording && !isAnnotating {
             switch action {
-            case .annotationMode, .startRecord, .stopRecord, .mouseHighlight:
+            case .annotationMode, .startRecord, .stopRecord, .mouseHighlight, .systemAudio:
                 break  // allowed — fall through to main switch
             default:
                 return
@@ -7837,6 +7841,11 @@ class OverlayView: NSView {
             showFontPicker = false
             showEmojiPicker = false
             currentTool = tool
+            // Auto-select first emoji when switching to stamp tool with nothing selected
+            if tool == .stamp && currentStampImage == nil {
+                currentStampImage = renderEmoji(Self.commonEmojis[0])
+                currentStampEmoji = Self.commonEmojis[0]
+            }
             needsDisplay = true
         case .loupe:
             currentTool = .loupe
@@ -7956,6 +7965,10 @@ class OverlayView: NSView {
             if isCapturingVideo {
                 if !current { startMouseHighlightMonitor() } else { stopMouseHighlightMonitor() }
             }
+            rebuildToolbarLayout()
+        case .systemAudio:
+            let current = UserDefaults.standard.bool(forKey: "recordSystemAudio")
+            UserDefaults.standard.set(!current, forKey: "recordSystemAudio")
             rebuildToolbarLayout()
         case .cancel:
             overlayDelegate?.overlayViewDidCancel()
@@ -8300,10 +8313,12 @@ class OverlayView: NSView {
             needsDisplay = true
             return
         case .stamp:
-            guard let img = currentStampImage else {
-                showOverlayError("Select an emoji or image first")
-                return
+            // Auto-select first emoji if nothing selected
+            if currentStampImage == nil {
+                currentStampImage = renderEmoji(Self.commonEmojis[0])
+                currentStampEmoji = Self.commonEmojis[0]
             }
+            guard let img = currentStampImage else { return }
             let stampSize: CGFloat = 64
             let aspect = img.size.width / max(img.size.height, 1)
             let w = aspect >= 1 ? stampSize : stampSize * aspect
@@ -8778,6 +8793,7 @@ class OverlayView: NSView {
     override func insertText(_ insertString: Any) {
         guard currentTool == .stamp, let str = insertString as? String, !str.isEmpty else { return }
         currentStampImage = renderEmoji(str)
+        currentStampEmoji = str
         needsDisplay = true
     }
 

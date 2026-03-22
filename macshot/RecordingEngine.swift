@@ -36,9 +36,11 @@ final class RecordingEngine: NSObject {
 
     private var assetWriter: AVAssetWriter?
     private var videoInput: AVAssetWriterInput?
+    private var audioInput: AVAssetWriterInput?
     private var adaptor: AVAssetWriterInputPixelBufferAdaptor?
     private var outputURL: URL?
     private var startTime: CMTime = .invalid
+    private var sessionStarted: Bool = false
     private var frameCount: Int64 = 0
 
     // MARK: - GIF
@@ -113,6 +115,11 @@ final class RecordingEngine: NSObject {
             config.pixelFormat = kCVPixelFormatType_32BGRA
             config.scalesToFit = false
 
+            // System audio capture (MP4 only, off by default)
+            let recordAudio = UserDefaults.standard.bool(forKey: "recordSystemAudio") && format == .mp4
+            config.capturesAudio = recordAudio
+            config.excludesCurrentProcessAudio = true  // don't capture macshot's own sounds
+
             let pixelW = config.width
             let pixelH = config.height
 
@@ -126,17 +133,23 @@ final class RecordingEngine: NSObject {
             if format == .mp4 {
                 try setupAssetWriter(url: outURL, width: pixelW, height: pixelH)
             } else {
-                gifEncoder = GIFEncoder(url: outURL, fps: fps)
+                gifEncoder = GIFEncoder(url: outURL, fps: min(fps, 15))
             }
 
             let output = RecordingStreamOutput()
             output.onFrame = { [weak self] pixelBuffer, presentationTime in
                 self?.handleFrame(pixelBuffer: pixelBuffer, presentationTime: presentationTime)
             }
+            output.onAudioSample = { [weak self] sampleBuffer in
+                self?.handleAudioSample(sampleBuffer)
+            }
             self.streamOutput = output
 
             let stream = SCStream(filter: filter, configuration: config, delegate: nil)
             try stream.addStreamOutput(output, type: .screen, sampleHandlerQueue: DispatchQueue(label: "macshot.recording"))
+            if recordAudio {
+                try stream.addStreamOutput(output, type: .audio, sampleHandlerQueue: DispatchQueue(label: "macshot.recording.audio"))
+            }
             try await stream.startCapture()
             self.stream = stream
 
@@ -178,6 +191,11 @@ final class RecordingEngine: NSObject {
         }
     }
 
+    private func handleAudioSample(_ sampleBuffer: CMSampleBuffer) {
+        guard format == .mp4, sessionStarted, let audioInput = audioInput, audioInput.isReadyForMoreMediaData else { return }
+        audioInput.append(sampleBuffer)
+    }
+
     // MARK: - MP4
 
     private func setupAssetWriter(url: URL, width: Int, height: Int) throws {
@@ -204,29 +222,44 @@ final class RecordingEngine: NSObject {
         let adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: input, sourcePixelBufferAttributes: sourceAttr)
 
         writer.add(input)
+
+        // Audio input (if system audio is enabled)
+        if UserDefaults.standard.bool(forKey: "recordSystemAudio") {
+            let audioSettings: [String: Any] = [
+                AVFormatIDKey: kAudioFormatMPEG4AAC,
+                AVSampleRateKey: 48000,
+                AVNumberOfChannelsKey: 2,
+                AVEncoderBitRateKey: 128000,
+            ]
+            let audioIn = AVAssetWriterInput(mediaType: .audio, outputSettings: audioSettings)
+            audioIn.expectsMediaDataInRealTime = true
+            writer.add(audioIn)
+            self.audioInput = audioIn
+        }
+
         writer.startWriting()
-        writer.startSession(atSourceTime: .zero)
+        // Don't start session yet — start at first video frame's timestamp
+        // so audio and video are aligned
 
         self.assetWriter = writer
         self.videoInput = input
         self.adaptor = adaptor
         self.startTime = .invalid
+        self.sessionStarted = false
         self.frameCount = 0
     }
 
     private func writeMP4Frame(buffer: CVPixelBuffer, presentationTime: CMTime) {
-        guard let input = videoInput, let adaptor = adaptor else { return }
+        guard let writer = assetWriter, let input = videoInput, let adaptor = adaptor else { return }
         guard input.isReadyForMoreMediaData else { return }
 
-        let pts: CMTime
-        if startTime == .invalid {
+        if !sessionStarted {
             startTime = presentationTime
-            pts = .zero
-        } else {
-            pts = CMTimeSubtract(presentationTime, startTime)
+            writer.startSession(atSourceTime: presentationTime)
+            sessionStarted = true
         }
 
-        adaptor.append(buffer, withPresentationTime: pts)
+        adaptor.append(buffer, withPresentationTime: presentationTime)
         frameCount += 1
     }
 
@@ -236,6 +269,7 @@ final class RecordingEngine: NSObject {
             return
         }
         input.markAsFinished()
+        audioInput?.markAsFinished()
         await writer.finishWriting()
         await MainActor.run { self.succeed() }
     }
@@ -288,11 +322,18 @@ final class RecordingEngine: NSObject {
 
 private class RecordingStreamOutput: NSObject, SCStreamOutput {
     var onFrame: ((CVPixelBuffer, CMTime) -> Void)?
+    var onAudioSample: ((CMSampleBuffer) -> Void)?
 
     func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, of type: SCStreamOutputType) {
-        guard type == .screen else { return }
-        guard let pixelBuffer = sampleBuffer.imageBuffer else { return }
-        let pts = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
-        onFrame?(pixelBuffer, pts)
+        switch type {
+        case .screen:
+            guard let pixelBuffer = sampleBuffer.imageBuffer else { return }
+            let pts = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+            onFrame?(pixelBuffer, pts)
+        case .audio:
+            onAudioSample?(sampleBuffer)
+        @unknown default:
+            break
+        }
     }
 }

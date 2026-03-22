@@ -372,23 +372,18 @@ class BeautifyRenderer {
 
         let imageRect = NSRect(x: padding, y: padding, width: imgSize.width, height: imgSize.height)
 
-        // Drop shadow
-        if shadowRadius > 0 {
-            let shadow = NSShadow()
-            shadow.shadowColor = NSColor.black.withAlphaComponent(0.35)
-            shadow.shadowBlurRadius = shadowRadius
-            shadow.shadowOffset = NSSize(width: 0, height: -shadowOffset)
-            NSGraphicsContext.saveGraphicsState()
-            shadow.set()
-            NSColor.white.setFill()
-            NSBezierPath(roundedRect: imageRect, xRadius: cornerRadius, yRadius: cornerRadius).fill()
-            NSGraphicsContext.restoreGraphicsState()
-        }
-
-        // Draw image with rounded corners
+        // Draw image with rounded corners + shadow in one pass
         context.saveGState()
+        if shadowRadius > 0 {
+            context.setShadow(offset: CGSize(width: 0, height: -shadowOffset),
+                              blur: shadowRadius,
+                              color: NSColor.black.withAlphaComponent(0.35).cgColor)
+        }
+        // Begin a transparency layer so the shadow is cast by the clipped image shape
+        context.beginTransparencyLayer(auxiliaryInfo: nil)
         NSBezierPath(roundedRect: imageRect, xRadius: cornerRadius, yRadius: cornerRadius).addClip()
-        image.draw(in: imageRect, from: .zero, operation: .copy, fraction: 1.0)
+        image.draw(in: imageRect, from: .zero, operation: .sourceOver, fraction: 1.0)
+        context.endTransparencyLayer()
         context.restoreGState()
 
         result.unlockFocus()
