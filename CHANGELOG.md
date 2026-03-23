@@ -1,5 +1,27 @@
 # Changelog
 
+## [3.0.5] - 2026-03-23
+
+### Added
+- **Annotation rotation** — shapes (rectangle, ellipse, stamp, text, number, pixelate, blur) can be rotated via a rotation handle above the selection box. Hold Shift to snap to 90° steps. Works in both Select tool and hover-to-move (quick edit) mode.
+- **Stamp tool shortcut** — press `G` to switch to the stamp/emoji tool.
+- **About tab** — Preferences now has an About tab showing version, description, author, and GitHub link.
+- **Redact button hover/press states** — "Blur All Text" and "Auto-Redact PII" buttons now visually respond to hover and click.
+
+### Improved
+- **Beautify output** — removed outer background radius to eliminate subpixel gap artifacts on exported images. Gradient fills edge-to-edge.
+- **Thick arrow smoothness** — increased curve sampling from 24 to 64 points for smoother bends. Shape scales down proportionally when short.
+- **Thick arrow hit test** — uses distance-to-curve instead of bounding rect for more accurate hover/click detection.
+- **Rotation handle UX** — arrow cursor over handle, icon centered in circle, handle reachable in quick edit mode.
+- **Menu bar order** — "Show History Panel" moved below "Recent Captures" for logical grouping.
+
+### Fixed
+- **Resize handles after rotation** — click point is inverse-rotated into annotation's local space so handles work correctly at any rotation angle.
+- **Rotation direction** — dragging the handle clockwise now rotates the shape clockwise (was inverted).
+- **Debug logging** — all print/NSLog statements wrapped in `#if DEBUG`.
+- **Dead code** — removed unused `showRecordingCompletedToast` function.
+- **README** — updated beautify style count (28), added global hotkeys table, added stamp shortcut.
+
 ## [3.0.4] - 2026-03-22
 
 ### Added

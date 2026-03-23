@@ -236,7 +236,7 @@ class OverlayView: NSView {
             padding: beautifyPadding,
             cornerRadius: beautifyCornerRadius,
             shadowRadius: beautifyShadowRadius,
-            bgRadius: beautifyBgRadius
+            bgRadius: 0
         )
     }
 
@@ -270,7 +270,7 @@ class OverlayView: NSView {
     private var beautifyModeWindowRect: NSRect = .zero
     private var beautifyModeRoundedRect: NSRect = .zero
     private var isDraggingBeautifySlider: Bool = false
-    private var activeBeautifySlider: Int = -1  // 0=padding, 1=corner, 2=shadow, 3=bgRadius
+    private var activeBeautifySlider: Int = -1  // 0=padding, 1=corner, 2=shadow
     private var beautifyBgRadiusSliderRect: NSRect = .zero
     private var beautifySwatchRects: [NSRect] = []
     private var showBeautifyGradientPicker: Bool = false
@@ -416,6 +416,8 @@ class OverlayView: NSView {
     private var redactPIIBtnRect: NSRect = .zero
     private var redactAllTextBtnRect: NSRect = .zero
     private var redactTypeDropdownRect: NSRect = .zero
+    private var hoveredRedactBtn: Int = -1  // 0 = all text, 1 = PII, -1 = none
+    private var pressedRedactBtn: Int = -1
     // Editor top bar
     private var editorTopBarRect: NSRect = .zero
     private var editorCropBtnRect: NSRect = .zero
@@ -444,6 +446,10 @@ class OverlayView: NSView {
     // Annotation selection/resize controls
     private var isResizingAnnotation: Bool = false
     private var annotationResizeHandle: ResizeHandle = .none
+    private var isRotatingAnnotation: Bool = false
+    private var rotationStartAngle: CGFloat = 0
+    private var rotationOriginal: CGFloat = 0
+    private var annotationRotateHandleRect: NSRect = .zero
     private var annotationResizeOrigStart: NSPoint = .zero
     private var annotationResizeOrigEnd: NSPoint = .zero
     private var annotationResizeOrigTextOrigin: NSPoint = .zero
@@ -863,6 +869,17 @@ class OverlayView: NSView {
             if newRow != hoveredTranslateRow { hoveredTranslateRow = newRow; needsDisplay = true }
         }
 
+        // Redact button hover
+        if (currentTool == .pixelate || currentTool == .blur) && optionsRowRect.contains(point) {
+            let newHovered: Int
+            if redactAllTextBtnRect != .zero && redactAllTextBtnRect.contains(point) { newHovered = 0 }
+            else if redactPIIBtnRect != .zero && redactPIIBtnRect.contains(point) { newHovered = 1 }
+            else { newHovered = -1 }
+            if newHovered != hoveredRedactBtn { hoveredRedactBtn = newHovered; needsDisplay = true }
+        } else if hoveredRedactBtn != -1 {
+            hoveredRedactBtn = -1; needsDisplay = true
+        }
+
         // Hover-to-move: only active for the core shape/drawing tools.
         let hoverMoveTools: Set<AnnotationTool> = [.arrow, .line, .rectangle, .ellipse]
         // Hover-to-move: when a drawing tool is active and the cursor is over a movable annotation,
@@ -893,8 +910,22 @@ class OverlayView: NSView {
             } else if hoveredAnnotation != nil {
                 // Cursor left the annotation hit area. Check if it's within the extended controls
                 // zone (handles + delete button sit outside the hit area) — if so, keep hoveredAnnotation.
+                // Unrotate point for resize handle hit test (handles are drawn in rotated space)
+                let unrotatedPoint: NSPoint
+                if let ann = hoveredAnnotation, ann.rotation != 0 && ann.supportsRotation {
+                    let center = NSPoint(x: ann.boundingRect.midX, y: ann.boundingRect.midY)
+                    let cos_r = cos(-ann.rotation)
+                    let sin_r = sin(-ann.rotation)
+                    let dx = point.x - center.x
+                    let dy = point.y - center.y
+                    unrotatedPoint = NSPoint(x: center.x + dx * cos_r - dy * sin_r,
+                                             y: center.y + dx * sin_r + dy * cos_r)
+                } else {
+                    unrotatedPoint = point
+                }
                 let controlsActive = annotationDeleteButtonRect.contains(point)
-                    || annotationResizeHandleRects.contains { $0.1.insetBy(dx: -8, dy: -8).contains(point) }
+                    || annotationResizeHandleRects.contains { $0.1.insetBy(dx: -8, dy: -8).contains(unrotatedPoint) }
+                    || (annotationRotateHandleRect != .zero && annotationRotateHandleRect.insetBy(dx: -8, dy: -8).contains(point))
 
                 if controlsActive {
                     // Inside a control rect — cancel any pending clear and stay active.
@@ -1193,6 +1224,9 @@ class OverlayView: NSView {
             }
             if annotationEditButtonRect.width > 0 {
                 addCursorRect(annotationEditButtonRect, cursor: .arrow)
+            }
+            if annotationRotateHandleRect.width > 0 {
+                addCursorRect(annotationRotateHandleRect.insetBy(dx: -4, dy: -4), cursor: .arrow)
             }
         }
 
@@ -2672,14 +2706,6 @@ class OverlayView: NSView {
         drawBeautifySlider(rect: beautifyShadowSliderRect, value: beautifyShadowRadius, min: 0, max: 40)
         curY -= sectionGap
 
-        // ── Background Radius slider ──
-        curY -= labelH
-        ("Background Radius" as NSString).draw(at: NSPoint(x: insetX, y: curY), withAttributes: labelAttrs)
-        curY -= sliderH
-        beautifyBgRadiusSliderRect = NSRect(x: insetX, y: curY, width: contentW, height: sliderH)
-        drawBeautifySlider(rect: beautifyBgRadiusSliderRect, value: beautifyBgRadius, min: 0, max: 30)
-        curY -= sectionGap
-
         // ── Background swatches ──
         curY -= labelH
         ("Background" as NSString).draw(at: NSPoint(x: insetX, y: curY), withAttributes: labelAttrs)
@@ -3522,7 +3548,8 @@ class OverlayView: NSView {
         let allRect = NSRect(x: curX, y: btnY, width: allBtnW, height: btnH)
         redactAllTextBtnRect = allRect
 
-        ToolbarLayout.accentColor.withAlphaComponent(0.7).setFill()
+        let allAlpha: CGFloat = pressedRedactBtn == 0 ? 1.0 : (hoveredRedactBtn == 0 ? 0.85 : 0.7)
+        ToolbarLayout.accentColor.withAlphaComponent(allAlpha).setFill()
         NSBezierPath(roundedRect: allRect, xRadius: btnRadius, yRadius: btnRadius).fill()
         allLabel.draw(at: NSPoint(x: allRect.midX - allSize.width / 2, y: allRect.midY - allSize.height / 2),
                       withAttributes: btnAttrs)
@@ -3535,7 +3562,8 @@ class OverlayView: NSView {
         let piiRect = NSRect(x: curX, y: btnY, width: piiBtnW, height: btnH)
         redactPIIBtnRect = piiRect
 
-        NSColor.white.withAlphaComponent(0.1).setFill()
+        let piiAlpha: CGFloat = pressedRedactBtn == 1 ? 0.25 : (hoveredRedactBtn == 1 ? 0.18 : 0.1)
+        NSColor.white.withAlphaComponent(piiAlpha).setFill()
         NSBezierPath(roundedRect: piiRect, xRadius: btnRadius, yRadius: btnRadius).fill()
         piiLabel.draw(at: NSPoint(x: piiRect.midX - piiSize.width / 2, y: piiRect.midY - piiSize.height / 2),
                       withAttributes: btnAttrs)
@@ -4100,7 +4128,6 @@ class OverlayView: NSView {
             ("Padding", beautifyPadding, 16, 96),
             ("Radius", beautifyCornerRadius, 0, 30),
             ("Shadow", beautifyShadowRadius, 0, 40),
-            ("Bg Radius", beautifyBgRadius, 0, 30),
         ]
 
         var sliderRects: [NSRect] = []
@@ -4117,7 +4144,6 @@ class OverlayView: NSView {
         beautifyPaddingSliderRect = sliderRects[0]
         beautifyCornerSliderRect = sliderRects[1]
         beautifyShadowSliderRect = sliderRects[2]
-        beautifyBgRadiusSliderRect = sliderRects[3]
 
         // Separator
         NSColor.white.withAlphaComponent(0.2).setFill()
@@ -4326,7 +4352,6 @@ class OverlayView: NSView {
         case 0: sliderRect = beautifyPaddingSliderRect; minVal = 16; maxVal = 96; key = "beautifyPadding"
         case 1: sliderRect = beautifyCornerSliderRect; minVal = 0; maxVal = 30; key = "beautifyCornerRadius"
         case 2: sliderRect = beautifyShadowSliderRect; minVal = 0; maxVal = 40; key = "beautifyShadowRadius"
-        case 3: sliderRect = beautifyBgRadiusSliderRect; minVal = 0; maxVal = 30; key = "beautifyBgRadius"
         default: return
         }
 
@@ -4338,7 +4363,6 @@ class OverlayView: NSView {
         case 0: beautifyPadding = rounded
         case 1: beautifyCornerRadius = rounded
         case 2: beautifyShadowRadius = rounded
-        case 3: beautifyBgRadius = rounded
         default: break
         }
 
@@ -5689,6 +5713,17 @@ class OverlayView: NSView {
 
         let padded = baseRect.insetBy(dx: -4, dy: -4)
 
+        // Apply annotation rotation to controls
+        if annotation.rotation != 0 && annotation.supportsRotation {
+            let center = NSPoint(x: baseRect.midX, y: baseRect.midY)
+            let xform = NSAffineTransform()
+            xform.translateX(by: center.x, yBy: center.y)
+            xform.rotate(byRadians: annotation.rotation)
+            xform.translateX(by: -center.x, yBy: -center.y)
+            NSGraphicsContext.current?.cgContext.saveGState()
+            xform.concat()
+        }
+
         // Draw dashed border
         let path = NSBezierPath(roundedRect: padded, xRadius: 3, yRadius: 3)
         path.lineWidth = 1.5
@@ -5712,6 +5747,56 @@ class OverlayView: NSView {
             }
         } else {
             annotationResizeHandleRects = []
+        }
+
+        // Restore rotation transform before drawing rotation handle (in screen space)
+        if annotation.rotation != 0 && annotation.supportsRotation {
+            NSGraphicsContext.current?.cgContext.restoreGState()
+        }
+
+        // Rotation handle (above top-center)
+        annotationRotateHandleRect = .zero
+        if annotation.supportsRotation {
+            let center = NSPoint(x: padded.midX, y: padded.midY)
+            let handleDist: CGFloat = padded.height / 2 + 24
+            // Rotate the handle position by the annotation's current rotation
+            let handleX = center.x - handleDist * sin(annotation.rotation)
+            let handleY = center.y + handleDist * cos(annotation.rotation)
+            let hs: CGFloat = 14
+            let rotRect = NSRect(x: handleX - hs / 2, y: handleY - hs / 2, width: hs, height: hs)
+            annotationRotateHandleRect = rotRect
+
+            // Connecting line from top-center of box to handle
+            let topCenterX = center.x - (padded.height / 2 + 2) * sin(annotation.rotation)
+            let topCenterY = center.y + (padded.height / 2 + 2) * cos(annotation.rotation)
+            let connPath = NSBezierPath()
+            connPath.lineWidth = 1
+            connPath.setLineDash([3, 3], count: 2, phase: 0)
+            NSColor.white.withAlphaComponent(0.5).setStroke()
+            connPath.move(to: NSPoint(x: topCenterX, y: topCenterY))
+            connPath.line(to: NSPoint(x: handleX, y: handleY))
+            connPath.stroke()
+
+            // Draw rotate icon circle
+            NSColor(white: 0.2, alpha: 0.9).setFill()
+            NSBezierPath(ovalIn: rotRect).fill()
+            NSColor.white.withAlphaComponent(0.8).setStroke()
+            NSBezierPath(ovalIn: rotRect.insetBy(dx: 0.5, dy: 0.5)).stroke()
+
+            // Draw rotate arrow icon — draw into a fixed square centered in the circle
+            let iconSize: CGFloat = 10
+            let iconRect = NSRect(x: rotRect.midX - iconSize / 2, y: rotRect.midY - iconSize / 2,
+                                   width: iconSize, height: iconSize)
+            let cfg = NSImage.SymbolConfiguration(pointSize: iconSize, weight: .bold)
+            if let img = NSImage(systemSymbolName: "arrow.trianglehead.2.clockwise.rotate.90", accessibilityDescription: nil)?.withSymbolConfiguration(cfg) {
+                let tinted = NSImage(size: img.size)
+                tinted.lockFocus()
+                img.draw(in: NSRect(origin: .zero, size: img.size), from: .zero, operation: .sourceOver, fraction: 1)
+                NSColor.white.setFill()
+                NSRect(origin: .zero, size: img.size).fill(using: .sourceAtop)
+                tinted.unlockFocus()
+                tinted.draw(in: iconRect, from: .zero, operation: .sourceOver, fraction: 1.0, respectFlipped: true, hints: nil)
+            }
         }
 
         // Delete button (X) at top-right outside the box
@@ -6542,12 +6627,6 @@ class OverlayView: NSView {
                     updateBeautifySlider(at: point)
                     return
                 }
-                if beautifyBgRadiusSliderRect.contains(point) {
-                    isDraggingBeautifySlider = true
-                    activeBeautifySlider = 3
-                    updateBeautifySlider(at: point)
-                    return
-                }
                 // Background swatches — use stored rects from draw
                 for (i, swatchRect) in beautifySwatchRects.enumerated() {
                     if swatchRect.contains(point) {
@@ -7047,12 +7126,20 @@ class OverlayView: NSView {
                     }
                     // Redact buttons (blur/pixelate options row)
                     if currentTool == .pixelate || currentTool == .blur {
-                        if redactPIIBtnRect != .zero && redactPIIBtnRect.contains(point) {
-                            performAutoRedact()
+                        if redactAllTextBtnRect != .zero && redactAllTextBtnRect.contains(point) {
+                            pressedRedactBtn = 0; needsDisplay = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                                self?.pressedRedactBtn = -1; self?.needsDisplay = true
+                                self?.performRedactAllText()
+                            }
                             return
                         }
-                        if redactAllTextBtnRect != .zero && redactAllTextBtnRect.contains(point) {
-                            performRedactAllText()
+                        if redactPIIBtnRect != .zero && redactPIIBtnRect.contains(point) {
+                            pressedRedactBtn = 1; needsDisplay = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                                self?.pressedRedactBtn = -1; self?.needsDisplay = true
+                                self?.performAutoRedact()
+                            }
                             return
                         }
                         if redactTypeDropdownRect != .zero && redactTypeDropdownRect.contains(point) {
@@ -7293,6 +7380,19 @@ class OverlayView: NSView {
         case .selected:
             // Convert to canvas space for annotation interactions (accounts for zoom)
             let canvasPoint = viewToCanvas(point)
+            if isRotatingAnnotation, let annotation = selectedAnnotation {
+                let center = NSPoint(x: annotation.boundingRect.midX, y: annotation.boundingRect.midY)
+                let currentAngle = atan2(canvasPoint.x - center.x, canvasPoint.y - center.y)
+                var newRotation = rotationOriginal - (currentAngle - rotationStartAngle)
+                // Shift: snap to 90° steps
+                if NSEvent.modifierFlags.contains(.shift) {
+                    let step = CGFloat.pi / 2
+                    newRotation = (newRotation / step).rounded() * step
+                }
+                annotation.rotation = newRotation
+                needsDisplay = true
+                return
+            }
             if isResizingAnnotation, let annotation = selectedAnnotation {
                 let dx = canvasPoint.x - annotationResizeMouseStart.x
                 let dy = canvasPoint.y - annotationResizeMouseStart.y
@@ -7482,6 +7582,11 @@ class OverlayView: NSView {
         }
         if isDraggingBrightnessSlider {
             isDraggingBrightnessSlider = false
+            return
+        }
+        if isRotatingAnnotation {
+            isRotatingAnnotation = false
+            needsDisplay = true
             return
         }
         if isResizingAnnotation {
@@ -8170,9 +8275,29 @@ class OverlayView: NSView {
                     needsDisplay = true
                     return
                 }
-                // Resize handles
+                // Rotation handle
+                if annotationRotateHandleRect != .zero && annotationRotateHandleRect.insetBy(dx: -6, dy: -6).contains(point) {
+                    isRotatingAnnotation = true
+                    let center = NSPoint(x: selected.boundingRect.midX, y: selected.boundingRect.midY)
+                    rotationStartAngle = atan2(point.x - center.x, point.y - center.y)
+                    rotationOriginal = selected.rotation
+                    return
+                }
+                // Resize handles — unrotate point into annotation's local space
+                let handleTestPoint: NSPoint
+                if selected.rotation != 0 && selected.supportsRotation {
+                    let center = NSPoint(x: selected.boundingRect.midX, y: selected.boundingRect.midY)
+                    let cos_r = cos(-selected.rotation)
+                    let sin_r = sin(-selected.rotation)
+                    let dx = point.x - center.x
+                    let dy = point.y - center.y
+                    handleTestPoint = NSPoint(x: center.x + dx * cos_r - dy * sin_r,
+                                              y: center.y + dx * sin_r + dy * cos_r)
+                } else {
+                    handleTestPoint = point
+                }
                 for (handle, rect) in annotationResizeHandleRects {
-                    if rect.insetBy(dx: -4, dy: -4).contains(point) {
+                    if rect.insetBy(dx: -4, dy: -4).contains(handleTestPoint) {
                         isResizingAnnotation = true
                         annotationResizeHandle = handle
                         annotationResizeOrigStart = selected.startPoint
@@ -8211,9 +8336,22 @@ class OverlayView: NSView {
         // intercept the click and handle it like the select tool — resize handle or drag — without
         // switching currentTool.
         if let hovered = hoveredAnnotation {
+            // Unrotate point for resize handle hit test
+            let hoverHandlePoint: NSPoint
+            if hovered.rotation != 0 && hovered.supportsRotation {
+                let center = NSPoint(x: hovered.boundingRect.midX, y: hovered.boundingRect.midY)
+                let cos_r = cos(-hovered.rotation)
+                let sin_r = sin(-hovered.rotation)
+                let dx = point.x - center.x
+                let dy = point.y - center.y
+                hoverHandlePoint = NSPoint(x: center.x + dx * cos_r - dy * sin_r,
+                                           y: center.y + dx * sin_r + dy * cos_r)
+            } else {
+                hoverHandlePoint = point
+            }
             // Check resize handles of the hovered annotation (populated by drawAnnotationControls)
             for (handle, rect) in annotationResizeHandleRects {
-                if rect.insetBy(dx: -4, dy: -4).contains(point) {
+                if rect.insetBy(dx: -4, dy: -4).contains(hoverHandlePoint) {
                     selectedAnnotation = hovered
                     isResizingAnnotation = true
                     annotationResizeHandle = handle
@@ -8230,6 +8368,16 @@ class OverlayView: NSView {
                     needsDisplay = true
                     return
                 }
+            }
+            // Check rotation handle
+            if annotationRotateHandleRect != .zero && annotationRotateHandleRect.insetBy(dx: -6, dy: -6).contains(point) {
+                selectedAnnotation = hovered
+                isRotatingAnnotation = true
+                let center = NSPoint(x: hovered.boundingRect.midX, y: hovered.boundingRect.midY)
+                rotationStartAngle = atan2(point.x - center.x, point.y - center.y)
+                rotationOriginal = hovered.rotation
+                needsDisplay = true
+                return
             }
             // Check delete button
             if annotationDeleteButtonRect.contains(point) {
@@ -8938,6 +9086,7 @@ class OverlayView: NSView {
                     case "x": handleToolbarAction(.tool(.pixelate)); return
                     case "i": handleToolbarAction(.tool(.colorSampler)); return
                     case "s": handleToolbarAction(.tool(.select)); return
+                    case "g": handleToolbarAction(.tool(.stamp)); return
                     case "e":
                         if !isDetached { handleToolbarAction(.detach) }
                         return

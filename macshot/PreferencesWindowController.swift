@@ -97,6 +97,11 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         uploadsTab.view = makeUploadsTabView()
         tabView.addTabViewItem(uploadsTab)
 
+        let aboutTab = NSTabViewItem(identifier: "about")
+        aboutTab.label = "About"
+        aboutTab.view = makeAboutTabView()
+        tabView.addTabViewItem(aboutTab)
+
         // Footer separator
         let sep = NSBox()
         sep.boxType = .separator
@@ -700,6 +705,85 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         return scroll
     }
 
+    // MARK: - About Tab
+
+    private func makeAboutTabView() -> NSView {
+        let container = NSView()
+        container.autoresizingMask = [.width, .height]
+
+        let stack = NSStackView()
+        stack.orientation = .vertical
+        stack.alignment = .centerX
+        stack.spacing = 8
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(stack)
+
+        NSLayoutConstraint.activate([
+            stack.centerXAnchor.constraint(equalTo: container.centerXAnchor),
+            stack.topAnchor.constraint(equalTo: container.topAnchor, constant: 30),
+            stack.widthAnchor.constraint(lessThanOrEqualTo: container.widthAnchor, constant: -40),
+        ])
+
+        // App icon
+        let icon = NSImageView()
+        icon.image = NSApp.applicationIconImage
+        icon.translatesAutoresizingMaskIntoConstraints = false
+        icon.widthAnchor.constraint(equalToConstant: 80).isActive = true
+        icon.heightAnchor.constraint(equalToConstant: 80).isActive = true
+        stack.addArrangedSubview(icon)
+        stack.setCustomSpacing(12, after: icon)
+
+        // App name
+        let name = NSTextField(labelWithString: "macshot")
+        name.font = NSFont.systemFont(ofSize: 22, weight: .bold)
+        name.textColor = .labelColor
+        stack.addArrangedSubview(name)
+
+        // Version
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
+        let versionLabel = NSTextField(labelWithString: "Version \(version) (\(build))")
+        versionLabel.font = NSFont.systemFont(ofSize: 12)
+        versionLabel.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(versionLabel)
+        stack.setCustomSpacing(20, after: versionLabel)
+
+        // Description
+        let desc = NSTextField(wrappingLabelWithString: "A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit.")
+        desc.font = NSFont.systemFont(ofSize: 13)
+        desc.textColor = .labelColor
+        desc.alignment = .center
+        stack.addArrangedSubview(desc)
+        stack.setCustomSpacing(20, after: desc)
+
+        // Author
+        let author = NSTextField(labelWithString: "Made by sw33tLie")
+        author.font = NSFont.systemFont(ofSize: 12, weight: .medium)
+        author.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(author)
+        stack.setCustomSpacing(6, after: author)
+
+        // GitHub link
+        let ghBtn = NSButton(title: "github.com/sw33tLie/macshot", target: self, action: #selector(openGitHub))
+        ghBtn.bezelStyle = .inline
+        ghBtn.isBordered = false
+        ghBtn.attributedTitle = NSAttributedString(string: "github.com/sw33tLie/macshot", attributes: [
+            .font: NSFont.systemFont(ofSize: 12),
+            .foregroundColor: NSColor.linkColor,
+            .underlineStyle: NSUnderlineStyle.single.rawValue,
+        ])
+        stack.addArrangedSubview(ghBtn)
+        stack.setCustomSpacing(20, after: ghBtn)
+
+        // License
+        let license = NSTextField(labelWithString: "Licensed under the MIT License")
+        license.font = NSFont.systemFont(ofSize: 11)
+        license.textColor = .tertiaryLabelColor
+        stack.addArrangedSubview(license)
+
+        return container
+    }
+
     private func updateGDriveStatus() {
         if GoogleDriveUploader.shared.isSignedIn {
             gdriveStatusLabel?.stringValue = GoogleDriveUploader.shared.userEmail ?? "Signed in"
@@ -1152,7 +1236,11 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
             do {
                 if enabled { try SMAppService.mainApp.register() }
                 else { try SMAppService.mainApp.unregister() }
-            } catch { print("Failed to update login item: \(error)") }
+            } catch {
+                #if DEBUG
+                print("Failed to update login item: \(error)")
+                #endif
+            }
         }
     }
 

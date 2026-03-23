@@ -111,6 +111,16 @@ class Annotation {
     var groupID: UUID?  // for batch undo (e.g. auto-redact)
     var isUnderline: Bool = false
     var isStrikethrough: Bool = false
+    var rotation: CGFloat = 0         // rotation angle in radians
+
+    var supportsRotation: Bool {
+        switch tool {
+        case .rectangle, .filledRectangle, .ellipse, .stamp, .text, .number, .pixelate, .blur:
+            return true
+        default:
+            return false
+        }
+    }
     var controlPoint: NSPoint? = nil  // optional bend point for line/arrow
     var isRounded: Bool = false       // legacy — kept for compat, see rectCornerRadius
     var rectCornerRadius: CGFloat = 0 // 0..30, actual corner radius for rect tools
@@ -147,6 +157,7 @@ class Annotation {
         c.groupID = groupID
         c.isUnderline = isUnderline
         c.isStrikethrough = isStrikethrough
+        c.rotation = rotation
         c.controlPoint = controlPoint
         c.isRounded = isRounded
         c.rectCornerRadius = rectCornerRadius
@@ -199,7 +210,15 @@ class Annotation {
             return distanceToLineSegment(point: point, from: startPoint, to: endPoint) < threshold
         case .arrow:
             if arrowStyle == .thick {
-                return boundingRect.insetBy(dx: -threshold, dy: -threshold).contains(point)
+                // Use distance to the center line with a threshold based on the shape width
+                let totalLen = hypot(endPoint.x - startPoint.x, endPoint.y - startPoint.y)
+                let sizeScale = min(1.0, max(0.2, totalLen / 120))
+                let shapeWidth = max(6, strokeWidth * 2.5) * sizeScale * 2.2  // headHalf
+                let hitThreshold = max(threshold, shapeWidth)
+                if let cp = controlPoint {
+                    return distanceToQuadCurve(point: point, from: startPoint, control: cp, to: endPoint) < hitThreshold
+                }
+                return distanceToLineSegment(point: point, from: startPoint, to: endPoint) < hitThreshold
             }
             if let cp = controlPoint {
                 return distanceToQuadCurve(point: point, from: startPoint, control: cp, to: endPoint) < threshold
@@ -356,6 +375,17 @@ class Annotation {
     func draw(in context: NSGraphicsContext) {
         NSGraphicsContext.current = context
 
+        // Apply rotation around annotation center
+        if rotation != 0 && supportsRotation {
+            let center = NSPoint(x: boundingRect.midX, y: boundingRect.midY)
+            let xform = NSAffineTransform()
+            xform.translateX(by: center.x, yBy: center.y)
+            xform.rotate(byRadians: rotation)
+            xform.translateX(by: -center.x, yBy: -center.y)
+            context.cgContext.saveGState()
+            xform.concat()
+        }
+
         switch tool {
         case .pencil:
             drawFreeform(alpha: color.alphaComponent, width: strokeWidth)
@@ -393,6 +423,10 @@ class Annotation {
             break  // preview-only tool, no annotation drawn
         case .stamp:
             drawStamp()
+        }
+
+        if rotation != 0 && supportsRotation {
+            context.cgContext.restoreGState()
         }
     }
 
@@ -625,9 +659,10 @@ class Annotation {
         }
         let spx = -sin(startAngle), spy = cos(startAngle)
 
-        // Sizing
-        let tailHalf = max(2, strokeWidth * 0.8)
-        let shaftHalf = max(6, strokeWidth * 2.5)
+        // Sizing — scale everything down when arrow is short
+        let sizeScale = min(1.0, max(0.2, totalLen / 120))
+        let tailHalf = max(2, strokeWidth * 0.8) * sizeScale
+        let shaftHalf = max(6, strokeWidth * 2.5) * sizeScale
         let headHalf = shaftHalf * 2.2
         let headLen = min(totalLen * 0.35, headHalf * 1.8)
         let r: CGFloat = min(headLen * 0.22, headHalf * 0.3)  // corner rounding
@@ -638,7 +673,7 @@ class Annotation {
 
         // Sample points along the shaft (tail → headBase), offset perpendicular for taper
         // Works for both straight and bent arrows
-        let steps = 24
+        let steps = 64
         var leftPts: [NSPoint] = []
         var rightPts: [NSPoint] = []
 

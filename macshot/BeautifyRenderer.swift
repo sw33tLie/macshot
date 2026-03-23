@@ -248,14 +248,14 @@ class BeautifyRenderer {
         let padding = config.padding
         let windowCornerRadius = config.cornerRadius
         let shadowRadius = config.shadowRadius
-        let shadowOffset = min(shadowRadius * 0.4, 10)
+        let shadowOffset = min(shadowRadius * 0.3, 8)
         let titleBarHeight: CGFloat = 28
 
         let windowWidth = imgSize.width
         let windowHeight = imgSize.height + titleBarHeight
 
         let totalWidth = windowWidth + padding * 2
-        let totalHeight = windowHeight + padding * 2 + shadowOffset
+        let totalHeight = windowHeight + padding * 2
 
         let result = NSImage(size: NSSize(width: totalWidth, height: totalHeight))
         result.lockFocus()
@@ -265,10 +265,9 @@ class BeautifyRenderer {
             return image
         }
 
-        // Draw gradient background with outer corner radius
+        // Gradient background — fill entire canvas, no outer rounding
         let bgRect = NSRect(x: 0, y: 0, width: totalWidth, height: totalHeight)
         context.saveGState()
-        NSBezierPath(roundedRect: bgRect, xRadius: config.bgRadius, yRadius: config.bgRadius).addClip()
         drawGradientBackground(in: bgRect, config: config, context: context)
         context.restoreGState()
 
@@ -350,10 +349,10 @@ class BeautifyRenderer {
         let padding = config.padding
         let cornerRadius = config.cornerRadius
         let shadowRadius = config.shadowRadius
-        let shadowOffset = min(shadowRadius * 0.4, 10)
+        let shadowOffset = min(shadowRadius * 0.3, 8)
 
         let totalWidth = imgSize.width + padding * 2
-        let totalHeight = imgSize.height + padding * 2 + shadowOffset
+        let totalHeight = imgSize.height + padding * 2
 
         let result = NSImage(size: NSSize(width: totalWidth, height: totalHeight))
         result.lockFocus()
@@ -363,10 +362,9 @@ class BeautifyRenderer {
             return image
         }
 
-        // Gradient background with outer corner radius
+        // Gradient background — fill entire canvas, no outer rounding
         let bgRect = NSRect(x: 0, y: 0, width: totalWidth, height: totalHeight)
         context.saveGState()
-        NSBezierPath(roundedRect: bgRect, xRadius: config.bgRadius, yRadius: config.bgRadius).addClip()
         drawGradientBackground(in: bgRect, config: config, context: context)
         context.restoreGState()
 
