@@ -776,7 +776,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         stack.setCustomSpacing(20, after: ghBtn)
 
         // License
-        let license = NSTextField(labelWithString: "Licensed under the MIT License")
+        let license = NSTextField(labelWithString: "Licensed under the GPLv3")
         license.font = NSFont.systemFont(ofSize: 11)
         license.textColor = .tertiaryLabelColor
         stack.addArrangedSubview(license)

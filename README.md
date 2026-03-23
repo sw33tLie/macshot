@@ -170,4 +170,4 @@ macOS 14.0 (Sonoma) or later.
 
 ## License
 
-[MIT](LICENSE)
+[GPLv3](LICENSE)
