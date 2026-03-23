@@ -1,5 +1,10 @@
 # Changelog
 
+## [3.0.6] - 2026-03-23
+
+### Fixed
+- **Credit card auto-redact** — significantly improved detection of credit card numbers in OCR text. Handles Amex (4-6-5) format, OCR artifacts (฿, @, : appended to digit groups), and numbers split across multiple OCR text blocks. Uses spatial grouping to detect horizontally adjacent digit groups on the same row and redacts them as a card number.
+
 ## [3.0.5] - 2026-03-23
 
 ### Added
