@@ -9262,10 +9262,12 @@ class OverlayView: NSView {
             ("phone", #"(?:\+?1[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)\d{3}[-.\s]?\d{4}"#),
             // SSN (US Social Security Number)
             ("ssn", #"\b\d{3}[-\s]\d{2}[-\s]\d{4}\b"#),
-            // Credit card numbers (16 digits with any whitespace/dash separators)
-            ("credit_card", #"\b\d{4}[-\s]*\d{4}[-\s]*\d{4}[-\s]*\d{4}\b"#),
-            // 4-digit groups that look like card number parts (standalone)
-            ("card_group", #"\b\d{4}\s+\d{4}\s+\d{4}\s+\d{4}\b"#),
+            // Credit card numbers: 13-19 digits with any separators, tolerating trailing OCR junk
+            ("credit_card", #"\d{4}[-\s]*\d{4}[-\s]*\d{4}[-\s]*\d{1,7}"#),
+            // Amex format: 4-6-5
+            ("credit_card", #"\d{4}[-\s]*\d{6}[-\s]*\d{5}"#),
+            // Any sequence of 2+ groups of 3-6 digits separated by spaces
+            ("credit_card", #"\d{3,6}\s+\d{3,6}(?:\s+\d{3,6}){0,3}"#),
             // CVV (3-4 digit code near CVV/CVC/CSC label)
             ("cvv", #"(?:CVV|CVC|CSC|CCV)\s*:?\s*\d{3,4}"#),
             // Expiry dates (MM/YY, MM/YYYY, YYYY-MM, etc.)
@@ -9368,23 +9370,46 @@ class OverlayView: NSView {
             }
 
             // Pass 2: detect card numbers split across observations
-            // Collect observations that are purely digit groups (e.g. "4868", "7191 9682", etc.)
-            let digitGroupPattern = try? NSRegularExpression(pattern: #"^\d{3,4}$"#)
-            var digitGroupIndices: [Int] = []
+            // Find observations that are purely numeric (3-6 digits) and group ones
+            // that are horizontally adjacent (similar Y, sequential X) into card candidates
+            struct DigitObs { let index: Int; let midY: CGFloat; let midX: CGFloat; let box: CGRect; let digitCount: Int }
+            var digitObservations: [DigitObs] = []
             for (i, observation) in observations.enumerated() {
                 guard !redactedObservations.contains(i) else { continue }
                 guard let candidate = observation.topCandidates(1).first else { continue }
-                let text = candidate.string.trimmingCharacters(in: .whitespaces)
-                let range = NSRange(location: 0, length: (text as NSString).length)
-                if digitGroupPattern?.firstMatch(in: text, options: [], range: range) != nil {
-                    digitGroupIndices.append(i)
+                // Strip non-digit chars (OCR artifacts like ฿, @, :, etc.)
+                let digitsOnly = candidate.string.filter(\.isNumber)
+                if digitsOnly.count >= 3 && digitsOnly.count <= 6 {
+                    let box = observation.boundingBox
+                    digitObservations.append(DigitObs(index: i, midY: box.midY, midX: box.midX, box: box, digitCount: digitsOnly.count))
                 }
             }
-            // If 4+ standalone digit groups exist, they're likely a split card number — redact them all
-            if digitGroupIndices.count >= 4 {
-                for i in digitGroupIndices {
-                    addRedaction(box: observations[i].boundingBox)
-                    redactedObservations.insert(i)
+            // Group by similar Y position (same row) — tolerance 3% of image height
+            let yTolerance: CGFloat = 0.03
+            var grouped: [[DigitObs]] = []
+            var used = Set<Int>()
+            for (idx, obs) in digitObservations.enumerated() {
+                guard !used.contains(idx) else { continue }
+                var row = [obs]
+                used.insert(idx)
+                for (jdx, other) in digitObservations.enumerated() {
+                    guard !used.contains(jdx) else { continue }
+                    if abs(other.midY - obs.midY) < yTolerance {
+                        row.append(other)
+                        used.insert(jdx)
+                    }
+                }
+                row.sort { $0.midX < $1.midX }
+                grouped.append(row)
+            }
+            // Redact rows with 2+ digit groups (likely split card numbers)
+            for row in grouped where row.count >= 2 {
+                let totalDigits = row.reduce(0) { $0 + $1.digitCount }
+                // 8-19 digits = plausible card number; also accept 2 groups of 4 (partial)
+                guard totalDigits >= 8 || (row.count >= 2 && row.allSatisfy { $0.digitCount >= 4 }) else { continue }
+                for obs in row {
+                    addRedaction(box: obs.box)
+                    redactedObservations.insert(obs.index)
                 }
             }
 
