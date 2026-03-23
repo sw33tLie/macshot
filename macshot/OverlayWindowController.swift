@@ -429,7 +429,9 @@ extension OverlayWindowController: OverlayViewDelegate {
                     self.overlayDelegate?.overlayDidConfirm(self, capturedImage: finalNSImage)
                 }
             } catch {
+                #if DEBUG
                 print("Vision background removal error: \(error.localizedDescription)")
+                #endif
                 DispatchQueue.main.async {
                     self.overlayView?.showOverlayError("Background removal failed — no clear subject found.")
                 }

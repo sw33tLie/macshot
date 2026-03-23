@@ -131,11 +131,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         recordScreenItem.toolTip = HotkeyManager.displayString(for: .recordScreen)
         menu.addItem(recordScreenItem)
 
-        let historyOverlayItem = NSMenuItem(title: "Show History", action: #selector(showHistoryOverlay), keyEquivalent: "")
-        historyOverlayItem.target = self
-        historyOverlayItem.toolTip = HotkeyManager.displayString(for: .historyOverlay)
-        menu.addItem(historyOverlayItem)
-
         menu.addItem(NSMenuItem.separator())
 
         // Recent Captures submenu
@@ -145,6 +140,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         historyItem.submenu = historySubmenu
         self.historyMenu = historySubmenu
         menu.addItem(historyItem)
+
+        let historyOverlayItem = NSMenuItem(title: "Show History Panel", action: #selector(showHistoryOverlay), keyEquivalent: "")
+        historyOverlayItem.target = self
+        historyOverlayItem.toolTip = HotkeyManager.displayString(for: .historyOverlay)
+        menu.addItem(historyOverlayItem)
 
         menu.addItem(NSMenuItem.separator())
 
@@ -541,7 +541,9 @@ extension AppDelegate: OverlayWindowControllerDelegate {
             if let url = url {
                 VideoEditorWindowController.open(url: url)
             } else if let error = error {
+                #if DEBUG
                 print("Recording failed: \(error.localizedDescription)")
+                #endif
             }
         }
         recordingEngine = engine
@@ -603,41 +605,6 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         if autoCopy { ImageEncoder.copyToClipboard(image) }
         playCopySound()
         showFloatingThumbnail(image: image)
-    }
-
-    private func showRecordingCompletedToast(url: URL) {
-        let onStop = UserDefaults.standard.string(forKey: "recordingOnStop") ?? "finder"
-        if onStop == "finder" {
-            NSWorkspace.shared.activateFileViewerSelecting([url])
-        }
-
-        let size = NSSize(width: 320, height: 60)
-        guard let screen = NSScreen.main else { return }
-        let origin = NSPoint(
-            x: screen.frame.midX - size.width / 2,
-            y: screen.frame.minY + 60
-        )
-        let window = NSWindow(
-            contentRect: NSRect(origin: origin, size: size),
-            styleMask: [.borderless],
-            backing: .buffered,
-            defer: false
-        )
-        window.isOpaque = false
-        window.backgroundColor = .clear
-        window.level = .floating + 1
-        window.hasShadow = true
-        window.ignoresMouseEvents = false
-        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-
-        let view = RecordingToastView(frame: NSRect(origin: .zero, size: size), url: url)
-        window.contentView = view
-        window.makeKeyAndOrderFront(nil)
-
-        // Auto-dismiss after 6 seconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 6) { [weak window] in
-            window?.orderOut(nil)
-        }
     }
 
     private func startDelayCountdown(seconds: Int) {

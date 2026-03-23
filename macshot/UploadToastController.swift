@@ -79,9 +79,10 @@ class UploadToastController {
         spinner?.removeFromSuperview()
         spinner = nil
 
-        // Resize taller to fit buttons
-        let toastWidth: CGFloat = 320
-        let toastHeight: CGFloat = 90
+        // Resize taller to fit buttons — taller for long links
+        let toastWidth: CGFloat = 360
+        let linkHeight: CGFloat = link.count > 40 ? 36 : 18
+        let toastHeight: CGFloat = 72 + linkHeight
         let frame = window.frame
         let newFrame = NSRect(x: frame.minX, y: frame.minY, width: toastWidth, height: toastHeight)
 
@@ -111,8 +112,8 @@ class UploadToastController {
         contentView.addSubview(close)
         self.closeButton = close
 
-        // Link button (clickable)
-        let linkBtn = NSButton(frame: NSRect(x: 16, y: toastHeight - 55, width: toastWidth - 32, height: 18))
+        // Link button (clickable, wraps for long URLs)
+        let linkBtn = NSButton(frame: NSRect(x: 16, y: toastHeight - 30 - linkHeight - 8, width: toastWidth - 32, height: linkHeight))
         linkBtn.bezelStyle = .inline
         linkBtn.isBordered = false
         linkBtn.alignment = .left
@@ -125,6 +126,7 @@ class UploadToastController {
         linkBtn.target = self
         linkBtn.action = #selector(openLink)
         linkBtn.toolTip = link
+        (linkBtn.cell as? NSButtonCell)?.wraps = true
         contentView.addSubview(linkBtn)
         self.linkButton = linkBtn
 
