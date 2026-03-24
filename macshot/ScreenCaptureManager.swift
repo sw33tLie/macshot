@@ -32,8 +32,9 @@ class ScreenCaptureManager {
                         group.addTask {
                             let filter = SCContentFilter(display: display, excludingWindows: [])
                             let config = SCStreamConfiguration()
-                            config.width = display.width * 2
-                            config.height = display.height * 2
+                            let scale = Int(screen.backingScaleFactor)
+                            config.width = display.width * scale
+                            config.height = display.height * scale
                             config.showsCursor = false
                             if #available(macOS 14.0, *) {
                                 config.captureResolution = .best
