@@ -216,6 +216,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          gh release delete "v$VERSION" --yes 2>/dev/null || true
           gh release create "v$VERSION" MacShot.dmg \
             --title "v$VERSION" \
             --notes-file release_notes.md
