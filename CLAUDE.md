@@ -39,11 +39,14 @@ macshot/
 ├── ScrollCaptureController.swift      # Scroll capture with SAD-based stitching
 ├── OCRResultController.swift          # Text recognition results window with translation
 ├── TranslationService.swift           # Google Translate API wrapper
-├── BeautifyRenderer.swift             # Gradient frame / background beautification
+├── BeautifyRenderer.swift             # Gradient frame / background beautification (linear + mesh gradients)
 ├── ImageEncoder.swift                 # PNG/JPEG/HEIC/WebP encoding, clipboard copy, resolution scaling
 ├── ImgurUploader.swift                # imgbb image upload
+├── GoogleDriveUploader.swift          # Google Drive OAuth2 upload
 ├── UploadToastController.swift        # Upload progress/success toast
 ├── ScreenshotHistory.swift            # Local history in ~/Library/Application Support/
+├── HistoryOverlayController.swift     # Recent captures visual overlay panel
+├── VideoEditorWindowController.swift  # Standalone video editor (trim, export, upload)
 ├── GIFEncoder.swift                   # Animated GIF from video frames
 ├── CountdownView.swift                # Delay capture countdown display
 ├── PermissionOnboardingController.swift  # First-run permission guide
@@ -106,14 +109,14 @@ The core of the app. Handles selection, annotation, rendering, and all user inte
 #### Annotation — Data Model + Drawing
 Class (not struct) with `clone()` for safe copying.
 
-**Tools (AnnotationTool enum, 17 cases):**
+**Tools (AnnotationTool enum, 18 cases):**
 ```
 pencil, line, arrow, rectangle, filledRectangle, ellipse, marker,
-text, number, pixelate, blur, measure, loupe, select,
+text, number, stamp, pixelate, blur, measure, loupe, select,
 translateOverlay, crop, colorSampler
 ```
 
-**Key properties:** tool, startPoint, endPoint, color, strokeWidth, text, attributedText, number, points (freeform), bakedBlurNSImage (pixelate/blur result), textImage (text snapshot), textDrawRect, fontSize, isBold/isItalic/isUnderline/isStrikethrough, controlPoint (bend), groupID (batch undo for auto-redact), sourceImage (temporary, cleared after bake)
+**Key properties:** tool, startPoint, endPoint, color, strokeWidth, text, attributedText, number, points (freeform), bakedBlurNSImage (pixelate/blur result), textImage (text snapshot), textDrawRect, fontSize, isBold/isItalic/isUnderline/isStrikethrough, controlPoint (bend), rotation, groupID (batch undo for auto-redact), sourceImage (temporary, cleared after bake)
 
 **Each annotation draws itself** via `draw(in:)`. Has `hitTest(point:threshold:)`, `move(dx:dy:)`, `isMovable`, `boundingRect`, `drawSelectionHighlight()`.
 
@@ -183,7 +186,9 @@ PinWindowControllerDelegate      — PinWindowController → AppDelegate
 - Recording: `recordingFormat` (mp4/gif), `recordingFPS`, `recordingOnStop`
 - History: `historySize`
 - Tools: `enabledTools`, `knownToolRawValues`
-- Features: `imgbbAPIKey`, `beautifyEnabled`, `beautifyStyleIndex`, `pencilSmoothEnabled`, `loupeSize`, `translateTargetLang`
+- Features: `imgbbAPIKey`, `beautifyEnabled`, `beautifyStyleIndex`, `beautifyMode`, `beautifyPadding`, `beautifyCornerRadius`, `beautifyShadowRadius`, `pencilSmoothEnabled`, `loupeSize`, `translateTargetLang`
+- Styles: `currentLineStyle`, `currentArrowStyle`, `currentRectFillStyle`, `currentRectCornerRadius`
+- Upload: `uploadProvider` (imgbb/gdrive), `googleDriveRefreshToken`, `uploadConfirmEnabled`
 
 ### Threading Model
 - **Capture:** Async/await TaskGroup for concurrent multi-display capture
@@ -202,28 +207,39 @@ PinWindowControllerDelegate      — PinWindowController → AppDelegate
 - Full-screen capture (single click without drag)
 - Remember last selection rectangle
 
-### Annotation Tools (17)
-Pencil, Line, Arrow, Rectangle, Filled Rectangle, Ellipse, Marker/Highlighter, Text (rich formatting), Number (auto-incrementing), Pixelate, Blur, Measure (pixel ruler), Loupe (2x magnifier), Select & Edit, Translate Overlay, Crop (editor only), Color Sampler
+### Annotation Tools (18)
+Pencil, Line, Arrow, Rectangle, Filled Rectangle, Ellipse, Marker/Highlighter, Text (rich formatting), Number (auto-incrementing), Stamp/Emoji, Pixelate, Blur, Measure (pixel ruler), Loupe (2x magnifier), Select & Edit, Translate Overlay, Crop (editor only), Color Sampler
+
+- **Line styles:** Solid, dashed, dotted
+- **Arrow styles:** Single, thick, double, open, tail
+- **Annotation rotation:** Rotate shapes via handle, Shift to snap to 90°
+- **Bend control points:** Draggable cubic bezier curve on lines and arrows
+- **Stamp tool:** Place emoji or custom images, load from file
 
 ### Output Actions
-Copy to clipboard, Save to file (PNG/JPEG), Pin (floating always-on-top), OCR with translation (30+ languages), Upload to imgbb, Remove background (VNGenerateForegroundInstanceMaskRequest), Open in editor, Beautify (6 gradient styles)
+Copy to clipboard, Save to file (PNG/JPEG/HEIC/WebP), Pin (floating always-on-top), OCR with translation (30+ languages), Upload to imgbb or Google Drive (OAuth2), Remove background (VNGenerateForegroundInstanceMaskRequest), Open in editor, Beautify (30 gradient styles including 7 mesh gradients on macOS 15+), Flip horizontal/vertical
 
 ### Advanced
 - **Editor Window:** Standalone resizable window for post-capture editing, full annotation tools, zoom 0.1x–8x
-- **Screen Recording:** MP4/GIF, annotation mode during recording, configurable FPS
+- **Video Editor:** Standalone video editor window for trimming, exporting, and uploading recorded videos
+- **Screen Recording:** MP4/GIF, annotation mode during recording, configurable FPS (up to 120fps), mouse click highlighting, system audio capture
 - **Scroll Capture:** Automatic scroll detection + stitching via SAD matching
 - **Auto-Redact:** Right-click filled rect → regex patterns (emails, phones, SSN, credit cards, IPs, AWS keys, bearer tokens)
 - **Barcode/QR Detection:** Live Vision detection with decoded payload, open/copy actions
 - **Floating Thumbnail:** Stackable, draggable, auto-dismiss, quick actions
-- **Screenshot History:** Local storage with thumbnails, "Recent Captures" menu
+- **Screenshot History:** Local storage with thumbnails, "Recent Captures" menu, visual history overlay panel
 - **Delay Capture:** Configurable countdown (3s, 5s, 10s)
 - **Color Opacity:** Adjustable per annotation
 - **Smooth Pencil Strokes:** Toggle in settings
 - **Zoom:** 0.1x–8x, scroll/pinch, pan, clickable label to edit percentage
+- **Sparkle Auto-Updates:** Automatic update checks via Sparkle framework
+- **Permission Onboarding:** First-run guide for granting Screen Recording permission
 
 ## Coding Conventions
 
-- Pure AppKit, no SwiftUI (Apple frameworks: ScreenCaptureKit, Vision, CoreImage, AVFoundation + Sparkle for auto-updates + Swift-WebP for WebP encoding)
+- Pure AppKit, no SwiftUI except `BeautifyRenderer` which uses SwiftUI `MeshGradient` + `ImageRenderer` for mesh gradient rendering (macOS 15+ only, guarded with `@available`)
+- **Strict concurrency:** CI builds with Xcode 16+ and `-Owholemodule` which enforces strict Swift concurrency. Any code using `@MainActor`-isolated SwiftUI APIs (e.g. `ImageRenderer`) must itself be `@MainActor`. Always mark classes/functions that touch SwiftUI rendering with `@MainActor`. Local Debug builds may not catch these errors — always consider CI's stricter checking.
+- Apple frameworks: ScreenCaptureKit, Vision, CoreImage, AVFoundation + Sparkle for auto-updates + Swift-WebP for WebP encoding
 - All overlay/drawing in `draw(_:)` overrides via Core Graphics / NSBezierPath
 - Toolbars drawn inline in OverlayView (not separate NSPanel windows) — avoids z-order issues
 - SF Symbols for toolbar icons
