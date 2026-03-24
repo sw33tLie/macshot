@@ -59,7 +59,7 @@ struct BeautifyConfig {
     }
 }
 
-class BeautifyRenderer {
+@MainActor class BeautifyRenderer {
 
     // Standard 3×3 mesh grid points
     private static let meshGrid: [SIMD2<Float>] = [
