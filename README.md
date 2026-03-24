@@ -29,6 +29,14 @@
 
 ---
 
+> **Upgrading from v3.1.1 or earlier?** Auto-update may fail due to the new sandbox mode. Please reinstall manually:
+> ```bash
+> brew uninstall macshot && brew update && brew install sw33tlie/macshot/macshot
+> ```
+> Or download the latest `.dmg` from [Releases](https://github.com/sw33tLie/macshot/releases). Future updates will work automatically.
+
+---
+
 ## Install
 
 **Homebrew:**
