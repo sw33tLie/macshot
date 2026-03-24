@@ -5,16 +5,16 @@
         <link>https://github.com/sw33tLie/macshot</link>
         <description>macshot updates</description>
         <item>
-            <title>v3.1.0</title>
-            <pubDate>Tue, 24 Mar 2026 16:25:00 +0000</pubDate>
-            <sparkle:version>3.1.0</sparkle:version>
-            <sparkle:shortVersionString>3.1.0</sparkle:shortVersionString>
+            <title>v3.1.1</title>
+            <pubDate>Tue, 24 Mar 2026 16:42:29 +0000</pubDate>
+            <sparkle:version>3.1.1</sparkle:version>
+            <sparkle:shortVersionString>3.1.1</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
             <enclosure
-                url="https://github.com/sw33tLie/macshot/releases/download/v3.1.0/MacShot.dmg"
-                length="4366661"
+                url="https://github.com/sw33tLie/macshot/releases/download/v3.1.1/MacShot.dmg"
+                length="4373948"
                 type="application/octet-stream"
-                sparkle:edSignature="CDf/5MXZSsDvHo671UAaiBm5u7XEpDhVgd8cBBtfBkvRQPx3LrHeYPrPjJ9QIGQaQbKiFrmOZJ83X7Wb1c3TAA=="
+                sparkle:edSignature="JXQz2BlKvHx28kzWSZzP2UqL7evRh2UiICfw70jyrFjUoyc/OpYMv+1BTZY88S9xpEvixwsEHP3buIMlo3n8Bg=="
             />
         </item>
     </channel>
