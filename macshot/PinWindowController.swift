@@ -200,16 +200,12 @@ private class PinView: NSView {
         savePanel.allowedContentTypes = [ImageEncoder.utType]
         savePanel.nameFieldStringValue = "macshot_\(OverlayWindowController.formattedTimestamp()).\(ImageEncoder.fileExtension)"
 
-        if let savedPath = UserDefaults.standard.string(forKey: "saveDirectory") {
-            savePanel.directoryURL = URL(fileURLWithPath: savedPath)
-        } else {
-            savePanel.directoryURL = FileManager.default.urls(for: .picturesDirectory, in: .userDomainMask).first
-        }
+        savePanel.directoryURL = SaveDirectoryAccess.directoryHint()
 
         savePanel.begin { response in
             if response == .OK, let url = savePanel.url {
                 try? imageData.write(to: url)
-                UserDefaults.standard.set(url.deletingLastPathComponent().path, forKey: "saveDirectory")
+                SaveDirectoryAccess.save(url: url.deletingLastPathComponent())
             }
         }
     }

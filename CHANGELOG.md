@@ -1,5 +1,35 @@
 # Changelog
 
+## [3.1.0] - 2026-03-24
+
+### Added
+- **App Sandbox** — macshot is now fully sandboxed with minimal entitlements (network client, user-selected files, bookmarks). Improved security posture.
+- **macOS 12.3+ support** — minimum deployment target lowered from macOS 14.0 to macOS 12.3 (Monterey). Features unavailable on older versions gracefully degrade:
+  - Background removal requires macOS 14+
+  - Launch at login requires macOS 13+
+  - Mesh gradients require macOS 15+
+  - System audio recording requires macOS 13+
+- **Google AI Search in OCR** — new button in OCR results window to search extracted text directly in Google AI mode.
+- **Error toast improvements** — upload error messages now word-wrap instead of truncating, with expanded toast height.
+- **Video editor error colors** — errors now display in red instead of green.
+
+### Changed
+- **Google Drive OAuth** — replaced loopback HTTP server with ASWebAuthenticationSession and a new iOS-type OAuth client. More secure, sandbox-compatible, no local server socket.
+- **Screen capture engine** — replaced SCScreenshotManager (macOS 14+) with SCStream-based single-frame capture compatible with macOS 12.3+.
+- **Modernized image rendering** — replaced all deprecated `lockFocus()`/`unlockFocus()` calls (~32 occurrences) with `NSImage(size:flipped:drawingHandler:)`.
+- **Recording output** — recordings now save to temp directory; final export via video editor Save button.
+- **Save directory** — now uses security-scoped bookmarks for sandbox compatibility. Save directory preference persists across launches.
+
+### Fixed
+- **Video recording in sandbox** — recordings were failing because security-scoped access was released before the video editor could open the file.
+- **GIFEncoder thread safety** — added locking to prevent data races on frame counters.
+- **Force unwrap crashes** — replaced `NSScreen.main!` with safe fallbacks.
+
+### Breaking Changes
+- **Google Drive:** You will need to re-sign in to Google Drive after updating. The OAuth client has changed.
+- **Screenshot history:** Local screenshot history will be cleared on first launch due to sandbox container migration. New screenshots will be saved normally.
+- **Save directory:** You may need to re-select your custom save directory in Preferences after updating.
+
 ## [3.0.8] - 2026-03-24
 
 ### Added

@@ -1,17 +1,20 @@
 import Cocoa
 import Security
 import CryptoKit
+import AuthenticationServices
 
 /// Google Drive uploader using OAuth2 with PKCE.
 /// Files are uploaded to a "macshot" folder in the user's Drive, kept private (not shared).
-final class GoogleDriveUploader: NSObject {
+final class GoogleDriveUploader: NSObject, ASWebAuthenticationPresentationContextProviding {
 
     static let shared = GoogleDriveUploader()
 
-    // GCP OAuth Desktop client — secret is not confidential for installed apps per Google's docs
-    private let clientID = "681324894254-c7jli6kv5gshg0bk4hoa6u04idiqoqcj.apps.googleusercontent.com"
-    private let clientSecret = "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"
-    private let redirectURI = "http://127.0.0.1"  // loopback — port appended at runtime
+    // GCP OAuth iOS client — no secret needed for native apps using PKCE
+    private let clientID = "92758256085-8gkpg2b9to7bu7to0vgh9c7af755hp5d.apps.googleusercontent.com"
+    /// Reversed client ID used as custom URL scheme for OAuth redirect.
+    private var callbackScheme: String {
+        clientID.components(separatedBy: ".").reversed().joined(separator: ".")
+    }
     private let scopes = "https://www.googleapis.com/auth/drive.file"
 
     private let tokenURL = "https://oauth2.googleapis.com/token"
@@ -19,7 +22,8 @@ final class GoogleDriveUploader: NSObject {
     private let filesURL = "https://www.googleapis.com/drive/v3/files"
 
     private var macShotFolderID: String?
-    private var loopbackServer: LoopbackAuthServer?
+    private var authSession: ASWebAuthenticationSession?
+    private weak var presentationWindow: NSWindow?
 
     // MARK: - Public API
 
@@ -31,25 +35,16 @@ final class GoogleDriveUploader: NSObject {
         UserDefaults.standard.string(forKey: "gdriveUserEmail")
     }
 
-    /// Start the OAuth2 sign-in flow using a loopback HTTP server.
+    /// Start the OAuth2 sign-in flow using ASWebAuthenticationSession.
     func signIn(from window: NSWindow?, completion: @escaping (Bool) -> Void) {
         let codeVerifier = generateCodeVerifier()
         let codeChallenge = generateCodeChallenge(from: codeVerifier)
-
-        // Start loopback server to receive the callback
-        let server = LoopbackAuthServer()
-        guard let port = server.start() else {
-            completion(false)
-            return
-        }
-        loopbackServer = server
-
-        let actualRedirectURI = "http://127.0.0.1:\(port)"
+        let redirectURI = "\(callbackScheme):/oauthredirect"
 
         var components = URLComponents(string: "https://accounts.google.com/o/oauth2/v2/auth")!
         components.queryItems = [
             URLQueryItem(name: "client_id", value: clientID),
-            URLQueryItem(name: "redirect_uri", value: actualRedirectURI),
+            URLQueryItem(name: "redirect_uri", value: redirectURI),
             URLQueryItem(name: "response_type", value: "code"),
             URLQueryItem(name: "scope", value: scopes + " email"),
             URLQueryItem(name: "code_challenge", value: codeChallenge),
@@ -60,18 +55,29 @@ final class GoogleDriveUploader: NSObject {
 
         guard let authURL = components.url else { completion(false); return }
 
-        server.onCode = { [weak self] code in
+        presentationWindow = window
+        let session = ASWebAuthenticationSession(url: authURL, callbackURLScheme: callbackScheme) { [weak self] callbackURL, error in
             guard let self = self else { return }
-            self.loopbackServer?.stop()
-            self.loopbackServer = nil
-            if let code = code {
-                self.exchangeCodeWithRedirect(code, codeVerifier: codeVerifier, redirectURI: actualRedirectURI, completion: completion)
-            } else {
-                DispatchQueue.main.async { completion(false) }
-            }
-        }
+            self.authSession = nil
 
-        NSWorkspace.shared.open(authURL)
+            guard let callbackURL = callbackURL, error == nil,
+                  let urlComponents = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false),
+                  let code = urlComponents.queryItems?.first(where: { $0.name == "code" })?.value else {
+                DispatchQueue.main.async { completion(false) }
+                return
+            }
+            self.exchangeCodeWithRedirect(code, codeVerifier: codeVerifier, redirectURI: redirectURI, completion: completion)
+        }
+        session.presentationContextProvider = self
+        session.prefersEphemeralWebBrowserSession = false
+        authSession = session
+        session.start()
+    }
+
+    // MARK: - ASWebAuthenticationPresentationContextProviding
+
+    func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+        presentationWindow ?? NSApp.keyWindow ?? NSApp.windows.first ?? ASPresentationAnchor()
     }
 
     func signOut() {
@@ -134,7 +140,6 @@ final class GoogleDriveUploader: NSObject {
         let body = [
             "code": code,
             "client_id": clientID,
-            "client_secret": clientSecret,
             "redirect_uri": redirectURI,
             "grant_type": "authorization_code",
             "code_verifier": codeVerifier,
@@ -185,7 +190,6 @@ final class GoogleDriveUploader: NSObject {
         let body = [
             "refresh_token": refreshToken,
             "client_id": clientID,
-            "client_secret": clientSecret,
             "grant_type": "refresh_token",
         ].map { "\($0.key)=\($0.value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)" }
          .joined(separator: "&")
@@ -438,115 +442,3 @@ final class GoogleDriveUploader: NSObject {
     }
 }
 
-// MARK: - Loopback HTTP Server for OAuth callback
-
-/// Minimal HTTP server that listens on a random port, waits for Google's OAuth redirect,
-/// extracts the authorization code, shows a success page, and shuts down.
-private final class LoopbackAuthServer {
-    var onCode: ((String?) -> Void)?
-    private var serverSocket: Int32 = -1
-    private var listenSource: DispatchSourceRead?
-    private(set) var port: UInt16 = 0
-
-    func start() -> UInt16? {
-        serverSocket = socket(AF_INET, SOCK_STREAM, 0)
-        guard serverSocket >= 0 else { return nil }
-
-        var opt: Int32 = 1
-        setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, socklen_t(MemoryLayout<Int32>.size))
-
-        var addr = sockaddr_in()
-        addr.sin_len = UInt8(MemoryLayout<sockaddr_in>.size)
-        addr.sin_family = sa_family_t(AF_INET)
-        addr.sin_port = 0  // random port
-        addr.sin_addr.s_addr = inet_addr("127.0.0.1")
-
-        let bindResult = withUnsafePointer(to: &addr) { ptr in
-            ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) { sockPtr in
-                bind(serverSocket, sockPtr, socklen_t(MemoryLayout<sockaddr_in>.size))
-            }
-        }
-        guard bindResult == 0 else { close(serverSocket); return nil }
-
-        // Get assigned port
-        var boundAddr = sockaddr_in()
-        var addrLen = socklen_t(MemoryLayout<sockaddr_in>.size)
-        withUnsafeMutablePointer(to: &boundAddr) { ptr in
-            ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) { sockPtr in
-                getsockname(serverSocket, sockPtr, &addrLen)
-            }
-        }
-        port = UInt16(bigEndian: boundAddr.sin_port)
-
-        guard Darwin.listen(serverSocket, 1) == 0 else { close(serverSocket); return nil }
-
-        let source = DispatchSource.makeReadSource(fileDescriptor: serverSocket, queue: .global())
-        source.setEventHandler { [weak self] in
-            self?.acceptConnection()
-        }
-        source.setCancelHandler { [weak self] in
-            if let fd = self?.serverSocket, fd >= 0 { close(fd) }
-        }
-        source.resume()
-        listenSource = source
-
-        return port
-    }
-
-    func stop() {
-        listenSource?.cancel()
-        listenSource = nil
-        if serverSocket >= 0 { close(serverSocket); serverSocket = -1 }
-    }
-
-    private func acceptConnection() {
-        let clientFD = accept(serverSocket, nil, nil)
-        guard clientFD >= 0 else { return }
-
-        // Read the HTTP request
-        var buffer = [UInt8](repeating: 0, count: 4096)
-        let bytesRead = read(clientFD, &buffer, buffer.count)
-        guard bytesRead > 0 else { close(clientFD); return }
-
-        let requestStr = String(bytes: buffer[0..<bytesRead], encoding: .utf8) ?? ""
-
-        // Extract the path from "GET /path?query HTTP/1.1"
-        var code: String?
-        if let firstLine = requestStr.components(separatedBy: "\r\n").first,
-           let pathStart = firstLine.range(of: "GET ")?.upperBound,
-           let pathEnd = firstLine.range(of: " HTTP")?.lowerBound {
-            let path = String(firstLine[pathStart..<pathEnd])
-            if let urlComponents = URLComponents(string: "http://127.0.0.1\(path)") {
-                code = urlComponents.queryItems?.first(where: { $0.name == "code" })?.value
-            }
-        }
-
-        // Send response
-        let responseBody: String
-        if code != nil {
-            responseBody = """
-            <html><body style="font-family:-apple-system,sans-serif;text-align:center;padding:60px;">
-            <h2>&#10004; Signed in to macshot</h2>
-            <p style="color:#666;">You can close this tab and return to macshot.</p>
-            </body></html>
-            """
-        } else {
-            responseBody = """
-            <html><body style="font-family:-apple-system,sans-serif;text-align:center;padding:60px;">
-            <h2>&#10008; Sign-in failed</h2>
-            <p style="color:#666;">Please try again from macshot Preferences.</p>
-            </body></html>
-            """
-        }
-
-        let response = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: \(responseBody.utf8.count)\r\nConnection: close\r\n\r\n\(responseBody)"
-        _ = response.withCString { ptr in
-            write(clientFD, ptr, strlen(ptr))
-        }
-        close(clientFD)
-
-        DispatchQueue.main.async { [weak self] in
-            self?.onCode?(code)
-        }
-    }
-}

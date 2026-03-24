@@ -152,16 +152,23 @@ class OCRResultController: NSObject {
         footer.addSubview(copyBtn)
         self.copyButton = copyBtn
 
+        // AI Search button
+        let aiSearchBtn = NSButton(title: "AI Search", target: self, action: #selector(openAISearch))
+        aiSearchBtn.bezelStyle = .rounded
+        aiSearchBtn.frame = NSRect(x: rightW - 220, y: (footerH - 28) / 2, width: 100, height: 28)
+        aiSearchBtn.autoresizingMask = [.minXMargin]
+        footer.addSubview(aiSearchBtn)
+
         // Translate button
         let translateBtn = NSButton(title: "Translate", target: self, action: #selector(toggleTranslate))
         translateBtn.bezelStyle = .rounded
-        translateBtn.frame = NSRect(x: rightW - 220, y: (footerH - 28) / 2, width: 100, height: 28)
+        translateBtn.frame = NSRect(x: rightW - 330, y: (footerH - 28) / 2, width: 100, height: 28)
         translateBtn.autoresizingMask = [.minXMargin]
         footer.addSubview(translateBtn)
         self.translateButton = translateBtn
 
         // Spinner (hidden)
-        let spinner = NSProgressIndicator(frame: NSRect(x: rightW - 240, y: (footerH - 16) / 2, width: 16, height: 16))
+        let spinner = NSProgressIndicator(frame: NSRect(x: rightW - 350, y: (footerH - 16) / 2, width: 16, height: 16))
         spinner.style = .spinning
         spinner.controlSize = .small
         spinner.isIndeterminate = true
@@ -236,6 +243,13 @@ class OCRResultController: NSObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
             self?.copyButton?.title = original
         }
+    }
+
+    @objc private func openAISearch() {
+        guard let text = textView?.string, !text.isEmpty else { return }
+        guard let encoded = text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let url = URL(string: "https://www.google.com/search?q=\(encoded)&csuir=1&udm=50") else { return }
+        NSWorkspace.shared.open(url)
     }
 
     @objc private func languageChanged(_ sender: NSPopUpButton) {

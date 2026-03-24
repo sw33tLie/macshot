@@ -189,7 +189,7 @@ jobs:
                       <pubDate>${DATE}</pubDate>
                       <sparkle:version>${VERSION}</sparkle:version>
                       <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
-                      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+                      <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
                       <enclosure
                           url="${DOWNLOAD_URL}"
                           length="${FILESIZE}"

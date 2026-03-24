@@ -98,7 +98,7 @@ brew install sw33tlie/macshot/macshot
 - 30 gradient styles including 7 mesh gradients (macOS 15+), adjustable padding/corner radius/shadow
 
 ### Other
-- **OCR** — extract text with Apple Vision, translate to 30+ languages
+- **OCR** — extract text with Apple Vision, translate to 30+ languages, Google AI Search
 - **Invert colors** — one-click color inversion, apply twice to revert
 - **Background removal** — Apple Vision foreground mask (macOS 14+)
 - **Pin to screen** — floating always-on-top window
@@ -167,7 +167,7 @@ macshot requires **Screen Recording** permission. macOS will prompt you on first
 
 ## Requirements
 
-macOS 14.0 (Sonoma) or later.
+macOS 12.3 (Monterey) or later.
 
 ## License
 

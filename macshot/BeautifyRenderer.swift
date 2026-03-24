@@ -379,89 +379,93 @@ struct BeautifyConfig {
         let totalWidth = windowWidth + padding * 2
         let totalHeight = windowHeight + padding * 2
 
-        let result = NSImage(size: NSSize(width: totalWidth, height: totalHeight))
-        result.lockFocus()
+        var success = false
+        let result = NSImage(size: NSSize(width: totalWidth, height: totalHeight), flipped: false) { _ in
+            guard let context = NSGraphicsContext.current?.cgContext else {
+                return true
+            }
 
-        guard let context = NSGraphicsContext.current?.cgContext else {
-            result.unlockFocus()
-            return image
-        }
+            // Gradient background — fill entire canvas, no outer rounding
+            let bgRect = NSRect(x: 0, y: 0, width: totalWidth, height: totalHeight)
+            context.saveGState()
+            drawGradientBackground(in: bgRect, config: config, context: context)
+            context.restoreGState()
 
-        // Gradient background — fill entire canvas, no outer rounding
-        let bgRect = NSRect(x: 0, y: 0, width: totalWidth, height: totalHeight)
-        context.saveGState()
-        drawGradientBackground(in: bgRect, config: config, context: context)
-        context.restoreGState()
+            // Window frame position
+            let windowX = padding
+            let windowY = padding
 
-        // Window frame position
-        let windowX = padding
-        let windowY = padding
+            // Drop shadow
+            if shadowRadius > 0 {
+                let shadow = NSShadow()
+                shadow.shadowColor = NSColor.black.withAlphaComponent(0.35)
+                shadow.shadowBlurRadius = shadowRadius
+                shadow.shadowOffset = NSSize(width: 0, height: -shadowOffset)
+                NSGraphicsContext.saveGraphicsState()
+                shadow.set()
+                let windowRect = NSRect(x: windowX, y: windowY, width: windowWidth, height: windowHeight)
+                NSBezierPath(roundedRect: windowRect, xRadius: windowCornerRadius, yRadius: windowCornerRadius).fill()
+                NSGraphicsContext.restoreGraphicsState()
+            }
 
-        // Drop shadow
-        if shadowRadius > 0 {
-            let shadow = NSShadow()
-            shadow.shadowColor = NSColor.black.withAlphaComponent(0.35)
-            shadow.shadowBlurRadius = shadowRadius
-            shadow.shadowOffset = NSSize(width: 0, height: -shadowOffset)
-            NSGraphicsContext.saveGraphicsState()
-            shadow.set()
+            // Draw window background clipped
             let windowRect = NSRect(x: windowX, y: windowY, width: windowWidth, height: windowHeight)
-            NSBezierPath(roundedRect: windowRect, xRadius: windowCornerRadius, yRadius: windowCornerRadius).fill()
-            NSGraphicsContext.restoreGraphicsState()
+            context.saveGState()
+            let clipPath = NSBezierPath(roundedRect: windowRect, xRadius: windowCornerRadius, yRadius: windowCornerRadius)
+            clipPath.addClip()
+
+            NSColor(white: 0.97, alpha: 1.0).setFill()
+            NSBezierPath(rect: windowRect).fill()
+
+            // Title bar
+            let titleBarRect = NSRect(x: windowX, y: windowY + windowHeight - titleBarHeight, width: windowWidth, height: titleBarHeight)
+            NSColor(white: 0.94, alpha: 1.0).setFill()
+            NSBezierPath(rect: titleBarRect).fill()
+
+            // Separator
+            NSColor(white: 0.82, alpha: 1.0).setFill()
+            NSBezierPath(rect: NSRect(x: windowX, y: titleBarRect.minY - 0.5, width: windowWidth, height: 0.5)).fill()
+
+            // Traffic lights
+            let buttonY = titleBarRect.midY
+            let buttonRadius: CGFloat = 6
+            let buttonStartX = windowX + 14
+            let buttonSpacing: CGFloat = 20
+
+            let trafficLights: [(NSColor, NSColor)] = [
+                (NSColor(calibratedRed: 1.0, green: 0.38, blue: 0.35, alpha: 1.0),
+                 NSColor(calibratedRed: 0.85, green: 0.25, blue: 0.22, alpha: 1.0)),
+                (NSColor(calibratedRed: 1.0, green: 0.75, blue: 0.25, alpha: 1.0),
+                 NSColor(calibratedRed: 0.85, green: 0.60, blue: 0.15, alpha: 1.0)),
+                (NSColor(calibratedRed: 0.30, green: 0.80, blue: 0.35, alpha: 1.0),
+                 NSColor(calibratedRed: 0.20, green: 0.65, blue: 0.25, alpha: 1.0)),
+            ]
+
+            for (i, (fill, ring)) in trafficLights.enumerated() {
+                let cx = buttonStartX + CGFloat(i) * buttonSpacing
+                let circleRect = NSRect(x: cx - buttonRadius, y: buttonY - buttonRadius, width: buttonRadius * 2, height: buttonRadius * 2)
+                fill.setFill()
+                NSBezierPath(ovalIn: circleRect).fill()
+                ring.setStroke()
+                let border = NSBezierPath(ovalIn: circleRect.insetBy(dx: 0.5, dy: 0.5))
+                border.lineWidth = 0.5
+                border.stroke()
+            }
+
+            // Screenshot image
+            let contentRect = NSRect(x: windowX, y: windowY, width: windowWidth, height: windowHeight - titleBarHeight)
+            image.draw(in: contentRect, from: .zero, operation: .sourceOver, fraction: 1.0)
+
+            context.restoreGState()
+
+            success = true
+            return true
         }
-
-        // Draw window background clipped
-        let windowRect = NSRect(x: windowX, y: windowY, width: windowWidth, height: windowHeight)
-        context.saveGState()
-        let clipPath = NSBezierPath(roundedRect: windowRect, xRadius: windowCornerRadius, yRadius: windowCornerRadius)
-        clipPath.addClip()
-
-        NSColor(white: 0.97, alpha: 1.0).setFill()
-        NSBezierPath(rect: windowRect).fill()
-
-        // Title bar
-        let titleBarRect = NSRect(x: windowX, y: windowY + windowHeight - titleBarHeight, width: windowWidth, height: titleBarHeight)
-        NSColor(white: 0.94, alpha: 1.0).setFill()
-        NSBezierPath(rect: titleBarRect).fill()
-
-        // Separator
-        NSColor(white: 0.82, alpha: 1.0).setFill()
-        NSBezierPath(rect: NSRect(x: windowX, y: titleBarRect.minY - 0.5, width: windowWidth, height: 0.5)).fill()
-
-        // Traffic lights
-        let buttonY = titleBarRect.midY
-        let buttonRadius: CGFloat = 6
-        let buttonStartX = windowX + 14
-        let buttonSpacing: CGFloat = 20
-
-        let trafficLights: [(NSColor, NSColor)] = [
-            (NSColor(calibratedRed: 1.0, green: 0.38, blue: 0.35, alpha: 1.0),
-             NSColor(calibratedRed: 0.85, green: 0.25, blue: 0.22, alpha: 1.0)),
-            (NSColor(calibratedRed: 1.0, green: 0.75, blue: 0.25, alpha: 1.0),
-             NSColor(calibratedRed: 0.85, green: 0.60, blue: 0.15, alpha: 1.0)),
-            (NSColor(calibratedRed: 0.30, green: 0.80, blue: 0.35, alpha: 1.0),
-             NSColor(calibratedRed: 0.20, green: 0.65, blue: 0.25, alpha: 1.0)),
-        ]
-
-        for (i, (fill, ring)) in trafficLights.enumerated() {
-            let cx = buttonStartX + CGFloat(i) * buttonSpacing
-            let circleRect = NSRect(x: cx - buttonRadius, y: buttonY - buttonRadius, width: buttonRadius * 2, height: buttonRadius * 2)
-            fill.setFill()
-            NSBezierPath(ovalIn: circleRect).fill()
-            ring.setStroke()
-            let border = NSBezierPath(ovalIn: circleRect.insetBy(dx: 0.5, dy: 0.5))
-            border.lineWidth = 0.5
-            border.stroke()
+        if !success {
+            // Force the drawing handler to run so we can check `success`
+            _ = result.cgImage(forProposedRect: nil, context: nil, hints: nil)
         }
-
-        // Screenshot image
-        let contentRect = NSRect(x: windowX, y: windowY, width: windowWidth, height: windowHeight - titleBarHeight)
-        image.draw(in: contentRect, from: .zero, operation: .sourceOver, fraction: 1.0)
-
-        context.restoreGState()
-
-        result.unlockFocus()
-        return result
+        return success ? result : image
     }
 
     // MARK: - Rounded mode (just rounded corners, no title bar)
@@ -476,37 +480,40 @@ struct BeautifyConfig {
         let totalWidth = imgSize.width + padding * 2
         let totalHeight = imgSize.height + padding * 2
 
-        let result = NSImage(size: NSSize(width: totalWidth, height: totalHeight))
-        result.lockFocus()
+        var success = false
+        let result = NSImage(size: NSSize(width: totalWidth, height: totalHeight), flipped: false) { _ in
+            guard let context = NSGraphicsContext.current?.cgContext else {
+                return true
+            }
 
-        guard let context = NSGraphicsContext.current?.cgContext else {
-            result.unlockFocus()
-            return image
+            // Gradient background — fill entire canvas, no outer rounding
+            let bgRect = NSRect(x: 0, y: 0, width: totalWidth, height: totalHeight)
+            context.saveGState()
+            drawGradientBackground(in: bgRect, config: config, context: context)
+            context.restoreGState()
+
+            let imageRect = NSRect(x: padding, y: padding, width: imgSize.width, height: imgSize.height)
+
+            // Draw image with rounded corners + shadow in one pass
+            context.saveGState()
+            if shadowRadius > 0 {
+                context.setShadow(offset: CGSize(width: 0, height: -shadowOffset),
+                                  blur: shadowRadius,
+                                  color: NSColor.black.withAlphaComponent(0.35).cgColor)
+            }
+            // Begin a transparency layer so the shadow is cast by the clipped image shape
+            context.beginTransparencyLayer(auxiliaryInfo: nil)
+            NSBezierPath(roundedRect: imageRect, xRadius: cornerRadius, yRadius: cornerRadius).addClip()
+            image.draw(in: imageRect, from: .zero, operation: .sourceOver, fraction: 1.0)
+            context.endTransparencyLayer()
+            context.restoreGState()
+
+            success = true
+            return true
         }
-
-        // Gradient background — fill entire canvas, no outer rounding
-        let bgRect = NSRect(x: 0, y: 0, width: totalWidth, height: totalHeight)
-        context.saveGState()
-        drawGradientBackground(in: bgRect, config: config, context: context)
-        context.restoreGState()
-
-        let imageRect = NSRect(x: padding, y: padding, width: imgSize.width, height: imgSize.height)
-
-        // Draw image with rounded corners + shadow in one pass
-        context.saveGState()
-        if shadowRadius > 0 {
-            context.setShadow(offset: CGSize(width: 0, height: -shadowOffset),
-                              blur: shadowRadius,
-                              color: NSColor.black.withAlphaComponent(0.35).cgColor)
+        if !success {
+            _ = result.cgImage(forProposedRect: nil, context: nil, hints: nil)
         }
-        // Begin a transparency layer so the shadow is cast by the clipped image shape
-        context.beginTransparencyLayer(auxiliaryInfo: nil)
-        NSBezierPath(roundedRect: imageRect, xRadius: cornerRadius, yRadius: cornerRadius).addClip()
-        image.draw(in: imageRect, from: .zero, operation: .sourceOver, fraction: 1.0)
-        context.endTransparencyLayer()
-        context.restoreGState()
-
-        result.unlockFocus()
-        return result
+        return success ? result : image
     }
 }

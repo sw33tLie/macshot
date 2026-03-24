@@ -1043,12 +1043,13 @@ class Annotation {
         let rect = boundingRect
         guard rect.width > 4, rect.height > 4 else { return nil }
 
-        let regionImage = NSImage(size: rect.size)
-        regionImage.lockFocus()
-        sourceImage.draw(in: NSRect(x: -rect.minX, y: -rect.minY,
-                                     width: sourceImageBounds.width, height: sourceImageBounds.height),
-                         from: .zero, operation: .copy, fraction: 1.0)
-        regionImage.unlockFocus()
+        let srcBounds = sourceImageBounds
+        let regionImage = NSImage(size: rect.size, flipped: false) { _ in
+            sourceImage.draw(in: NSRect(x: -rect.minX, y: -rect.minY,
+                                         width: srcBounds.width, height: srcBounds.height),
+                             from: .zero, operation: .copy, fraction: 1.0)
+            return true
+        }
         return regionImage
     }
 
@@ -1234,16 +1235,16 @@ class Annotation {
             height: srcSize * scaleY
         )
         
-        let magnifiedImage = NSImage(size: NSSize(width: size, height: size))
-        magnifiedImage.lockFocus()
-        if let ctx = NSGraphicsContext.current {
-            ctx.imageInterpolation = .high
+        let magnifiedImage = NSImage(size: NSSize(width: size, height: size), flipped: false) { _ in
+            if let ctx = NSGraphicsContext.current {
+                ctx.imageInterpolation = .high
+            }
+            image.draw(in: NSRect(x: 0, y: 0, width: size, height: size),
+                       from: cropRect,
+                       operation: .copy,
+                       fraction: 1.0)
+            return true
         }
-        image.draw(in: NSRect(x: 0, y: 0, width: size, height: size),
-                   from: cropRect,
-                   operation: .copy,
-                   fraction: 1.0)
-        magnifiedImage.unlockFocus()
         
         return magnifiedImage
     }

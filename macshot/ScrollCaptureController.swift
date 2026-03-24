@@ -216,10 +216,22 @@ final class ScrollCaptureController {
         config.width             = Int(captureRect.width  * screen.backingScaleFactor)
         config.height            = Int(captureRect.height * screen.backingScaleFactor)
         config.showsCursor       = false
-        config.captureResolution = .best
-        guard let raw = try? await SCScreenshotManager.captureImage(contentFilter: filter,
-                                                                     configuration: config) else { return nil }
-        return copyToCPUBacked(raw) ?? raw
+        if #available(macOS 14.0, *) {
+            config.captureResolution = .best
+        }
+        // Use SCStream single-frame capture (works on macOS 12.3+)
+        let handler = ScrollStripFrameHandler()
+        guard let stream = try? SCStream(filter: filter, configuration: config, delegate: nil) else { return nil }
+        do {
+            try stream.addStreamOutput(handler, type: .screen, sampleHandlerQueue: DispatchQueue(label: "macshot.scrollstrip"))
+            try await stream.startCapture()
+            let image = await handler.waitForFrame()
+            try? await stream.stopCapture()
+            guard let raw = image else { return nil }
+            return copyToCPUBacked(raw) ?? raw
+        } catch {
+            return nil
+        }
     }
 
     // MARK: - Vision-based offset detection
@@ -253,16 +265,16 @@ final class ScrollCaptureController {
     private func compositeVertical(base: NSImage, new: NSImage, offset: CGFloat, append: Bool) -> NSImage? {
         let totalH = base.size.height + offset
         let size = NSSize(width: base.size.width, height: totalH)
-        let result = NSImage(size: size)
-        result.lockFocus()
-        if append {
-            base.draw(in: CGRect(x: 0, y: totalH - base.size.height, width: base.size.width, height: base.size.height))
-            new.draw(in: CGRect(x: 0, y: 0, width: new.size.width, height: new.size.height))
-        } else {
-            base.draw(in: CGRect(x: 0, y: 0, width: base.size.width, height: base.size.height))
-            new.draw(in: CGRect(x: 0, y: totalH - new.size.height, width: new.size.width, height: new.size.height))
+        let result = NSImage(size: size, flipped: false) { _ in
+            if append {
+                base.draw(in: CGRect(x: 0, y: totalH - base.size.height, width: base.size.width, height: base.size.height))
+                new.draw(in: CGRect(x: 0, y: 0, width: new.size.width, height: new.size.height))
+            } else {
+                base.draw(in: CGRect(x: 0, y: 0, width: base.size.width, height: base.size.height))
+                new.draw(in: CGRect(x: 0, y: totalH - new.size.height, width: new.size.width, height: new.size.height))
+            }
+            return true
         }
-        result.unlockFocus()
         return result
     }
 
@@ -271,16 +283,16 @@ final class ScrollCaptureController {
     private func compositeHorizontal(base: NSImage, new: NSImage, offset: CGFloat, append: Bool) -> NSImage? {
         let totalW = base.size.width + offset
         let size = NSSize(width: totalW, height: base.size.height)
-        let result = NSImage(size: size)
-        result.lockFocus()
-        if append {
-            base.draw(in: CGRect(x: 0, y: 0, width: base.size.width, height: base.size.height))
-            new.draw(in: CGRect(x: totalW - new.size.width, y: 0, width: new.size.width, height: new.size.height))
-        } else {
-            base.draw(in: CGRect(x: totalW - base.size.width, y: 0, width: base.size.width, height: base.size.height))
-            new.draw(in: CGRect(x: 0, y: 0, width: new.size.width, height: new.size.height))
+        let result = NSImage(size: size, flipped: false) { _ in
+            if append {
+                base.draw(in: CGRect(x: 0, y: 0, width: base.size.width, height: base.size.height))
+                new.draw(in: CGRect(x: totalW - new.size.width, y: 0, width: new.size.width, height: new.size.height))
+            } else {
+                base.draw(in: CGRect(x: totalW - base.size.width, y: 0, width: base.size.width, height: base.size.height))
+                new.draw(in: CGRect(x: 0, y: 0, width: new.size.width, height: new.size.height))
+            }
+            return true
         }
-        result.unlockFocus()
         return result
     }
 
@@ -293,23 +305,23 @@ final class ScrollCaptureController {
             let newH = image.size.height - amount
             guard newH > 0 else { return image }
             let size = NSSize(width: image.size.width, height: newH)
-            let result = NSImage(size: size)
-            result.lockFocus()
-            image.draw(in: NSRect(origin: .zero, size: size),
-                       from: NSRect(x: 0, y: amount, width: image.size.width, height: newH),
-                       operation: .copy, fraction: 1)
-            result.unlockFocus()
+            let result = NSImage(size: size, flipped: false) { _ in
+                image.draw(in: NSRect(origin: .zero, size: size),
+                           from: NSRect(x: 0, y: amount, width: image.size.width, height: newH),
+                           operation: .copy, fraction: 1)
+                return true
+            }
             return result
         case .right:
             let newW = image.size.width - amount
             guard newW > 0 else { return image }
             let size = NSSize(width: newW, height: image.size.height)
-            let result = NSImage(size: size)
-            result.lockFocus()
-            image.draw(in: NSRect(origin: .zero, size: size),
-                       from: NSRect(x: 0, y: 0, width: newW, height: image.size.height),
-                       operation: .copy, fraction: 1)
-            result.unlockFocus()
+            let result = NSImage(size: size, flipped: false) { _ in
+                image.draw(in: NSRect(origin: .zero, size: size),
+                           from: NSRect(x: 0, y: 0, width: newW, height: image.size.height),
+                           operation: .copy, fraction: 1)
+                return true
+            }
             return result
         }
     }
@@ -330,5 +342,49 @@ final class ScrollCaptureController {
     private func deliverResult() {
         guard let img = runningStitched else { onSessionDone?(nil); return }
         onSessionDone?(img)
+    }
+}
+
+// MARK: - Single-frame handler for scroll capture strips
+
+private final class ScrollStripFrameHandler: NSObject, SCStreamOutput, @unchecked Sendable {
+    private var continuation: CheckedContinuation<CGImage?, Never>?
+    private var capturedImage: CGImage?
+    private var delivered = false
+    private let lock = NSLock()
+
+    func waitForFrame() async -> CGImage? {
+        await withCheckedContinuation { cont in
+            lock.lock()
+            if delivered {
+                let image = capturedImage
+                lock.unlock()
+                cont.resume(returning: image)
+            } else {
+                continuation = cont
+                lock.unlock()
+            }
+        }
+    }
+
+    func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, of type: SCStreamOutputType) {
+        guard type == .screen else { return }
+
+        // Skip frames without valid image data (blank, idle, suspended)
+        guard let pixelBuffer = sampleBuffer.imageBuffer else { return }
+
+        let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
+        let context = CIContext()
+        let cgImage = context.createCGImage(ciImage, from: ciImage.extent)
+
+        lock.lock()
+        guard !delivered else { lock.unlock(); return }
+        delivered = true
+        capturedImage = cgImage
+        let cont = continuation
+        continuation = nil
+        lock.unlock()
+
+        cont?.resume(returning: cgImage)
     }
 }

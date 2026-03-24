@@ -2,6 +2,17 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Google OAuth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.92758256085-8gkpg2b9to7bu7to0vgh9c7af755hp5d</string>
+			</array>
+		</dict>
+	</array>
 	<key>Privacy - Screen Capture Usage Description</key>
 	<string>macshot needs screen recording permission to capture screenshots.</string>
 	<key>SUFeedURL</key>

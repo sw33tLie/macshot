@@ -13,6 +13,7 @@ final class GIFEncoder {
     private let frameProperties: [CFString: Any]
     private let gifProperties: [CFString: Any]
     private var frameCount = 0
+    private let lock = NSLock()
 
     // Throttle: only keep every Nth frame to stay at target fps
     private let targetFPS: Int
@@ -44,8 +45,11 @@ final class GIFEncoder {
         }
     }
 
-    /// Add a frame. Called from background thread — thread safe.
+    /// Add a frame. Called from background thread — thread safe via lock.
     func addFrame(_ pixelBuffer: CVPixelBuffer) {
+        lock.lock()
+        defer { lock.unlock() }
+
         // Throttle to target fps
         let keepEvery = max(1, sourceEstimatedFPS / targetFPS)
         inputFrameCount += 1

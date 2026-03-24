@@ -35,17 +35,18 @@ class ScreenCaptureManager {
                             config.width = display.width * 2
                             config.height = display.height * 2
                             config.showsCursor = false
-                            config.captureResolution = .best
-                            if let image = try? await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config) {
-                                // SCScreenshotManager returns an IOSurface-backed CGImage (GPU memory).
-                                // Blit it into a CPU-backed bitmap now, while we're already on a
-                                // background thread, so the first draw and tiffRepresentation calls
-                                // at confirm-time are instant instead of stalling the main thread
-                                // with a ~1 s GPU→CPU readback.
-                                let cpuImage = Self.copyToCPUBacked(image) ?? image
-                                return ScreenCapture(screen: screen, image: cpuImage)
+                            if #available(macOS 14.0, *) {
+                                config.captureResolution = .best
                             }
-                            return nil
+                            guard let image = try? await Self.captureSingleFrame(filter: filter, config: config) else {
+                                return nil
+                            }
+                            // Blit into a CPU-backed bitmap now, while we're already on a
+                            // background thread, so the first draw and tiffRepresentation calls
+                            // at confirm-time are instant instead of stalling the main thread
+                            // with a ~1 s GPU→CPU readback.
+                            let cpuImage = Self.copyToCPUBacked(image) ?? image
+                            return ScreenCapture(screen: screen, image: cpuImage)
                         }
                     }
                     var results: [ScreenCapture] = []
@@ -67,6 +68,32 @@ class ScreenCaptureManager {
         }
     }
 
+    // MARK: - SCStream single-frame capture (works on macOS 12.3+)
+
+    /// Start an SCStream, grab the first frame, then stop.
+    /// This replaces SCScreenshotManager.captureImage() which requires macOS 14+.
+    private static func captureSingleFrame(filter: SCContentFilter, config: SCStreamConfiguration) async throws -> CGImage? {
+        let handler = SingleFrameHandler()
+        let stream = SCStream(filter: filter, configuration: config, delegate: nil)
+        try stream.addStreamOutput(handler, type: .screen, sampleHandlerQueue: DispatchQueue(label: "macshot.singleframe"))
+        try await stream.startCapture()
+
+        // Wait for frame with a timeout to prevent hanging if no frame arrives
+        let image = await withTaskGroup(of: CGImage?.self) { group -> CGImage? in
+            group.addTask { await handler.waitForFrame() }
+            group.addTask {
+                try? await Task.sleep(nanoseconds: 3_000_000_000) // 3 second timeout
+                return nil
+            }
+            let result = await group.next() ?? nil
+            group.cancelAll()
+            return result
+        }
+
+        try? await stream.stopCapture()
+        return image
+    }
+
     /// Blit an IOSurface-backed CGImage into a plain CPU-backed bitmap.
     /// This forces the GPU→CPU readback on the calling (background) thread so it
     /// never blocks the main thread later when the image is first drawn or encoded.
@@ -85,5 +112,51 @@ class ScreenCaptureManager {
         ) else { return nil }
         ctx.draw(src, in: CGRect(x: 0, y: 0, width: w, height: h))
         return ctx.makeImage()
+    }
+}
+
+// MARK: - Single-frame stream output handler
+
+/// Receives exactly one frame from an SCStream and exposes it via async/await.
+private final class SingleFrameHandler: NSObject, SCStreamOutput, @unchecked Sendable {
+    private var continuation: CheckedContinuation<CGImage?, Never>?
+    private var capturedImage: CGImage?
+    private var delivered = false
+    private let lock = NSLock()
+
+    func waitForFrame() async -> CGImage? {
+        await withCheckedContinuation { cont in
+            lock.lock()
+            if delivered {
+                // Frame already arrived before we started waiting
+                let image = capturedImage
+                lock.unlock()
+                cont.resume(returning: image)
+            } else {
+                continuation = cont
+                lock.unlock()
+            }
+        }
+    }
+
+    func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, of type: SCStreamOutputType) {
+        guard type == .screen else { return }
+
+        // Skip frames without valid image data (blank, idle, suspended)
+        guard let pixelBuffer = sampleBuffer.imageBuffer else { return }
+
+        let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
+        let context = CIContext()
+        let cgImage = context.createCGImage(ciImage, from: ciImage.extent)
+
+        lock.lock()
+        guard !delivered else { lock.unlock(); return }
+        delivered = true
+        capturedImage = cgImage
+        let cont = continuation
+        continuation = nil
+        lock.unlock()
+
+        cont?.resume(returning: cgImage)
     }
 }

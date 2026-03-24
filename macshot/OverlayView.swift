@@ -957,40 +957,40 @@ class OverlayView: NSView {
     /// Render an SF Symbol as a cursor image: white icon with dark shadow for visibility on any background.
     private static func cursorFromSymbol(_ name: String, pointSize: CGFloat, hotSpot: NSPoint, canvasSize: CGFloat = 22) -> NSCursor {
         let size = canvasSize
-        let image = NSImage(size: NSSize(width: size, height: size))
-        image.lockFocus()
-        if let sym = NSImage(systemSymbolName: name, accessibilityDescription: nil) {
-            let cfg = NSImage.SymbolConfiguration(pointSize: pointSize, weight: .semibold)
-            let colored = sym.withSymbolConfiguration(cfg) ?? sym
-            let iconRect = NSRect(x: 1, y: 1, width: size - 2, height: size - 2)
+        let image = NSImage(size: NSSize(width: size, height: size), flipped: false) { _ in
+            if let sym = NSImage(systemSymbolName: name, accessibilityDescription: nil) {
+                let cfg = NSImage.SymbolConfiguration(pointSize: pointSize, weight: .semibold)
+                let colored = sym.withSymbolConfiguration(cfg) ?? sym
+                let iconRect = NSRect(x: 1, y: 1, width: size - 2, height: size - 2)
 
-            // Tint to white by drawing into a separate image
-            let tinted = NSImage(size: colored.size)
-            tinted.lockFocus()
-            NSColor.white.setFill()
-            NSRect(origin: .zero, size: colored.size).fill()
-            colored.draw(in: NSRect(origin: .zero, size: colored.size), from: .zero, operation: .destinationIn, fraction: 1.0)
-            tinted.unlockFocus()
-
-            // Dark outline/shadow for contrast on light backgrounds
-            let dark = NSImage(size: colored.size)
-            dark.lockFocus()
-            NSColor(white: 0, alpha: 0.6).setFill()
-            NSRect(origin: .zero, size: colored.size).fill()
-            colored.draw(in: NSRect(origin: .zero, size: colored.size), from: .zero, operation: .destinationIn, fraction: 1.0)
-            dark.unlockFocus()
-
-            // Draw dark shadow offset in multiple directions
-            for dx: CGFloat in [-1, 0, 1] {
-                for dy: CGFloat in [-1, 0, 1] {
-                    if dx == 0 && dy == 0 { continue }
-                    dark.draw(in: iconRect.offsetBy(dx: dx, dy: dy), from: .zero, operation: .sourceOver, fraction: 1.0)
+                // Tint to white by drawing into a separate image
+                let tinted = NSImage(size: colored.size, flipped: false) { rect in
+                    NSColor.white.setFill()
+                    rect.fill()
+                    colored.draw(in: rect, from: .zero, operation: .destinationIn, fraction: 1.0)
+                    return true
                 }
+
+                // Dark outline/shadow for contrast on light backgrounds
+                let dark = NSImage(size: colored.size, flipped: false) { rect in
+                    NSColor(white: 0, alpha: 0.6).setFill()
+                    rect.fill()
+                    colored.draw(in: rect, from: .zero, operation: .destinationIn, fraction: 1.0)
+                    return true
+                }
+
+                // Draw dark shadow offset in multiple directions
+                for dx: CGFloat in [-1, 0, 1] {
+                    for dy: CGFloat in [-1, 0, 1] {
+                        if dx == 0 && dy == 0 { continue }
+                        dark.draw(in: iconRect.offsetBy(dx: dx, dy: dy), from: .zero, operation: .sourceOver, fraction: 1.0)
+                    }
+                }
+                // Draw white icon on top
+                tinted.draw(in: iconRect, from: .zero, operation: .sourceOver, fraction: 1.0)
             }
-            // Draw white icon on top
-            tinted.draw(in: iconRect, from: .zero, operation: .sourceOver, fraction: 1.0)
+            return true
         }
-        image.unlockFocus()
         return NSCursor(image: image, hotSpot: hotSpot)
     }
 
@@ -1853,14 +1853,7 @@ class OverlayView: NSView {
             if copyMode {
                 text = "Release to copy to clipboard"
             } else {
-                let dirURL: URL
-                if let savedPath = UserDefaults.standard.string(forKey: "saveDirectory") {
-                    dirURL = URL(fileURLWithPath: savedPath)
-                } else {
-                    dirURL = FileManager.default.urls(for: .picturesDirectory, in: .userDomainMask).first
-                        ?? FileManager.default.homeDirectoryForCurrentUser
-                }
-                let folderName = dirURL.lastPathComponent
+                let folderName = URL(fileURLWithPath: SaveDirectoryAccess.displayPath).lastPathComponent
                 text = "Release to save to \(folderName)/"
             }
         } else {
@@ -3391,13 +3384,13 @@ class OverlayView: NSView {
     }()
 
     private func renderEmoji(_ emoji: String, size: CGFloat = 128) -> NSImage {
-        let img = NSImage(size: NSSize(width: size, height: size))
-        img.lockFocus()
         let attrs: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: size * 0.85)]
         let str = emoji as NSString
         let strSize = str.size(withAttributes: attrs)
-        str.draw(at: NSPoint(x: (size - strSize.width) / 2, y: (size - strSize.height) / 2), withAttributes: attrs)
-        img.unlockFocus()
+        let img = NSImage(size: NSSize(width: size, height: size), flipped: false) { _ in
+            str.draw(at: NSPoint(x: (size - strSize.width) / 2, y: (size - strSize.height) / 2), withAttributes: attrs)
+            return true
+        }
         img.setName(emoji)
         return img
     }
@@ -4666,12 +4659,12 @@ class OverlayView: NSView {
         let symbolConfig = NSImage.SymbolConfiguration(pointSize: 14, weight: .medium)
         if let img = NSImage(systemSymbolName: checkSymbol, accessibilityDescription: nil)?.withSymbolConfiguration(symbolConfig) {
             let tintColor: NSColor = confirmEnabled ? ToolbarLayout.accentColor : NSColor.white.withAlphaComponent(0.5)
-            let tinted = NSImage(size: img.size)
-            tinted.lockFocus()
-            img.draw(in: NSRect(origin: .zero, size: img.size))
-            tintColor.setFill()
-            NSRect(origin: .zero, size: img.size).fill(using: .sourceAtop)
-            tinted.unlockFocus()
+            let tinted = NSImage(size: img.size, flipped: false) { rect in
+                img.draw(in: rect)
+                tintColor.setFill()
+                rect.fill(using: .sourceAtop)
+                return true
+            }
             let iconRect = NSRect(x: rowRect.minX + 10, y: rowRect.midY - 8, width: 16, height: 16)
             tinted.draw(in: iconRect, from: .zero, operation: .sourceOver, fraction: 1.0)
         }
@@ -4709,7 +4702,7 @@ class OverlayView: NSView {
             .foregroundColor: NSColor.white,
         ]
         let provider = UserDefaults.standard.string(forKey: "uploadProvider") ?? "imgbb"
-        let isGDrive = provider == "gdrive" && GoogleDriveUploader.shared.isSignedIn
+        let isGDrive = provider == "gdrive"
         let titleText = isGDrive ? "Upload to Google Drive?" : "Upload to imgbb.com?"
         let title = titleText as NSString
         let titleSize = title.size(withAttributes: titleAttrs)
@@ -4809,12 +4802,12 @@ class OverlayView: NSView {
             let symbolConfig = NSImage.SymbolConfiguration(pointSize: 11, weight: .medium)
             if let img = NSImage(systemSymbolName: checkSymbol, accessibilityDescription: nil)?.withSymbolConfiguration(symbolConfig) {
                 let tintColor: NSColor = isEnabled ? ToolbarLayout.accentColor : NSColor.white.withAlphaComponent(0.5)
-                let tinted = NSImage(size: img.size)
-                tinted.lockFocus()
-                img.draw(in: NSRect(origin: .zero, size: img.size))
-                tintColor.setFill()
-                NSRect(origin: .zero, size: img.size).fill(using: .sourceAtop)
-                tinted.unlockFocus()
+                let tinted = NSImage(size: img.size, flipped: false) { rect in
+                    img.draw(in: rect)
+                    tintColor.setFill()
+                    rect.fill(using: .sourceAtop)
+                    return true
+                }
                 tinted.draw(in: NSRect(x: rowRect.minX + 8, y: rowRect.midY - 7, width: 14, height: 14), from: .zero, operation: .sourceOver, fraction: 1.0)
             }
 
@@ -5078,12 +5071,12 @@ class OverlayView: NSView {
                 .withSymbolConfiguration(cfg) else { return }
         let tint: NSColor = selected ? .white : .white.withAlphaComponent(0.85)
         let imgSize = baseImg.size
-        let tintedImg = NSImage(size: imgSize)
-        tintedImg.lockFocus()
-        baseImg.draw(in: NSRect(origin: .zero, size: imgSize), from: .zero, operation: .sourceOver, fraction: 1.0)
-        tint.setFill()
-        NSRect(origin: .zero, size: imgSize).fill(using: .sourceAtop)
-        tintedImg.unlockFocus()
+        let tintedImg = NSImage(size: imgSize, flipped: false) { r in
+            baseImg.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1.0)
+            tint.setFill()
+            r.fill(using: .sourceAtop)
+            return true
+        }
         let iconRect = NSRect(x: rect.midX - imgSize.width / 2, y: rect.midY - imgSize.height / 2,
                               width: imgSize.width, height: imgSize.height)
         tintedImg.draw(in: iconRect, from: .zero, operation: .sourceOver, fraction: 1.0)
@@ -5849,12 +5842,12 @@ class OverlayView: NSView {
                                    width: iconSize, height: iconSize)
             let cfg = NSImage.SymbolConfiguration(pointSize: iconSize, weight: .bold)
             if let img = NSImage(systemSymbolName: "arrow.trianglehead.2.clockwise.rotate.90", accessibilityDescription: nil)?.withSymbolConfiguration(cfg) {
-                let tinted = NSImage(size: img.size)
-                tinted.lockFocus()
-                img.draw(in: NSRect(origin: .zero, size: img.size), from: .zero, operation: .sourceOver, fraction: 1)
-                NSColor.white.setFill()
-                NSRect(origin: .zero, size: img.size).fill(using: .sourceAtop)
-                tinted.unlockFocus()
+                let tinted = NSImage(size: img.size, flipped: false) { rect in
+                    img.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1)
+                    NSColor.white.setFill()
+                    rect.fill(using: .sourceAtop)
+                    return true
+                }
                 tinted.draw(in: iconRect, from: .zero, operation: .sourceOver, fraction: 1.0, respectFlipped: true, hints: nil)
             }
         }
@@ -5881,12 +5874,12 @@ class OverlayView: NSView {
             NSBezierPath(ovalIn: editRect).fill()
             let symbolConfig = NSImage.SymbolConfiguration(pointSize: 10, weight: .medium)
             if let img = NSImage(systemSymbolName: "pencil", accessibilityDescription: nil)?.withSymbolConfiguration(symbolConfig) {
-                let tinted = NSImage(size: img.size)
-                tinted.lockFocus()
-                img.draw(in: NSRect(origin: .zero, size: img.size))
-                NSColor.white.setFill()
-                NSRect(origin: .zero, size: img.size).fill(using: .sourceAtop)
-                tinted.unlockFocus()
+                let tinted = NSImage(size: img.size, flipped: false) { rect in
+                    img.draw(in: rect)
+                    NSColor.white.setFill()
+                    rect.fill(using: .sourceAtop)
+                    return true
+                }
                 let imgRect = NSRect(x: editRect.midX - img.size.width/2, y: editRect.midY - img.size.height/2, width: img.size.width, height: img.size.height)
                 tinted.draw(in: imgRect, from: .zero, operation: .sourceOver, fraction: 1.0)
             }
@@ -6005,12 +5998,14 @@ class OverlayView: NSView {
             guard let self = self else { return }
 
             // Crop selected region from screenshot
-            let regionImage = NSImage(size: rect.size)
-            regionImage.lockFocus()
-            screenshot.draw(in: NSRect(x: -rect.origin.x, y: -rect.origin.y,
-                                       width: self.bounds.width, height: self.bounds.height),
-                            from: .zero, operation: .copy, fraction: 1.0)
-            regionImage.unlockFocus()
+            let boundsWidth = self.bounds.width
+            let boundsHeight = self.bounds.height
+            let regionImage = NSImage(size: rect.size, flipped: false) { _ in
+                screenshot.draw(in: NSRect(x: -rect.origin.x, y: -rect.origin.y,
+                                           width: boundsWidth, height: boundsHeight),
+                                from: .zero, operation: .copy, fraction: 1.0)
+                return true
+            }
 
             guard let tiffData = regionImage.tiffRepresentation,
                   let bitmap = NSBitmapImageRep(data: tiffData),
@@ -8956,17 +8951,17 @@ class OverlayView: NSView {
         let text = tv.string
         if !text.isEmpty {
             // Render the attributed string into an NSImage using its own layout engine.
-            // NSImage.lockFocus gives a flipped context matching NSTextView, so
+            // NSImage(size:flipped:true) gives a flipped context matching NSTextView, so
             // draw(in:) lands correctly with no coordinate math.
             let attrStr = NSAttributedString(attributedString: tv.textStorage!)
             let imgSize = sv.frame.size
             let inset = tv.textContainerInset
-            let img = NSImage(size: imgSize)
-            img.lockFocusFlipped(true)
-            attrStr.draw(in: NSRect(x: inset.width, y: inset.height,
-                                     width: imgSize.width - inset.width * 2,
-                                     height: imgSize.height - inset.height * 2))
-            img.unlockFocus()
+            let img = NSImage(size: imgSize, flipped: true) { _ in
+                attrStr.draw(in: NSRect(x: inset.width, y: inset.height,
+                                         width: imgSize.width - inset.width * 2,
+                                         height: imgSize.height - inset.height * 2))
+                return true
+            }
 
             let annotation = Annotation(tool: .text,
                                         startPoint: sv.frame.origin,
@@ -9372,12 +9367,15 @@ class OverlayView: NSView {
         let redactTool: AnnotationTool = (currentTool == .blur) ? .blur : (currentTool == .pixelate ? .pixelate : .rectangle)
 
         // Crop the selected region for Vision
-        let regionImage = NSImage(size: selectionRect.size)
-        regionImage.lockFocus()
-        screenshot.draw(in: NSRect(x: -selectionRect.origin.x, y: -selectionRect.origin.y,
-                                    width: bounds.width, height: bounds.height),
-                        from: .zero, operation: .copy, fraction: 1.0)
-        regionImage.unlockFocus()
+        let boundsW = bounds.width
+        let boundsH = bounds.height
+        let selRect0 = selectionRect
+        let regionImage = NSImage(size: selRect0.size, flipped: false) { _ in
+            screenshot.draw(in: NSRect(x: -selRect0.origin.x, y: -selRect0.origin.y,
+                                        width: boundsW, height: boundsH),
+                            from: .zero, operation: .copy, fraction: 1.0)
+            return true
+        }
 
         guard let tiffData = regionImage.tiffRepresentation,
               let bitmap = NSBitmapImageRep(data: tiffData),
@@ -9541,12 +9539,15 @@ class OverlayView: NSView {
 
         let redactTool: AnnotationTool = (currentTool == .blur) ? .blur : (currentTool == .pixelate ? .pixelate : .rectangle)
 
-        let regionImage = NSImage(size: selectionRect.size)
-        regionImage.lockFocus()
-        screenshot.draw(in: NSRect(x: -selectionRect.origin.x, y: -selectionRect.origin.y,
-                                    width: bounds.width, height: bounds.height),
-                        from: .zero, operation: .copy, fraction: 1.0)
-        regionImage.unlockFocus()
+        let boundsW = bounds.width
+        let boundsH = bounds.height
+        let selRect0 = selectionRect
+        let regionImage = NSImage(size: selRect0.size, flipped: false) { _ in
+            screenshot.draw(in: NSRect(x: -selRect0.origin.x, y: -selRect0.origin.y,
+                                        width: boundsW, height: boundsH),
+                            from: .zero, operation: .copy, fraction: 1.0)
+            return true
+        }
 
         guard let tiffData = regionImage.tiffRepresentation,
               let bitmap = NSBitmapImageRep(data: tiffData),
@@ -9705,14 +9706,17 @@ class OverlayView: NSView {
 
         // Crop selected region for Vision.
         // The screenshot covers the full bounds, so offset to extract the selection.
-        let regionImage = NSImage(size: selectionRect.size)
-        regionImage.lockFocus()
-        screenshot.draw(
-            in: NSRect(x: -selectionRect.origin.x, y: -selectionRect.origin.y,
-                       width: bounds.width, height: bounds.height),
-            from: .zero, operation: .copy, fraction: 1.0
-        )
-        regionImage.unlockFocus()
+        let boundsW = bounds.width
+        let boundsH = bounds.height
+        let selRect0 = selectionRect
+        let regionImage = NSImage(size: selRect0.size, flipped: false) { _ in
+            screenshot.draw(
+                in: NSRect(x: -selRect0.origin.x, y: -selRect0.origin.y,
+                           width: boundsW, height: boundsH),
+                from: .zero, operation: .copy, fraction: 1.0
+            )
+            return true
+        }
 
         guard let tiffData = regionImage.tiffRepresentation,
               let bitmap = NSBitmapImageRep(data: tiffData),
@@ -9863,17 +9867,24 @@ class OverlayView: NSView {
         guard let screenshot = screenshotImage else { return nil }
         if annotations.isEmpty { return screenshot }
 
-        let image = NSImage(size: bounds.size)
-        image.lockFocus()
-        guard let context = NSGraphicsContext.current else {
-            image.unlockFocus()
-            return screenshot
+        let boundsRect = bounds
+        let annotationsCopy = annotations
+        var success = false
+        let image = NSImage(size: boundsRect.size, flipped: false) { _ in
+            guard let context = NSGraphicsContext.current else {
+                return true
+            }
+            screenshot.draw(in: boundsRect, from: .zero, operation: .copy, fraction: 1.0)
+            for annotation in annotationsCopy {
+                annotation.draw(in: context)
+            }
+            success = true
+            return true
         }
-        screenshot.draw(in: bounds, from: .zero, operation: .copy, fraction: 1.0)
-        for annotation in annotations {
-            annotation.draw(in: context)
+        if !success {
+            _ = image.cgImage(forProposedRect: nil, context: nil, hints: nil)
         }
-        image.unlockFocus()
+        if !success { return screenshot }
         cachedCompositedImage = image
         return image
     }

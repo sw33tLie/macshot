@@ -203,10 +203,10 @@ class ScreenshotHistory {
         guard size.width > 0, size.height > 0 else { return image }
         let scale = min(maxWidth / size.width, maxWidth / size.height)
         let thumbSize = NSSize(width: size.width * scale, height: size.height * scale)
-        let thumb = NSImage(size: thumbSize)
-        thumb.lockFocus()
-        image.draw(in: NSRect(origin: .zero, size: thumbSize), from: .zero, operation: .copy, fraction: 1.0)
-        thumb.unlockFocus()
+        let thumb = NSImage(size: thumbSize, flipped: false) { _ in
+            image.draw(in: NSRect(origin: .zero, size: thumbSize), from: .zero, operation: .copy, fraction: 1.0)
+            return true
+        }
         return thumb
     }
 }

@@ -160,16 +160,37 @@ class UploadToastController {
         spinner?.removeFromSuperview()
         spinner = nil
 
-        statusLabel?.stringValue = "Upload failed: \(message)"
+        let fullMessage = "Upload failed: \(message)"
+        statusLabel?.stringValue = fullMessage
         statusLabel?.textColor = NSColor(calibratedRed: 1.0, green: 0.5, blue: 0.5, alpha: 1.0)
+        statusLabel?.lineBreakMode = .byWordWrapping
+        statusLabel?.maximumNumberOfLines = 3
 
-        // Auto-dismiss after 5 seconds
+        // Expand toast height if the message needs more room
+        if let label = statusLabel, let panel = window {
+            let toastWidth: CGFloat = 320
+            let maxLabelW = toastWidth - 32
+            let boundingSize = NSSize(width: maxLabelW, height: 200)
+            let neededSize = (fullMessage as NSString).boundingRect(
+                with: boundingSize,
+                options: [.usesLineFragmentOrigin],
+                attributes: [.font: label.font!]
+            ).size
+            let newHeight = max(60, neededSize.height + 36)
+            var frame = panel.frame
+            frame.size.height = newHeight
+            panel.setFrame(frame, display: true)
+            panel.contentView?.frame = NSRect(origin: .zero, size: frame.size)
+            label.frame = NSRect(x: 16, y: (newHeight - neededSize.height) / 2, width: maxLabelW, height: neededSize.height + 4)
+        }
+
+        // Auto-dismiss after 8 seconds (longer for errors so user can read)
         dismissTask?.cancel()
         let task = DispatchWorkItem { [weak self] in
             self?.animateOut()
         }
         dismissTask = task
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: task)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 8, execute: task)
     }
 
     @objc private func openLink() {

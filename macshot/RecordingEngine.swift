@@ -25,7 +25,7 @@ final class RecordingEngine: NSObject {
     private var format: RecordingFormat = .mp4
     private var fps: Int = 30
     private var cropRect: CGRect = .zero      // in screen coordinates (top-left origin)
-    private var screen: NSScreen = NSScreen.main!
+    private var screen: NSScreen = NSScreen.main ?? NSScreen.screens.first ?? NSScreen()
 
     // MARK: - SCStream
 
@@ -115,10 +115,12 @@ final class RecordingEngine: NSObject {
             config.pixelFormat = kCVPixelFormatType_32BGRA
             config.scalesToFit = false
 
-            // System audio capture (MP4 only, off by default)
-            let recordAudio = UserDefaults.standard.bool(forKey: "recordSystemAudio") && format == .mp4
-            config.capturesAudio = recordAudio
-            config.excludesCurrentProcessAudio = true  // don't capture macshot's own sounds
+            // System audio capture (MP4 only, off by default, macOS 13+)
+            if #available(macOS 13.0, *) {
+                let recordAudio = UserDefaults.standard.bool(forKey: "recordSystemAudio") && format == .mp4
+                config.capturesAudio = recordAudio
+                config.excludesCurrentProcessAudio = true  // don't capture macshot's own sounds
+            }
 
             let pixelW = config.width
             let pixelH = config.height
@@ -147,8 +149,11 @@ final class RecordingEngine: NSObject {
 
             let stream = SCStream(filter: filter, configuration: config, delegate: nil)
             try stream.addStreamOutput(output, type: .screen, sampleHandlerQueue: DispatchQueue(label: "macshot.recording"))
-            if recordAudio {
-                try stream.addStreamOutput(output, type: .audio, sampleHandlerQueue: DispatchQueue(label: "macshot.recording.audio"))
+            if #available(macOS 13.0, *) {
+                let recordAudio = UserDefaults.standard.bool(forKey: "recordSystemAudio") && format == .mp4
+                if recordAudio {
+                    try stream.addStreamOutput(output, type: .audio, sampleHandlerQueue: DispatchQueue(label: "macshot.recording.audio"))
+                }
             }
             try await stream.startCapture()
             self.stream = stream
@@ -284,12 +289,9 @@ final class RecordingEngine: NSObject {
     // MARK: - Output URL
 
     private func makeOutputURL() -> URL? {
-        let dir: URL
-        if let saved = UserDefaults.standard.string(forKey: "saveDirectory") {
-            dir = URL(fileURLWithPath: saved)
-        } else {
-            dir = FileManager.default.urls(for: .picturesDirectory, in: .userDomainMask).first ?? URL(fileURLWithPath: NSHomeDirectory())
-        }
+        // Save to temp directory — always writable in sandbox.
+        // The video editor handles final export to the user's chosen location.
+        let dir = FileManager.default.temporaryDirectory
         let ext = format.rawValue
         let name = "Recording \(OverlayWindowController.formattedTimestamp()).\(ext)"
         return dir.appendingPathComponent(name)

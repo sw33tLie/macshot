@@ -113,6 +113,7 @@ private final class VideoEditorView: NSView {
     private var finderBtnRect: NSRect = .zero
     private var isMuted: Bool = false
     private var statusMessage: String?
+    private var statusIsError: Bool = false
     private var statusTimer: Timer?
 
     // Layout
@@ -408,12 +409,12 @@ private final class VideoEditorView: NSView {
 
         if let img = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?
                 .withSymbolConfiguration(.init(pointSize: 13, weight: .medium)) {
-            let tinted = NSImage(size: img.size)
-            tinted.lockFocus()
-            img.draw(in: NSRect(origin: .zero, size: img.size), from: .zero, operation: .sourceOver, fraction: 1)
-            NSColor.white.setFill()
-            NSRect(origin: .zero, size: img.size).fill(using: .sourceAtop)
-            tinted.unlockFocus()
+            let tinted = NSImage(size: img.size, flipped: false) { r in
+                img.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1)
+                NSColor.white.setFill()
+                r.fill(using: .sourceAtop)
+                return true
+            }
             let imgRect = NSRect(x: rect.midX - img.size.width / 2, y: rect.midY - img.size.height / 2,
                                   width: img.size.width, height: img.size.height)
             tinted.draw(in: imgRect)
@@ -439,12 +440,12 @@ private final class VideoEditorView: NSView {
 
         if let img = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?
                 .withSymbolConfiguration(.init(pointSize: iconSize, weight: .medium)) {
-            let tinted = NSImage(size: img.size)
-            tinted.lockFocus()
-            img.draw(in: NSRect(origin: .zero, size: img.size), from: .zero, operation: .sourceOver, fraction: 1)
-            NSColor.white.withAlphaComponent(alpha).setFill()
-            NSRect(origin: .zero, size: img.size).fill(using: .sourceAtop)
-            tinted.unlockFocus()
+            let tinted = NSImage(size: img.size, flipped: false) { r in
+                img.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1)
+                NSColor.white.withAlphaComponent(alpha).setFill()
+                r.fill(using: .sourceAtop)
+                return true
+            }
             tinted.draw(in: NSRect(x: startX, y: rect.midY - img.size.height / 2, width: img.size.width, height: img.size.height))
         }
         str.draw(at: NSPoint(x: startX + iconSize + iconGap, y: rect.midY - textSize.height / 2), withAttributes: attrs)
@@ -469,9 +470,10 @@ private final class VideoEditorView: NSView {
     }
 
     private func drawStatus(_ message: String) {
+        let color: NSColor = statusIsError ? NSColor(calibratedRed: 1.0, green: 0.5, blue: 0.5, alpha: 1.0) : .systemGreen
         let attrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: 12, weight: .medium),
-            .foregroundColor: NSColor.systemGreen,
+            .foregroundColor: color,
         ]
         let str = message as NSString
         let size = str.size(withAttributes: attrs)
@@ -580,10 +582,11 @@ private final class VideoEditorView: NSView {
         needsDisplay = true
     }
 
-    private func showStatus(_ msg: String) {
+    private func showStatus(_ msg: String, isError: Bool = false) {
         statusMessage = msg
+        statusIsError = isError
         statusTimer?.invalidate()
-        statusTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: false) { [weak self] _ in
+        statusTimer = Timer.scheduledTimer(withTimeInterval: isError ? 6 : 3, repeats: false) { [weak self] _ in
             self?.statusMessage = nil
             self?.needsDisplay = true
         }
@@ -642,7 +645,7 @@ private final class VideoEditorView: NSView {
         let timeRange = CMTimeRange(start: startTime, end: endTime)
 
         guard let session = exportSession(asset: asset, timeRange: timeRange, outputURL: outputURL) else {
-            showStatus("Export failed")
+            showStatus("Export failed", isError: true)
             return
         }
 
@@ -653,7 +656,7 @@ private final class VideoEditorView: NSView {
                     NSWorkspace.shared.activateFileViewerSelecting([outputURL])
                     self.showStatus("Saved!")
                 } else {
-                    self.showStatus("Export failed")
+                    self.showStatus("Export failed", isError: true)
                 }
             }
         }
@@ -662,7 +665,7 @@ private final class VideoEditorView: NSView {
     private func uploadVideo() {
         let provider = UserDefaults.standard.string(forKey: "uploadProvider") ?? "imgbb"
         guard provider == "gdrive" && GoogleDriveUploader.shared.isSignedIn else {
-            showStatus("Sign in to Google Drive in Preferences")
+            showStatus("Sign in to Google Drive in Preferences", isError: true)
             return
         }
 
@@ -682,7 +685,7 @@ private final class VideoEditorView: NSView {
                     NSPasteboard.general.setString(link, forType: .string)
                     self?.showStatus("Uploaded! Link copied.")
                 case .failure(let error):
-                    self?.showStatus("Upload failed: \(error.localizedDescription)")
+                    self?.showStatus("Upload failed: \(error.localizedDescription)", isError: true)
                 }
             }
         } else {
@@ -692,7 +695,7 @@ private final class VideoEditorView: NSView {
             let timeRange = CMTimeRange(start: CMTime(seconds: trimStart, preferredTimescale: 600),
                                         end: CMTime(seconds: trimEnd, preferredTimescale: 600))
             guard let session = exportSession(asset: asset, timeRange: timeRange, outputURL: tmpURL) else {
-                showStatus("Export failed")
+                showStatus("Export failed", isError: true)
                 return
             }
 
@@ -700,7 +703,7 @@ private final class VideoEditorView: NSView {
                 await session.export()
                 await MainActor.run {
                     guard session.status == .completed else {
-                        self.showStatus("Export failed")
+                        self.showStatus("Export failed", isError: true)
                         return
                     }
                     GoogleDriveUploader.shared.uploadVideo(url: tmpURL) { [weak self] result in
@@ -711,7 +714,7 @@ private final class VideoEditorView: NSView {
                             NSPasteboard.general.setString(link, forType: .string)
                             self?.showStatus("Uploaded! Link copied.")
                         case .failure(let error):
-                            self?.showStatus("Upload failed: \(error.localizedDescription)")
+                            self?.showStatus("Upload failed: \(error.localizedDescription)", isError: true)
                         }
                     }
                 }

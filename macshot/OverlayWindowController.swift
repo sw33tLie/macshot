@@ -29,7 +29,7 @@ class OverlayWindowController {
     private var recordingControlWindow: NSWindow?
     private var recordingControlView: RecordingControlView?
     var windowNumber: CGWindowID { overlayWindow.map { CGWindowID($0.windowNumber) } ?? CGWindowID.max }
-    private(set) var screen: NSScreen = NSScreen.main!
+    private(set) var screen: NSScreen = NSScreen.main ?? NSScreen.screens.first ?? NSScreen()
 
     init(capture: ScreenCapture) {
         let screen = capture.screen
@@ -358,11 +358,11 @@ extension OverlayWindowController: OverlayViewDelegate {
         // Crop just the raw screenshot (no annotations) to the selection area.
         let croppedImage: NSImage? = {
             guard let src = view.screenshotImage else { return nil }
-            let img = NSImage(size: sel.size)
-            img.lockFocus()
-            src.draw(in: NSRect(origin: .zero, size: sel.size),
-                     from: sel, operation: .copy, fraction: 1.0)
-            img.unlockFocus()
+            let img = NSImage(size: sel.size, flipped: false) { _ in
+                src.draw(in: NSRect(origin: .zero, size: sel.size),
+                         from: sel, operation: .copy, fraction: 1.0)
+                return true
+            }
             return img
         }()
         guard let image = croppedImage else { return }
@@ -459,13 +459,7 @@ extension OverlayWindowController: OverlayViewDelegate {
             dismiss()
             overlayDelegate?.overlayDidConfirm(self, capturedImage: image)
 
-            let dirURL: URL
-            if let savedPath = UserDefaults.standard.string(forKey: "saveDirectory") {
-                dirURL = URL(fileURLWithPath: savedPath)
-            } else {
-                dirURL = FileManager.default.urls(for: .picturesDirectory, in: .userDomainMask).first
-                    ?? FileManager.default.homeDirectoryForCurrentUser
-            }
+            let dirURL = SaveDirectoryAccess.resolve()
 
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy-MM-dd 'at' HH.mm.ss"
@@ -475,6 +469,7 @@ extension OverlayWindowController: OverlayViewDelegate {
             DispatchQueue.global(qos: .userInitiated).async {
                 guard let imageData = ImageEncoder.encode(image) else { return }
                 try? imageData.write(to: fileURL)
+                SaveDirectoryAccess.stopAccessing(url: dirURL)
             }
         }
     }
@@ -489,17 +484,13 @@ extension OverlayWindowController: OverlayViewDelegate {
         savePanel.nameFieldStringValue = "macshot_\(Self.formattedTimestamp()).\(ImageEncoder.fileExtension)"
         savePanel.level = .statusBar + 3
 
-        if let savedPath = UserDefaults.standard.string(forKey: "saveDirectory") {
-            savePanel.directoryURL = URL(fileURLWithPath: savedPath)
-        } else {
-            savePanel.directoryURL = FileManager.default.urls(for: .picturesDirectory, in: .userDomainMask).first
-        }
+        savePanel.directoryURL = SaveDirectoryAccess.directoryHint()
 
         savePanel.begin { [weak self] response in
             guard let self = self else { return }
             if response == .OK, let url = savePanel.url {
                 try? imageData.write(to: url)
-                UserDefaults.standard.set(url.deletingLastPathComponent().path, forKey: "saveDirectory")
+                SaveDirectoryAccess.save(url: url.deletingLastPathComponent())
                 self.playCopySound()
                 self.dismiss()
                 self.overlayDelegate?.overlayDidConfirm(self, capturedImage: nil)

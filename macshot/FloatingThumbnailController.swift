@@ -374,12 +374,12 @@ private class ThumbnailView: NSView {
     }
 
     private func tintedWhite(_ img: NSImage) -> NSImage {
-        let result = NSImage(size: img.size)
-        result.lockFocus()
-        NSColor.white.setFill()
-        NSRect(origin: .zero, size: img.size).fill()
-        img.draw(in: NSRect(origin: .zero, size: img.size), from: .zero, operation: .destinationIn, fraction: 1.0)
-        result.unlockFocus()
+        let result = NSImage(size: img.size, flipped: false) { rect in
+            NSColor.white.setFill()
+            rect.fill()
+            img.draw(in: rect, from: .zero, operation: .destinationIn, fraction: 1.0)
+            return true
+        }
         return result
     }
 

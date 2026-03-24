@@ -1040,7 +1040,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
             hotkeyFields[slot]?.stringValue = HotkeyManager.displayString(for: slot)
         }
 
-        savePathField.stringValue = UserDefaults.standard.string(forKey: "saveDirectory") ?? "~/Pictures"
+        savePathField.stringValue = SaveDirectoryAccess.displayPath
 
         let autoCopy = UserDefaults.standard.object(forKey: "autoCopyToClipboard") as? Bool ?? true
         autoCopyCheckbox.state = autoCopy ? .on : .off
@@ -1115,12 +1115,10 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = false
-        if let p = UserDefaults.standard.string(forKey: "saveDirectory") {
-            panel.directoryURL = URL(fileURLWithPath: p)
-        }
+        panel.directoryURL = SaveDirectoryAccess.directoryHint()
         panel.begin { [weak self] response in
             guard response == .OK, let url = panel.url else { return }
-            UserDefaults.standard.set(url.path, forKey: "saveDirectory")
+            SaveDirectoryAccess.save(url: url)
             self?.savePathField.stringValue = url.path
         }
     }

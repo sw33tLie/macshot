@@ -462,12 +462,12 @@ class ToolbarLayout {
             return nil
         }
         let imgSize = baseImg.size
-        let tintedImg = NSImage(size: imgSize)
-        tintedImg.lockFocus()
-        baseImg.draw(in: NSRect(origin: .zero, size: imgSize), from: .zero, operation: .sourceOver, fraction: 1.0)
-        tint.setFill()
-        NSRect(origin: .zero, size: imgSize).fill(using: .sourceAtop)
-        tintedImg.unlockFocus()
+        let tintedImg = NSImage(size: imgSize, flipped: false) { rect in
+            baseImg.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1.0)
+            tint.setFill()
+            rect.fill(using: .sourceAtop)
+            return true
+        }
         return tintedImg
     }
 
@@ -480,12 +480,12 @@ class ToolbarLayout {
         }
         let tint: NSColor = selected ? .white : .white.withAlphaComponent(0.85)
         let imgSize = baseImg.size
-        let tintedImg = NSImage(size: imgSize)
-        tintedImg.lockFocus()
-        baseImg.draw(in: NSRect(origin: .zero, size: imgSize), from: .zero, operation: .sourceOver, fraction: 1.0)
-        tint.setFill()
-        NSRect(origin: .zero, size: imgSize).fill(using: .sourceAtop)
-        tintedImg.unlockFocus()
+        let tintedImg = NSImage(size: imgSize, flipped: false) { rect in
+            baseImg.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1.0)
+            tint.setFill()
+            rect.fill(using: .sourceAtop)
+            return true
+        }
 
         if iconCache[symbolName] == nil {
             iconCache[symbolName] = [:]
