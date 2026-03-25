@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.2.1] - 2026-03-25
+
+### Fixed
+- **Multi-monitor recording** — recording on a secondary display no longer captures the wrong screen. Display matching now uses `CGDirectDisplayID` instead of fragile coordinate comparison. Same fix applied to scroll capture.
+- **Cursor flickering on toolbars** — eliminated cursor flicker (crosshair/arrow alternation) when hovering over toolbars in the overlay. Replaced AppKit cursor rect system with fully imperative cursor management that avoids cross-window conflicts on multi-monitor setups and with background editor windows.
+- **Editor annotation coordinates** — annotations transferred to the editor window now render at the correct position. Replaced the old approach of shifting annotation coordinates in `draw()` with a pure rendering offset (`editorCanvasOffset`), eliminating coordinate drift.
+- **Editor selection resize** — selection handle hit-testing is now disabled in the editor, preventing accidental resizing of the image canvas when clicking near edges.
+
 ## [3.2.0] - 2026-03-25
 
 ### Added

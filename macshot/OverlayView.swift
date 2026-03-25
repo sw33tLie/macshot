@@ -65,6 +65,7 @@ class OverlayView: NSView {
     /// When true, hides overlay-only toolbar buttons (record, delay, cancel, move, scroll capture).
     /// The view itself renders identically — same coordinates, same drawing, same everything.
     var isDetached: Bool = false
+    private var editorCanvasOffset: NSPoint = .zero  // rendering offset for centering image in editor
 
     var screenshotImage: NSImage? {
         didSet { needsDisplay = true }
@@ -528,7 +529,7 @@ class OverlayView: NSView {
         annotationModeEverUsed = true  // suppress frozen screenshot from the start
         activateAppUnderSelection()
         window?.ignoresMouseEvents = true
-        window?.invalidateCursorRects(for: self)
+
         needsDisplay = true
     }
 
@@ -540,7 +541,7 @@ class OverlayView: NSView {
         // Pass mouse & scroll events through to the underlying app.
         activateAppUnderSelection()
         window?.ignoresMouseEvents = true
-        window?.invalidateCursorRects(for: self)
+
         // Install a global monitor so the Stop button (drawn at scrollCaptureStopRect) is still
         // clickable even though the overlay window ignores mouse events.
         scrollCaptureClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: .leftMouseDown) { [weak self] _ in
@@ -564,7 +565,7 @@ class OverlayView: NSView {
         scrollCaptureStopRect = .zero
         if let m = scrollCaptureClickMonitor { NSEvent.removeMonitor(m); scrollCaptureClickMonitor = nil }
         window?.ignoresMouseEvents = false
-        window?.invalidateCursorRects(for: self)
+
         needsDisplay = true
     }
 
@@ -575,7 +576,7 @@ class OverlayView: NSView {
             guard isAnnotating != oldValue else { return }
             if isAnnotating { annotationModeEverUsed = true }
             window?.ignoresMouseEvents = !isAnnotating
-            window?.invalidateCursorRects(for: self)
+    
             if isAnnotating {
                 window?.makeKeyAndOrderFront(nil)
                 NSApp.activate(ignoringOtherApps: true)
@@ -658,19 +659,24 @@ class OverlayView: NSView {
         let area = NSTrackingArea(rect: .zero, options: [.mouseMoved, .activeAlways, .inVisibleRect], owner: self, userInfo: nil)
         addTrackingArea(area)
 
-        // Keep forcing crosshair until the user finishes drawing a selection.
-        // AppKit's cursor rect system races with app activation and can reset
-        // the cursor to arrow; this timer wins that race by re-setting every frame.
+        // Imperative cursor timer for overlay mode — continuously sets the correct cursor
+        // to prevent AppKit's cursor rect system from interfering (especially on multi-monitor).
+        // Only fires when the mouse is actually over THIS window to avoid cross-window fights.
         if window != nil {
             cursorTimer?.invalidate()
-            cursorTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true) { @MainActor [weak self] timer in
-                guard let self = self else { timer.invalidate(); return }
-                if self.state == .idle || self.state == .selecting {
-                    NSCursor.crosshair.set()
-                } else {
-                    timer.invalidate()
-                    self.cursorTimer = nil
+            cursorTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { @MainActor [weak self] timer in
+                guard let self = self, let win = self.window else { timer.invalidate(); return }
+                // Only set cursor if this is the frontmost window under the mouse
+                let mouseScreen = NSEvent.mouseLocation
+                guard win.frame.contains(mouseScreen) else { return }
+                // Skip if another window is above us at this point
+                if let frontWindow = NSApp.windows.first(where: { $0.isVisible && $0.frame.contains(mouseScreen) && $0.level >= win.level && $0 !== win }) {
+                    _ = frontWindow  // another window is on top, don't fight
+                    return
                 }
+                let windowPoint = win.mouseLocationOutsideOfEventStream
+                let point = self.convert(windowPoint, from: nil)
+                self.updateCursorForPoint(point)
             }
         }
     }
@@ -689,9 +695,12 @@ class OverlayView: NSView {
             needsDisplay = true
         }
 
-        // Force arrow cursor over color picker popup
-        if showColorPicker && colorPickerRect.contains(point) {
-            NSCursor.arrow.set()
+        // Update cursor imperatively — only if this is the topmost window under the mouse
+        if let win = window, win.frame.contains(NSEvent.mouseLocation) {
+            let dominated = NSApp.windows.contains { $0.isVisible && $0.frame.contains(NSEvent.mouseLocation) && $0.level >= win.level && $0 !== win }
+            if !dominated {
+                updateCursorForPoint(point)
+            }
         }
 
         // Font picker hover tracking
@@ -911,7 +920,7 @@ class OverlayView: NSView {
                 hoveredAnnotationClearTimer = nil
                 if newHovered !== hoveredAnnotation {
                     hoveredAnnotation = newHovered
-                    window?.invalidateCursorRects(for: self)
+            
                     needsDisplay = true
                 }
             } else if hoveredAnnotation != nil {
@@ -944,7 +953,6 @@ class OverlayView: NSView {
                         guard let self = self else { return }
                         self.hoveredAnnotationClearTimer = nil
                         self.hoveredAnnotation = nil
-                        self.window?.invalidateCursorRects(for: self)
                         self.needsDisplay = true
                     }
                 }
@@ -953,7 +961,7 @@ class OverlayView: NSView {
             hoveredAnnotationClearTimer?.invalidate()
             hoveredAnnotationClearTimer = nil
             hoveredAnnotation = nil
-            window?.invalidateCursorRects(for: self)
+    
             needsDisplay = true
         }
     }
@@ -1020,249 +1028,84 @@ class OverlayView: NSView {
     }()
 
     override func resetCursorRects() {
-        super.resetCursorRects()
+        // Cursor is managed entirely by updateCursorForPoint() called from
+        // mouseMoved and a repeating timer. No cursor rects needed.
+    }
+
+    /// Imperative cursor management for overlay mode. Called from mouseMoved and a timer.
+    private func updateCursorForPoint(_ point: NSPoint) {
+        // Recording without annotation — always arrow
         if isRecording && !isAnnotating {
-            addCursorRect(bounds, cursor: .arrow)
+            NSCursor.arrow.set()
             return
         }
-        // When text editing, force arrow cursor everywhere
+        // Text editing — always arrow
         if textEditView != nil {
-            addCursorRect(bounds, cursor: .arrow)
+            NSCursor.arrow.set()
             return
         }
-        if state == .idle {
-            addCursorRect(bounds, cursor: .crosshair)
+        // Idle / selecting — always crosshair
+        if state == .idle || state == .selecting {
+            NSCursor.crosshair.set()
             return
         }
+        guard state == .selected else { return }
 
-        guard state == .selected, selectionRect.width > 1, selectionRect.height > 1 else {
-            addCursorRect(bounds, cursor: .crosshair)
-            return
-        }
+        // Check UI elements first — arrow for all toolbars, popups, labels
+        if showToolbars && (bottomBarRect.contains(point) || rightBarRect.contains(point) || optionsRowRect.contains(point)) { NSCursor.arrow.set(); return }
+        if showColorPicker && colorPickerRect.contains(point) { NSCursor.arrow.set(); return }
+        if showBeautifyPicker && beautifyPickerRect.contains(point) { NSCursor.arrow.set(); return }
+        if showBeautifyGradientPicker && beautifyGradientPickerRect.contains(point) { NSCursor.arrow.set(); return }
+        if showStrokePicker && strokePickerRect.contains(point) { NSCursor.arrow.set(); return }
+        if showLoupeSizePicker && loupeSizePickerRect.contains(point) { NSCursor.arrow.set(); return }
+        if showDelayPicker && delayPickerRect.contains(point) { NSCursor.arrow.set(); return }
+        if showUploadConfirmPicker && uploadConfirmPickerRect.contains(point) { NSCursor.arrow.set(); return }
+        if showUploadConfirmDialog && uploadConfirmDialogRect.contains(point) { NSCursor.arrow.set(); return }
+        if showRedactTypePicker && redactTypePickerRect.contains(point) { NSCursor.arrow.set(); return }
+        if showTranslatePicker && translatePickerRect.contains(point) { NSCursor.arrow.set(); return }
+        if showFontPicker && fontPickerRect.contains(point) { NSCursor.arrow.set(); return }
+        if showEmojiPicker && emojiPickerRect.contains(point) { NSCursor.arrow.set(); return }
+        if isDetached && editorTopBarRect.contains(point) { NSCursor.arrow.set(); return }
+        if sizeLabelRect.contains(point) && sizeInputField == nil { NSCursor.pointingHand.set(); return }
+        if zoomLabelRect.contains(point) && zoomLabelOpacity > 0 && zoomInputField == nil { NSCursor.pointingHand.set(); return }
 
-        let edgeThickness: CGFloat = 6
+        // Selection resize handles
         let r = selectionRect
-        let hs = handleSize + 4  // handle hit area
+        let hs = handleSize + 4
+        let edgeT: CGFloat = 6
+        // Corners
+        if NSRect(x: r.minX - hs/2, y: r.maxY - hs/2, width: hs, height: hs).contains(point) ||
+           NSRect(x: r.maxX - hs/2, y: r.minY - hs/2, width: hs, height: hs).contains(point) {
+            Self.nwseCursor.set(); return
+        }
+        if NSRect(x: r.maxX - hs/2, y: r.maxY - hs/2, width: hs, height: hs).contains(point) ||
+           NSRect(x: r.minX - hs/2, y: r.minY - hs/2, width: hs, height: hs).contains(point) {
+            Self.neswCursor.set(); return
+        }
+        // Edges
+        if NSRect(x: r.minX + hs/2, y: r.maxY - edgeT/2, width: r.width - hs, height: edgeT).contains(point) ||
+           NSRect(x: r.minX + hs/2, y: r.minY - edgeT/2, width: r.width - hs, height: edgeT).contains(point) {
+            NSCursor.resizeUpDown.set(); return
+        }
+        if NSRect(x: r.minX - edgeT/2, y: r.minY + hs/2, width: edgeT, height: r.height - hs).contains(point) ||
+           NSRect(x: r.maxX - edgeT/2, y: r.minY + hs/2, width: edgeT, height: r.height - hs).contains(point) {
+            NSCursor.resizeLeftRight.set(); return
+        }
 
-        // Corner handles — diagonal resize cursors
-        // Top-left (NWSE)
-        addCursorRect(NSRect(x: r.minX - hs/2, y: r.maxY - hs/2, width: hs, height: hs), cursor: Self.nwseCursor)
-        // Bottom-right (NWSE)
-        addCursorRect(NSRect(x: r.maxX - hs/2, y: r.minY - hs/2, width: hs, height: hs), cursor: Self.nwseCursor)
-        // Top-right (NESW)
-        addCursorRect(NSRect(x: r.maxX - hs/2, y: r.maxY - hs/2, width: hs, height: hs), cursor: Self.neswCursor)
-        // Bottom-left (NESW)
-        addCursorRect(NSRect(x: r.minX - hs/2, y: r.minY - hs/2, width: hs, height: hs), cursor: Self.neswCursor)
-
-        // Edge handles — horizontal/vertical resize cursors
-        // Top edge
-        addCursorRect(NSRect(x: r.minX + hs/2, y: r.maxY - edgeThickness/2, width: r.width - hs, height: edgeThickness), cursor: .resizeUpDown)
-        // Bottom edge
-        addCursorRect(NSRect(x: r.minX + hs/2, y: r.minY - edgeThickness/2, width: r.width - hs, height: edgeThickness), cursor: .resizeUpDown)
-        // Left edge
-        addCursorRect(NSRect(x: r.minX - edgeThickness/2, y: r.minY + hs/2, width: edgeThickness, height: r.height - hs), cursor: .resizeLeftRight)
-        // Right edge
-        addCursorRect(NSRect(x: r.maxX - edgeThickness/2, y: r.minY + hs/2, width: edgeThickness, height: r.height - hs), cursor: .resizeLeftRight)
-
-        // Toolbar buttons — arrow cursor so they look clickable
-        if showToolbars {
-            for btn in bottomButtons {
-                if btn.rect.width > 0 {
-                    addCursorRect(btn.rect, cursor: .arrow)
-                }
-            }
-            for btn in rightButtons {
-                if btn.rect.width > 0 {
-                    addCursorRect(btn.rect, cursor: .arrow)
-                }
-            }
-            if bottomBarRect.width > 0 {
-                addCursorRect(bottomBarRect, cursor: .arrow)
-            }
-            if rightBarRect.width > 0 {
-                addCursorRect(rightBarRect, cursor: .arrow)
+        // Hover-to-move over annotations
+        let hoverMoveTools: Set<AnnotationTool> = [.arrow, .line, .rectangle, .ellipse, .select]
+        if hoverMoveTools.contains(currentTool) {
+            let canvasPoint = viewToCanvas(point)
+            if let hovered = hoveredAnnotation, hovered.hitTest(point: canvasPoint) {
+                Self.moveCursor.set(); return
             }
         }
 
-        // Color picker popup — arrow cursor
-        if showColorPicker && colorPickerRect.width > 0 {
-            addCursorRect(colorPickerRect, cursor: .arrow)
-        }
-
-        // Beautify panel — arrow cursor for entire panel
-        if showBeautifyPicker && beautifyPickerRect.width > 0 {
-            addCursorRect(beautifyPickerRect, cursor: .arrow)
-        }
-
-        // Beautify gradient picker dropdown — arrow cursor
-        if showBeautifyGradientPicker && beautifyGradientPickerRect.width > 0 {
-            addCursorRect(beautifyGradientPickerRect, cursor: .arrow)
-        }
-
-        // Tool options row — arrow cursor
-        if optionsRowRect.width > 0 {
-            addCursorRect(optionsRowRect, cursor: .arrow)
-        }
-
-        // Editor top bar — arrow cursor
-        if isDetached && editorTopBarRect.width > 0 {
-            addCursorRect(editorTopBarRect, cursor: .arrow)
-        }
-
-        // Stroke pickers — pointing hand for rows
-        let popups: [(Bool, NSRect, Int)] = [
-            (showStrokePicker, strokePickerRect, 7) // 7 widths
-        ]
-        for (isVisible, rect, count) in popups {
-            if isVisible && rect.width > 0 {
-                addCursorRect(rect, cursor: .arrow) // default arrow for background
-                let rowH: CGFloat = 28
-                let padding: CGFloat = 6
-                for i in 0..<count {
-                    let rowY = rect.maxY - padding - rowH * CGFloat(i + 1)
-                    let rowRect = NSRect(x: rect.minX, y: rowY, width: rect.width, height: rowH)
-                    addCursorRect(rowRect, cursor: .pointingHand)
-                }
-            }
-        }
-
-        // Loupe size picker
-        if showLoupeSizePicker && loupeSizePickerRect.width > 0 {
-            addCursorRect(loupeSizePickerRect, cursor: .arrow)
-            let rowH: CGFloat = 28; let padding: CGFloat = 6
-            for i in 0..<8 {
-                let rowY = loupeSizePickerRect.maxY - padding - rowH * CGFloat(i + 1)
-                addCursorRect(NSRect(x: loupeSizePickerRect.minX, y: rowY, width: loupeSizePickerRect.width, height: rowH), cursor: .pointingHand)
-            }
-        }
-        // Delay picker
-        if showDelayPicker && delayPickerRect.width > 0 {
-            addCursorRect(delayPickerRect, cursor: .arrow)
-            let rowH: CGFloat = 28; let padding: CGFloat = 6
-            for i in 0..<7 {
-                let rowY = delayPickerRect.maxY - padding - rowH * CGFloat(i + 1)
-                addCursorRect(NSRect(x: delayPickerRect.minX, y: rowY, width: delayPickerRect.width, height: rowH), cursor: .pointingHand)
-            }
-        }
-        // Upload confirm picker (handled after bounds crosshair below)
-        // Redact type picker
-        if showRedactTypePicker && redactTypePickerRect.width > 0 {
-            addCursorRect(redactTypePickerRect, cursor: .arrow)
-            let rowH: CGFloat = 26; let padding: CGFloat = 6
-            for i in 0..<OverlayView.redactTypeNames.count {
-                let rowY = redactTypePickerRect.maxY - padding - rowH * CGFloat(i + 1)
-                addCursorRect(NSRect(x: redactTypePickerRect.minX, y: rowY, width: redactTypePickerRect.width, height: rowH), cursor: .pointingHand)
-            }
-        }
-
-        // Translate picker
-        if showTranslatePicker && translatePickerRect.width > 0 {
-            addCursorRect(translatePickerRect, cursor: .arrow)
-            let rowH: CGFloat = 26; let padding: CGFloat = 6
-            for i in 0..<TranslationService.availableLanguages.count {
-                let rowY = translatePickerRect.maxY - padding - rowH * CGFloat(i + 1)
-                addCursorRect(NSRect(x: translatePickerRect.minX, y: rowY, width: translatePickerRect.width, height: rowH), cursor: .pointingHand)
-            }
-        }
-
-        // Size label — pointer cursor to indicate clickable
-        if sizeLabelRect.width > 0 && sizeInputField == nil {
-            addCursorRect(sizeLabelRect, cursor: .pointingHand)
-        }
-
-        // Zoom label — pointer cursor to indicate clickable
-        if zoomLabelRect.width > 0 && zoomLabelOpacity > 0 && zoomInputField == nil {
-            addCursorRect(zoomLabelRect, cursor: .pointingHand)
-        }
-
-        // Inside selection — tool-specific cursor
-        let innerRect = r.insetBy(dx: edgeThickness, dy: edgeThickness)
-        if innerRect.width > 0 && innerRect.height > 0 {
-            let selectionCursor: NSCursor
-            switch currentTool {
-            case .select: selectionCursor = .arrow
-            case .pencil: selectionCursor = Self.penCursor
-            default: selectionCursor = .crosshair
-            }
-            addCursorRect(innerRect, cursor: selectionCursor)
-        }
-
-        // Select tool: move cursor only over movable annotations
-        if currentTool == .select {
-            for ann in annotations where ann.isMovable {
-                let bb = ann.boundingRect.insetBy(dx: -8, dy: -8)
-                if bb.width > 0 && bb.height > 0 {
-                    addCursorRect(bb, cursor: Self.moveCursor)
-                }
-            }
-        }
-
-        // Hover-to-move: move cursor over a hovered annotation when using a shape/drawing tool
-        let hoverMoveToolsForCursor: Set<AnnotationTool> = [.arrow, .line, .rectangle, .ellipse]
-        if hoverMoveToolsForCursor.contains(currentTool), let hovered = hoveredAnnotation {
-            let bb = hovered.boundingRect.insetBy(dx: -12, dy: -12)
-            if bb.width > 0 && bb.height > 0 {
-                addCursorRect(bb, cursor: Self.moveCursor)
-            }
-        }
-
-        // When select tool is active, layer annotation-specific cursors on top
-        if currentTool == .select, let selected = selectedAnnotation {
-            // Annotation bounding box interior → move cursor (already covered by openHand above)
-            // Resize handles → appropriate resize cursors
-            let isEndpointTool = selected.tool == .arrow || selected.tool == .line || selected.tool == .measure
-            for (handle, rect) in annotationResizeHandleRects {
-                let hitRect = rect.insetBy(dx: -4, dy: -4)
-                if isEndpointTool {
-                    addCursorRect(hitRect, cursor: .crosshair)
-                } else {
-                switch handle {
-                case .topLeft, .bottomRight:
-                    addCursorRect(hitRect, cursor: Self.nwseCursor)
-                case .topRight, .bottomLeft:
-                    addCursorRect(hitRect, cursor: Self.neswCursor)
-                case .top, .bottom:
-                    addCursorRect(hitRect, cursor: .resizeUpDown)
-                case .left, .right:
-                    addCursorRect(hitRect, cursor: .resizeLeftRight)
-                default:
-                    break
-                }
-                }
-            }
-            // Delete / edit buttons → arrow
-            if annotationDeleteButtonRect.width > 0 {
-                addCursorRect(annotationDeleteButtonRect, cursor: .arrow)
-            }
-            if annotationEditButtonRect.width > 0 {
-                addCursorRect(annotationEditButtonRect, cursor: .arrow)
-            }
-            if annotationRotateHandleRect.width > 0 {
-                addCursorRect(annotationRotateHandleRect.insetBy(dx: -4, dy: -4), cursor: .arrow)
-            }
-        }
-
-        // Outside selection — crosshair for new selection
-        addCursorRect(bounds, cursor: .crosshair)
-
-        // Upload confirm picker — override crosshair with arrow (must come after bounds rect)
-        if showUploadConfirmPicker && uploadConfirmPickerRect.width > 0 {
-            addCursorRect(uploadConfirmPickerRect, cursor: .arrow)
-            let rowY = uploadConfirmPickerRect.minY + 8
-            let rowRect = NSRect(x: uploadConfirmPickerRect.minX, y: rowY, width: uploadConfirmPickerRect.width, height: 32)
-            addCursorRect(rowRect, cursor: .pointingHand)
-        }
-
-        // Upload confirm dialog — override crosshair with arrow
-        if showUploadConfirmDialog && uploadConfirmDialogRect.width > 0 {
-            addCursorRect(uploadConfirmDialogRect, cursor: .arrow)
-            if uploadConfirmOKRect.width > 0 { addCursorRect(uploadConfirmOKRect, cursor: .pointingHand) }
-            if uploadConfirmCancelRect.width > 0 { addCursorRect(uploadConfirmCancelRect, cursor: .pointingHand) }
-        }
-
-        // Emoji picker — arrow cursor
-        if showEmojiPicker && emojiPickerRect.width > 0 {
-            addCursorRect(emojiPickerRect, cursor: .arrow)
+        // Tool-specific cursor inside selection
+        switch currentTool {
+        case .pencil, .marker: Self.penCursor.set()
+        case .select: NSCursor.arrow.set()
+        default: NSCursor.crosshair.set()
         }
     }
 
@@ -1273,10 +1116,11 @@ class OverlayView: NSView {
 
         guard let context = NSGraphicsContext.current else { return }
 
-        window?.invalidateCursorRects(for: self)
+
 
         // In editor mode: dark background, draw image centered at natural size (no stretch).
-        // Reserve padding around the image for toolbars (bottom bar + right bar).
+        // selectionRect stays at (0, 0, imgW, imgH) — annotations always use image-relative coords.
+        // editorCanvasOffset is a pure rendering offset applied via graphics context transform.
         if isDetached {
             let padLeft:   CGFloat = 8
             let padRight:  CGFloat = 52  // right toolbar width
@@ -1286,25 +1130,17 @@ class OverlayView: NSView {
             let padTop:    CGFloat = editorTopBarH + 4  // top bar + gap
             let availW = bounds.width  - padLeft - padRight
             let availH = bounds.height - padBottom - padTop
-            if let image = screenshotImage {
-                let imgW = image.size.width
-                let imgH = image.size.height
-                let cx = padLeft + max(0, (availW - imgW) / 2)
-                let cy = padBottom + max(0, (availH - imgH) / 2)
-                let newRect = NSRect(x: cx, y: cy, width: imgW, height: imgH)
-                let dx = newRect.origin.x - selectionRect.origin.x
-                let dy = newRect.origin.y - selectionRect.origin.y
-                if dx != 0 || dy != 0 {
-                    for ann in annotations { ann.move(dx: dx, dy: dy) }
-                    for entry in undoStack { entry.annotation.move(dx: dx, dy: dy) }
-                    for entry in redoStack { entry.annotation.move(dx: dx, dy: dy) }
-                }
-                selectionRect = newRect
-            }
+            let imgW = selectionRect.width
+            let imgH = selectionRect.height
+            let cx = padLeft + max(0, (availW - imgW) / 2)
+            let cy = padBottom + max(0, (availH - imgH) / 2)
+            editorCanvasOffset = NSPoint(x: cx, y: cy)
+
             NSColor(white: 0.15, alpha: 1.0).setFill()
             NSBezierPath(rect: bounds).fill()
-            // Draw image with zoom transform applied
+            // Draw image with canvas offset + zoom transform
             context.saveGraphicsState()
+            context.cgContext.translateBy(x: editorCanvasOffset.x, y: editorCanvasOffset.y)
             applyZoomTransform(to: context)
             if let image = screenshotImage {
                 image.draw(in: selectionRect, from: .zero, operation: .copy, fraction: 1.0)
@@ -1359,8 +1195,8 @@ class OverlayView: NSView {
 
             // Draw translate overlays clipped to selection (they must stay inside).
             context.saveGraphicsState()
+            applyCanvasTransform(to: context)
             NSBezierPath(rect: selectionRect).setClip()
-            applyZoomTransform(to: context)
             for annotation in annotations where annotation.tool == .translateOverlay {
                 annotation.draw(in: context)
             }
@@ -1368,7 +1204,7 @@ class OverlayView: NSView {
 
             // Draw user annotations unclipped — strokes can continue past the selection border.
             context.saveGraphicsState()
-            applyZoomTransform(to: context)
+            applyCanvasTransform(to: context)
             for annotation in annotations where annotation.tool != .translateOverlay {
                 annotation.draw(in: context)
             }
@@ -1591,7 +1427,7 @@ class OverlayView: NSView {
                 let h = aspect >= 1 ? stampSize / aspect : stampSize
                 let previewRect = NSRect(x: previewPt.x - w / 2, y: previewPt.y - h / 2, width: w, height: h)
                 context.saveGraphicsState()
-                applyZoomTransform(to: context)
+                applyCanvasTransform(to: context)
                 img.draw(in: previewRect, from: .zero, operation: .sourceOver, fraction: 0.5, respectFlipped: true, hints: nil)
                 context.restoreGraphicsState()
             }
@@ -1717,7 +1553,7 @@ class OverlayView: NSView {
         if isScrollCapturing { drawScrollCaptureHUD() }
 
         // Keep cursor rects in sync with current selection
-        window?.invalidateCursorRects(for: self)
+
     }
 
     private func drawHoveredTooltip() {
@@ -5531,11 +5367,17 @@ class OverlayView: NSView {
 
     /// Convert a point in view space to canvas (annotation) space by reversing the zoom transform.
     private func viewToCanvas(_ p: NSPoint) -> NSPoint {
-        if zoomLevel == 1.0 && zoomAnchorCanvas == .zero && zoomAnchorView == .zero { return p }
-        guard zoomAnchorCanvas != .zero || zoomAnchorView != .zero else { return p }
+        // In editor mode, subtract the canvas centering offset
+        var q = p
+        if isDetached {
+            q.x -= editorCanvasOffset.x
+            q.y -= editorCanvasOffset.y
+        }
+        if zoomLevel == 1.0 && zoomAnchorCanvas == .zero && zoomAnchorView == .zero { return q }
+        guard zoomAnchorCanvas != .zero || zoomAnchorView != .zero else { return q }
         return NSPoint(
-            x: zoomAnchorCanvas.x + (p.x - zoomAnchorView.x) / zoomLevel,
-            y: zoomAnchorCanvas.y + (p.y - zoomAnchorView.y) / zoomLevel
+            x: zoomAnchorCanvas.x + (q.x - zoomAnchorView.x) / zoomLevel,
+            y: zoomAnchorCanvas.y + (q.y - zoomAnchorView.y) / zoomLevel
         )
     }
 
@@ -5547,6 +5389,14 @@ class OverlayView: NSView {
         cgCtx.translateBy(x: zoomAnchorView.x - zoomAnchorCanvas.x * zoomLevel,
                           y: zoomAnchorView.y - zoomAnchorCanvas.y * zoomLevel)
         cgCtx.scaleBy(x: zoomLevel, y: zoomLevel)
+    }
+
+    /// Apply editor canvas offset + zoom transform. Use this for all canvas-space drawing.
+    private func applyCanvasTransform(to context: NSGraphicsContext) {
+        if isDetached {
+            context.cgContext.translateBy(x: editorCanvasOffset.x, y: editorCanvasOffset.y)
+        }
+        applyZoomTransform(to: context)
     }
 
     /// Set zoom level, pinning the given view-space cursor point in place.
@@ -7351,13 +7201,15 @@ class OverlayView: NSView {
                 }
             }
 
-            // Check handles (locked during recording)
-            let handle = hitTestHandle(at: point)
-            if handle != .none {
-                guard !isRecording else { return }
-                isResizingSelection = true
-                resizeHandle = handle
-                return
+            // Check handles (locked during recording, disabled in editor)
+            if !isDetached {
+                let handle = hitTestHandle(at: point)
+                if handle != .none {
+                    guard !isRecording else { return }
+                    isResizingSelection = true
+                    resizeHandle = handle
+                    return
+                }
             }
 
             // Crop tool drag
@@ -8825,7 +8677,7 @@ class OverlayView: NSView {
 
         window?.makeFirstResponder(tv)
         needsDisplay = true
-        window?.invalidateCursorRects(for: self)
+
     }
 
     private func currentTextFont() -> NSFont {
@@ -9054,7 +8906,7 @@ class OverlayView: NSView {
         textEditView = nil
         showFontPicker = false
         window?.makeFirstResponder(self)
-        window?.invalidateCursorRects(for: self)
+
         needsDisplay = true
     }
 
@@ -9103,7 +8955,7 @@ class OverlayView: NSView {
         textEditView = nil
         showFontPicker = false
         window?.makeFirstResponder(self)
-        window?.invalidateCursorRects(for: self)
+
         needsDisplay = true
     }
 
@@ -9192,7 +9044,7 @@ class OverlayView: NSView {
                 textEditView = nil
                 showFontPicker = false
                 window?.makeFirstResponder(self)
-                window?.invalidateCursorRects(for: self)
+        
                 needsDisplay = true
             } else if showColorPicker {
                 showColorPicker = false
@@ -9426,7 +9278,6 @@ class OverlayView: NSView {
             selectedAnnotation = nil
             changed = true
         }
-        if changed { window?.invalidateCursorRects(for: self) }
     }
 
     func redo() {
