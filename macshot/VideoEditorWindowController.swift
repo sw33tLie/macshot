@@ -72,10 +72,14 @@ final class VideoEditorWindowController: NSObject, NSWindowDelegate {
     func windowWillClose(_ notification: Notification) {
         editorView?.cleanup()
         editorView = nil
+        let closingWindow = window
         window = nil
         Self.activeControllers.removeAll { $0 === self }
         if Self.activeControllers.isEmpty {
-            NSApp.setActivationPolicy(.accessory)
+            let hasOtherWindows = NSApp.windows.contains { $0 !== closingWindow && $0.isVisible && $0.styleMask.contains(.titled) }
+            if !hasOtherWindows {
+                NSApp.setActivationPolicy(.accessory)
+            }
         }
     }
 }
@@ -349,7 +353,9 @@ private final class VideoEditorView: NSView {
         let btnY: CGFloat = 12
         let gap: CGFloat = 8
         let iconBtnW: CGFloat = 34
-        let labelBtnW: CGFloat = 100
+        // Use compact (icon-only) buttons when window is narrow
+        let compact = bounds.width < 700
+        let labelBtnW: CGFloat = compact ? iconBtnW : 100
 
         // Left group: play, mute
         var x: CGFloat = timelinePad
@@ -363,43 +369,58 @@ private final class VideoEditorView: NSView {
         drawIconButton(rect: muteBtnRect, symbol: isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill", accent: false, active: isMuted)
         x += iconBtnW + gap
 
-        // File info
-        let infoAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 10, weight: .regular),
-            .foregroundColor: NSColor.white.withAlphaComponent(0.4),
-        ]
-        let fileSize = (try? FileManager.default.attributesOfItem(atPath: videoURL.path)[.size] as? Int) ?? 0
-        let sizeStr = ByteCountFormatter.string(fromByteCount: Int64(fileSize), countStyle: .file)
-        let ext = videoURL.pathExtension.uppercased()
-        let fpsValue = asset?.tracks(withMediaType: .video).first?.nominalFrameRate ?? 0
-        let fpsStr = fpsValue > 0 ? "  ·  \(Int(fpsValue.rounded()))fps" : ""
-        var resStr = ""
-        if let track = asset?.tracks(withMediaType: .video).first {
-            let size = track.naturalSize.applying(track.preferredTransform)
-            resStr = "  ·  \(Int(abs(size.width)))×\(Int(abs(size.height)))"
-        } else if isGIF, let src = CGImageSourceCreateWithURL(videoURL as CFURL, nil),
-                  let img = CGImageSourceCreateImageAtIndex(src, 0, nil) {
-            resStr = "  ·  \(img.width)×\(img.height)"
+        // File info (hidden when window is too narrow)
+        if !compact {
+            let infoAttrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 10, weight: .regular),
+                .foregroundColor: NSColor.white.withAlphaComponent(0.4),
+            ]
+            let fileSize = (try? FileManager.default.attributesOfItem(atPath: videoURL.path)[.size] as? Int) ?? 0
+            let sizeStr = ByteCountFormatter.string(fromByteCount: Int64(fileSize), countStyle: .file)
+            let ext = videoURL.pathExtension.uppercased()
+            let fpsValue = asset?.tracks(withMediaType: .video).first?.nominalFrameRate ?? 0
+            let fpsStr = fpsValue > 0 ? "  ·  \(Int(fpsValue.rounded()))fps" : ""
+            var resStr = ""
+            if let track = asset?.tracks(withMediaType: .video).first {
+                let size = track.naturalSize.applying(track.preferredTransform)
+                resStr = "  ·  \(Int(abs(size.width)))×\(Int(abs(size.height)))"
+            } else if isGIF, let src = CGImageSourceCreateWithURL(videoURL as CFURL, nil),
+                      let img = CGImageSourceCreateImageAtIndex(src, 0, nil) {
+                resStr = "  ·  \(img.width)×\(img.height)"
+            }
+            let infoStr = "\(ext)  ·  \(sizeStr)\(fpsStr)\(resStr)" as NSString
+            let infoSize = infoStr.size(withAttributes: infoAttrs)
+            infoStr.draw(at: NSPoint(x: x + 4, y: btnY + (btnH - infoSize.height) / 2), withAttributes: infoAttrs)
         }
-        let infoStr = "\(ext)  ·  \(sizeStr)\(fpsStr)\(resStr)" as NSString
-        let infoSize = infoStr.size(withAttributes: infoAttrs)
-        infoStr.draw(at: NSPoint(x: x + 4, y: btnY + (btnH - infoSize.height) / 2), withAttributes: infoAttrs)
 
         // Right group: save, upload, finder, copy
         x = bounds.width - timelinePad
         x -= labelBtnW
         copyBtnRect = NSRect(x: x, y: btnY, width: labelBtnW, height: btnH)
-        drawLabelButton(rect: copyBtnRect, symbol: "doc.on.doc", label: "Copy Path")
+        if compact {
+            drawIconButton(rect: copyBtnRect, symbol: "doc.on.doc", accent: false)
+        } else {
+            drawLabelButton(rect: copyBtnRect, symbol: "doc.on.doc", label: "Copy Path")
+        }
         x -= gap + iconBtnW
         finderBtnRect = NSRect(x: x, y: btnY, width: iconBtnW, height: btnH)
         drawIconButton(rect: finderBtnRect, symbol: "folder", accent: false)
         x -= gap + labelBtnW
-        let canUpload = UserDefaults.standard.string(forKey: "uploadProvider") == "gdrive" && GoogleDriveUploader.shared.isSignedIn
+        let uploadProvider = UserDefaults.standard.string(forKey: "uploadProvider") ?? "imgbb"
+        let canUpload = (uploadProvider == "gdrive" && GoogleDriveUploader.shared.isSignedIn) || (uploadProvider == "s3" && S3Uploader.shared.isConfigured)
         uploadBtnRect = NSRect(x: x, y: btnY, width: labelBtnW, height: btnH)
-        drawLabelButton(rect: uploadBtnRect, symbol: "icloud.and.arrow.up", label: "Upload", dimmed: !canUpload)
+        if compact {
+            drawIconButton(rect: uploadBtnRect, symbol: "icloud.and.arrow.up", accent: false)
+        } else {
+            drawLabelButton(rect: uploadBtnRect, symbol: "icloud.and.arrow.up", label: "Upload", dimmed: !canUpload)
+        }
         x -= gap + labelBtnW
         saveBtnRect = NSRect(x: x, y: btnY, width: labelBtnW, height: btnH)
-        drawLabelButton(rect: saveBtnRect, symbol: "square.and.arrow.down", label: "Save")
+        if compact {
+            drawIconButton(rect: saveBtnRect, symbol: "square.and.arrow.down", accent: false)
+        } else {
+            drawLabelButton(rect: saveBtnRect, symbol: "square.and.arrow.down", label: "Save")
+        }
     }
 
     private func drawIconButton(rect: NSRect, symbol: String, accent: Bool, active: Bool = false) {
@@ -664,30 +685,57 @@ private final class VideoEditorView: NSView {
 
     private func uploadVideo() {
         let provider = UserDefaults.standard.string(forKey: "uploadProvider") ?? "imgbb"
-        guard provider == "gdrive" && GoogleDriveUploader.shared.isSignedIn else {
+
+        if provider == "gdrive" && !GoogleDriveUploader.shared.isSignedIn {
             showStatus("Sign in to Google Drive in Preferences", isError: true)
             return
         }
+        if provider == "s3" && !S3Uploader.shared.isConfigured {
+            showStatus("Configure S3 in Preferences", isError: true)
+            return
+        }
+        if provider != "gdrive" && provider != "s3" {
+            showStatus("Video upload requires Google Drive or S3", isError: true)
+            return
+        }
 
-        showStatus("Uploading to Drive... 0%")
-        GoogleDriveUploader.shared.onProgress = { [weak self] fraction in
-            self?.showStatus("Uploading to Drive... \(Int(fraction * 100))%")
+        let providerLabel = provider == "s3" ? "S3" : "Drive"
+        showStatus("Uploading to \(providerLabel)... 0%")
+
+        let progressHandler: (Double) -> Void = { [weak self] fraction in
+            self?.showStatus("Uploading to \(providerLabel)... \(Int(fraction * 100))%")
+        }
+
+        let completionHandler: (Result<String, Error>) -> Void = { [weak self] result in
+            switch result {
+            case .success(let link):
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(link, forType: .string)
+                self?.showStatus("Uploaded! Link copied.")
+            case .failure(let error):
+                self?.showStatus("Upload failed: \(error.localizedDescription)", isError: true)
+            }
+        }
+
+        let uploadFileURL: (URL, Bool) -> Void = { fileURL, isTemp in
+            let wrappedCompletion: (Result<String, Error>) -> Void = { result in
+                if isTemp { try? FileManager.default.removeItem(at: fileURL) }
+                completionHandler(result)
+            }
+            if provider == "s3" {
+                S3Uploader.shared.onProgress = progressHandler
+                S3Uploader.shared.uploadVideo(url: fileURL, completion: wrappedCompletion)
+            } else {
+                GoogleDriveUploader.shared.onProgress = progressHandler
+                GoogleDriveUploader.shared.uploadVideo(url: fileURL, completion: wrappedCompletion)
+            }
         }
 
         let needsTrim = trimStart > 0.01 || (duration - trimEnd) > 0.01
         let needsExport = needsTrim || isMuted
 
         if !needsExport {
-            GoogleDriveUploader.shared.uploadVideo(url: videoURL) { [weak self] result in
-                switch result {
-                case .success(let link):
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(link, forType: .string)
-                    self?.showStatus("Uploaded! Link copied.")
-                case .failure(let error):
-                    self?.showStatus("Upload failed: \(error.localizedDescription)", isError: true)
-                }
-            }
+            uploadFileURL(videoURL, false)
         } else {
             guard let asset = asset else { return }
             let tmpURL = FileManager.default.temporaryDirectory.appendingPathComponent("macshot_upload_\(UUID().uuidString).mp4")
@@ -706,17 +754,7 @@ private final class VideoEditorView: NSView {
                         self.showStatus("Export failed", isError: true)
                         return
                     }
-                    GoogleDriveUploader.shared.uploadVideo(url: tmpURL) { [weak self] result in
-                        try? FileManager.default.removeItem(at: tmpURL)
-                        switch result {
-                        case .success(let link):
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString(link, forType: .string)
-                            self?.showStatus("Uploaded! Link copied.")
-                        case .failure(let error):
-                            self?.showStatus("Upload failed: \(error.localizedDescription)", isError: true)
-                        }
-                    }
+                    uploadFileURL(tmpURL, true)
                 }
             }
         }

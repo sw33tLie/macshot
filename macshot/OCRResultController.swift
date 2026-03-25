@@ -375,6 +375,12 @@ private class KeyablePanel: NSPanel {
                 fr.undoManager?.redo(); return true
             }
         }
+        // Cmd+W to close — handle outside the text view check so it always works
+        if event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
+           event.charactersIgnoringModifiers == "w" {
+            performClose(nil)
+            return true
+        }
         return super.performKeyEquivalent(with: event)
     }
 }

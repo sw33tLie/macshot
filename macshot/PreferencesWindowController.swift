@@ -2,7 +2,7 @@ import Cocoa
 import Carbon
 import ServiceManagement
 
-class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
+class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWindowDelegate {
 
     private var hotkeyFields: [HotkeyManager.HotkeySlot: NSTextField] = [:]
     private var hotkeyButtons: [HotkeyManager.HotkeySlot: NSButton] = [:]
@@ -16,6 +16,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
     private var thumbnailAutoDismissField: NSTextField!
     private var thumbnailStackingPopup: NSPopUpButton!
     private var launchAtLoginCheckbox: NSButton!
+    private var hideMenuBarIconCheckbox: NSButton!
     private var historySizeField: NSTextField!
     private var historySizeStepper: NSStepper!
     private var snapGuidesCheckbox: NSButton!
@@ -32,6 +33,16 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
     private var providerPopup: NSPopUpButton!
     private var gdriveSignInBtn: NSButton!
     private var gdriveStatusLabel: NSTextField!
+    // S3 tab controls
+    private var s3EndpointField: NSTextField!
+    private var s3RegionField: NSTextField!
+    private var s3BucketField: NSTextField!
+    private var s3AccessKeyField: NSTextField!
+    private var s3SecretKeyField: NSSecureTextField!
+    private var s3PublicURLField: NSTextField!
+    private var s3PathPrefixField: NSTextField!
+    private var s3TestBtn: NSButton!
+    private var s3StatusLabel: NSTextField!
     // Recording tab controls
     private var recordingFormatPopup: NSPopUpButton!
     private var recordingFPSPopup: NSPopUpButton!
@@ -50,6 +61,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         window.center()
         window.isReleasedWhenClosed = false
         super.init(window: window)
+        window.delegate = self
         setupUI()
         loadPreferences()
     }
@@ -240,6 +252,16 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         stack.addArrangedSubview(indented(launchAtLoginCheckbox))
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
+        hideMenuBarIconCheckbox = NSButton(checkboxWithTitle: "Hide menu bar icon", target: self, action: #selector(hideMenuBarIconChanged(_:)))
+        stack.addArrangedSubview(indented(hideMenuBarIconCheckbox))
+        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+
+        let hideNote = NSTextField(wrappingLabelWithString: "Hotkeys still work. To show the icon again, re-launch macshot.")
+        hideNote.font = NSFont.systemFont(ofSize: 10)
+        hideNote.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(indented(hideNote))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // ── Output ───────────────────────────────────────────
@@ -384,10 +406,20 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
             btn.bezelStyle = .rounded
             btn.tag = slot.rawValue
 
+            let clearBtn = NSButton(title: "", target: self, action: #selector(clearShortcut(_:)))
+            clearBtn.bezelStyle = .inline
+            clearBtn.isBordered = false
+            clearBtn.image = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: "Clear shortcut")
+            clearBtn.contentTintColor = .secondaryLabelColor
+            clearBtn.imagePosition = .imageOnly
+            clearBtn.tag = slot.rawValue
+            clearBtn.toolTip = "Clear shortcut"
+            clearBtn.widthAnchor.constraint(equalToConstant: 20).isActive = true
+
             hotkeyFields[slot] = field
             hotkeyButtons[slot] = btn
 
-            stack.addArrangedSubview(labeledRow("\(slot.label):", controls: [field, btn]))
+            stack.addArrangedSubview(labeledRow("\(slot.label):", controls: [field, btn, clearBtn]))
             stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
         }
 
@@ -449,6 +481,14 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
             self.onHotkeyChanged?()
             return nil
         }
+    }
+
+    @objc private func clearShortcut(_ sender: NSButton) {
+        guard let slot = HotkeyManager.HotkeySlot(rawValue: sender.tag) else { return }
+        stopShortcutRecording()
+        HotkeyManager.disableHotkey(for: slot)
+        hotkeyFields[slot]?.stringValue = "None"
+        onHotkeyChanged?()
     }
 
     private func stopShortcutRecording() {
@@ -628,9 +668,13 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
         providerPopup = NSPopUpButton()
-        providerPopup.addItems(withTitles: ["imgbb (images only)", "Google Drive (images + videos)"])
+        providerPopup.addItems(withTitles: ["imgbb (images only)", "Google Drive (images + videos)", "S3-Compatible (images + videos)"])
         let currentProvider = UserDefaults.standard.string(forKey: "uploadProvider") ?? "imgbb"
-        providerPopup.selectItem(at: currentProvider == "gdrive" ? 1 : 0)
+        switch currentProvider {
+        case "gdrive": providerPopup.selectItem(at: 1)
+        case "s3": providerPopup.selectItem(at: 2)
+        default: providerPopup.selectItem(at: 0)
+        }
         providerPopup.target = self
         providerPopup.action = #selector(uploadProviderChanged(_:))
         stack.addArrangedSubview(labeledRow("Provider:", controls: [providerPopup]))
@@ -657,6 +701,93 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         gdriveNote.font = NSFont.systemFont(ofSize: 10)
         gdriveNote.textColor = .secondaryLabelColor
         stack.addArrangedSubview(indented(gdriveNote))
+        stack.setCustomSpacing(16, after: stack.arrangedSubviews.last!)
+
+        // ── S3-Compatible ──
+        stack.addArrangedSubview(sectionHeader("S3-Compatible Storage"))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        s3EndpointField = NSTextField()
+        s3EndpointField.placeholderString = "https://abc123.r2.cloudflarestorage.com"
+        s3EndpointField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        s3EndpointField.stringValue = UserDefaults.standard.string(forKey: "s3Endpoint") ?? ""
+        s3EndpointField.target = self
+        s3EndpointField.action = #selector(s3FieldChanged(_:))
+        stack.addArrangedSubview(labeledRow("Endpoint:", controls: [s3EndpointField]))
+
+        s3RegionField = NSTextField()
+        s3RegionField.placeholderString = "auto"
+        s3RegionField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        s3RegionField.stringValue = UserDefaults.standard.string(forKey: "s3Region") ?? "auto"
+        s3RegionField.target = self
+        s3RegionField.action = #selector(s3FieldChanged(_:))
+        stack.addArrangedSubview(labeledRow("Region:", controls: [s3RegionField]))
+
+        s3BucketField = NSTextField()
+        s3BucketField.placeholderString = "my-bucket"
+        s3BucketField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        s3BucketField.stringValue = UserDefaults.standard.string(forKey: "s3Bucket") ?? ""
+        s3BucketField.target = self
+        s3BucketField.action = #selector(s3FieldChanged(_:))
+        stack.addArrangedSubview(labeledRow("Bucket:", controls: [s3BucketField]))
+
+        s3AccessKeyField = NSTextField()
+        s3AccessKeyField.placeholderString = "AKIAIOSFODNN7EXAMPLE"
+        s3AccessKeyField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        s3AccessKeyField.stringValue = UserDefaults.standard.string(forKey: "s3AccessKeyID") ?? ""
+        s3AccessKeyField.target = self
+        s3AccessKeyField.action = #selector(s3FieldChanged(_:))
+        stack.addArrangedSubview(labeledRow("Access Key:", controls: [s3AccessKeyField]))
+
+        s3SecretKeyField = NSSecureTextField()
+        s3SecretKeyField.placeholderString = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+        s3SecretKeyField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        s3SecretKeyField.stringValue = UserDefaults.standard.string(forKey: "s3SecretAccessKey") ?? ""
+        s3SecretKeyField.target = self
+        s3SecretKeyField.action = #selector(s3FieldChanged(_:))
+        stack.addArrangedSubview(labeledRow("Secret Key:", controls: [s3SecretKeyField]))
+
+        s3PublicURLField = NSTextField()
+        s3PublicURLField.placeholderString = "https://cdn.example.com"
+        s3PublicURLField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        s3PublicURLField.stringValue = UserDefaults.standard.string(forKey: "s3PublicURLBase") ?? ""
+        s3PublicURLField.target = self
+        s3PublicURLField.action = #selector(s3FieldChanged(_:))
+        stack.addArrangedSubview(labeledRow("Public URL:", controls: [s3PublicURLField]))
+        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+
+        let publicURLNote = NSTextField(wrappingLabelWithString: "Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible).")
+        publicURLNote.font = NSFont.systemFont(ofSize: 10)
+        publicURLNote.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(indented(publicURLNote))
+
+        s3PathPrefixField = NSTextField()
+        s3PathPrefixField.placeholderString = "screenshots/"
+        s3PathPrefixField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        s3PathPrefixField.stringValue = UserDefaults.standard.string(forKey: "s3PathPrefix") ?? ""
+        s3PathPrefixField.target = self
+        s3PathPrefixField.action = #selector(s3FieldChanged(_:))
+        stack.addArrangedSubview(labeledRow("Path Prefix:", controls: [s3PathPrefixField]))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        s3TestBtn = NSButton(title: "Test Connection", target: self, action: #selector(s3TestTapped(_:)))
+        s3TestBtn.bezelStyle = .rounded
+
+        s3StatusLabel = NSTextField(labelWithString: "")
+        s3StatusLabel.font = NSFont.systemFont(ofSize: 11)
+        s3StatusLabel.textColor = .secondaryLabelColor
+        s3StatusLabel.lineBreakMode = .byTruncatingTail
+
+        let testRow = NSStackView(views: [s3TestBtn, s3StatusLabel])
+        testRow.orientation = .horizontal
+        testRow.spacing = 8
+        stack.addArrangedSubview(indented(testRow))
+        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+
+        let s3Note = NSTextField(wrappingLabelWithString: "Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos.")
+        s3Note.font = NSFont.systemFont(ofSize: 10)
+        s3Note.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(indented(s3Note))
         stack.setCustomSpacing(16, after: stack.arrangedSubviews.last!)
 
         // ── imgbb ──
@@ -804,7 +935,12 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
     }
 
     @objc private func uploadProviderChanged(_ sender: NSPopUpButton) {
-        let provider = sender.indexOfSelectedItem == 1 ? "gdrive" : "imgbb"
+        let provider: String
+        switch sender.indexOfSelectedItem {
+        case 1: provider = "gdrive"
+        case 2: provider = "s3"
+        default: provider = "imgbb"
+        }
         UserDefaults.standard.set(provider, forKey: "uploadProvider")
     }
 
@@ -822,6 +958,47 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
                     self.updateGDriveStatus()
                     self.updateGDriveButton()
                 }
+            }
+        }
+    }
+
+    @objc private func s3FieldChanged(_ sender: NSTextField) {
+        UserDefaults.standard.set(s3EndpointField.stringValue, forKey: "s3Endpoint")
+        UserDefaults.standard.set(s3RegionField.stringValue, forKey: "s3Region")
+        UserDefaults.standard.set(s3BucketField.stringValue, forKey: "s3Bucket")
+        UserDefaults.standard.set(s3AccessKeyField.stringValue, forKey: "s3AccessKeyID")
+        UserDefaults.standard.set(s3SecretKeyField.stringValue, forKey: "s3SecretAccessKey")
+        UserDefaults.standard.set(s3PublicURLField.stringValue, forKey: "s3PublicURLBase")
+        UserDefaults.standard.set(s3PathPrefixField.stringValue, forKey: "s3PathPrefix")
+    }
+
+    @objc private func s3TestTapped(_ sender: NSButton) {
+        // Save current field values first
+        s3FieldChanged(s3EndpointField)
+
+        guard S3Uploader.shared.isConfigured else {
+            s3StatusLabel.stringValue = "Fill in endpoint, bucket, and credentials first"
+            s3StatusLabel.textColor = .systemOrange
+            return
+        }
+
+        s3TestBtn.isEnabled = false
+        s3StatusLabel.stringValue = "Testing..."
+        s3StatusLabel.textColor = .secondaryLabelColor
+
+        // Upload a tiny test file
+        let testData = Data("macshot connection test".utf8)
+        let testKey = ".macshot_test_\(UUID().uuidString.prefix(8)).txt"
+        S3Uploader.shared.upload(data: testData, filename: testKey, contentType: "text/plain") { [weak self] result in
+            guard let self = self else { return }
+            self.s3TestBtn.isEnabled = true
+            switch result {
+            case .success:
+                self.s3StatusLabel.stringValue = "Connection successful!"
+                self.s3StatusLabel.textColor = .systemGreen
+            case .failure(let error):
+                self.s3StatusLabel.stringValue = error.localizedDescription
+                self.s3StatusLabel.textColor = .systemRed
             }
         }
     }
@@ -1063,6 +1240,8 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         let launchAtLogin = UserDefaults.standard.bool(forKey: "launchAtLogin")
         launchAtLoginCheckbox.state = launchAtLogin ? .on : .off
 
+        hideMenuBarIconCheckbox.state = UserDefaults.standard.bool(forKey: "hideMenuBarIcon") ? .on : .off
+
         let snapGuides = UserDefaults.standard.object(forKey: "snapGuidesEnabled") as? Bool ?? true
         snapGuidesCheckbox.state = snapGuides ? .on : .off
 
@@ -1243,6 +1422,12 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         }
     }
 
+    @objc private func hideMenuBarIconChanged(_ sender: NSButton) {
+        let hidden = sender.state == .on
+        UserDefaults.standard.set(hidden, forKey: "hideMenuBarIcon")
+        (NSApp.delegate as? AppDelegate)?.setMenuBarIconVisible(!hidden)
+    }
+
     // MARK: - NSTabViewDelegate
 
     func tabView(_ tabView: NSTabView, didSelect tabViewItem: NSTabViewItem?) {
@@ -1255,6 +1440,15 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate {
         loadPreferences()
         window?.center()
         window?.makeKeyAndOrderFront(nil)
+        NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        // Revert to accessory (no dock icon) if no other titled windows are open
+        let hasOtherWindows = NSApp.windows.contains { $0 !== window && $0.isVisible && $0.styleMask.contains(.titled) }
+        if !hasOtherWindows {
+            NSApp.setActivationPolicy(.accessory)
+        }
     }
 }

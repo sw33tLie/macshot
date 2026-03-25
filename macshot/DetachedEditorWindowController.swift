@@ -91,10 +91,14 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         overlayView?.overlayDelegate = nil
         window?.contentView = nil
         overlayView = nil
+        let closingWindow = window
         window = nil
         Self.activeControllers.removeAll { $0 === self }
         if Self.activeControllers.isEmpty {
-            NSApp.setActivationPolicy(.accessory)
+            let hasOtherWindows = NSApp.windows.contains { $0 !== closingWindow && $0.isVisible && $0.styleMask.contains(.titled) }
+            if !hasOtherWindows {
+                NSApp.setActivationPolicy(.accessory)
+            }
         }
     }
 }
@@ -163,7 +167,26 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
         }
     }
 
-    func overlayViewDidRequestQuickSave() { overlayViewDidConfirm() }
+    func overlayViewDidRequestQuickSave() {
+        guard let view = overlayView,
+              var image = view.captureSelectedRegion() else { return }
+        if view.beautifyEnabled {
+            image = BeautifyRenderer.render(image: image, config: view.beautifyConfig)
+        }
+        playCopySound()
+
+        let dirURL = SaveDirectoryAccess.resolve()
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd 'at' HH.mm.ss"
+        let filename = "Screenshot \(formatter.string(from: Date())).\(ImageEncoder.fileExtension)"
+        let fileURL = dirURL.appendingPathComponent(filename)
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            guard let imageData = ImageEncoder.encode(image) else { return }
+            try? imageData.write(to: fileURL)
+            SaveDirectoryAccess.stopAccessing(url: dirURL)
+        }
+    }
     func overlayViewDidRequestDelayCapture(seconds: Int, selectionRect: NSRect) {}
 
     func overlayViewDidRequestUpload() {

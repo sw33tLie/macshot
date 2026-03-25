@@ -1,5 +1,36 @@
 # Changelog
 
+## [3.2.0] - 2026-03-25
+
+### Added
+- **S3-compatible uploads** — upload screenshots and videos to AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Configure endpoint, credentials, bucket, and public URL in Preferences.
+- **Quick Capture shortcut** (`Cmd+Shift+S`) — select area and instantly save/copy without the annotation toolbar. Same as right-click drag, but as a global hotkey.
+- **Capture OCR shortcut** (`Cmd+Shift+T`) — select area and immediately extract text via OCR. No toolbar, straight to the OCR results window.
+- **Space-to-reposition mid-drag** — hold Space while drawing any shape or selection to reposition it without changing its size. Standard design tool behavior (Photoshop, Figma, Sketch).
+- **Save button quick-save** — left-click Save now instantly saves to the configured folder. Right-click for "Save As..." dialog. Context menu indicator triangle shown on button.
+- **Hide menu bar icon** — new toggle in Preferences. Hotkeys still work. Re-launch macshot from Spotlight to restore the icon.
+- **Shortcut clear buttons** — each keyboard shortcut in Preferences now has a "x" button to disable it. Field shows "None" when cleared.
+- **Menu bar icons** — all status bar menu items now have SF Symbol icons.
+- **Color sampler right-click to copy** — right-click with the eyedropper to copy hex value to clipboard instead of pressing C.
+- **Color picker slot system** — custom color slots always have one selected. Any color you pick (swatch, gradient, or eyedropper) auto-saves to the selected slot. Slots auto-advance when using the eyedropper for rapid palette collection. Right-click a slot to clear it.
+- **Color picker stays open** — clicking on the screenshot with the color picker open now samples the color and keeps the picker visible. Switching to the eyedropper tool also keeps the picker open.
+
+### Changed
+- **Menu bar icon size** — reduced from 26px to 22px to match other menu bar apps.
+- **Upload toast redesign** — moved from bottom-right to top-center. Native macOS notification appearance with app icon, light/dark mode support, and "Open" button for upload links. Click anywhere to dismiss. Error messages now word-wrap instead of truncating.
+- **Floating thumbnail hover** — auto-dismiss timer now pauses while the cursor is over the thumbnail. Timer resumes when the cursor leaves.
+- **Video editor responsive layout** — buttons collapse to icon-only when the window is narrow, preventing overlap.
+
+### Fixed
+- **Dock icon lifecycle** — dock icon now appears when Preferences, Editor, or Video Editor windows are open, and hides when all are closed. Fixed a bug where closing the video editor didn't remove the dock icon.
+- **Duplicate instances** — launching macshot while it's already running now activates the existing instance instead of starting a second one.
+- **Space switching** — switching macOS spaces now automatically dismisses the capture overlay.
+- **OCR window Cmd+W** — the OCR results window can now be closed with Cmd+W.
+- **Upload confirmation dialog** — now shows the correct provider name ("Upload to S3?" / "Upload to Google Drive?" / "Upload to imgbb?") based on the selected provider.
+- **Editor tall image scrolling** — tall screenshots (e.g. from scroll capture) can now be scrolled at 1x zoom in the editor. Previously required zooming in first.
+- **Zoom position preservation** — zooming back to 100% in the editor no longer resets the scroll position.
+- **Space key beep** — holding Space to reposition no longer produces system beep sounds from key repeat.
+
 ## [3.1.0] - 2026-03-24
 
 ### Added

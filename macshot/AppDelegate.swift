@@ -33,11 +33,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }()
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        // Prevent multiple instances — if already running, activate the existing one and quit
+        let bundleID = Bundle.main.bundleIdentifier ?? "com.sw33tlie.macshot.macshot"
+        let running = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
+        if running.count > 1 {
+            // Tell the existing instance to show its icon and open Preferences
+            DistributedNotificationCenter.default().postNotificationName(
+                .init("com.sw33tlie.macshot.showAndOpenPrefs"),
+                object: nil, userInfo: nil, deliverImmediately: true
+            )
+            NSApp.terminate(nil)
+            return
+        }
+
         updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
         setupMainMenu()
         setupStatusBar()
+        if UserDefaults.standard.bool(forKey: "hideMenuBarIcon") {
+            setMenuBarIconVisible(false)
+        }
         registerHotkey()
-
         // Pre-warm CoreAudio so the first capture sound doesn't stall ~1s.
         if let sound = Self.captureSound {
             sound.volume = 0
@@ -45,6 +60,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             sound.stop()
             sound.volume = 1
         }
+
+        // Listen for duplicate-launch notification to restore icon
+        DistributedNotificationCenter.default().addObserver(
+            self, selector: #selector(handleShowAndOpenPrefs),
+            name: .init("com.sw33tlie.macshot.showAndOpenPrefs"), object: nil
+        )
+
+        // Dismiss overlays when the user switches spaces
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self, selector: #selector(spaceDidChange),
+            name: NSWorkspace.activeSpaceDidChangeNotification, object: nil
+        )
 
         // Check screen recording permission. If not yet granted, show the
         // custom onboarding window instead of letting macOS throw its own dialogs.
@@ -68,6 +95,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         onboardingController = oc
         oc.show()
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        // Re-launching macshot while it's running: show the menu bar icon and open Preferences
+        if UserDefaults.standard.bool(forKey: "hideMenuBarIcon") {
+            UserDefaults.standard.set(false, forKey: "hideMenuBarIcon")
+            setMenuBarIconVisible(true)
+        }
+        openPreferences()
+        return false
+    }
+
+    func setMenuBarIconVisible(_ visible: Bool) {
+        statusItem.isVisible = visible
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
@@ -102,7 +143,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let button = statusItem.button {
             if let img = NSImage(named: "StatusBarIcon") {
                 img.isTemplate = true
-                img.size = NSSize(width: 26, height: 26)
+                img.size = NSSize(width: 22, height: 22)
                 button.image = img
             } else {
                 button.title = "macshot"
@@ -114,27 +155,46 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let captureAreaItem = NSMenuItem(title: "Capture Area", action: #selector(captureScreen), keyEquivalent: "")
         captureAreaItem.target = self
         captureAreaItem.toolTip = HotkeyManager.displayString(for: .captureArea)
+        captureAreaItem.image = NSImage(systemSymbolName: "crop", accessibilityDescription: nil)
         menu.addItem(captureAreaItem)
 
         let captureFullItem = NSMenuItem(title: "Capture Screen", action: #selector(captureFullScreen), keyEquivalent: "")
         captureFullItem.target = self
         captureFullItem.toolTip = HotkeyManager.displayString(for: .captureFullScreen)
+        captureFullItem.image = NSImage(systemSymbolName: "desktopcomputer", accessibilityDescription: nil)
         menu.addItem(captureFullItem)
+
+        let captureOCRItem = NSMenuItem(title: "Capture OCR", action: #selector(captureOCR), keyEquivalent: "")
+        captureOCRItem.target = self
+        captureOCRItem.toolTip = HotkeyManager.displayString(for: .captureOCR)
+        captureOCRItem.image = NSImage(systemSymbolName: "text.viewfinder", accessibilityDescription: nil)
+        menu.addItem(captureOCRItem)
+
+        let quickCaptureItem = NSMenuItem(title: "Quick Capture", action: #selector(quickCapture), keyEquivalent: "")
+        quickCaptureItem.target = self
+        quickCaptureItem.toolTip = HotkeyManager.displayString(for: .quickCapture)
+        quickCaptureItem.image = NSImage(systemSymbolName: "square.and.arrow.down", accessibilityDescription: nil)
+        menu.addItem(quickCaptureItem)
+
+        menu.addItem(NSMenuItem.separator())
 
         let recordAreaItem = NSMenuItem(title: "Record Area", action: #selector(recordArea), keyEquivalent: "")
         recordAreaItem.target = self
         recordAreaItem.toolTip = HotkeyManager.displayString(for: .recordArea)
+        recordAreaItem.image = NSImage(systemSymbolName: "record.circle", accessibilityDescription: nil)
         menu.addItem(recordAreaItem)
 
         let recordScreenItem = NSMenuItem(title: "Record Screen", action: #selector(recordFullScreen), keyEquivalent: "")
         recordScreenItem.target = self
         recordScreenItem.toolTip = HotkeyManager.displayString(for: .recordScreen)
+        recordScreenItem.image = NSImage(systemSymbolName: "menubar.dock.rectangle", accessibilityDescription: nil)
         menu.addItem(recordScreenItem)
 
         menu.addItem(NSMenuItem.separator())
 
         // Recent Captures submenu
         let historyItem = NSMenuItem(title: "Recent Captures", action: nil, keyEquivalent: "")
+        historyItem.image = NSImage(systemSymbolName: "clock.arrow.circlepath", accessibilityDescription: nil)
         let historySubmenu = NSMenu()
         historySubmenu.delegate = self
         historyItem.submenu = historySubmenu
@@ -144,16 +204,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let historyOverlayItem = NSMenuItem(title: "Show History Panel", action: #selector(showHistoryOverlay), keyEquivalent: "")
         historyOverlayItem.target = self
         historyOverlayItem.toolTip = HotkeyManager.displayString(for: .historyOverlay)
+        historyOverlayItem.image = NSImage(systemSymbolName: "square.grid.2x2", accessibilityDescription: nil)
         menu.addItem(historyOverlayItem)
 
         menu.addItem(NSMenuItem.separator())
 
         let prefsItem = NSMenuItem(title: "Preferences...", action: #selector(openPreferences), keyEquivalent: ",")
         prefsItem.target = self
+        prefsItem.image = NSImage(systemSymbolName: "gear", accessibilityDescription: nil)
         menu.addItem(prefsItem)
 
         let updateItem = NSMenuItem(title: "Check for Updates...", action: #selector(checkForUpdates), keyEquivalent: "")
         updateItem.target = self
+        updateItem.image = NSImage(systemSymbolName: "arrow.triangle.2.circlepath", accessibilityDescription: nil)
         menu.addItem(updateItem)
 
         menu.addItem(NSMenuItem.separator())
@@ -188,6 +251,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             },
             historyOverlay: { [weak self] in
                 DispatchQueue.main.async { self?.showHistoryOverlay() }
+            },
+            captureOCR: { [weak self] in
+                DispatchQueue.main.async { self?.captureOCR() }
+            },
+            quickCapture: { [weak self] in
+                DispatchQueue.main.async { self?.quickCapture() }
             }
         )
     }
@@ -195,6 +264,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var pendingRecordMode: Bool = false
     private var pendingFullScreen: Bool = false
     private var pendingFullScreenRecord: Bool = false
+    private var pendingOCRMode: Bool = false
+    private var pendingQuickCaptureMode: Bool = false
 
     // MARK: - Capture
 
@@ -220,6 +291,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         controller.show()
         historyOverlayController = controller
+    }
+
+    @objc private func captureOCR() {
+        pendingOCRMode = true
+        startCapture(fromMenu: true)
+    }
+
+    @objc private func quickCapture() {
+        pendingQuickCaptureMode = true
+        startCapture(fromMenu: true)
     }
 
     @objc private func recordArea() {
@@ -266,6 +347,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 if self.pendingRecordMode {
                     controller.setAutoRecordMode()
                 }
+                if self.pendingOCRMode {
+                    controller.setAutoOCRMode()
+                }
+                if self.pendingQuickCaptureMode {
+                    controller.setAutoQuickSaveMode()
+                }
                 controller.showOverlay()
                 if self.pendingFullScreen || self.pendingFullScreenRecord {
                     controller.applyFullScreenSelection()
@@ -276,6 +363,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 self.overlayControllers.append(controller)
             }
             self.pendingRecordMode = false
+            self.pendingOCRMode = false
+            self.pendingQuickCaptureMode = false
             if !self.pendingFullScreen && !self.pendingFullScreenRecord {
                 self.restoreLastSelectionIfNeeded(controllers: self.overlayControllers)
             }
@@ -296,6 +385,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             controller.applySelection(savedRect)
             break
         }
+    }
+
+    @objc private func handleShowAndOpenPrefs() {
+        if UserDefaults.standard.bool(forKey: "hideMenuBarIcon") {
+            UserDefaults.standard.set(false, forKey: "hideMenuBarIcon")
+            setMenuBarIconVisible(true)
+        }
+        openPreferences()
+    }
+
+    @objc private func spaceDidChange() {
+        guard !overlayControllers.isEmpty else { return }
+        dismissOverlays()
     }
 
     private func dismissOverlays() {
@@ -426,8 +528,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
+        if provider == "s3" && !S3Uploader.shared.isConfigured {
+            toast.showError(message: "S3 not configured — check Preferences")
+            return
+        }
+
         if provider == "gdrive" {
             GoogleDriveUploader.shared.uploadImage(image) { result in
+                switch result {
+                case .success(let link):
+                    let pasteboard = NSPasteboard.general
+                    pasteboard.clearContents()
+                    pasteboard.setString(link, forType: .string)
+                    toast.showSuccess(link: link, deleteURL: "")
+                case .failure(let error):
+                    toast.showError(message: error.localizedDescription)
+                }
+            }
+        } else if provider == "s3" {
+            S3Uploader.shared.onProgress = { fraction in
+                toast.updateProgress(fraction)
+            }
+            S3Uploader.shared.uploadImage(image) { result in
                 switch result {
                 case .success(let link):
                     let pasteboard = NSPasteboard.general

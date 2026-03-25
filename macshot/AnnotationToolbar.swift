@@ -257,7 +257,9 @@ class ToolbarLayout {
 
         // Copy and save are always present
         buttons.append(ToolbarButton(action: .copy, sfSymbol: "doc.on.doc", label: nil, tooltip: "Copy"))
-        buttons.append(ToolbarButton(action: .save, sfSymbol: "square.and.arrow.down.fill", label: nil, tooltip: "Save"))
+        var saveBtn = ToolbarButton(action: .save, sfSymbol: "square.and.arrow.down.fill", label: nil, tooltip: "Save to \(URL(fileURLWithPath: SaveDirectoryAccess.displayPath).lastPathComponent)")
+        saveBtn.hasContextMenu = true
+        buttons.append(saveBtn)
 
         // Upload (tag 1001)
         if actionEnabled(1001) {

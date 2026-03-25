@@ -88,6 +88,16 @@ class OverlayWindowController {
         overlayView?.autoEnterRecordingMode = true
     }
 
+    /// Set flag so overlay triggers OCR immediately after user makes a selection.
+    func setAutoOCRMode() {
+        overlayView?.autoOCRMode = true
+    }
+
+    /// Set flag so overlay quick-saves immediately after user makes a selection.
+    func setAutoQuickSaveMode() {
+        overlayView?.autoQuickSaveMode = true
+    }
+
     /// Enter recording mode — pass-through, control window, app underneath gets focus.
     func enterRecordingMode() {
         overlayView?.isRecording = true

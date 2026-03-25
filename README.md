@@ -24,7 +24,7 @@
 - **Capture & annotate in one flow** — select a region, draw arrows/text/shapes/blur, copy to clipboard. One hotkey, zero friction.
 - **Screen recording with built-in editor** — record any area or full screen as MP4/GIF with optional system audio, then trim and export without leaving the app.
 - **Scroll capture** — select a region and scroll. macshot stitches it into one seamless tall (or wide) image automatically.
-- **Upload anywhere** — one-click upload to Google Drive or imgbb. Link copied to clipboard instantly.
+- **Upload anywhere** — one-click upload to Google Drive, imgbb, or any S3-compatible service (Cloudflare R2, AWS S3, MinIO, etc.). Link copied to clipboard instantly.
 - **Lightweight & native** — ~8 MB memory at idle. Lives in your menu bar. Built with Swift and AppKit, not a web browser in disguise.
 
 ---
@@ -66,7 +66,8 @@ brew install sw33tlie/macshot/macshot
 - **Scroll capture** — auto-detects vertical or horizontal scrolling, stitches with Apple Vision
 - **Delay capture** — 3/5/10 second timer for tooltips, menus, hover states
 - **Multi-monitor** — captures all screens simultaneously
-- **Quick save** — right-click + drag to save instantly without annotation
+- **Quick save** — right-click + drag or `Cmd+Shift+S` to save instantly without annotation
+- **Quick OCR** — `Cmd+Shift+T` to select and extract text instantly
 
 ### Annotation Tools
 - **Arrow** — 5 styles: single, thick/banner, double, open, tail
@@ -78,7 +79,8 @@ brew install sw33tlie/macshot/macshot
 - **Pixelate & Blur** — irreversible redaction; auto-redact PII (emails, phones, credit cards, SSNs, API keys) with one click
 - **Measure** — pixel ruler with px/pt toggle; hold `1` or `2` for auto-measure
 - **Loupe** — 2x magnifier
-- **Color sampler** — eyedropper to pick any color
+- **Color sampler** — eyedropper to pick any color; right-click to copy hex; auto-saves to custom palette slots
+- **Space to reposition** — hold Space while drawing to move the shape without changing its size
 - **Rotation** — rotate shapes via handle, Shift for 90° snaps
 - **Hover-to-move** — drag, resize, rotate, or delete any annotation without switching tools
 
@@ -93,6 +95,7 @@ brew install sw33tlie/macshot/macshot
 - **Formats** — PNG, JPEG, HEIC, WebP with quality slider
 - **Google Drive** — sign in once, uploads to a private "macshot" folder
 - **imgbb** — anonymous image hosting with shareable links
+- **S3-compatible** — upload to Cloudflare R2, AWS S3, MinIO, DigitalOcean Spaces, Backblaze B2, etc.
 - **Retina downscale** — optional 1x export for smaller files
 - **sRGB color profile** — optional embedding for cross-display consistency
 
@@ -128,6 +131,8 @@ brew install sw33tlie/macshot/macshot
 |---|---|
 | `Cmd+Shift+X` | Capture Area |
 | `Cmd+Shift+F` | Capture Full Screen |
+| `Cmd+Shift+S` | Quick Capture (instant save) |
+| `Cmd+Shift+T` | Capture OCR (instant text extraction) |
 | `Cmd+Shift+R` | Record Area |
 | `Cmd+Shift+H` | Show History Panel |
 
@@ -145,6 +150,7 @@ brew install sw33tlie/macshot/macshot
 | `Tab` | Toggle window snap mode |
 | `F` | Capture full screen (snap mode) |
 | `Shift` (while drawing) | Constrain to straight lines / perfect shapes |
+| `Space` (while drawing) | Reposition shape without changing size |
 | `Right-click` + drag | Quick save to file |
 
 **Tool shortcuts** (active after selecting a region)

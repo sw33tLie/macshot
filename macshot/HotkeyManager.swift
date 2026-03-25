@@ -12,6 +12,8 @@ class HotkeyManager {
         case recordArea = 3
         case recordScreen = 4
         case historyOverlay = 5
+        case captureOCR = 6
+        case quickCapture = 7
 
         var keyCodeKey: String {
             switch self {
@@ -20,6 +22,8 @@ class HotkeyManager {
             case .recordArea: return "hotkeyRecordKeyCode"
             case .recordScreen: return "hotkeyRecordFullScreenKeyCode"
             case .historyOverlay: return "hotkeyHistoryKeyCode"
+            case .captureOCR: return "hotkeyOCRKeyCode"
+            case .quickCapture: return "hotkeyQuickCaptureKeyCode"
             }
         }
 
@@ -30,7 +34,13 @@ class HotkeyManager {
             case .recordArea: return "hotkeyRecordModifiers"
             case .recordScreen: return "hotkeyRecordFullScreenModifiers"
             case .historyOverlay: return "hotkeyHistoryModifiers"
+            case .captureOCR: return "hotkeyOCRModifiers"
+            case .quickCapture: return "hotkeyQuickCaptureModifiers"
             }
+        }
+
+        var disabledKey: String {
+            return "hotkeyDisabled_\(rawValue)"
         }
 
         var label: String {
@@ -40,6 +50,8 @@ class HotkeyManager {
             case .recordArea: return "Record Area"
             case .recordScreen: return "Record Screen"
             case .historyOverlay: return "History"
+            case .captureOCR: return "Capture OCR"
+            case .quickCapture: return "Quick Capture"
             }
         }
 
@@ -50,6 +62,8 @@ class HotkeyManager {
             case .recordArea: return UInt32(kVK_ANSI_R)
             case .recordScreen: return 0
             case .historyOverlay: return UInt32(kVK_ANSI_H)
+            case .captureOCR: return UInt32(kVK_ANSI_T)
+            case .quickCapture: return UInt32(kVK_ANSI_S)
             }
         }
 
@@ -94,13 +108,15 @@ class HotkeyManager {
     }
 
     /// Register all hotkeys with their callbacks.
-    func registerAll(captureArea: @escaping () -> Void, captureFullScreen: @escaping () -> Void, recordArea: @escaping () -> Void, recordScreen: @escaping () -> Void, historyOverlay: @escaping () -> Void) {
+    func registerAll(captureArea: @escaping () -> Void, captureFullScreen: @escaping () -> Void, recordArea: @escaping () -> Void, recordScreen: @escaping () -> Void, historyOverlay: @escaping () -> Void, captureOCR: @escaping () -> Void, quickCapture: @escaping () -> Void) {
         unregisterAll()
         register(slot: .captureArea, callback: captureArea)
         register(slot: .captureFullScreen, callback: captureFullScreen)
         register(slot: .recordArea, callback: recordArea)
         register(slot: .recordScreen, callback: recordScreen)
         register(slot: .historyOverlay, callback: historyOverlay)
+        register(slot: .captureOCR, callback: captureOCR)
+        register(slot: .quickCapture, callback: quickCapture)
     }
 
     /// Re-register all hotkeys (e.g., after preferences change).
@@ -156,6 +172,10 @@ class HotkeyManager {
 
     /// Read the stored (or default) keyCode and modifiers for a slot.
     static func readHotkey(for slot: HotkeySlot) -> (keyCode: UInt32, modifiers: UInt32) {
+        // If explicitly disabled, return (0, 0)
+        if UserDefaults.standard.bool(forKey: slot.disabledKey) {
+            return (0, 0)
+        }
         let storedKey = UInt32(UserDefaults.standard.integer(forKey: slot.keyCodeKey))
         let storedMods = UInt32(UserDefaults.standard.integer(forKey: slot.modifiersKey))
 
@@ -169,11 +189,18 @@ class HotkeyManager {
     static func saveHotkey(for slot: HotkeySlot, keyCode: UInt32, modifiers: UInt32) {
         UserDefaults.standard.set(Int(keyCode), forKey: slot.keyCodeKey)
         UserDefaults.standard.set(Int(modifiers), forKey: slot.modifiersKey)
+        UserDefaults.standard.removeObject(forKey: slot.disabledKey)
+    }
+
+    /// Explicitly disable a hotkey slot.
+    static func disableHotkey(for slot: HotkeySlot) {
+        UserDefaults.standard.set(true, forKey: slot.disabledKey)
     }
 
     /// Display string for a slot's current hotkey.
     static func displayString(for slot: HotkeySlot) -> String {
         let (keyCode, modifiers) = readHotkey(for: slot)
+        if keyCode == 0 && modifiers == 0 { return "None" }
         return modifierString(from: modifiers) + keyString(from: keyCode)
     }
 

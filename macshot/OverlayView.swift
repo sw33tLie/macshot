@@ -100,6 +100,8 @@ class OverlayView: NSView {
     private var dragOffset: NSPoint = .zero
     private var moveMode: Bool = false  // move tool active
     private var lastDragPoint: NSPoint?  // for shift constraint on flagsChanged
+    private var spaceRepositioning: Bool = false  // Space held during drag to reposition
+    private var spaceRepositionLast: NSPoint = .zero  // last mouse position when space reposition started
     private var isRightClickSelecting: Bool = false  // right-click quick save mode
 
     // Annotations
@@ -474,6 +476,8 @@ class OverlayView: NSView {
     var isCapturingVideo: Bool = false   // true when SCStream is actually capturing
     var recordingElapsedSeconds: Int = 0
     var autoEnterRecordingMode: Bool = false  // set by "Record Screen" menu — enters recording mode after selection
+    var autoOCRMode: Bool = false  // set by "Capture OCR" menu — triggers OCR immediately after selection
+    var autoQuickSaveMode: Bool = false  // set by "Quick Capture" menu — quick-saves immediately after selection
     // Recording overlay features
     private var mouseHighlightPoints: [(point: NSPoint, time: Date)] = []
     private var globalMouseMonitor: Any?
@@ -603,6 +607,7 @@ class OverlayView: NSView {
     private var customColors: [NSColor?] = Array(repeating: nil, count: 7)
     private var customColorSlotsLoaded: Bool = false
     private var customColorSlotRects: [NSRect] = []
+    private var selectedColorSlot: Int = 0  // which custom slot is selected for saving colors
     private var addToMyColorsRect: NSRect = .zero
     private var hexDisplayRect: NSRect = .zero
     private var customHSBCachedImage: NSImage?
@@ -2290,28 +2295,34 @@ class OverlayView: NSView {
             let slotRect = NSRect(x: slotX, y: slotY, width: customSlotSize, height: customSlotSize)
             customColorSlotRects.append(slotRect)
 
+            let isSelected = selectedColorSlot == i
+
             if let savedColor = customColors[i] {
                 // Filled slot
                 savedColor.setFill()
                 NSBezierPath(ovalIn: slotRect).fill()
 
-                // Selected highlight
-                let selColor = currentColor.withAlphaComponent(1.0)
-                let cmpColor = savedColor.withAlphaComponent(1.0)
-                if colorsMatchRGB(selColor, cmpColor) {
+                if isSelected {
                     NSColor.white.setStroke()
-                    let border = NSBezierPath(ovalIn: slotRect.insetBy(dx: -1.5, dy: -1.5))
-                    border.lineWidth = 2
+                    let border = NSBezierPath(ovalIn: slotRect.insetBy(dx: -2, dy: -2))
+                    border.lineWidth = 2.5
                     border.stroke()
                 }
             } else {
-                // Empty slot: dashed circle
-                NSColor.white.withAlphaComponent(0.2).setStroke()
-                let dashPath = NSBezierPath(ovalIn: slotRect.insetBy(dx: 1, dy: 1))
-                dashPath.lineWidth = 1
-                let dashPattern: [CGFloat] = [3, 3]
-                dashPath.setLineDash(dashPattern, count: 2, phase: 0)
-                dashPath.stroke()
+                // Empty slot
+                if isSelected {
+                    NSColor.white.withAlphaComponent(0.5).setStroke()
+                    let border = NSBezierPath(ovalIn: slotRect.insetBy(dx: 1, dy: 1))
+                    border.lineWidth = 2
+                    border.stroke()
+                } else {
+                    NSColor.white.withAlphaComponent(0.2).setStroke()
+                    let dashPath = NSBezierPath(ovalIn: slotRect.insetBy(dx: 1, dy: 1))
+                    dashPath.lineWidth = 1
+                    let dashPattern: [CGFloat] = [3, 3]
+                    dashPath.setLineDash(dashPattern, count: 2, phase: 0)
+                    dashPath.stroke()
+                }
             }
         }
         cursorY -= customSlotSize
@@ -4702,8 +4713,12 @@ class OverlayView: NSView {
             .foregroundColor: NSColor.white,
         ]
         let provider = UserDefaults.standard.string(forKey: "uploadProvider") ?? "imgbb"
-        let isGDrive = provider == "gdrive"
-        let titleText = isGDrive ? "Upload to Google Drive?" : "Upload to imgbb.com?"
+        let titleText: String
+        switch provider {
+        case "gdrive": titleText = "Upload to Google Drive?"
+        case "s3": titleText = "Upload to S3?"
+        default: titleText = "Upload to imgbb.com?"
+        }
         let title = titleText as NSString
         let titleSize = title.size(withAttributes: titleAttrs)
         title.draw(at: NSPoint(x: dialogRect.midX - titleSize.width / 2, y: dialogRect.maxY - 30), withAttributes: titleAttrs)
@@ -4713,7 +4728,12 @@ class OverlayView: NSView {
             .font: NSFont.systemFont(ofSize: 11, weight: .regular),
             .foregroundColor: NSColor.white.withAlphaComponent(0.6),
         ]
-        let subText = isGDrive ? "Your screenshot will be saved to your Google Drive" : "Your screenshot will be sent to imgbb.com"
+        let subText: String
+        switch provider {
+        case "gdrive": subText = "Your screenshot will be saved to your Google Drive"
+        case "s3": subText = "Your screenshot will be uploaded to your S3 bucket"
+        default: subText = "Your screenshot will be sent to imgbb.com"
+        }
         let sub = subText as NSString
         let subSize = sub.size(withAttributes: subAttrs)
         sub.draw(at: NSPoint(x: dialogRect.midX - subSize.width / 2, y: dialogRect.maxY - 52), withAttributes: subAttrs)
@@ -4895,7 +4915,7 @@ class OverlayView: NSView {
         let copyAttrs: [NSAttributedString.Key: Any] = [.font: copyFont, .foregroundColor: NSColor.white.withAlphaComponent(0.5)]
 
         let hexSize = (hexStr as NSString).size(withAttributes: hexAttrs)
-        let copyText = "C to copy"
+        let copyText = "Right-click to copy"
         let copySize = (copyText as NSString).size(withAttributes: copyAttrs)
 
         let swatchSize: CGFloat = 16
@@ -5511,7 +5531,7 @@ class OverlayView: NSView {
 
     /// Convert a point in view space to canvas (annotation) space by reversing the zoom transform.
     private func viewToCanvas(_ p: NSPoint) -> NSPoint {
-        if zoomLevel == 1.0 { return p }
+        if zoomLevel == 1.0 && zoomAnchorCanvas == .zero && zoomAnchorView == .zero { return p }
         guard zoomAnchorCanvas != .zero || zoomAnchorView != .zero else { return p }
         return NSPoint(
             x: zoomAnchorCanvas.x + (p.x - zoomAnchorView.x) / zoomLevel,
@@ -5520,7 +5540,7 @@ class OverlayView: NSView {
     }
 
     private func applyZoomTransform(to context: NSGraphicsContext) {
-        guard zoomLevel != 1.0 else { return }
+        if zoomLevel == 1.0 && zoomAnchorCanvas == .zero && zoomAnchorView == .zero { return }
         guard zoomAnchorCanvas != .zero || zoomAnchorView != .zero else { return }
         let cgCtx = context.cgContext
         // screen = anchorView + (canvas - anchorCanvas) * zoom
@@ -5610,7 +5630,8 @@ class OverlayView: NSView {
     /// zoom < 1×: allow free panning but keep at least `margin` screen-space pixels of the
     ///            image visible on each side, so the user never scrolls completely off canvas.
     private func clampZoomAnchor() {
-        guard zoomLevel != 1.0 else { return }
+        // In overlay mode at 1x, no clamping needed (image fills the view exactly)
+        if zoomLevel == 1.0 && !isDetached { return }
         let r = selectionRect
         let z = zoomLevel
         let ac = zoomAnchorCanvas
@@ -5625,6 +5646,25 @@ class OverlayView: NSView {
             let maxAVy = r.minY - (r.minY - ac.y) * z
             let minAVy = r.maxY - (r.maxY - ac.y) * z
             av.y = max(minAVy, min(maxAVy, av.y))
+        } else if z == 1.0 && isDetached {
+            // Editor at 1x with oversized image: keep image within view bounds
+            // Allow scrolling but don't let the image go completely off-screen
+            let viewW = bounds.width
+            let viewH = bounds.height
+            let imgW = r.width * z
+            let imgH = r.height * z
+
+            if imgH > viewH {
+                // Tall image: clamp vertically so at least some content is visible
+                let maxAVy = r.minY - (r.minY - ac.y) * z + viewH * 0.1
+                let minAVy = r.maxY - (r.maxY - ac.y) * z - viewH * 0.1
+                av.y = max(minAVy, min(maxAVy, av.y))
+            }
+            if imgW > viewW {
+                let maxAVx = r.minX - (r.minX - ac.x) * z + viewW * 0.1
+                let minAVx = r.maxX - (r.maxX - ac.x) * z - viewW * 0.1
+                av.x = max(minAVx, min(maxAVx, av.x))
+            }
         }
         // zoom < 1×: no clamping — the image is smaller than the canvas area, let the user
         // pan freely to access the empty drawing space around it.
@@ -6650,10 +6690,27 @@ class OverlayView: NSView {
             // If click is on the color button itself, let the toggle in handleToolbarAction handle it
             if let action = ToolbarLayout.hitTest(point: point, buttons: bottomButtons), case .color = action {
                 // fall through — don't dismiss here, the button's .toggle() will close it
-            } else {
+            } else if let bottomAction = ToolbarLayout.hitTest(point: point, buttons: bottomButtons),
+                      case .tool(let t) = bottomAction, t == .colorSampler {
+                // Clicked the color sampler tool — keep picker open, let the button handle tool switch
+            } else if ToolbarLayout.hitTest(point: point, buttons: bottomButtons) != nil
+                      || ToolbarLayout.hitTest(point: point, buttons: rightButtons) != nil {
+                // Clicked a different toolbar button — close picker and let the button handle it
                 showColorPicker = false
                 colorPickerTarget = .drawColor
                 needsDisplay = true
+            } else {
+                // Clicked on the screenshot — sample color, keep picker open
+                if let screenshot = screenshotImage,
+                   let result = sampleColor(from: screenshot, at: viewToCanvas(point)) {
+                    applyPickedColor(result.color)
+                    if selectedColorSlot >= 0 && selectedColorSlot < customColors.count - 1 {
+                        selectedColorSlot += 1
+                    }
+                    showOverlayError("Set color \(result.hex)")
+                }
+                needsDisplay = true
+                return
             }
         }
 
@@ -7312,6 +7369,13 @@ class OverlayView: NSView {
                 return
             }
 
+            // Color sampler works anywhere on the screenshot, not just inside selection
+            if currentTool == .colorSampler {
+                let canvasPoint = viewToCanvas(point)
+                startAnnotation(at: canvasPoint)
+                return
+            }
+
             // Start annotation (convert to canvas space for zoom).
             // Require the click to be inside the selection rectangle.
             if currentTool != .crop && selectionRect.contains(point) {
@@ -7438,6 +7502,14 @@ class OverlayView: NSView {
 
         switch state {
         case .selecting:
+            if spaceRepositioning {
+                // Space held: move the origin without changing size
+                let dx = point.x - spaceRepositionLast.x
+                let dy = point.y - spaceRepositionLast.y
+                selectionStart.x += dx
+                selectionStart.y += dy
+                spaceRepositionLast = point
+            }
             let rawW = abs(point.x - selectionStart.x)
             let rawH = abs(point.y - selectionStart.y)
             let shiftHeld = event.modifierFlags.contains(.shift)
@@ -7595,8 +7667,22 @@ class OverlayView: NSView {
                 resizeSelection(to: point)
                 needsDisplay = true
             } else if currentAnnotation != nil {
+                if spaceRepositioning {
+                    // Space held: reposition the whole shape
+                    let dx = canvasPoint.x - spaceRepositionLast.x
+                    let dy = canvasPoint.y - spaceRepositionLast.y
+                    currentAnnotation!.startPoint.x += dx
+                    currentAnnotation!.startPoint.y += dy
+                    currentAnnotation!.endPoint.x += dx
+                    currentAnnotation!.endPoint.y += dy
+                    if let points = currentAnnotation!.points {
+                        currentAnnotation!.points = points.map { NSPoint(x: $0.x + dx, y: $0.y + dy) }
+                    }
+                    spaceRepositionLast = canvasPoint
+                } else {
+                    updateAnnotation(at: canvasPoint, shiftHeld: event.modifierFlags.contains(.shift))
+                }
                 lastDragPoint = canvasPoint
-                updateAnnotation(at: canvasPoint, shiftHeld: event.modifierFlags.contains(.shift))
                 needsDisplay = true
             }
 
@@ -7606,6 +7692,8 @@ class OverlayView: NSView {
     }
 
     override func mouseUp(with event: NSEvent) {
+        spaceRepositioning = false
+
         // Crop commit
         if isCropDragging {
             isCropDragging = false
@@ -7679,19 +7767,19 @@ class OverlayView: NSView {
             if selectionRect.width > 5 || selectionRect.height > 5 {
                 // Real drag — use drawn rect as-is
                 state = .selected
-                showToolbars = true
+                if !autoOCRMode && !autoQuickSaveMode { showToolbars = true }
                 overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
             } else if windowSnapEnabled, let snapRect = hoveredWindowRect, !snapRect.isEmpty {
                 // Click (no drag) with snap on — snap to hovered window
                 selectionRect = snapRect
                 state = .selected
-                showToolbars = true
+                if !autoOCRMode && !autoQuickSaveMode { showToolbars = true }
                 overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
             } else {
                 // Click (no drag), snap off — expand to full screen
                 selectionRect = bounds
                 state = .selected
-                showToolbars = true
+                if !autoOCRMode && !autoQuickSaveMode { showToolbars = true }
                 overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
             }
             hoveredWindowRect = nil
@@ -7700,6 +7788,16 @@ class OverlayView: NSView {
             if autoEnterRecordingMode {
                 autoEnterRecordingMode = false
                 overlayDelegate?.overlayViewDidRequestEnterRecordingMode()
+            }
+            // Auto-trigger OCR if triggered from "Capture OCR"
+            if autoOCRMode {
+                autoOCRMode = false
+                overlayDelegate?.overlayViewDidRequestOCR()
+            }
+            // Auto-trigger quick save if triggered from "Quick Capture"
+            if autoQuickSaveMode {
+                autoQuickSaveMode = false
+                overlayDelegate?.overlayViewDidRequestQuickSave()
             }
             needsDisplay = true
 
@@ -7741,18 +7839,11 @@ class OverlayView: NSView {
     override func rightMouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
 
-        // Right-click on custom color slot: replace with current color, or clear if it's the same color
+        // Right-click on custom color slot: clear it
         if showColorPicker {
             for (i, slotRect) in customColorSlotRects.enumerated() {
                 if slotRect.contains(point) {
-                    if let existing = customColors[i], colorsMatchRGB(existing, currentColor.withAlphaComponent(1.0)) {
-                        // Same color — remove it
-                        removeCustomColor(at: i)
-                    } else {
-                        // Different color or empty — replace/fill with current color
-                        customColors[i] = currentColor.withAlphaComponent(1.0)
-                        saveCustomColors()
-                    }
+                    removeCustomColor(at: i)
                     needsDisplay = true
                     return
                 }
@@ -7804,6 +7895,14 @@ class OverlayView: NSView {
                     needsDisplay = true
                     return
                 }
+                if case .save = action {
+                    let menu = NSMenu()
+                    let saveAsItem = NSMenuItem(title: "Save As...", action: #selector(saveAsMenuAction), keyEquivalent: "")
+                    saveAsItem.target = self
+                    menu.addItem(saveAsItem)
+                    NSMenu.popUpContextMenu(menu, with: event, for: self)
+                    return
+                }
                 if case .upload = action {
                     showUploadConfirmPicker.toggle()
                     showColorPicker = false
@@ -7829,6 +7928,18 @@ class OverlayView: NSView {
                 // Record button right-click removed — toggles are in recording toolbar
                 return
             }
+        }
+
+        if state == .selected && currentTool == .colorSampler {
+            // Right-click with color sampler: copy hex to clipboard
+            if let screenshot = screenshotImage,
+               let result = sampleColor(from: screenshot, at: viewToCanvas(point)) {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(result.hex, forType: .string)
+                showOverlayError("Copied \(result.hex)")
+                needsDisplay = true
+            }
+            return
         }
 
         if state == .selected && selectionRect.contains(point) {
@@ -7906,7 +8017,9 @@ class OverlayView: NSView {
 
         // Phase-based (trackpad) scroll without Cmd → pan only, never zoom
         if isTrackpadPhased && !isCommandScroll {
-            guard zoomLevel != 1.0 else { return }  // pan only makes sense when zoomed
+            // Allow panning when zoomed OR when the image exceeds the view (tall/wide images in editor)
+            let imageExceedsView = isDetached && (selectionRect.height > bounds.height || selectionRect.width > bounds.width)
+            guard zoomLevel != 1.0 || imageExceedsView else { return }
             let dx = event.scrollingDeltaX
             let dy = event.scrollingDeltaY
             zoomAnchorView.x += dx
@@ -8046,7 +8159,7 @@ class OverlayView: NSView {
         case .copy:
             overlayDelegate?.overlayViewDidConfirm()
         case .save:
-            overlayDelegate?.overlayViewDidRequestSave()
+            overlayDelegate?.overlayViewDidRequestQuickSave()
         case .upload:
             let confirmEnabled = UserDefaults.standard.bool(forKey: "uploadConfirmEnabled")
             if confirmEnabled {
@@ -8183,27 +8296,12 @@ class OverlayView: NSView {
             }
         }
 
-        // Custom color slots
+        // Custom color slots — left click selects the slot
         for (i, slotRect) in customColorSlotRects.enumerated() {
             if slotRect.contains(point) {
-                if let savedColor = customColors[i] {
-                    // Filled slot: select that color and update HSB tracker
-                    if let hsb = savedColor.usingColorSpace(.deviceRGB) {
-                        var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-                        hsb.getHue(&h, saturation: &s, brightness: &b, alpha: &a)
-                        customPickerHue = h
-                        customPickerSaturation = s
-                        customBrightness = b
-                        customHSBCachedImage = nil
-                    }
-                    return savedColor
-                } else {
-                    // Empty slot: save current color here
-                    customColors[i] = currentColor.withAlphaComponent(1.0)
-                    saveCustomColors()
-                    needsDisplay = true
-                    return nil
-                }
+                selectedColorSlot = i
+                needsDisplay = true
+                return nil
             }
         }
 
@@ -8245,6 +8343,12 @@ class OverlayView: NSView {
     }
 
     private func applyPickedColor(_ color: NSColor) {
+        // Save to selected custom slot
+        if selectedColorSlot >= 0 && selectedColorSlot < customColors.count {
+            customColors[selectedColorSlot] = color.withAlphaComponent(1.0)
+            saveCustomColors()
+        }
+
         switch colorPickerTarget {
         case .drawColor:
             currentColor = color
@@ -8305,6 +8409,14 @@ class OverlayView: NSView {
                 currentColor = result.color
                 currentColorOpacity = 1.0
                 OverlayView.lastUsedOpacity = 1.0
+                // Also save to selected custom slot
+                if selectedColorSlot >= 0 && selectedColorSlot < customColors.count {
+                    customColors[selectedColorSlot] = result.color.withAlphaComponent(1.0)
+                    saveCustomColors()
+                    // Advance to next slot for rapid collection
+                    let nextSlot = selectedColorSlot + 1
+                    if nextSlot < customColors.count { selectedColorSlot = nextSlot }
+                }
                 showOverlayError("Set color \(result.hex)")
                 needsDisplay = true
             }
@@ -8995,6 +9107,12 @@ class OverlayView: NSView {
         needsDisplay = true
     }
 
+    // MARK: - Context Menu Actions
+
+    @objc private func saveAsMenuAction() {
+        overlayDelegate?.overlayViewDidRequestSave()
+    }
+
     // MARK: - Keyboard
 
     override func flagsChanged(with event: NSEvent) {
@@ -9038,6 +9156,27 @@ class OverlayView: NSView {
     }
 
     override func keyDown(with event: NSEvent) {
+        // Space: reposition shape/selection mid-drag (design tool convention)
+        if event.keyCode == 49 {
+            // Swallow all repeats while repositioning to prevent system beep
+            if spaceRepositioning { return }
+
+            if !event.isARepeat {
+                let isDraggingAnnotation = currentAnnotation != nil && currentAnnotation!.tool != .pencil && currentAnnotation!.tool != .marker
+                let isDraggingNewSelection = state == .selecting
+
+                if isDraggingAnnotation || isDraggingNewSelection {
+                    spaceRepositioning = true
+                    if isDraggingAnnotation {
+                        spaceRepositionLast = lastDragPoint ?? .zero
+                    } else if let windowPoint = window?.mouseLocationOutsideOfEventStream {
+                        spaceRepositionLast = convert(windowPoint, from: nil)
+                    }
+                    return
+                }
+            }
+        }
+
         switch event.keyCode {
         case 53: // Escape
             if isScrollCapturing {
@@ -9215,6 +9354,10 @@ class OverlayView: NSView {
     }
 
     override func keyUp(with event: NSEvent) {
+        if event.keyCode == 49 && spaceRepositioning {
+            spaceRepositioning = false
+            return
+        }
         // Commit auto-measure preview on key release
         if let preview = autoMeasurePreview {
             if let char = event.charactersIgnoringModifiers, char == "1" || char == "2" {

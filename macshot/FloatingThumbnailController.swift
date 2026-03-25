@@ -86,6 +86,8 @@ class FloatingThumbnailController: NSObject, NSDraggingSource {
         view.onPin    = { [weak self] in self?.onPin?();    self?.dismiss() }
         view.onEdit   = { [weak self] in self?.onEdit?();   self?.dismiss() }
         view.onUpload = { [weak self] in self?.onUpload?(); self?.dismiss() }
+        view.onHoverEnter = { [weak self] in self?.pauseAutoDismiss() }
+        view.onHoverExit  = { [weak self] in self?.scheduleAutoDismiss() }
 
         panel.contentView = view
         self.window = panel
@@ -103,6 +105,11 @@ class FloatingThumbnailController: NSObject, NSDraggingSource {
         })
 
         scheduleAutoDismiss()
+    }
+
+    private func pauseAutoDismiss() {
+        dismissTask?.cancel()
+        dismissTask = nil
     }
 
     private func scheduleAutoDismiss() {
@@ -193,6 +200,8 @@ private class ThumbnailView: NSView {
     var onPin:    (() -> Void)?
     var onEdit:   (() -> Void)?
     var onUpload: (() -> Void)?
+    var onHoverEnter: (() -> Void)?
+    var onHoverExit:  (() -> Void)?
 
     private let image: NSImage
     private let thumbSize: NSSize
@@ -242,14 +251,14 @@ private class ThumbnailView: NSView {
     override func mouseEntered(with event: NSEvent) {
         isHovering = true
         needsDisplay = true
-        // Pause auto-dismiss while hovering — cancel timer; it resumes on exit
-        NSObject.cancelPreviousPerformRequests(withTarget: self)
+        onHoverEnter?()
     }
 
     override func mouseExited(with event: NSEvent) {
         isHovering = false
         hoveredRect = .zero
         needsDisplay = true
+        onHoverExit?()
     }
 
     override func mouseMoved(with event: NSEvent) {

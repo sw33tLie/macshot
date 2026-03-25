@@ -4,27 +4,31 @@ class UploadToastController {
 
     private var window: NSPanel?
     private var statusLabel: NSTextField?
-    private var linkButton: NSButton?
-    private var deleteButton: NSButton?
-    private var closeButton: NSButton?
+    private var linkLabel: NSTextField?
+    private var openButton: NSButton?
+    private var iconView: NSImageView?
     private var spinner: NSProgressIndicator?
     private var dismissTask: DispatchWorkItem?
-    private var currentDeleteURL: String?
+    private var currentLink: String?
     var onDismiss: (() -> Void)?
+
+    private let toastWidth: CGFloat = 380
+    private let cornerRadius: CGFloat = 14
 
     func show(status: String) {
         let screen = NSScreen.main ?? NSScreen.screens[0]
-        let screenFrame = screen.visibleFrame
-        let toastWidth: CGFloat = 320
-        let toastHeight: CGFloat = 60
-        let padding: CGFloat = 16
+        let screenFrame = screen.frame
+        let visibleFrame = screen.visibleFrame
+        let toastHeight: CGFloat = 56
+        let topPadding: CGFloat = 12
 
-        let startX = screenFrame.maxX + 10
-        let finalX = screenFrame.maxX - toastWidth - padding
-        let y = screenFrame.minY + padding
+        // Top-center, just below the menu bar
+        let x = screenFrame.midX - toastWidth / 2
+        let startY = visibleFrame.maxY + 10
+        let finalY = visibleFrame.maxY - toastHeight - topPadding
 
         let panel = NSPanel(
-            contentRect: NSRect(x: startX, y: y, width: toastWidth, height: toastHeight),
+            contentRect: NSRect(x: x, y: startY, width: toastWidth, height: toastHeight),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
@@ -36,190 +40,188 @@ class UploadToastController {
         panel.isReleasedWhenClosed = false
         panel.collectionBehavior = [.canJoinAllSpaces, .stationary]
 
-        let contentView = ToastContentView(frame: NSRect(origin: .zero, size: NSSize(width: toastWidth, height: toastHeight)))
+        let contentView = ToastBackgroundView(frame: NSRect(origin: .zero, size: NSSize(width: toastWidth, height: toastHeight)))
+        contentView.cornerRadius = cornerRadius
+        contentView.onClicked = { [weak self] in self?.animateOut() }
         panel.contentView = contentView
 
-        // Spinner
-        let spinnerView = NSProgressIndicator(frame: NSRect(x: 16, y: (toastHeight - 20) / 2, width: 20, height: 20))
+        // App icon
+        let icon = NSImageView(frame: NSRect(x: 14, y: (toastHeight - 28) / 2, width: 28, height: 28))
+        icon.image = NSApp.applicationIconImage
+        icon.imageScaling = .scaleProportionallyUpOrDown
+        contentView.addSubview(icon)
+        self.iconView = icon
+
+        // Spinner (overlays the icon area during upload)
+        let spinnerView = NSProgressIndicator(frame: NSRect(x: 14, y: (toastHeight - 20) / 2, width: 20, height: 20))
         spinnerView.style = .spinning
         spinnerView.controlSize = .small
         spinnerView.startAnimation(nil)
         contentView.addSubview(spinnerView)
         self.spinner = spinnerView
+        icon.isHidden = true
 
         // Status label
         let label = NSTextField(labelWithString: status)
-        label.frame = NSRect(x: 44, y: (toastHeight - 20) / 2, width: toastWidth - 60, height: 20)
+        label.frame = NSRect(x: 50, y: (toastHeight - 18) / 2, width: toastWidth - 66, height: 18)
         label.font = NSFont.systemFont(ofSize: 13, weight: .medium)
-        label.textColor = .white
-        label.lineBreakMode = .byTruncatingTail
+        label.textColor = .labelColor
+        label.lineBreakMode = .byWordWrapping
+        label.maximumNumberOfLines = 0
         contentView.addSubview(label)
         self.statusLabel = label
 
         self.window = panel
         panel.orderFrontRegardless()
 
-        // Animate in
+        // Animate in from top
         NSAnimationContext.runAnimationGroup { ctx in
             ctx.duration = 0.3
             ctx.timingFunction = CAMediaTimingFunction(name: .easeOut)
             panel.animator().setFrame(
-                NSRect(x: finalX, y: y, width: toastWidth, height: toastHeight),
+                NSRect(x: x, y: finalY, width: toastWidth, height: toastHeight),
                 display: true
             )
         }
     }
 
+    func updateProgress(_ fraction: Double) {
+        statusLabel?.stringValue = "Uploading... \(Int(fraction * 100))%"
+    }
+
     func showSuccess(link: String, deleteURL: String) {
         guard let window = window, let contentView = window.contentView else { return }
-        self.currentDeleteURL = deleteURL
+        self.currentLink = link
 
-        // Remove spinner
+        // Remove spinner, show icon
         spinner?.stopAnimation(nil)
         spinner?.removeFromSuperview()
         spinner = nil
+        iconView?.isHidden = false
 
-        // Resize taller to fit buttons — taller for long links
-        let toastWidth: CGFloat = 360
-        let linkHeight: CGFloat = link.count > 40 ? 36 : 18
-        let toastHeight: CGFloat = 72 + linkHeight
-        let frame = window.frame
-        let newFrame = NSRect(x: frame.minX, y: frame.minY, width: toastWidth, height: toastHeight)
-
-        window.setFrame(newFrame, display: false)
-        contentView.frame = NSRect(origin: .zero, size: NSSize(width: toastWidth, height: toastHeight))
-        (contentView as? ToastContentView)?.needsDisplay = true
-
-        // Update status
+        // Remove old status label
         statusLabel?.removeFromSuperview()
+        statusLabel = nil
 
-        // "Link copied!" label
-        let copiedLabel = NSTextField(labelWithString: "Link copied to clipboard!")
-        copiedLabel.frame = NSRect(x: 16, y: toastHeight - 30, width: toastWidth - 80, height: 18)
-        copiedLabel.font = NSFont.systemFont(ofSize: 13, weight: .semibold)
-        copiedLabel.textColor = .white
-        contentView.addSubview(copiedLabel)
-        statusLabel = copiedLabel
+        // Compute height based on link text length
+        let linkFont = NSFont.systemFont(ofSize: 11)
+        let maxLinkW = toastWidth - 140
+        let linkTextSize = (link as NSString).boundingRect(
+            with: NSSize(width: maxLinkW, height: 200),
+            options: [.usesLineFragmentOrigin],
+            attributes: [.font: linkFont]
+        ).size
+        let linkH = max(16, ceil(linkTextSize.height))
+        let toastHeight = max(64, linkH + 42)
 
-        // Close button (X)
-        let close = NSButton(frame: NSRect(x: toastWidth - 30, y: toastHeight - 30, width: 20, height: 20))
-        close.bezelStyle = .inline
-        close.isBordered = false
-        close.image = NSImage(systemSymbolName: "xmark", accessibilityDescription: "Close")
-        close.contentTintColor = .white.withAlphaComponent(0.7)
-        close.target = self
-        close.action = #selector(dismissClicked)
-        contentView.addSubview(close)
-        self.closeButton = close
+        // Resize and reposition (stay top-center)
+        let screen = NSScreen.main ?? NSScreen.screens[0]
+        let visibleFrame = screen.visibleFrame
+        let topPadding: CGFloat = 12
+        let x = screen.frame.midX - toastWidth / 2
+        let y = visibleFrame.maxY - toastHeight - topPadding
 
-        // Link button (clickable, wraps for long URLs)
-        let linkBtn = NSButton(frame: NSRect(x: 16, y: toastHeight - 30 - linkHeight - 8, width: toastWidth - 32, height: linkHeight))
-        linkBtn.bezelStyle = .inline
-        linkBtn.isBordered = false
-        linkBtn.alignment = .left
-        let linkAttrs = NSMutableAttributedString(string: link, attributes: [
-            .font: NSFont.systemFont(ofSize: 11),
-            .foregroundColor: NSColor(calibratedRed: 0.5, green: 0.8, blue: 1.0, alpha: 1.0),
-            .underlineStyle: NSUnderlineStyle.single.rawValue,
-        ])
-        linkBtn.attributedTitle = linkAttrs
-        linkBtn.target = self
-        linkBtn.action = #selector(openLink)
-        linkBtn.toolTip = link
-        (linkBtn.cell as? NSButtonCell)?.wraps = true
-        contentView.addSubview(linkBtn)
-        self.linkButton = linkBtn
-
-        // Delete button (only for imgbb — Google Drive has no delete URL)
-        if !deleteURL.isEmpty {
-            let delBtn = NSButton(frame: NSRect(x: 16, y: 10, width: 140, height: 22))
-            delBtn.bezelStyle = .inline
-            delBtn.isBordered = false
-            let delAttrs = NSMutableAttributedString(string: "Delete from server", attributes: [
-                .font: NSFont.systemFont(ofSize: 11, weight: .medium),
-                .foregroundColor: NSColor(calibratedRed: 1.0, green: 0.5, blue: 0.5, alpha: 1.0),
-            ])
-            delBtn.attributedTitle = delAttrs
-            delBtn.target = self
-            delBtn.action = #selector(deleteUpload)
-            contentView.addSubview(delBtn)
-            self.deleteButton = delBtn
+        NSAnimationContext.runAnimationGroup { ctx in
+            ctx.duration = 0.15
+            window.animator().setFrame(NSRect(x: x, y: y, width: toastWidth, height: toastHeight), display: true)
         }
+        contentView.frame = NSRect(origin: .zero, size: NSSize(width: toastWidth, height: toastHeight))
+        contentView.needsDisplay = true
 
-        // Auto-dismiss after 10 seconds
-        dismissTask?.cancel()
-        let task = DispatchWorkItem { [weak self] in
-            self?.animateOut()
-        }
-        dismissTask = task
-        DispatchQueue.main.asyncAfter(deadline: .now() + 10, execute: task)
+        // Reposition icon
+        iconView?.frame = NSRect(x: 14, y: (toastHeight - 28) / 2, width: 28, height: 28)
+
+        // Title
+        let titleLabel = NSTextField(labelWithString: "URL copied to the clipboard")
+        titleLabel.frame = NSRect(x: 50, y: toastHeight - 28, width: toastWidth - 140, height: 18)
+        titleLabel.font = NSFont.systemFont(ofSize: 13, weight: .semibold)
+        titleLabel.textColor = .labelColor
+        titleLabel.lineBreakMode = .byTruncatingTail
+        contentView.addSubview(titleLabel)
+        self.statusLabel = titleLabel
+
+        // Link (subtitle)
+        let linkLabel = NSTextField(wrappingLabelWithString: link)
+        linkLabel.frame = NSRect(x: 50, y: 10, width: toastWidth - 140, height: linkH)
+        linkLabel.font = linkFont
+        linkLabel.textColor = .secondaryLabelColor
+        linkLabel.isSelectable = false
+        contentView.addSubview(linkLabel)
+        self.linkLabel = linkLabel
+
+        // "Open" button (native-looking, right side)
+        let btn = NSButton(frame: NSRect(x: toastWidth - 76, y: (toastHeight - 28) / 2, width: 62, height: 28))
+        btn.title = "Open"
+        btn.bezelStyle = .rounded
+        btn.font = NSFont.systemFont(ofSize: 12, weight: .medium)
+        btn.target = self
+        btn.action = #selector(openLink)
+        contentView.addSubview(btn)
+        self.openButton = btn
+
+        // Auto-dismiss after 8 seconds
+        scheduleDismiss(seconds: 8)
     }
 
     func showError(message: String) {
         spinner?.stopAnimation(nil)
         spinner?.removeFromSuperview()
         spinner = nil
+        iconView?.isHidden = false
+
+        guard let panel = window, let contentView = panel.contentView else { return }
 
         let fullMessage = "Upload failed: \(message)"
-        statusLabel?.stringValue = fullMessage
-        statusLabel?.textColor = NSColor(calibratedRed: 1.0, green: 0.5, blue: 0.5, alpha: 1.0)
-        statusLabel?.lineBreakMode = .byWordWrapping
-        statusLabel?.maximumNumberOfLines = 3
+        let labelFont = NSFont.systemFont(ofSize: 13, weight: .medium)
+        let maxLabelW = toastWidth - 66  // 50 left pad + 16 right pad
+        let textSize = (fullMessage as NSString).boundingRect(
+            with: NSSize(width: maxLabelW, height: 200),
+            options: [.usesLineFragmentOrigin],
+            attributes: [.font: labelFont]
+        ).size
 
-        // Expand toast height if the message needs more room
-        if let label = statusLabel, let panel = window {
-            let toastWidth: CGFloat = 320
-            let maxLabelW = toastWidth - 32
-            let boundingSize = NSSize(width: maxLabelW, height: 200)
-            let neededSize = (fullMessage as NSString).boundingRect(
-                with: boundingSize,
-                options: [.usesLineFragmentOrigin],
-                attributes: [.font: label.font!]
-            ).size
-            let newHeight = max(60, neededSize.height + 36)
-            var frame = panel.frame
-            frame.size.height = newHeight
-            panel.setFrame(frame, display: true)
-            panel.contentView?.frame = NSRect(origin: .zero, size: frame.size)
-            label.frame = NSRect(x: 16, y: (newHeight - neededSize.height) / 2, width: maxLabelW, height: neededSize.height + 4)
+        let toastHeight = max(56, ceil(textSize.height) + 28)
+
+        // Resize and reposition
+        let screen = NSScreen.main ?? NSScreen.screens[0]
+        let visibleFrame = screen.visibleFrame
+        let topPadding: CGFloat = 12
+        let x = screen.frame.midX - toastWidth / 2
+        let y = visibleFrame.maxY - toastHeight - topPadding
+
+        NSAnimationContext.runAnimationGroup { ctx in
+            ctx.duration = 0.15
+            panel.animator().setFrame(NSRect(x: x, y: y, width: toastWidth, height: toastHeight), display: true)
         }
+        contentView.frame = NSRect(origin: .zero, size: NSSize(width: toastWidth, height: toastHeight))
+        contentView.needsDisplay = true
 
-        // Auto-dismiss after 8 seconds (longer for errors so user can read)
+        // Update label to wrap
+        statusLabel?.stringValue = fullMessage
+        statusLabel?.textColor = .systemRed
+        statusLabel?.lineBreakMode = .byWordWrapping
+        statusLabel?.maximumNumberOfLines = 0
+        statusLabel?.frame = NSRect(x: 50, y: (toastHeight - ceil(textSize.height)) / 2, width: maxLabelW, height: ceil(textSize.height) + 2)
+
+        // Reposition icon
+        iconView?.frame = NSRect(x: 14, y: (toastHeight - 28) / 2, width: 28, height: 28)
+
+        scheduleDismiss(seconds: 6)
+    }
+
+    private func scheduleDismiss(seconds: Double) {
         dismissTask?.cancel()
         let task = DispatchWorkItem { [weak self] in
             self?.animateOut()
         }
         dismissTask = task
-        DispatchQueue.main.asyncAfter(deadline: .now() + 8, execute: task)
+        DispatchQueue.main.asyncAfter(deadline: .now() + seconds, execute: task)
     }
 
     @objc private func openLink() {
-        guard let link = linkButton?.toolTip, let url = URL(string: link) else { return }
+        guard let link = currentLink, let url = URL(string: link) else { return }
         NSWorkspace.shared.open(url)
-    }
-
-    @objc private func deleteUpload() {
-        guard let deleteURL = currentDeleteURL, let url = URL(string: deleteURL) else { return }
-        // imgbb delete URLs must be opened in a browser for confirmation
-        NSWorkspace.shared.open(url)
-
-        // Remove from stored uploads
-        if let link = linkButton?.toolTip {
-            var uploads = UserDefaults.standard.array(forKey: "imgbbUploads") as? [[String: String]] ?? []
-            uploads.removeAll { $0["link"] == link }
-            UserDefaults.standard.set(uploads, forKey: "imgbbUploads")
-        }
-
-        let delAttrs = NSMutableAttributedString(string: "Opened in browser", attributes: [
-            .font: NSFont.systemFont(ofSize: 11, weight: .medium),
-            .foregroundColor: NSColor(calibratedRed: 0.5, green: 1.0, blue: 0.5, alpha: 1.0),
-        ])
-        deleteButton?.attributedTitle = delAttrs
-        deleteButton?.isEnabled = false
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
-            self?.animateOut()
-        }
+        dismiss()
     }
 
     @objc private func dismissClicked() {
@@ -233,9 +235,9 @@ class UploadToastController {
         window?.close()
         window = nil
         statusLabel = nil
-        linkButton = nil
-        deleteButton = nil
-        closeButton = nil
+        linkLabel = nil
+        openButton = nil
+        iconView = nil
         spinner = nil
         onDismiss?()
         onDismiss = nil
@@ -245,13 +247,13 @@ class UploadToastController {
         guard let window = window else { return }
         let frame = window.frame
         let screen = NSScreen.main ?? NSScreen.screens[0]
-        let offscreenX = screen.visibleFrame.maxX + 10
+        let offscreenY = screen.visibleFrame.maxY + 10
 
         NSAnimationContext.runAnimationGroup({ ctx in
-            ctx.duration = 0.4
+            ctx.duration = 0.35
             ctx.timingFunction = CAMediaTimingFunction(name: .easeIn)
             window.animator().setFrame(
-                NSRect(x: offscreenX, y: frame.minY, width: frame.width, height: frame.height),
+                NSRect(x: frame.minX, y: offscreenY, width: frame.width, height: frame.height),
                 display: true
             )
             window.animator().alphaValue = 0
@@ -261,17 +263,40 @@ class UploadToastController {
     }
 }
 
-// MARK: - Toast background view
+// MARK: - Background view (mimics macOS notification appearance)
 
-private class ToastContentView: NSView {
+private class ToastBackgroundView: NSView {
+
+    var cornerRadius: CGFloat = 14
+    var onClicked: (() -> Void)?
+
+    override func mouseDown(with event: NSEvent) {
+        // Don't dismiss if clicking the "Open" button — let it handle itself
+        let point = convert(event.locationInWindow, from: nil)
+        for subview in subviews where subview is NSButton {
+            if subview.frame.contains(point) {
+                super.mouseDown(with: event)
+                return
+            }
+        }
+        onClicked?()
+    }
+
     override func draw(_ dirtyRect: NSRect) {
-        let path = NSBezierPath(roundedRect: bounds, xRadius: 10, yRadius: 10)
-        NSColor(white: 0.12, alpha: 0.95).setFill()
+        let path = NSBezierPath(roundedRect: bounds, xRadius: cornerRadius, yRadius: cornerRadius)
+
+        // Use the system visual effect material colors for a native feel
+        if NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua {
+            NSColor(white: 0.18, alpha: 0.92).setFill()
+        } else {
+            NSColor(white: 0.98, alpha: 0.95).setFill()
+        }
         path.fill()
 
-        NSColor.white.withAlphaComponent(0.1).setStroke()
-        let border = NSBezierPath(roundedRect: bounds.insetBy(dx: 0.5, dy: 0.5), xRadius: 10, yRadius: 10)
-        border.lineWidth = 1
+        // Subtle border
+        NSColor.separatorColor.withAlphaComponent(0.3).setStroke()
+        let border = NSBezierPath(roundedRect: bounds.insetBy(dx: 0.5, dy: 0.5), xRadius: cornerRadius, yRadius: cornerRadius)
+        border.lineWidth = 0.5
         border.stroke()
     }
 }
