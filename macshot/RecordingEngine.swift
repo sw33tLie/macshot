@@ -94,12 +94,11 @@ final class RecordingEngine: NSObject {
 
     private func beginCapture(rect: NSRect) async {
         do {
-            // Find the SCDisplay matching our screen
+            // Find the SCDisplay matching our screen by display ID
             let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+            let screenID = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID
             guard let display = content.displays.first(where: { d in
-                // Match by frame origin
-                abs(d.frame.origin.x - screen.frame.origin.x) < 2 &&
-                abs(d.frame.origin.y - (NSScreen.screens.map(\.frame.maxY).max() ?? 0) - screen.frame.origin.y) < 50
+                screenID != nil && d.displayID == screenID!
             }) ?? content.displays.first else {
                 await MainActor.run { self.fail(RecordingError.noDisplay) }
                 return

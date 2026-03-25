@@ -69,9 +69,9 @@ final class ScrollCaptureController {
         guard !isActive else { return }
 
         if let content = try? await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true) {
+            let screenID = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID
             scDisplay = content.displays.first(where: { d in
-                abs(d.frame.origin.x - screen.frame.origin.x) < 2 &&
-                abs(d.frame.origin.y - (NSScreen.screens.map(\.frame.maxY).max() ?? 0) - screen.frame.origin.y) < 50
+                screenID != nil && d.displayID == screenID!
             }) ?? content.displays.first
             excludedSCWindows = content.windows.filter { excludedWindowIDs.contains(CGWindowID($0.windowID)) }
         }
