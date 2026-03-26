@@ -64,7 +64,7 @@ brew install sw33tlie/macshot/macshot
 - **Instant capture** — global hotkey freezes your screen, select any region
 - **Window snap** — hover over a window and click to capture it exactly; `Tab` toggles snap, `F` for full screen
 - **Scroll capture** — auto-detects vertical or horizontal scrolling, stitches with Apple Vision
-- **Delay capture** — 3/5/10 second timer for tooltips, menus, hover states
+- **Capture delay** — 3/5/10/30 second countdown before capture, set via menu bar. Escape to cancel.
 - **Multi-monitor** — captures all screens simultaneously
 - **Quick save** — right-click + drag or `Cmd+Shift+S` to save instantly without annotation
 - **Quick OCR** — `Cmd+Shift+T` to select and extract text instantly

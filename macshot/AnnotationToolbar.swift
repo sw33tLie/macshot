@@ -170,7 +170,7 @@ class ToolbarLayout {
     }
 
     // Right toolbar items (output actions + cancel + delay)
-    static func rightButtons(delaySeconds: Int = 0, beautifyEnabled: Bool = false, beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false, translateEnabled: Bool = false, isRecording: Bool = false, isCapturingVideo: Bool = false, isAnnotating: Bool = false, isEditorMode: Bool = false) -> [ToolbarButton] {
+    static func rightButtons(beautifyEnabled: Bool = false, beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false, translateEnabled: Bool = false, isRecording: Bool = false, isCapturingVideo: Bool = false, isAnnotating: Bool = false, isEditorMode: Bool = false) -> [ToolbarButton] {
         var buttons: [ToolbarButton] = []
 
         // If in recording mode (toolbar shown), show recording controls
@@ -237,24 +237,6 @@ class ToolbarLayout {
             buttons.append(ToolbarButton(action: .detach, sfSymbol: "arrow.up.forward.app", label: nil, tooltip: "Open in Editor Window"))
         }
         // Delay capture (tag 1007) — hidden in editor mode
-        if !isEditorMode && actionEnabled(1007) {
-            let delaySymbol: String
-            let delayTooltip: String
-            switch delaySeconds {
-            case 1: delaySymbol = "1.circle.fill"; delayTooltip = "Delay: 1s"
-            case 2: delaySymbol = "2.circle.fill"; delayTooltip = "Delay: 2s"
-            case 3: delaySymbol = "3.circle.fill"; delayTooltip = "Delay: 3s"
-            case 5: delaySymbol = "5.circle.fill"; delayTooltip = "Delay: 5s"
-            case 10: delaySymbol = "10.circle.fill"; delayTooltip = "Delay: 10s"
-            case 30: delaySymbol = "timer"; delayTooltip = "Delay: 30s"
-            default: delaySymbol = "timer"; delayTooltip = "Delay capture"
-            }
-            var delayBtn = ToolbarButton(action: .delayCapture, sfSymbol: delaySymbol, label: nil, tooltip: delayTooltip)
-            delayBtn.hasContextMenu = true
-            if delaySeconds > 0 { delayBtn.isSelected = true }
-            buttons.append(delayBtn)
-        }
-
         // Copy and save are always present
         buttons.append(ToolbarButton(action: .copy, sfSymbol: "doc.on.doc", label: nil, tooltip: "Copy"))
         var saveBtn = ToolbarButton(action: .save, sfSymbol: "square.and.arrow.down.fill", label: nil, tooltip: "Save to \(URL(fileURLWithPath: SaveDirectoryAccess.displayPath).lastPathComponent)")

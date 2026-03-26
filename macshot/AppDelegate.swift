@@ -18,6 +18,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var isCapturing = false
     private var delayCountdownWindow: NSWindow?
     private var delayTimer: Timer?
+    private var delayEscMonitor: Any?
     private var pendingDelaySelection: NSRect = .zero
     private var uploadToastController: UploadToastController?
     private var recordingEngine: RecordingEngine?
@@ -176,6 +177,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         quickCaptureItem.image = NSImage(systemSymbolName: "square.and.arrow.down", accessibilityDescription: nil)
         menu.addItem(quickCaptureItem)
 
+        // Capture Delay submenu
+        let delayItem = NSMenuItem(title: "Capture Delay", action: nil, keyEquivalent: "")
+        delayItem.image = NSImage(systemSymbolName: "timer", accessibilityDescription: nil)
+        let delaySubmenu = NSMenu()
+        delaySubmenu.autoenablesItems = false
+        let currentDelay = UserDefaults.standard.integer(forKey: "captureDelaySeconds")
+        for seconds in [0, 3, 5, 10, 30] {
+            let title = seconds == 0 ? "None" : "\(seconds) seconds"
+            let item = NSMenuItem(title: title, action: #selector(setDelaySeconds(_:)), keyEquivalent: "")
+            item.target = self
+            item.tag = seconds
+            item.state = seconds == currentDelay ? .on : .off
+            delaySubmenu.addItem(item)
+        }
+        delayItem.submenu = delaySubmenu
+        menu.addItem(delayItem)
+
         menu.addItem(NSMenuItem.separator())
 
         let recordAreaItem = NSMenuItem(title: "Record Area", action: #selector(recordArea), keyEquivalent: "")
@@ -264,6 +282,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var pendingRecordMode: Bool = false
     private var pendingFullScreen: Bool = false
     private var pendingFullScreenRecord: Bool = false
+    private var pendingFullScreenRecordAutoStart: Bool = false
     private var pendingOCRMode: Bool = false
     private var pendingQuickCaptureMode: Bool = false
 
@@ -310,7 +329,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func recordFullScreen() {
         pendingFullScreenRecord = true
+        // If delay is set, auto-start recording after countdown (no user interaction needed)
+        if UserDefaults.standard.integer(forKey: "captureDelaySeconds") > 0 {
+            pendingFullScreenRecordAutoStart = true
+        }
         startCapture(fromMenu: true)
+    }
+
+    @objc private func setDelaySeconds(_ sender: NSMenuItem) {
+        UserDefaults.standard.set(sender.tag, forKey: "captureDelaySeconds")
+        // Update checkmarks
+        if let menu = sender.menu {
+            for item in menu.items {
+                item.state = item.tag == sender.tag ? .on : .off
+            }
+        }
     }
 
     private func startCapture(fromMenu: Bool) {
@@ -319,13 +352,97 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         dismissOverlays()
 
-        if fromMenu {
+        let delay = UserDefaults.standard.integer(forKey: "captureDelaySeconds")
+        if delay > 0 {
+            // Show countdown, then capture
+            if fromMenu {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+                    self?.showPreCaptureCountdown(seconds: delay)
+                }
+            } else {
+                showPreCaptureCountdown(seconds: delay)
+            }
+        } else if fromMenu {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
                 self?.performCapture()
             }
         } else {
             performCapture()
         }
+    }
+
+    private func showPreCaptureCountdown(seconds: Int) {
+        let screen = NSScreen.main ?? NSScreen.screens[0]
+        let size = NSSize(width: 140, height: 140)
+        let origin = NSPoint(
+            x: screen.frame.midX - size.width / 2,
+            y: screen.frame.midY - size.height / 2
+        )
+
+        let window = NSWindow(
+            contentRect: NSRect(origin: origin, size: size),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        window.isOpaque = false
+        window.backgroundColor = .clear
+        window.level = .floating
+        window.hasShadow = false
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+
+        let countdownView = CountdownView(frame: NSRect(origin: .zero, size: size))
+        countdownView.remaining = seconds
+        window.contentView = countdownView
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+        delayCountdownWindow = window
+
+        // Listen for Escape to cancel countdown — use both local and global monitors
+        // Local catches keys when macshot is active; global catches when another app has focus
+        delayEscMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            if event.keyCode == 53 {
+                self?.cancelPreCaptureCountdown()
+                return nil
+            }
+            return event
+        }
+
+        var remaining = seconds
+        delayTimer?.invalidate()
+        delayTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
+            remaining -= 1
+            if remaining <= 0 {
+                timer.invalidate()
+                self?.delayTimer = nil
+                self?.delayCountdownWindow?.orderOut(nil)
+                self?.delayCountdownWindow = nil
+                self?.removeDelayEscMonitors()
+                self?.performCapture()
+            } else {
+                countdownView.remaining = remaining
+                countdownView.needsDisplay = true
+            }
+        }
+    }
+
+    private func removeDelayEscMonitors() {
+        if let m = delayEscMonitor { NSEvent.removeMonitor(m); delayEscMonitor = nil }
+    }
+
+    private func cancelPreCaptureCountdown() {
+        delayTimer?.invalidate()
+        delayTimer = nil
+        delayCountdownWindow?.orderOut(nil)
+        delayCountdownWindow = nil
+        removeDelayEscMonitors()
+        isCapturing = false
+        pendingRecordMode = false
+        pendingFullScreen = false
+        pendingFullScreenRecord = false
+        pendingFullScreenRecordAutoStart = false
+        pendingOCRMode = false
+        pendingQuickCaptureMode = false
     }
 
     private func performCapture() {
@@ -359,10 +476,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 }
                 if self.pendingFullScreenRecord {
                     controller.enterRecordingMode()
+                    if self.pendingFullScreenRecordAutoStart {
+                        // Auto-start recording after a brief moment to let the overlay settle
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            controller.autoStartRecording()
+                        }
+                    }
                 }
                 self.overlayControllers.append(controller)
             }
             self.pendingRecordMode = false
+            self.pendingFullScreenRecordAutoStart = false
             self.pendingOCRMode = false
             self.pendingQuickCaptureMode = false
             if !self.pendingFullScreen && !self.pendingFullScreenRecord {
@@ -644,12 +768,6 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         ScreenshotHistory.shared.add(image: image)
         dismissOverlays()
         showUploadProgress(image: image)
-    }
-
-    func overlayDidRequestDelayCapture(_ controller: OverlayWindowController, seconds: Int, selectionRect: NSRect) {
-        pendingDelaySelection = selectionRect
-        dismissOverlays()
-        startDelayCountdown(seconds: seconds)
     }
 
     func overlayDidRequestStartRecording(_ controller: OverlayWindowController, rect: NSRect, screen: NSScreen) {

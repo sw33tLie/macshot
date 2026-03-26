@@ -12,7 +12,6 @@ protocol OverlayViewDelegate: AnyObject {
     func overlayViewDidRequestPin()
     func overlayViewDidRequestOCR()
     func overlayViewDidRequestQuickSave()
-    func overlayViewDidRequestDelayCapture(seconds: Int, selectionRect: NSRect)
     func overlayViewDidRequestUpload()
     @available(macOS 14.0, *)
     func overlayViewDidRequestRemoveBackground()
@@ -247,9 +246,6 @@ class OverlayView: NSView {
     // Cursor enforcement timer — forces crosshair until selection is made
     private var cursorTimer: Timer?
 
-    // Delay capture
-    private var delaySeconds: Int = 0
-
     // Draggable toolbars
     private var bottomBarDragOffset: NSPoint = .zero
     private var rightBarDragOffset: NSPoint = .zero
@@ -362,11 +358,6 @@ class OverlayView: NSView {
     // Rounded rectangle corners — persisted in UserDefaults
     private var roundedRectEnabled: Bool = UserDefaults.standard.object(forKey: "roundedRectEnabled") as? Bool ?? false
     private var roundedRectToggleRect: NSRect = .zero
-
-    // Delay picker popover
-    private var showDelayPicker: Bool = false
-    private var delayPickerRect: NSRect = .zero
-    private var hoveredDelayRow: Int = -1
 
     // Upload confirm picker (toggle setting via right-click)
     private var showUploadConfirmPicker: Bool = false
@@ -847,20 +838,6 @@ class OverlayView: NSView {
             if newRow != hoveredLoupeSizeRow { hoveredLoupeSizeRow = newRow; needsDisplay = true }
         }
 
-        // Delay picker hover
-        if showDelayPicker && delayPickerRect.contains(point) {
-            let options = 7 // number of options
-            let rowH: CGFloat = 28
-            let padding: CGFloat = 2
-            var newRow = -1
-            for i in 0..<options {
-                let rowY = delayPickerRect.maxY - padding - rowH * CGFloat(i + 1)
-                let rowRect = NSRect(x: delayPickerRect.minX, y: rowY, width: delayPickerRect.width, height: rowH)
-                if rowRect.contains(point) { newRow = i; break }
-            }
-            if newRow != hoveredDelayRow { hoveredDelayRow = newRow; needsDisplay = true }
-        }
-
         // Redact type picker hover
         if showRedactTypePicker && redactTypePickerRect.contains(point) {
             let types = OverlayView.redactTypeNames.count
@@ -1069,7 +1046,6 @@ class OverlayView: NSView {
         if showBeautifyGradientPicker && beautifyGradientPickerRect.contains(point) { NSCursor.arrow.set(); return }
         if showStrokePicker && strokePickerRect.contains(point) { NSCursor.arrow.set(); return }
         if showLoupeSizePicker && loupeSizePickerRect.contains(point) { NSCursor.arrow.set(); return }
-        if showDelayPicker && delayPickerRect.contains(point) { NSCursor.arrow.set(); return }
         if showUploadConfirmPicker && uploadConfirmPickerRect.contains(point) { NSCursor.arrow.set(); return }
         if showUploadConfirmDialog && uploadConfirmDialogRect.contains(point) { NSCursor.arrow.set(); return }
         if showRedactTypePicker && redactTypePickerRect.contains(point) { NSCursor.arrow.set(); return }
@@ -1628,11 +1604,6 @@ class OverlayView: NSView {
                     drawLoupeSizePicker()
                 }
 
-                // Delay picker
-                if showDelayPicker {
-                    drawDelayPicker()
-                }
-
                 // Upload confirm picker
                 if showUploadConfirmPicker {
                     drawUploadConfirmPicker()
@@ -1715,7 +1686,7 @@ class OverlayView: NSView {
         guard hoveredButtonIndex >= 0 else { return }
 
         // Hide tooltip when any picker/popover is open (they overlap)
-        if showDelayPicker || showUploadConfirmPicker || showRedactTypePicker
+        if showUploadConfirmPicker || showRedactTypePicker
             || showTranslatePicker || showStrokePicker || showLoupeSizePicker || showBeautifyPicker {
             return
         }
@@ -4549,58 +4520,6 @@ class OverlayView: NSView {
         }
     }
 
-    // MARK: - Delay Picker
-
-    private func drawDelayPicker() {
-        let options: [(label: String, seconds: Int)] = [
-            ("Off", 0), ("1s", 1), ("2s", 2), ("3s", 3), ("5s", 5), ("10s", 10), ("30s", 30)
-        ]
-        let rowH: CGFloat = 28
-        let pickerWidth: CGFloat = 90
-        let padding: CGFloat = 6
-        let pickerHeight = rowH * CGFloat(options.count) + padding * 2
-
-        var anchorRect = NSRect.zero
-        for btn in rightButtons {
-            if case .delayCapture = btn.action {
-                anchorRect = btn.rect
-                break
-            }
-        }
-
-        let pickerX = anchorRect.minX - pickerWidth - 4
-        var pickerY = anchorRect.maxY - pickerHeight
-        pickerY = max(bounds.minY + 4, min(pickerY, bounds.maxY - pickerHeight - 4))
-
-        let pickerRect = NSRect(x: pickerX, y: pickerY, width: pickerWidth, height: pickerHeight)
-        delayPickerRect = pickerRect
-
-        ToolbarLayout.bgColor.setFill()
-        NSBezierPath(roundedRect: pickerRect, xRadius: 6, yRadius: 6).fill()
-
-        let textAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 12, weight: .medium),
-            .foregroundColor: NSColor.white,
-        ]
-
-        for (i, option) in options.enumerated() {
-            let rowY = pickerRect.maxY - padding - rowH * CGFloat(i + 1)
-            let rowRect = NSRect(x: pickerRect.minX, y: rowY, width: pickerRect.width, height: rowH)
-
-            if option.seconds == delaySeconds {
-                ToolbarLayout.accentColor.withAlphaComponent(0.5).setFill()
-                NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
-            } else if i == hoveredDelayRow {
-                NSColor.white.withAlphaComponent(0.15).setFill()
-                NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
-            }
-
-            let labelStr = option.label as NSString
-            let labelSize = labelStr.size(withAttributes: textAttrs)
-            labelStr.draw(at: NSPoint(x: rowRect.midX - labelSize.width / 2, y: rowRect.midY - labelSize.height / 2), withAttributes: textAttrs)
-        }
-    }
-
     // MARK: - Upload Confirm Picker
 
     private func drawUploadConfirmPicker() {
@@ -4952,15 +4871,6 @@ class OverlayView: NSView {
         let hex = String(format: "#%02X%02X%02X", r, g, b)
         let color = NSColor(srgbRed: CGFloat(r)/255, green: CGFloat(g)/255, blue: CGFloat(b)/255, alpha: 1)
         return (color, hex)
-    }
-
-    private func copyColorAtSamplerPoint() {
-        guard let screenshot = screenshotImage,
-              let result = sampleColor(from: screenshot, at: colorSamplerPoint) else { return }
-
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(result.hex, forType: .string)
-        showOverlayError("Copied \(result.hex)")
     }
 
     // MARK: - Editor Top Bar
@@ -6374,7 +6284,7 @@ class OverlayView: NSView {
                 }
             }
         }
-        rightButtons = ToolbarLayout.rightButtons(delaySeconds: delaySeconds, beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex, hasAnnotations: movableAnnotations, translateEnabled: translateEnabled, isRecording: isRecording, isCapturingVideo: isCapturingVideo, isAnnotating: isAnnotating, isEditorMode: isEditorMode)
+        rightButtons = ToolbarLayout.rightButtons(beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex, hasAnnotations: movableAnnotations, translateEnabled: translateEnabled, isRecording: isRecording, isCapturingVideo: isCapturingVideo, isAnnotating: isAnnotating, isEditorMode: isEditorMode)
 
         // When beautify is active, anchor toolbars to the expanded preview frame
         // so they don't overlap the gradient/shadow chrome.
@@ -6579,6 +6489,19 @@ class OverlayView: NSView {
 
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
+
+        // Control-click = right-click for color sampler (supports BetterTouchTool and other tools
+        // that simulate right-click via control-click instead of rightMouseDown)
+        if event.modifierFlags.contains(.control) && state == .selected && currentTool == .colorSampler {
+            if let screenshot = screenshotImage,
+               let result = sampleColor(from: screenshot, at: viewToCanvas(point)) {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(result.hex, forType: .string)
+                showOverlayError("Copied \(result.hex)")
+                needsDisplay = true
+            }
+            return
+        }
 
         // Barcode bar button hit-test
         if detectedBarcodePayload != nil && barcodeActionRects.count == 2 {
@@ -6793,34 +6716,6 @@ class OverlayView: NSView {
                 return
             }
             showLoupeSizePicker = false
-            needsDisplay = true
-        }
-
-        // Delay picker dismissal / selection
-        if showDelayPicker {
-            if delayPickerRect.contains(point) {
-                let options: [(label: String, seconds: Int)] = [
-                    ("Off", 0), ("1s", 1), ("2s", 2), ("3s", 3), ("5s", 5), ("10s", 10), ("30s", 30)
-                ]
-                let rowH: CGFloat = 28
-                let padding: CGFloat = 2
-                for (i, option) in options.enumerated() {
-                    let rowY = delayPickerRect.maxY - padding - rowH * CGFloat(i + 1)
-                    let rowRect = NSRect(x: delayPickerRect.minX, y: rowY, width: delayPickerRect.width, height: rowH)
-                    if rowRect.contains(point) {
-                        delaySeconds = option.seconds
-                        UserDefaults.standard.set(delaySeconds, forKey: "lastDelaySeconds")
-                        showDelayPicker = false
-                        needsDisplay = true
-                        if delaySeconds > 0 {
-                            overlayDelegate?.overlayViewDidRequestDelayCapture(seconds: delaySeconds, selectionRect: selectionRect)
-                        }
-                        return
-                    }
-                }
-                return
-            }
-            showDelayPicker = false
             needsDisplay = true
         }
 
@@ -7841,7 +7736,6 @@ class OverlayView: NSView {
                     showColorPicker = false
                     showBeautifyPicker = false
                     showStrokePicker = false
-                    showDelayPicker = false
                     showUploadConfirmPicker = false
                     needsDisplay = true
                     return
@@ -7849,18 +7743,6 @@ class OverlayView: NSView {
                 return
             }
             if let action = ToolbarLayout.hitTest(point: point, buttons: rightButtons) {
-                if case .delayCapture = action {
-                    showDelayPicker.toggle()
-                    showColorPicker = false
-                    showBeautifyPicker = false
-                    showStrokePicker = false
-                    showLoupeSizePicker = false
-                    showUploadConfirmPicker = false
-                    showRedactTypePicker = false
-                    showTranslatePicker = false
-                    needsDisplay = true
-                    return
-                }
                 if case .save = action {
                     let menu = NSMenu()
                     let saveAsItem = NSMenuItem(title: "Save As...", action: #selector(saveAsMenuAction), keyEquivalent: "")
@@ -7874,7 +7756,6 @@ class OverlayView: NSView {
                     showColorPicker = false
                     showBeautifyPicker = false
                     showStrokePicker = false
-                    showDelayPicker = false
                     showRedactTypePicker = false
                     showTranslatePicker = false
                     needsDisplay = true
@@ -7885,7 +7766,6 @@ class OverlayView: NSView {
                     showColorPicker = false
                     showBeautifyPicker = false
                     showStrokePicker = false
-                    showDelayPicker = false
                     showRedactTypePicker = false
                     showUploadConfirmPicker = false
                     needsDisplay = true
@@ -8165,18 +8045,7 @@ class OverlayView: NSView {
             UserDefaults.standard.set(beautifyStyleIndex, forKey: "beautifyStyleIndex")
             needsDisplay = true
         case .delayCapture:
-            // Toggle: 0 → last nonzero or default 3, nonzero → 0
-            if delaySeconds > 0 {
-                delaySeconds = 0
-            } else {
-                let last = UserDefaults.standard.integer(forKey: "lastDelaySeconds")
-                delaySeconds = (last > 0) ? last : 3
-            }
-            UserDefaults.standard.set(delaySeconds, forKey: "lastDelaySeconds")
-            if delaySeconds > 0 {
-                overlayDelegate?.overlayViewDidRequestDelayCapture(seconds: delaySeconds, selectionRect: selectionRect)
-            }
-            needsDisplay = true
+            break
         case .translate:
             showTranslatePicker = false
             if translateEnabled {
@@ -8559,7 +8428,7 @@ class OverlayView: NSView {
                 color: currentColor,
                 strokeWidth: currentStrokeWidth
             )
-            loupeAnnotation.sourceImage = compositedImage()
+            loupeAnnotation.sourceImage = screenshotImage
             loupeAnnotation.sourceImageBounds = captureDrawRect
             loupeAnnotation.bakeLoupe()
             annotations.append(loupeAnnotation)
@@ -9205,11 +9074,10 @@ class OverlayView: NSView {
             } else if showEmojiPicker {
                 showEmojiPicker = false
                 needsDisplay = true
-            } else if showBeautifyPicker || showStrokePicker || showLoupeSizePicker || showDelayPicker || showUploadConfirmPicker || showRedactTypePicker || showBeautifyGradientPicker {
+            } else if showBeautifyPicker || showStrokePicker || showLoupeSizePicker || showUploadConfirmPicker || showRedactTypePicker || showBeautifyGradientPicker {
                 showBeautifyPicker = false
                 showStrokePicker = false
                 showLoupeSizePicker = false
-                showDelayPicker = false
                 showUploadConfirmPicker = false
                 showRedactTypePicker = false
                 showTranslatePicker = false
@@ -9262,12 +9130,6 @@ class OverlayView: NSView {
                 needsDisplay = true
             }
         default:
-            // C (without Cmd) — copy color hex when color sampler is active
-            if event.keyCode == 8 && !event.modifierFlags.contains(.command) &&
-               currentTool == .colorSampler && colorSamplerPoint != .zero {
-                copyColorAtSamplerPoint()
-                return
-            }
             // Auto-measure: hold "1" = vertical preview, hold "2" = horizontal preview
             if state == .selected && currentTool == .measure && textEditView == nil &&
                !event.modifierFlags.contains(.command) {
@@ -10192,7 +10054,6 @@ class OverlayView: NSView {
         showBeautifyPicker = false
         showStrokePicker = false
         showLoupeSizePicker = false
-        showDelayPicker = false
         showUploadConfirmPicker = false
         showUploadConfirmDialog = false
         uploadConfirmDialogRect = .zero
@@ -10215,7 +10076,6 @@ class OverlayView: NSView {
         hoveredAnnotation = nil
         showColorWheel = false
         isRightClickSelecting = false
-        delaySeconds = 0
         beautifyEnabled = UserDefaults.standard.bool(forKey: "beautifyEnabled")
         beautifyStyleIndex = UserDefaults.standard.integer(forKey: "beautifyStyleIndex")
         beautifyMode = BeautifyMode(rawValue: UserDefaults.standard.integer(forKey: "beautifyMode")) ?? .window

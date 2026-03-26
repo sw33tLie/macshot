@@ -1,5 +1,20 @@
 # Changelog
 
+## [3.2.3] - 2026-03-26
+
+### Added
+- **Pre-capture delay** — new "Capture Delay" submenu in the menu bar with None/3s/5s/10s/30s options. Applies to all capture and recording hotkeys. Countdown shown before screen freeze. Press Escape to cancel.
+- **Record Screen auto-start** — when capture delay is set, Record Screen starts recording automatically after countdown (no manual click needed)
+- **Control-click to copy color** — color sampler now supports Control+click as alternative to right-click for copying hex values (improves compatibility with BetterTouchTool and other gesture tools)
+
+### Changed
+- **Delay capture moved to menu bar** — the per-capture delay toolbar button has been removed. Delay is now a persistent setting in the menu bar, applying to all captures. Simpler UX, matches how other screenshot apps work.
+- **Loupe performance** — loupe annotations now use the raw screenshot instead of the composited image, eliminating O(n²) re-rendering lag when placing multiple loupes
+- **Removed C-to-copy shortcut** — color hex copy is now right-click only (or Control+click). C key is freed for future use.
+
+### Fixed
+- **Sparkle auto-updates from DMG** — fixed entitlements not expanding `$(PRODUCT_BUNDLE_IDENTIFIER)` in CI builds, which broke the XPC installer service. Auto-updates now work for DMG installs. Users on 3.2.2 or earlier need to manually reinstall once.
+
 ## [3.2.2] - 2026-03-26
 
 ### Added

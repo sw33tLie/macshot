@@ -9,7 +9,6 @@ protocol OverlayWindowControllerDelegate: AnyObject {
     func overlayDidConfirm(_ controller: OverlayWindowController, capturedImage: NSImage?)
     func overlayDidRequestPin(_ controller: OverlayWindowController, image: NSImage)
     func overlayDidRequestOCR(_ controller: OverlayWindowController, text: String, image: NSImage?)
-    func overlayDidRequestDelayCapture(_ controller: OverlayWindowController, seconds: Int, selectionRect: NSRect)
     func overlayDidRequestUpload(_ controller: OverlayWindowController, image: NSImage)
     func overlayDidRequestStartRecording(_ controller: OverlayWindowController, rect: NSRect, screen: NSScreen)
     func overlayDidRequestStopRecording(_ controller: OverlayWindowController)
@@ -105,6 +104,11 @@ class OverlayWindowController {
         overlayView?.rebuildToolbarLayout()
         overlayView?.needsDisplay = true
         showRecordingControlWindow()
+    }
+
+    /// Auto-start recording immediately (used when timer + fullscreen record).
+    func autoStartRecording() {
+        overlayView?.overlayDelegate?.overlayViewDidRequestStartRecording(rect: overlayView?.selectionRect ?? .zero)
     }
 
     func setRecordingState(isRecording: Bool, elapsedSeconds: Int = 0) {
@@ -314,10 +318,6 @@ extension OverlayWindowController: OverlayViewDelegate {
             let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
             try? handler.perform([request])
         }
-    }
-
-    func overlayViewDidRequestDelayCapture(seconds: Int, selectionRect: NSRect) {
-        overlayDelegate?.overlayDidRequestDelayCapture(self, seconds: seconds, selectionRect: selectionRect)
     }
 
     func overlayViewDidRequestUpload() {

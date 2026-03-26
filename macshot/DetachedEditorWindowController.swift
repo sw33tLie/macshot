@@ -187,8 +187,6 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
             SaveDirectoryAccess.stopAccessing(url: dirURL)
         }
     }
-    func overlayViewDidRequestDelayCapture(seconds: Int, selectionRect: NSRect) {}
-
     func overlayViewDidRequestUpload() {
         guard var image = overlayView?.captureSelectedRegion() else { return }
         if overlayView?.beautifyEnabled == true {
