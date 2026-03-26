@@ -555,13 +555,14 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
         let actionItems: [(tag: Int, label: String)] = [
-            (1001, "Upload to imgbb"), (1002, "Pin (floating window)"),
+            (1001, "Upload"), (1002, "Pin (floating window)"),
             (1003, "OCR (extract text)"), (1004, "Beautify"),
             (1005, "Remove Background"), (1006, "Auto-Redact sensitive data"),
-            (1007, "Delay capture"), (1008, "Translate"),
+            (1008, "Translate"),
             (1009, "Record screen"),
             (1010, "Scroll Capture"),
             (1011, "Invert Colors"),
+            (1012, "Share"),
         ]
         let enabledActions = UserDefaults.standard.array(forKey: "enabledActions") as? [Int]
         let actionsGrid = makeToggleGrid(items: actionItems,

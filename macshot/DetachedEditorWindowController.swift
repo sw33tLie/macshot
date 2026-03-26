@@ -196,6 +196,22 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
         (NSApp.delegate as? AppDelegate)?.uploadImage(image)
     }
 
+    func overlayViewDidRequestShare() {
+        guard var image = overlayView?.captureSelectedRegion() else { return }
+        if overlayView?.beautifyEnabled == true {
+            image = BeautifyRenderer.render(image: image, config: overlayView?.beautifyConfig ?? BeautifyConfig()) ?? image
+        }
+        guard let imageData = ImageEncoder.encode(image) else { return }
+        let tempURL = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("macshot_\(OverlayWindowController.formattedTimestamp()).\(ImageEncoder.fileExtension)")
+        try? imageData.write(to: tempURL)
+
+        let picker = NSSharingServicePicker(items: [tempURL])
+        if let view = overlayView {
+            picker.show(relativeTo: .zero, of: view, preferredEdge: .minY)
+        }
+    }
+
     @available(macOS 14.0, *)
     func overlayViewDidRequestRemoveBackground() {
         guard let image = overlayView?.captureSelectedRegion(),

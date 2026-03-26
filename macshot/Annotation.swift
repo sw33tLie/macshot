@@ -82,6 +82,50 @@ enum RectFillStyle: Int, CaseIterable {
     case fill = 2           // filled only (respects color opacity)
 }
 
+enum NumberFormat: Int, CaseIterable {
+    case decimal = 0    // 1, 2, 3
+    case roman = 1      // I, II, III
+    case alpha = 2      // A, B, C
+    case alphaLower = 3 // a, b, c
+
+    func format(_ number: Int) -> String {
+        switch self {
+        case .decimal: return "\(number)"
+        case .roman: return Self.toRoman(number)
+        case .alpha: return Self.toAlpha(number, uppercase: true)
+        case .alphaLower: return Self.toAlpha(number, uppercase: false)
+        }
+    }
+
+    var label: String {
+        switch self {
+        case .decimal: return "1"
+        case .roman: return "I"
+        case .alpha: return "A"
+        case .alphaLower: return "a"
+        }
+    }
+
+    private static func toRoman(_ n: Int) -> String {
+        let values = [(1000,"M"),(900,"CM"),(500,"D"),(400,"CD"),(100,"C"),(90,"XC"),(50,"L"),(40,"XL"),(10,"X"),(9,"IX"),(5,"V"),(4,"IV"),(1,"I")]
+        var result = ""
+        var remaining = max(1, min(n, 3999))
+        for (value, numeral) in values {
+            while remaining >= value {
+                result += numeral
+                remaining -= value
+            }
+        }
+        return result
+    }
+
+    private static func toAlpha(_ n: Int, uppercase: Bool) -> String {
+        let base = uppercase ? Character("A") : Character("a")
+        let idx = ((n - 1) % 26)
+        return String(Character(UnicodeScalar(base.asciiValue! + UInt8(idx))))
+    }
+}
+
 enum ArrowStyle: Int, CaseIterable {
     case single = 0     // arrowhead at end only
     case thick = 1      // solid filled banner arrow shape
@@ -99,6 +143,7 @@ class Annotation {
     var text: String?
     var attributedText: NSAttributedString?  // rich text (overrides text + style flags)
     var number: Int?
+    var numberFormat: NumberFormat = .decimal
     var points: [NSPoint]?
     var sourceImage: NSImage?    // for pixelate: temporary reference during drawing (cleared after bake)
     var sourceImageBounds: NSRect = .zero  // the bounds the image was drawn into
@@ -147,6 +192,7 @@ class Annotation {
         c.text = text
         c.attributedText = attributedText
         c.number = number
+        c.numberFormat = numberFormat
         c.points = points
         c.bakedBlurNSImage = bakedBlurNSImage
         c.textImage = textImage
@@ -941,7 +987,7 @@ class Annotation {
             .font: NSFont.boldSystemFont(ofSize: fontSize),
             .foregroundColor: textColor
         ]
-        let str = "\(number)" as NSString
+        let str = numberFormat.format(number) as NSString
         let size = str.size(withAttributes: attrs)
         str.draw(at: NSPoint(x: center.x - size.width / 2, y: center.y - size.height / 2), withAttributes: attrs)
     }

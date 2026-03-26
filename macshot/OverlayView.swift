@@ -13,6 +13,7 @@ protocol OverlayViewDelegate: AnyObject {
     func overlayViewDidRequestOCR()
     func overlayViewDidRequestQuickSave()
     func overlayViewDidRequestUpload()
+    func overlayViewDidRequestShare()
     @available(macOS 14.0, *)
     func overlayViewDidRequestRemoveBackground()
     func overlayViewDidRequestEnterRecordingMode()
@@ -136,6 +137,12 @@ class OverlayView: NSView {
         return saved != nil ? CGFloat(saved!) : 3.0
     }()
     private var numberCounter: Int = 0
+    private var numberStartAt: Int = {
+        UserDefaults.standard.object(forKey: "numberStartAt") as? Int ?? 1
+    }()
+    private var currentNumberFormat: NumberFormat = {
+        NumberFormat(rawValue: UserDefaults.standard.integer(forKey: "numberFormat")) ?? .decimal
+    }()
 
     // Select/move mode
     private var selectedAnnotation: Annotation?
@@ -285,6 +292,9 @@ class OverlayView: NSView {
     var optionsRowRect: NSRect = .zero
     private var optionsStrokeSliderRect: NSRect = .zero
     private var optionsSmoothToggleRect: NSRect = .zero
+    private var optionsNumberFormatRects: [NSRect] = []
+    private var optionsNumberStartMinusRect: NSRect = .zero
+    private var optionsNumberStartPlusRect: NSRect = .zero
     private var optionsRoundedToggleRect: NSRect = .zero
     private var measureUnitToggleRect: NSRect = .zero
     private var currentMeasureInPoints: Bool = UserDefaults.standard.bool(forKey: "measureInPoints")
@@ -3278,6 +3288,82 @@ class OverlayView: NSView {
         // ── Pill toggles ──
         if currentTool == .pencil {
             curX = drawOptionsPillToggle(label: "Smooth", isOn: pencilSmoothEnabled, x: curX, rowRect: rowRect, targetRect: &optionsSmoothToggleRect)
+        }
+
+        // ── Number format segment control ──
+        if currentTool == .number {
+            optionsNumberFormatRects = []
+            let segH: CGFloat = 22
+            let segW: CGFloat = 28
+            let segY = rowRect.midY - segH / 2
+            let formats = NumberFormat.allCases
+            let totalW = segW * CGFloat(formats.count)
+
+            let segBgRect = NSRect(x: curX, y: segY, width: totalW, height: segH)
+            NSColor.white.withAlphaComponent(0.06).setFill()
+            NSBezierPath(roundedRect: segBgRect, xRadius: 5, yRadius: 5).fill()
+
+            for (i, fmt) in formats.enumerated() {
+                let btnRect = NSRect(x: curX + CGFloat(i) * segW, y: segY, width: segW, height: segH)
+                optionsNumberFormatRects.append(btnRect)
+
+                let isActive = currentNumberFormat == fmt
+                if isActive {
+                    ToolbarLayout.accentColor.withAlphaComponent(0.45).setFill()
+                    NSBezierPath(roundedRect: btnRect.insetBy(dx: 1.5, dy: 1.5), xRadius: 4, yRadius: 4).fill()
+                }
+
+                let fmtAttrs: [NSAttributedString.Key: Any] = [
+                    .font: NSFont.boldSystemFont(ofSize: 11),
+                    .foregroundColor: isActive ? NSColor.white : NSColor.white.withAlphaComponent(0.5),
+                ]
+                let fmtStr = fmt.label as NSString
+                let fmtSize = fmtStr.size(withAttributes: fmtAttrs)
+                fmtStr.draw(at: NSPoint(x: btnRect.midX - fmtSize.width / 2, y: btnRect.midY - fmtSize.height / 2), withAttributes: fmtAttrs)
+            }
+
+            curX += totalW + 10
+
+            // Start-at stepper label
+            let startLabel = "Start:" as NSString
+            let startLblAttrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 9.5, weight: .medium),
+                .foregroundColor: NSColor.white.withAlphaComponent(0.4),
+            ]
+            let startLblSize = startLabel.size(withAttributes: startLblAttrs)
+            startLabel.draw(at: NSPoint(x: curX, y: rowRect.midY - startLblSize.height / 2), withAttributes: startLblAttrs)
+            curX += startLblSize.width + 4
+
+            // Minus button
+            let stepBtnW: CGFloat = 20
+            let minusRect = NSRect(x: curX, y: segY, width: stepBtnW, height: segH)
+            optionsNumberStartMinusRect = minusRect
+            NSColor.white.withAlphaComponent(0.08).setFill()
+            NSBezierPath(roundedRect: minusRect, xRadius: 4, yRadius: 4).fill()
+            let minusAttrs: [NSAttributedString.Key: Any] = [.font: NSFont.boldSystemFont(ofSize: 13), .foregroundColor: NSColor.white.withAlphaComponent(0.6)]
+            let minusStr = "−" as NSString
+            let minusSize = minusStr.size(withAttributes: minusAttrs)
+            minusStr.draw(at: NSPoint(x: minusRect.midX - minusSize.width / 2, y: minusRect.midY - minusSize.height / 2), withAttributes: minusAttrs)
+            curX += stepBtnW + 2
+
+            // Value display
+            let valStr = currentNumberFormat.format(numberStartAt) as NSString
+            let valAttrs: [NSAttributedString.Key: Any] = [.font: NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium), .foregroundColor: NSColor.white.withAlphaComponent(0.85)]
+            let valSize = valStr.size(withAttributes: valAttrs)
+            let valW = max(24, valSize.width + 8)
+            valStr.draw(at: NSPoint(x: curX + valW / 2 - valSize.width / 2, y: rowRect.midY - valSize.height / 2), withAttributes: valAttrs)
+            curX += valW + 2
+
+            // Plus button
+            let plusRect = NSRect(x: curX, y: segY, width: stepBtnW, height: segH)
+            optionsNumberStartPlusRect = plusRect
+            NSColor.white.withAlphaComponent(0.08).setFill()
+            NSBezierPath(roundedRect: plusRect, xRadius: 4, yRadius: 4).fill()
+            let plusAttrs: [NSAttributedString.Key: Any] = [.font: NSFont.boldSystemFont(ofSize: 13), .foregroundColor: NSColor.white.withAlphaComponent(0.6)]
+            let plusStr = "+" as NSString
+            let plusSize = plusStr.size(withAttributes: plusAttrs)
+            plusStr.draw(at: NSPoint(x: plusRect.midX - plusSize.width / 2, y: plusRect.midY - plusSize.height / 2), withAttributes: plusAttrs)
+            curX += stepBtnW + 10
         }
 
         // ── Corner radius slider (rect tools) ──
@@ -7059,6 +7145,28 @@ class OverlayView: NSView {
                             return
                         }
                     }
+                    // Number format buttons
+                    for (i, sr) in optionsNumberFormatRects.enumerated() {
+                        if sr.contains(point), let fmt = NumberFormat(rawValue: i) {
+                            currentNumberFormat = fmt
+                            UserDefaults.standard.set(fmt.rawValue, forKey: "numberFormat")
+                            needsDisplay = true
+                            return
+                        }
+                    }
+                    // Number start-at stepper
+                    if optionsNumberStartMinusRect.contains(point) {
+                        numberStartAt = max(0, numberStartAt - 1)
+                        UserDefaults.standard.set(numberStartAt, forKey: "numberStartAt")
+                        needsDisplay = true
+                        return
+                    }
+                    if optionsNumberStartPlusRect.contains(point) {
+                        numberStartAt += 1
+                        UserDefaults.standard.set(numberStartAt, forKey: "numberStartAt")
+                        needsDisplay = true
+                        return
+                    }
                     // Stamp emoji/load buttons
                     if currentTool == .stamp {
                         for (i, sr) in stampEmojiRects.enumerated() {
@@ -8014,6 +8122,8 @@ class OverlayView: NSView {
             } else {
                 overlayDelegate?.overlayViewDidRequestUpload()
             }
+        case .share:
+            overlayDelegate?.overlayViewDidRequestShare()
         case .pin:
             overlayDelegate?.overlayViewDidRequestPin()
         case .ocr:
@@ -8473,7 +8583,8 @@ class OverlayView: NSView {
         case .number:
             numberCounter += 1
             let annotation = Annotation(tool: .number, startPoint: point, endPoint: point, color: opacityApplied(for: .number), strokeWidth: currentNumberSize)
-            annotation.number = numberCounter
+            annotation.number = numberCounter + (numberStartAt - 1)
+            annotation.numberFormat = currentNumberFormat
             currentAnnotation = annotation
             needsDisplay = true
             return

@@ -328,6 +328,33 @@ extension OverlayWindowController: OverlayViewDelegate {
         overlayDelegate?.overlayDidRequestUpload(self, image: image)
     }
 
+    func overlayViewDidRequestShare() {
+        guard var image = overlayView?.captureSelectedRegion() else { return }
+        image = applyBeautifyIfNeeded(image) ?? image
+        guard let imageData = ImageEncoder.encode(image) else { return }
+        let tempURL = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("macshot_\(Self.formattedTimestamp()).\(ImageEncoder.fileExtension)")
+        try? imageData.write(to: tempURL)
+
+        playCopySound()
+        dismiss()
+        overlayDelegate?.overlayDidConfirm(self, capturedImage: image)
+
+        // Show share picker after overlay is dismissed
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            guard let screen = NSScreen.main else { return }
+            // Create a tiny temporary window to anchor the share picker
+            let anchorWindow = NSWindow(contentRect: NSRect(x: screen.frame.midX - 1, y: screen.frame.midY - 1, width: 2, height: 2),
+                                         styleMask: [.borderless], backing: .buffered, defer: false)
+            anchorWindow.isOpaque = false
+            anchorWindow.backgroundColor = .clear
+            anchorWindow.level = .floating
+            anchorWindow.orderFrontRegardless()
+            let picker = NSSharingServicePicker(items: [tempURL])
+            picker.show(relativeTo: .zero, of: anchorWindow.contentView!, preferredEdge: .minY)
+        }
+    }
+
     func overlayViewDidRequestEnterRecordingMode() {
         enterRecordingMode()
     }

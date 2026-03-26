@@ -20,6 +20,7 @@ enum ToolbarButtonAction {
     case moveSelection
     case delayCapture
     case upload
+    case share
     case removeBackground
     case invertColors
     case loupe
@@ -205,7 +206,7 @@ class ToolbarLayout {
             return buttons
         }
 
-        let allKnownActionTags: [Int] = [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011]
+        let allKnownActionTags: [Int] = [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011, 1012]
         // Migrate: only add action tags that are brand-new (never seen before).
         // knownActionTags tracks which tags have been introduced so user-disabled tags are
         // never silently re-enabled when future versions add new action tags.
@@ -236,12 +237,16 @@ class ToolbarLayout {
             buttons.append(ToolbarButton(action: .moveSelection, sfSymbol: "arrow.up.and.down.and.arrow.left.and.right", label: nil, tooltip: "Move Selection"))
             buttons.append(ToolbarButton(action: .detach, sfSymbol: "arrow.up.forward.app", label: nil, tooltip: "Open in Editor Window"))
         }
-        // Delay capture (tag 1007) — hidden in editor mode
         // Copy and save are always present
         buttons.append(ToolbarButton(action: .copy, sfSymbol: "doc.on.doc", label: nil, tooltip: "Copy"))
         var saveBtn = ToolbarButton(action: .save, sfSymbol: "square.and.arrow.down.fill", label: nil, tooltip: "Save to \(URL(fileURLWithPath: SaveDirectoryAccess.displayPath).lastPathComponent)")
         saveBtn.hasContextMenu = true
         buttons.append(saveBtn)
+
+        // Share (tag 1012)
+        if actionEnabled(1012) {
+            buttons.append(ToolbarButton(action: .share, sfSymbol: "square.and.arrow.up", label: nil, tooltip: "Share"))
+        }
 
         // Upload (tag 1001)
         if actionEnabled(1001) {
@@ -280,7 +285,6 @@ class ToolbarLayout {
             buttons.append(recordBtn)
         }
 
-        // Delay capture (hidden in editor mode) is handled above with tag 1007
 
         return buttons
     }
