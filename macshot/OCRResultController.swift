@@ -237,12 +237,7 @@ class OCRResultController: NSObject {
         guard let text = textView?.string, !text.isEmpty else { return }
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(text, forType: .string)
-
-        let original = copyButton?.title ?? "Copy  ⌘↩"
-        copyButton?.title = "Copied!"
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
-            self?.copyButton?.title = original
-        }
+        close()
     }
 
     @objc private func openAISearch() {
@@ -250,6 +245,7 @@ class OCRResultController: NSObject {
         guard let encoded = text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
               let url = URL(string: "https://www.google.com/search?q=\(encoded)&csuir=1&udm=50") else { return }
         NSWorkspace.shared.open(url)
+        close()
     }
 
     @objc private func languageChanged(_ sender: NSPopUpButton) {

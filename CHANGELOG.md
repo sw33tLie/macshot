@@ -1,5 +1,31 @@
 # Changelog
 
+## [3.2.2] - 2026-03-26
+
+### Added
+- **Capture cursor setting** — new "Capture mouse cursor in screenshot" toggle in Preferences (off by default)
+- **Editor reset zoom button** — new button in editor top bar (left of zoom %) to reset zoom and recenter image
+- **Beautify in editor** — beautify preview now works in the editor window (previously overlay-only)
+
+### Changed
+- **Editor architecture refactor** — editor is now a proper `EditorView` subclass of `OverlayView` instead of branching via `isDetached` boolean. Cleaner code, fewer edge cases, shared annotation/toolbar code via inheritance.
+- **Marker/pencil Shift constraint** — Shift now constrains to horizontal/vertical only (not 45°), locks direction for the entire stroke
+- **"Add to My Colors" button removed** — redundant; color slots auto-save when using color sampler tool
+- **Auto-save to color slots** — only happens when color sampler tool is active, not on every color pick
+- **OCR Copy button** — now closes the OCR window after copying
+- **OCR AI Search button** — now closes the OCR window after opening browser
+
+### Fixed
+- **Editor window coordinate system** — comprehensive fix for all tools in editor mode: text, loupe, pixelate, blur, color sampler, crop, stamp, auto-redact, beautify, and remove background now all work at correct positions
+- **Editor crop tool** — crop selection, preview, and commit all use correct canvas coordinates; undo/redo properly restores image size and recenters
+- **Editor zoom** — smooth zoom without random jumps or recentering; canvas offset freezes when zoomed to prevent fighting with zoom anchor
+- **Editor window sizing** — window now accounts for max beautify padding/shadow to prevent overflow
+- **Editor title bar cursor** — cursor no longer shows tool-specific icon over traffic lights and title bar
+- **Beautify shadow bleed** — fixed raw screenshot content showing through shadow area in editor
+- **Remove background in editor** — now shows floating thumbnail preview (same as overlay mode)
+- **Marker cursor preview** — now visible when beautify mode is active
+- **Crop preview with beautify** — crop selection overlay now visible when beautify mode is active
+
 ## [3.2.1] - 2026-03-25
 
 ### Fixed

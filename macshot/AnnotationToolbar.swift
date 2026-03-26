@@ -170,7 +170,7 @@ class ToolbarLayout {
     }
 
     // Right toolbar items (output actions + cancel + delay)
-    static func rightButtons(delaySeconds: Int = 0, beautifyEnabled: Bool = false, beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false, translateEnabled: Bool = false, isRecording: Bool = false, isCapturingVideo: Bool = false, isAnnotating: Bool = false, isDetached: Bool = false) -> [ToolbarButton] {
+    static func rightButtons(delaySeconds: Int = 0, beautifyEnabled: Bool = false, beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false, translateEnabled: Bool = false, isRecording: Bool = false, isCapturingVideo: Bool = false, isAnnotating: Bool = false, isEditorMode: Bool = false) -> [ToolbarButton] {
         var buttons: [ToolbarButton] = []
 
         // If in recording mode (toolbar shown), show recording controls
@@ -231,13 +231,13 @@ class ToolbarLayout {
         }
 
         // Cancel, move-selection, editor — not shown in editor window
-        if !isDetached {
+        if !isEditorMode {
             buttons.append(ToolbarButton(action: .cancel, sfSymbol: "xmark", label: nil, tooltip: "Cancel"))
             buttons.append(ToolbarButton(action: .moveSelection, sfSymbol: "arrow.up.and.down.and.arrow.left.and.right", label: nil, tooltip: "Move Selection"))
             buttons.append(ToolbarButton(action: .detach, sfSymbol: "arrow.up.forward.app", label: nil, tooltip: "Open in Editor Window"))
         }
-        // Delay capture (tag 1007) — hidden when detached
-        if !isDetached && actionEnabled(1007) {
+        // Delay capture (tag 1007) — hidden in editor mode
+        if !isEditorMode && actionEnabled(1007) {
             let delaySymbol: String
             let delayTooltip: String
             switch delaySeconds {
@@ -286,19 +286,19 @@ class ToolbarLayout {
             buttons.append(translateBtn)
         }
 
-        // Scroll Capture (tag 1010) — hidden when recording or detached
-        if !isRecording && !isDetached && actionEnabled(1010) {
+        // Scroll Capture (tag 1010) — hidden when recording or in editor mode
+        if !isRecording && !isEditorMode && actionEnabled(1010) {
             buttons.append(ToolbarButton(action: .scrollCapture, sfSymbol: "scroll", label: nil, tooltip: "Scroll Capture"))
         }
 
-        // Record (tag 1009) — hidden when detached. Right-click for options.
-        if !isDetached && actionEnabled(1009) {
+        // Record (tag 1009) — hidden in editor mode. Right-click for options.
+        if !isEditorMode && actionEnabled(1009) {
             var recordBtn = ToolbarButton(action: .record, sfSymbol: "video.fill", label: nil, tooltip: "Record")
             recordBtn.tintColor = .white
             buttons.append(recordBtn)
         }
 
-        // Delay capture (hidden when detached) is handled above with tag 1007
+        // Delay capture (hidden in editor mode) is handled above with tag 1007
 
         return buttons
     }

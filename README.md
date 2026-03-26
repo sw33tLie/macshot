@@ -100,7 +100,7 @@ brew install sw33tlie/macshot/macshot
 - **sRGB color profile** — optional embedding for cross-display consistency
 
 ### Editor Window
-- Standalone resizable window with full annotation tools
+- Standalone resizable window with full annotation tools, beautify preview
 - Crop (with rule-of-thirds grid), flip H/V, zoom 0.1x–8x
 - Top bar with pixel dimensions, zoom level
 

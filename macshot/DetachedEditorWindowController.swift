@@ -28,17 +28,19 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         let screen = NSScreen.main ?? NSScreen.screens.first!
         let screenFrame = screen.visibleFrame
 
-        // Toolbar padding: must match the values in OverlayView's detached draw block
+        // Toolbar padding: must match the values in EditorView's draw block
         let padH: CGFloat = 8 + 52   // left + right toolbar
         let padV: CGFloat = 56 + 36 + 36  // bottom toolbar + gap + options row (34+2 gap) + top bar (32+4)
+        // Extra space for beautify preview — use max possible values so it always fits
+        let beautifyExtra: CGFloat = (96 + 40 + 16) * 2  // max padding (96) + max shadow (40) + offset, both sides
         let minW: CGFloat = 800  // enough width for all bottom toolbar buttons
         let minH: CGFloat = 400  // enough height for right toolbar buttons
 
-        // Size window to fit image + padding, capped to 80% of screen
+        // Size window to fit image + padding + beautify space, capped to 80% of screen
         let maxW = screenFrame.width * 0.8
         let maxH = screenFrame.height * 0.8
-        let winW = min(maxW, max(minW, imgSize.width + padH))
-        let winH = min(maxH, max(minH, imgSize.height + padV))
+        let winW = min(maxW, max(minW, imgSize.width + padH + beautifyExtra))
+        let winH = min(maxH, max(minH, imgSize.height + padV + beautifyExtra))
 
         let win = NSWindow(
             contentRect: NSRect(x: screenFrame.midX - winW/2,
@@ -55,13 +57,11 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         win.delegate = self
         win.collectionBehavior = [.fullScreenAuxiliary]
 
-        // Create a fresh OverlayView sized to the image.
-        // bounds == image size, selectionRect == bounds → no coordinate offset anywhere.
-        let view = OverlayView()
+        // Create an EditorView (subclass of OverlayView) for the standalone editor.
+        let view = EditorView()
         view.frame = NSRect(origin: .zero, size: imgSize)
         view.autoresizingMask = [.width, .height]
         view.screenshotImage = image
-        view.isDetached = true
         view.overlayDelegate = self
         view.currentTool = tool
         view.currentColor = color
@@ -217,8 +217,10 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
                 guard let out = filter.outputImage,
                       let cg = CIContext().createCGImage(out, from: out.extent) else { return }
                 DispatchQueue.main.async {
-                    ImageEncoder.copyToClipboard(NSImage(cgImage: cg, size: image.size))
+                    let finalImage = NSImage(cgImage: cg, size: image.size)
+                    ImageEncoder.copyToClipboard(finalImage)
                     self.playCopySound()
+                    (NSApp.delegate as? AppDelegate)?.showFloatingThumbnail(image: finalImage)
                 }
             } catch {}
         }

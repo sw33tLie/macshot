@@ -20,6 +20,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
     private var historySizeField: NSTextField!
     private var historySizeStepper: NSStepper!
     private var snapGuidesCheckbox: NSButton!
+    private var captureCursorCheckbox: NSButton!
     private var quickModePopup: NSPopUpButton!
     private var imageFormatPopup: NSPopUpButton!
     private var qualitySlider: NSSlider!
@@ -210,6 +211,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         thumbnailCheckbox = NSButton(checkboxWithTitle: "Show floating thumbnail after capture", target: self, action: #selector(thumbnailChanged(_:)))
         launchAtLoginCheckbox = NSButton(checkboxWithTitle: "Launch at login", target: self, action: #selector(launchAtLoginChanged(_:)))
         snapGuidesCheckbox = NSButton(checkboxWithTitle: "Show snap alignment guides", target: self, action: #selector(snapGuidesChanged(_:)))
+        captureCursorCheckbox = NSButton(checkboxWithTitle: "Capture mouse cursor in screenshot", target: self, action: #selector(captureCursorChanged(_:)))
 
         for cb in [autoCopyCheckbox!, copySoundCheckbox!, rememberSelectionCheckbox!, thumbnailCheckbox!] {
             stack.addArrangedSubview(indented(cb))
@@ -247,6 +249,9 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         stack.addArrangedSubview(indented(snapGuidesCheckbox))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+
+        stack.addArrangedSubview(indented(captureCursorCheckbox))
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
         stack.addArrangedSubview(indented(launchAtLoginCheckbox))
@@ -1245,6 +1250,8 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         let snapGuides = UserDefaults.standard.object(forKey: "snapGuidesEnabled") as? Bool ?? true
         snapGuidesCheckbox.state = snapGuides ? .on : .off
 
+        captureCursorCheckbox.state = UserDefaults.standard.bool(forKey: "captureCursor") ? .on : .off
+
         let historySize = UserDefaults.standard.object(forKey: "historySize") as? Int ?? 10
         historySizeField.integerValue = historySize
         historySizeStepper.integerValue = historySize
@@ -1406,6 +1413,9 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
     }
     @objc private func snapGuidesChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "snapGuidesEnabled")
+    }
+    @objc private func captureCursorChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: "captureCursor")
     }
     @objc private func launchAtLoginChanged(_ sender: NSButton) {
         let enabled = sender.state == .on

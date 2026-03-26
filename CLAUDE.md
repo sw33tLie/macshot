@@ -25,10 +25,11 @@ macshot/
 ├── AppDelegate.swift                  # App lifecycle, status bar, hotkey, capture orchestration
 ├── ScreenCaptureManager.swift         # Multi-screen capture via ScreenCaptureKit (async/await)
 ├── OverlayWindowController.swift      # One per screen: fullscreen borderless overlay window
-├── OverlayView.swift                  # Main canvas: selection, drawing, annotation, toolbars (~6000 lines)
+├── OverlayView.swift                  # Base canvas: selection, drawing, annotation, toolbars (shared by overlay + editor)
+├── EditorView.swift                   # Editor subclass of OverlayView: centering, zoom 0.1x, crop, flip, no selection chrome
 ├── AnnotationToolbar.swift            # Toolbar button definitions, layout constants, drawing helpers
 ├── Annotation.swift                   # Data model + drawing for all annotation types
-├── DetachedEditorWindowController.swift  # Standalone editor window (resizable, titled)
+├── DetachedEditorWindowController.swift  # Standalone editor window (resizable, titled), uses EditorView
 ├── PinWindowController.swift          # Floating always-on-top pinned screenshot
 ├── FloatingThumbnailController.swift  # Auto-dismiss thumbnail after capture (right edge)
 ├── PreferencesWindowController.swift  # Settings: General, Tools, Recording tabs
@@ -88,10 +89,20 @@ The core of the app. Handles selection, annotation, rendering, and all user inte
 - **Bottom bar:** Drawing tools, color picker, stroke width, undo/redo
 - **Right bar:** Output actions (copy, save, pin, OCR, upload, etc.), cancel, move selection, editor, delay, record, scroll capture
 
-**`isDetached` mode:** When true (editor window), hides overlay-only buttons (cancel, move, delay, record, scroll capture), pins toolbars to window edges, dark background, image centered at natural size, no selection border/handles, no new-selection on click outside.
+**Editor mode (EditorView subclass):** `EditorView` is a subclass of `OverlayView` that overrides behavior via clean override points. It hides overlay-only buttons (cancel, move, delay, record, scroll capture), pins toolbars to window edges, dark background, image centered at natural size, no selection border/handles, no new-selection on click outside. The old `isDetached` flag is removed — use `isEditorMode` computed property instead.
+
+**CRITICAL — Overlay vs Editor coordinate rules:**
+- **Never use `bounds` for image-to-pixel mapping.** Always use `captureDrawRect` (returns `bounds` in overlay, `selectionRect` in editor).
+- **Never use raw view-space points for annotation positions.** Always convert via `viewToCanvas()` first. In the editor, this subtracts `editorCanvasOffset`.
+- **Never call `viewToCanvas()` on a point that's already in canvas space.** `startAnnotation(at:)` receives canvas-space points — don't double-convert inside it.
+- **When positioning NSViews (e.g. NSTextView for text tool),** convert canvas coords back to view coords via `canvasToView()`.
+- **`compositedImage()`** renders at `captureDrawRect.size`, not `bounds.size`.
+- **`sourceImageBounds`** for pixelate/blur/loupe must be set to `captureDrawRect`, not `bounds`.
+- **For Vision API region crops** (OCR, barcode, auto-redact), draw the screenshot at `captureDrawRect` size, not `bounds` size.
+- **Cursor management** is fully imperative (no cursor rects) via `updateCursorForPoint()` + a 30fps timer. Each window only sets cursors when the mouse is actually over it (prevents cross-window flicker on multi-monitor).
 
 **Drawing pipeline in `draw(_:)`:**
-1. Background: screenshot image (full-screen in overlay, centered in editor)
+1. Background: screenshot image (full-screen in overlay, centered with `editorCanvasOffset` in editor)
 2. Dark overlay mask (except inside selection) — skipped in editor
 3. Selection rectangle with 8 resize handles — skipped in editor
 4. Annotations rendered with cached composite when not actively drawing

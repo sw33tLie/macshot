@@ -35,7 +35,7 @@ class ScreenCaptureManager {
                             let scale = Int(screen.backingScaleFactor)
                             config.width = display.width * scale
                             config.height = display.height * scale
-                            config.showsCursor = false
+                            config.showsCursor = UserDefaults.standard.bool(forKey: "captureCursor")
                             if #available(macOS 14.0, *) {
                                 config.captureResolution = .best
                             }
