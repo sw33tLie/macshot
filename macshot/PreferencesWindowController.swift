@@ -21,6 +21,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
     private var historySizeStepper: NSStepper!
     private var snapGuidesCheckbox: NSButton!
     private var captureCursorCheckbox: NSButton!
+    private var windowTitleCheckbox: NSButton!
     private var quickModePopup: NSPopUpButton!
     private var imageFormatPopup: NSPopUpButton!
     private var qualitySlider: NSSlider!
@@ -195,13 +196,13 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.addArrangedSubview(sectionHeader("Capture"))
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
-        // Right-click action
+        // Enter key action
         quickModePopup = NSPopUpButton()
         quickModePopup.addItems(withTitles: ["Save to file", "Copy to clipboard"])
         quickModePopup.target = self
         quickModePopup.action = #selector(quickModeChanged(_:))
 
-        stack.addArrangedSubview(labeledRow("Right-click action:", controls: [quickModePopup]))
+        stack.addArrangedSubview(labeledRow("Enter / Quick Capture:", controls: [quickModePopup]))
         stack.setCustomSpacing(12, after: stack.arrangedSubviews.last!)
 
         // Checkboxes
@@ -212,6 +213,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         launchAtLoginCheckbox = NSButton(checkboxWithTitle: "Launch at login", target: self, action: #selector(launchAtLoginChanged(_:)))
         snapGuidesCheckbox = NSButton(checkboxWithTitle: "Show snap alignment guides", target: self, action: #selector(snapGuidesChanged(_:)))
         captureCursorCheckbox = NSButton(checkboxWithTitle: "Capture mouse cursor in screenshot", target: self, action: #selector(captureCursorChanged(_:)))
+        windowTitleCheckbox = NSButton(checkboxWithTitle: "Use window title in saved filename", target: self, action: #selector(windowTitleChanged(_:)))
 
         for cb in [autoCopyCheckbox!, copySoundCheckbox!, rememberSelectionCheckbox!, thumbnailCheckbox!] {
             stack.addArrangedSubview(indented(cb))
@@ -252,6 +254,9 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
         stack.addArrangedSubview(indented(captureCursorCheckbox))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+
+        stack.addArrangedSubview(indented(windowTitleCheckbox))
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
         stack.addArrangedSubview(indented(launchAtLoginCheckbox))
@@ -1252,6 +1257,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         snapGuidesCheckbox.state = snapGuides ? .on : .off
 
         captureCursorCheckbox.state = UserDefaults.standard.bool(forKey: "captureCursor") ? .on : .off
+        windowTitleCheckbox.state = UserDefaults.standard.bool(forKey: "useWindowTitleInFilename") ? .on : .off
 
         let historySize = UserDefaults.standard.object(forKey: "historySize") as? Int ?? 10
         historySizeField.integerValue = historySize
@@ -1417,6 +1423,9 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
     }
     @objc private func captureCursorChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "captureCursor")
+    }
+    @objc private func windowTitleChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: "useWindowTitleInFilename")
     }
     @objc private func launchAtLoginChanged(_ sender: NSButton) {
         let enabled = sender.state == .on

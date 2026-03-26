@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.2.6] - 2026-03-26
+
+### Added
+- **Window title in filename** — new preference (off by default) to include the focused window's title in saved screenshot filenames (e.g. `Screenshot 2026-03-26 at 14.30.00 — My Document.png`)
+- **Enter key action preference** — new "Enter key action" setting in Preferences to choose whether pressing Enter saves to file or copies to clipboard. Previously this was labeled "Right-click action" and only affected right-click behavior.
+
+### Changed
+- **Enter key respects confirm action** — pressing Enter in the overlay now follows the "Enter key action" preference. If set to "Save to file", Enter saves directly to the configured folder instead of copying to clipboard. Cmd+C always copies.
+- **Quick Capture + F key** — pressing F (full screen) in Quick Capture mode now immediately saves/copies instead of expanding the selection and showing toolbars
+- **Removed right-click selection from overlay** — right-click no longer starts a quick-save selection in the capture overlay. Use the dedicated Quick Capture shortcut instead. Other right-click actions (color wheel, toolbar context menus, anchor points, color sampler copy) are unchanged.
+
+### Fixed
+- **Save to file on Enter** — fixed a bug where pressing Enter always copied to clipboard even when "Save to file" was selected in preferences
+
 ## [3.2.5] - 2026-03-26
 
 ### Added

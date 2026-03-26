@@ -66,7 +66,7 @@ brew install sw33tlie/macshot/macshot
 - **Scroll capture** — auto-detects vertical or horizontal scrolling, stitches with Apple Vision
 - **Capture delay** — 3/5/10/30 second countdown before capture, set via menu bar. Escape to cancel.
 - **Multi-monitor** — captures all screens simultaneously
-- **Quick save** — right-click + drag or `Cmd+Shift+S` to save instantly without annotation
+- **Quick save** — `Cmd+Shift+S` to select and save/copy instantly without annotation. Enter key also saves/copies based on preference.
 - **Quick OCR** — `Cmd+Shift+T` to select and extract text instantly
 
 ### Annotation Tools
@@ -141,7 +141,7 @@ brew install sw33tlie/macshot/macshot
 
 | Shortcut | Action |
 |---|---|
-| `Enter` | Confirm and copy to clipboard |
+| `Enter` | Confirm (save or copy based on preference) |
 | `Cmd+C` | Copy to clipboard |
 | `Cmd+S` | Save to file |
 | `Cmd+Z` / `Cmd+Shift+Z` | Undo / Redo |
@@ -152,7 +152,6 @@ brew install sw33tlie/macshot/macshot
 | `F` | Capture full screen (snap mode) |
 | `Shift` (while drawing) | Constrain to straight lines / perfect shapes |
 | `Space` (while drawing) | Reposition shape without changing size |
-| `Right-click` + drag | Quick save to file |
 | `Right-click` on line/arrow | Add anchor point for multi-point curves |
 
 **Tool shortcuts** (active after selecting a region)

@@ -22,6 +22,7 @@ protocol OverlayWindowControllerDelegate: AnyObject {
 class OverlayWindowController {
 
     weak var overlayDelegate: OverlayWindowControllerDelegate?
+    var capturedWindowTitle: String?
 
     private var overlayView: OverlayView?
     private var overlayWindow: OverlayWindow?
@@ -500,7 +501,16 @@ extension OverlayWindowController: OverlayViewDelegate {
 
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy-MM-dd 'at' HH.mm.ss"
-            let filename = "Screenshot \(formatter.string(from: Date())).\(ImageEncoder.fileExtension)"
+            let timestamp = formatter.string(from: Date())
+            let useWindowTitle = UserDefaults.standard.bool(forKey: "useWindowTitleInFilename")
+            let filename: String
+            if useWindowTitle, let title = capturedWindowTitle {
+                let safe = title.replacingOccurrences(of: "/", with: "-")
+                    .replacingOccurrences(of: ":", with: "-")
+                filename = "Screenshot \(timestamp) — \(safe).\(ImageEncoder.fileExtension)"
+            } else {
+                filename = "Screenshot \(timestamp).\(ImageEncoder.fileExtension)"
+            }
             let fileURL = dirURL.appendingPathComponent(filename)
 
             DispatchQueue.global(qos: .userInitiated).async {

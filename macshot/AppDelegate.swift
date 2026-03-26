@@ -285,6 +285,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var pendingFullScreenRecordAutoStart: Bool = false
     private var pendingOCRMode: Bool = false
     private var pendingQuickCaptureMode: Bool = false
+    private var capturedWindowTitle: String?
 
     // MARK: - Capture
 
@@ -349,6 +350,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func startCapture(fromMenu: Bool) {
         guard !isCapturing else { return }
         isCapturing = true
+
+        // Grab focused window title before overlay steals focus
+        capturedWindowTitle = Self.focusedWindowTitle()
 
         dismissOverlays()
 
@@ -461,6 +465,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             for capture in captures {
                 let controller = OverlayWindowController(capture: capture)
                 controller.overlayDelegate = self
+                controller.capturedWindowTitle = self.capturedWindowTitle
                 if self.pendingRecordMode {
                     controller.setAutoRecordMode()
                 }
@@ -495,6 +500,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self.pendingFullScreen = false
             self.pendingFullScreenRecord = false
         }
+    }
+
+    /// Returns the title of the currently focused window via Accessibility API, or nil.
+    private static func focusedWindowTitle() -> String? {
+        guard let app = NSWorkspace.shared.frontmostApplication else { return nil }
+        let appElement = AXUIElementCreateApplication(app.processIdentifier)
+        var focusedWindow: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(appElement, kAXFocusedWindowAttribute as CFString, &focusedWindow) == .success else { return nil }
+        var titleValue: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(focusedWindow as! AXUIElement, kAXTitleAttribute as CFString, &titleValue) == .success else { return nil }
+        guard let title = titleValue as? String, !title.isEmpty else { return nil }
+        return title
     }
 
     private func restoreLastSelectionIfNeeded(controllers: [OverlayWindowController]) {

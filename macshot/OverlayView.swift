@@ -105,7 +105,6 @@ class OverlayView: NSView {
     private var spaceRepositioning: Bool = false  // Space held during drag to reposition
     private var freeformShiftDirection: Int = 0  // 0 = undecided, 1 = horizontal, 2 = vertical
     private var spaceRepositionLast: NSPoint = .zero  // last mouse position when space reposition started
-    private var isRightClickSelecting: Bool = false  // right-click quick save mode
 
     // Annotations
     var annotations: [Annotation] = [] { didSet { cachedCompositedImage = nil } }
@@ -1759,17 +1758,6 @@ class OverlayView: NSView {
         let line1 = windowSnapEnabled
             ? "Click a window  ·  Drag for custom area  ·  F for full screen"
             : "Drag to select  ·  Click for full screen"
-        let copyMode = UserDefaults.standard.object(forKey: "quickModeCopyToClipboard") as? Bool ?? false
-        let line2: String
-        if windowSnapEnabled {
-            line2 = copyMode
-                ? "Right-click a window to quick copy  ·  drag for custom area"
-                : "Right-click a window to quick save  ·  drag for custom area"
-        } else {
-            line2 = copyMode
-                ? "Right-click: drag to quick copy  ·  click to copy full screen"
-                : "Right-click: drag to quick save  ·  click to save full screen"
-        }
         let snapOn = windowSnapEnabled
         let line3prefix = "Window snap: "
         let line3state = snapOn ? "ON" : "OFF"
@@ -1782,23 +1770,21 @@ class OverlayView: NSView {
         let snapColor = snapOn ? NSColor.systemGreen : NSColor.systemOrange
 
         let attrs1: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: textColor]
-        let attrs2: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: dimColor]
-        let attrs3prefix: [NSAttributedString.Key: Any] = [.font: smallFont, .foregroundColor: dimColor]
-        let attrs3state: [NSAttributedString.Key: Any]  = [.font: NSFont.systemFont(ofSize: 12, weight: .semibold), .foregroundColor: snapColor]
-        let attrs3suffix: [NSAttributedString.Key: Any] = [.font: smallFont, .foregroundColor: dimColor]
+        let attrs2prefix: [NSAttributedString.Key: Any] = [.font: smallFont, .foregroundColor: dimColor]
+        let attrs2state: [NSAttributedString.Key: Any]  = [.font: NSFont.systemFont(ofSize: 12, weight: .semibold), .foregroundColor: snapColor]
+        let attrs2suffix: [NSAttributedString.Key: Any] = [.font: smallFont, .foregroundColor: dimColor]
 
         let size1       = (line1 as NSString).size(withAttributes: attrs1)
-        let size2       = (line2 as NSString).size(withAttributes: attrs2)
-        let size3pre    = (line3prefix as NSString).size(withAttributes: attrs3prefix)
-        let size3state  = (line3state as NSString).size(withAttributes: attrs3state)
-        let size3suf    = (line3suffix as NSString).size(withAttributes: attrs3suffix)
-        let size3total  = CGSize(width: size3pre.width + size3state.width + size3suf.width,
-                                 height: max(size3pre.height, size3state.height, size3suf.height))
+        let size2pre    = (line3prefix as NSString).size(withAttributes: attrs2prefix)
+        let size2state  = (line3state as NSString).size(withAttributes: attrs2state)
+        let size2suf    = (line3suffix as NSString).size(withAttributes: attrs2suffix)
+        let size2total  = CGSize(width: size2pre.width + size2state.width + size2suf.width,
+                                 height: max(size2pre.height, size2state.height, size2suf.height))
 
         let lineSpacing: CGFloat = 6
         let padding: CGFloat = 14
-        let totalTextHeight = size1.height + lineSpacing + size2.height + lineSpacing + size3total.height
-        let bgWidth = max(size1.width, size2.width, size3total.width) + padding * 2
+        let totalTextHeight = size1.height + lineSpacing + size2total.height
+        let bgWidth = max(size1.width, size2total.width) + padding * 2
         let bgHeight = totalTextHeight + padding * 2
 
         let bgX = bounds.midX - bgWidth / 2
@@ -1808,36 +1794,23 @@ class OverlayView: NSView {
         NSColor.black.withAlphaComponent(0.65).setFill()
         NSBezierPath(roundedRect: bgRect, xRadius: 8, yRadius: 8).fill()
 
-        let textY1 = bgY + padding + size2.height + lineSpacing + size3total.height + lineSpacing
-        let textY2 = bgY + padding + size3total.height + lineSpacing
-        let textY3 = bgY + padding
+        let textY1 = bgY + padding + size2total.height + lineSpacing
+        let textY2 = bgY + padding
 
         (line1 as NSString).draw(at: NSPoint(x: bounds.midX - size1.width / 2, y: textY1), withAttributes: attrs1)
-        (line2 as NSString).draw(at: NSPoint(x: bounds.midX - size2.width / 2, y: textY2), withAttributes: attrs2)
 
-        // Draw line3 as three segments with different colors
-        let line3startX = bounds.midX - size3total.width / 2
-        let line3Y = textY3 + (size3total.height - size3pre.height) / 2
-        (line3prefix as NSString).draw(at: NSPoint(x: line3startX, y: line3Y), withAttributes: attrs3prefix)
-        (line3state as NSString).draw(at: NSPoint(x: line3startX + size3pre.width, y: line3Y), withAttributes: attrs3state)
-        (line3suffix as NSString).draw(at: NSPoint(x: line3startX + size3pre.width + size3state.width, y: line3Y), withAttributes: attrs3suffix)
+        // Draw snap line as three segments with different colors
+        let line2startX = bounds.midX - size2total.width / 2
+        let line2Y = textY2 + (size2total.height - size2pre.height) / 2
+        (line3prefix as NSString).draw(at: NSPoint(x: line2startX, y: line2Y), withAttributes: attrs2prefix)
+        (line3state as NSString).draw(at: NSPoint(x: line2startX + size2pre.width, y: line2Y), withAttributes: attrs2state)
+        (line3suffix as NSString).draw(at: NSPoint(x: line2startX + size2pre.width + size2state.width, y: line2Y), withAttributes: attrs2suffix)
     }
 
     private func drawSelectingHelperText() {
         guard selectionRect.width >= 1, selectionRect.height >= 1 else { return }
 
-        let text: String
-        if isRightClickSelecting {
-            let copyMode = UserDefaults.standard.object(forKey: "quickModeCopyToClipboard") as? Bool ?? false
-            if copyMode {
-                text = "Release to copy to clipboard"
-            } else {
-                let folderName = URL(fileURLWithPath: SaveDirectoryAccess.displayPath).lastPathComponent
-                text = "Release to save to \(folderName)/"
-            }
-        } else {
-            text = "Release to annotate and edit"
-        }
+        let text = "Release to annotate and edit"
 
         let attrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: 12, weight: .medium),
@@ -7878,8 +7851,6 @@ class OverlayView: NSView {
         }
     }
 
-    // MARK: - Right-click quick save
-
     override func rightMouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
 
@@ -7993,13 +7964,6 @@ class OverlayView: NSView {
             needsDisplay = true
             return
         }
-
-        guard state == .idle else { return }
-        selectionStart = point
-        selectionRect = NSRect(origin: point, size: .zero)
-        isRightClickSelecting = true
-        state = .selecting
-        needsDisplay = true
     }
 
     override func rightMouseDragged(with event: NSEvent) {
@@ -8009,14 +7973,6 @@ class OverlayView: NSView {
             needsDisplay = true
             return
         }
-        guard isRightClickSelecting else { return }
-        let point = convert(event.locationInWindow, from: nil)
-        let x = min(selectionStart.x, point.x)
-        let y = min(selectionStart.y, point.y)
-        let w = max(1, abs(point.x - selectionStart.x))
-        let h = max(1, abs(point.y - selectionStart.y))
-        selectionRect = NSRect(x: x, y: y, width: w, height: h)
-        needsDisplay = true
     }
 
     override func rightMouseUp(with event: NSEvent) {
@@ -8030,24 +7986,6 @@ class OverlayView: NSView {
             colorWheelHoveredIndex = -1
             needsDisplay = true
             return
-        }
-        guard isRightClickSelecting else { return }
-        isRightClickSelecting = false
-        if selectionRect.width > 5 || selectionRect.height > 5 {
-            // Real drag — use drawn rect
-            state = .selected
-            overlayDelegate?.overlayViewDidRequestQuickSave()
-        } else if windowSnapEnabled, let snapRect = hoveredWindowRect, !snapRect.isEmpty {
-            // Click (no drag) with snap on — quick save the hovered window
-            selectionRect = snapRect
-            state = .selected
-            hoveredWindowRect = nil
-            overlayDelegate?.overlayViewDidRequestQuickSave()
-        } else {
-            // Click (no drag), snap off — full screen quick save
-            selectionRect = bounds
-            state = .selected
-            overlayDelegate?.overlayViewDidRequestQuickSave()
         }
     }
 
@@ -9406,15 +9344,25 @@ class OverlayView: NSView {
             if state == .idle && windowSnapEnabled {
                 selectionRect = bounds
                 state = .selected
-                showToolbars = true
                 hoveredWindowRect = nil
-                scheduleBarcodeDetection()
-                overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
-                needsDisplay = true
+                if autoQuickSaveMode {
+                    autoQuickSaveMode = false
+                    overlayDelegate?.overlayViewDidRequestQuickSave()
+                } else {
+                    showToolbars = true
+                    scheduleBarcodeDetection()
+                    overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
+                    needsDisplay = true
+                }
             }
         case 36: // Return/Enter — only confirm overlay when not editing text
             if textEditView == nil, state == .selected {
-                overlayDelegate?.overlayViewDidConfirm()
+                let saveMode = !(UserDefaults.standard.object(forKey: "quickModeCopyToClipboard") as? Bool ?? false)
+                if saveMode {
+                    overlayDelegate?.overlayViewDidRequestQuickSave()
+                } else {
+                    overlayDelegate?.overlayViewDidConfirm()
+                }
             }
         case 51: // Backspace/Delete — remove selected or hovered annotation
             guard textEditView == nil, state == .selected else { break }
@@ -10385,7 +10333,6 @@ class OverlayView: NSView {
         hoveredAnnotationClearTimer = nil
         hoveredAnnotation = nil
         showColorWheel = false
-        isRightClickSelecting = false
         beautifyEnabled = UserDefaults.standard.bool(forKey: "beautifyEnabled")
         beautifyStyleIndex = UserDefaults.standard.integer(forKey: "beautifyStyleIndex")
         beautifyMode = BeautifyMode(rawValue: UserDefaults.standard.integer(forKey: "beautifyMode")) ?? .window
