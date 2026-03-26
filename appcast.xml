@@ -11,7 +11,7 @@
             <sparkle:shortVersionString>3.2.6</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
             <enclosure
-                url="https://github.com/sw33tLie/macshot/releases/download/v3.2.6/MacShot-test.dmg"
+                url="https://github.com/sw33tLie/macshot/releases/download/v3.2.6/MacShot-original.dmg"
                 length="4493284"
                 type="application/octet-stream"
                 sparkle:edSignature="kju0O6aL8c0W1QFymz1QEt0PB/C3EuU8fukn6Ee4xdDEXWra0KoOcz9YmUGgmshNwh6lueQuAif/rdE7I+GlDQ=="
