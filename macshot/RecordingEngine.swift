@@ -36,12 +36,19 @@ final class RecordingEngine: NSObject {
 
     private var assetWriter: AVAssetWriter?
     private var videoInput: AVAssetWriterInput?
-    private var audioInput: AVAssetWriterInput?
+    private var audioInput: AVAssetWriterInput?       // system audio
+    private var micAudioInput: AVAssetWriterInput?    // microphone audio
     private var adaptor: AVAssetWriterInputPixelBufferAdaptor?
     private var outputURL: URL?
     private var startTime: CMTime = .invalid
     private var sessionStarted: Bool = false
     private var frameCount: Int64 = 0
+
+    // MARK: - Mic capture
+
+    private var micCaptureSession: AVCaptureSession?
+    private var micDataOutput: AVCaptureAudioDataOutput?
+    private var micDelegate: MicCaptureDelegate?
 
     // MARK: - GIF
 
@@ -157,6 +164,11 @@ final class RecordingEngine: NSObject {
             try await stream.startCapture()
             self.stream = stream
 
+            // Start mic capture if enabled (MP4 only, requires permission)
+            if format == .mp4 && UserDefaults.standard.bool(forKey: "recordMicAudio") {
+                await MainActor.run { self.startMicCapture() }
+            }
+
             await MainActor.run {
                 self.elapsedSeconds = 0
                 self.progressTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
@@ -177,6 +189,7 @@ final class RecordingEngine: NSObject {
             self.stream = nil
         }
         streamOutput = nil
+        await MainActor.run { self.stopMicCapture() }
 
         if format == .mp4 {
             await finalizeMP4()
@@ -198,6 +211,48 @@ final class RecordingEngine: NSObject {
     private func handleAudioSample(_ sampleBuffer: CMSampleBuffer) {
         guard format == .mp4, sessionStarted, let audioInput = audioInput, audioInput.isReadyForMoreMediaData else { return }
         audioInput.append(sampleBuffer)
+    }
+
+    private func handleMicSample(_ sampleBuffer: CMSampleBuffer) {
+        guard format == .mp4, sessionStarted, let micInput = micAudioInput, micInput.isReadyForMoreMediaData else { return }
+        micInput.append(sampleBuffer)
+    }
+
+    // MARK: - Mic capture
+
+    private func startMicCapture() {
+        guard AVCaptureDevice.authorizationStatus(for: .audio) == .authorized else { return }
+        guard let micDevice = AVCaptureDevice.default(for: .audio) else { return }
+
+        let session = AVCaptureSession()
+        session.beginConfiguration()
+
+        guard let deviceInput = try? AVCaptureDeviceInput(device: micDevice) else { return }
+        guard session.canAddInput(deviceInput) else { return }
+        session.addInput(deviceInput)
+
+        let dataOutput = AVCaptureAudioDataOutput()
+        let delegate = MicCaptureDelegate()
+        delegate.onSample = { [weak self] sampleBuffer in
+            self?.handleMicSample(sampleBuffer)
+        }
+        dataOutput.setSampleBufferDelegate(delegate, queue: DispatchQueue(label: "macshot.recording.mic"))
+        guard session.canAddOutput(dataOutput) else { return }
+        session.addOutput(dataOutput)
+
+        session.commitConfiguration()
+        session.startRunning()
+
+        self.micCaptureSession = session
+        self.micDataOutput = dataOutput
+        self.micDelegate = delegate
+    }
+
+    private func stopMicCapture() {
+        micCaptureSession?.stopRunning()
+        micCaptureSession = nil
+        micDataOutput = nil
+        micDelegate = nil
     }
 
     // MARK: - MP4
@@ -227,7 +282,7 @@ final class RecordingEngine: NSObject {
 
         writer.add(input)
 
-        // Audio input (if system audio is enabled)
+        // System audio input
         if UserDefaults.standard.bool(forKey: "recordSystemAudio") {
             let audioSettings: [String: Any] = [
                 AVFormatIDKey: kAudioFormatMPEG4AAC,
@@ -239,6 +294,20 @@ final class RecordingEngine: NSObject {
             audioIn.expectsMediaDataInRealTime = true
             writer.add(audioIn)
             self.audioInput = audioIn
+        }
+
+        // Mic audio input (separate track)
+        if UserDefaults.standard.bool(forKey: "recordMicAudio") {
+            let micSettings: [String: Any] = [
+                AVFormatIDKey: kAudioFormatMPEG4AAC,
+                AVSampleRateKey: 48000,
+                AVNumberOfChannelsKey: 1,
+                AVEncoderBitRateKey: 96000,
+            ]
+            let micIn = AVAssetWriterInput(mediaType: .audio, outputSettings: micSettings)
+            micIn.expectsMediaDataInRealTime = true
+            writer.add(micIn)
+            self.micAudioInput = micIn
         }
 
         writer.startWriting()
@@ -274,6 +343,7 @@ final class RecordingEngine: NSObject {
         }
         input.markAsFinished()
         audioInput?.markAsFinished()
+        micAudioInput?.markAsFinished()
         await writer.finishWriting()
         await MainActor.run { self.succeed() }
     }
@@ -336,5 +406,15 @@ private class RecordingStreamOutput: NSObject, SCStreamOutput {
         @unknown default:
             break
         }
+    }
+}
+
+// MARK: - Mic AVCaptureAudioDataOutput delegate
+
+private class MicCaptureDelegate: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate {
+    var onSample: ((CMSampleBuffer) -> Void)?
+
+    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        onSample?(sampleBuffer)
     }
 }

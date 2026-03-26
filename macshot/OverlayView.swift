@@ -1,6 +1,7 @@
 import Cocoa
 import UniformTypeIdentifiers
 import Vision
+import AVFoundation
 
 @MainActor
 protocol OverlayViewDelegate: AnyObject {
@@ -8154,7 +8155,7 @@ class OverlayView: NSView {
         // When recording but not in annotation mode, only allow recording-control actions
         if isRecording && !isAnnotating {
             switch action {
-            case .annotationMode, .startRecord, .stopRecord, .mouseHighlight, .systemAudio:
+            case .annotationMode, .startRecord, .stopRecord, .mouseHighlight, .systemAudio, .micAudio:
                 break  // allowed — fall through to main switch
             default:
                 return
@@ -8290,6 +8291,8 @@ class OverlayView: NSView {
             let current = UserDefaults.standard.bool(forKey: "recordSystemAudio")
             UserDefaults.standard.set(!current, forKey: "recordSystemAudio")
             rebuildToolbarLayout()
+        case .micAudio:
+            toggleMicAudio()
         case .cancel:
             overlayDelegate?.overlayViewDidCancel()
         case .detach:
@@ -9193,6 +9196,52 @@ class OverlayView: NSView {
         window?.makeFirstResponder(self)
 
         needsDisplay = true
+    }
+
+    // MARK: - Mic Permission & Toggle
+
+    private func toggleMicAudio() {
+        let current = UserDefaults.standard.bool(forKey: "recordMicAudio")
+        if current {
+            // Turning off — no permission needed
+            UserDefaults.standard.set(false, forKey: "recordMicAudio")
+            rebuildToolbarLayout()
+            return
+        }
+        // Turning on — check mic permission first
+        switch AVCaptureDevice.authorizationStatus(for: .audio) {
+        case .authorized:
+            UserDefaults.standard.set(true, forKey: "recordMicAudio")
+            rebuildToolbarLayout()
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .audio) { [weak self] granted in
+                DispatchQueue.main.async {
+                    if granted {
+                        UserDefaults.standard.set(true, forKey: "recordMicAudio")
+                    }
+                    self?.rebuildToolbarLayout()
+                }
+            }
+        case .denied, .restricted:
+            showMicPermissionAlert()
+        @unknown default:
+            break
+        }
+    }
+
+    private func showMicPermissionAlert() {
+        let alert = NSAlert()
+        alert.messageText = "Microphone Access Required"
+        alert.informativeText = "macshot needs microphone permission to record voice audio. Open System Settings to grant access."
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Open Settings")
+        alert.addButton(withTitle: "Cancel")
+        let response = alert.runModal()
+        if response == .alertFirstButtonReturn {
+            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
+                NSWorkspace.shared.open(url)
+            }
+        }
     }
 
     // MARK: - Context Menu Actions

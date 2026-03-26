@@ -29,7 +29,7 @@
 
 ---
 
-> **Upgrading from v3.1.1 or earlier?** Auto-update may fail due to the new sandbox mode. Please reinstall manually:
+> **Upgrading from v3.2.4 or earlier?** Auto-update may fail due to a signing issue with the update installer. Please reinstall manually:
 > ```bash
 > brew uninstall macshot && brew update && brew install sw33tlie/macshot/macshot
 > ```
@@ -87,6 +87,7 @@ brew install sw33tlie/macshot/macshot
 ### Screen Recording
 - **MP4 (H.264)** up to 120fps or **GIF** (5/10/15fps)
 - **System audio capture** — toggle on/off, excludes macshot's own sounds
+- **Microphone recording** — record voice narration alongside screen capture (permission requested on first use)
 - **Mouse click highlights** — visual ripple on clicks during recording
 - **Annotation mode** — draw on screen while recording
 - **Video editor** — trim timeline, mute/strip audio, play/pause, save, upload, reveal in Finder

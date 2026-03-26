@@ -91,26 +91,76 @@ jobs:
         run: |
           APP="build/Build/Products/Release/macshot.app"
 
-          # Sign all nested code: frameworks, dylibs, helper apps (Sparkle's Autoupdate)
-          find "$APP/Contents" \( -name "*.framework" -o -name "*.dylib" -o -name "*.app" \) -print0 | while IFS= read -r -d '' f; do
+          # Sparkle's XPC services (Installer.xpc, Downloader.xpc) must NOT be sandboxed.
+          # They ship with empty entitlements so they can write to /Applications to replace
+          # the app bundle during updates. We must sign them WITHOUT the app's sandbox
+          # entitlements, and we must not use --deep on the outer app (which would re-sign
+          # them with the parent's entitlements).
+          #
+          # Signing order: innermost → outermost.
+
+          # 1. Sign XPC services (no entitlements — intentionally unsandboxed)
+          find "$APP/Contents" -name "*.xpc" -print0 | while IFS= read -r -d '' xpc; do
+            echo "Signing XPC: $xpc"
+            codesign --force --options runtime \
+              --sign "$SIGNING_IDENTITY" \
+              --keychain "$KEYCHAIN_PATH" "$xpc"
+          done
+
+          # 2. Sign helper apps (Sparkle's Updater.app)
+          find "$APP/Contents" -name "*.app" -print0 | while IFS= read -r -d '' helper; do
+            echo "Signing helper: $helper"
+            codesign --force --options runtime \
+              --sign "$SIGNING_IDENTITY" \
+              --keychain "$KEYCHAIN_PATH" "$helper"
+          done
+
+          # 3. Sign standalone executables (Sparkle's Autoupdate)
+          AUTOUPDATE="$APP/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate"
+          if [ -f "$AUTOUPDATE" ]; then
+            echo "Signing Autoupdate"
+            codesign --force --options runtime \
+              --sign "$SIGNING_IDENTITY" \
+              --keychain "$KEYCHAIN_PATH" "$AUTOUPDATE"
+          fi
+
+          # 4. Sign dylibs
+          find "$APP/Contents" -name "*.dylib" -print0 | while IFS= read -r -d '' f; do
+            echo "Signing dylib: $f"
             codesign --force --options runtime \
               --sign "$SIGNING_IDENTITY" \
               --keychain "$KEYCHAIN_PATH" "$f"
           done
 
-          codesign --force --deep --options runtime \
+          # 5. Sign frameworks (seals the already-signed nested code)
+          find "$APP/Contents" -name "*.framework" -print0 | while IFS= read -r -d '' f; do
+            echo "Signing framework: $f"
+            codesign --force --options runtime \
+              --sign "$SIGNING_IDENTITY" \
+              --keychain "$KEYCHAIN_PATH" "$f"
+          done
+
+          # 6. Sign the main app with its sandbox entitlements (no --deep!)
+          echo "Signing main app"
+          codesign --force --options runtime \
             --sign "$SIGNING_IDENTITY" \
             --keychain "$KEYCHAIN_PATH" \
             --entitlements macshot/macshot.entitlements \
-            "$APP" || \
-          codesign --force --deep --options runtime \
-            --sign "$SIGNING_IDENTITY" \
-            --keychain "$KEYCHAIN_PATH" \
             "$APP"
 
-          # Verify
+          # 7. Verify everything
           codesign --verify --deep --strict "$APP"
           echo "✅ Signing verified"
+
+          # 8. Confirm XPC services are NOT sandboxed
+          for xpc in $(find "$APP/Contents" -name "*.xpc"); do
+            ENT=$(codesign -d --entitlements - "$xpc" 2>&1 || true)
+            if echo "$ENT" | grep -q "app-sandbox"; then
+              echo "❌ ERROR: $xpc has sandbox entitlements — updates will fail!"
+              exit 1
+            fi
+            echo "✅ $(basename $xpc): no sandbox (correct)"
+          done
 
       # ── 6. Package into DMG ────────────────────────────────────────────────
       - name: Package DMG

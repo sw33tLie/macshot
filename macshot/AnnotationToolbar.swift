@@ -31,6 +31,7 @@ enum ToolbarButtonAction {
     case annotationMode
     case mouseHighlight
     case systemAudio
+    case micAudio
     case detach
     case scrollCapture
 }
@@ -202,6 +203,11 @@ class ToolbarLayout {
             var audioBtn = ToolbarButton(action: .systemAudio, sfSymbol: audioOn ? "speaker.wave.2.fill" : "speaker.slash", label: nil, tooltip: "Record System Audio")
             audioBtn.isSelected = audioOn
             buttons.append(audioBtn)
+
+            let micOn = UserDefaults.standard.bool(forKey: "recordMicAudio")
+            var micBtn = ToolbarButton(action: .micAudio, sfSymbol: micOn ? "mic.fill" : "mic.slash", label: nil, tooltip: "Record Microphone")
+            micBtn.isSelected = micOn
+            buttons.append(micBtn)
 
             return buttons
         }

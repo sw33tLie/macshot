@@ -1,8 +1,9 @@
 # Changelog
 
-## [3.2.4] - 2026-03-26
+## [3.2.5] - 2026-03-26
 
 ### Added
+- **Microphone recording** — record voice audio during screen recordings. New mic toggle button in the recording toolbar (off by default). Microphone permission is requested only when first enabled — users who don't need it are never prompted. Audio is written as a separate track in the MP4 file.
 - **Multi-anchor lines & arrows** — right-click (or Control-click) any line or arrow annotation to add anchor points. Drag individual anchors to create complex curves through multiple waypoints. Smooth Catmull-Rom spline rendering through all points.
 - **Share button** — new share button in the right toolbar opens the native macOS sharing menu (AirDrop, Messages, Mail, etc.)
 - **Number format options** — number annotations now support four formats: numeric (1, 2, 3), uppercase Roman (I, II, III), uppercase letters (A, B, C), and lowercase letters (a, b, c). Start-at value adjustable via stepper in the options row.
@@ -13,6 +14,8 @@
 - **Delay capture moved to menu bar** — the per-capture delay toolbar button has been removed. Delay is now a persistent setting in the menu bar only.
 
 ### Fixed
+- **Sparkle auto-updates** — fixed CI signing pipeline that was re-signing Sparkle's XPC installer services with the app's sandbox entitlements, preventing the updater from writing to the app bundle. XPC services are now signed without sandbox entitlements as Sparkle requires.
+- **Number tool crash** — fixed crash when switching to the number tool with alpha format and start-at value of 0. Input is now clamped and stepper minimum raised to 1.
 - **Annotation bounding rect** — bounding rectangle now accounts for all anchor points and control points, fixing hit-testing and selection for complex curved annotations
 
 ## [3.2.3] - 2026-03-26
