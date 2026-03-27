@@ -79,7 +79,7 @@ final class RecordingEngine: NSObject {
         let flippedY = displayBounds.maxY - rect.maxY
         // Scale to points — SCStream works in points on the display
         self.cropRect = CGRect(x: rect.minX - displayBounds.minX,
-                               y: flippedY - displayBounds.minY,
+                               y: flippedY,
                                width: rect.width,
                                height: rect.height)
 
