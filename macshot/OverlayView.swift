@@ -23,6 +23,7 @@ protocol OverlayViewDelegate: AnyObject {
     func overlayViewDidRequestDetach()
     func overlayViewDidRequestScrollCapture(rect: NSRect)
     func overlayViewDidRequestStopScrollCapture()
+    func overlayViewDidBeginSelection()
 }
 
 /// An entry in the undo/redo history.
@@ -7023,6 +7024,7 @@ class OverlayView: NSView {
             selectionStart = point
             selectionRect = NSRect(origin: point, size: .zero)
             state = .selecting
+            overlayDelegate?.overlayViewDidBeginSelection()
             needsDisplay = true
 
         case .selected:
@@ -7396,8 +7398,9 @@ class OverlayView: NSView {
             selectionStart = point
             selectionRect = NSRect(origin: point, size: .zero)
             state = .selecting
+            overlayDelegate?.overlayViewDidBeginSelection()
             needsDisplay = true
-        
+
         case .selecting:
             break
         }
@@ -10290,6 +10293,13 @@ class OverlayView: NSView {
         cursorTimer = nil
         scheduleBarcodeDetection()
         overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
+        needsDisplay = true
+    }
+
+    func clearSelection() {
+        state = .idle
+        selectionRect = .zero
+        showToolbars = false
         needsDisplay = true
     }
 

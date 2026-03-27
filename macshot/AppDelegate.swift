@@ -851,6 +851,12 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         // onSessionDone fires asynchronously via handleScrollCaptureCompleted
     }
 
+    func overlayDidBeginSelection(_ controller: OverlayWindowController) {
+        for other in overlayControllers where other !== controller {
+            other.clearSelection()
+        }
+    }
+
     private func handleScrollCaptureCompleted(finalImage: NSImage?) {
         scrollCaptureOverlayController?.setScrollCaptureState(isActive: false)
         scrollCaptureOverlayController = nil

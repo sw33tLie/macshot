@@ -14,6 +14,7 @@ protocol OverlayWindowControllerDelegate: AnyObject {
     func overlayDidRequestStopRecording(_ controller: OverlayWindowController)
     func overlayDidRequestScrollCapture(_ controller: OverlayWindowController, rect: NSRect, screen: NSScreen)
     func overlayDidRequestStopScrollCapture(_ controller: OverlayWindowController)
+    func overlayDidBeginSelection(_ controller: OverlayWindowController)
 }
 
 /// Manages one fullscreen overlay per screen.
@@ -76,6 +77,10 @@ class OverlayWindowController {
 
     func applySelection(_ rect: NSRect) {
         overlayView?.applySelection(rect)
+    }
+
+    func clearSelection() {
+        overlayView?.clearSelection()
     }
 
     /// Auto-select the full screen (as if user clicked without dragging).
@@ -385,6 +390,10 @@ extension OverlayWindowController: OverlayViewDelegate {
 
     func overlayViewDidRequestStopScrollCapture() {
         overlayDelegate?.overlayDidRequestStopScrollCapture(self)
+    }
+
+    func overlayViewDidBeginSelection() {
+        overlayDelegate?.overlayDidBeginSelection(self)
     }
 
     func overlayViewDidRequestDetach() {
