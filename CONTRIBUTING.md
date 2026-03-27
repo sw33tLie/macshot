@@ -32,10 +32,6 @@ The project uses synchronized file groups — just create `.swift` files in `mac
 - [ ] Doesn't break existing behavior
 - [ ] Commit message describes *what* and *why*
 
-## Localization
-
-macshot doesn't have a localization system yet. If you want to help with translations, open an issue and we'll figure out the approach together.
-
 ## Questions?
 
 Open an issue or start a discussion.
