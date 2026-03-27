@@ -294,7 +294,7 @@ extension OverlayWindowController: OverlayViewDelegate {
         guard let image = overlayView?.captureSelectedRegion() else { return }
         guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return }
 
-        let request = VNRecognizeTextRequest { [weak self] request, error in
+        let request = VisionOCR.makeTextRecognitionRequest { [weak self] request, error in
             guard let self = self else { return }
             var lines: [String] = []
             if let observations = request.results as? [VNRecognizedTextObservation] {
@@ -312,8 +312,6 @@ extension OverlayWindowController: OverlayViewDelegate {
                 self.overlayDelegate?.overlayDidRequestOCR(self, text: text, image: capturedImage)
             }
         }
-        request.recognitionLevel = .accurate
-        request.usesLanguageCorrection = true
 
         DispatchQueue.global(qos: .userInitiated).async {
             let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])

@@ -9659,7 +9659,7 @@ class OverlayView: NSView {
         let sourceImg = (redactTool == .blur || redactTool == .pixelate) ? compositedImage() : nil
         let sourceBounds = captureDrawRect
 
-        let request = VNRecognizeTextRequest { [weak self] request, error in
+        let request = VisionOCR.makeTextRecognitionRequest { [weak self] request, error in
             guard let self = self else { return }
             guard let observations = request.results as? [VNRecognizedTextObservation] else { return }
 
@@ -9795,8 +9795,6 @@ class OverlayView: NSView {
                 self.needsDisplay = true
             }
         }
-        request.recognitionLevel = .accurate
-        request.usesLanguageCorrection = true
 
         DispatchQueue.global(qos: .userInitiated).async {
             let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
@@ -9829,7 +9827,7 @@ class OverlayView: NSView {
         let sourceImg = (redactTool == .blur || redactTool == .pixelate) ? compositedImage() : nil
         let sourceBounds = captureDrawRect
 
-        let request = VNRecognizeTextRequest { [weak self] request, error in
+        let request = VisionOCR.makeTextRecognitionRequest { [weak self] request, error in
             guard let self = self else { return }
             guard let observations = request.results as? [VNRecognizedTextObservation] else { return }
 
@@ -9873,8 +9871,6 @@ class OverlayView: NSView {
                 self.needsDisplay = true
             }
         }
-        request.recognitionLevel = .accurate
-        request.usesLanguageCorrection = true
 
         DispatchQueue.global(qos: .userInitiated).async {
             let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
@@ -9998,7 +9994,7 @@ class OverlayView: NSView {
         let viewBounds = self.bounds
 
         // Vision OCR with bounding boxes
-        let request = VNRecognizeTextRequest { [weak self] request, error in
+        let request = VisionOCR.makeTextRecognitionRequest { [weak self] request, error in
             guard let self = self else { return }
             guard let observations = request.results as? [VNRecognizedTextObservation],
                   !observations.isEmpty else {
@@ -10080,8 +10076,6 @@ class OverlayView: NSView {
                 }
             }
         }
-        request.recognitionLevel = .accurate
-        request.usesLanguageCorrection = true
 
         DispatchQueue.global(qos: .userInitiated).async {
             let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])

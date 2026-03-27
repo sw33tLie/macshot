@@ -153,15 +153,13 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
     func overlayViewDidRequestOCR() {
         guard let image = overlayView?.captureSelectedRegion(),
               let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return }
-        let request = VNRecognizeTextRequest { [weak self] req, _ in
+        let request = VisionOCR.makeTextRecognitionRequest { [weak self] req, _ in
             let lines = (req.results as? [VNRecognizedTextObservation])?.compactMap { $0.topCandidates(1).first?.string } ?? []
             DispatchQueue.main.async {
                 guard self != nil else { return }
                 OCRResultController(text: lines.joined(separator: "\n"), image: image).show()
             }
         }
-        request.recognitionLevel = .accurate
-        request.usesLanguageCorrection = true
         DispatchQueue.global(qos: .userInitiated).async {
             try? VNImageRequestHandler(cgImage: cgImage, options: [:]).perform([request])
         }
