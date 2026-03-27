@@ -507,7 +507,7 @@ class OverlayView: NSView {
         ) as? [[String: Any]] else { return }
 
         let overlayWindowNumber = win.windowNumber
-        let screenH = NSScreen.screens.map { $0.frame.maxY }.max() ?? 0
+        let screenH = NSScreen.screens.first?.frame.height ?? 0
 
         for info in windowList {
             guard let layer = info[kCGWindowLayer as String] as? Int, layer == 0,
@@ -732,7 +732,7 @@ class OverlayView: NSView {
             let overlayWindowNumber = viewWindow.windowNumber
             let windowOrigin = viewWindow.frame.origin
             let viewBounds = bounds
-            let screenH = NSScreen.screens.map { $0.frame.maxY }.max() ?? NSScreen.main?.frame.height ?? 0
+            let screenH = NSScreen.screens.first?.frame.height ?? NSScreen.main?.frame.height ?? 0
             windowSnapQueryInFlight = true
             DispatchQueue.global(qos: .userInteractive).async { [weak self] in
                 let newRect = Self.windowRectOnBackground(
