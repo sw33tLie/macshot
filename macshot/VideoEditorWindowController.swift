@@ -1,6 +1,7 @@
 import Cocoa
 import AVFoundation
 import AVKit
+import UniformTypeIdentifiers
 
 /// Standalone video editor window for trimming and exporting recorded videos.
 final class VideoEditorWindowController: NSObject, NSWindowDelegate {
@@ -111,11 +112,13 @@ private final class VideoEditorView: NSView {
     // Button rects
     private var playBtnRect: NSRect = .zero
     private var saveBtnRect: NSRect = .zero
+    private var saveArrowRect: NSRect = .zero
     private var uploadBtnRect: NSRect = .zero
     private var copyBtnRect: NSRect = .zero
     private var muteBtnRect: NSRect = .zero
     private var finderBtnRect: NSRect = .zero
     private var isMuted: Bool = false
+    private var savedURL: URL?
     private var statusMessage: String?
     private var statusIsError: Bool = false
     private var statusTimer: Timer?
@@ -257,6 +260,8 @@ private final class VideoEditorView: NSView {
         playerView?.player = nil
         gifPlaybackTimer?.invalidate()
         gifPlaybackTimer = nil
+        // Clean up temp recording file
+        try? FileManager.default.removeItem(at: videoURL)
     }
 
     private var currentPlaybackTime: Double {
@@ -404,7 +409,7 @@ private final class VideoEditorView: NSView {
         }
         x -= gap + iconBtnW
         finderBtnRect = NSRect(x: x, y: btnY, width: iconBtnW, height: btnH)
-        drawIconButton(rect: finderBtnRect, symbol: "folder", accent: false)
+        drawIconButton(rect: finderBtnRect, symbol: "folder", accent: false, dimmed: savedURL == nil)
         x -= gap + labelBtnW
         let uploadProvider = UserDefaults.standard.string(forKey: "uploadProvider") ?? "imgbb"
         let canUpload = (uploadProvider == "gdrive" && GoogleDriveUploader.shared.isSignedIn) || (uploadProvider == "s3" && S3Uploader.shared.isConfigured)
@@ -414,25 +419,86 @@ private final class VideoEditorView: NSView {
         } else {
             drawLabelButton(rect: uploadBtnRect, symbol: "icloud.and.arrow.up", label: "Upload", dimmed: !canUpload)
         }
-        x -= gap + labelBtnW
+        let arrowW: CGFloat = 20
+        x -= gap + labelBtnW + arrowW
+        let fullSaveW = labelBtnW + arrowW
+        let fullSaveRect = NSRect(x: x, y: btnY, width: fullSaveW, height: btnH)
         saveBtnRect = NSRect(x: x, y: btnY, width: labelBtnW, height: btnH)
+        saveArrowRect = NSRect(x: x + labelBtnW, y: btnY, width: arrowW, height: btnH)
+
+        // Draw combined background
+        NSColor.white.withAlphaComponent(0.1).setFill()
+        NSBezierPath(roundedRect: fullSaveRect, xRadius: 6, yRadius: 6).fill()
+
+        // Draw save icon + label in left portion
         if compact {
-            drawIconButton(rect: saveBtnRect, symbol: "square.and.arrow.down", accent: false)
+            if let img = NSImage(systemSymbolName: "square.and.arrow.down", accessibilityDescription: nil)?
+                    .withSymbolConfiguration(.init(pointSize: 13, weight: .medium)) {
+                let tinted = NSImage(size: img.size, flipped: false) { r in
+                    img.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1)
+                    NSColor.white.setFill()
+                    r.fill(using: .sourceAtop)
+                    return true
+                }
+                let imgRect = NSRect(x: saveBtnRect.midX - img.size.width / 2, y: saveBtnRect.midY - img.size.height / 2,
+                                      width: img.size.width, height: img.size.height)
+                tinted.draw(in: imgRect)
+            }
         } else {
-            drawLabelButton(rect: saveBtnRect, symbol: "square.and.arrow.down", label: "Save")
+            let iconSize: CGFloat = 12
+            let attrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 11, weight: .medium),
+                .foregroundColor: NSColor.white.withAlphaComponent(0.85),
+            ]
+            let labelSize = ("Save" as NSString).size(withAttributes: attrs)
+            let totalW = iconSize + 4 + labelSize.width
+            let startX = saveBtnRect.midX - totalW / 2
+            if let img = NSImage(systemSymbolName: "square.and.arrow.down", accessibilityDescription: nil)?
+                    .withSymbolConfiguration(.init(pointSize: iconSize, weight: .medium)) {
+                let tinted = NSImage(size: img.size, flipped: false) { r in
+                    img.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1)
+                    NSColor.white.withAlphaComponent(0.85).setFill()
+                    r.fill(using: .sourceAtop)
+                    return true
+                }
+                tinted.draw(in: NSRect(x: startX, y: saveBtnRect.midY - img.size.height / 2, width: img.size.width, height: img.size.height))
+            }
+            ("Save" as NSString).draw(at: NSPoint(x: startX + iconSize + 4, y: saveBtnRect.midY - labelSize.height / 2), withAttributes: attrs)
+        }
+
+        // Draw separator line
+        NSColor.white.withAlphaComponent(0.2).setStroke()
+        let sep = NSBezierPath()
+        sep.move(to: NSPoint(x: saveArrowRect.minX, y: saveArrowRect.minY + 4))
+        sep.line(to: NSPoint(x: saveArrowRect.minX, y: saveArrowRect.maxY - 4))
+        sep.lineWidth = 1
+        sep.stroke()
+
+        // Draw chevron in arrow portion
+        if let chevron = NSImage(systemSymbolName: "chevron.down", accessibilityDescription: nil)?
+                .withSymbolConfiguration(.init(pointSize: 8, weight: .semibold)) {
+            let tinted = NSImage(size: chevron.size, flipped: false) { r in
+                chevron.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1)
+                NSColor.white.withAlphaComponent(0.6).setFill()
+                r.fill(using: .sourceAtop)
+                return true
+            }
+            tinted.draw(in: NSRect(x: saveArrowRect.midX - chevron.size.width / 2, y: saveArrowRect.midY - chevron.size.height / 2,
+                                    width: chevron.size.width, height: chevron.size.height))
         }
     }
 
-    private func drawIconButton(rect: NSRect, symbol: String, accent: Bool, active: Bool = false) {
-        let bg = accent ? NSColor.systemPurple : (active ? NSColor.systemPurple.withAlphaComponent(0.4) : NSColor.white.withAlphaComponent(0.1))
+    private func drawIconButton(rect: NSRect, symbol: String, accent: Bool, active: Bool = false, dimmed: Bool = false) {
+        let bg = accent ? NSColor.systemPurple : (active ? NSColor.systemPurple.withAlphaComponent(0.4) : NSColor.white.withAlphaComponent(dimmed ? 0.04 : 0.1))
         bg.setFill()
         NSBezierPath(roundedRect: rect, xRadius: 6, yRadius: 6).fill()
 
+        let alpha: CGFloat = dimmed ? 0.25 : 1.0
         if let img = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?
                 .withSymbolConfiguration(.init(pointSize: 13, weight: .medium)) {
             let tinted = NSImage(size: img.size, flipped: false) { r in
                 img.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1)
-                NSColor.white.setFill()
+                NSColor.white.withAlphaComponent(alpha).setFill()
                 r.fill(using: .sourceAtop)
                 return true
             }
@@ -537,9 +603,13 @@ private final class VideoEditorView: NSView {
         // Buttons
         if playBtnRect.contains(point) { togglePlayPause(); return }
         if muteBtnRect.contains(point) { toggleMute(); return }
+        if saveArrowRect.contains(point) { saveVideoAs(); return }
         if saveBtnRect.contains(point) { saveVideo(); return }
         if uploadBtnRect.contains(point) { uploadVideo(); return }
-        if finderBtnRect.contains(point) { NSWorkspace.shared.activateFileViewerSelecting([videoURL]); return }
+        if finderBtnRect.contains(point) {
+            if let url = savedURL { NSWorkspace.shared.activateFileViewerSelecting([url]) }
+            return
+        }
         if copyBtnRect.contains(point) { copyPath(); return }
     }
 
@@ -615,8 +685,9 @@ private final class VideoEditorView: NSView {
     }
 
     private func copyPath() {
+        let url = savedURL ?? videoURL
         NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(videoURL.path, forType: .string)
+        NSPasteboard.general.setString(url.path, forType: .string)
         showStatus("Path copied!")
     }
 
@@ -641,31 +712,54 @@ private final class VideoEditorView: NSView {
     }
 
     private func saveVideo() {
+        let dirURL = SaveDirectoryAccess.resolveRecordingDirectory()
+        let ext = videoURL.pathExtension
+        let name = videoURL.deletingPathExtension().lastPathComponent + ".\(ext)"
+        let destURL = dirURL.appendingPathComponent(name)
+        saveToDestination(destURL, dirURL: dirURL)
+    }
+
+    private func saveVideoAs() {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = isGIF ? [.gif] : [.mpeg4Movie]
+        panel.nameFieldStringValue = videoURL.deletingPathExtension().lastPathComponent + ".\(videoURL.pathExtension)"
+        panel.directoryURL = SaveDirectoryAccess.recordingDirectoryHint()
+        panel.level = .statusBar + 3
+        panel.begin { [weak self] response in
+            guard let self = self, response == .OK, let url = panel.url else { return }
+            self.saveToDestination(url, dirURL: nil)
+        }
+    }
+
+    private func saveToDestination(_ destURL: URL, dirURL: URL?) {
         let needsTrim = trimStart > 0.01 || (duration - trimEnd) > 0.01
         let needsExport = needsTrim || isMuted
 
         if !needsExport {
-            NSWorkspace.shared.activateFileViewerSelecting([videoURL])
-            showStatus("Saved!")
+            // No processing needed — copy temp file to destination
+            try? FileManager.default.removeItem(at: destURL)
+            do {
+                try FileManager.default.copyItem(at: videoURL, to: destURL)
+                savedURL = destURL
+                if let dirURL = dirURL { SaveDirectoryAccess.stopAccessing(url: dirURL) }
+                showStatus("Saved to \(destURL.lastPathComponent)")
+                needsDisplay = true
+            } catch {
+                showStatus("Save failed", isError: true)
+            }
             return
         }
 
         guard let asset = asset else { return }
         showStatus("Exporting...")
 
-        let ext = videoURL.pathExtension
-        let dir = videoURL.deletingLastPathComponent()
-        let suffix = [needsTrim ? "trimmed" : nil, isMuted ? "muted" : nil].compactMap { $0 }.joined(separator: "+")
-        let name = videoURL.deletingPathExtension().lastPathComponent + " (\(suffix)).\(ext)"
-        let outputURL = dir.appendingPathComponent(name)
-
-        try? FileManager.default.removeItem(at: outputURL)
-
+        // Export to a temp file first, then move to destination
+        let tmpURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".\(videoURL.pathExtension)")
         let startTime = CMTime(seconds: trimStart, preferredTimescale: 600)
         let endTime = CMTime(seconds: trimEnd, preferredTimescale: 600)
         let timeRange = CMTimeRange(start: startTime, end: endTime)
 
-        guard let session = exportSession(asset: asset, timeRange: timeRange, outputURL: outputURL) else {
+        guard let session = exportSession(asset: asset, timeRange: timeRange, outputURL: tmpURL) else {
             showStatus("Export failed", isError: true)
             return
         }
@@ -674,10 +768,19 @@ private final class VideoEditorView: NSView {
             await session.export()
             await MainActor.run {
                 if session.status == .completed {
-                    NSWorkspace.shared.activateFileViewerSelecting([outputURL])
-                    self.showStatus("Saved!")
+                    try? FileManager.default.removeItem(at: destURL)
+                    do {
+                        try FileManager.default.moveItem(at: tmpURL, to: destURL)
+                        self.savedURL = destURL
+                        if let dirURL = dirURL { SaveDirectoryAccess.stopAccessing(url: dirURL) }
+                        self.showStatus("Saved to \(destURL.lastPathComponent)")
+                        self.needsDisplay = true
+                    } catch {
+                        self.showStatus("Save failed", isError: true)
+                    }
                 } else {
                     self.showStatus("Export failed", isError: true)
+                    try? FileManager.default.removeItem(at: tmpURL)
                 }
             }
         }

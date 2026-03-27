@@ -64,4 +64,63 @@ enum SaveDirectoryAccess {
     static var displayPath: String {
         UserDefaults.standard.string(forKey: pathKey) ?? "~/Pictures"
     }
+
+    // MARK: - Recording save directory (optional, falls back to general)
+
+    private static let recBookmarkKey = "recordingSaveDirectoryBookmark"
+    private static let recPathKey = "recordingSaveDirectory"
+
+    static func saveRecordingDirectory(url: URL) {
+        UserDefaults.standard.set(url.path, forKey: recPathKey)
+        if let bookmark = try? url.bookmarkData(options: .withSecurityScope,
+                                                  includingResourceValuesForKeys: nil,
+                                                  relativeTo: nil) {
+            UserDefaults.standard.set(bookmark, forKey: recBookmarkKey)
+        }
+    }
+
+    static func clearRecordingDirectory() {
+        UserDefaults.standard.removeObject(forKey: recPathKey)
+        UserDefaults.standard.removeObject(forKey: recBookmarkKey)
+    }
+
+    static var hasRecordingDirectory: Bool {
+        UserDefaults.standard.string(forKey: recPathKey) != nil
+    }
+
+    /// Resolve recording save directory. Falls back to general save directory.
+    static func resolveRecordingDirectory() -> URL {
+        if let bookmarkData = UserDefaults.standard.data(forKey: recBookmarkKey) {
+            var isStale = false
+            if let url = try? URL(resolvingBookmarkData: bookmarkData,
+                                   options: .withSecurityScope,
+                                   relativeTo: nil,
+                                   bookmarkDataIsStale: &isStale) {
+                if isStale {
+                    if let fresh = try? url.bookmarkData(options: .withSecurityScope,
+                                                          includingResourceValuesForKeys: nil,
+                                                          relativeTo: nil) {
+                        UserDefaults.standard.set(fresh, forKey: recBookmarkKey)
+                    }
+                }
+                _ = url.startAccessingSecurityScopedResource()
+                return url
+            }
+        }
+        if let path = UserDefaults.standard.string(forKey: recPathKey) {
+            return URL(fileURLWithPath: path)
+        }
+        return resolve()
+    }
+
+    static func recordingDirectoryHint() -> URL? {
+        if let path = UserDefaults.standard.string(forKey: recPathKey) {
+            return URL(fileURLWithPath: path)
+        }
+        return directoryHint()
+    }
+
+    static var recordingDisplayPath: String {
+        UserDefaults.standard.string(forKey: recPathKey) ?? "Same as screenshots"
+    }
 }

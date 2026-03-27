@@ -86,7 +86,22 @@ final class RecordingEngine: NSObject {
         self.format = RecordingFormat(rawValue: UserDefaults.standard.string(forKey: "recordingFormat") ?? "mp4") ?? .mp4
         self.fps = UserDefaults.standard.integer(forKey: "recordingFPS") > 0
             ? UserDefaults.standard.integer(forKey: "recordingFPS") : 30
-        Task { await self.beginCapture(rect: rect) }
+        Task {
+            // Resolve mic permission before starting capture so the prompt
+            // doesn't block the UI while frames are already being recorded.
+            if format == .mp4 && UserDefaults.standard.bool(forKey: "recordMicAudio") {
+                let micStatus = AVCaptureDevice.authorizationStatus(for: .audio)
+                if micStatus == .notDetermined {
+                    let granted = await AVCaptureDevice.requestAccess(for: .audio)
+                    if !granted {
+                        UserDefaults.standard.set(false, forKey: "recordMicAudio")
+                    }
+                } else if micStatus == .denied || micStatus == .restricted {
+                    UserDefaults.standard.set(false, forKey: "recordMicAudio")
+                }
+            }
+            await self.beginCapture(rect: rect)
+        }
     }
 
     func stopRecording() {
@@ -164,22 +179,10 @@ final class RecordingEngine: NSObject {
             try await stream.startCapture()
             self.stream = stream
 
-            // Start mic capture if enabled (MP4 only, requires permission)
-            if format == .mp4 && UserDefaults.standard.bool(forKey: "recordMicAudio") {
-                let micStatus = AVCaptureDevice.authorizationStatus(for: .audio)
-                if micStatus == .authorized {
-                    await MainActor.run { self.startMicCapture() }
-                } else if micStatus == .notDetermined {
-                    let granted = await AVCaptureDevice.requestAccess(for: .audio)
-                    if granted {
-                        await MainActor.run { self.startMicCapture() }
-                    } else {
-                        UserDefaults.standard.set(false, forKey: "recordMicAudio")
-                    }
-                } else {
-                    // Permission denied/restricted — turn off the toggle silently
-                    UserDefaults.standard.set(false, forKey: "recordMicAudio")
-                }
+            // Start mic capture if enabled and authorized (permission resolved before capture started)
+            if format == .mp4 && UserDefaults.standard.bool(forKey: "recordMicAudio") &&
+               AVCaptureDevice.authorizationStatus(for: .audio) == .authorized {
+                await MainActor.run { self.startMicCapture() }
             }
 
             await MainActor.run {

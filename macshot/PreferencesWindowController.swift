@@ -49,6 +49,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
     private var recordingFormatPopup: NSPopUpButton!
     private var recordingFPSPopup: NSPopUpButton!
     private var recordingOnStopPopup: NSPopUpButton!
+    private var recSavePathField: NSTextField!
 
     var onHotkeyChanged: (() -> Void)?
 
@@ -622,10 +623,17 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.addArrangedSubview(labeledRow("Frame rate:", controls: [recordingFPSPopup]))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
-        let saveNote = NSTextField(labelWithString: "Recordings are saved to the folder set in General.")
-        saveNote.font = NSFont.systemFont(ofSize: 11)
-        saveNote.textColor = .secondaryLabelColor
-        stack.addArrangedSubview(indented(saveNote))
+        recSavePathField = NSTextField()
+        recSavePathField.isEditable = false
+        recSavePathField.isSelectable = false
+        recSavePathField.lineBreakMode = .byTruncatingMiddle
+
+        let recBrowseBtn = NSButton(title: "Browse…", target: self, action: #selector(browseRecSavePath(_:)))
+        recBrowseBtn.bezelStyle = .rounded
+        let recClearBtn = NSButton(title: "Clear", target: self, action: #selector(clearRecSavePath(_:)))
+        recClearBtn.bezelStyle = .rounded
+
+        stack.addArrangedSubview(labeledRow("Save folder:", controls: [recSavePathField, recBrowseBtn, recClearBtn]))
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // ── Behavior ──────────────────────────────────────────
@@ -1293,6 +1301,8 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
 
         let onStop = UserDefaults.standard.string(forKey: "recordingOnStop") ?? "finder"
         recordingOnStopPopup.selectItem(at: onStop == "nothing" ? 1 : 0)
+
+        recSavePathField.stringValue = SaveDirectoryAccess.recordingDisplayPath
     }
 
     private func updateQualityVisibility() {
@@ -1398,6 +1408,22 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
     }
     @objc private func recordingOnStopChanged(_ sender: NSPopUpButton) {
         UserDefaults.standard.set(sender.indexOfSelectedItem == 1 ? "nothing" : "finder", forKey: "recordingOnStop")
+    }
+    @objc private func browseRecSavePath(_ sender: NSButton) {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = false
+        panel.directoryURL = SaveDirectoryAccess.recordingDirectoryHint()
+        panel.begin { [weak self] response in
+            guard response == .OK, let url = panel.url else { return }
+            SaveDirectoryAccess.saveRecordingDirectory(url: url)
+            self?.recSavePathField.stringValue = url.path
+        }
+    }
+    @objc private func clearRecSavePath(_ sender: NSButton) {
+        SaveDirectoryAccess.clearRecordingDirectory()
+        recSavePathField.stringValue = SaveDirectoryAccess.recordingDisplayPath
     }
     @objc private func toggleItemChanged(_ sender: NSButton) {
         let key = sender.identifier?.rawValue ?? "enabledTools"
