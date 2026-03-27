@@ -29,14 +29,6 @@
 
 ---
 
-> **Upgrading from v3.2.4 or earlier?** Auto-update may fail due to a signing issue with the update installer. Please reinstall manually:
-> ```bash
-> brew uninstall macshot && brew update && brew install sw33tlie/macshot/macshot
-> ```
-> Or download the latest `.dmg` from [Releases](https://github.com/sw33tLie/macshot/releases). Future updates will work automatically.
-
----
-
 ## Install
 
 **Homebrew:**
@@ -65,7 +57,7 @@ brew install sw33tlie/macshot/macshot
 - **Window snap** — hover over a window and click to capture it exactly; `Tab` toggles snap, `F` for full screen
 - **Scroll capture** — auto-detects vertical or horizontal scrolling, stitches with Apple Vision
 - **Capture delay** — 3/5/10/30 second countdown before capture, set via menu bar. Escape to cancel.
-- **Multi-monitor** — captures all screens simultaneously
+- **Multi-monitor** — captures all screens simultaneously; drag a selection across screens for a stitched image
 - **Quick save** — `Cmd+Shift+S` to select and save/copy instantly without annotation. Enter key also saves/copies based on preference.
 - **Quick OCR** — `Cmd+Shift+T` to select and extract text instantly
 
@@ -90,7 +82,7 @@ brew install sw33tlie/macshot/macshot
 - **Microphone recording** — record voice narration alongside screen capture (permission requested on first use)
 - **Mouse click highlights** — visual ripple on clicks during recording
 - **Annotation mode** — draw on screen while recording
-- **Video editor** — trim timeline, mute/strip audio, play/pause, save, upload, reveal in Finder
+- **Video editor** — trim timeline, mute/strip audio, play/pause, save (with Save As), upload, reveal in Finder
 
 ### Output & Upload
 - **Formats** — PNG, JPEG, HEIC, WebP with quality slider
@@ -110,7 +102,7 @@ brew install sw33tlie/macshot/macshot
 - 30 gradient styles including 7 mesh gradients (macOS 15+), adjustable padding/corner radius/shadow
 
 ### Other
-- **OCR** — extract text with Apple Vision, translate to 30+ languages, Google AI Search
+- **OCR** — extract text with Apple Vision (auto-detects all languages on macOS 13+), translate to 30+ languages, Google AI Search
 - **Invert colors** — one-click color inversion, apply twice to revert
 - **Background removal** — Apple Vision foreground mask (macOS 14+)
 - **Pin to screen** — floating always-on-top window

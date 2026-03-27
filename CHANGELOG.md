@@ -1,5 +1,25 @@
 # Changelog
 
+## [3.3.0] - 2026-03-27
+
+### Added
+- **Multi-language OCR** — Vision auto-detects Chinese, Japanese, Korean, Arabic, and all other supported languages on macOS 13+ (macOS 12 behavior unchanged)
+- **Cross-screen selection** — drag a selection across multiple monitors. The selection highlight appears on both screens and the captured image is stitched from all overlapping displays.
+- **Recording save folder** — optional separate save directory for recordings in Preferences > Recording. Falls back to the general screenshot folder if not set.
+- **Video editor Save As** — click the chevron arrow on the Save button to choose a custom save location. Save button now shows the filename in the status bar after saving.
+- **Contributing guide** — added CONTRIBUTING.md with guidelines for contributors
+
+### Changed
+- **Video editor save flow** — Save now copies to the configured save directory instead of revealing the temp file. Finder button is grayed out until the file is saved. Temp files are cleaned up when the editor closes.
+- **Window title in filename** — now uses CGWindowList API instead of Accessibility API, removing the need for Accessibility permission
+- **Mic permission timing** — microphone permission is now requested before recording starts, not during. Prevents frozen timer and recording of the permission dialog.
+
+### Fixed
+- **Window snap on vertical monitors** — fixed window highlighting showing wrong windows when monitors are stacked vertically (CG→AppKit Y conversion used wrong reference height)
+- **Multi-monitor selection cleanup** — starting a new selection on one monitor now clears the selection on all other monitors
+- **Recording crop rect on vertical monitors** — fixed incorrect Y coordinate conversion that could cause recording to fail or capture the wrong region on vertically stacked displays (thanks @vo1x)
+- **Shortcut recorder stuck on "Waiting..."** — fixed the preferences shortcut recorder getting stuck when clicking the Record button again without pressing a key (thanks @vo1x)
+
 ## [3.2.6] - 2026-03-26
 
 ### Added
