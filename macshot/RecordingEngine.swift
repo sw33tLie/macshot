@@ -166,7 +166,20 @@ final class RecordingEngine: NSObject {
 
             // Start mic capture if enabled (MP4 only, requires permission)
             if format == .mp4 && UserDefaults.standard.bool(forKey: "recordMicAudio") {
-                await MainActor.run { self.startMicCapture() }
+                let micStatus = AVCaptureDevice.authorizationStatus(for: .audio)
+                if micStatus == .authorized {
+                    await MainActor.run { self.startMicCapture() }
+                } else if micStatus == .notDetermined {
+                    let granted = await AVCaptureDevice.requestAccess(for: .audio)
+                    if granted {
+                        await MainActor.run { self.startMicCapture() }
+                    } else {
+                        UserDefaults.standard.set(false, forKey: "recordMicAudio")
+                    }
+                } else {
+                    // Permission denied/restricted — turn off the toggle silently
+                    UserDefaults.standard.set(false, forKey: "recordMicAudio")
+                }
             }
 
             await MainActor.run {
