@@ -4049,14 +4049,32 @@ class OverlayView: NSView {
             bx = max(bounds.minX + 4, min(bx, bounds.maxX - bottomSize.width - 4))
             bottomStrip.frame.origin = NSPoint(x: bx, y: by)
 
-            // Right: to the right of selection, flip left if no room
+            // Right: to the right of selection, flip to left if no room
             var rx = anchorRect.maxX + 6
-            if rx + rightSize.width > bounds.maxX - 4 { rx = anchorRect.minX - rightSize.width - 6 }
+            if rx + rightSize.width > bounds.maxX - 4 {
+                rx = anchorRect.minX - rightSize.width - 6
+            }
             rx = max(bounds.minX + 4, min(rx, bounds.maxX - rightSize.width - 4))
+
+            // Top-align with selection top
             var ry = anchorRect.maxY - rightSize.height
             ry = max(bounds.minY + 4, min(ry, bounds.maxY - rightSize.height - 4))
-            if NSRect(x: rx, y: ry, width: rightSize.width, height: rightSize.height).intersects(bottomStrip.frame) {
-                ry = bottomStrip.frame.minY - rightSize.height - 4
+
+            // Avoid overlapping bottom bar
+            let bf = bottomStrip.frame
+            if bf.width > 0 {
+                let rightRect = NSRect(x: rx, y: ry, width: rightSize.width, height: rightSize.height)
+                if rightRect.intersects(bf) {
+                    // Bottom bar is above selection: push right bar below it
+                    if bf.minY > anchorRect.maxY - 2 {
+                        ry = bf.minY - 4 - rightSize.height
+                    }
+                    // Bottom bar is below selection: push right bar above it
+                    else if bf.maxY < anchorRect.minY + 2 {
+                        ry = bf.maxY + 4
+                    }
+                    ry = max(bounds.minY + 4, min(ry, bounds.maxY - rightSize.height - 4))
+                }
             }
             rightStrip.frame.origin = NSPoint(x: rx, y: ry)
         }
