@@ -58,7 +58,6 @@ class ToolOptionsRowView: NSView {
 
         // ── Arrow style ──
         if tool == .arrow {
-            curX = addStrokeSlider(at: curX, tool: tool, ov: ov)
             curX = addArrowStyleSegment(at: curX, ov: ov)
         }
 
@@ -70,6 +69,11 @@ class ToolOptionsRowView: NSView {
         // ── Corner radius slider (rectangle) ──
         if tool == .rectangle {
             curX = addCornerRadiusSlider(at: curX, ov: ov)
+        }
+
+        // ── Right-click hint for line/arrow ──
+        if tool == .line || tool == .arrow {
+            curX = addHintLabel(at: curX, text: "Right-click to add points")
         }
 
         // ── Pencil smooth toggle ──
@@ -253,6 +257,8 @@ class ToolOptionsRowView: NSView {
 
     private func addTextOptions(at x: CGFloat, ov: OverlayView) -> CGFloat {
         var curX = x
+
+        // Bold / Italic / Underline / Strikethrough
         let textStyles: [(String, String, Bool, Selector)] = [
             ("bold", "B", ov.textBold, #selector(boldToggled)),
             ("italic", "I", ov.textItalic, #selector(italicToggled)),
@@ -271,25 +277,86 @@ class ToolOptionsRowView: NSView {
         }
         curX += 4
 
-        // Font size stepper
-        let sizeLabel = NSTextField(labelWithString: "\(Int(ov.textFontSize))pt")
-        sizeLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .medium)
-        sizeLabel.textColor = NSColor.white.withAlphaComponent(0.6)
-        sizeLabel.tag = 998
-        sizeLabel.sizeToFit()
-        sizeLabel.frame.origin = NSPoint(x: curX, y: (rowHeight - sizeLabel.frame.height) / 2)
-        addSubview(sizeLabel)
-        curX += sizeLabel.frame.width + 2
+        // Alignment buttons
+        let alignments: [(String, NSTextAlignment)] = [
+            ("text.alignleft", .left), ("text.aligncenter", .center), ("text.alignright", .right)
+        ]
+        for (symbol, alignment) in alignments {
+            let btn = NSButton()
+            btn.bezelStyle = .recessed
+            btn.isBordered = false
+            btn.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?
+                .withSymbolConfiguration(.init(pointSize: 12, weight: .medium))
+            btn.state = ov.textAlignment == alignment ? .on : .off
+            btn.setButtonType(.toggle)
+            btn.tag = alignment.rawValue
+            btn.target = self
+            btn.action = #selector(alignmentChanged(_:))
+            btn.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: 26, height: 22)
+            addSubview(btn)
+            curX += 28
+        }
+        curX += 4
 
-        let stepper = NSStepper()
-        stepper.minValue = 8
-        stepper.maxValue = 200
-        stepper.integerValue = Int(ov.textFontSize)
-        stepper.target = self
-        stepper.action = #selector(fontSizeChanged(_:))
-        stepper.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: 19, height: 22)
-        addSubview(stepper)
+        // Font size −/+
+        let minusBtn = NSButton(title: "−", target: self, action: #selector(fontSizeDecreased))
+        minusBtn.bezelStyle = .recessed
+        minusBtn.font = NSFont.systemFont(ofSize: 14, weight: .medium)
+        minusBtn.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: 20, height: 22)
+        addSubview(minusBtn)
+        curX += 20
+
+        let sizeLabel = NSTextField(labelWithString: "\(Int(ov.textFontSize))")
+        sizeLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .medium)
+        sizeLabel.textColor = NSColor.white.withAlphaComponent(0.7)
+        sizeLabel.alignment = .center
+        sizeLabel.tag = 998
+        sizeLabel.frame = NSRect(x: curX, y: (rowHeight - 14) / 2, width: 26, height: 14)
+        addSubview(sizeLabel)
+        curX += 26
+
+        let plusBtn = NSButton(title: "+", target: self, action: #selector(fontSizeIncreased))
+        plusBtn.bezelStyle = .recessed
+        plusBtn.font = NSFont.systemFont(ofSize: 14, weight: .medium)
+        plusBtn.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: 20, height: 22)
+        addSubview(plusBtn)
         curX += 24
+
+        // Fill / Outline toggles
+        let fillBtn = NSButton(checkboxWithTitle: "Fill", target: self, action: #selector(textBgToggled(_:)))
+        fillBtn.state = ov.textBgEnabled ? .on : .off
+        fillBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
+        fillBtn.sizeToFit()
+        fillBtn.frame.origin = NSPoint(x: curX, y: (rowHeight - fillBtn.frame.height) / 2)
+        addSubview(fillBtn)
+        curX += fillBtn.frame.width + 4
+
+        let outlineBtn = NSButton(checkboxWithTitle: "Outline", target: self, action: #selector(textOutlineToggled(_:)))
+        outlineBtn.state = ov.textOutlineEnabled ? .on : .off
+        outlineBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
+        outlineBtn.sizeToFit()
+        outlineBtn.frame.origin = NSPoint(x: curX, y: (rowHeight - outlineBtn.frame.height) / 2)
+        addSubview(outlineBtn)
+        curX += outlineBtn.frame.width + 8
+
+        // Cancel / Confirm (only when editing text)
+        if ov.textEditView != nil {
+            let cancelBtn = NSButton(title: "✕", target: self, action: #selector(textCancelClicked))
+            cancelBtn.bezelStyle = .recessed
+            cancelBtn.contentTintColor = .systemRed
+            cancelBtn.font = NSFont.systemFont(ofSize: 11, weight: .medium)
+            cancelBtn.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: 24, height: 22)
+            addSubview(cancelBtn)
+            curX += 26
+
+            let confirmBtn = NSButton(title: "✓", target: self, action: #selector(textConfirmClicked))
+            confirmBtn.bezelStyle = .recessed
+            confirmBtn.contentTintColor = .systemGreen
+            confirmBtn.font = NSFont.systemFont(ofSize: 12, weight: .medium)
+            confirmBtn.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: 24, height: 22)
+            addSubview(confirmBtn)
+            curX += 28
+        }
 
         return curX
     }
@@ -302,7 +369,10 @@ class ToolOptionsRowView: NSView {
         seg.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: 60, height: 22)
         (seg.cell as? NSSegmentedCell)?.segmentStyle = .roundRect
         addSubview(seg)
-        curX += 64
+        curX += 72
+
+        // Hint
+        curX = addHintLabel(at: curX, text: "Hold 1 auto-vertical  ·  Hold 2 auto-horizontal")
         return curX
     }
 
@@ -472,6 +542,16 @@ class ToolOptionsRowView: NSView {
         ov.needsDisplay = true
     }
 
+    private func addHintLabel(at x: CGFloat, text: String) -> CGFloat {
+        let label = NSTextField(labelWithString: text)
+        label.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
+        label.textColor = NSColor.white.withAlphaComponent(0.3)
+        label.sizeToFit()
+        label.frame.origin = NSPoint(x: x, y: (rowHeight - label.frame.height) / 2)
+        addSubview(label)
+        return x + label.frame.width + 8
+    }
+
     // MARK: - Actions
 
     @objc private func strokeSliderChanged(_ sender: NSSlider) {
@@ -587,6 +667,53 @@ class ToolOptionsRowView: NSView {
     @objc private func redactTypesClicked() {
         guard let ov = overlayView else { return }
         ov.showRedactTypePopover(anchorRect: frame)
+    }
+
+    @objc private func alignmentChanged(_ sender: NSButton) {
+        guard let ov = overlayView else { return }
+        if let align = NSTextAlignment(rawValue: sender.tag) {
+            ov.textAlignment = align
+            ov.applyAlignmentToTextIfEditing()
+            ov.needsDisplay = true
+        }
+    }
+
+    @objc private func fontSizeDecreased() {
+        guard let ov = overlayView else { return }
+        ov.textFontSize = max(8, ov.textFontSize - 1)
+        UserDefaults.standard.set(Double(ov.textFontSize), forKey: "textFontSize")
+        ov.updateTextFontSize()
+        if let label = viewWithTag(998) as? NSTextField { label.stringValue = "\(Int(ov.textFontSize))" }
+    }
+
+    @objc private func fontSizeIncreased() {
+        guard let ov = overlayView else { return }
+        ov.textFontSize = min(200, ov.textFontSize + 1)
+        UserDefaults.standard.set(Double(ov.textFontSize), forKey: "textFontSize")
+        ov.updateTextFontSize()
+        if let label = viewWithTag(998) as? NSTextField { label.stringValue = "\(Int(ov.textFontSize))" }
+    }
+
+    @objc private func textBgToggled(_ sender: NSButton) {
+        guard let ov = overlayView else { return }
+        ov.textBgEnabled = sender.state == .on
+        UserDefaults.standard.set(ov.textBgEnabled, forKey: "textBgEnabled")
+        ov.needsDisplay = true
+    }
+
+    @objc private func textOutlineToggled(_ sender: NSButton) {
+        guard let ov = overlayView else { return }
+        ov.textOutlineEnabled = sender.state == .on
+        UserDefaults.standard.set(ov.textOutlineEnabled, forKey: "textOutlineEnabled")
+        ov.needsDisplay = true
+    }
+
+    @objc private func textCancelClicked() {
+        overlayView?.cancelTextEditing()
+    }
+
+    @objc private func textConfirmClicked() {
+        overlayView?.commitTextFieldIfNeeded()
     }
 }
 
