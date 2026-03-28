@@ -5081,6 +5081,9 @@ class OverlayView: NSView {
         case .scrollCapture:
             overlayDelegate?.overlayViewDidRequestScrollCapture(rect: selectionRect)
         }
+
+        // Rebuild toolbars to reflect new state (selected tool, color, etc.)
+        rebuildToolbarLayout()
     }
 
     /// Returns a color if a preset swatch was clicked, toggles the inline HSB picker
