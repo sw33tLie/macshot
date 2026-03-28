@@ -4921,7 +4921,7 @@ class OverlayView: NSView {
         switch action {
         case .autoRedact:
             PopoverHelper.dismiss()
-            showRedactTypePopover(anchorRect: anchorView.convert(anchorView.bounds, to: self))
+            showRedactTypePopover(anchorRect: anchorView.convert(anchorView.bounds, to: self), anchorView: anchorView)
         case .save:
             let menu = NSMenu()
             let saveAsItem = NSMenuItem(title: "Save As...", action: #selector(saveAsMenuAction), keyEquivalent: "")
@@ -4930,10 +4930,10 @@ class OverlayView: NSView {
             menu.popUp(positioning: nil, at: NSPoint(x: 0, y: anchorView.bounds.height), in: anchorView)
         case .upload:
             PopoverHelper.dismiss()
-            showUploadConfirmPopover(anchorRect: anchorView.convert(anchorView.bounds, to: self))
+            showUploadConfirmPopover(anchorRect: anchorView.convert(anchorView.bounds, to: self), anchorView: anchorView)
         case .translate:
             PopoverHelper.dismiss()
-            showTranslatePopover(anchorRect: anchorView.convert(anchorView.bounds, to: self))
+            showTranslatePopover(anchorRect: anchorView.convert(anchorView.bounds, to: self), anchorView: anchorView)
         default:
             break
         }
@@ -7003,7 +7003,7 @@ class OverlayView: NSView {
 
     // MARK: - NSPopover-based pickers
 
-    func showUploadConfirmPopover(anchorRect: NSRect) {
+    func showUploadConfirmPopover(anchorRect: NSRect, anchorView: NSView? = nil) {
         let current = UserDefaults.standard.bool(forKey: "uploadConfirmEnabled")
         let picker = ListPickerView()
         picker.items = [
@@ -7015,10 +7015,14 @@ class OverlayView: NSView {
             self?.needsDisplay = true
         }
         let size = picker.preferredSize
-        PopoverHelper.showAtPoint(picker, size: size, at: NSPoint(x: anchorRect.midX, y: anchorRect.midY), in: self, preferredEdge: .minX)
+        if let anchor = anchorView {
+            PopoverHelper.show(picker, size: size, relativeTo: anchor.bounds, of: anchor, preferredEdge: .maxY)
+        } else {
+            PopoverHelper.showAtPoint(picker, size: size, at: NSPoint(x: anchorRect.maxX + 4, y: anchorRect.midY), in: self, preferredEdge: .maxX)
+        }
     }
 
-    func showRedactTypePopover(anchorRect: NSRect) {
+    func showRedactTypePopover(anchorRect: NSRect, anchorView: NSView? = nil) {
         let types = Self.redactTypeNames
         let picker = ListPickerView()
         picker.items = types.map { item in
@@ -7034,10 +7038,14 @@ class OverlayView: NSView {
             self?.needsDisplay = true
         }
         let size = picker.preferredSize
-        PopoverHelper.showAtPoint(picker, size: size, at: NSPoint(x: anchorRect.midX, y: anchorRect.midY), in: self, preferredEdge: .minY)
+        if let anchor = anchorView {
+            PopoverHelper.show(picker, size: size, relativeTo: anchor.bounds, of: anchor, preferredEdge: .maxY)
+        } else {
+            PopoverHelper.showAtPoint(picker, size: size, at: NSPoint(x: anchorRect.maxX + 4, y: anchorRect.midY), in: self, preferredEdge: .maxX)
+        }
     }
 
-    func showTranslatePopover(anchorRect: NSRect) {
+    func showTranslatePopover(anchorRect: NSRect, anchorView: NSView? = nil) {
         let languages = TranslationService.availableLanguages
         let currentCode = TranslationService.targetLanguage
         let picker = ListPickerView()
@@ -7050,7 +7058,11 @@ class OverlayView: NSView {
             self?.needsDisplay = true
         }
         let size = NSSize(width: 160, height: min(400, CGFloat(languages.count) * 28 + 12))
-        PopoverHelper.showAtPoint(picker, size: size, at: NSPoint(x: anchorRect.midX, y: anchorRect.midY), in: self, preferredEdge: .minX)
+        if let anchor = anchorView {
+            PopoverHelper.show(picker, size: size, relativeTo: anchor.bounds, of: anchor, preferredEdge: .maxY)
+        } else {
+            PopoverHelper.showAtPoint(picker, size: size, at: NSPoint(x: anchorRect.maxX + 4, y: anchorRect.midY), in: self, preferredEdge: .maxX)
+        }
     }
 
     func showBeautifyGradientPopover(anchorRect: NSRect) {

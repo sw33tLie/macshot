@@ -67,26 +67,28 @@ private class ListPickerRowView: NSView {
     private var trackingArea: NSTrackingArea?
 
     override func draw(_ dirtyRect: NSRect) {
+        if isHovered {
+            NSColor.white.withAlphaComponent(0.1).setFill()
+            NSBezierPath(roundedRect: bounds.insetBy(dx: 3, dy: 1), xRadius: 4, yRadius: 4).fill()
+        }
+
+        // Checkmark for selected items
+        let checkX: CGFloat = 8
         if isItemSelected {
-            ToolbarLayout.accentColor.withAlphaComponent(0.5).setFill()
-            NSBezierPath(roundedRect: bounds.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
-        } else if isHovered {
-            NSColor.white.withAlphaComponent(0.15).setFill()
-            NSBezierPath(roundedRect: bounds.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
+            let checkAttrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 12, weight: .semibold),
+                .foregroundColor: ToolbarLayout.accentColor,
+            ]
+            ("✓" as NSString).draw(at: NSPoint(x: checkX, y: bounds.midY - 7), withAttributes: checkAttrs)
         }
 
         let attrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: 11, weight: .medium),
-            .foregroundColor: NSColor.white,
+            .foregroundColor: NSColor.white.withAlphaComponent(isItemSelected ? 1.0 : 0.7),
         ]
         let str = title as NSString
         let strSize = str.size(withAttributes: attrs)
-        str.draw(at: NSPoint(x: 12, y: bounds.midY - strSize.height / 2), withAttributes: attrs)
-
-        if let icon = icon {
-            let iconSize: CGFloat = 14
-            icon.draw(in: NSRect(x: bounds.maxX - iconSize - 8, y: bounds.midY - iconSize / 2, width: iconSize, height: iconSize))
-        }
+        str.draw(at: NSPoint(x: 24, y: bounds.midY - strSize.height / 2), withAttributes: attrs)
     }
 
     override func mouseDown(with event: NSEvent) {
