@@ -96,7 +96,7 @@ class OverlayView: NSView {
     private var zoomFadingOut: Bool = false
     private var zoomLabelOpacity: CGFloat = 0.0
     private var zoomFadeTimer: Timer?
-    var zoomMin: CGFloat { isEditorMode ? 0.1 : 1.0 }
+    var zoomMin: CGFloat { 1.0 }
     private let zoomMax: CGFloat = 8.0
 
     // Selection
@@ -861,12 +861,6 @@ class OverlayView: NSView {
     /// Imperative cursor management. Called from mouseMoved and a 30fps timer.
     /// Simplified: arrow for chrome, resize cursors for handles, tool cursor for canvas.
     private func updateCursorForPoint(_ point: NSPoint) {
-        // Editor title bar — let AppKit handle
-        if isEditorMode, let win = window {
-            let titleH = win.frame.height - win.contentRect(forFrameRect: win.frame).height
-            if point.y > bounds.height - titleH { return }
-        }
-
         // Non-interactive states — simple cursors
         if isRecording && !isAnnotating {
             NSCursor.arrow.set()
@@ -2921,28 +2915,14 @@ class OverlayView: NSView {
     /// zoom < 1×: allow free panning but keep at least `margin` screen-space pixels of the
     ///            image visible on each side, so the user never scrolls completely off canvas.
     private func clampZoomAnchor() {
-        // In overlay mode at 1x, no clamping needed (image fills the view exactly)
-        if zoomLevel == 1.0 && !isEditorMode { return }
+        // At 1x, no clamping needed (image fills the view exactly)
+        if zoomLevel == 1.0 { return }
         let r = selectionRect
         let z = zoomLevel
         let ac = zoomAnchorCanvas
         var av = zoomAnchorView
 
-        if isEditorMode {
-            // Editor: unified clamping for all zoom levels.
-            // Keep at least 10% of the image visible on each side.
-            let viewW = bounds.width
-            let viewH = bounds.height
-            let margin: CGFloat = 0.1
-
-            let maxAVx = r.minX - (r.minX - ac.x) * z + viewW * margin
-            let minAVx = r.maxX - (r.maxX - ac.x) * z - viewW * margin
-            if minAVx < maxAVx { av.x = max(minAVx, min(maxAVx, av.x)) }
-
-            let maxAVy = r.minY - (r.minY - ac.y) * z + viewH * margin
-            let minAVy = r.maxY - (r.maxY - ac.y) * z - viewH * margin
-            if minAVy < maxAVy { av.y = max(minAVy, min(maxAVy, av.y)) }
-        } else if z > 1.0 {
+        if z > 1.0 {
             // Overlay zoom-in: edges must stay covered.
             let maxAVx = r.minX - (r.minX - ac.x) * z
             let minAVx = r.maxX - (r.maxX - ac.x) * z
