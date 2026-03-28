@@ -169,7 +169,7 @@ class OverlayView: NSView {
     var textItalic: Bool = false
     var textUnderline: Bool = false
     var textStrikethrough: Bool = false
-    private var textFontFamily: String = UserDefaults.standard.string(forKey: "textFontFamily") ?? "System"
+    var textFontFamily: String = UserDefaults.standard.string(forKey: "textFontFamily") ?? "System"
 
     // Text options row rects (drawn in secondary toolbar)
     private var textSizeDecRect: NSRect = .zero
@@ -2106,7 +2106,7 @@ class OverlayView: NSView {
         }
     }
     /// Curated font families for the font picker
-    private static let fontFamilies: [String] = {
+    static let fontFamilies: [String] = {
         // "System" uses the default SF Pro; the rest are well-known macOS-bundled families
         var families = ["System"]
         let wanted = [

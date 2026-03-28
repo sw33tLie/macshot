@@ -258,6 +258,16 @@ class ToolOptionsRowView: NSView {
     private func addTextOptions(at x: CGFloat, ov: OverlayView) -> CGFloat {
         var curX = x
 
+        // Font family dropdown
+        let displayName = ov.textFontFamily == "System" ? "System" : ov.textFontFamily
+        let fontBtn = NSButton(title: "\(displayName) ▾", target: self, action: #selector(fontFamilyClicked(_:)))
+        fontBtn.bezelStyle = .recessed
+        fontBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
+        fontBtn.sizeToFit()
+        fontBtn.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: max(65, fontBtn.frame.width + 8), height: 22)
+        addSubview(fontBtn)
+        curX += fontBtn.frame.width + 6
+
         // Bold / Italic / Underline / Strikethrough
         let textStyles: [(String, String, Bool, Selector)] = [
             ("bold", "B", ov.textBold, #selector(boldToggled)),
@@ -667,6 +677,26 @@ class ToolOptionsRowView: NSView {
     @objc private func redactTypesClicked() {
         guard let ov = overlayView else { return }
         ov.showRedactTypePopover(anchorRect: frame)
+    }
+
+    @objc private func fontFamilyClicked(_ sender: NSButton) {
+        guard let ov = overlayView else { return }
+        let families = OverlayView.fontFamilies
+        let picker = ListPickerView()
+        picker.items = families.map { family in
+            .init(title: family, isSelected: family == ov.textFontFamily)
+        }
+        picker.onSelect = { [weak ov] idx in
+            guard let ov = ov else { return }
+            ov.textFontFamily = families[idx]
+            UserDefaults.standard.set(families[idx], forKey: "textFontFamily")
+            ov.updateTextFontSize()
+            ov.rebuildToolbarLayout()
+            ov.needsDisplay = true
+            PopoverHelper.dismiss()
+        }
+        let size = NSSize(width: 160, height: min(400, CGFloat(families.count) * 28 + 12))
+        PopoverHelper.show(picker, size: size, relativeTo: sender.bounds, of: sender, preferredEdge: .maxY)
     }
 
     @objc private func alignmentChanged(_ sender: NSButton) {
