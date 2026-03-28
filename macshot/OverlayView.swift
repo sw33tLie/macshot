@@ -270,17 +270,12 @@ class OverlayView: NSView {
     private var colorPickerRect: NSRect = .zero
 
     // Beautify style picker popover
-    private var showBeautifyPicker: Bool = false
-    private var beautifyPickerRect: NSRect = .zero
-    private var hoveredBeautifyRow: Int = -1
     // Beautify panel slider hit rects and dragging state
     private var beautifyPaddingSliderRect: NSRect = .zero
     private var beautifyCornerSliderRect: NSRect = .zero
     private var beautifyShadowSliderRect: NSRect = .zero
     private var beautifyModeWindowRect: NSRect = .zero
     private var beautifyModeRoundedRect: NSRect = .zero
-    private var isDraggingBeautifySlider: Bool = false
-    private var activeBeautifySlider: Int = -1  // 0=padding, 1=corner, 2=shadow
     private var beautifyBgRadiusSliderRect: NSRect = .zero
     private var beautifySwatchRects: [NSRect] = []
     private var showBeautifyGradientPicker: Bool = false
@@ -361,9 +356,6 @@ class OverlayView: NSView {
     }()
 
     // Stroke width picker popover
-    private var showStrokePicker: Bool = false
-    private var strokePickerRect: NSRect = .zero
-    private var hoveredStrokeRow: Int = -1
     private var strokeSmoothToggleRect: NSRect = .zero  // hit rect for the smooth toggle row
 
     // Pencil smoothing — persisted in UserDefaults
@@ -434,9 +426,6 @@ class OverlayView: NSView {
     var editorFlipVBtnRect: NSRect = .zero
     var editorResetZoomBtnRect: NSRect = .zero
     var cachedCompositedImage: NSImage? = nil  // invalidated when annotations change
-    private var showLoupeSizePicker: Bool = false
-    private var loupeSizePickerRect: NSRect = .zero
-    private var hoveredLoupeSizeRow: Int = -1
 
     // Translate language picker popover
     private var showTranslatePicker: Bool = false
@@ -817,40 +806,6 @@ class OverlayView: NSView {
             needsDisplay = true
         }
 
-        // Stroke picker hover (including smooth toggle row = sentinel 99)
-        if showStrokePicker && strokePickerRect.contains(point) {
-            let widths: [CGFloat] = [1, 2, 3, 5, 8, 12, 20]
-            let rowH: CGFloat = 30; let padding: CGFloat = 6
-            var newRow = -1
-            if currentTool == .pencil && strokeSmoothToggleRect.contains(point) {
-                newRow = 99
-            } else if currentTool == .rectangle && roundedRectToggleRect.contains(point) {
-                newRow = 99
-            } else {
-                for i in 0..<widths.count {
-                    let rowY = strokePickerRect.maxY - padding - rowH * CGFloat(i + 1)
-                    let rowRect = NSRect(x: strokePickerRect.minX, y: rowY, width: strokePickerRect.width, height: rowH)
-                    if rowRect.contains(point) { newRow = i; break }
-                }
-            }
-            if newRow != hoveredStrokeRow { hoveredStrokeRow = newRow; needsDisplay = true }
-        } else if showStrokePicker && hoveredStrokeRow != -1 {
-            hoveredStrokeRow = -1; needsDisplay = true
-        }
-
-        // Loupe size picker hover
-        if showLoupeSizePicker && loupeSizePickerRect.contains(point) {
-            let sizes = 8
-            let rowH: CGFloat = 28
-            let padding: CGFloat = 2
-            var newRow = -1
-            for i in 0..<sizes {
-                let rowY = loupeSizePickerRect.maxY - padding - rowH * CGFloat(i + 1)
-                let rowRect = NSRect(x: loupeSizePickerRect.minX, y: rowY, width: loupeSizePickerRect.width, height: rowH)
-                if rowRect.contains(point) { newRow = i; break }
-            }
-            if newRow != hoveredLoupeSizeRow { hoveredLoupeSizeRow = newRow; needsDisplay = true }
-        }
 
         // Redact type picker hover
         if showRedactTypePicker && redactTypePickerRect.contains(point) {
@@ -1056,10 +1011,10 @@ class OverlayView: NSView {
         // Check UI elements first — arrow for all toolbars, popups, labels
         if showToolbars && (bottomBarRect.contains(point) || rightBarRect.contains(point) || optionsRowRect.contains(point)) { NSCursor.arrow.set(); return }
         if showColorPicker && colorPickerRect.contains(point) { NSCursor.arrow.set(); return }
-        if showBeautifyPicker && beautifyPickerRect.contains(point) { NSCursor.arrow.set(); return }
+        
         if showBeautifyGradientPicker && beautifyGradientPickerRect.contains(point) { NSCursor.arrow.set(); return }
-        if showStrokePicker && strokePickerRect.contains(point) { NSCursor.arrow.set(); return }
-        if showLoupeSizePicker && loupeSizePickerRect.contains(point) { NSCursor.arrow.set(); return }
+        
+        
         if showUploadConfirmPicker && uploadConfirmPickerRect.contains(point) { NSCursor.arrow.set(); return }
         if showUploadConfirmDialog && uploadConfirmDialogRect.contains(point) { NSCursor.arrow.set(); return }
         if showRedactTypePicker && redactTypePickerRect.contains(point) { NSCursor.arrow.set(); return }
@@ -1616,19 +1571,10 @@ class OverlayView: NSView {
                 }
 
                 // Beautify style picker popover
-                if showBeautifyPicker {
-                    drawBeautifyPicker()
-                }
 
                 // Stroke width picker popover
-                if showStrokePicker {
-                    drawStrokePicker()
-                }
 
                 // Loupe size picker
-                if showLoupeSizePicker {
-                    drawLoupeSizePicker()
-                }
 
                 // Upload confirm picker
                 if showUploadConfirmPicker {
@@ -1713,7 +1659,7 @@ class OverlayView: NSView {
 
         // Hide tooltip when any picker/popover is open (they overlap)
         if showUploadConfirmPicker || showRedactTypePicker
-            || showTranslatePicker || showStrokePicker || showLoupeSizePicker || showBeautifyPicker {
+            || showTranslatePicker {
             return
         }
 
@@ -2546,136 +2492,6 @@ class OverlayView: NSView {
         NSGraphicsContext.current?.imageInterpolation = .high
         customHSBCachedImage!.draw(in: rect, from: NSRect(origin: .zero, size: customHSBCachedImage!.size), operation: .sourceOver, fraction: 1.0)
         NSGraphicsContext.restoreGraphicsState()
-    }
-
-    private func drawBeautifyPicker() {
-        let styles = BeautifyRenderer.styles
-        let pickerWidth: CGFloat = 200
-        let pad: CGFloat = 8
-        let labelH: CGFloat = 16
-        let sliderH: CGFloat = 22
-        let swatchSize: CGFloat = 26
-        let swatchSpacing: CGFloat = 4
-        let modeH: CGFloat = 28
-        let sectionGap: CGFloat = 8
-
-        // Calculate height: mode toggle + 4 sliders + swatch grid
-        let swatchRows = Int(ceil(Double(styles.count) / 3.0))
-        let swatchGridH = CGFloat(swatchRows) * (swatchSize + swatchSpacing)
-        let pickerHeight = pad + modeH + sectionGap
-            + (labelH + sliderH + sectionGap) * 4  // padding, corner, shadow, bg radius sliders
-            + labelH + swatchGridH + pad
-
-        // Anchor to the beautify button
-        var anchorRect = NSRect.zero
-        for btn in bottomButtons {
-            if case .beautify = btn.action {
-                anchorRect = btn.rect
-                break
-            }
-        }
-
-        let pickerX = max(bounds.minX + 4, min(anchorRect.midX - pickerWidth / 2, bounds.maxX - pickerWidth - 4))
-        var pickerY = anchorRect.maxY + 4
-        if pickerY + pickerHeight > bounds.maxY - 4 {
-            pickerY = anchorRect.minY - pickerHeight - 4
-        }
-        pickerY = max(bounds.minY + 4, min(pickerY, bounds.maxY - pickerHeight - 4))
-
-        let pickerRect = NSRect(x: pickerX, y: pickerY, width: pickerWidth, height: pickerHeight)
-        beautifyPickerRect = pickerRect
-
-        // Background
-        ToolbarLayout.bgColor.setFill()
-        NSBezierPath(roundedRect: pickerRect, xRadius: 8, yRadius: 8).fill()
-
-        let labelAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 10, weight: .semibold),
-            .foregroundColor: NSColor.white.withAlphaComponent(0.6),
-        ]
-
-        let insetX = pickerRect.minX + pad
-        let contentW = pickerWidth - pad * 2
-        var curY = pickerRect.maxY - pad
-
-        // ── Mode toggle: Window / Rounded ──
-        curY -= modeH
-        let halfW = (contentW - 4) / 2
-        let windowBtnRect = NSRect(x: insetX, y: curY, width: halfW, height: modeH)
-        let roundedBtnRect = NSRect(x: insetX + halfW + 4, y: curY, width: halfW, height: modeH)
-        beautifyModeWindowRect = windowBtnRect
-        beautifyModeRoundedRect = roundedBtnRect
-
-        let modeAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 11, weight: .medium),
-            .foregroundColor: NSColor.white,
-        ]
-
-        // Window button
-        (beautifyMode == .window ? ToolbarLayout.accentColor.withAlphaComponent(0.6) : NSColor.white.withAlphaComponent(0.12)).setFill()
-        NSBezierPath(roundedRect: windowBtnRect, xRadius: 5, yRadius: 5).fill()
-        let wStr = "Window" as NSString
-        let wSize = wStr.size(withAttributes: modeAttrs)
-        wStr.draw(at: NSPoint(x: windowBtnRect.midX - wSize.width / 2, y: windowBtnRect.midY - wSize.height / 2), withAttributes: modeAttrs)
-
-        // Rounded button
-        (beautifyMode == .rounded ? ToolbarLayout.accentColor.withAlphaComponent(0.6) : NSColor.white.withAlphaComponent(0.12)).setFill()
-        NSBezierPath(roundedRect: roundedBtnRect, xRadius: 5, yRadius: 5).fill()
-        let rStr = "Rounded" as NSString
-        let rSize = rStr.size(withAttributes: modeAttrs)
-        rStr.draw(at: NSPoint(x: roundedBtnRect.midX - rSize.width / 2, y: roundedBtnRect.midY - rSize.height / 2), withAttributes: modeAttrs)
-
-        curY -= sectionGap
-
-        // ── Padding slider ──
-        curY -= labelH
-        ("Padding" as NSString).draw(at: NSPoint(x: insetX, y: curY), withAttributes: labelAttrs)
-        curY -= sliderH
-        beautifyPaddingSliderRect = NSRect(x: insetX, y: curY, width: contentW, height: sliderH)
-        drawBeautifySlider(rect: beautifyPaddingSliderRect, value: beautifyPadding, min: 16, max: 96)
-        curY -= sectionGap
-
-        // ── Corner Radius slider ──
-        curY -= labelH
-        ("Corner Radius" as NSString).draw(at: NSPoint(x: insetX, y: curY), withAttributes: labelAttrs)
-        curY -= sliderH
-        beautifyCornerSliderRect = NSRect(x: insetX, y: curY, width: contentW, height: sliderH)
-        drawBeautifySlider(rect: beautifyCornerSliderRect, value: beautifyCornerRadius, min: 0, max: 30)
-        curY -= sectionGap
-
-        // ── Shadow slider ──
-        curY -= labelH
-        ("Shadow" as NSString).draw(at: NSPoint(x: insetX, y: curY), withAttributes: labelAttrs)
-        curY -= sliderH
-        beautifyShadowSliderRect = NSRect(x: insetX, y: curY, width: contentW, height: sliderH)
-        drawBeautifySlider(rect: beautifyShadowSliderRect, value: beautifyShadowRadius, min: 0, max: 40)
-        curY -= sectionGap
-
-        // ── Background swatches ──
-        curY -= labelH
-        ("Background" as NSString).draw(at: NSPoint(x: insetX, y: curY), withAttributes: labelAttrs)
-        curY -= swatchSpacing
-
-        beautifySwatchRects = []
-        for (i, style) in styles.enumerated() {
-            let col = i % 3
-            let row = i / 3
-            let sx = insetX + CGFloat(col) * (swatchSize + swatchSpacing)
-            let sy = curY - CGFloat(row + 1) * (swatchSize + swatchSpacing)
-            let swatchRect = NSRect(x: sx, y: sy, width: swatchSize, height: swatchSize)
-            beautifySwatchRects.append(swatchRect)
-
-            let swatchPath = NSBezierPath(roundedRect: swatchRect, xRadius: 5, yRadius: 5)
-            drawStyleSwatch(style: style, path: swatchPath, rect: swatchRect)
-
-            // Selection ring
-            if i == beautifyStyleIndex % styles.count {
-                ToolbarLayout.accentColor.setStroke()
-                let ring = NSBezierPath(roundedRect: swatchRect.insetBy(dx: -2, dy: -2), xRadius: 6, yRadius: 6)
-                ring.lineWidth = 2
-                ring.stroke()
-            }
-        }
     }
 
     /// Draw a gradient swatch — uses mesh rendering on macOS 15+ for mesh styles, linear otherwise.
@@ -4406,6 +4222,12 @@ class OverlayView: NSView {
         }
     }
 
+
+    // MARK: - Beautify Slider (used from options row)
+
+    private var isDraggingBeautifySlider: Bool = false
+    private var activeBeautifySlider: Int = -1
+
     private func updateBeautifySlider(at point: NSPoint) {
         let sliderRect: NSRect
         let minVal: CGFloat
@@ -4421,7 +4243,7 @@ class OverlayView: NSView {
 
         let frac = max(0, min(1, (point.x - sliderRect.minX) / sliderRect.width))
         let value = minVal + frac * (maxVal - minVal)
-        let rounded = (value * 2).rounded() / 2  // snap to 0.5 increments
+        let rounded = (value * 2).rounded() / 2
 
         switch activeBeautifySlider {
         case 0: beautifyPadding = rounded
@@ -4432,179 +4254,6 @@ class OverlayView: NSView {
 
         UserDefaults.standard.set(Double(rounded), forKey: key)
         needsDisplay = true
-    }
-
-    private func drawStrokePicker() {
-        let widths: [CGFloat] = [1, 2, 3, 5, 8, 12, 20]
-        let rowH: CGFloat = 30
-        let pickerWidth: CGFloat = 140
-        let padding: CGFloat = 6
-        let showSmoothToggle = (currentTool == .pencil)
-        let showRoundedToggle = (currentTool == .rectangle)
-        let showWidthRows = true
-        let hasToggle = showSmoothToggle || showRoundedToggle
-        let toggleRowH: CGFloat = hasToggle ? 32 : 0
-        let separatorH: CGFloat = (hasToggle && showWidthRows) ? 5 : 0
-        let widthRowsHeight = showWidthRows ? rowH * CGFloat(widths.count) : 0
-        let pickerHeight = widthRowsHeight + padding * 2 + separatorH + toggleRowH
-
-        // Anchor to the current tool button
-        var anchorX = bottomBarRect.midX
-        var anchorRect = NSRect.zero
-        for btn in bottomButtons {
-            if case .tool(let t) = btn.action, t == currentTool {
-                anchorX = btn.rect.midX
-                anchorRect = btn.rect
-                break
-            }
-        }
-
-        let pickerX = max(bounds.minX + 4, min(anchorX - pickerWidth / 2, bounds.maxX - pickerWidth - 4))
-        var pickerY = anchorRect.maxY + 4
-        if pickerY + pickerHeight > bounds.maxY - 4 {
-            pickerY = anchorRect.minY - pickerHeight - 4
-        }
-
-        let pickerRect = NSRect(x: pickerX, y: pickerY, width: pickerWidth, height: pickerHeight)
-        strokePickerRect = pickerRect
-
-        // Current size for this tool
-        let activeWidth: CGFloat
-        switch currentTool {
-        case .number: activeWidth = currentNumberSize
-        case .marker: activeWidth = currentMarkerSize
-        default:      activeWidth = currentStrokeWidth
-        }
-
-        // Background
-        ToolbarLayout.bgColor.setFill()
-        NSBezierPath(roundedRect: pickerRect, xRadius: 6, yRadius: 6).fill()
-
-        let textAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 11, weight: .medium),
-            .foregroundColor: NSColor.white,
-        ]
-
-        let labelX = pickerRect.minX + 12
-        let labelW: CGFloat = 44   // fixed label column width
-        let lineStartX = labelX + labelW + 8  // gap between label and preview
-
-        if showWidthRows {
-            for (i, width) in widths.enumerated() {
-                let rowY = pickerRect.maxY - padding - rowH * CGFloat(i + 1)
-                let rowRect = NSRect(x: pickerRect.minX, y: rowY, width: pickerRect.width, height: rowH)
-
-                if activeWidth == width {
-                    ToolbarLayout.accentColor.withAlphaComponent(0.5).setFill()
-                    NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
-                } else if i == hoveredStrokeRow {
-                    NSColor.white.withAlphaComponent(0.15).setFill()
-                    NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
-                }
-
-                // Label
-                let labelText = "\(Int(width))px"
-                let nameStr = labelText as NSString
-                let nameSize = nameStr.size(withAttributes: textAttrs)
-                nameStr.draw(at: NSPoint(x: labelX, y: rowRect.midY - nameSize.height / 2), withAttributes: textAttrs)
-
-                // Stroke preview line (all tools — no circle for number)
-                let lineY = rowRect.midY
-                let linePath = NSBezierPath()
-                linePath.move(to: NSPoint(x: lineStartX, y: lineY))
-                linePath.line(to: NSPoint(x: pickerRect.maxX - 10, y: lineY))
-                linePath.lineWidth = min(width, 14)
-                linePath.lineCapStyle = .round
-                NSColor.white.setStroke()
-                linePath.stroke()
-            }
-        }
-
-        // Smooth toggle row (pencil only)
-        if showSmoothToggle {
-            // Separator
-            let sepY = pickerRect.minY + toggleRowH
-            NSColor.white.withAlphaComponent(0.12).setFill()
-            NSBezierPath(rect: NSRect(x: pickerRect.minX + 8, y: sepY, width: pickerRect.width - 16, height: 1)).fill()
-
-            let toggleRowRect = NSRect(x: pickerRect.minX, y: pickerRect.minY, width: pickerRect.width, height: toggleRowH)
-            strokeSmoothToggleRect = toggleRowRect
-
-            // Hover highlight
-            if hoveredStrokeRow == 99 {
-                NSColor.white.withAlphaComponent(0.15).setFill()
-                NSBezierPath(roundedRect: toggleRowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
-            }
-
-            // Label
-            let toggleAttrs: [NSAttributedString.Key: Any] = [
-                .font: NSFont.systemFont(ofSize: 11, weight: .medium),
-                .foregroundColor: NSColor.white,
-            ]
-            let label = "Smooth strokes" as NSString
-            let labelSize = label.size(withAttributes: toggleAttrs)
-            label.draw(at: NSPoint(x: toggleRowRect.minX + 10, y: toggleRowRect.midY - labelSize.height / 2), withAttributes: toggleAttrs)
-
-            // Checkbox
-            let checkSize: CGFloat = 14
-            let checkX = toggleRowRect.maxX - checkSize - 10
-            let checkY = toggleRowRect.midY - checkSize / 2
-            let checkRect = NSRect(x: checkX, y: checkY, width: checkSize, height: checkSize)
-            NSColor.white.withAlphaComponent(pencilSmoothEnabled ? 0.9 : 0.25).setFill()
-            NSBezierPath(roundedRect: checkRect, xRadius: 3, yRadius: 3).fill()
-            if pencilSmoothEnabled {
-                let checkAttrs: [NSAttributedString.Key: Any] = [
-                    .font: NSFont.systemFont(ofSize: 10, weight: .bold),
-                    .foregroundColor: NSColor.black,
-                ]
-                let tick = "✓" as NSString
-                let tickSize = tick.size(withAttributes: checkAttrs)
-                tick.draw(at: NSPoint(x: checkRect.midX - tickSize.width / 2, y: checkRect.midY - tickSize.height / 2), withAttributes: checkAttrs)
-            }
-        } else {
-            strokeSmoothToggleRect = .zero
-        }
-
-        // Rounded corners toggle (rectangle / filled rectangle)
-        if showRoundedToggle {
-            let sepY = pickerRect.minY + toggleRowH
-            NSColor.white.withAlphaComponent(0.12).setFill()
-            NSBezierPath(rect: NSRect(x: pickerRect.minX + 8, y: sepY, width: pickerRect.width - 16, height: 1)).fill()
-
-            let toggleRowRect = NSRect(x: pickerRect.minX, y: pickerRect.minY, width: pickerRect.width, height: toggleRowH)
-            roundedRectToggleRect = toggleRowRect
-
-            if hoveredStrokeRow == 99 {
-                NSColor.white.withAlphaComponent(0.15).setFill()
-                NSBezierPath(roundedRect: toggleRowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
-            }
-
-            let toggleAttrs: [NSAttributedString.Key: Any] = [
-                .font: NSFont.systemFont(ofSize: 11, weight: .medium),
-                .foregroundColor: NSColor.white,
-            ]
-            let label = "Rounded corners" as NSString
-            let labelSize = label.size(withAttributes: toggleAttrs)
-            label.draw(at: NSPoint(x: toggleRowRect.minX + 10, y: toggleRowRect.midY - labelSize.height / 2), withAttributes: toggleAttrs)
-
-            let checkSize: CGFloat = 14
-            let checkX = toggleRowRect.maxX - checkSize - 10
-            let checkY = toggleRowRect.midY - checkSize / 2
-            let checkRect = NSRect(x: checkX, y: checkY, width: checkSize, height: checkSize)
-            NSColor.white.withAlphaComponent(roundedRectEnabled ? 0.9 : 0.25).setFill()
-            NSBezierPath(roundedRect: checkRect, xRadius: 3, yRadius: 3).fill()
-            if roundedRectEnabled {
-                let checkAttrs: [NSAttributedString.Key: Any] = [
-                    .font: NSFont.systemFont(ofSize: 10, weight: .bold),
-                    .foregroundColor: NSColor.black,
-                ]
-                let tick = "✓" as NSString
-                let tickSize = tick.size(withAttributes: checkAttrs)
-                tick.draw(at: NSPoint(x: checkRect.midX - tickSize.width / 2, y: checkRect.midY - tickSize.height / 2), withAttributes: checkAttrs)
-            }
-        } else {
-            roundedRectToggleRect = .zero
-        }
     }
 
     // MARK: - Upload Confirm Picker
@@ -4807,64 +4456,6 @@ class OverlayView: NSView {
     }
 
     // MARK: - Loupe Size Picker
-
-    private func drawLoupeSizePicker() {
-        let sizes: [CGFloat] = [60, 80, 100, 120, 160, 200, 250, 320]
-        let rowH: CGFloat = 28
-        let pickerWidth: CGFloat = 120
-        let padding: CGFloat = 6
-        let pickerHeight = rowH * CGFloat(sizes.count) + padding * 2
-
-        var anchorRect = NSRect.zero
-        for btn in bottomButtons {
-            if case .tool(let t) = btn.action, t == .loupe {
-                anchorRect = btn.rect
-                break
-            }
-        }
-
-        let pickerX = max(bounds.minX + 4, min(anchorRect.midX - pickerWidth / 2, bounds.maxX - pickerWidth - 4))
-        var pickerY = anchorRect.maxY + 4
-        if pickerY + pickerHeight > bounds.maxY - 4 {
-            pickerY = anchorRect.minY - pickerHeight - 4
-        }
-
-        let pickerRect = NSRect(x: pickerX, y: pickerY, width: pickerWidth, height: pickerHeight)
-        loupeSizePickerRect = pickerRect
-
-        ToolbarLayout.bgColor.setFill()
-        NSBezierPath(roundedRect: pickerRect, xRadius: 6, yRadius: 6).fill()
-
-        let textAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 11, weight: .medium),
-            .foregroundColor: NSColor.white,
-        ]
-
-        for (i, size) in sizes.enumerated() {
-            let rowY = pickerRect.maxY - padding - rowH * CGFloat(i + 1)
-            let rowRect = NSRect(x: pickerRect.minX, y: rowY, width: pickerRect.width, height: rowH)
-
-            if size == currentLoupeSize {
-                ToolbarLayout.accentColor.withAlphaComponent(0.5).setFill()
-                NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
-            } else if i == hoveredLoupeSizeRow {
-                NSColor.white.withAlphaComponent(0.15).setFill()
-                NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
-            }
-
-            let radius = min(12, size / 10)
-            let cx = rowRect.maxX - 20
-            let cy = rowRect.midY
-            NSColor.white.withAlphaComponent(0.7).setStroke()
-            let circlePath = NSBezierPath(ovalIn: NSRect(x: cx - radius, y: cy - radius, width: radius * 2, height: radius * 2))
-            circlePath.lineWidth = 1.5
-            circlePath.stroke()
-
-            let labelStr = "\(Int(size))px" as NSString
-            let labelSize = labelStr.size(withAttributes: textAttrs)
-            labelStr.draw(at: NSPoint(x: rowRect.minX + 12, y: rowRect.midY - labelSize.height / 2), withAttributes: textAttrs)
-        }
-    }
 
     // MARK: - Color Sampler Preview
 
@@ -6730,125 +6321,6 @@ class OverlayView: NSView {
             }
         }
 
-        // Beautify picker dismissal / selection
-        if showBeautifyPicker {
-            if beautifyPickerRect.contains(point) {
-                // Mode buttons
-                if beautifyModeWindowRect.contains(point) {
-                    beautifyMode = .window
-                    UserDefaults.standard.set(beautifyMode.rawValue, forKey: "beautifyMode")
-                    needsDisplay = true
-                    return
-                }
-                if beautifyModeRoundedRect.contains(point) {
-                    beautifyMode = .rounded
-                    UserDefaults.standard.set(beautifyMode.rawValue, forKey: "beautifyMode")
-                    needsDisplay = true
-                    return
-                }
-                // Sliders — start dragging
-                if beautifyPaddingSliderRect.contains(point) {
-                    isDraggingBeautifySlider = true
-                    activeBeautifySlider = 0
-                    updateBeautifySlider(at: point)
-                    return
-                }
-                if beautifyCornerSliderRect.contains(point) {
-                    isDraggingBeautifySlider = true
-                    activeBeautifySlider = 1
-                    updateBeautifySlider(at: point)
-                    return
-                }
-                if beautifyShadowSliderRect.contains(point) {
-                    isDraggingBeautifySlider = true
-                    activeBeautifySlider = 2
-                    updateBeautifySlider(at: point)
-                    return
-                }
-                // Background swatches — use stored rects from draw
-                for (i, swatchRect) in beautifySwatchRects.enumerated() {
-                    if swatchRect.contains(point) {
-                        beautifyStyleIndex = i
-                        UserDefaults.standard.set(beautifyStyleIndex, forKey: "beautifyStyleIndex")
-                        needsDisplay = true
-                        return
-                    }
-                }
-                return
-            }
-            showBeautifyPicker = false
-            needsDisplay = true
-        }
-
-        // Stroke picker dismissal / selection
-        if showStrokePicker {
-            if strokePickerRect.contains(point) {
-                // Smooth toggle row (pencil only)
-                if currentTool == .pencil && strokeSmoothToggleRect.contains(point) {
-                    pencilSmoothEnabled.toggle()
-                    UserDefaults.standard.set(pencilSmoothEnabled, forKey: "pencilSmoothEnabled")
-                    needsDisplay = true
-                    return
-                }
-                // Rounded corners toggle (rectangle / filled rectangle)
-                if currentTool == .rectangle && roundedRectToggleRect.contains(point) {
-                    roundedRectEnabled.toggle()
-                    UserDefaults.standard.set(roundedRectEnabled, forKey: "roundedRectEnabled")
-                    needsDisplay = true
-                    return
-                }
-                let widths: [CGFloat] = [1, 2, 3, 5, 8, 12, 20]
-                let rowH: CGFloat = 30
-                let padding: CGFloat = 2
-                for (i, width) in widths.enumerated() {
-                    let rowY = strokePickerRect.maxY - padding - rowH * CGFloat(i + 1)
-                    let rowRect = NSRect(x: strokePickerRect.minX, y: rowY, width: strokePickerRect.width, height: rowH)
-                    if rowRect.contains(point) {
-                        switch currentTool {
-                        case .number:
-                            currentNumberSize = width
-                            UserDefaults.standard.set(Double(width), forKey: "numberStrokeWidth")
-                        case .marker:
-                            currentMarkerSize = width
-                            UserDefaults.standard.set(Double(width), forKey: "markerStrokeWidth")
-                        default:
-                            currentStrokeWidth = width
-                            UserDefaults.standard.set(Double(width), forKey: "currentStrokeWidth")
-                        }
-                        showStrokePicker = false
-                        needsDisplay = true
-                        return
-                    }
-                }
-                return
-            }
-            showStrokePicker = false
-            needsDisplay = true
-        }
-
-        // Loupe size picker dismissal / selection
-        if showLoupeSizePicker {
-            if loupeSizePickerRect.contains(point) {
-                let sizes: [CGFloat] = [60, 80, 100, 120, 160, 200, 250, 320]
-                let rowH: CGFloat = 28
-                let padding: CGFloat = 2
-                for (i, size) in sizes.enumerated() {
-                    let rowY = loupeSizePickerRect.maxY - padding - rowH * CGFloat(i + 1)
-                    let rowRect = NSRect(x: loupeSizePickerRect.minX, y: rowY, width: loupeSizePickerRect.width, height: rowH)
-                    if rowRect.contains(point) {
-                        currentLoupeSize = size
-                        UserDefaults.standard.set(Double(size), forKey: "loupeSize")
-                        showLoupeSizePicker = false
-                        needsDisplay = true
-                        return
-                    }
-                }
-                return
-            }
-            showLoupeSizePicker = false
-            needsDisplay = true
-        }
-
         // Upload confirm dialog
         if showUploadConfirmDialog {
             if uploadConfirmOKRect.contains(point) {
@@ -7109,8 +6581,6 @@ class OverlayView: NSView {
                         }
                         for (idx, sr) in [beautifyPaddingSliderRect, beautifyCornerSliderRect, beautifyShadowSliderRect, beautifyBgRadiusSliderRect].enumerated() {
                             if sr != .zero && sr.insetBy(dx: -4, dy: -4).contains(point) {
-                                isDraggingBeautifySlider = true
-                                activeBeautifySlider = idx
                                 updateBeautifySlider(at: point)
                                 return
                             }
@@ -7493,7 +6963,6 @@ class OverlayView: NSView {
             updateOptionsCornerRadius(at: point)
             return
         }
-        // Handle beautify slider dragging
         if isDraggingBeautifySlider {
             updateBeautifySlider(at: point)
             return
@@ -7906,8 +7375,6 @@ class OverlayView: NSView {
                 if case .autoRedact = action {
                     showRedactTypePicker.toggle()
                     showColorPicker = false
-                    showBeautifyPicker = false
-                    showStrokePicker = false
                     showUploadConfirmPicker = false
                     needsDisplay = true
                     return
@@ -7926,8 +7393,6 @@ class OverlayView: NSView {
                 if case .upload = action {
                     showUploadConfirmPicker.toggle()
                     showColorPicker = false
-                    showBeautifyPicker = false
-                    showStrokePicker = false
                     showRedactTypePicker = false
                     showTranslatePicker = false
                     needsDisplay = true
@@ -7936,8 +7401,6 @@ class OverlayView: NSView {
                 if case .translate = action {
                     showTranslatePicker.toggle()
                     showColorPicker = false
-                    showBeautifyPicker = false
-                    showStrokePicker = false
                     showRedactTypePicker = false
                     showUploadConfirmPicker = false
                     needsDisplay = true
@@ -9340,10 +8803,7 @@ class OverlayView: NSView {
             } else if showEmojiPicker {
                 showEmojiPicker = false
                 needsDisplay = true
-            } else if showBeautifyPicker || showStrokePicker || showLoupeSizePicker || showUploadConfirmPicker || showRedactTypePicker || showBeautifyGradientPicker {
-                showBeautifyPicker = false
-                showStrokePicker = false
-                showLoupeSizePicker = false
+            } else if showUploadConfirmPicker || showRedactTypePicker || showBeautifyGradientPicker {
                 showUploadConfirmPicker = false
                 showRedactTypePicker = false
                 showTranslatePicker = false
@@ -10330,9 +9790,6 @@ class OverlayView: NSView {
         numberCounter = 0
         showToolbars = false
         showColorPicker = false
-        showBeautifyPicker = false
-        showStrokePicker = false
-        showLoupeSizePicker = false
         showUploadConfirmPicker = false
         showUploadConfirmDialog = false
         uploadConfirmDialogRect = .zero
