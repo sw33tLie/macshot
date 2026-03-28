@@ -263,7 +263,6 @@ class OverlayView: NSView {
     private var beautifyToolbarAnimTarget: Bool = false  // target beautify state
 
     // Tool options row (second row below bottom bar)
-    var optionsRowRect: NSRect = .zero
     var currentMeasureInPoints: Bool = UserDefaults.standard.bool(forKey: "measureInPoints")
     var currentLineStyle: LineStyle = LineStyle(rawValue: UserDefaults.standard.integer(forKey: "currentLineStyle")) ?? .solid
     var currentArrowStyle: ArrowStyle = ArrowStyle(rawValue: UserDefaults.standard.integer(forKey: "currentArrowStyle")) ?? .single
@@ -1006,36 +1005,7 @@ class OverlayView: NSView {
     /// Override to change the rect used when drawing the screenshot in `captureSelectedRegion`. Base returns bounds.
     var captureDrawRect: NSRect { isEditorMode ? selectionRect : bounds }
 
-    /// Override to position toolbars for editor mode. Base pins bottom bar centered at bottom, right bar at top-right.
-    func positionToolbarsForEditor() {
-        // Bottom bar: centered at the bottom of the view
-        let bw = bottomBarRect.width
-        let bh = bottomBarRect.height
-        let optRowSpace: CGFloat = toolHasOptionsRow ? 40 : 0  // 34 row + 2 gap + 4 margin
-        let newBottomY: CGFloat = 6 + optRowSpace
-        let newBottomX = bounds.midX - bw / 2
-        let bdx = newBottomX - bottomBarRect.origin.x
-        let bdy = newBottomY - bottomBarRect.origin.y
-        bottomBarRect = NSRect(x: newBottomX, y: newBottomY, width: bw, height: bh)
-        for i in 0..<bottomButtons.count {
-            bottomButtons[i].rect = bottomButtons[i].rect.offsetBy(dx: bdx, dy: bdy)
-        }
-
-        // Right bar: top-right corner of the view
-        let rw = rightBarRect.width
-        let rh = rightBarRect.height
-        let newRightX = bounds.maxX - rw - 6
-        let editorTopBarOffset: CGFloat = 32 + 4  // top bar height + gap
-        let newRightY = bounds.maxY - rh - editorTopBarOffset
-        let rdx = newRightX - rightBarRect.origin.x
-        let rdy = newRightY - rightBarRect.origin.y
-        rightBarRect = NSRect(x: newRightX, y: newRightY, width: rw, height: rh)
-        for i in 0..<rightButtons.count {
-            rightButtons[i].rect = rightButtons[i].rect.offsetBy(dx: rdx, dy: rdy)
-        }
-    }
-
-    /// Override to control whether detach (open in editor) is allowed. Base returns true when not in editor mode.
+    /// Override to position toolbars for editor mode. Base pins bottom bar centered at bottom, right bar at top-right.    /// Override to control whether detach (open in editor) is allowed. Base returns true when not in editor mode.
     func shouldAllowDetach() -> Bool { !isEditorMode }
 
     /// Override to handle clicks on the top chrome area. Base handles editor top bar buttons. Returns true if click was consumed.
@@ -1385,7 +1355,7 @@ class OverlayView: NSView {
                 // Toolbars are real NSView subviews (ToolbarStripView) — no custom drawing needed.
                 // Tool options row handled by ToolOptionsRowView (real NSView subview)
                 if !toolHasOptionsRow || (isRecording && !isAnnotating) {
-                    optionsRowRect = .zero
+                    // options row rect managed by ToolOptionsRowView
                 }
 
                 // Color picker popover
@@ -2251,12 +2221,12 @@ class OverlayView: NSView {
         let pickerY: CGFloat
         if bottomBarRect.midY < selectionRect.midY {
             // Toolbar is below selection — try opening downward
-            let downY = optionsRowRect.minY - pickerH - 2
-            pickerY = downY >= bounds.minY + 4 ? downY : optionsRowRect.maxY + 2
+            let downY = (toolOptionsRowView?.frame.minY ?? 0) - pickerH - 2
+            pickerY = downY >= bounds.minY + 4 ? downY : (toolOptionsRowView?.frame.maxY ?? 0) + 2
         } else {
             // Toolbar is above selection — try opening upward
-            let upY = optionsRowRect.maxY + 2
-            pickerY = (upY + pickerH) <= bounds.maxY - 4 ? upY : optionsRowRect.minY - pickerH - 2
+            let upY = (toolOptionsRowView?.frame.maxY ?? 0) + 2
+            pickerY = (upY + pickerH) <= bounds.maxY - 4 ? upY : (toolOptionsRowView?.frame.minY ?? 0) - pickerH - 2
         }
 
         let pRect = NSRect(x: pickerX, y: pickerY, width: pickerW, height: pickerH)
@@ -4087,70 +4057,9 @@ class OverlayView: NSView {
             anchorRect = selectionRect
         }
 
-        // Place each toolbar inside if it would go off-screen
-        let bottomMargin: CGFloat = 50  // toolbar height + gap
-        let rightMargin: CGFloat = 50
+        // --- Position toolbar strip views ---
 
-        let bottomFits = anchorRect.minY > bounds.minY + bottomMargin
-        let topFits = anchorRect.maxY < bounds.maxY - bottomMargin
-        let bottomOutside = bottomFits || topFits  // layoutBottom handles flipping above if below doesn't fit
-
-        // When placing toolbars "inside", use the actual selectionRect (not the
-        // beautify-expanded anchorRect) so they stay within the visible area.
-        let insideAnchor = selectionRect
-
-        if bottomOutside {
-            bottomBarRect = ToolbarLayout.layoutBottom(buttons: &bottomButtons, selectionRect: anchorRect, viewBounds: bounds)
-        } else {
-            bottomBarRect = ToolbarLayout.layoutBottomInside(buttons: &bottomButtons, selectionRect: insideAnchor, viewBounds: bounds)
-        }
-
-        let rightFits = anchorRect.maxX < bounds.maxX - rightMargin
-        let leftFits = anchorRect.minX > bounds.minX + rightMargin
-        let rightOutside = rightFits || leftFits  // layoutRight handles flipping to left if right doesn't fit
-
-        if rightOutside {
-            rightBarRect = ToolbarLayout.layoutRight(buttons: &rightButtons, selectionRect: anchorRect, viewBounds: bounds, bottomBarRect: bottomBarRect)
-        } else {
-            rightBarRect = ToolbarLayout.layoutRightInside(buttons: &rightButtons, selectionRect: insideAnchor, viewBounds: bounds, bottomBarRect: bottomBarRect)
-        }
-
-        // If bottom bar overlaps right bar, push bottom bar down (or up) to clear it.
-        // This handles the case where the selection is near the top of the screen and
-        // the right bar's bottom-avoidance clamping couldn't move it far enough.
-        if bottomBarRect.intersects(rightBarRect) {
-            let rightBarXRange = rightBarRect.minX...rightBarRect.maxX
-            let bottomBarXRange = bottomBarRect.minX...bottomBarRect.maxX
-            let xOverlap = rightBarXRange.overlaps(bottomBarXRange)
-            if xOverlap {
-                // Prefer pushing bottom bar downward (below the right bar)
-                let newBarYBelow = rightBarRect.minY - bottomBarRect.height - 4
-                let newBarYAbove = rightBarRect.maxY + 4
-                let fitsBelow = newBarYBelow >= bounds.minY + 4
-                let fitsAbove = newBarYAbove + bottomBarRect.height <= bounds.maxY - 4
-                let dy: CGFloat
-                if fitsBelow {
-                    dy = newBarYBelow - bottomBarRect.minY
-                } else if fitsAbove {
-                    dy = newBarYAbove - bottomBarRect.minY
-                } else {
-                    dy = newBarYBelow - bottomBarRect.minY  // best effort
-                }
-                bottomBarRect = bottomBarRect.offsetBy(dx: 0, dy: dy)
-                for i in 0..<bottomButtons.count {
-                    bottomButtons[i].rect = bottomButtons[i].rect.offsetBy(dx: 0, dy: dy)
-                }
-            }
-        }
-
-        // In editor mode: pin toolbars to the window edges, not relative to selectionRect.
-        if isEditorMode {
-            positionToolbarsForEditor()
-        }
-
-
-
-        // Rebuild real NSView toolbar strips
+        // Create strip views if needed
         if bottomStripView == nil {
             let strip = ToolbarStripView(orientation: .horizontal)
             addSubview(strip)
@@ -4164,17 +4073,53 @@ class OverlayView: NSView {
 
         bottomStripView?.setButtons(bottomButtons)
         bottomStripView?.onClick = { [weak self] action in self?.handleToolbarAction(action) }
-        bottomStripView?.frame.origin = bottomBarRect.origin
-        bottomStripView?.isHidden = !(showToolbars && state == .selected && !isScrollCapturing)
-
         rightStripView?.setButtons(rightButtons)
         rightStripView?.onClick = { [weak self] action in self?.handleToolbarAction(action) }
-        // Right-click on toolbar buttons — handled via ToolbarButtonView.onRightClick
-        // Specific right-click actions are routed in handleToolbarAction (e.g. save context menu)
-        rightStripView?.frame.origin = rightBarRect.origin
-        rightStripView?.isHidden = !(showToolbars && state == .selected && !isScrollCapturing)
 
-        // Rebuild real NSView options row
+        let bottomSize = bottomStripView?.frame.size ?? .zero
+        let rightSize = rightStripView?.frame.size ?? .zero
+        let visible = showToolbars && state == .selected && !isScrollCapturing
+
+        if isEditorMode {
+            // Editor: pin bottom centered at bottom, right at top-right
+            let chromeBounds = bounds
+            let bx = chromeBounds.midX - bottomSize.width / 2
+            let by: CGFloat = 6
+            bottomStripView?.frame.origin = NSPoint(x: bx, y: by)
+            let rx = chromeBounds.maxX - rightSize.width - 6
+            let ry = chromeBounds.maxY - rightSize.height - 36
+            rightStripView?.frame.origin = NSPoint(x: rx, y: ry)
+        } else {
+            // Overlay: position relative to anchor rect (selection or beautify-expanded)
+            // Bottom bar: centered below selection, flip above if no room
+            var bx = anchorRect.midX - bottomSize.width / 2
+            var by = anchorRect.minY - bottomSize.height - 6
+            if by < bounds.minY + 4 { by = anchorRect.maxY + 6 }
+            bx = max(bounds.minX + 4, min(bx, bounds.maxX - bottomSize.width - 4))
+            bottomStripView?.frame.origin = NSPoint(x: bx, y: by)
+
+            // Right bar: to the right of selection, flip to left if no room
+            let bottomFrame = bottomStripView?.frame ?? .zero
+            var rx = anchorRect.maxX + 6
+            if rx + rightSize.width > bounds.maxX - 4 { rx = anchorRect.minX - rightSize.width - 6 }
+            rx = max(bounds.minX + 4, min(rx, bounds.maxX - rightSize.width - 4))
+            var ry = anchorRect.maxY - rightSize.height
+            ry = max(bounds.minY + 4, min(ry, bounds.maxY - rightSize.height - 4))
+            // Avoid overlapping bottom bar
+            if NSRect(x: rx, y: ry, width: rightSize.width, height: rightSize.height).intersects(bottomFrame) {
+                ry = bottomFrame.minY - rightSize.height - 4
+            }
+            rightStripView?.frame.origin = NSPoint(x: rx, y: ry)
+        }
+
+        // Update rects for other code that references them
+        bottomBarRect = bottomStripView?.frame ?? .zero
+        rightBarRect = rightStripView?.frame ?? .zero
+
+        bottomStripView?.isHidden = !visible
+        rightStripView?.isHidden = !visible
+
+        // Options row
         if toolHasOptionsRow {
             if toolOptionsRowView == nil {
                 let row = ToolOptionsRowView()
@@ -4373,7 +4318,7 @@ class OverlayView: NSView {
 
         // Don't commit text if clicking on text formatting controls in the options row
         let isTextFormattingClick = textEditView != nil && currentTool == .text &&
-            (optionsRowRect.contains(point) || (showFontPicker && fontPickerRect.contains(point)))
+            ((toolOptionsRowView?.frame.contains(point) ?? false) || (showFontPicker && fontPickerRect.contains(point)))
         if !isTextFormattingClick {
             commitTextFieldIfNeeded()
         }
