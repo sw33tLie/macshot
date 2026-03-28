@@ -168,20 +168,11 @@ class OverlayView: NSView {
     private var textFontFamily: String = UserDefaults.standard.string(forKey: "textFontFamily") ?? "System"
 
     // Text options row rects (drawn in secondary toolbar)
-    private var textBoldRect: NSRect = .zero
-    private var textItalicRect: NSRect = .zero
-    private var textUnderlineRect: NSRect = .zero
-    private var textStrikethroughRect: NSRect = .zero
     private var textSizeDecRect: NSRect = .zero
     private var textSizeIncRect: NSRect = .zero
     private var textFontDropdownRect: NSRect = .zero
     private var textConfirmRect: NSRect = .zero
     private var textCancelRect: NSRect = .zero
-    private var textBgToggleRect: NSRect = .zero
-    private var textOutlineToggleRect: NSRect = .zero
-    private var textAlignLeftRect: NSRect = .zero
-    private var textAlignCenterRect: NSRect = .zero
-    private var textAlignRightRect: NSRect = .zero
     private var textAlignment: NSTextAlignment = .left
     private var isResizingTextBox: Bool = false
     private var textBoxResizeHandle: ResizeHandle = .none
@@ -257,6 +248,19 @@ class OverlayView: NSView {
     // Cursor enforcement timer — forces crosshair until selection is made
     private var cursorTimer: Timer?
 
+    var showBeautifyInOptionsRow: Bool = false
+    private var beautifyToggleRect: NSRect = .zero
+    private var beautifyGradientBtnRect: NSRect = .zero
+    private var beautifyModeWindowRect: NSRect = .zero
+    private var beautifyModeRoundedRect: NSRect = .zero
+    private var beautifyPaddingSliderRect: NSRect = .zero
+    private var beautifyCornerSliderRect: NSRect = .zero
+    private var beautifyShadowSliderRect: NSRect = .zero
+    private var beautifyBgRadiusSliderRect: NSRect = .zero
+    private var beautifySwatchRects: [NSRect] = []
+    private var textBgToggleRect: NSRect = .zero
+    private var textOutlineToggleRect: NSRect = .zero
+
     // Draggable toolbars
     private var bottomBarDragOffset: NSPoint = .zero
     private var rightBarDragOffset: NSPoint = .zero
@@ -270,45 +274,22 @@ class OverlayView: NSView {
 
     // Beautify style picker popover
     // Beautify panel slider hit rects and dragging state
-    private var beautifyPaddingSliderRect: NSRect = .zero
-    private var beautifyCornerSliderRect: NSRect = .zero
-    private var beautifyShadowSliderRect: NSRect = .zero
-    private var beautifyModeWindowRect: NSRect = .zero
-    private var beautifyModeRoundedRect: NSRect = .zero
-    private var beautifyBgRadiusSliderRect: NSRect = .zero
-    private var beautifySwatchRects: [NSRect] = []
-    private var beautifyGradientBtnRect: NSRect = .zero
-    private var beautifyToggleRect: NSRect = .zero
     private var beautifyToolbarAnimProgress: CGFloat = 1.0  // 0..1, 1 = fully settled
     private var beautifyToolbarAnimTimer: Timer?
     private var beautifyToolbarAnimTarget: Bool = false  // target beautify state
 
     // Tool options row (second row below bottom bar)
     var optionsRowRect: NSRect = .zero
-    private var optionsStrokeSliderRect: NSRect = .zero
     private var optionsSmoothToggleRect: NSRect = .zero
-    private var optionsNumberFormatRects: [NSRect] = []
-    private var optionsNumberStartMinusRect: NSRect = .zero
-    private var optionsNumberStartPlusRect: NSRect = .zero
     private var optionsRoundedToggleRect: NSRect = .zero
-    private var measureUnitToggleRect: NSRect = .zero
     var currentMeasureInPoints: Bool = UserDefaults.standard.bool(forKey: "measureInPoints")
-    private var isDraggingOptionsStroke: Bool = false
-    private var showBeautifyInOptionsRow: Bool = false  // true when user clicks beautify button to adjust settings
-    private var optionsLineStyleRects: [NSRect] = []  // hit rects for line style buttons
-    private var optionsCornerRadiusSliderRect: NSRect = .zero
-    private var isDraggingOptionsCornerRadius: Bool = false
     var currentLineStyle: LineStyle = LineStyle(rawValue: UserDefaults.standard.integer(forKey: "currentLineStyle")) ?? .solid
     var currentArrowStyle: ArrowStyle = ArrowStyle(rawValue: UserDefaults.standard.integer(forKey: "currentArrowStyle")) ?? .single
-    private var optionsArrowStyleRects: [NSRect] = []
     var currentRectFillStyle: RectFillStyle = RectFillStyle(rawValue: UserDefaults.standard.integer(forKey: "currentRectFillStyle")) ?? .stroke
     private var optionsRectFillStyleRects: [NSRect] = []
     var currentStampImage: NSImage?  // selected emoji/image for stamp tool
     var currentStampEmoji: String?   // emoji string for highlight tracking
     private var stampPreviewPoint: NSPoint? // mouse position for stamp cursor preview
-    private var stampEmojiRects: [NSRect] = []
-    private var stampMoreRect: NSRect = .zero
-    private var stampLoadRect: NSRect = .zero
     static let emojiCategories: [(String, [String])] = [
         ("😀", [  // Faces & People
             "😀", "😂", "🤣", "😍", "🤔", "😎", "🤯", "😱",
@@ -348,13 +329,11 @@ class OverlayView: NSView {
     }()
 
     // Stroke width picker popover
-    private var strokeSmoothToggleRect: NSRect = .zero  // hit rect for the smooth toggle row
 
     // Pencil smoothing — persisted in UserDefaults
     var pencilSmoothEnabled: Bool = UserDefaults.standard.object(forKey: "pencilSmoothEnabled") as? Bool ?? true
     // Rounded rectangle corners — persisted in UserDefaults
     private var roundedRectEnabled: Bool = UserDefaults.standard.object(forKey: "roundedRectEnabled") as? Bool ?? false
-    private var roundedRectToggleRect: NSRect = .zero
 
     // Upload confirm picker (toggle setting via right-click)
 
@@ -397,11 +376,6 @@ class OverlayView: NSView {
     }
 
     // Redact options in blur/pixelate options row
-    private var redactPIIBtnRect: NSRect = .zero
-    private var redactAllTextBtnRect: NSRect = .zero
-    private var redactTypeDropdownRect: NSRect = .zero
-    private var hoveredRedactBtn: Int = -1  // 0 = all text, 1 = PII, -1 = none
-    private var pressedRedactBtn: Int = -1
     // Editor top bar
     var editorTopBarRect: NSRect = .zero
     var editorCropBtnRect: NSRect = .zero
@@ -777,17 +751,6 @@ class OverlayView: NSView {
             needsDisplay = true
         }
 
-
-        // Redact button hover
-        if (currentTool == .pixelate || currentTool == .blur) && optionsRowRect.contains(point) {
-            let newHovered: Int
-            if redactAllTextBtnRect != .zero && redactAllTextBtnRect.contains(point) { newHovered = 0 }
-            else if redactPIIBtnRect != .zero && redactPIIBtnRect.contains(point) { newHovered = 1 }
-            else { newHovered = -1 }
-            if newHovered != hoveredRedactBtn { hoveredRedactBtn = newHovered; needsDisplay = true }
-        } else if hoveredRedactBtn != -1 {
-            hoveredRedactBtn = -1; needsDisplay = true
-        }
 
         // Hover-to-move: only active for the core shape/drawing tools.
         let hoverMoveTools: Set<AnnotationTool> = [.arrow, .line, .rectangle, .ellipse]
@@ -2839,46 +2802,6 @@ class OverlayView: NSView {
         return curX
     }
 
-    private func updateOptionsStrokeSlider(at point: NSPoint) {
-        let steps: [CGFloat] = currentTool == .loupe
-            ? [60, 80, 100, 120, 160, 200, 250, 320]
-            : [1, 2, 3, 5, 8, 12, 20]
-
-        let sr = optionsStrokeSliderRect
-        guard sr.width > 0 else { return }
-
-        // Map position to nearest step
-        let frac = max(0, min(1, (point.x - sr.minX - 4) / (sr.width - 8)))
-        let idx = Int((frac * CGFloat(steps.count - 1)).rounded())
-        let bestIdx = max(0, min(steps.count - 1, idx))
-        let value = steps[bestIdx]
-        switch currentTool {
-        case .number:
-            currentNumberSize = value
-            UserDefaults.standard.set(Double(value), forKey: "numberStrokeWidth")
-        case .marker:
-            currentMarkerSize = value
-            UserDefaults.standard.set(Double(value), forKey: "markerStrokeWidth")
-        case .loupe:
-            currentLoupeSize = value
-            UserDefaults.standard.set(Double(value), forKey: "loupeSize")
-        default:
-            currentStrokeWidth = value
-            UserDefaults.standard.set(Double(value), forKey: "currentStrokeWidth")
-        }
-        needsDisplay = true
-    }
-
-    private func updateOptionsCornerRadius(at point: NSPoint) {
-        let sr = optionsCornerRadiusSliderRect
-        guard sr.width > 0 else { return }
-        let frac = max(0, min(1, (point.x - sr.minX) / sr.width))
-        let value = (frac * 30).rounded()
-        currentRectCornerRadius = value
-        UserDefaults.standard.set(Double(value), forKey: "currentRectCornerRadius")
-        needsDisplay = true
-    }
-
     private func startBeautifyToolbarAnimation() {
         beautifyToolbarAnimProgress = 0
         beautifyToolbarAnimTarget = beautifyEnabled
@@ -4866,227 +4789,6 @@ class OverlayView: NSView {
                     }
                 }
 
-                // Tool options row click handling
-                if optionsRowRect.contains(point) {
-                    // Beautify toggle & controls (check first — overrides tool options)
-                    if showBeautifyInOptionsRow {
-                        if beautifyToggleRect != .zero && beautifyToggleRect.insetBy(dx: -4, dy: -4).contains(point) {
-                            beautifyEnabled.toggle()
-                            UserDefaults.standard.set(beautifyEnabled, forKey: "beautifyEnabled")
-                            startBeautifyToolbarAnimation()
-                            needsDisplay = true
-                            return
-                        }
-                        if beautifyModeWindowRect.contains(point) {
-                            beautifyMode = .window; UserDefaults.standard.set(beautifyMode.rawValue, forKey: "beautifyMode"); needsDisplay = true; return
-                        }
-                        if beautifyModeRoundedRect.contains(point) {
-                            beautifyMode = .rounded; UserDefaults.standard.set(beautifyMode.rawValue, forKey: "beautifyMode"); needsDisplay = true; return
-                        }
-                        for (idx, sr) in [beautifyPaddingSliderRect, beautifyCornerSliderRect, beautifyShadowSliderRect, beautifyBgRadiusSliderRect].enumerated() {
-                            if sr != .zero && sr.insetBy(dx: -4, dy: -4).contains(point) {
-                                updateBeautifySlider(at: point)
-                                return
-                            }
-                        }
-                        if beautifyGradientBtnRect != .zero && beautifyGradientBtnRect.insetBy(dx: -4, dy: -4).contains(point) {
-                            PopoverHelper.dismiss()
-                            showBeautifyGradientPopover(anchorRect: beautifyGradientBtnRect)
-                            return
-                        }
-                        return  // consumed by beautify options row
-                    }
-                    // Measure unit toggle (px/pt)
-                    if currentTool == .measure && measureUnitToggleRect != .zero {
-                        let pxRect = measureUnitToggleRect
-                        let ptRect = NSRect(x: pxRect.maxX, y: pxRect.minY, width: pxRect.width, height: pxRect.height)
-                        if pxRect.contains(point) && currentMeasureInPoints {
-                            currentMeasureInPoints = false
-                            UserDefaults.standard.set(false, forKey: "measureInPoints")
-                            needsDisplay = true; return
-                        }
-                        if ptRect.contains(point) && !currentMeasureInPoints {
-                            currentMeasureInPoints = true
-                            UserDefaults.standard.set(true, forKey: "measureInPoints")
-                            needsDisplay = true; return
-                        }
-                    }
-                    // Stroke slider
-                    if optionsStrokeSliderRect != .zero && optionsStrokeSliderRect.insetBy(dx: -4, dy: -4).contains(point) {
-                        isDraggingOptionsStroke = true
-                        updateOptionsStrokeSlider(at: point)
-                        return
-                    }
-                    // Smooth toggle
-                    if optionsSmoothToggleRect != .zero && optionsSmoothToggleRect.insetBy(dx: -4, dy: -4).contains(point) {
-                        pencilSmoothEnabled.toggle()
-                        UserDefaults.standard.set(pencilSmoothEnabled, forKey: "pencilSmoothEnabled")
-                        needsDisplay = true
-                        return
-                    }
-                    // Rounded toggle
-                    if optionsRoundedToggleRect != .zero && optionsRoundedToggleRect.insetBy(dx: -4, dy: -4).contains(point) {
-                        roundedRectEnabled.toggle()
-                        UserDefaults.standard.set(roundedRectEnabled, forKey: "roundedRectEnabled")
-                        needsDisplay = true
-                        return
-                    }
-                    // Corner radius slider
-                    if optionsCornerRadiusSliderRect != .zero && optionsCornerRadiusSliderRect.insetBy(dx: -4, dy: -4).contains(point) {
-                        isDraggingOptionsCornerRadius = true
-                        updateOptionsCornerRadius(at: point)
-                        return
-                    }
-                    // Line style buttons
-                    for (i, sr) in optionsLineStyleRects.enumerated() {
-                        if sr.contains(point), let style = LineStyle(rawValue: i) {
-                            currentLineStyle = style
-                            UserDefaults.standard.set(style.rawValue, forKey: "currentLineStyle")
-                            needsDisplay = true
-                            return
-                        }
-                    }
-                    // Arrow style buttons
-                    for (i, sr) in optionsArrowStyleRects.enumerated() {
-                        if sr.contains(point), let style = ArrowStyle(rawValue: i) {
-                            currentArrowStyle = style
-                            UserDefaults.standard.set(style.rawValue, forKey: "currentArrowStyle")
-                            needsDisplay = true
-                            return
-                        }
-                    }
-                    // Rect fill style buttons
-                    for (i, sr) in optionsRectFillStyleRects.enumerated() {
-                        if sr.contains(point), let style = RectFillStyle(rawValue: i) {
-                            currentRectFillStyle = style
-                            UserDefaults.standard.set(style.rawValue, forKey: "currentRectFillStyle")
-                            needsDisplay = true
-                            return
-                        }
-                    }
-                    // Number format buttons
-                    for (i, sr) in optionsNumberFormatRects.enumerated() {
-                        if sr.contains(point), let fmt = NumberFormat(rawValue: i) {
-                            currentNumberFormat = fmt
-                            UserDefaults.standard.set(fmt.rawValue, forKey: "numberFormat")
-                            needsDisplay = true
-                            return
-                        }
-                    }
-                    // Number start-at stepper
-                    if optionsNumberStartMinusRect.contains(point) {
-                        numberStartAt = max(1, numberStartAt - 1)
-                        UserDefaults.standard.set(numberStartAt, forKey: "numberStartAt")
-                        needsDisplay = true
-                        return
-                    }
-                    if optionsNumberStartPlusRect.contains(point) {
-                        numberStartAt += 1
-                        UserDefaults.standard.set(numberStartAt, forKey: "numberStartAt")
-                        needsDisplay = true
-                        return
-                    }
-                    // Stamp emoji/load buttons
-                    if currentTool == .stamp {
-                        for (i, sr) in stampEmojiRects.enumerated() {
-                            if sr.contains(point), i < Self.commonEmojis.count {
-                                currentStampImage = renderEmoji(Self.commonEmojis[i])
-                                currentStampEmoji = Self.commonEmojis[i]
-                                needsDisplay = true
-                                return
-                            }
-                        }
-                        if stampMoreRect.contains(point) {
-                            PopoverHelper.dismiss()
-                            showEmojiPopover(anchorRect: stampMoreRect)
-                            return
-                        }
-                        if stampLoadRect.contains(point) {
-                            loadStampImage()
-                            return
-                        }
-                    }
-                    // Text formatting buttons
-                    if currentTool == .text {
-                        if textBoldRect != .zero && textBoldRect.contains(point) {
-                            toggleTextBold(); return
-                        }
-                        if textItalicRect != .zero && textItalicRect.contains(point) {
-                            toggleTextItalic(); return
-                        }
-                        if textUnderlineRect != .zero && textUnderlineRect.contains(point) {
-                            toggleTextUnderline(); return
-                        }
-                        if textStrikethroughRect != .zero && textStrikethroughRect.contains(point) {
-                            toggleTextStrikethrough(); return
-                        }
-                        // Alignment buttons
-                        for (rect, align) in [(textAlignLeftRect, NSTextAlignment.left),
-                                               (textAlignCenterRect, NSTextAlignment.center),
-                                               (textAlignRightRect, NSTextAlignment.right)] {
-                            if rect != .zero && rect.contains(point) {
-                                textAlignment = align
-                                applyAlignmentToText()
-                                needsDisplay = true; return
-                            }
-                        }
-                        if textBgToggleRect != .zero && textBgToggleRect.contains(point) {
-                            textBgEnabled.toggle()
-                            UserDefaults.standard.set(textBgEnabled, forKey: "textBgEnabled")
-                            needsDisplay = true; return
-                        }
-                        if textOutlineToggleRect != .zero && textOutlineToggleRect.contains(point) {
-                            textOutlineEnabled.toggle()
-                            UserDefaults.standard.set(textOutlineEnabled, forKey: "textOutlineEnabled")
-                            needsDisplay = true; return
-                        }
-                        if textSizeDecRect != .zero && textSizeDecRect.contains(point) {
-                            textFontSize = max(10, textFontSize - 2)
-                            applyFontSizeToSelection()
-                            needsDisplay = true; return
-                        }
-                        if textSizeIncRect != .zero && textSizeIncRect.contains(point) {
-                            textFontSize = min(72, textFontSize + 2)
-                            applyFontSizeToSelection()
-                            needsDisplay = true; return
-                        }
-                        if textFontDropdownRect != .zero && textFontDropdownRect.contains(point) {
-                            showFontPicker.toggle()
-                            needsDisplay = true; return
-                        }
-                        if textCancelRect != .zero && textCancelRect.contains(point) {
-                            cancelTextEditing(); return
-                        }
-                        if textConfirmRect != .zero && textConfirmRect.contains(point) {
-                            commitTextFieldIfNeeded(); return
-                        }
-                    }
-                    // Redact buttons (blur/pixelate options row)
-                    if currentTool == .pixelate || currentTool == .blur {
-                        if redactAllTextBtnRect != .zero && redactAllTextBtnRect.contains(point) {
-                            pressedRedactBtn = 0; needsDisplay = true
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-                                self?.pressedRedactBtn = -1; self?.needsDisplay = true
-                                self?.performRedactAllText()
-                            }
-                            return
-                        }
-                        if redactPIIBtnRect != .zero && redactPIIBtnRect.contains(point) {
-                            pressedRedactBtn = 1; needsDisplay = true
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-                                self?.pressedRedactBtn = -1; self?.needsDisplay = true
-                                self?.performAutoRedact()
-                            }
-                            return
-                        }
-                        if redactTypeDropdownRect != .zero && redactTypeDropdownRect.contains(point) {
-                            PopoverHelper.dismiss()
-                            showRedactTypePopover(anchorRect: redactTypeDropdownRect)
-                            return
-                        }
-                    }
-                    return  // consumed by options row
-                }
 
                 if let action = ToolbarLayout.hitTest(point: point, buttons: bottomButtons) {
                     // Flash press feedback for momentary buttons
@@ -5259,14 +4961,6 @@ class OverlayView: NSView {
         }
 
         // Handle options row slider dragging
-        if isDraggingOptionsStroke {
-            updateOptionsStrokeSlider(at: point)
-            return
-        }
-        if isDraggingOptionsCornerRadius {
-            updateOptionsCornerRadius(at: point)
-            return
-        }
         if isDraggingBeautifySlider {
             updateBeautifySlider(at: point)
             return
@@ -5508,14 +5202,6 @@ class OverlayView: NSView {
         }
         if isResizingTextBox {
             isResizingTextBox = false
-            return
-        }
-        if isDraggingOptionsStroke {
-            isDraggingOptionsStroke = false
-            return
-        }
-        if isDraggingOptionsCornerRadius {
-            isDraggingOptionsCornerRadius = false
             return
         }
         if isDraggingBeautifySlider {
@@ -5919,7 +5605,6 @@ class OverlayView: NSView {
             showFontPicker = false
             stampPreviewPoint = nil
             loupeCursorPoint = .zero
-            showBeautifyInOptionsRow = true
             // Auto-enable beautify on first click in this session
             if !beautifyEnabled {
                 beautifyEnabled = true
