@@ -541,16 +541,7 @@ class OverlayView: NSView {
     private var currentColorOpacity: CGFloat = OverlayView.lastUsedOpacity
 
     // Radial color wheel (right-click in drawing mode)
-    private var showColorWheel: Bool = false
-    private var colorWheelCenter: NSPoint = .zero
-    private var colorWheelHoveredIndex: Int = -1  // -1 = none
-    private let colorWheelRadius: CGFloat = 60
-    private let colorWheelSwatchRadius: CGFloat = 14
-    private let colorWheelColors: [NSColor] = [
-        .systemRed, .systemOrange, .systemYellow, .systemGreen,
-        .systemTeal, .systemBlue, .systemIndigo, .systemPurple,
-        .systemPink, .white, .gray, .black,
-    ]
+    private let colorWheel = ColorWheelRenderer()
 
     // Handle
     private let handleSize: CGFloat = 10
@@ -1393,8 +1384,8 @@ class OverlayView: NSView {
             }
 
             // Radial color wheel
-            if showColorWheel {
-                drawColorWheel()
+            if colorWheel.isVisible {
+                colorWheel.draw(currentColor: currentColor)
             }
         }
 
@@ -1714,97 +1705,7 @@ class OverlayView: NSView {
             ToolbarLayout.handleColor.setFill()
             NSBezierPath(ovalIn: rect).fill()
         }
-    }
-
-    private func drawColorWheel() {
-        let center = colorWheelCenter
-        let count = colorWheelColors.count
-        let angleStep = (2 * CGFloat.pi) / CGFloat(count)
-
-        // Dim background
-        NSColor.black.withAlphaComponent(0.3).setFill()
-        let bgCircle = NSBezierPath(ovalIn: NSRect(
-            x: center.x - colorWheelRadius - colorWheelSwatchRadius - 8,
-            y: center.y - colorWheelRadius - colorWheelSwatchRadius - 8,
-            width: (colorWheelRadius + colorWheelSwatchRadius + 8) * 2,
-            height: (colorWheelRadius + colorWheelSwatchRadius + 8) * 2
-        ))
-        bgCircle.fill()
-
-        // Draw each color swatch in a circle
-        for (i, color) in colorWheelColors.enumerated() {
-            // Start from top (–π/2) and go clockwise
-            let angle = -CGFloat.pi / 2 + CGFloat(i) * angleStep
-            let sx = center.x + colorWheelRadius * cos(angle)
-            let sy = center.y + colorWheelRadius * sin(angle)
-
-            let isHovered = (i == colorWheelHoveredIndex)
-            let radius = isHovered ? colorWheelSwatchRadius + 4 : colorWheelSwatchRadius
-            let swatchRect = NSRect(x: sx - radius, y: sy - radius, width: radius * 2, height: radius * 2)
-
-            // Shadow for depth
-            if isHovered {
-                NSColor.black.withAlphaComponent(0.4).setFill()
-                NSBezierPath(ovalIn: swatchRect.insetBy(dx: -2, dy: -2)).fill()
-            }
-
-            color.setFill()
-            NSBezierPath(ovalIn: swatchRect).fill()
-
-            // Border
-            let borderColor: NSColor = isHovered ? .white : .white.withAlphaComponent(0.5)
-            borderColor.setStroke()
-            let border = NSBezierPath(ovalIn: swatchRect.insetBy(dx: 0.5, dy: 0.5))
-            border.lineWidth = isHovered ? 2.5 : 1.0
-            border.stroke()
-
-            // Check mark for current color
-            if color == currentColor && !isHovered {
-                let checkSize: CGFloat = 8
-                let checkPath = NSBezierPath()
-                checkPath.lineWidth = 2
-                checkPath.lineCapStyle = .round
-                checkPath.lineJoinStyle = .round
-                // Simple check mark
-                let cx = sx - checkSize / 3
-                let cy = sy
-                checkPath.move(to: NSPoint(x: cx - checkSize / 3, y: cy))
-                checkPath.line(to: NSPoint(x: cx, y: cy - checkSize / 3))
-                checkPath.line(to: NSPoint(x: cx + checkSize / 2, y: cy + checkSize / 3))
-                NSColor.white.setStroke()
-                checkPath.stroke()
-            }
-        }
-
-        // Center dot showing current color
-        let centerRadius: CGFloat = 12
-        let centerRect = NSRect(x: center.x - centerRadius, y: center.y - centerRadius, width: centerRadius * 2, height: centerRadius * 2)
-        currentColor.setFill()
-        NSBezierPath(ovalIn: centerRect).fill()
-        NSColor.white.withAlphaComponent(0.6).setStroke()
-        let centerBorder = NSBezierPath(ovalIn: centerRect.insetBy(dx: 0.5, dy: 0.5))
-        centerBorder.lineWidth = 1.5
-        centerBorder.stroke()
-    }
-
-    private func colorWheelIndexAt(_ point: NSPoint) -> Int {
-        let dx = point.x - colorWheelCenter.x
-        let dy = point.y - colorWheelCenter.y
-        let dist = hypot(dx, dy)
-
-        // Must be reasonably close to the ring
-        if dist < colorWheelRadius * 0.3 || dist > colorWheelRadius + colorWheelSwatchRadius + 15 {
-            return -1
-        }
-
-        let count = colorWheelColors.count
-        let angleStep = (2 * CGFloat.pi) / CGFloat(count)
-        var angle = atan2(dy, dx) + CGFloat.pi / 2  // offset so 0 is at top
-        if angle < 0 { angle += 2 * CGFloat.pi }
-        let index = Int((angle + angleStep / 2) / angleStep) % count
-        return index
-    }
-    /// Compare two colors by RGB components (ignoring minor floating point differences)
+    }    /// Compare two colors by RGB components (ignoring minor floating point differences)
     private func colorsMatchRGB(_ a: NSColor, _ b: NSColor) -> Bool {
         guard let ac = a.usingColorSpace(.deviceRGB), let bc = b.usingColorSpace(.deviceRGB) else {
             return a == b
@@ -4697,32 +4598,32 @@ class OverlayView: NSView {
 
         if state == .selected && pointIsInSelection(point) {
             // Show radial color wheel
-            showColorWheel = true
-            colorWheelCenter = point
-            colorWheelHoveredIndex = -1
+            colorWheel.show(at: point)
+            
+            colorWheel.hoveredIndex = -1
             needsDisplay = true
             return
         }
     }
 
     override func rightMouseDragged(with event: NSEvent) {
-        if showColorWheel {
+        if colorWheel.isVisible {
             let point = convert(event.locationInWindow, from: nil)
-            colorWheelHoveredIndex = colorWheelIndexAt(point)
+            colorWheel.updateHover(at: point)
             needsDisplay = true
             return
         }
     }
 
     override func rightMouseUp(with event: NSEvent) {
-        if showColorWheel {
-            if colorWheelHoveredIndex >= 0 && colorWheelHoveredIndex < colorWheelColors.count {
-                currentColor = colorWheelColors[colorWheelHoveredIndex]
+        if colorWheel.isVisible {
+            if colorWheel.hoveredColor != nil {
+                currentColor = colorWheel.hoveredColor!
                 applyColorToTextIfEditing()
                 applyColorToSelectedAnnotation()
             }
-            showColorWheel = false
-            colorWheelHoveredIndex = -1
+            colorWheel.dismiss()
+            colorWheel.hoveredIndex = -1
             needsDisplay = true
             return
         }
@@ -7078,7 +6979,7 @@ class OverlayView: NSView {
         hoveredAnnotationClearTimer?.invalidate()
         hoveredAnnotationClearTimer = nil
         hoveredAnnotation = nil
-        showColorWheel = false
+        colorWheel.dismiss()
         beautifyEnabled = UserDefaults.standard.bool(forKey: "beautifyEnabled")
         beautifyStyleIndex = UserDefaults.standard.integer(forKey: "beautifyStyleIndex")
         beautifyMode = BeautifyMode(rawValue: UserDefaults.standard.integer(forKey: "beautifyMode")) ?? .window
