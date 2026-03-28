@@ -348,20 +348,6 @@ class OverlayView: NSView {
 
     // Redact type picker
 
-    static let redactTypeNames: [(key: String, label: String)] = [
-        ("email", "Emails"),
-        ("phone", "Phone Numbers"),
-        ("ssn", "SSN"),
-        ("credit_card", "Credit Cards"),
-        ("cvv", "CVV Codes"),
-        ("expiry", "Expiry Dates"),
-        ("ipv4", "IP Addresses"),
-        ("aws_key", "AWS Keys"),
-        ("secret_assignment", "Secrets/Tokens"),
-        ("hex_key", "Hex Keys"),
-        ("bearer", "Bearer Tokens"),
-    ]
-
     // Loupe size picker
     var currentLoupeSize: CGFloat = {
         let saved = UserDefaults.standard.object(forKey: "loupeSize") as? Double
@@ -6186,417 +6172,7 @@ class OverlayView: NSView {
             guard let regex = try? NSRegularExpression(pattern: pat, options: [.caseInsensitive]) else { return nil }
             return (name, regex)
         }
-    }()
-
-    func performAutoRedact() {
-        guard state == .selected,
-              selectionRect.width > 1, selectionRect.height > 1,
-              let screenshot = screenshotImage else { return }
-
-        // Determine redact style based on current tool
-        let redactTool: AnnotationTool = (currentTool == .blur) ? .blur : (currentTool == .pixelate ? .pixelate : .rectangle)
-
-        // Crop the selected region for Vision
-        let drawR = captureDrawRect
-        let selRect0 = selectionRect
-        let regionImage = NSImage(size: selRect0.size, flipped: false) { _ in
-            screenshot.draw(in: NSRect(x: -selRect0.origin.x, y: -selRect0.origin.y,
-                                        width: drawR.width, height: drawR.height),
-                            from: .zero, operation: .copy, fraction: 1.0)
-            return true
-        }
-
-        guard let tiffData = regionImage.tiffRepresentation,
-              let bitmap = NSBitmapImageRep(data: tiffData),
-              let cgImage = bitmap.cgImage else { return }
-
-        let selRect = selectionRect
-        let redactColor = currentColor
-        // Capture composited image for blur/pixelate source
-        let sourceImg = (redactTool == .blur || redactTool == .pixelate) ? compositedImage() : nil
-        let sourceBounds = captureDrawRect
-
-        let request = VisionOCR.makeTextRecognitionRequest { [weak self] request, error in
-            guard let self = self else { return }
-            guard let observations = request.results as? [VNRecognizedTextObservation] else { return }
-
-            var redactAnnotations: [Annotation] = []
-            let groupID = UUID()
-            let padding: CGFloat = 2
-            var redactedObservations = Set<Int>()  // track already-redacted observations by index
-
-            // Helper to create a redaction annotation from a Vision bounding box
-            func addRedaction(box: CGRect) {
-                let viewX = selRect.origin.x + box.origin.x * selRect.width - padding
-                let viewY = selRect.origin.y + box.origin.y * selRect.height - padding
-                let viewW = box.width * selRect.width + padding * 2
-                let viewH = box.height * selRect.height + padding * 2
-                let annotation = Annotation(
-                    tool: redactTool,
-                    startPoint: NSPoint(x: viewX, y: viewY),
-                    endPoint: NSPoint(x: viewX + viewW, y: viewY + viewH),
-                    color: redactColor,
-                    strokeWidth: 0
-                )
-                annotation.groupID = groupID
-                if redactTool == .rectangle {
-                    annotation.rectFillStyle = .fill
-                } else if redactTool == .blur || redactTool == .pixelate {
-                    annotation.sourceImage = sourceImg
-                    annotation.sourceImageBounds = sourceBounds
-                }
-                redactAnnotations.append(annotation)
-            }
-
-            // Pass 1: regex matching within each observation
-            let enabledTypes = UserDefaults.standard.array(forKey: "enabledRedactTypes") as? [String]
-            let activePatterns = OverlayView.sensitivePatterns.filter { pattern in
-                enabledTypes == nil || enabledTypes!.contains(pattern.name)
-            }
-
-            for (i, observation) in observations.enumerated() {
-                guard let candidate = observation.topCandidates(1).first else { continue }
-                let text = candidate.string
-                let fullRange = NSRange(location: 0, length: (text as NSString).length)
-
-                for (_, regex) in activePatterns {
-                    let matches = regex.matches(in: text, options: [], range: fullRange)
-                    for match in matches {
-                        guard let swiftRange = Range(match.range, in: text) else { continue }
-                        guard let box = try? candidate.boundingBox(for: swiftRange) else { continue }
-                        addRedaction(box: box.boundingBox)
-                        redactedObservations.insert(i)
-                    }
-                }
-            }
-
-            // Pass 2: detect card numbers split across observations
-            // Find observations that are purely numeric (3-6 digits) and group ones
-            // that are horizontally adjacent (similar Y, sequential X) into card candidates
-            struct DigitObs { let index: Int; let midY: CGFloat; let midX: CGFloat; let box: CGRect; let digitCount: Int }
-            var digitObservations: [DigitObs] = []
-            for (i, observation) in observations.enumerated() {
-                guard !redactedObservations.contains(i) else { continue }
-                guard let candidate = observation.topCandidates(1).first else { continue }
-                // Strip non-digit chars (OCR artifacts like ฿, @, :, etc.)
-                let digitsOnly = candidate.string.filter(\.isNumber)
-                if digitsOnly.count >= 3 && digitsOnly.count <= 6 {
-                    let box = observation.boundingBox
-                    digitObservations.append(DigitObs(index: i, midY: box.midY, midX: box.midX, box: box, digitCount: digitsOnly.count))
-                }
-            }
-            // Group by similar Y position (same row) — tolerance 3% of image height
-            let yTolerance: CGFloat = 0.03
-            var grouped: [[DigitObs]] = []
-            var used = Set<Int>()
-            for (idx, obs) in digitObservations.enumerated() {
-                guard !used.contains(idx) else { continue }
-                var row = [obs]
-                used.insert(idx)
-                for (jdx, other) in digitObservations.enumerated() {
-                    guard !used.contains(jdx) else { continue }
-                    if abs(other.midY - obs.midY) < yTolerance {
-                        row.append(other)
-                        used.insert(jdx)
-                    }
-                }
-                row.sort { $0.midX < $1.midX }
-                grouped.append(row)
-            }
-            // Redact rows with 2+ digit groups (likely split card numbers)
-            for row in grouped where row.count >= 2 {
-                let totalDigits = row.reduce(0) { $0 + $1.digitCount }
-                // 8-19 digits = plausible card number; also accept 2 groups of 4 (partial)
-                guard totalDigits >= 8 || (row.count >= 2 && row.allSatisfy { $0.digitCount >= 4 }) else { continue }
-                for obs in row {
-                    addRedaction(box: obs.box)
-                    redactedObservations.insert(obs.index)
-                }
-            }
-
-            // Pass 3: redact observations whose text matches known sensitive labels + values
-            // e.g. "CVV 344", "EXP 2029-01", standalone 3-digit numbers near card data
-            if !redactedObservations.isEmpty {
-                let cvvPattern = try? NSRegularExpression(pattern: #"^\d{3,4}$"#)
-                let expiryPattern = try? NSRegularExpression(pattern: #"^\d{4}[-/]\d{2}$|^\d{2}[-/]\d{2,4}$"#)
-                for (i, observation) in observations.enumerated() {
-                    guard !redactedObservations.contains(i) else { continue }
-                    guard let candidate = observation.topCandidates(1).first else { continue }
-                    let text = candidate.string.trimmingCharacters(in: .whitespaces)
-                    let range = NSRange(location: 0, length: (text as NSString).length)
-
-                    // Standalone 3-digit number (likely CVV if card data was found)
-                    if cvvPattern?.firstMatch(in: text, options: [], range: range) != nil {
-                        addRedaction(box: observation.boundingBox)
-                        redactedObservations.insert(i)
-                    }
-                    // Expiry date
-                    if expiryPattern?.firstMatch(in: text, options: [], range: range) != nil {
-                        addRedaction(box: observation.boundingBox)
-                        redactedObservations.insert(i)
-                    }
-                }
-            }
-
-            // Bake blur/pixelate annotations on background thread
-            for ann in redactAnnotations {
-                ann.bakePixelate()
-            }
-
-            DispatchQueue.main.async { [weak self] in
-                guard let self = self, !redactAnnotations.isEmpty else { return }
-                self.annotations.append(contentsOf: redactAnnotations)
-                self.undoStack.append(contentsOf: redactAnnotations.map { .added($0) })
-                self.redoStack.removeAll()
-                self.cachedCompositedImage = nil
-                self.needsDisplay = true
-            }
-        }
-
-        DispatchQueue.global(qos: .userInitiated).async {
-            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-            try? handler.perform([request])
-        }
-    }
-
-    private func performRedactAllText() {
-        guard state == .selected,
-              selectionRect.width > 1, selectionRect.height > 1,
-              let screenshot = screenshotImage else { return }
-
-        let redactTool: AnnotationTool = (currentTool == .blur) ? .blur : (currentTool == .pixelate ? .pixelate : .rectangle)
-
-        let drawR2 = captureDrawRect
-        let selRect0 = selectionRect
-        let regionImage = NSImage(size: selRect0.size, flipped: false) { _ in
-            screenshot.draw(in: NSRect(x: -selRect0.origin.x, y: -selRect0.origin.y,
-                                        width: drawR2.width, height: drawR2.height),
-                            from: .zero, operation: .copy, fraction: 1.0)
-            return true
-        }
-
-        guard let tiffData = regionImage.tiffRepresentation,
-              let bitmap = NSBitmapImageRep(data: tiffData),
-              let cgImage = bitmap.cgImage else { return }
-
-        let selRect = selectionRect
-        let redactColor = currentColor
-        let sourceImg = (redactTool == .blur || redactTool == .pixelate) ? compositedImage() : nil
-        let sourceBounds = captureDrawRect
-
-        let request = VisionOCR.makeTextRecognitionRequest { [weak self] request, error in
-            guard let self = self else { return }
-            guard let observations = request.results as? [VNRecognizedTextObservation] else { return }
-
-            var redactAnnotations: [Annotation] = []
-            let groupID = UUID()
-            let padding: CGFloat = 2
-
-            for observation in observations {
-                let box = observation.boundingBox
-                let viewX = selRect.origin.x + box.origin.x * selRect.width - padding
-                let viewY = selRect.origin.y + box.origin.y * selRect.height - padding
-                let viewW = box.width * selRect.width + padding * 2
-                let viewH = box.height * selRect.height + padding * 2
-                let annotation = Annotation(
-                    tool: redactTool,
-                    startPoint: NSPoint(x: viewX, y: viewY),
-                    endPoint: NSPoint(x: viewX + viewW, y: viewY + viewH),
-                    color: redactColor,
-                    strokeWidth: 0
-                )
-                annotation.groupID = groupID
-                if redactTool == .rectangle {
-                    annotation.rectFillStyle = .fill
-                } else if redactTool == .blur || redactTool == .pixelate {
-                    annotation.sourceImage = sourceImg
-                    annotation.sourceImageBounds = sourceBounds
-                }
-                redactAnnotations.append(annotation)
-            }
-
-            for ann in redactAnnotations {
-                ann.bakePixelate()
-            }
-
-            DispatchQueue.main.async { [weak self] in
-                guard let self = self, !redactAnnotations.isEmpty else { return }
-                self.annotations.append(contentsOf: redactAnnotations)
-                self.undoStack.append(contentsOf: redactAnnotations.map { .added($0) })
-                self.redoStack.removeAll()
-                self.cachedCompositedImage = nil
-                self.needsDisplay = true
-            }
-        }
-
-        DispatchQueue.global(qos: .userInitiated).async {
-            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-            try? handler.perform([request])
-        }
-    }
-
-    // MARK: - Translate
-    private func performTranslate(targetLang: String) {
-        guard state == .selected,
-              selectionRect.width > 1, selectionRect.height > 1,
-              let screenshot = screenshotImage else { return }
-
-        // Remove any previous translate overlays
-        annotations.removeAll { $0.tool == .translateOverlay }
-        isTranslating = true
-        needsDisplay = true
-
-        // Crop selected region for Vision.
-        let drawR3 = captureDrawRect
-        let selRect0 = selectionRect
-        let regionImage = NSImage(size: selRect0.size, flipped: false) { _ in
-            screenshot.draw(
-                in: NSRect(x: -selRect0.origin.x, y: -selRect0.origin.y,
-                           width: drawR3.width, height: drawR3.height),
-                from: .zero, operation: .copy, fraction: 1.0
-            )
-            return true
-        }
-
-        guard let tiffData = regionImage.tiffRepresentation,
-              let bitmap = NSBitmapImageRep(data: tiffData),
-              let cgImage = bitmap.cgImage else {
-            isTranslating = false
-            return
-        }
-
-        let selRect = self.selectionRect
-        let viewBounds = self.bounds
-
-        // Vision OCR with bounding boxes
-        let request = VisionOCR.makeTextRecognitionRequest { [weak self] request, error in
-            guard let self = self else { return }
-            guard let observations = request.results as? [VNRecognizedTextObservation],
-                  !observations.isEmpty else {
-                DispatchQueue.main.async {
-                    self.isTranslating = false
-                    self.showOverlayError("No text found in selection.")
-                }
-                return
-            }
-
-            // Filter out low-confidence / whitespace observations
-            let blocks = observations.compactMap { obs -> (text: String, box: CGRect, h: CGFloat)? in
-                guard let top = obs.topCandidates(1).first else { return nil }
-                let t = top.string.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !t.isEmpty else { return nil }
-                return (t, obs.boundingBox, obs.boundingBox.height)
-            }
-
-            let texts = blocks.map { $0.text }
-
-            TranslationService.translateBatch(texts: texts, targetLang: targetLang) { [weak self] result in
-                guard let self = self else { return }
-                self.isTranslating = false
-
-                switch result {
-                case .failure(let error):
-                    self.showOverlayError("Translation failed: \(error.localizedDescription)")
-                    self.needsDisplay = true
-
-                case .success(let translations):
-                    var newAnnotations: [Annotation] = []
-                    let groupID = UUID()
-
-                    for (i, block) in blocks.enumerated() {
-                        guard i < translations.count else { continue }
-                        let translated = translations[i].trimmingCharacters(in: .whitespacesAndNewlines)
-                        guard !translated.isEmpty else { continue }
-
-                        // Convert Vision normalized box (origin bottom-left) → view coords
-                        let vBox = block.box
-                        let padding: CGFloat = 1
-                        let viewX = selRect.origin.x + vBox.origin.x * selRect.width - padding
-                        let viewY = selRect.origin.y + vBox.origin.y * selRect.height - padding
-                        let viewW = vBox.width * selRect.width + padding * 2
-                        let viewH = vBox.height * selRect.height + padding * 2
-
-                        // Sample average background color from the screenshot at this region
-                        let bgColor = self.sampleAverageColor(
-                            in: cgImage,
-                            region: CGRect(
-                                x: vBox.origin.x * CGFloat(cgImage.width),
-                                y: vBox.origin.y * CGFloat(cgImage.height),
-                                width: vBox.width * CGFloat(cgImage.width),
-                                height: vBox.height * CGFloat(cgImage.height)
-                            )
-                        )
-
-                        // Font size approximation from box height in view coords
-                        let approxFontSize = max(8, viewH * 0.65)
-
-                        let ann = Annotation(
-                            tool: .translateOverlay,
-                            startPoint: NSPoint(x: viewX, y: viewY),
-                            endPoint: NSPoint(x: viewX + viewW, y: viewY + viewH),
-                            color: bgColor,
-                            strokeWidth: 0
-                        )
-                        ann.text = translated
-                        ann.fontSize = approxFontSize
-                        ann.groupID = groupID
-                        newAnnotations.append(ann)
-                    }
-
-                    self.annotations.removeAll { $0.tool == .translateOverlay }
-                    self.annotations.append(contentsOf: newAnnotations)
-                    self.undoStack.append(contentsOf: newAnnotations.map { .added($0) })
-                    self.redoStack.removeAll()
-                    self.needsDisplay = true
-                }
-            }
-        }
-
-        DispatchQueue.global(qos: .userInitiated).async {
-            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-            try? handler.perform([request])
-        }
-    }
-
-    /// Samples the average color of a region in a CGImage. Returns a near-match fill color.
-    private func sampleAverageColor(in cgImage: CGImage, region: CGRect) -> NSColor {
-        let sampleW = max(1, Int(region.width))
-        let sampleH = max(1, Int(region.height))
-        let clampedX = max(0, min(Int(region.origin.x), cgImage.width - 1))
-        let clampedY = max(0, min(Int(region.origin.y), cgImage.height - 1))
-        let clampedW = min(sampleW, cgImage.width - clampedX)
-        let clampedH = min(sampleH, cgImage.height - clampedY)
-        guard clampedW > 0, clampedH > 0 else { return .white }
-
-        // Downscale to 4×4 for cheap averaging
-        let thumbW = 4, thumbH = 4
-        var pixelData = [UInt8](repeating: 0, count: thumbW * thumbH * 4)
-        guard let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
-              let ctx = CGContext(data: &pixelData, width: thumbW, height: thumbH,
-                                  bitsPerComponent: 8, bytesPerRow: thumbW * 4,
-                                  space: colorSpace,
-                                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue),
-              let cropped = cgImage.cropping(to: CGRect(x: clampedX, y: clampedY,
-                                                        width: clampedW, height: clampedH))
-        else { return .white }
-
-        ctx.draw(cropped, in: CGRect(x: 0, y: 0, width: thumbW, height: thumbH))
-
-        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0
-        let count = CGFloat(thumbW * thumbH)
-        for i in 0..<(thumbW * thumbH) {
-            let base = i * 4
-            let a = CGFloat(pixelData[base + 3]) / 255.0
-            if a > 0 {
-                r += CGFloat(pixelData[base])     / 255.0
-                g += CGFloat(pixelData[base + 1]) / 255.0
-                b += CGFloat(pixelData[base + 2]) / 255.0
-            }
-        }
-        return NSColor(deviceRed: r / count, green: g / count, blue: b / count, alpha: 1.0)
-    }
-
-    // MARK: - Output
+    }()    // MARK: - Translate    /// Samples the average color of a region in a CGImage. Returns a near-match fill color.    // MARK: - Output
 
     /// Render screenshot + all existing annotations into a full-size image.
     /// Used as source for pixelate/blur so they operate on the composited result.
@@ -6801,10 +6377,63 @@ class OverlayView: NSView {
         needsDisplay = true
     }
 
+    func performAutoRedact() {
+        guard state == .selected, let screenshot = screenshotImage else { return }
+        let tool: AnnotationTool = currentTool == .blur ? .blur : (currentTool == .pixelate ? .pixelate : .rectangle)
+        let sourceImg = (tool == .blur || tool == .pixelate) ? compositedImage() : nil
+        AutoRedactor.redactPII(screenshot: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect,
+                               redactTool: tool, color: currentColor, sourceImage: sourceImg, sourceImageBounds: captureDrawRect) { [weak self] anns in
+            guard let self = self, !anns.isEmpty else { return }
+            self.annotations.append(contentsOf: anns)
+            self.undoStack.append(contentsOf: anns.map { .added($0) })
+            self.redoStack.removeAll()
+            self.cachedCompositedImage = nil
+            self.needsDisplay = true
+        }
+    }
+
+    func performRedactAllText() {
+        guard state == .selected, let screenshot = screenshotImage else { return }
+        let tool: AnnotationTool = currentTool == .blur ? .blur : (currentTool == .pixelate ? .pixelate : .rectangle)
+        let sourceImg = (tool == .blur || tool == .pixelate) ? compositedImage() : nil
+        AutoRedactor.redactAllText(screenshot: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect,
+                                   redactTool: tool, color: currentColor, sourceImage: sourceImg, sourceImageBounds: captureDrawRect) { [weak self] anns in
+            guard let self = self, !anns.isEmpty else { return }
+            self.annotations.append(contentsOf: anns)
+            self.undoStack.append(contentsOf: anns.map { .added($0) })
+            self.redoStack.removeAll()
+            self.cachedCompositedImage = nil
+            self.needsDisplay = true
+        }
+    }
+
     func performAutoRedactPII() {
         performAutoRedact()
     }
 
+    private func performTranslate(targetLang: String) {
+        guard state == .selected, let screenshot = screenshotImage else { return }
+        annotations.removeAll { $0.tool == .translateOverlay }
+        isTranslating = true
+        needsDisplay = true
+
+        TranslateOverlay.translate(screenshot: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect, targetLang: targetLang,
+            onError: { [weak self] msg in
+                self?.isTranslating = false
+                self?.showOverlayError(msg)
+                self?.needsDisplay = true
+            },
+            completion: { [weak self] anns in
+                guard let self = self else { return }
+                self.isTranslating = false
+                self.annotations.removeAll { $0.tool == .translateOverlay }
+                self.annotations.append(contentsOf: anns)
+                self.undoStack.append(contentsOf: anns.map { .added($0) })
+                self.redoStack.removeAll()
+                self.needsDisplay = true
+            }
+        )
+    }
 
     // MARK: - NSPopover-based pickers
 
@@ -6828,7 +6457,7 @@ class OverlayView: NSView {
     }
 
     func showRedactTypePopover(anchorRect: NSRect, anchorView: NSView? = nil) {
-        let types = Self.redactTypeNames
+        let types = AutoRedactor.redactTypeNames
         let picker = ListPickerView()
         picker.items = types.map { item in
             .init(title: item.label, isSelected: UserDefaults.standard.object(forKey: item.key) as? Bool ?? true)
