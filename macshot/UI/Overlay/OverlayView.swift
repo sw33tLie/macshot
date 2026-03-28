@@ -404,9 +404,7 @@ class OverlayView: NSView {
     private var overlayErrorTimer: Timer? = nil
 
     // Barcode / QR detection
-    private var detectedBarcodePayload: String? = nil
-    private var barcodeActionRects: [NSRect] = []   // [0] = primary action, [1] = dismiss
-    private var barcodeScanTask: DispatchWorkItem? = nil
+    private let barcodeDetector = BarcodeDetector()
 
     // Recording state
     var isRecording: Bool = false       // true when recording toolbar is shown (mode entered)
@@ -1422,7 +1420,7 @@ class OverlayView: NSView {
         }
 
         // Barcode / QR badge
-        if state == .selected { drawBarcodeBar() }
+        if state == .selected { barcodeDetector.draw(selectionRect: selectionRect, bottomBarRect: bottomBarRect, viewBounds: bounds) }
 
         // Recording HUD
         if isRecording {
@@ -3642,47 +3640,12 @@ class OverlayView: NSView {
     // MARK: - Barcode / QR Detection
 
     func scheduleBarcodeDetection() {
-        barcodeScanTask?.cancel()
-        detectedBarcodePayload = nil
-        barcodeActionRects = []
+        barcodeDetector.cancel()
         needsDisplay = true
-
-        guard state == .selected,
-              selectionRect.width > 20, selectionRect.height > 20,
-              let screenshot = screenshotImage else { return }
-
-        let rect = selectionRect
-        let task = DispatchWorkItem { [weak self] in
-            guard let self = self else { return }
-
-            // Crop selected region from screenshot
-            let drawRect = self.captureDrawRect
-            let regionImage = NSImage(size: rect.size, flipped: false) { _ in
-                screenshot.draw(in: NSRect(x: -rect.origin.x, y: -rect.origin.y,
-                                           width: drawRect.width, height: drawRect.height),
-                                from: .zero, operation: .copy, fraction: 1.0)
-                return true
-            }
-
-            guard let tiffData = regionImage.tiffRepresentation,
-                  let bitmap = NSBitmapImageRep(data: tiffData),
-                  let cgImage = bitmap.cgImage else { return }
-
-            let request = VNDetectBarcodesRequest()
-            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-            try? handler.perform([request])
-            let payload = (request.results ?? [])
-                .compactMap { $0.payloadStringValue }
-                .first(where: { !$0.isEmpty })
-
-            DispatchQueue.main.async { [weak self] in
-                guard let self = self else { return }
-                self.detectedBarcodePayload = payload
-                self.needsDisplay = true
-            }
+        guard state == .selected, let screenshot = screenshotImage else { return }
+        barcodeDetector.scan(image: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect) { [weak self] in
+            self?.needsDisplay = true
         }
-        barcodeScanTask = task
-        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.3, execute: task)
     }
 
     private func drawRecordingHUD() {
@@ -3873,89 +3836,6 @@ class OverlayView: NSView {
         let clampedHintY = min(hintY, bounds.maxY - hintSize.height - 4)
         (hintStr as NSString).draw(at: NSPoint(x: hintX, y: clampedHintY), withAttributes: hintAttrs)
     }
-
-    private func drawBarcodeBar() {
-        guard let payload = detectedBarcodePayload else { return }
-        let isURL = payload.hasPrefix("http://") || payload.hasPrefix("https://")
-
-        let barH: CGFloat = 36
-        let gap: CGFloat = 6
-        let barW: CGFloat = max(320, min(selectionRect.width - 16, 420))
-        let barX = max(bounds.minX + 4, min(selectionRect.midX - barW / 2, bounds.maxX - barW - 4))
-
-        // Prefer below the selection; if bottom toolbar is there or no room, try above;
-        // last resort: inside the selection at the top.
-        let belowY = selectionRect.minY - barH - gap
-        let aboveY = selectionRect.maxY + gap
-        let insideY = selectionRect.maxY - barH - gap
-
-        let bottomBarOccupied = bottomBarRect != .zero
-        let belowClear = belowY >= bounds.minY + 4 &&
-            !(bottomBarOccupied && NSRect(x: barX, y: belowY, width: barW, height: barH).intersects(bottomBarRect))
-        let aboveClear = aboveY + barH <= bounds.maxY - 4
-
-        let finalBarY: CGFloat
-        if belowClear {
-            finalBarY = belowY
-        } else if aboveClear {
-            finalBarY = aboveY
-        } else {
-            finalBarY = insideY
-        }
-
-        let barRect = NSRect(x: barX, y: finalBarY, width: barW, height: barH)
-
-        // Background pill
-        NSColor(white: 0.12, alpha: 0.92).setFill()
-        NSBezierPath(roundedRect: barRect, xRadius: 10, yRadius: 10).fill()
-
-        // QR icon + label
-        let icon = isURL ? "🔗" : "📋"
-        let shortPayload = payload.count > 45 ? String(payload.prefix(42)) + "…" : payload
-        let labelText = "\(icon)  \(shortPayload)"
-        let labelAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 11, weight: .regular),
-            .foregroundColor: NSColor.white,
-        ]
-        let labelStr = labelText as NSString
-        let labelSize = labelStr.size(withAttributes: labelAttrs)
-        let labelX = barRect.minX + 10
-        let labelY = barRect.midY - labelSize.height / 2
-        labelStr.draw(at: NSPoint(x: labelX, y: labelY), withAttributes: labelAttrs)
-
-        // Action button (right side)
-        let btnTitle = isURL ? "Open" : "Copy"
-        let btnAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 11, weight: .semibold),
-            .foregroundColor: NSColor.white,
-        ]
-        let btnSize = (btnTitle as NSString).size(withAttributes: btnAttrs)
-        let btnW = btnSize.width + 20
-        let dismissW: CGFloat = 22
-
-        let dismissRect = NSRect(x: barRect.maxX - dismissW - 4, y: barRect.minY + 4, width: dismissW, height: barH - 8)
-        let actionRect  = NSRect(x: dismissRect.minX - btnW - 6,  y: barRect.minY + 4, width: btnW,    height: barH - 8)
-
-        // Action button bg
-        NSColor(red: 0.2, green: 0.5, blue: 1.0, alpha: 0.9).setFill()
-        NSBezierPath(roundedRect: actionRect, xRadius: 6, yRadius: 6).fill()
-        (btnTitle as NSString).draw(
-            at: NSPoint(x: actionRect.midX - btnSize.width / 2, y: actionRect.midY - btnSize.height / 2),
-            withAttributes: btnAttrs)
-
-        // Dismiss ✕
-        let xAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 12, weight: .medium),
-            .foregroundColor: NSColor(white: 0.6, alpha: 1),
-        ]
-        let xStr = "✕" as NSString
-        let xSize = xStr.size(withAttributes: xAttrs)
-        xStr.draw(at: NSPoint(x: dismissRect.midX - xSize.width / 2, y: dismissRect.midY - xSize.height / 2),
-                  withAttributes: xAttrs)
-
-        barcodeActionRects = [actionRect, dismissRect]
-    }
-
     // MARK: - Toolbar Layout
 
     /// Whether the selection covers (nearly) the full screen
@@ -4218,32 +4098,25 @@ class OverlayView: NSView {
         }
 
         // Barcode bar button hit-test
-        if detectedBarcodePayload != nil && barcodeActionRects.count == 2 {
-            if barcodeActionRects[1].contains(point) {
-                // Dismiss
-                detectedBarcodePayload = nil
-                barcodeActionRects = []
+        if let action = barcodeDetector.hitTest(point: point) {
+            switch action {
+            case .dismiss:
+                barcodeDetector.cancel()
                 needsDisplay = true
-                return
-            }
-            if barcodeActionRects[0].contains(point) {
-                let payload = detectedBarcodePayload!
-                let isURL = payload.hasPrefix("http://") || payload.hasPrefix("https://")
-                detectedBarcodePayload = nil
-                barcodeActionRects = []
+            case .open(let url):
+                barcodeDetector.cancel()
                 needsDisplay = true
-                if isURL, let url = URL(string: payload) {
-                    // Cancel + dismiss overlay first, then open URL on next runloop tick
-                    overlayDelegate?.overlayViewDidCancel()
-                    DispatchQueue.main.async {
-                        NSWorkspace.shared.open(url)
-                    }
-                } else {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(payload, forType: .string)
+                overlayDelegate?.overlayViewDidCancel()
+                if let url = URL(string: url) {
+                    DispatchQueue.main.async { NSWorkspace.shared.open(url) }
                 }
-                return
+            case .copy(let text):
+                barcodeDetector.cancel()
+                needsDisplay = true
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(text, forType: .string)
             }
+            return
         }
 
         // Editor top bar button clicks
@@ -7230,10 +7103,7 @@ class OverlayView: NSView {
         overlayErrorTimer?.invalidate()
         overlayErrorTimer = nil
         overlayErrorMessage = nil
-        barcodeScanTask?.cancel()
-        barcodeScanTask = nil
-        detectedBarcodePayload = nil
-        barcodeActionRects = []
+        barcodeDetector.cancel()
         hoveredWindowRect = nil
         isRecording = false
         isCapturingVideo = false
