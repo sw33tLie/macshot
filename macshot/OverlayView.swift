@@ -131,19 +131,19 @@ class OverlayView: NSView {
         let saved = UserDefaults.standard.object(forKey: "currentStrokeWidth") as? Double
         return saved != nil ? CGFloat(saved!) : 3.0
     }()
-    private var currentNumberSize: CGFloat = {
+    var currentNumberSize: CGFloat = {
         let saved = UserDefaults.standard.object(forKey: "numberStrokeWidth") as? Double
         return saved != nil ? CGFloat(saved!) : 3.0
     }()
-    private var currentMarkerSize: CGFloat = {
+    var currentMarkerSize: CGFloat = {
         let saved = UserDefaults.standard.object(forKey: "markerStrokeWidth") as? Double
         return saved != nil ? CGFloat(saved!) : 3.0
     }()
     private var numberCounter: Int = 0
-    private var numberStartAt: Int = {
+    var numberStartAt: Int = {
         UserDefaults.standard.object(forKey: "numberStartAt") as? Int ?? 1
     }()
-    private var currentNumberFormat: NumberFormat = {
+    var currentNumberFormat: NumberFormat = {
         NumberFormat(rawValue: UserDefaults.standard.integer(forKey: "numberFormat")) ?? .decimal
     }()
 
@@ -297,10 +297,10 @@ class OverlayView: NSView {
     private var optionsLineStyleRects: [NSRect] = []  // hit rects for line style buttons
     private var optionsCornerRadiusSliderRect: NSRect = .zero
     private var isDraggingOptionsCornerRadius: Bool = false
-    private var currentLineStyle: LineStyle = LineStyle(rawValue: UserDefaults.standard.integer(forKey: "currentLineStyle")) ?? .solid
-    private var currentArrowStyle: ArrowStyle = ArrowStyle(rawValue: UserDefaults.standard.integer(forKey: "currentArrowStyle")) ?? .single
+    var currentLineStyle: LineStyle = LineStyle(rawValue: UserDefaults.standard.integer(forKey: "currentLineStyle")) ?? .solid
+    var currentArrowStyle: ArrowStyle = ArrowStyle(rawValue: UserDefaults.standard.integer(forKey: "currentArrowStyle")) ?? .single
     private var optionsArrowStyleRects: [NSRect] = []
-    private var currentRectFillStyle: RectFillStyle = RectFillStyle(rawValue: UserDefaults.standard.integer(forKey: "currentRectFillStyle")) ?? .stroke
+    var currentRectFillStyle: RectFillStyle = RectFillStyle(rawValue: UserDefaults.standard.integer(forKey: "currentRectFillStyle")) ?? .stroke
     private var optionsRectFillStyleRects: [NSRect] = []
     private var currentStampImage: NSImage?  // selected emoji/image for stamp tool
     var currentStampEmoji: String?   // emoji string for highlight tracking
@@ -341,7 +341,7 @@ class OverlayView: NSView {
         "❤️", "👍", "👎", "🚀",           // love, thumbs, launch
         "✏️",                              // edit
     ]
-    private var currentRectCornerRadius: CGFloat = {
+    var currentRectCornerRadius: CGFloat = {
         let v = UserDefaults.standard.object(forKey: "currentRectCornerRadius") as? Double
         return v != nil ? CGFloat(v!) : 0
     }()
@@ -350,7 +350,7 @@ class OverlayView: NSView {
     private var strokeSmoothToggleRect: NSRect = .zero  // hit rect for the smooth toggle row
 
     // Pencil smoothing — persisted in UserDefaults
-    private var pencilSmoothEnabled: Bool = UserDefaults.standard.object(forKey: "pencilSmoothEnabled") as? Bool ?? true
+    var pencilSmoothEnabled: Bool = UserDefaults.standard.object(forKey: "pencilSmoothEnabled") as? Bool ?? true
     // Rounded rectangle corners — persisted in UserDefaults
     private var roundedRectEnabled: Bool = UserDefaults.standard.object(forKey: "roundedRectEnabled") as? Bool ?? false
     private var roundedRectToggleRect: NSRect = .zero
@@ -376,7 +376,7 @@ class OverlayView: NSView {
     ]
 
     // Loupe size picker
-    private var currentLoupeSize: CGFloat = {
+    var currentLoupeSize: CGFloat = {
         let saved = UserDefaults.standard.object(forKey: "loupeSize") as? Double
         return saved != nil ? CGFloat(saved!) : 120.0
     }()
