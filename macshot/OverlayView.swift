@@ -1351,7 +1351,7 @@ class OverlayView: NSView {
 
             // Toolbars
             if showToolbars && state == .selected && !isScrollCapturing {
-                rebuildToolbarLayout()
+                repositionToolbars()
                 // Toolbars are real NSView subviews (ToolbarStripView) — no custom drawing needed.
                 // Tool options row handled by ToolOptionsRowView (real NSView subview)
                 if !toolHasOptionsRow || (isRecording && !isAnnotating) {
@@ -4007,57 +4007,17 @@ class OverlayView: NSView {
                selectionRect.maxY > bounds.maxY - margin
     }
 
+    /// Rebuild toolbar button content. Call when tool, color, or state changes — NOT on every draw.
     func rebuildToolbarLayout() {
         let movableAnnotations = annotations.contains { $0.isMovable }
         bottomButtons = ToolbarLayout.bottomButtons(selectedTool: currentTool, selectedColor: currentColor, beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex, hasAnnotations: movableAnnotations, isRecording: isRecording, isAnnotating: isAnnotating)
-        // When beautify options row is showing, deselect all tools and highlight beautify instead
         if showBeautifyInOptionsRow {
             for i in bottomButtons.indices {
-                if case .tool = bottomButtons[i].action {
-                    bottomButtons[i].isSelected = false
-                } else if case .beautify = bottomButtons[i].action {
-                    bottomButtons[i].isSelected = true
-                }
+                if case .tool = bottomButtons[i].action { bottomButtons[i].isSelected = false }
+                else if case .beautify = bottomButtons[i].action { bottomButtons[i].isSelected = true }
             }
         }
         rightButtons = ToolbarLayout.rightButtons(beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex, hasAnnotations: movableAnnotations, translateEnabled: translateEnabled, isRecording: isRecording, isCapturingVideo: isCapturingVideo, isAnnotating: isAnnotating, isEditorMode: isEditorMode)
-
-        // When beautify is active, anchor toolbars to the expanded preview frame
-        // so they don't overlap the gradient/shadow chrome.
-        // Animate the transition with easeOut interpolation.
-        // Always compute the expanded anchor (for animation purposes — even when beautify is off)
-        let config = beautifyConfig
-        let pad = config.padding
-        let titleBarH: CGFloat = config.mode == .window ? 28 : 0
-        let expandedAnchor = NSRect(
-            x: selectionRect.minX - pad,
-            y: selectionRect.minY - pad,
-            width: selectionRect.width + pad * 2,
-            height: selectionRect.height + titleBarH + pad * 2
-        )
-        let showBeautifyFrame = beautifyEnabled && state == .selected && !isScrollCapturing && !isRecording
-
-        // Interpolate between selectionRect and expandedAnchor during animation
-        let anchorRect: NSRect
-        if beautifyToolbarAnimProgress < 1.0 {
-            // EaseOut: t' = 1 - (1-t)^2
-            let t = beautifyToolbarAnimProgress
-            let eased = 1.0 - (1.0 - t) * (1.0 - t)
-            let fromRect = beautifyToolbarAnimTarget ? selectionRect : expandedAnchor
-            let toRect = beautifyToolbarAnimTarget ? expandedAnchor : selectionRect
-            anchorRect = NSRect(
-                x: fromRect.minX + (toRect.minX - fromRect.minX) * eased,
-                y: fromRect.minY + (toRect.minY - fromRect.minY) * eased,
-                width: fromRect.width + (toRect.width - fromRect.width) * eased,
-                height: fromRect.height + (toRect.height - fromRect.height) * eased
-            )
-        } else if showBeautifyFrame {
-            anchorRect = expandedAnchor
-        } else {
-            anchorRect = selectionRect
-        }
-
-        // --- Position toolbar strip views ---
 
         // Create strip views if needed
         if bottomStripView == nil {
@@ -4076,50 +4036,7 @@ class OverlayView: NSView {
         rightStripView?.setButtons(rightButtons)
         rightStripView?.onClick = { [weak self] action in self?.handleToolbarAction(action) }
 
-        let bottomSize = bottomStripView?.frame.size ?? .zero
-        let rightSize = rightStripView?.frame.size ?? .zero
-        let visible = showToolbars && state == .selected && !isScrollCapturing
-
-        if isEditorMode {
-            // Editor: pin bottom centered at bottom, right at top-right
-            let chromeBounds = bounds
-            let bx = chromeBounds.midX - bottomSize.width / 2
-            let by: CGFloat = 6
-            bottomStripView?.frame.origin = NSPoint(x: bx, y: by)
-            let rx = chromeBounds.maxX - rightSize.width - 6
-            let ry = chromeBounds.maxY - rightSize.height - 36
-            rightStripView?.frame.origin = NSPoint(x: rx, y: ry)
-        } else {
-            // Overlay: position relative to anchor rect (selection or beautify-expanded)
-            // Bottom bar: centered below selection, flip above if no room
-            var bx = anchorRect.midX - bottomSize.width / 2
-            var by = anchorRect.minY - bottomSize.height - 6
-            if by < bounds.minY + 4 { by = anchorRect.maxY + 6 }
-            bx = max(bounds.minX + 4, min(bx, bounds.maxX - bottomSize.width - 4))
-            bottomStripView?.frame.origin = NSPoint(x: bx, y: by)
-
-            // Right bar: to the right of selection, flip to left if no room
-            let bottomFrame = bottomStripView?.frame ?? .zero
-            var rx = anchorRect.maxX + 6
-            if rx + rightSize.width > bounds.maxX - 4 { rx = anchorRect.minX - rightSize.width - 6 }
-            rx = max(bounds.minX + 4, min(rx, bounds.maxX - rightSize.width - 4))
-            var ry = anchorRect.maxY - rightSize.height
-            ry = max(bounds.minY + 4, min(ry, bounds.maxY - rightSize.height - 4))
-            // Avoid overlapping bottom bar
-            if NSRect(x: rx, y: ry, width: rightSize.width, height: rightSize.height).intersects(bottomFrame) {
-                ry = bottomFrame.minY - rightSize.height - 4
-            }
-            rightStripView?.frame.origin = NSPoint(x: rx, y: ry)
-        }
-
-        // Update rects for other code that references them
-        bottomBarRect = bottomStripView?.frame ?? .zero
-        rightBarRect = rightStripView?.frame ?? .zero
-
-        bottomStripView?.isHidden = !visible
-        rightStripView?.isHidden = !visible
-
-        // Options row
+        // Rebuild options row content
         if toolHasOptionsRow {
             if toolOptionsRowView == nil {
                 let row = ToolOptionsRowView()
@@ -4128,14 +4045,80 @@ class OverlayView: NSView {
                 toolOptionsRowView = row
             }
             toolOptionsRowView?.rebuild(for: currentTool)
-            let rowW = toolOptionsRowView?.frame.width ?? 200
-            let rowH = toolOptionsRowView?.frame.height ?? 34
-            let rowX = bottomBarRect.midX - rowW / 2
-            let rowY = bottomBarRect.minY - rowH - 2
-            toolOptionsRowView?.frame.origin = NSPoint(x: rowX, y: rowY)
-            toolOptionsRowView?.isHidden = false
+        }
+
+        repositionToolbars()
+    }
+
+    /// Reposition toolbar strips based on current selection/bounds. Cheap — safe to call from draw().
+    private func repositionToolbars() {
+        guard let bottomStrip = bottomStripView, let rightStrip = rightStripView else { return }
+
+        let visible = showToolbars && state == .selected && !isScrollCapturing
+        bottomStrip.isHidden = !visible
+        rightStrip.isHidden = !visible
+        toolOptionsRowView?.isHidden = !visible || !toolHasOptionsRow
+        guard visible else { return }
+
+        // Anchor rect: beautify-expanded when active, selection otherwise
+        let config = beautifyConfig
+        let bPad = config.padding
+        let titleBarH: CGFloat = config.mode == .window ? 28 : 0
+        let expandedAnchor = NSRect(
+            x: selectionRect.minX - bPad, y: selectionRect.minY - bPad,
+            width: selectionRect.width + bPad * 2, height: selectionRect.height + titleBarH + bPad * 2)
+        let anchorRect: NSRect
+        if beautifyToolbarAnimProgress < 1.0 {
+            let t = beautifyToolbarAnimProgress
+            let eased = 1.0 - (1.0 - t) * (1.0 - t)
+            let fromRect = beautifyToolbarAnimTarget ? selectionRect : expandedAnchor
+            let toRect = beautifyToolbarAnimTarget ? expandedAnchor : selectionRect
+            anchorRect = NSRect(
+                x: fromRect.minX + (toRect.minX - fromRect.minX) * eased,
+                y: fromRect.minY + (toRect.minY - fromRect.minY) * eased,
+                width: fromRect.width + (toRect.width - fromRect.width) * eased,
+                height: fromRect.height + (toRect.height - fromRect.height) * eased
+            )
+        } else if beautifyEnabled && !isScrollCapturing && !isRecording {
+            anchorRect = expandedAnchor
         } else {
-            toolOptionsRowView?.isHidden = true
+            anchorRect = selectionRect
+        }
+
+        let bottomSize = bottomStrip.frame.size
+        let rightSize = rightStrip.frame.size
+
+        if isEditorMode {
+            bottomStrip.frame.origin = NSPoint(x: bounds.midX - bottomSize.width / 2, y: 6)
+            rightStrip.frame.origin = NSPoint(x: bounds.maxX - rightSize.width - 6, y: bounds.maxY - rightSize.height - 36)
+        } else {
+            // Bottom: centered below selection, flip above if no room
+            var bx = anchorRect.midX - bottomSize.width / 2
+            var by = anchorRect.minY - bottomSize.height - 6
+            if by < bounds.minY + 4 { by = anchorRect.maxY + 6 }
+            bx = max(bounds.minX + 4, min(bx, bounds.maxX - bottomSize.width - 4))
+            bottomStrip.frame.origin = NSPoint(x: bx, y: by)
+
+            // Right: to the right of selection, flip left if no room
+            var rx = anchorRect.maxX + 6
+            if rx + rightSize.width > bounds.maxX - 4 { rx = anchorRect.minX - rightSize.width - 6 }
+            rx = max(bounds.minX + 4, min(rx, bounds.maxX - rightSize.width - 4))
+            var ry = anchorRect.maxY - rightSize.height
+            ry = max(bounds.minY + 4, min(ry, bounds.maxY - rightSize.height - 4))
+            if NSRect(x: rx, y: ry, width: rightSize.width, height: rightSize.height).intersects(bottomStrip.frame) {
+                ry = bottomStrip.frame.minY - rightSize.height - 4
+            }
+            rightStrip.frame.origin = NSPoint(x: rx, y: ry)
+        }
+
+        bottomBarRect = bottomStrip.frame
+        rightBarRect = rightStrip.frame
+
+        // Position options row below bottom bar
+        if let row = toolOptionsRowView, !row.isHidden {
+            let rowX = bottomBarRect.midX - row.frame.width / 2
+            let rowY = bottomBarRect.minY - row.frame.height - 2
+            row.frame.origin = NSPoint(x: rowX, y: rowY)
         }
     }
 
