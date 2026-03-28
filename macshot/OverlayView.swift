@@ -203,6 +203,8 @@ class OverlayView: NSView {
     var rightBarRect: NSRect = .zero
     var showToolbars: Bool = false
     private var hoveredButtonIndex: Int = -1  // -1 = none, 0..N bottom, 1000+ right
+    private var bottomStripView: ToolbarStripView?
+    private var rightStripView: ToolbarStripView?
     private var toolOptionsRowView: ToolOptionsRowView?
 
     // Size label
@@ -882,7 +884,8 @@ class OverlayView: NSView {
     /// Returns true if the point is over any chrome element (toolbars, options row, popovers, labels).
     private func isPointOnChrome(_ point: NSPoint) -> Bool {
         if showToolbars {
-            if bottomBarRect.contains(point) || rightBarRect.contains(point) { return true }
+            if let strip = bottomStripView, !strip.isHidden, strip.frame.contains(point) { return true }
+            if let strip = rightStripView, !strip.isHidden, strip.frame.contains(point) { return true }
             if let row = toolOptionsRowView, !row.isHidden, row.frame.contains(point) { return true }
         }
         if showFontPicker && fontPickerRect.contains(point) { return true }
@@ -1394,15 +1397,7 @@ class OverlayView: NSView {
             // Toolbars
             if showToolbars && state == .selected && !isScrollCapturing {
                 rebuildToolbarLayout()
-                // Hide bottom bar and options row when in recording mode (not annotating)
-                // — the right bar is drawn by RecordingControlView instead
-                if !(isRecording && !isAnnotating) {
-                    ToolbarLayout.drawToolbar(barRect: bottomBarRect, buttons: bottomButtons, selectionSize: selectionRect.size)
-                }
-                if !(isRecording && !isAnnotating) {
-                    ToolbarLayout.drawToolbar(barRect: rightBarRect, buttons: rightButtons, selectionSize: nil)
-                }
-
+                // Toolbars are real NSView subviews (ToolbarStripView) — no custom drawing needed.
                 // Tool options row handled by ToolOptionsRowView (real NSView subview)
                 if !toolHasOptionsRow || (isRecording && !isAnnotating) {
                     optionsRowRect = .zero
@@ -4259,6 +4254,30 @@ class OverlayView: NSView {
             rightButtons[i].isPressed = (pressedButtonIndex == 1000 + i)
         }
 
+        // Rebuild real NSView toolbar strips
+        if bottomStripView == nil {
+            let strip = ToolbarStripView(orientation: .horizontal)
+            addSubview(strip)
+            bottomStripView = strip
+        }
+        if rightStripView == nil {
+            let strip = ToolbarStripView(orientation: .vertical)
+            addSubview(strip)
+            rightStripView = strip
+        }
+
+        bottomStripView?.setButtons(bottomButtons)
+        bottomStripView?.onClick = { [weak self] action in self?.handleToolbarAction(action) }
+        bottomStripView?.frame.origin = bottomBarRect.origin
+        bottomStripView?.isHidden = !(showToolbars && state == .selected && !isScrollCapturing)
+
+        rightStripView?.setButtons(rightButtons)
+        rightStripView?.onClick = { [weak self] action in self?.handleToolbarAction(action) }
+        // Right-click on toolbar buttons — handled via ToolbarButtonView.onRightClick
+        // Specific right-click actions are routed in handleToolbarAction (e.g. save context menu)
+        rightStripView?.frame.origin = rightBarRect.origin
+        rightStripView?.isHidden = !(showToolbars && state == .selected && !isScrollCapturing)
+
         // Rebuild real NSView options row
         if toolHasOptionsRow {
             if toolOptionsRowView == nil {
@@ -4268,7 +4287,6 @@ class OverlayView: NSView {
                 toolOptionsRowView = row
             }
             toolOptionsRowView?.rebuild(for: currentTool)
-            // Position below bottom bar
             let rowW = toolOptionsRowView?.frame.width ?? 200
             let rowH = toolOptionsRowView?.frame.height ?? 34
             let rowX = bottomBarRect.midX - rowW / 2
@@ -4357,11 +4375,10 @@ class OverlayView: NSView {
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
 
-        // Let real NSView subviews (ToolOptionsRowView) handle their own events
-        if let row = toolOptionsRowView, !row.isHidden, row.frame.contains(point) {
-            super.mouseDown(with: event)
-            return
-        }
+        // Let real NSView subviews handle their own events
+        if let strip = bottomStripView, !strip.isHidden, strip.frame.contains(point) { super.mouseDown(with: event); return }
+        if let strip = rightStripView, !strip.isHidden, strip.frame.contains(point) { super.mouseDown(with: event); return }
+        if let row = toolOptionsRowView, !row.isHidden, row.frame.contains(point) { super.mouseDown(with: event); return }
 
         // Control-click = right-click for color sampler (supports BetterTouchTool and other tools
         // that simulate right-click via control-click instead of rightMouseDown)
@@ -7415,6 +7432,9 @@ class OverlayView: NSView {
         currentAnnotation = nil
         numberCounter = 0
         showToolbars = false
+        bottomStripView?.isHidden = true
+        rightStripView?.isHidden = true
+        toolOptionsRowView?.isHidden = true
         PopoverHelper.dismiss()
         stopMouseHighlightMonitor()
         isTranslating = false
