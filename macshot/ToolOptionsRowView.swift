@@ -300,8 +300,7 @@ class ToolOptionsRowView: NSView {
     private func addStampOptions(at x: CGFloat, ov: OverlayView) -> CGFloat {
         var curX = x
         // Quick emoji buttons
-        let quickEmojis = ["🔴", "✅", "⭐", "❌", "❓", "💡", "🔥", "👍"]
-        for emoji in quickEmojis {
+        for emoji in OverlayView.commonEmojis {
             let btn = NSButton(title: emoji, target: self, action: #selector(quickEmojiClicked(_:)))
             btn.bezelStyle = .recessed
             btn.isBordered = false

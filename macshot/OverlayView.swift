@@ -302,7 +302,7 @@ class OverlayView: NSView {
             "🔍", "🔎", "📝", "📋", "📊", "📈", "📉", "🗂️",
         ]),
     ]
-    private static let commonEmojis = [
+    static let commonEmojis = [
         "👆", "👇", "👈", "👉",           // point at things
         "✅", "❌", "⚠️", "❓",            // approve / reject / warn / question
         "🔥", "🐛", "💀", "🎉",           // reactions: hot, bug, dead, celebrate
@@ -328,7 +328,7 @@ class OverlayView: NSView {
 
     // Redact type picker
 
-    private static let redactTypeNames: [(key: String, label: String)] = [
+    static let redactTypeNames: [(key: String, label: String)] = [
         ("email", "Emails"),
         ("phone", "Phone Numbers"),
         ("ssn", "SSN"),
@@ -538,10 +538,6 @@ class OverlayView: NSView {
     }
     private var hoveredWindowRect: NSRect? = nil
     private var windowSnapQueryInFlight: Bool = false
-    private let availableColors: [NSColor] = [
-        .systemRed, .systemOrange, .systemYellow, .systemGreen, .systemBlue, .systemPurple,
-        .systemPink, .white, .lightGray, .gray, .darkGray, .black,
-    ]
     private var customColors: [NSColor?] = Array(repeating: nil, count: 7)
     private var selectedColorSlot: Int = 0  // which custom slot is selected for saving colors
     private static var lastUsedOpacity: CGFloat = 1.0
@@ -7361,26 +7357,17 @@ class OverlayView: NSView {
     }
 
     func showRedactTypePopover(anchorRect: NSRect) {
-        let patterns = [
-            ("Emails", "redactEmails"),
-            ("Phone numbers", "redactPhones"),
-            ("Credit cards", "redactCreditCards"),
-            ("SSNs", "redactSSNs"),
-            ("IP addresses", "redactIPs"),
-            ("AWS keys", "redactAWSKeys"),
-            ("Bearer tokens", "redactBearerTokens"),
-        ]
+        let types = Self.redactTypeNames
         let picker = ListPickerView()
-        picker.items = patterns.map { name, key in
-            .init(title: name, isSelected: UserDefaults.standard.object(forKey: key) as? Bool ?? true)
+        picker.items = types.map { item in
+            .init(title: item.label, isSelected: UserDefaults.standard.object(forKey: item.key) as? Bool ?? true)
         }
         picker.onSelect = { [weak self] idx in
-            let key = patterns[idx].1
+            let key = types[idx].key
             let current = UserDefaults.standard.object(forKey: key) as? Bool ?? true
             UserDefaults.standard.set(!current, forKey: key)
-            // Rebuild picker to reflect new state
-            picker.items = patterns.map { name, key in
-                .init(title: name, isSelected: UserDefaults.standard.object(forKey: key) as? Bool ?? true)
+            picker.items = types.map { item in
+                .init(title: item.label, isSelected: UserDefaults.standard.object(forKey: item.key) as? Bool ?? true)
             }
             self?.needsDisplay = true
         }
