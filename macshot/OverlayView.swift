@@ -3196,9 +3196,22 @@ class OverlayView: NSView {
         selectionRect = NSRect(origin: .zero, size: croppedPointSize)
 
         cachedCompositedImage = nil
-        editorCanvasOffset = .zero  // force recalculation on next draw
-        resetZoom()
+        editorCanvasOffset = .zero
+
+        // Resize view frame to match new image size (scroll view re-centers automatically)
+        if isInsideScrollView {
+            frame.size = croppedPointSize
+            enclosingScrollView?.magnification = 1.0
+            // Update top bar size label
+            if let topBar = chromeParentView?.subviews.compactMap({ $0 as? EditorTopBarView }).first {
+                topBar.updateSizeLabel(width: croppedCG.width, height: croppedCG.height)
+                topBar.updateZoom(1.0)
+            }
+        } else {
+            resetZoom()
+        }
         currentTool = .arrow
+        rebuildToolbarLayout()
         needsDisplay = true
     }
 
