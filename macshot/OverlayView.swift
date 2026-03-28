@@ -246,7 +246,6 @@ class OverlayView: NSView {
     }
 
     // Cursor enforcement timer — forces crosshair until selection is made
-    private var cursorTimer: Timer?
 
     var showBeautifyInOptionsRow: Bool = false
 
@@ -575,29 +574,8 @@ class OverlayView: NSView {
         super.viewDidMoveToWindow()
         window?.makeFirstResponder(self)
         window?.acceptsMouseMovedEvents = true
-        let area = NSTrackingArea(rect: .zero, options: [.mouseMoved, .activeAlways, .inVisibleRect], owner: self, userInfo: nil)
+        let area = NSTrackingArea(rect: .zero, options: [.mouseMoved, .activeAlways, .inVisibleRect, .cursorUpdate], owner: self, userInfo: nil)
         addTrackingArea(area)
-
-        // Imperative cursor timer for overlay mode — continuously sets the correct cursor
-        // to prevent AppKit's cursor rect system from interfering (especially on multi-monitor).
-        // Only fires when the mouse is actually over THIS window to avoid cross-window fights.
-        if window != nil {
-            cursorTimer?.invalidate()
-            cursorTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { @MainActor [weak self] timer in
-                guard let self = self, let win = self.window else { timer.invalidate(); return }
-                // Only set cursor if this is the frontmost window under the mouse
-                let mouseScreen = NSEvent.mouseLocation
-                guard win.frame.contains(mouseScreen) else { return }
-                // Skip if another window is above us at this point
-                if let frontWindow = NSApp.windows.first(where: { $0.isVisible && $0.frame.contains(mouseScreen) && $0.level >= win.level && $0 !== win }) {
-                    _ = frontWindow  // another window is on top, don't fight
-                    return
-                }
-                let windowPoint = win.mouseLocationOutsideOfEventStream
-                let point = self.convert(windowPoint, from: nil)
-                self.updateCursorForPoint(point)
-            }
-        }
     }
 
     override func mouseMoved(with event: NSEvent) {
@@ -613,14 +591,6 @@ class OverlayView: NSView {
         } else if stampPreviewPoint != nil {
             stampPreviewPoint = nil
             needsDisplay = true
-        }
-
-        // Update cursor imperatively — only if this is the topmost window under the mouse
-        if let win = window, win.frame.contains(NSEvent.mouseLocation) {
-            let dominated = NSApp.windows.contains { $0.isVisible && $0.frame.contains(NSEvent.mouseLocation) && $0.level >= win.level && $0 !== win }
-            if !dominated {
-                updateCursorForPoint(point)
-            }
         }
 
         // Font picker hover tracking
@@ -862,9 +832,13 @@ class OverlayView: NSView {
         return .crosshair
     }()
 
+    override func cursorUpdate(with event: NSEvent) {
+        let point = convert(event.locationInWindow, from: nil)
+        updateCursorForPoint(point)
+    }
+
     override func resetCursorRects() {
-        // Cursor is managed entirely by updateCursorForPoint() called from
-        // mouseMoved and a repeating timer. No cursor rects needed.
+        // Handled by cursorUpdate via tracking area
     }
 
     /// Imperative cursor management. Called from mouseMoved and a 30fps timer.
@@ -7269,8 +7243,6 @@ class OverlayView: NSView {
         selectionStart = rect.origin
         state = .selected
         showToolbars = true
-        cursorTimer?.invalidate()
-        cursorTimer = nil
         needsDisplay = true
     }
 
@@ -7279,8 +7251,6 @@ class OverlayView: NSView {
         selectionStart = bounds.origin
         state = .selected
         showToolbars = true
-        cursorTimer?.invalidate()
-        cursorTimer = nil
         scheduleBarcodeDetection()
         overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
         needsDisplay = true
@@ -7475,8 +7445,6 @@ class OverlayView: NSView {
         showFontPicker = false
         sizeInputField?.removeFromSuperview()
         sizeInputField = nil
-        cursorTimer?.invalidate()
-        cursorTimer = nil
         isDraggingBottomBar = false
         isDraggingRightBar = false
         bottomBarDragOffset = .zero
