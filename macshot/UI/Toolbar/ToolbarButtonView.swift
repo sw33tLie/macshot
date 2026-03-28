@@ -16,6 +16,7 @@ class ToolbarButtonView: NSView {
     private var trackingArea: NSTrackingArea?
 
     var onClick: ((ToolbarButtonAction) -> Void)?
+    var onMouseDown: ((ToolbarButtonAction) -> Void)?
     var onRightClick: ((ToolbarButtonAction, NSView) -> Void)?
 
     static let size: CGFloat = 32
@@ -99,13 +100,38 @@ class ToolbarButtonView: NSView {
     override func mouseEntered(with event: NSEvent) { isHovered = true; needsDisplay = true }
     override func mouseExited(with event: NSEvent) { isHovered = false; needsDisplay = true }
 
+    private var forwardingDrag = false
+    /// The view that should receive forwarded drag events (set by onMouseDown handler).
+    var dragForwardTarget: NSView?
+
     override func mouseDown(with event: NSEvent) {
         isPressed = true; needsDisplay = true
+        if onMouseDown != nil {
+            onMouseDown?(action)
+            if let target = dragForwardTarget {
+                forwardingDrag = true
+                target.mouseDown(with: event)
+            }
+            return
+        }
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        if forwardingDrag, let target = dragForwardTarget {
+            target.mouseDragged(with: event)
+            return
+        }
     }
 
     override func mouseUp(with event: NSEvent) {
         let wasPressed = isPressed
         isPressed = false; needsDisplay = true
+        if forwardingDrag, let target = dragForwardTarget {
+            forwardingDrag = false
+            target.mouseUp(with: event)
+            return
+        }
+        forwardingDrag = false
         if wasPressed && bounds.contains(convert(event.locationInWindow, from: nil)) {
             onClick?(action)
         }

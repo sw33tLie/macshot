@@ -3721,6 +3721,13 @@ class OverlayView: NSView {
         }
         rightStripView?.setButtons(rightButtons)
         rightStripView?.onClick = { [weak self] action in self?.handleToolbarAction(action) }
+        rightStripView?.onMouseDown = { [weak self] action in
+            if case .moveSelection = action { self?.handleToolbarAction(action) }
+        }
+        // Set drag forward target for move button so drag events go to OverlayView
+        for bv in rightStripView?.buttonViews ?? [] {
+            if case .moveSelection = bv.action { bv.dragForwardTarget = self }
+        }
         rightStripView?.onRightClick = { [weak self] action, view in
             self?.handleToolbarButtonRightClick(action, anchorView: view)
         }
