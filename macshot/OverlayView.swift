@@ -365,8 +365,6 @@ class OverlayView: NSView {
     private var roundedRectToggleRect: NSRect = .zero
 
     // Upload confirm picker (toggle setting via right-click)
-    private var showUploadConfirmPicker: Bool = false
-    private var uploadConfirmPickerRect: NSRect = .zero
 
     // Upload confirm dialog (inline confirmation before uploading)
     private var showUploadConfirmDialog: Bool = false
@@ -375,9 +373,6 @@ class OverlayView: NSView {
     private var uploadConfirmCancelRect: NSRect = .zero
 
     // Redact type picker
-    private var showRedactTypePicker: Bool = false
-    private var redactTypePickerRect: NSRect = .zero
-    private var hoveredRedactTypeRow: Int = -1
 
     private static let redactTypeNames: [(key: String, label: String)] = [
         ("email", "Emails"),
@@ -428,9 +423,6 @@ class OverlayView: NSView {
     var cachedCompositedImage: NSImage? = nil  // invalidated when annotations change
 
     // Translate language picker popover
-    private var showTranslatePicker: Bool = false
-    private var translatePickerRect: NSRect = .zero
-    private var hoveredTranslateRow: Int = -1
     private var isTranslating: Bool = false
     private var translateEnabled: Bool = false
 
@@ -807,32 +799,6 @@ class OverlayView: NSView {
         }
 
 
-        // Redact type picker hover
-        if showRedactTypePicker && redactTypePickerRect.contains(point) {
-            let types = OverlayView.redactTypeNames.count
-            let rowH: CGFloat = 26; let padding: CGFloat = 6
-            var newRow = -1
-            for i in 0..<types {
-                let rowY = redactTypePickerRect.maxY - padding - rowH * CGFloat(i + 1)
-                let rowRect = NSRect(x: redactTypePickerRect.minX, y: rowY, width: redactTypePickerRect.width, height: rowH)
-                if rowRect.contains(point) { newRow = i; break }
-            }
-            if newRow != hoveredRedactTypeRow { hoveredRedactTypeRow = newRow; needsDisplay = true }
-        }
-
-        // Translate language picker hover
-        if showTranslatePicker && translatePickerRect.contains(point) {
-            let langs = TranslationService.availableLanguages.count
-            let rowH: CGFloat = 26; let padding: CGFloat = 6
-            var newRow = -1
-            for i in 0..<langs {
-                let rowY = translatePickerRect.maxY - padding - rowH * CGFloat(i + 1)
-                let rowRect = NSRect(x: translatePickerRect.minX, y: rowY, width: translatePickerRect.width, height: rowH)
-                if rowRect.contains(point) { newRow = i; break }
-            }
-            if newRow != hoveredTranslateRow { hoveredTranslateRow = newRow; needsDisplay = true }
-        }
-
         // Redact button hover
         if (currentTool == .pixelate || currentTool == .blur) && optionsRowRect.contains(point) {
             let newHovered: Int
@@ -1015,10 +981,7 @@ class OverlayView: NSView {
         if showBeautifyGradientPicker && beautifyGradientPickerRect.contains(point) { NSCursor.arrow.set(); return }
         
         
-        if showUploadConfirmPicker && uploadConfirmPickerRect.contains(point) { NSCursor.arrow.set(); return }
         if showUploadConfirmDialog && uploadConfirmDialogRect.contains(point) { NSCursor.arrow.set(); return }
-        if showRedactTypePicker && redactTypePickerRect.contains(point) { NSCursor.arrow.set(); return }
-        if showTranslatePicker && translatePickerRect.contains(point) { NSCursor.arrow.set(); return }
         if showFontPicker && fontPickerRect.contains(point) { NSCursor.arrow.set(); return }
         if showEmojiPicker && emojiPickerRect.contains(point) { NSCursor.arrow.set(); return }
         if updateCursorForChrome(at: point) { return }
@@ -1577,14 +1540,8 @@ class OverlayView: NSView {
                 // Loupe size picker
 
                 // Upload confirm picker
-                if showUploadConfirmPicker {
-                    drawUploadConfirmPicker()
-                }
 
                 // Redact type picker
-                if showRedactTypePicker {
-                    drawRedactTypePicker()
-                }
 
                 // Beautify gradient picker
                 if showBeautifyGradientPicker {
@@ -1592,9 +1549,6 @@ class OverlayView: NSView {
                 }
 
                 // Translate language picker
-                if showTranslatePicker {
-                    drawTranslatePicker()
-                }
 
                 // Emoji picker
                 if showEmojiPicker {
@@ -1658,8 +1612,7 @@ class OverlayView: NSView {
         guard hoveredButtonIndex >= 0 else { return }
 
         // Hide tooltip when any picker/popover is open (they overlap)
-        if showUploadConfirmPicker || showRedactTypePicker
-            || showTranslatePicker {
+        if PopoverHelper.isVisible || showColorPicker || showEmojiPicker || showBeautifyGradientPicker {
             return
         }
 
@@ -4257,56 +4210,6 @@ class OverlayView: NSView {
     }
 
     // MARK: - Upload Confirm Picker
-
-    private func drawUploadConfirmPicker() {
-        let confirmEnabled = UserDefaults.standard.bool(forKey: "uploadConfirmEnabled")
-        let rowH: CGFloat = 32
-        let pickerWidth: CGFloat = 180
-        let padding: CGFloat = 8
-        let pickerHeight = rowH + padding * 2
-
-        var anchorRect = NSRect.zero
-        for btn in rightButtons {
-            if case .upload = btn.action { anchorRect = btn.rect; break }
-        }
-
-        var pickerX = anchorRect.minX - pickerWidth - 4
-        var pickerY = anchorRect.maxY - pickerHeight
-        pickerY = max(bounds.minY + 4, min(pickerY, bounds.maxY - pickerHeight - 4))
-        pickerX = max(bounds.minX + 4, min(pickerX, bounds.maxX - pickerWidth - 4))
-
-        let pickerRect = NSRect(x: pickerX, y: pickerY, width: pickerWidth, height: pickerHeight)
-        uploadConfirmPickerRect = pickerRect
-
-        ToolbarLayout.bgColor.setFill()
-        NSBezierPath(roundedRect: pickerRect, xRadius: 6, yRadius: 6).fill()
-
-        let rowY = pickerRect.minY + padding
-        let rowRect = NSRect(x: pickerRect.minX, y: rowY, width: pickerRect.width, height: rowH)
-
-        let checkSymbol: String = confirmEnabled ? "checkmark.circle.fill" : "circle"
-        let symbolConfig = NSImage.SymbolConfiguration(pointSize: 14, weight: .medium)
-        if let img = NSImage(systemSymbolName: checkSymbol, accessibilityDescription: nil)?.withSymbolConfiguration(symbolConfig) {
-            let tintColor: NSColor = confirmEnabled ? ToolbarLayout.accentColor : NSColor.white.withAlphaComponent(0.5)
-            let tinted = NSImage(size: img.size, flipped: false) { rect in
-                img.draw(in: rect)
-                tintColor.setFill()
-                rect.fill(using: .sourceAtop)
-                return true
-            }
-            let iconRect = NSRect(x: rowRect.minX + 10, y: rowRect.midY - 8, width: 16, height: 16)
-            tinted.draw(in: iconRect, from: .zero, operation: .sourceOver, fraction: 1.0)
-        }
-
-        let textAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 11, weight: .medium),
-            .foregroundColor: NSColor.white,
-        ]
-        let label = "Confirm before upload" as NSString
-        let labelSize = label.size(withAttributes: textAttrs)
-        label.draw(at: NSPoint(x: rowRect.minX + 32, y: rowRect.midY - labelSize.height / 2), withAttributes: textAttrs)
-    }
-
     // MARK: - Upload Confirm Dialog
 
     private func drawUploadConfirmDialog() {
@@ -4389,72 +4292,6 @@ class OverlayView: NSView {
     }
 
     // MARK: - Redact Type Picker
-
-    private func drawRedactTypePicker() {
-        let types = OverlayView.redactTypeNames
-        let enabledTypes = UserDefaults.standard.array(forKey: "enabledRedactTypes") as? [String]
-
-        let rowH: CGFloat = 26
-        let pickerWidth: CGFloat = 165
-        let padding: CGFloat = 6
-        let pickerHeight = rowH * CGFloat(types.count) + padding * 2
-
-        // Anchor to the dropdown button in the options row (or fallback to options row center)
-        let anchorRect = redactTypeDropdownRect != .zero ? redactTypeDropdownRect : optionsRowRect
-
-        let pickerX = max(bounds.minX + 4, anchorRect.midX - pickerWidth / 2)
-        var pickerY: CGFloat
-        if optionsRowRect.minY < selectionRect.midY {
-            // Options row is below selection — open picker below dropdown
-            pickerY = anchorRect.minY - pickerHeight - 4
-            if pickerY < bounds.minY + 4 { pickerY = anchorRect.maxY + 4 }
-        } else {
-            // Options row is above selection — open picker above dropdown
-            pickerY = anchorRect.maxY + 4
-            if pickerY + pickerHeight > bounds.maxY - 4 { pickerY = anchorRect.minY - pickerHeight - 4 }
-        }
-        pickerY = max(bounds.minY + 4, min(pickerY, bounds.maxY - pickerHeight - 4))
-
-        let pickerRect = NSRect(x: pickerX, y: pickerY, width: pickerWidth, height: pickerHeight)
-        redactTypePickerRect = pickerRect
-
-        ToolbarLayout.bgColor.setFill()
-        NSBezierPath(roundedRect: pickerRect, xRadius: 6, yRadius: 6).fill()
-
-        let textAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 11, weight: .medium),
-            .foregroundColor: NSColor.white,
-        ]
-
-        for (i, item) in types.enumerated() {
-            let rowY = pickerRect.maxY - padding - rowH * CGFloat(i + 1)
-            let rowRect = NSRect(x: pickerRect.minX, y: rowY, width: pickerRect.width, height: rowH)
-
-            if i == hoveredRedactTypeRow {
-                NSColor.white.withAlphaComponent(0.15).setFill()
-                NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
-            }
-
-            let isEnabled = enabledTypes == nil || enabledTypes!.contains(item.key)
-            let checkSymbol: String = isEnabled ? "checkmark.square.fill" : "square"
-            let symbolConfig = NSImage.SymbolConfiguration(pointSize: 11, weight: .medium)
-            if let img = NSImage(systemSymbolName: checkSymbol, accessibilityDescription: nil)?.withSymbolConfiguration(symbolConfig) {
-                let tintColor: NSColor = isEnabled ? ToolbarLayout.accentColor : NSColor.white.withAlphaComponent(0.5)
-                let tinted = NSImage(size: img.size, flipped: false) { rect in
-                    img.draw(in: rect)
-                    tintColor.setFill()
-                    rect.fill(using: .sourceAtop)
-                    return true
-                }
-                tinted.draw(in: NSRect(x: rowRect.minX + 8, y: rowRect.midY - 7, width: 14, height: 14), from: .zero, operation: .sourceOver, fraction: 1.0)
-            }
-
-            let labelStr = item.label as NSString
-            let labelSize = labelStr.size(withAttributes: textAttrs)
-            labelStr.draw(at: NSPoint(x: rowRect.minX + 28, y: rowRect.midY - labelSize.height / 2), withAttributes: textAttrs)
-        }
-    }
-
     // MARK: - Loupe Size Picker
 
     // MARK: - Color Sampler Preview
@@ -6334,50 +6171,6 @@ class OverlayView: NSView {
             return
         }
 
-        // Upload confirm picker
-        if showUploadConfirmPicker {
-            if uploadConfirmPickerRect.contains(point) {
-                let current = UserDefaults.standard.bool(forKey: "uploadConfirmEnabled")
-                UserDefaults.standard.set(!current, forKey: "uploadConfirmEnabled")
-                showUploadConfirmPicker = false
-                needsDisplay = true
-                return
-            }
-            showUploadConfirmPicker = false
-            needsDisplay = true
-        }
-
-        // Redact type picker dismissal / selection
-        if showRedactTypePicker {
-            if redactTypePickerRect.contains(point) {
-                let types = OverlayView.redactTypeNames
-                let rowH: CGFloat = 26
-                let padding: CGFloat = 2
-                for (i, item) in types.enumerated() {
-                    let rowY = redactTypePickerRect.maxY - padding - rowH * CGFloat(i + 1)
-                    let rowRect = NSRect(x: redactTypePickerRect.minX, y: rowY, width: redactTypePickerRect.width, height: rowH)
-                    if rowRect.contains(point) {
-                        var enabledTypes = UserDefaults.standard.array(forKey: "enabledRedactTypes") as? [String] ?? types.map { $0.key }
-                        if enabledTypes.contains(item.key) {
-                            enabledTypes.removeAll { $0 == item.key }
-                        } else {
-                            enabledTypes.append(item.key)
-                        }
-                        UserDefaults.standard.set(enabledTypes, forKey: "enabledRedactTypes")
-                        needsDisplay = true
-                        return
-                    }
-                }
-                return
-            }
-            showRedactTypePicker = false
-            needsDisplay = true
-            // If click was on the dropdown button, consume it so the toggle below doesn't reopen
-            if redactTypeDropdownRect.contains(point) {
-                return
-            }
-        }
-
         // Beautify gradient picker dismissal / selection
         if showBeautifyGradientPicker {
             if beautifyGradientPickerRect.contains(point) {
@@ -6428,31 +6221,6 @@ class OverlayView: NSView {
             if stampMoreRect.insetBy(dx: -4, dy: -4).contains(point) {
                 return  // consume so toggle doesn't reopen
             }
-        }
-
-        // Translate language picker dismissal / selection
-        if showTranslatePicker {
-            if translatePickerRect.contains(point) {
-                let langs = TranslationService.availableLanguages
-                let rowH: CGFloat = 26
-                let padding: CGFloat = 2
-                for (i, lang) in langs.enumerated() {
-                    let rowY = translatePickerRect.maxY - padding - rowH * CGFloat(i + 1)
-                    let rowRect = NSRect(x: translatePickerRect.minX, y: rowY,
-                                        width: translatePickerRect.width, height: rowH)
-                    if rowRect.contains(point) {
-                        TranslationService.targetLanguage = lang.code
-                        translateEnabled = true
-                        showTranslatePicker = false
-                        needsDisplay = true
-                        performTranslate(targetLang: lang.code)
-                        return
-                    }
-                }
-                return
-            }
-            showTranslatePicker = false
-            needsDisplay = true
         }
 
         // If text is being edited, check if the click is on the color toolbar button
@@ -6776,8 +6544,8 @@ class OverlayView: NSView {
                             return
                         }
                         if redactTypeDropdownRect != .zero && redactTypeDropdownRect.contains(point) {
-                            showRedactTypePicker.toggle()
-                            needsDisplay = true
+                            PopoverHelper.dismiss()
+                            showRedactTypePopover(anchorRect: redactTypeDropdownRect)
                             return
                         }
                     }
@@ -7373,10 +7141,9 @@ class OverlayView: NSView {
             if let action = ToolbarLayout.hitTest(point: point, buttons: bottomButtons) {
                 // Tool right-click menus removed — options now in the tool options row
                 if case .autoRedact = action {
-                    showRedactTypePicker.toggle()
-                    showColorPicker = false
-                    showUploadConfirmPicker = false
-                    needsDisplay = true
+                    PopoverHelper.dismiss()
+                    let btnRect = bottomButtons.first { if case .autoRedact = $0.action { return true }; return false }?.rect ?? .zero
+                    showRedactTypePopover(anchorRect: btnRect)
                     return
                 }
                 return
@@ -7391,18 +7158,15 @@ class OverlayView: NSView {
                     return
                 }
                 if case .upload = action {
-                    showUploadConfirmPicker.toggle()
-                    showColorPicker = false
-                    showRedactTypePicker = false
-                    showTranslatePicker = false
-                    needsDisplay = true
+                    PopoverHelper.dismiss()
+                    let btnRect = rightButtons.first { if case .upload = $0.action { return true }; return false }?.rect ?? .zero
+                    showUploadConfirmPopover(anchorRect: btnRect)
                     return
                 }
                 if case .translate = action {
-                    showTranslatePicker.toggle()
-                    showColorPicker = false
-                    showRedactTypePicker = false
-                    showUploadConfirmPicker = false
+                    PopoverHelper.dismiss()
+                    let btnRect = rightButtons.first { if case .translate = $0.action { return true }; return false }?.rect ?? .zero
+                    showTranslatePopover(anchorRect: btnRect)
                     needsDisplay = true
                     return
                 }
@@ -7665,7 +7429,6 @@ class OverlayView: NSView {
         case .delayCapture:
             break
         case .translate:
-            showTranslatePicker = false
             if translateEnabled {
                 // Toggle off: remove overlays, restore original
                 translateEnabled = false
@@ -8803,10 +8566,7 @@ class OverlayView: NSView {
             } else if showEmojiPicker {
                 showEmojiPicker = false
                 needsDisplay = true
-            } else if showUploadConfirmPicker || showRedactTypePicker || showBeautifyGradientPicker {
-                showUploadConfirmPicker = false
-                showRedactTypePicker = false
-                showTranslatePicker = false
+            } else if showBeautifyGradientPicker {
                 showBeautifyGradientPicker = false
                 needsDisplay = true
             } else {
@@ -9357,88 +9117,6 @@ class OverlayView: NSView {
     }
 
     // MARK: - Translate
-
-    private func drawTranslatePicker() {
-        let langs = TranslationService.availableLanguages
-        let currentCode = TranslationService.targetLanguage
-
-        let rowH: CGFloat = 26
-        let pickerWidth: CGFloat = 175
-        let padding: CGFloat = 6
-        let pickerHeight = rowH * CGFloat(langs.count) + padding * 2
-
-        // Anchor to translate button in right bar
-        var anchorRect = NSRect.zero
-        for btn in rightButtons {
-            if case .translate = btn.action { anchorRect = btn.rect; break }
-        }
-        if anchorRect == .zero {
-            anchorRect = rightBarRect
-        }
-
-        // Position to the left of the right bar
-        var pickerX = anchorRect.minX - pickerWidth - 6
-        if pickerX < bounds.minX + 4 { pickerX = anchorRect.maxX + 6 }
-
-        var pickerY = anchorRect.midY - pickerHeight / 2
-        pickerY = max(bounds.minY + 4, min(pickerY, bounds.maxY - pickerHeight - 4))
-
-        let pickerRect = NSRect(x: pickerX, y: pickerY, width: pickerWidth, height: pickerHeight)
-        translatePickerRect = pickerRect
-
-        ToolbarLayout.bgColor.setFill()
-        NSBezierPath(roundedRect: pickerRect, xRadius: 6, yRadius: 6).fill()
-
-        let textAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 11, weight: .medium),
-            .foregroundColor: NSColor.white,
-        ]
-        let dimAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 11, weight: .medium),
-            .foregroundColor: NSColor.white.withAlphaComponent(0.45),
-        ]
-
-        for (i, lang) in langs.enumerated() {
-            let rowY = pickerRect.maxY - padding - rowH * CGFloat(i + 1)
-            let rowRect = NSRect(x: pickerRect.minX, y: rowY, width: pickerRect.width, height: rowH)
-
-            let isSelected = (lang.code == currentCode)
-            if isSelected {
-                ToolbarLayout.accentColor.withAlphaComponent(0.4).setFill()
-                NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
-            } else if i == hoveredTranslateRow {
-                NSColor.white.withAlphaComponent(0.15).setFill()
-                NSBezierPath(roundedRect: rowRect.insetBy(dx: 3, dy: 2), xRadius: 4, yRadius: 4).fill()
-            }
-
-            let attrs = isSelected ? textAttrs : dimAttrs
-            let label = lang.name as NSString
-            let labelSize = label.size(withAttributes: attrs)
-            label.draw(at: NSPoint(x: rowRect.minX + 10, y: rowRect.midY - labelSize.height / 2), withAttributes: attrs)
-
-            if isSelected {
-                let checkAttrs: [NSAttributedString.Key: Any] = [
-                    .font: NSFont.systemFont(ofSize: 11, weight: .bold),
-                    .foregroundColor: ToolbarLayout.accentColor,
-                ]
-                let checkStr = "✓" as NSString
-                let checkSize = checkStr.size(withAttributes: checkAttrs)
-                checkStr.draw(at: NSPoint(x: rowRect.maxX - checkSize.width - 8, y: rowRect.midY - checkSize.height / 2), withAttributes: checkAttrs)
-            }
-        }
-
-        // Show spinner if translating
-        if isTranslating {
-            let spinAttrs: [NSAttributedString.Key: Any] = [
-                .font: NSFont.systemFont(ofSize: 10),
-                .foregroundColor: NSColor.white.withAlphaComponent(0.6),
-            ]
-            let spinStr = "Translating…" as NSString
-            let spinSize = spinStr.size(withAttributes: spinAttrs)
-            spinStr.draw(at: NSPoint(x: pickerRect.midX - spinSize.width / 2, y: pickerRect.minY - spinSize.height - 4), withAttributes: spinAttrs)
-        }
-    }
-
     private func performTranslate(targetLang: String) {
         guard state == .selected,
               selectionRect.width > 1, selectionRect.height > 1,
@@ -9779,6 +9457,67 @@ class OverlayView: NSView {
         needsDisplay = true
     }
 
+    // MARK: - NSPopover-based pickers
+
+    func showUploadConfirmPopover(anchorRect: NSRect) {
+        let current = UserDefaults.standard.bool(forKey: "uploadConfirmEnabled")
+        let picker = ListPickerView()
+        picker.items = [
+            .init(title: "Confirm before upload", isSelected: current),
+        ]
+        picker.onSelect = { [weak self] _ in
+            UserDefaults.standard.set(!current, forKey: "uploadConfirmEnabled")
+            PopoverHelper.dismiss()
+            self?.needsDisplay = true
+        }
+        let size = picker.preferredSize
+        PopoverHelper.showAtPoint(picker, size: size, at: NSPoint(x: anchorRect.midX, y: anchorRect.midY), in: self, preferredEdge: .minX)
+    }
+
+    func showRedactTypePopover(anchorRect: NSRect) {
+        let patterns = [
+            ("Emails", "redactEmails"),
+            ("Phone numbers", "redactPhones"),
+            ("Credit cards", "redactCreditCards"),
+            ("SSNs", "redactSSNs"),
+            ("IP addresses", "redactIPs"),
+            ("AWS keys", "redactAWSKeys"),
+            ("Bearer tokens", "redactBearerTokens"),
+        ]
+        let picker = ListPickerView()
+        picker.items = patterns.map { name, key in
+            .init(title: name, isSelected: UserDefaults.standard.object(forKey: key) as? Bool ?? true)
+        }
+        picker.onSelect = { [weak self] idx in
+            let key = patterns[idx].1
+            let current = UserDefaults.standard.object(forKey: key) as? Bool ?? true
+            UserDefaults.standard.set(!current, forKey: key)
+            // Rebuild picker to reflect new state
+            picker.items = patterns.map { name, key in
+                .init(title: name, isSelected: UserDefaults.standard.object(forKey: key) as? Bool ?? true)
+            }
+            self?.needsDisplay = true
+        }
+        let size = picker.preferredSize
+        PopoverHelper.showAtPoint(picker, size: size, at: NSPoint(x: anchorRect.midX, y: anchorRect.midY), in: self, preferredEdge: .minY)
+    }
+
+    func showTranslatePopover(anchorRect: NSRect) {
+        let languages = TranslationService.availableLanguages
+        let currentCode = TranslationService.targetLanguage
+        let picker = ListPickerView()
+        picker.items = languages.map { lang in
+            .init(title: lang.name, isSelected: lang.code == currentCode)
+        }
+        picker.onSelect = { [weak self] idx in
+            TranslationService.targetLanguage = languages[idx].code
+            PopoverHelper.dismiss()
+            self?.needsDisplay = true
+        }
+        let size = NSSize(width: 160, height: min(400, CGFloat(languages.count) * 28 + 12))
+        PopoverHelper.showAtPoint(picker, size: size, at: NSPoint(x: anchorRect.midX, y: anchorRect.midY), in: self, preferredEdge: .minX)
+    }
+
     func reset() {
         state = .idle
         selectionRect = .zero
@@ -9790,13 +9529,10 @@ class OverlayView: NSView {
         numberCounter = 0
         showToolbars = false
         showColorPicker = false
-        showUploadConfirmPicker = false
         showUploadConfirmDialog = false
         uploadConfirmDialogRect = .zero
         uploadConfirmOKRect = .zero
         uploadConfirmCancelRect = .zero
-        showRedactTypePicker = false
-        showTranslatePicker = false
         showBeautifyGradientPicker = false
         showEmojiPicker = false
         stopMouseHighlightMonitor()
