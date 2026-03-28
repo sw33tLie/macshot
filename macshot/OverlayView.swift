@@ -917,7 +917,9 @@ class OverlayView: NSView {
         guard state == .selected else { return }
 
         // Check UI elements first — arrow for all toolbars, popups, labels
-        if showToolbars && (bottomBarRect.contains(point) || rightBarRect.contains(point) || optionsRowRect.contains(point)) { NSCursor.arrow.set(); return }
+        if showToolbars && (bottomBarRect.contains(point) || rightBarRect.contains(point)) { NSCursor.arrow.set(); return }
+        // ToolOptionsRowView is a real subview — check if mouse is over it
+        if let row = toolOptionsRowView, !row.isHidden, row.frame.contains(point) { NSCursor.arrow.set(); return }
         
         
         
@@ -4616,6 +4618,12 @@ class OverlayView: NSView {
 
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
+
+        // Let real NSView subviews (ToolOptionsRowView) handle their own events
+        if let row = toolOptionsRowView, !row.isHidden, row.frame.contains(point) {
+            super.mouseDown(with: event)
+            return
+        }
 
         // Control-click = right-click for color sampler (supports BetterTouchTool and other tools
         // that simulate right-click via control-click instead of rightMouseDown)
