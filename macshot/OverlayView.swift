@@ -202,7 +202,6 @@ class OverlayView: NSView {
     var bottomBarRect: NSRect = .zero
     var rightBarRect: NSRect = .zero
     var showToolbars: Bool = false
-    private var hoveredButtonIndex: Int = -1  // -1 = none, 0..N bottom, 1000+ right
     private var bottomStripView: ToolbarStripView?
     private var rightStripView: ToolbarStripView?
     private var toolOptionsRowView: ToolOptionsRowView?
@@ -252,11 +251,6 @@ class OverlayView: NSView {
     var showBeautifyInOptionsRow: Bool = false
 
     // Draggable toolbars
-    private var bottomBarDragOffset: NSPoint = .zero
-    private var rightBarDragOffset: NSPoint = .zero
-    private var isDraggingBottomBar: Bool = false
-    private var isDraggingRightBar: Bool = false
-    private var toolbarDragStart: NSPoint = .zero
 
     // Color picker popover
     enum ColorPickerTarget { case drawColor, textBg, textOutline }
@@ -382,7 +376,6 @@ class OverlayView: NSView {
     private var cropDragRect: NSRect = .zero
 
     // Press feedback for momentary buttons
-    private var pressedButtonIndex: Int = -1
 
     // Annotation selection/resize controls
     private var isResizingAnnotation: Bool = false
@@ -674,33 +667,7 @@ class OverlayView: NSView {
             needsDisplay = true
         }
 
-        guard showToolbars else { return }
-        var newHovered = -1
-
-        for (i, btn) in bottomButtons.enumerated() {
-            if btn.rect.contains(point) {
-                newHovered = i
-                break
-            }
-        }
-        if newHovered == -1 {
-            for (i, btn) in rightButtons.enumerated() {
-                if btn.rect.contains(point) {
-                    newHovered = 1000 + i
-                    break
-                }
-            }
-        }
-
-        var needsRedraw = false
-        if newHovered != hoveredButtonIndex {
-            hoveredButtonIndex = newHovered
-            needsRedraw = true
-        }
-
-        if needsRedraw {
-            needsDisplay = true
-        }
+        // Toolbar hover handled by ToolbarButtonView (real NSView subviews)
 
 
         // Hover-to-move: only active for the core shape/drawing tools.
@@ -1422,7 +1389,7 @@ class OverlayView: NSView {
                 // Emoji picker
 
                 // Tooltip for hovered button
-                drawHoveredTooltip()
+                // Tooltips handled by ToolbarButtonView.toolTip
             }
 
             // Editor top bar (drawn outside zoom transform, fixed to window top)
@@ -1470,67 +1437,6 @@ class OverlayView: NSView {
         // Keep cursor rects in sync with current selection
 
     }
-
-    private func drawHoveredTooltip() {
-        guard hoveredButtonIndex >= 0 else { return }
-
-        // Hide tooltip when any picker/popover is open (they overlap)
-        if PopoverHelper.isVisible {
-            return
-        }
-
-        // Find the hovered button
-        var btn: ToolbarButton?
-        var isBottomBar = false
-        if hoveredButtonIndex < 1000 && hoveredButtonIndex < bottomButtons.count {
-            btn = bottomButtons[hoveredButtonIndex]
-            isBottomBar = true
-        } else if hoveredButtonIndex >= 1000 && (hoveredButtonIndex - 1000) < rightButtons.count {
-            btn = rightButtons[hoveredButtonIndex - 1000]
-        }
-        guard let button = btn, !button.tooltip.isEmpty else { return }
-
-        // While move-selection drag is active, show a contextual hint
-        var tooltipText = button.tooltip
-        if moveMode, case .moveSelection = button.action {
-            tooltipText = "Drag to reposition"
-        }
-
-        let attrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 11, weight: .medium),
-            .foregroundColor: NSColor.white,
-        ]
-        let str = tooltipText as NSString
-        let textSize = str.size(withAttributes: attrs)
-        let padding: CGFloat = 6
-        let tipWidth = textSize.width + padding * 2
-        let tipHeight = textSize.height + padding
-
-        let tipX = button.rect.midX - tipWidth / 2
-        let tipY: CGFloat
-        if isBottomBar {
-            // Show below bottom bar, unless it would go off screen
-            let below = bottomBarRect.minY - tipHeight - 4
-            if below >= bounds.minY + 2 {
-                tipY = below
-            } else {
-                tipY = bottomBarRect.maxY + 4
-            }
-        } else {
-            // Right bar: show to the left
-            let tipRect = NSRect(x: button.rect.minX - tipWidth - 6, y: button.rect.midY - tipHeight / 2, width: tipWidth, height: tipHeight)
-            ToolbarLayout.bgColor.setFill()
-            NSBezierPath(roundedRect: tipRect, xRadius: 4, yRadius: 4).fill()
-            str.draw(at: NSPoint(x: tipRect.minX + padding, y: tipRect.minY + padding / 2), withAttributes: attrs)
-            return
-        }
-
-        let tipRect = NSRect(x: tipX, y: tipY, width: tipWidth, height: tipHeight)
-        ToolbarLayout.bgColor.setFill()
-        NSBezierPath(roundedRect: tipRect, xRadius: 4, yRadius: 4).fill()
-        str.draw(at: NSPoint(x: tipRect.minX + padding, y: tipRect.minY + padding / 2), withAttributes: attrs)
-    }
-
     private func drawIdleHelperText() {
         let line1 = windowSnapEnabled
             ? "Click a window  ·  Drag for custom area  ·  F for full screen"
@@ -4224,35 +4130,7 @@ class OverlayView: NSView {
             positionToolbarsForEditor()
         }
 
-        // Apply drag offsets
-        if bottomBarDragOffset != .zero {
-            bottomBarRect = bottomBarRect.offsetBy(dx: bottomBarDragOffset.x, dy: bottomBarDragOffset.y)
-            for i in 0..<bottomButtons.count {
-                bottomButtons[i].rect = bottomButtons[i].rect.offsetBy(dx: bottomBarDragOffset.x, dy: bottomBarDragOffset.y)
-            }
-        }
-        if rightBarDragOffset != .zero {
-            rightBarRect = rightBarRect.offsetBy(dx: rightBarDragOffset.x, dy: rightBarDragOffset.y)
-            for i in 0..<rightButtons.count {
-                rightButtons[i].rect = rightButtons[i].rect.offsetBy(dx: rightBarDragOffset.x, dy: rightBarDragOffset.y)
-            }
-        }
 
-        // Apply hover state
-        for i in 0..<bottomButtons.count {
-            bottomButtons[i].isHovered = (hoveredButtonIndex == i)
-        }
-        for i in 0..<rightButtons.count {
-            rightButtons[i].isHovered = (hoveredButtonIndex == 1000 + i)
-        }
-
-        // Apply pressed state
-        for i in 0..<bottomButtons.count {
-            bottomButtons[i].isPressed = (pressedButtonIndex == i)
-        }
-        for i in 0..<rightButtons.count {
-            rightButtons[i].isPressed = (pressedButtonIndex == 1000 + i)
-        }
 
         // Rebuild real NSView toolbar strips
         if bottomStripView == nil {
@@ -4446,15 +4324,8 @@ class OverlayView: NSView {
 
 
 
-        // If text is being edited, check if the click is on the color toolbar button
-        // before committing the text field
+        // Check text box resize handles when editing
         if isTextEditing && showToolbars {
-            if let action = ToolbarLayout.hitTest(point: point, buttons: bottomButtons) {
-                if case .color = action {
-                    showSystemColorPicker(target: .drawColor)
-                    return
-                }
-            }
             // Check text box resize handles
             if let sv = textScrollView {
                 let hs: CGFloat = 10  // hit area
@@ -4553,52 +4424,6 @@ class OverlayView: NSView {
                 }
 
 
-                if let action = ToolbarLayout.hitTest(point: point, buttons: bottomButtons) {
-                    // Flash press feedback for momentary buttons
-                    let momentaryActions: [ToolbarButtonAction] = [.undo, .redo, .copy, .save, .upload, .pin, .ocr, .autoRedact, .removeBackground]
-                    let isMomentary = momentaryActions.contains { actionEq($0, action) }
-                    if isMomentary, let idx = bottomButtons.firstIndex(where: { $0.rect.contains(point) }) {
-                        pressedButtonIndex = idx
-                        needsDisplay = true
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) { [weak self] in
-                            self?.pressedButtonIndex = -1
-                            self?.needsDisplay = true
-                        }
-                    }
-                    handleToolbarAction(action, mousePoint: point)
-                    return
-                }
-                if let action = ToolbarLayout.hitTest(point: point, buttons: rightButtons) {
-                    let momentaryActions: [ToolbarButtonAction] = [.cancel, .undo, .redo, .copy, .save, .upload, .pin, .ocr, .autoRedact, .removeBackground]
-                    let isMomentary = momentaryActions.contains { actionEq($0, action) }
-                    if case .moveSelection = action {
-                        // Keep pressed/dark while dragging — cleared in mouseUp
-                        if let idx = rightButtons.firstIndex(where: { $0.rect.contains(point) }) {
-                            pressedButtonIndex = 1000 + idx
-                            needsDisplay = true
-                        }
-                    } else if isMomentary, let idx = rightButtons.firstIndex(where: { $0.rect.contains(point) }) {
-                        pressedButtonIndex = 1000 + idx
-                        needsDisplay = true
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) { [weak self] in
-                            self?.pressedButtonIndex = -1
-                            self?.needsDisplay = true
-                        }
-                    }
-                    handleToolbarAction(action, mousePoint: point)
-                    return
-                }
-                // Clicking on toolbar background — start dragging toolbar
-                if ToolbarLayout.hitTestBar(point: point, barRect: bottomBarRect) {
-                    isDraggingBottomBar = true
-                    toolbarDragStart = point
-                    return
-                }
-                if ToolbarLayout.hitTestBar(point: point, barRect: rightBarRect) {
-                    isDraggingRightBar = true
-                    toolbarDragStart = point
-                    return
-                }
             }
 
             // Check handles (locked during recording, disabled in editor)
@@ -4643,8 +4468,6 @@ class OverlayView: NSView {
             undoStack.removeAll()
             redoStack.removeAll()
             numberCounter = 0
-            bottomBarDragOffset = .zero
-            rightBarDragOffset = .zero
             resetZoom()
             zoomLabelOpacity = 0.0
             zoomFadeTimer?.invalidate()
@@ -4673,24 +4496,6 @@ class OverlayView: NSView {
             cropDragRect = NSRect(origin: origin,
                                   size: NSSize(width: abs(clampedPoint.x - cropDragStart.x),
                                                height: abs(clampedPoint.y - cropDragStart.y)))
-            needsDisplay = true
-            return
-        }
-
-        // Handle toolbar dragging
-        if isDraggingBottomBar {
-            let dx = point.x - toolbarDragStart.x
-            let dy = point.y - toolbarDragStart.y
-            bottomBarDragOffset = NSPoint(x: bottomBarDragOffset.x + dx, y: bottomBarDragOffset.y + dy)
-            toolbarDragStart = point
-            needsDisplay = true
-            return
-        }
-        if isDraggingRightBar {
-            let dx = point.x - toolbarDragStart.x
-            let dy = point.y - toolbarDragStart.y
-            rightBarDragOffset = NSPoint(x: rightBarDragOffset.x + dx, y: rightBarDragOffset.y + dy)
-            toolbarDragStart = point
             needsDisplay = true
             return
         }
@@ -4950,14 +4755,6 @@ class OverlayView: NSView {
             return
         }
 
-        if isDraggingBottomBar {
-            isDraggingBottomBar = false
-            return
-        }
-        if isDraggingRightBar {
-            isDraggingRightBar = false
-            return
-        }
         if isResizingTextBox {
             isResizingTextBox = false
             return
@@ -5036,7 +4833,6 @@ class OverlayView: NSView {
             } else if isDraggingSelection {
                 isDraggingSelection = false
                 moveMode = false
-                pressedButtonIndex = -1
                 scheduleBarcodeDetection()
                 needsDisplay = true
             } else if isResizingSelection {
@@ -7465,12 +7261,7 @@ class OverlayView: NSView {
         showFontPicker = false
         sizeInputField?.removeFromSuperview()
         sizeInputField = nil
-        isDraggingBottomBar = false
-        isDraggingRightBar = false
-        bottomBarDragOffset = .zero
-        rightBarDragOffset = .zero
         isResizingAnnotation = false
-        pressedButtonIndex = -1
         loupeCursorPoint = .zero
         colorSamplerPoint = .zero
         colorSamplerBitmap = nil
