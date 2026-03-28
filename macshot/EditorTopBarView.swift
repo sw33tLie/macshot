@@ -119,5 +119,6 @@ class EditorTopBarView: NSView {
 
     @objc private func resetZoomClicked() {
         overlayView?.enclosingScrollView?.magnification = 1.0
+        updateZoom(1.0)
     }
 }

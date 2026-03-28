@@ -4080,12 +4080,18 @@ class OverlayView: NSView {
         bottomBarRect = bottomStrip.frame
         rightBarRect = rightStrip.frame
 
-        // Position options row below bottom bar, matching its width
+        // Position options row — above bottom bar in editor, below in overlay
         if let row = toolOptionsRowView, !row.isHidden {
             row.frame.size.width = bottomBarRect.width
             let rowX = bottomBarRect.minX
-            let rowY = bottomBarRect.minY - row.frame.height - 2
+            let rowY: CGFloat
+            if isEditorMode {
+                rowY = bottomBarRect.maxY + 2
+            } else {
+                rowY = bottomBarRect.minY - row.frame.height - 2
+            }
             row.frame.origin = NSPoint(x: rowX, y: rowY)
+            if isEditorMode { row.autoresizingMask = [.minXMargin, .maxXMargin, .maxYMargin] }
         }
     }
 
@@ -4833,7 +4839,23 @@ class OverlayView: NSView {
     // MARK: - Zoom (scroll wheel + trackpad pinch)
 
     override func scrollWheel(with event: NSEvent) {
-        if isInsideScrollView { enclosingScrollView?.scrollWheel(with: event); return }
+        if isInsideScrollView {
+            guard let sv = enclosingScrollView else { return }
+            let isTrackpad = event.phase != [] || event.momentumPhase != []
+            if !isTrackpad {
+                // Mouse scroll wheel → zoom
+                let delta = event.deltaY
+                let newMag = sv.magnification + delta * 0.05
+                sv.magnification = max(sv.minMagnification, min(sv.maxMagnification, newMag))
+                // Update zoom label
+                if let topBar = sv.superview?.subviews.compactMap({ $0 as? EditorTopBarView }).first {
+                    topBar.updateZoom(sv.magnification)
+                }
+            } else {
+                sv.scrollWheel(with: event)
+            }
+            return
+        }
         guard state == .selected else { return }
         let isTrackpadPhased = event.phase != [] || event.momentumPhase != []
         let isCommandScroll = event.modifierFlags.contains(.command)

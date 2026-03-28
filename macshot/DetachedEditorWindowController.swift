@@ -92,9 +92,11 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         }
 
         // Observe scroll view magnification for zoom label
-        NotificationCenter.default.addObserver(forName: NSScrollView.didEndLiveMagnifyNotification, object: scrollView, queue: .main) { [weak topBar, weak scrollView] _ in
+        let updateZoom = { [weak topBar, weak scrollView] (_: Notification) in
             if let mag = scrollView?.magnification { topBar?.updateZoom(mag) }
         }
+        NotificationCenter.default.addObserver(forName: NSScrollView.didEndLiveMagnifyNotification, object: scrollView, queue: .main, using: updateZoom)
+        NotificationCenter.default.addObserver(forName: NSScrollView.didLiveScrollNotification, object: scrollView, queue: .main, using: updateZoom)
 
         // Set chrome parent BEFORE applySelection so toolbars are added to container, not documentView
         view.chromeParentView = container
