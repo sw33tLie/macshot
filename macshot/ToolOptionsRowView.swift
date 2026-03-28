@@ -27,6 +27,14 @@ class ToolOptionsRowView: NSView {
         currentTool = tool
         var curX: CGFloat = padding
 
+        // ── Beautify options (overrides tool options when active) ──
+        if ov.showBeautifyInOptionsRow {
+            curX = addBeautifyOptions(at: curX, ov: ov)
+            let totalW = max(curX + padding, 200)
+            frame.size = NSSize(width: totalW, height: rowHeight)
+            return
+        }
+
         // ── Stroke width slider (most drawing tools) ──
         let hasStroke = [.pencil, .line, .arrow, .rectangle, .ellipse, .marker, .number, .loupe].contains(tool)
         if hasStroke {
@@ -350,6 +358,110 @@ class ToolOptionsRowView: NSView {
         curX += typeBtn.frame.width + 4
 
         return curX
+    }
+
+    private func addBeautifyOptions(at x: CGFloat, ov: OverlayView) -> CGFloat {
+        var curX = x
+
+        // Mode toggle: Window / Rounded
+        let modeSeg = NSSegmentedControl(labels: ["W", "R"], trackingMode: .selectOne,
+                                         target: self, action: #selector(beautifyModeChanged(_:)))
+        modeSeg.selectedSegment = ov.beautifyMode == .window ? 0 : 1
+        modeSeg.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: 56, height: 22)
+        (modeSeg.cell as? NSSegmentedCell)?.segmentStyle = .roundRect
+        addSubview(modeSeg)
+        curX += 60
+
+        // Padding slider
+        curX = addBeautifySlider(at: curX, label: "Pad", value: ov.beautifyPadding, min: 16, max: 96, action: #selector(beautifyPaddingChanged(_:)))
+
+        // Corner radius slider
+        curX = addBeautifySlider(at: curX, label: "Radius", value: ov.beautifyCornerRadius, min: 0, max: 30, action: #selector(beautifyCornerChanged(_:)))
+
+        // Shadow slider
+        curX = addBeautifySlider(at: curX, label: "Shadow", value: ov.beautifyShadowRadius, min: 0, max: 40, action: #selector(beautifyShadowChanged(_:)))
+
+        // Gradient picker button
+        let gradBtn = NSButton(title: "Style ▾", target: self, action: #selector(beautifyGradientClicked))
+        gradBtn.bezelStyle = .recessed
+        gradBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
+        gradBtn.sizeToFit()
+        gradBtn.frame.origin = NSPoint(x: curX, y: (rowHeight - gradBtn.frame.height) / 2)
+        addSubview(gradBtn)
+        curX += gradBtn.frame.width + 8
+
+        // On/off toggle
+        let toggleBtn = NSButton(checkboxWithTitle: "On", target: self, action: #selector(beautifyToggleChanged(_:)))
+        toggleBtn.state = ov.beautifyEnabled ? .on : .off
+        toggleBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
+        toggleBtn.sizeToFit()
+        toggleBtn.frame.origin = NSPoint(x: curX, y: (rowHeight - toggleBtn.frame.height) / 2)
+        addSubview(toggleBtn)
+        curX += toggleBtn.frame.width + 4
+
+        return curX
+    }
+
+    private func addBeautifySlider(at x: CGFloat, label: String, value: CGFloat, min: CGFloat, max: CGFloat, action: Selector) -> CGFloat {
+        var curX = x
+        let lbl = NSTextField(labelWithString: label)
+        lbl.font = NSFont.systemFont(ofSize: 9, weight: .medium)
+        lbl.textColor = NSColor.white.withAlphaComponent(0.5)
+        lbl.sizeToFit()
+        lbl.frame.origin = NSPoint(x: curX, y: (rowHeight - lbl.frame.height) / 2)
+        addSubview(lbl)
+        curX += lbl.frame.width + 3
+
+        let slider = NSSlider(value: Double(value), minValue: Double(min), maxValue: Double(max),
+                              target: self, action: action)
+        slider.frame = NSRect(x: curX, y: (rowHeight - 18) / 2, width: 60, height: 18)
+        slider.isContinuous = true
+        addSubview(slider)
+        curX += 64
+
+        return curX
+    }
+
+    // MARK: - Beautify Actions
+
+    @objc private func beautifyModeChanged(_ sender: NSSegmentedControl) {
+        guard let ov = overlayView else { return }
+        ov.beautifyMode = sender.selectedSegment == 0 ? .window : .rounded
+        UserDefaults.standard.set(ov.beautifyMode.rawValue, forKey: "beautifyMode")
+        ov.needsDisplay = true
+    }
+
+    @objc private func beautifyPaddingChanged(_ sender: NSSlider) {
+        guard let ov = overlayView else { return }
+        ov.beautifyPadding = CGFloat(sender.floatValue)
+        UserDefaults.standard.set(sender.doubleValue, forKey: "beautifyPadding")
+        ov.needsDisplay = true
+    }
+
+    @objc private func beautifyCornerChanged(_ sender: NSSlider) {
+        guard let ov = overlayView else { return }
+        ov.beautifyCornerRadius = CGFloat(sender.floatValue)
+        UserDefaults.standard.set(sender.doubleValue, forKey: "beautifyCornerRadius")
+        ov.needsDisplay = true
+    }
+
+    @objc private func beautifyShadowChanged(_ sender: NSSlider) {
+        guard let ov = overlayView else { return }
+        ov.beautifyShadowRadius = CGFloat(sender.floatValue)
+        UserDefaults.standard.set(sender.doubleValue, forKey: "beautifyShadowRadius")
+        ov.needsDisplay = true
+    }
+
+    @objc private func beautifyGradientClicked() {
+        guard let ov = overlayView else { return }
+        ov.showBeautifyGradientPopover(anchorRect: frame)
+    }
+
+    @objc private func beautifyToggleChanged(_ sender: NSButton) {
+        guard let ov = overlayView else { return }
+        ov.beautifyEnabled = sender.state == .on
+        UserDefaults.standard.set(ov.beautifyEnabled, forKey: "beautifyEnabled")
+        ov.needsDisplay = true
     }
 
     // MARK: - Actions

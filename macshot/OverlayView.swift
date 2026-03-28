@@ -214,18 +214,18 @@ class OverlayView: NSView {
     private var zoomInputField: NSTextField?
 
     // Beautify
-    private(set) var beautifyEnabled: Bool = UserDefaults.standard.bool(forKey: "beautifyEnabled")
+    var beautifyEnabled: Bool = UserDefaults.standard.bool(forKey: "beautifyEnabled")
     private(set) var beautifyStyleIndex: Int = UserDefaults.standard.integer(forKey: "beautifyStyleIndex")
-    private(set) var beautifyMode: BeautifyMode = BeautifyMode(rawValue: UserDefaults.standard.integer(forKey: "beautifyMode")) ?? .window
-    private(set) var beautifyPadding: CGFloat = {
+    var beautifyMode: BeautifyMode = BeautifyMode(rawValue: UserDefaults.standard.integer(forKey: "beautifyMode")) ?? .window
+    var beautifyPadding: CGFloat = {
         let v = UserDefaults.standard.object(forKey: "beautifyPadding") as? Double
         return v != nil ? CGFloat(v!) : 48
     }()
-    private(set) var beautifyCornerRadius: CGFloat = {
+    var beautifyCornerRadius: CGFloat = {
         let v = UserDefaults.standard.object(forKey: "beautifyCornerRadius") as? Double
         return v != nil ? CGFloat(v!) : 10
     }()
-    private(set) var beautifyShadowRadius: CGFloat = {
+    var beautifyShadowRadius: CGFloat = {
         let v = UserDefaults.standard.object(forKey: "beautifyShadowRadius") as? Double
         return v != nil ? CGFloat(v!) : 20
     }()
@@ -280,8 +280,6 @@ class OverlayView: NSView {
 
     // Tool options row (second row below bottom bar)
     var optionsRowRect: NSRect = .zero
-    private var optionsSmoothToggleRect: NSRect = .zero
-    private var optionsRoundedToggleRect: NSRect = .zero
     var currentMeasureInPoints: Bool = UserDefaults.standard.bool(forKey: "measureInPoints")
     var currentLineStyle: LineStyle = LineStyle(rawValue: UserDefaults.standard.integer(forKey: "currentLineStyle")) ?? .solid
     var currentArrowStyle: ArrowStyle = ArrowStyle(rawValue: UserDefaults.standard.integer(forKey: "currentArrowStyle")) ?? .single
@@ -557,12 +555,8 @@ class OverlayView: NSView {
     ]
     private var customColors: [NSColor?] = Array(repeating: nil, count: 7)
     private var selectedColorSlot: Int = 0  // which custom slot is selected for saving colors
-    private var hexDisplayRect: NSRect = .zero
-    private var customPickerGradientRect: NSRect = .zero
-    private var customPickerBrightnessRect: NSRect = .zero
     private static var lastUsedOpacity: CGFloat = 1.0
     private var currentColorOpacity: CGFloat = OverlayView.lastUsedOpacity
-    private var opacitySliderRect: NSRect = .zero
 
     // Radial color wheel (right-click in drawing mode)
     private var showColorWheel: Bool = false
@@ -2048,36 +2042,6 @@ class OverlayView: NSView {
             grad.draw(in: path, angle: style.angle - 90)  // NSGradient angle: 0=up, CG angle: 0=right
         }
     }
-
-    private func drawBeautifySlider(rect: NSRect, value: CGFloat, min minVal: CGFloat, max maxVal: CGFloat) {
-        let trackH: CGFloat = 4
-        let knobR: CGFloat = 7
-        let trackY = rect.midY - trackH / 2
-        let trackRect = NSRect(x: rect.minX, y: trackY, width: rect.width, height: trackH)
-
-        // Track background
-        NSColor.white.withAlphaComponent(0.2).setFill()
-        NSBezierPath(roundedRect: trackRect, xRadius: 2, yRadius: 2).fill()
-
-        // Filled portion
-        let frac = (value - minVal) / (maxVal - minVal)
-        let filledW = rect.width * frac
-        let filledRect = NSRect(x: rect.minX, y: trackY, width: filledW, height: trackH)
-        ToolbarLayout.accentColor.setFill()
-        NSBezierPath(roundedRect: filledRect, xRadius: 2, yRadius: 2).fill()
-
-        // Knob
-        let knobX = rect.minX + filledW
-        let knobCenter = NSPoint(x: knobX, y: rect.midY)
-        let knobRect = NSRect(x: knobCenter.x - knobR, y: knobCenter.y - knobR, width: knobR * 2, height: knobR * 2)
-        NSColor.white.setFill()
-        NSBezierPath(ovalIn: knobRect).fill()
-        NSColor.white.withAlphaComponent(0.4).setStroke()
-        let knobBorder = NSBezierPath(ovalIn: knobRect.insetBy(dx: 0.5, dy: 0.5))
-        knobBorder.lineWidth = 0.5
-        knobBorder.stroke()
-    }
-
     /// The expanded rect including beautify padding (for live preview).
     /// Returns selectionRect if beautify is off.
     var beautifyPreviewRect: NSRect {
@@ -2639,140 +2603,6 @@ class OverlayView: NSView {
             NSBezierPath(ovalIn: NSRect(x: left.x - r, y: left.y - r, width: r * 2, height: r * 2)).fill()
         }
     }
-    private func drawBeautifyOptionsRow(in rowRect: NSRect) {
-        let labelAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 10, weight: .medium),
-            .foregroundColor: NSColor.white.withAlphaComponent(0.7),
-        ]
-        let pad: CGFloat = 8
-        var curX = rowRect.minX + pad
-
-        // Mode toggle: W / R
-        let modeW: CGFloat = 26
-        let modeH: CGFloat = 20
-        let modeY = rowRect.midY - modeH / 2
-
-        let wRect = NSRect(x: curX, y: modeY, width: modeW, height: modeH)
-        beautifyModeWindowRect = wRect
-        (beautifyMode == .window ? ToolbarLayout.accentColor.withAlphaComponent(0.6) : NSColor.white.withAlphaComponent(0.12)).setFill()
-        NSBezierPath(roundedRect: wRect, xRadius: 4, yRadius: 4).fill()
-        let wAttrs: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: 9, weight: .semibold), .foregroundColor: NSColor.white]
-        let wStr = "W" as NSString
-        let wSize = wStr.size(withAttributes: wAttrs)
-        wStr.draw(at: NSPoint(x: wRect.midX - wSize.width / 2, y: wRect.midY - wSize.height / 2), withAttributes: wAttrs)
-        curX += modeW + 2
-
-        let rRect = NSRect(x: curX, y: modeY, width: modeW, height: modeH)
-        beautifyModeRoundedRect = rRect
-        (beautifyMode == .rounded ? ToolbarLayout.accentColor.withAlphaComponent(0.6) : NSColor.white.withAlphaComponent(0.12)).setFill()
-        NSBezierPath(roundedRect: rRect, xRadius: 4, yRadius: 4).fill()
-        let rStr = "R" as NSString
-        let rSize = rStr.size(withAttributes: wAttrs)
-        rStr.draw(at: NSPoint(x: rRect.midX - rSize.width / 2, y: rRect.midY - rSize.height / 2), withAttributes: wAttrs)
-        curX += modeW + 8
-
-        // Separator
-        NSColor.white.withAlphaComponent(0.2).setFill()
-        NSBezierPath(rect: NSRect(x: curX, y: rowRect.minY + 6, width: 1, height: rowRect.height - 12)).fill()
-        curX += 6
-
-        // Compact sliders: Pad, Radius, Shadow, BgR
-        let sliderW: CGFloat = 60
-        let sliderH: CGFloat = rowRect.height - 8
-        let sliderY = rowRect.minY + 4
-
-        let sliderDefs: [(String, CGFloat, CGFloat, CGFloat)] = [
-            ("Padding", beautifyPadding, 16, 96),
-            ("Radius", beautifyCornerRadius, 0, 30),
-            ("Shadow", beautifyShadowRadius, 0, 40),
-        ]
-
-        var sliderRects: [NSRect] = []
-        for (label, value, minV, maxV) in sliderDefs {
-            let lStr = label as NSString
-            let lSize = lStr.size(withAttributes: labelAttrs)
-            lStr.draw(at: NSPoint(x: curX, y: rowRect.midY - lSize.height / 2), withAttributes: labelAttrs)
-            curX += lSize.width + 5
-            let sr = NSRect(x: curX, y: sliderY, width: sliderW, height: sliderH)
-            sliderRects.append(sr)
-            drawOptionsSlider(rect: sr, value: value, min: minV, max: maxV)
-            curX += sliderW + 10
-        }
-        beautifyPaddingSliderRect = sliderRects[0]
-        beautifyCornerSliderRect = sliderRects[1]
-        beautifyShadowSliderRect = sliderRects[2]
-
-        // Separator
-        NSColor.white.withAlphaComponent(0.2).setFill()
-        NSBezierPath(rect: NSRect(x: curX, y: rowRect.minY + 6, width: 1, height: rowRect.height - 12)).fill()
-        curX += 6
-
-        // Gradient picker button — shows current gradient, opens grid popover on click
-        let btnSize: CGFloat = 22
-        let btnRect = NSRect(x: curX, y: rowRect.midY - btnSize / 2, width: btnSize, height: btnSize)
-
-        let currentStyle = BeautifyRenderer.styles[beautifyStyleIndex % BeautifyRenderer.styles.count]
-        let btnPath = NSBezierPath(roundedRect: btnRect, xRadius: 5, yRadius: 5)
-        drawStyleSwatch(style: currentStyle, path: btnPath, rect: btnRect)
-        // Selection ring
-        ToolbarLayout.accentColor.setStroke()
-        let ring = NSBezierPath(roundedRect: btnRect.insetBy(dx: -1.5, dy: -1.5), xRadius: 6, yRadius: 6)
-        ring.lineWidth = 1.5
-        ring.stroke()
-
-        // Dropdown triangle
-        let triAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 14, weight: .bold),
-            .foregroundColor: NSColor.white.withAlphaComponent(0.7),
-        ]
-        let triStr = "▾" as NSString
-        let triSize = triStr.size(withAttributes: triAttrs)
-        let triX = btnRect.maxX + 6
-        triStr.draw(at: NSPoint(x: triX, y: btnRect.midY - triSize.height / 2), withAttributes: triAttrs)
-
-        // Hit rect covers swatch + triangle
-        beautifyGradientBtnRect = NSRect(x: btnRect.minX, y: btnRect.minY, width: triX + triSize.width - btnRect.minX, height: btnRect.height)
-
-        // On/off toggle switch — far right
-        let toggleW: CGFloat = 36
-        let toggleH: CGFloat = 20
-        let toggleX = rowRect.maxX - pad - toggleW
-        let toggleY = rowRect.midY - toggleH / 2
-        let toggleRect = NSRect(x: toggleX, y: toggleY, width: toggleW, height: toggleH)
-        beautifyToggleRect = toggleRect
-
-        let trackPath = NSBezierPath(roundedRect: toggleRect, xRadius: toggleH / 2, yRadius: toggleH / 2)
-        (beautifyEnabled ? ToolbarLayout.accentColor : NSColor.white.withAlphaComponent(0.2)).setFill()
-        trackPath.fill()
-
-        let knobInset: CGFloat = 2
-        let knobD = toggleH - knobInset * 2
-        let knobX = beautifyEnabled ? toggleRect.maxX - knobD - knobInset : toggleRect.minX + knobInset
-        let knobRect = NSRect(x: knobX, y: toggleY + knobInset, width: knobD, height: knobD)
-        NSColor.white.setFill()
-        NSBezierPath(ovalIn: knobRect).fill()
-    }
-    private func drawOptionsSlider(rect: NSRect, value: CGFloat, min minVal: CGFloat, max maxVal: CGFloat) {
-        let trackH: CGFloat = 3
-        let knobR: CGFloat = 6
-        let trackY = rect.midY - trackH / 2
-        let trackRect = NSRect(x: rect.minX, y: trackY, width: rect.width, height: trackH)
-
-        NSColor.white.withAlphaComponent(0.2).setFill()
-        NSBezierPath(roundedRect: trackRect, xRadius: 1.5, yRadius: 1.5).fill()
-
-        let frac = max(0, min(1, (value - minVal) / (maxVal - minVal)))
-        let filledW = rect.width * frac
-        let filledRect = NSRect(x: rect.minX, y: trackY, width: filledW, height: trackH)
-        ToolbarLayout.accentColor.setFill()
-        NSBezierPath(roundedRect: filledRect, xRadius: 1.5, yRadius: 1.5).fill()
-
-        let knobX = rect.minX + filledW
-        let knobRect = NSRect(x: knobX - knobR, y: rect.midY - knobR, width: knobR * 2, height: knobR * 2)
-        NSColor.white.setFill()
-        NSBezierPath(ovalIn: knobRect).fill()
-    }
-
     @discardableResult
     private func drawOptionsToggle(label: String, isOn: Bool, x: CGFloat, rowRect: NSRect, targetRect: inout NSRect) -> CGFloat {
         let labelAttrs: [NSAttributedString.Key: Any] = [
@@ -5619,6 +5449,7 @@ class OverlayView: NSView {
                 UserDefaults.standard.set(true, forKey: "beautifyEnabled")
                 startBeautifyToolbarAnimation()
             }
+            showBeautifyInOptionsRow.toggle()
             needsDisplay = true
         case .beautifyStyle:
             beautifyStyleIndex = (beautifyStyleIndex + 1) % BeautifyRenderer.styles.count
