@@ -848,6 +848,24 @@ class OverlayView: NSView {
         }
     }
 
+    // MARK: - Hit Testing
+
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        // Let real NSView subviews (toolbar strips, options row) handle their own events.
+        // This prevents our mouseDown override from intercepting slider drags etc.
+        let localPoint = convert(point, from: superview)
+        if let strip = bottomStripView, !strip.isHidden, strip.frame.contains(localPoint) {
+            return strip.hitTest(convert(point, to: strip.superview))
+        }
+        if let strip = rightStripView, !strip.isHidden, strip.frame.contains(localPoint) {
+            return strip.hitTest(convert(point, to: strip.superview))
+        }
+        if let row = toolOptionsRowView, !row.isHidden, row.frame.contains(localPoint) {
+            return row.hitTest(convert(point, to: row.superview))
+        }
+        return super.hitTest(point)
+    }
+
     /// Returns true if the point is over any chrome element (toolbars, options row, popovers, labels).
     private func isPointOnChrome(_ point: NSPoint) -> Bool {
         if showToolbars {
@@ -4253,10 +4271,7 @@ class OverlayView: NSView {
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
 
-        // Let real NSView subviews handle their own events
-        if let strip = bottomStripView, !strip.isHidden, strip.frame.contains(point) { super.mouseDown(with: event); return }
-        if let strip = rightStripView, !strip.isHidden, strip.frame.contains(point) { super.mouseDown(with: event); return }
-        if let row = toolOptionsRowView, !row.isHidden, row.frame.contains(point) { super.mouseDown(with: event); return }
+        // Note: toolbar strips and options row are routed by hitTest() — they never reach here
 
         // Control-click = right-click for color sampler (supports BetterTouchTool and other tools
         // that simulate right-click via control-click instead of rightMouseDown)
