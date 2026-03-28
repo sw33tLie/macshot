@@ -4034,16 +4034,15 @@ class OverlayView: NSView {
             anchorRect = selectionRect
         }
 
-        let bottomSize = bottomStrip.frame.size
         let rightSize = rightStrip.frame.size
 
+        let bottomSize = bottomStrip.frame.size
+
         if isEditorMode {
-            // Use chrome parent bounds (window container), not EditorView bounds (canvas)
             let cb = chromeParentView?.bounds ?? bounds
             bottomStrip.frame.origin = NSPoint(x: cb.midX - bottomSize.width / 2, y: 6)
             rightStrip.frame.origin = NSPoint(x: cb.maxX - rightSize.width - 6, y: cb.maxY - rightSize.height - 36)
         } else {
-            // Bottom: centered below selection, flip above if no room
             var bx = anchorRect.midX - bottomSize.width / 2
             var by = anchorRect.minY - bottomSize.height - 6
             if by < bounds.minY + 4 { by = anchorRect.maxY + 6 }
@@ -4065,9 +4064,10 @@ class OverlayView: NSView {
         bottomBarRect = bottomStrip.frame
         rightBarRect = rightStrip.frame
 
-        // Position options row below bottom bar
+        // Position options row below bottom bar, matching its width
         if let row = toolOptionsRowView, !row.isHidden {
-            let rowX = bottomBarRect.midX - row.frame.width / 2
+            row.frame.size.width = bottomBarRect.width
+            let rowX = bottomBarRect.minX
             let rowY = bottomBarRect.minY - row.frame.height - 2
             row.frame.origin = NSPoint(x: rowX, y: rowY)
         }

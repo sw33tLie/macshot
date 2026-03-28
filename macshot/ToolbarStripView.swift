@@ -62,6 +62,7 @@ class ToolbarStripView: NSView {
             let w = count * btnSize + max(0, count - 1) * spacing + padding * 2
             let h = btnSize + padding * 2
             frame.size = NSSize(width: w, height: h)
+            // Left-align buttons
             for (i, bv) in buttonViews.enumerated() {
                 bv.frame.origin = NSPoint(x: padding + CGFloat(i) * (btnSize + spacing), y: padding)
             }
