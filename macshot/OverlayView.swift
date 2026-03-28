@@ -162,7 +162,7 @@ class OverlayView: NSView {
     private var hoveredAnnotationClearTimer: Timer?
 
     // Text editing
-    private var textEditView: NSTextView?
+    var textEditView: NSTextView?
     private var textScrollView: NSScrollView?
     var textFontSize: CGFloat = 20
     var textBold: Bool = false
@@ -177,14 +177,14 @@ class OverlayView: NSView {
     private var textFontDropdownRect: NSRect = .zero
     private var textConfirmRect: NSRect = .zero
     private var textCancelRect: NSRect = .zero
-    private var textAlignment: NSTextAlignment = .left
+    var textAlignment: NSTextAlignment = .left
     private var isResizingTextBox: Bool = false
     private var textBoxResizeHandle: ResizeHandle = .none
     private var textBoxResizeStart: NSPoint = .zero
     private var textBoxOrigFrame: NSRect = .zero
     private var editingAnnotation: Annotation?  // annotation being re-edited
-    private var textBgEnabled: Bool = UserDefaults.standard.bool(forKey: "textBgEnabled")
-    private var textOutlineEnabled: Bool = UserDefaults.standard.bool(forKey: "textOutlineEnabled")
+    var textBgEnabled: Bool = UserDefaults.standard.bool(forKey: "textBgEnabled")
+    var textOutlineEnabled: Bool = UserDefaults.standard.bool(forKey: "textOutlineEnabled")
     private var textBgColorValue: NSColor = {
         if let data = UserDefaults.standard.data(forKey: "textBgColor"),
            let c = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data) { return c }
@@ -5877,7 +5877,7 @@ class OverlayView: NSView {
         window?.makeFirstResponder(tv)
     }
 
-    private func applyAlignmentToText() {
+    func applyAlignmentToTextIfEditing() {
         guard let tv = textEditView, let ts = tv.textStorage else { return }
         let range = NSRange(location: 0, length: ts.length)
         let paraStyle = NSMutableParagraphStyle()
@@ -5890,7 +5890,7 @@ class OverlayView: NSView {
         window?.makeFirstResponder(tv)
     }
 
-    private func cancelTextEditing() {
+    func cancelTextEditing() {
         // If re-editing, restore the original annotation
         if let ann = editingAnnotation {
             annotations.append(ann)
@@ -5905,7 +5905,7 @@ class OverlayView: NSView {
         needsDisplay = true
     }
 
-    private func commitTextFieldIfNeeded() {
+    func commitTextFieldIfNeeded() {
         guard let tv = textEditView, let sv = textScrollView else { return }
         let text = tv.string
         if !text.isEmpty {
