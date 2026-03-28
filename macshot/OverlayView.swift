@@ -305,17 +305,12 @@ class OverlayView: NSView {
     private var currentRectFillStyle: RectFillStyle = RectFillStyle(rawValue: UserDefaults.standard.integer(forKey: "currentRectFillStyle")) ?? .stroke
     private var optionsRectFillStyleRects: [NSRect] = []
     private var currentStampImage: NSImage?  // selected emoji/image for stamp tool
-    private var currentStampEmoji: String?   // emoji string for highlight tracking
+    var currentStampEmoji: String?   // emoji string for highlight tracking
     private var stampPreviewPoint: NSPoint? // mouse position for stamp cursor preview
     private var stampEmojiRects: [NSRect] = []
     private var stampMoreRect: NSRect = .zero
     private var stampLoadRect: NSRect = .zero
-    private var showEmojiPicker: Bool = false
-    private var emojiPickerRect: NSRect = .zero
-    private var emojiPickerItemRects: [NSRect] = []
-    private var emojiPickerCategoryIndex: Int = 0
-    private var emojiPickerCategoryRects: [NSRect] = []
-    private static let emojiCategories: [(String, [String])] = [
+    static let emojiCategories: [(String, [String])] = [
         ("😀", [  // Faces & People
             "😀", "😂", "🤣", "😍", "🤔", "😎", "🤯", "😱",
             "😤", "🥳", "🤡", "💩", "👻", "🤖", "👽", "😈",
@@ -980,7 +975,6 @@ class OverlayView: NSView {
         
         if showUploadConfirmDialog && uploadConfirmDialogRect.contains(point) { NSCursor.arrow.set(); return }
         if showFontPicker && fontPickerRect.contains(point) { NSCursor.arrow.set(); return }
-        if showEmojiPicker && emojiPickerRect.contains(point) { NSCursor.arrow.set(); return }
         if updateCursorForChrome(at: point) { return }
         if sizeLabelRect.contains(point) && sizeInputField == nil { NSCursor.pointingHand.set(); return }
         if zoomLabelRect.contains(point) && zoomLabelOpacity > 0 && zoomInputField == nil { NSCursor.pointingHand.set(); return }
@@ -1545,9 +1539,6 @@ class OverlayView: NSView {
                 // Translate language picker
 
                 // Emoji picker
-                if showEmojiPicker {
-                    drawEmojiPicker()
-                }
 
                 // Tooltip for hovered button
                 drawHoveredTooltip()
@@ -1606,7 +1597,7 @@ class OverlayView: NSView {
         guard hoveredButtonIndex >= 0 else { return }
 
         // Hide tooltip when any picker/popover is open (they overlap)
-        if PopoverHelper.isVisible || showColorPicker || showEmojiPicker {
+        if PopoverHelper.isVisible || showColorPicker {
             return
         }
 
@@ -3178,7 +3169,7 @@ class OverlayView: NSView {
         return families
     }()
 
-    private func renderEmoji(_ emoji: String, size: CGFloat = 128) -> NSImage {
+    func renderEmoji(_ emoji: String, size: CGFloat = 128) -> NSImage {
         let attrs: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: size * 0.85)]
         let str = emoji as NSString
         let strSize = str.size(withAttributes: attrs)
@@ -3204,83 +3195,6 @@ class OverlayView: NSView {
             self.needsDisplay = true
         }
     }
-
-    private func drawEmojiPicker() {
-        let cats = Self.emojiCategories
-        guard emojiPickerCategoryIndex < cats.count else { return }
-        let emojis = cats[emojiPickerCategoryIndex].1
-        let cols = 8
-        let rows = (emojis.count + cols - 1) / cols
-        let cellSize: CGFloat = 32
-        let padding: CGFloat = 8
-        let tabH: CGFloat = 30
-        let pickerW = padding * 2 + CGFloat(cols) * cellSize
-        let pickerH = padding + tabH + CGFloat(rows) * cellSize + padding
-
-        // Position above the "More" button
-        let anchorRect = stampMoreRect.isEmpty ? optionsRowRect : stampMoreRect
-        let pickerX = max(bounds.minX + 4, min(anchorRect.midX - pickerW / 2, bounds.maxX - pickerW - 4))
-        var pickerY: CGFloat
-        if optionsRowRect.midY < selectionRect.midY {
-            pickerY = optionsRowRect.minY - pickerH - 4
-            if pickerY < bounds.minY + 4 { pickerY = optionsRowRect.maxY + 4 }
-        } else {
-            pickerY = optionsRowRect.maxY + 4
-            if pickerY + pickerH > bounds.maxY - 4 { pickerY = optionsRowRect.minY - pickerH - 4 }
-        }
-        pickerY = max(bounds.minY + 4, min(pickerY, bounds.maxY - pickerH - 4))
-
-        let pRect = NSRect(x: pickerX, y: pickerY, width: pickerW, height: pickerH)
-        emojiPickerRect = pRect
-
-        // Background
-        NSColor(white: 0.10, alpha: 0.95).setFill()
-        NSBezierPath(roundedRect: pRect, xRadius: 8, yRadius: 8).fill()
-        NSColor.white.withAlphaComponent(0.1).setStroke()
-        let border = NSBezierPath(roundedRect: pRect, xRadius: 8, yRadius: 8)
-        border.lineWidth = 0.5
-        border.stroke()
-
-        // Category tabs
-        emojiPickerCategoryRects = []
-        let tabW = (pickerW - padding * 2) / CGFloat(cats.count)
-        let tabY = pRect.maxY - padding - tabH
-        for (i, cat) in cats.enumerated() {
-            let tabRect = NSRect(x: pRect.minX + padding + CGFloat(i) * tabW, y: tabY, width: tabW, height: tabH)
-            emojiPickerCategoryRects.append(tabRect)
-
-            if i == emojiPickerCategoryIndex {
-                ToolbarLayout.accentColor.withAlphaComponent(0.3).setFill()
-                NSBezierPath(roundedRect: tabRect.insetBy(dx: 2, dy: 2), xRadius: 5, yRadius: 5).fill()
-            }
-
-            let tabStr = cat.0 as NSString
-            let tabAttrs: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: 16)]
-            let tabSize = tabStr.size(withAttributes: tabAttrs)
-            tabStr.draw(at: NSPoint(x: tabRect.midX - tabSize.width / 2, y: tabRect.midY - tabSize.height / 2), withAttributes: tabAttrs)
-        }
-
-        // Separator
-        NSColor.white.withAlphaComponent(0.08).setFill()
-        NSBezierPath(rect: NSRect(x: pRect.minX + padding, y: tabY - 1, width: pickerW - padding * 2, height: 0.5)).fill()
-
-        // Emoji grid
-        emojiPickerItemRects = []
-        for (i, emoji) in emojis.enumerated() {
-            let col = i % cols
-            let row = i / cols
-            let cx = pRect.minX + padding + CGFloat(col) * cellSize
-            let cy = tabY - 4 - cellSize - CGFloat(row) * cellSize
-            let cellRect = NSRect(x: cx, y: cy, width: cellSize, height: cellSize)
-            emojiPickerItemRects.append(cellRect)
-
-            let str = emoji as NSString
-            let attrs: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: 22)]
-            let size = str.size(withAttributes: attrs)
-            str.draw(at: NSPoint(x: cellRect.midX - size.width / 2, y: cellRect.midY - size.height / 2), withAttributes: attrs)
-        }
-    }
-
     private func drawStampOptionsRow(in rowRect: NSRect) {
         stampEmojiRects = []
         stampMoreRect = .zero
@@ -6109,36 +6023,6 @@ class OverlayView: NSView {
         }
 
 
-        // Emoji picker dismissal / selection
-        if showEmojiPicker {
-            if emojiPickerRect.contains(point) {
-                // Category tabs
-                for (i, tabRect) in emojiPickerCategoryRects.enumerated() {
-                    if tabRect.contains(point) {
-                        emojiPickerCategoryIndex = i
-                        needsDisplay = true
-                        return
-                    }
-                }
-                // Emoji cells
-                let emojis = Self.emojiCategories[emojiPickerCategoryIndex].1
-                for (i, cellRect) in emojiPickerItemRects.enumerated() {
-                    if cellRect.contains(point), i < emojis.count {
-                        currentStampImage = renderEmoji(emojis[i])
-                        currentStampEmoji = emojis[i]
-                        showEmojiPicker = false
-                        needsDisplay = true
-                        return
-                    }
-                }
-                return  // clicked in picker but not on an item
-            }
-            showEmojiPicker = false
-            needsDisplay = true
-            if stampMoreRect.insetBy(dx: -4, dy: -4).contains(point) {
-                return  // consume so toggle doesn't reopen
-            }
-        }
 
         // If text is being edited, check if the click is on the color toolbar button
         // before committing the text field
@@ -6378,8 +6262,8 @@ class OverlayView: NSView {
                             }
                         }
                         if stampMoreRect.contains(point) {
-                            showEmojiPicker.toggle()
-                            needsDisplay = true
+                            PopoverHelper.dismiss()
+                            showEmojiPopover(anchorRect: stampMoreRect)
                             return
                         }
                         if stampLoadRect.contains(point) {
@@ -7271,7 +7155,6 @@ class OverlayView: NSView {
             commitTextFieldIfNeeded()
             showBeautifyInOptionsRow = false  // switch back to tool options
             showFontPicker = false
-            showEmojiPicker = false
             currentTool = tool
             // Auto-select first emoji when switching to stamp tool with nothing selected
             if tool == .stamp && currentStampImage == nil {
@@ -7328,7 +7211,6 @@ class OverlayView: NSView {
         case .beautify:
             commitTextFieldIfNeeded()
             showFontPicker = false
-            showEmojiPicker = false
             stampPreviewPoint = nil
             loupeCursorPoint = .zero
             showBeautifyInOptionsRow = true
@@ -8480,9 +8362,6 @@ class OverlayView: NSView {
             } else if showUploadConfirmDialog {
                 showUploadConfirmDialog = false
                 needsDisplay = true
-            } else if showEmojiPicker {
-                showEmojiPicker = false
-                needsDisplay = true
             } else if PopoverHelper.isVisible {
                 PopoverHelper.dismiss()
             } else {
@@ -9444,6 +9323,16 @@ class OverlayView: NSView {
         PopoverHelper.showAtPoint(picker, size: picker.preferredSize, at: NSPoint(x: anchorRect.midX, y: anchorRect.midY), in: self, preferredEdge: .minY)
     }
 
+    func showEmojiPopover(anchorRect: NSRect) {
+        let picker = EmojiPickerView()
+        picker.onSelectEmoji = { [weak self] emoji in
+            self?.currentStampImage = self?.renderEmoji(emoji)
+            self?.currentStampEmoji = emoji
+            self?.needsDisplay = true
+        }
+        PopoverHelper.showAtPoint(picker, size: picker.preferredSize, at: NSPoint(x: anchorRect.midX, y: anchorRect.midY), in: self, preferredEdge: .minY)
+    }
+
     func reset() {
         state = .idle
         selectionRect = .zero
@@ -9459,7 +9348,6 @@ class OverlayView: NSView {
         uploadConfirmDialogRect = .zero
         uploadConfirmOKRect = .zero
         uploadConfirmCancelRect = .zero
-        showEmojiPicker = false
         stopMouseHighlightMonitor()
         isTranslating = false
         translateEnabled = false
