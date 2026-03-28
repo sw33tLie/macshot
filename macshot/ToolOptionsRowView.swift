@@ -8,6 +8,15 @@ class ToolOptionsRowView: NSView {
     private var currentTool: AnnotationTool?
     private let rowHeight: CGFloat = 34
     private let padding: CGFloat = 8
+    private let accent = ToolbarLayout.accentColor
+
+    /// Auto-tint controls to match toolbar accent color.
+    override func addSubview(_ view: NSView) {
+        super.addSubview(view)
+        if let btn = view as? NSButton { btn.contentTintColor = accent }
+        if let slider = view as? NSSlider { slider.trackFillColor = accent }
+        if let seg = view as? NSSegmentedControl { seg.selectedSegmentBezelColor = accent }
+    }
 
     override init(frame: NSRect) {
         super.init(frame: frame)
