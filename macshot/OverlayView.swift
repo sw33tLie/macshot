@@ -1386,8 +1386,10 @@ class OverlayView: NSView {
                 // Tooltips handled by ToolbarButtonView.toolTip
             }
 
-            // Editor top bar (drawn outside zoom transform, fixed to window top)
-            drawTopChrome()
+            // Editor top bar — skip in scroll view mode (drawn in canvas coords which get magnified)
+            if !isInsideScrollView {
+                drawTopChrome()
+            }
 
             // Radial color wheel
             if showColorWheel {

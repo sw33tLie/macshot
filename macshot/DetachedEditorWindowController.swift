@@ -59,8 +59,6 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         view.currentTool = tool
         view.currentColor = color
         view.currentStrokeWidth = strokeWidth
-        view.applySelection(NSRect(origin: .zero, size: imgSize))
-        if !annotations.isEmpty { view.setAnnotations(annotations) }
 
         // NSScrollView for native zoom/pan/centering
         let scrollView = NSScrollView(frame: NSRect(origin: .zero, size: NSSize(width: winW, height: winH)))
@@ -83,7 +81,12 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         let container = NSView(frame: NSRect(origin: .zero, size: NSSize(width: winW, height: winH)))
         container.autoresizingMask = [.width, .height]
         container.addSubview(scrollView)
+
+        // Set chrome parent BEFORE applySelection so toolbars are added to container, not documentView
         view.chromeParentView = container
+
+        view.applySelection(NSRect(origin: .zero, size: imgSize))
+        if !annotations.isEmpty { view.setAnnotations(annotations) }
 
         win.contentView = container
         win.makeKeyAndOrderFront(nil)
