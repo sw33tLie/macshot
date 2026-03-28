@@ -132,7 +132,8 @@ class ToolOptionsRowView: NSView {
         let label = NSTextField(labelWithString: "\(Int(ov.activeStrokeWidthForTool(tool)))px")
         label.font = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .medium)
         label.textColor = NSColor.white.withAlphaComponent(0.6)
-        label.frame = NSRect(x: curX, y: (rowHeight - 14) / 2, width: 30, height: 14)
+        label.frame = NSRect(x: curX, y: (rowHeight - 14) / 2, width: 36, height: 14)
+        label.tag = 997  // stroke label
         addSubview(label)
         curX += 34
 
@@ -400,21 +401,29 @@ class ToolOptionsRowView: NSView {
         }
         curX += 4
 
-        let moreBtn = NSButton(title: "More…", target: self, action: #selector(moreEmojisClicked))
+        let moreBtn = NSButton()
         moreBtn.bezelStyle = .recessed
-        moreBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
-        moreBtn.sizeToFit()
-        moreBtn.frame.origin = NSPoint(x: curX, y: (rowHeight - moreBtn.frame.height) / 2)
+        moreBtn.isBordered = false
+        moreBtn.image = NSImage(systemSymbolName: "face.smiling", accessibilityDescription: "More Emojis")?
+            .withSymbolConfiguration(.init(pointSize: 14, weight: .medium))
+        moreBtn.toolTip = "More Emojis"
+        moreBtn.target = self
+        moreBtn.action = #selector(moreEmojisClicked)
+        moreBtn.frame = NSRect(x: curX, y: (rowHeight - 26) / 2, width: 28, height: 26)
         addSubview(moreBtn)
-        curX += moreBtn.frame.width + 4
+        curX += 30
 
-        let loadBtn = NSButton(title: "Load…", target: self, action: #selector(loadImageClicked))
+        let loadBtn = NSButton()
         loadBtn.bezelStyle = .recessed
-        loadBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
-        loadBtn.sizeToFit()
-        loadBtn.frame.origin = NSPoint(x: curX, y: (rowHeight - loadBtn.frame.height) / 2)
+        loadBtn.isBordered = false
+        loadBtn.image = NSImage(systemSymbolName: "photo", accessibilityDescription: "Load Image")?
+            .withSymbolConfiguration(.init(pointSize: 14, weight: .medium))
+        loadBtn.toolTip = "Load Image"
+        loadBtn.target = self
+        loadBtn.action = #selector(loadImageClicked)
+        loadBtn.frame = NSRect(x: curX, y: (rowHeight - 26) / 2, width: 28, height: 26)
         addSubview(loadBtn)
-        curX += loadBtn.frame.width + 4
+        curX += 30
 
         return curX
     }
@@ -568,6 +577,9 @@ class ToolOptionsRowView: NSView {
         guard let ov = overlayView else { return }
         let val = CGFloat(sender.floatValue)
         if let tool = currentTool { ov.setActiveStrokeWidth(val, for: tool) }
+        if let label = viewWithTag(997) as? NSTextField {
+            label.stringValue = currentTool == .loupe ? "\(Int(val))" : "\(Int(val))px"
+        }
     }
 
     @objc private func lineStyleChanged(_ sender: NSSegmentedControl) {

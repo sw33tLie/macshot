@@ -5035,7 +5035,8 @@ class OverlayView: NSView {
             // Start drag-to-move immediately (hold and drag, release to stop)
             isDraggingSelection = true
             moveMode = true
-            dragOffset = NSPoint(x: mousePoint.x - selectionRect.origin.x, y: mousePoint.y - selectionRect.origin.y)
+            let mp = mousePoint == .zero ? (window.map { convert($0.mouseLocationOutsideOfEventStream, from: nil) } ?? .zero) : mousePoint
+            dragOffset = NSPoint(x: mp.x - selectionRect.origin.x, y: mp.y - selectionRect.origin.y)
             needsDisplay = true
         case .undo:
             undo()
@@ -6342,7 +6343,8 @@ class OverlayView: NSView {
             // Update selectionRect to match restored image size
             if isEditorMode {
                 selectionRect = NSRect(origin: .zero, size: previousImage.size)
-                editorCanvasOffset = .zero  // force recalculation
+                editorCanvasOffset = .zero
+                if isInsideScrollView { frame.size = previousImage.size }
             }
             cachedCompositedImage = nil
             resetZoom()
@@ -6396,9 +6398,10 @@ class OverlayView: NSView {
             if isEditorMode {
                 selectionRect = NSRect(origin: .zero, size: redoImage.size)
                 editorCanvasOffset = .zero
+                if isInsideScrollView { frame.size = redoImage.size }
             }
             cachedCompositedImage = nil
-            resetZoom()
+            if !isInsideScrollView { resetZoom() }
         }
         needsDisplay = true
     }
