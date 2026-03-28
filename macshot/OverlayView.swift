@@ -867,84 +867,73 @@ class OverlayView: NSView {
         // mouseMoved and a repeating timer. No cursor rects needed.
     }
 
-    /// Imperative cursor management for overlay mode. Called from mouseMoved and a timer.
+    /// Imperative cursor management. Called from mouseMoved and a 30fps timer.
+    /// Simplified: arrow for chrome, resize cursors for handles, tool cursor for canvas.
     private func updateCursorForPoint(_ point: NSPoint) {
-        // In editor window, don't override cursor in the title bar area (traffic lights, title)
+        // Editor title bar — let AppKit handle
         if isEditorMode, let win = window {
-            let contentRect = win.contentRect(forFrameRect: win.frame)
-            let titleBarHeight = win.frame.height - contentRect.height
-            if point.y > bounds.height - titleBarHeight {
-                return  // let AppKit handle the title bar cursor
-            }
+            let titleH = win.frame.height - win.contentRect(forFrameRect: win.frame).height
+            if point.y > bounds.height - titleH { return }
         }
 
-        // Recording without annotation — always arrow
-        if isRecording && !isAnnotating {
-            NSCursor.arrow.set()
-            return
-        }
-        // Text editing — always arrow
-        if textEditView != nil {
-            NSCursor.arrow.set()
-            return
-        }
-        // Idle / selecting — always crosshair
-        if state == .idle || state == .selecting {
-            NSCursor.crosshair.set()
-            return
-        }
+        // Non-interactive states — simple cursors
+        if isRecording && !isAnnotating { NSCursor.arrow.set(); return }
+        if textEditView != nil { NSCursor.arrow.set(); return }
+        if state == .idle || state == .selecting { NSCursor.crosshair.set(); return }
         guard state == .selected else { return }
 
-        // Check UI elements first — arrow for all toolbars, popups, labels
-        if showToolbars && (bottomBarRect.contains(point) || rightBarRect.contains(point)) { NSCursor.arrow.set(); return }
-        // ToolOptionsRowView is a real subview — check if mouse is over it
-        if let row = toolOptionsRowView, !row.isHidden, row.frame.contains(point) { NSCursor.arrow.set(); return }
-        
-        
-        
-        if showFontPicker && fontPickerRect.contains(point) { NSCursor.arrow.set(); return }
-        if updateCursorForChrome(at: point) { return }
-        if sizeLabelRect.contains(point) && sizeInputField == nil { NSCursor.pointingHand.set(); return }
-        if zoomLabelRect.contains(point) && zoomLabelOpacity > 0 && zoomInputField == nil { NSCursor.pointingHand.set(); return }
+        // Chrome areas — arrow
+        if isPointOnChrome(point) { NSCursor.arrow.set(); return }
 
-        // Selection resize handles (overlay only — disabled in editor)
-        if !isEditorMode {
-            let r = selectionRect
-            let hs = handleSize + 4
-            let edgeT: CGFloat = 6
-            if NSRect(x: r.minX - hs/2, y: r.maxY - hs/2, width: hs, height: hs).contains(point) ||
-               NSRect(x: r.maxX - hs/2, y: r.minY - hs/2, width: hs, height: hs).contains(point) {
-                Self.nwseCursor.set(); return
-            }
-            if NSRect(x: r.maxX - hs/2, y: r.maxY - hs/2, width: hs, height: hs).contains(point) ||
-               NSRect(x: r.minX - hs/2, y: r.minY - hs/2, width: hs, height: hs).contains(point) {
-                Self.neswCursor.set(); return
-            }
-            if NSRect(x: r.minX + hs/2, y: r.maxY - edgeT/2, width: r.width - hs, height: edgeT).contains(point) ||
-               NSRect(x: r.minX + hs/2, y: r.minY - edgeT/2, width: r.width - hs, height: edgeT).contains(point) {
-                NSCursor.resizeUpDown.set(); return
-            }
-            if NSRect(x: r.minX - edgeT/2, y: r.minY + hs/2, width: edgeT, height: r.height - hs).contains(point) ||
-               NSRect(x: r.maxX - edgeT/2, y: r.minY + hs/2, width: edgeT, height: r.height - hs).contains(point) {
-                NSCursor.resizeLeftRight.set(); return
-            }
+        // Selection resize handles (overlay only)
+        if !isEditorMode, let handleCursor = resizeHandleCursor(at: point) {
+            handleCursor.set(); return
         }
 
         // Hover-to-move over annotations
-        let hoverMoveTools: Set<AnnotationTool> = [.arrow, .line, .rectangle, .ellipse, .select]
-        if hoverMoveTools.contains(currentTool) {
-            let canvasPoint = viewToCanvas(point)
-            if let hovered = hoveredAnnotation, hovered.hitTest(point: canvasPoint) {
+        if [.arrow, .line, .rectangle, .ellipse, .select].contains(currentTool) {
+            if let hovered = hoveredAnnotation, hovered.hitTest(point: viewToCanvas(point)) {
                 Self.moveCursor.set(); return
             }
         }
 
-        // Tool-specific cursor inside selection
+        // Tool cursor
         switch currentTool {
         case .pencil, .marker: Self.penCursor.set()
         case .select: NSCursor.arrow.set()
         default: NSCursor.crosshair.set()
         }
+    }
+
+    /// Returns true if the point is over any chrome element (toolbars, options row, popovers, labels).
+    private func isPointOnChrome(_ point: NSPoint) -> Bool {
+        if showToolbars {
+            if bottomBarRect.contains(point) || rightBarRect.contains(point) { return true }
+            if let row = toolOptionsRowView, !row.isHidden, row.frame.contains(point) { return true }
+        }
+        if showFontPicker && fontPickerRect.contains(point) { return true }
+        if updateCursorForChrome(at: point) { return true }
+        if sizeLabelRect.contains(point) && sizeInputField == nil { return true }
+        if zoomLabelRect.contains(point) && zoomLabelOpacity > 0 && zoomInputField == nil { return true }
+        return false
+    }
+
+    /// Returns the appropriate resize cursor if the point is on a selection handle, nil otherwise.
+    private func resizeHandleCursor(at point: NSPoint) -> NSCursor? {
+        let r = selectionRect
+        let hs = handleSize + 4
+        let edgeT: CGFloat = 6
+        // Corner handles
+        if NSRect(x: r.minX - hs/2, y: r.maxY - hs/2, width: hs, height: hs).contains(point) ||
+           NSRect(x: r.maxX - hs/2, y: r.minY - hs/2, width: hs, height: hs).contains(point) { return Self.nwseCursor }
+        if NSRect(x: r.maxX - hs/2, y: r.maxY - hs/2, width: hs, height: hs).contains(point) ||
+           NSRect(x: r.minX - hs/2, y: r.minY - hs/2, width: hs, height: hs).contains(point) { return Self.neswCursor }
+        // Edge handles
+        if NSRect(x: r.minX + hs/2, y: r.maxY - edgeT/2, width: r.width - hs, height: edgeT).contains(point) ||
+           NSRect(x: r.minX + hs/2, y: r.minY - edgeT/2, width: r.width - hs, height: edgeT).contains(point) { return .resizeUpDown }
+        if NSRect(x: r.minX - edgeT/2, y: r.minY + hs/2, width: edgeT, height: r.height - hs).contains(point) ||
+           NSRect(x: r.maxX - edgeT/2, y: r.minY + hs/2, width: edgeT, height: r.height - hs).contains(point) { return .resizeLeftRight }
+        return nil
     }
 
     // MARK: - Subclass override points
