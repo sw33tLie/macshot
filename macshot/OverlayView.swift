@@ -160,11 +160,11 @@ class OverlayView: NSView {
     // Text editing
     private var textEditView: NSTextView?
     private var textScrollView: NSScrollView?
-    private var textFontSize: CGFloat = 20
-    private var textBold: Bool = false
-    private var textItalic: Bool = false
-    private var textUnderline: Bool = false
-    private var textStrikethrough: Bool = false
+    var textFontSize: CGFloat = 20
+    var textBold: Bool = false
+    var textItalic: Bool = false
+    var textUnderline: Bool = false
+    var textStrikethrough: Bool = false
     private var textFontFamily: String = UserDefaults.standard.string(forKey: "textFontFamily") ?? "System"
 
     // Text options row rects (drawn in secondary toolbar)
@@ -291,7 +291,7 @@ class OverlayView: NSView {
     private var optionsNumberStartPlusRect: NSRect = .zero
     private var optionsRoundedToggleRect: NSRect = .zero
     private var measureUnitToggleRect: NSRect = .zero
-    private var currentMeasureInPoints: Bool = UserDefaults.standard.bool(forKey: "measureInPoints")
+    var currentMeasureInPoints: Bool = UserDefaults.standard.bool(forKey: "measureInPoints")
     private var isDraggingOptionsStroke: Bool = false
     private var showBeautifyInOptionsRow: Bool = false  // true when user clicks beautify button to adjust settings
     private var optionsLineStyleRects: [NSRect] = []  // hit rects for line style buttons
@@ -302,7 +302,7 @@ class OverlayView: NSView {
     private var optionsArrowStyleRects: [NSRect] = []
     var currentRectFillStyle: RectFillStyle = RectFillStyle(rawValue: UserDefaults.standard.integer(forKey: "currentRectFillStyle")) ?? .stroke
     private var optionsRectFillStyleRects: [NSRect] = []
-    private var currentStampImage: NSImage?  // selected emoji/image for stamp tool
+    var currentStampImage: NSImage?  // selected emoji/image for stamp tool
     var currentStampEmoji: String?   // emoji string for highlight tracking
     private var stampPreviewPoint: NSPoint? // mouse position for stamp cursor preview
     private var stampEmojiRects: [NSRect] = []
@@ -2818,7 +2818,7 @@ class OverlayView: NSView {
         return img
     }
 
-    private func loadStampImage() {
+    func loadStampImage() {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.image, .png, .jpeg]
         panel.canChooseDirectories = false
@@ -7276,7 +7276,7 @@ class OverlayView: NSView {
         return NSRange(location: 0, length: tv.textStorage?.length ?? 0)
     }
 
-    private func toggleTextBold() {
+    func toggleTextBold() {
         guard let tv = textEditView, let ts = tv.textStorage else {
             textBold.toggle(); needsDisplay = true; return
         }
@@ -7297,7 +7297,7 @@ class OverlayView: NSView {
         needsDisplay = true
     }
 
-    private func toggleTextItalic() {
+    func toggleTextItalic() {
         guard let tv = textEditView, let ts = tv.textStorage else {
             textItalic.toggle(); needsDisplay = true; return
         }
@@ -7359,7 +7359,7 @@ class OverlayView: NSView {
         return result
     }
 
-    private func toggleTextUnderline() {
+    func toggleTextUnderline() {
         guard let tv = textEditView, let ts = tv.textStorage else {
             textUnderline.toggle(); needsDisplay = true; return
         }
@@ -7386,7 +7386,7 @@ class OverlayView: NSView {
         needsDisplay = true
     }
 
-    private func toggleTextStrikethrough() {
+    func toggleTextStrikethrough() {
         guard let tv = textEditView, let ts = tv.textStorage else {
             textStrikethrough.toggle(); needsDisplay = true; return
         }
@@ -8018,7 +8018,7 @@ class OverlayView: NSView {
         }
     }()
 
-    private func performAutoRedact() {
+    func performAutoRedact() {
         guard state == .selected,
               selectionRect.width > 1, selectionRect.height > 1,
               let screenshot = screenshotImage else { return }
@@ -8605,6 +8605,40 @@ class OverlayView: NSView {
         showToolbars = false
         needsDisplay = true
     }
+
+    // MARK: - Tool options API (used by ToolOptionsRowView)
+
+    func activeStrokeWidthForTool(_ tool: AnnotationTool) -> CGFloat {
+        switch tool {
+        case .number: return currentNumberSize
+        case .marker: return currentMarkerSize
+        case .loupe: return currentLoupeSize
+        default: return currentStrokeWidth
+        }
+    }
+
+    func setActiveStrokeWidth(_ value: CGFloat, for tool: AnnotationTool) {
+        switch tool {
+        case .number: currentNumberSize = value; UserDefaults.standard.set(Double(value), forKey: "numberStrokeWidth")
+        case .marker: currentMarkerSize = value; UserDefaults.standard.set(Double(value), forKey: "markerStrokeWidth")
+        case .loupe: currentLoupeSize = value; UserDefaults.standard.set(Double(value), forKey: "loupeSize")
+        default: currentStrokeWidth = value; UserDefaults.standard.set(Double(value), forKey: "currentStrokeWidth")
+        }
+        needsDisplay = true
+    }
+
+
+    func updateTextFontSize() {
+        guard let tv = textEditView else { return }
+        let range = tv.selectedRange().length > 0 ? tv.selectedRange() : NSRange(location: 0, length: tv.textStorage?.length ?? 0)
+        tv.textStorage?.addAttribute(.font, value: NSFont.systemFont(ofSize: textFontSize, weight: textBold ? .bold : .regular), range: range)
+        needsDisplay = true
+    }
+
+    func performAutoRedactPII() {
+        performAutoRedact()
+    }
+
 
     // MARK: - NSPopover-based pickers
 

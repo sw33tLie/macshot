@@ -99,7 +99,7 @@ class ToolOptionsRowView: NSView {
     private func addStrokeSlider(at x: CGFloat, tool: AnnotationTool, ov: OverlayView) -> CGFloat {
         var curX = x
         let sliderW: CGFloat = 100
-        let slider = NSSlider(value: Double(ov.activeStrokeWidth(for: tool)),
+        let slider = NSSlider(value: Double(ov.activeStrokeWidthForTool(tool)),
                               minValue: 1, maxValue: tool == .loupe ? 320 : 20,
                               target: self, action: #selector(strokeSliderChanged(_:)))
         slider.frame = NSRect(x: curX, y: (rowHeight - 20) / 2, width: sliderW, height: 20)
@@ -108,9 +108,9 @@ class ToolOptionsRowView: NSView {
         addSubview(slider)
         curX += sliderW + 4
 
-        let label = NSTextField(labelWithString: "\(Int(ov.activeStrokeWidth(for: tool)))px")
+        let label = NSTextField(labelWithString: "\(Int(ov.activeStrokeWidthForTool(tool)))px")
         label.font = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .medium)
-        label.textColor = .white.withAlphaComponent(0.6)
+        label.textColor = NSColor.white.withAlphaComponent(0.6)
         label.frame = NSRect(x: curX, y: (rowHeight - 14) / 2, width: 30, height: 14)
         addSubview(label)
         curX += 34
@@ -161,7 +161,7 @@ class ToolOptionsRowView: NSView {
         var curX = x
         let label = NSTextField(labelWithString: "Radius")
         label.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
-        label.textColor = .white.withAlphaComponent(0.4)
+        label.textColor = NSColor.white.withAlphaComponent(0.4)
         label.sizeToFit()
         label.frame.origin = NSPoint(x: curX, y: (rowHeight - label.frame.height) / 2)
         addSubview(label)
@@ -182,7 +182,7 @@ class ToolOptionsRowView: NSView {
         let btn = NSButton(checkboxWithTitle: title, target: nil, action: nil)
         btn.state = isOn ? .on : .off
         btn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
-        btn.contentTintColor = .white.withAlphaComponent(0.7)
+        btn.contentTintColor = NSColor.white.withAlphaComponent(0.7)
         btn.sizeToFit()
         btn.frame.origin = NSPoint(x: curX, y: (rowHeight - btn.frame.height) / 2)
         let handler = ToggleHandler(action: action)
@@ -207,7 +207,7 @@ class ToolOptionsRowView: NSView {
 
         let startLabel = NSTextField(labelWithString: "Start:")
         startLabel.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
-        startLabel.textColor = .white.withAlphaComponent(0.4)
+        startLabel.textColor = NSColor.white.withAlphaComponent(0.4)
         startLabel.sizeToFit()
         startLabel.frame.origin = NSPoint(x: curX, y: (rowHeight - startLabel.frame.height) / 2)
         addSubview(startLabel)
@@ -224,7 +224,7 @@ class ToolOptionsRowView: NSView {
 
         let valLabel = NSTextField(labelWithString: ov.currentNumberFormat.format(ov.numberStartAt))
         valLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium)
-        valLabel.textColor = .white.withAlphaComponent(0.85)
+        valLabel.textColor = NSColor.white.withAlphaComponent(0.85)
         valLabel.tag = 999  // tag for finding later
         valLabel.sizeToFit()
         valLabel.frame.origin = NSPoint(x: curX + 22, y: (rowHeight - valLabel.frame.height) / 2)
@@ -237,10 +237,10 @@ class ToolOptionsRowView: NSView {
     private func addTextOptions(at x: CGFloat, ov: OverlayView) -> CGFloat {
         var curX = x
         let textStyles: [(String, String, Bool, Selector)] = [
-            ("bold", "B", ov.isBold, #selector(boldToggled)),
-            ("italic", "I", ov.isItalic, #selector(italicToggled)),
-            ("underline", "U", ov.isUnderline, #selector(underlineToggled)),
-            ("strikethrough", "S", ov.isStrikethrough, #selector(strikethroughToggled)),
+            ("bold", "B", ov.textBold, #selector(boldToggled)),
+            ("italic", "I", ov.textItalic, #selector(italicToggled)),
+            ("underline", "U", ov.textUnderline, #selector(underlineToggled)),
+            ("strikethrough", "S", ov.textStrikethrough, #selector(strikethroughToggled)),
         ]
         for (_, label, isOn, sel) in textStyles {
             let btn = NSButton(title: label, target: self, action: sel)
@@ -255,9 +255,9 @@ class ToolOptionsRowView: NSView {
         curX += 4
 
         // Font size stepper
-        let sizeLabel = NSTextField(labelWithString: "\(Int(ov.currentFontSize))pt")
+        let sizeLabel = NSTextField(labelWithString: "\(Int(ov.textFontSize))pt")
         sizeLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .medium)
-        sizeLabel.textColor = .white.withAlphaComponent(0.6)
+        sizeLabel.textColor = NSColor.white.withAlphaComponent(0.6)
         sizeLabel.tag = 998
         sizeLabel.sizeToFit()
         sizeLabel.frame.origin = NSPoint(x: curX, y: (rowHeight - sizeLabel.frame.height) / 2)
@@ -267,7 +267,7 @@ class ToolOptionsRowView: NSView {
         let stepper = NSStepper()
         stepper.minValue = 8
         stepper.maxValue = 200
-        stepper.integerValue = Int(ov.currentFontSize)
+        stepper.integerValue = Int(ov.textFontSize)
         stepper.target = self
         stepper.action = #selector(fontSizeChanged(_:))
         stepper.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: 19, height: 22)
@@ -281,7 +281,7 @@ class ToolOptionsRowView: NSView {
         var curX = x
         let seg = NSSegmentedControl(labels: ["px", "pt"], trackingMode: .selectOne,
                                      target: self, action: #selector(measureUnitChanged(_:)))
-        seg.selectedSegment = ov.measureInPoints ? 1 : 0
+        seg.selectedSegment = ov.currentMeasureInPoints ? 1 : 0
         seg.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: 60, height: 22)
         (seg.cell as? NSSegmentedCell)?.segmentStyle = .roundRect
         addSubview(seg)
@@ -357,12 +357,12 @@ class ToolOptionsRowView: NSView {
     @objc private func strokeSliderChanged(_ sender: NSSlider) {
         guard let ov = overlayView else { return }
         let val = CGFloat(sender.floatValue)
-        if let tool = currentTool { ov.setStrokeWidth(val, for: tool) }
+        if let tool = currentTool { ov.setActiveStrokeWidth(val, for: tool) }
     }
 
     @objc private func lineStyleChanged(_ sender: NSSegmentedControl) {
         guard let ov = overlayView else { return }
-        if let style = OverlayView.LineStyle(rawValue: sender.selectedSegment) {
+        if let style = LineStyle(rawValue: sender.selectedSegment) {
             ov.currentLineStyle = style
             UserDefaults.standard.set(style.rawValue, forKey: "currentLineStyle")
             ov.needsDisplay = true
@@ -371,7 +371,7 @@ class ToolOptionsRowView: NSView {
 
     @objc private func arrowStyleChanged(_ sender: NSSegmentedControl) {
         guard let ov = overlayView else { return }
-        if let style = OverlayView.ArrowStyle(rawValue: sender.selectedSegment) {
+        if let style = ArrowStyle(rawValue: sender.selectedSegment) {
             ov.currentArrowStyle = style
             UserDefaults.standard.set(style.rawValue, forKey: "currentArrowStyle")
             ov.needsDisplay = true
@@ -380,7 +380,7 @@ class ToolOptionsRowView: NSView {
 
     @objc private func shapeFillChanged(_ sender: NSSegmentedControl) {
         guard let ov = overlayView else { return }
-        if let style = OverlayView.RectFillStyle(rawValue: sender.selectedSegment) {
+        if let style = RectFillStyle(rawValue: sender.selectedSegment) {
             ov.currentRectFillStyle = style
             UserDefaults.standard.set(style.rawValue, forKey: "currentRectFillStyle")
             ov.needsDisplay = true
@@ -396,7 +396,7 @@ class ToolOptionsRowView: NSView {
 
     @objc private func numberFormatChanged(_ sender: NSSegmentedControl) {
         guard let ov = overlayView else { return }
-        if let fmt = OverlayView.NumberFormat(rawValue: sender.selectedSegment) {
+        if let fmt = NumberFormat(rawValue: sender.selectedSegment) {
             ov.currentNumberFormat = fmt
             UserDefaults.standard.set(fmt.rawValue, forKey: "numberFormat")
             ov.needsDisplay = true
@@ -417,25 +417,25 @@ class ToolOptionsRowView: NSView {
 
     @objc private func fontSizeChanged(_ sender: NSStepper) {
         guard let ov = overlayView else { return }
-        ov.currentFontSize = CGFloat(sender.integerValue)
+        ov.textFontSize = CGFloat(sender.integerValue)
         UserDefaults.standard.set(sender.doubleValue, forKey: "fontSize")
         if let label = viewWithTag(998) as? NSTextField {
             label.stringValue = "\(sender.integerValue)pt"
             label.sizeToFit()
         }
-        ov.applyFontSizeToTextIfEditing()
+        ov.updateTextFontSize()
         ov.needsDisplay = true
     }
 
-    @objc private func boldToggled() { overlayView?.toggleBold(); overlayView.map { rebuild(for: $0.currentTool) } }
-    @objc private func italicToggled() { overlayView?.toggleItalic(); overlayView.map { rebuild(for: $0.currentTool) } }
-    @objc private func underlineToggled() { overlayView?.toggleUnderline(); overlayView.map { rebuild(for: $0.currentTool) } }
-    @objc private func strikethroughToggled() { overlayView?.toggleStrikethrough(); overlayView.map { rebuild(for: $0.currentTool) } }
+    @objc private func boldToggled() { overlayView?.toggleTextBold(); overlayView.map { rebuild(for: $0.currentTool) } }
+    @objc private func italicToggled() { overlayView?.toggleTextItalic(); overlayView.map { rebuild(for: $0.currentTool) } }
+    @objc private func underlineToggled() { overlayView?.toggleTextUnderline(); overlayView.map { rebuild(for: $0.currentTool) } }
+    @objc private func strikethroughToggled() { overlayView?.toggleTextStrikethrough(); overlayView.map { rebuild(for: $0.currentTool) } }
 
     @objc private func measureUnitChanged(_ sender: NSSegmentedControl) {
         guard let ov = overlayView else { return }
-        ov.measureInPoints = sender.selectedSegment == 1
-        UserDefaults.standard.set(ov.measureInPoints, forKey: "measureInPoints")
+        ov.currentMeasureInPoints = sender.selectedSegment == 1
+        UserDefaults.standard.set(ov.currentMeasureInPoints, forKey: "measureInPoints")
         ov.needsDisplay = true
     }
 
