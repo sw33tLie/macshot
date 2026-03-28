@@ -67,7 +67,9 @@ class OverlayView: NSView {
     /// When true, hides overlay-only toolbar buttons (record, delay, cancel, move, scroll capture).
     /// Override point for subclasses. EditorView returns true.
     var isEditorMode: Bool { false }
-    var editorCanvasOffset: NSPoint = .zero  // rendering offset for centering image in editor
+    /// When true, NSScrollView handles zoom/pan/centering. Coordinate transforms become identity.
+    var isInsideScrollView: Bool { false }
+    var editorCanvasOffset: NSPoint = .zero  // rendering offset for centering image in editor (legacy, unused in scroll view mode)
 
     var screenshotImage: NSImage? {
         didSet { needsDisplay = true }
@@ -3072,6 +3074,7 @@ class OverlayView: NSView {
 
     /// Convert a canvas-space point to view-space (reverse of viewToCanvas).
     func canvasToView(_ p: NSPoint) -> NSPoint {
+        if isInsideScrollView { return p }
         var q = p
         // Apply zoom
         if zoomLevel != 1.0 || zoomAnchorCanvas != .zero || zoomAnchorView != .zero {
@@ -3090,7 +3093,7 @@ class OverlayView: NSView {
 
     /// Convert a point in view space to canvas (annotation) space by reversing the zoom transform.
     private func viewToCanvas(_ p: NSPoint) -> NSPoint {
-        // In editor mode, subtract the canvas centering offset
+        if isInsideScrollView { return p }
         var q = adjustPointForEditor(p)
         if zoomLevel == 1.0 && zoomAnchorCanvas == .zero && zoomAnchorView == .zero { return q }
         guard zoomAnchorCanvas != .zero || zoomAnchorView != .zero else { return q }
@@ -3101,6 +3104,7 @@ class OverlayView: NSView {
     }
 
     func applyZoomTransform(to context: NSGraphicsContext) {
+        if isInsideScrollView { return }
         if zoomLevel == 1.0 && zoomAnchorCanvas == .zero && zoomAnchorView == .zero { return }
         guard zoomAnchorCanvas != .zero || zoomAnchorView != .zero else { return }
         let cgCtx = context.cgContext
@@ -4803,6 +4807,7 @@ class OverlayView: NSView {
     // MARK: - Zoom (scroll wheel + trackpad pinch)
 
     override func scrollWheel(with event: NSEvent) {
+        if isInsideScrollView { super.scrollWheel(with: event); return }
         guard state == .selected else { return }
         let isTrackpadPhased = event.phase != [] || event.momentumPhase != []
         let isCommandScroll = event.modifierFlags.contains(.command)
@@ -4830,6 +4835,7 @@ class OverlayView: NSView {
     }
 
     override func magnify(with event: NSEvent) {
+        if isInsideScrollView { super.magnify(with: event); return }
         guard state == .selected else { return }
         let cursor = convert(event.locationInWindow, from: nil)
         setZoom(zoomLevel + event.magnification, cursorView: cursor)

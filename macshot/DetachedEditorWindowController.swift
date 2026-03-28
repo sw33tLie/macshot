@@ -28,19 +28,12 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         let screen = NSScreen.main ?? NSScreen.screens.first!
         let screenFrame = screen.visibleFrame
 
-        // Toolbar padding: must match the values in EditorView's draw block
-        let padH: CGFloat = 8 + 52   // left + right toolbar
-        let padV: CGFloat = 56 + 36 + 36  // bottom toolbar + gap + options row (34+2 gap) + top bar (32+4)
-        // Extra space for beautify preview — use max possible values so it always fits
-        let beautifyExtra: CGFloat = (96 + 40 + 16) * 2  // max padding (96) + max shadow (40) + offset, both sides
-        let minW: CGFloat = 800  // enough width for all bottom toolbar buttons
-        let minH: CGFloat = 400  // enough height for right toolbar buttons
-
-        // Size window to fit image + padding + beautify space, capped to 80% of screen
-        let maxW = screenFrame.width * 0.8
-        let maxH = screenFrame.height * 0.8
-        let winW = min(maxW, max(minW, imgSize.width + padH + beautifyExtra))
-        let winH = min(maxH, max(minH, imgSize.height + padV + beautifyExtra))
+        let minW: CGFloat = 800
+        let minH: CGFloat = 400
+        let maxW = screenFrame.width * 0.9
+        let maxH = screenFrame.height * 0.9
+        let winW = min(maxW, max(minW, imgSize.width + 100))
+        let winH = min(maxH, max(minH, imgSize.height + 100))
 
         let win = NSWindow(
             contentRect: NSRect(x: screenFrame.midX - winW/2,
@@ -57,25 +50,36 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         win.delegate = self
         win.collectionBehavior = [.fullScreenAuxiliary]
 
-        // Create an EditorView (subclass of OverlayView) for the standalone editor.
+        // Create EditorView as the document view inside an NSScrollView
         let view = EditorView()
         view.frame = NSRect(origin: .zero, size: imgSize)
-        view.autoresizingMask = [.width, .height]
+        view.autoresizingMask = []  // fixed size — scroll view handles viewport
         view.screenshotImage = image
         view.overlayDelegate = self
         view.currentTool = tool
         view.currentColor = color
         view.currentStrokeWidth = strokeWidth
-
-        // Force the view into selected state with selection covering the full image.
         view.applySelection(NSRect(origin: .zero, size: imgSize))
+        if !annotations.isEmpty { view.setAnnotations(annotations) }
 
-        // Add transferred annotations (already shifted to image-relative coords).
-        if !annotations.isEmpty {
-            view.setAnnotations(annotations)
-        }
+        // NSScrollView for native zoom/pan/centering
+        let scrollView = NSScrollView(frame: NSRect(origin: .zero, size: NSSize(width: winW, height: winH)))
+        scrollView.autoresizingMask = [.width, .height]
+        scrollView.hasVerticalScroller = true
+        scrollView.hasHorizontalScroller = true
+        scrollView.autohidesScrollers = true
+        scrollView.drawsBackground = true
+        scrollView.backgroundColor = NSColor(white: 0.15, alpha: 1.0)
+        scrollView.allowsMagnification = true
+        scrollView.minMagnification = 0.1
+        scrollView.maxMagnification = 8.0
 
-        win.contentView = view
+        let clipView = CenteringClipView(frame: scrollView.contentView.frame)
+        clipView.drawsBackground = false
+        scrollView.contentView = clipView
+        scrollView.documentView = view
+
+        win.contentView = scrollView
         win.makeKeyAndOrderFront(nil)
         win.makeFirstResponder(view)
         NSApp.activate(ignoringOtherApps: true)
