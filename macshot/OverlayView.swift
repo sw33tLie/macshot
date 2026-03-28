@@ -69,6 +69,8 @@ class OverlayView: NSView {
     var isEditorMode: Bool { false }
     /// When true, NSScrollView handles zoom/pan/centering. Coordinate transforms become identity.
     var isInsideScrollView: Bool { false }
+    /// When in scroll view mode, toolbar strips are added to this view (window content) instead of self.
+    weak var chromeParentView: NSView?
     var editorCanvasOffset: NSPoint = .zero  // rendering offset for centering image in editor (legacy, unused in scroll view mode)
 
     var screenshotImage: NSImage? {
@@ -3959,15 +3961,16 @@ class OverlayView: NSView {
         }
         rightButtons = ToolbarLayout.rightButtons(beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex, hasAnnotations: movableAnnotations, translateEnabled: translateEnabled, isRecording: isRecording, isCapturingVideo: isCapturingVideo, isAnnotating: isAnnotating, isEditorMode: isEditorMode)
 
-        // Create strip views if needed
+        // Create strip views if needed — add to chrome parent (window content) when in scroll view
+        let parent = chromeParentView ?? self
         if bottomStripView == nil {
             let strip = ToolbarStripView(orientation: .horizontal)
-            addSubview(strip)
+            parent.addSubview(strip)
             bottomStripView = strip
         }
         if rightStripView == nil {
             let strip = ToolbarStripView(orientation: .vertical)
-            addSubview(strip)
+            parent.addSubview(strip)
             rightStripView = strip
         }
 
@@ -3987,7 +3990,7 @@ class OverlayView: NSView {
             if toolOptionsRowView == nil {
                 let row = ToolOptionsRowView()
                 row.overlayView = self
-                addSubview(row)
+                parent.addSubview(row)
                 toolOptionsRowView = row
             }
             toolOptionsRowView?.rebuild(for: currentTool)
@@ -4035,8 +4038,10 @@ class OverlayView: NSView {
         let rightSize = rightStrip.frame.size
 
         if isEditorMode {
-            bottomStrip.frame.origin = NSPoint(x: bounds.midX - bottomSize.width / 2, y: 6)
-            rightStrip.frame.origin = NSPoint(x: bounds.maxX - rightSize.width - 6, y: bounds.maxY - rightSize.height - 36)
+            // Use chrome parent bounds (window container), not EditorView bounds (canvas)
+            let cb = chromeParentView?.bounds ?? bounds
+            bottomStrip.frame.origin = NSPoint(x: cb.midX - bottomSize.width / 2, y: 6)
+            rightStrip.frame.origin = NSPoint(x: cb.maxX - rightSize.width - 6, y: cb.maxY - rightSize.height - 36)
         } else {
             // Bottom: centered below selection, flip above if no room
             var bx = anchorRect.midX - bottomSize.width / 2
@@ -4807,7 +4812,7 @@ class OverlayView: NSView {
     // MARK: - Zoom (scroll wheel + trackpad pinch)
 
     override func scrollWheel(with event: NSEvent) {
-        if isInsideScrollView { super.scrollWheel(with: event); return }
+        if isInsideScrollView { enclosingScrollView?.scrollWheel(with: event); return }
         guard state == .selected else { return }
         let isTrackpadPhased = event.phase != [] || event.momentumPhase != []
         let isCommandScroll = event.modifierFlags.contains(.command)
@@ -4835,7 +4840,7 @@ class OverlayView: NSView {
     }
 
     override func magnify(with event: NSEvent) {
-        if isInsideScrollView { super.magnify(with: event); return }
+        if isInsideScrollView { enclosingScrollView?.magnify(with: event); return }
         guard state == .selected else { return }
         let cursor = convert(event.locationInWindow, from: nil)
         setZoom(zoomLevel + event.magnification, cursorView: cursor)

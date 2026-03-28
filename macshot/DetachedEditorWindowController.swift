@@ -79,7 +79,13 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         scrollView.contentView = clipView
         scrollView.documentView = view
 
-        win.contentView = scrollView
+        // Container holds scroll view + toolbars (toolbars are siblings, not inside scroll view)
+        let container = NSView(frame: NSRect(origin: .zero, size: NSSize(width: winW, height: winH)))
+        container.autoresizingMask = [.width, .height]
+        container.addSubview(scrollView)
+        view.chromeParentView = container
+
+        win.contentView = container
         win.makeKeyAndOrderFront(nil)
         win.makeFirstResponder(view)
         NSApp.activate(ignoringOtherApps: true)
