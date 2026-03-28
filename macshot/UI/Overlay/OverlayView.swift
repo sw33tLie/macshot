@@ -1,7 +1,7 @@
+import AVFoundation
 import Cocoa
 import UniformTypeIdentifiers
 import Vision
-import AVFoundation
 
 @MainActor
 protocol OverlayViewDelegate: AnyObject {
@@ -28,15 +28,17 @@ protocol OverlayViewDelegate: AnyObject {
 
 /// An entry in the undo/redo history.
 enum UndoEntry {
-    case added(Annotation)          // annotation was added; undo removes it
-    case deleted(Annotation, Int)   // annotation was deleted at index; undo re-inserts it
+    case added(Annotation)  // annotation was added; undo removes it
+    case deleted(Annotation, Int)  // annotation was deleted at index; undo re-inserts it
     /// Image transform (crop/flip): stores the previous image and annotation offsets to restore.
     case imageTransform(previousImage: NSImage, annotationOffsets: [(Annotation, CGFloat, CGFloat)])
 
     var annotation: Annotation {
         switch self {
         case .added(let a), .deleted(let a, _): return a
-        case .imageTransform: return Annotation(tool: .measure, startPoint: .zero, endPoint: .zero, color: .clear, strokeWidth: 0)  // dummy
+        case .imageTransform:
+            return Annotation(
+                tool: .measure, startPoint: .zero, endPoint: .zero, color: .clear, strokeWidth: 0)  // dummy
         }
     }
 }
@@ -237,8 +239,10 @@ class OverlayView: NSView {
 
     // Beautify
     var beautifyEnabled: Bool = UserDefaults.standard.bool(forKey: "beautifyEnabled")
-    private(set) var beautifyStyleIndex: Int = UserDefaults.standard.integer(forKey: "beautifyStyleIndex")
-    var beautifyMode: BeautifyMode = BeautifyMode(rawValue: UserDefaults.standard.integer(forKey: "beautifyMode")) ?? .window
+    private(set) var beautifyStyleIndex: Int = UserDefaults.standard.integer(
+        forKey: "beautifyStyleIndex")
+    var beautifyMode: BeautifyMode =
+        BeautifyMode(rawValue: UserDefaults.standard.integer(forKey: "beautifyMode")) ?? .window
     var beautifyPadding: CGFloat = {
         let v = UserDefaults.standard.object(forKey: "beautifyPadding") as? Double
         return v != nil ? CGFloat(v!) : 48
@@ -285,45 +289,64 @@ class OverlayView: NSView {
 
     // Tool options row (second row below bottom bar)
     var currentMeasureInPoints: Bool = UserDefaults.standard.bool(forKey: "measureInPoints")
-    var currentLineStyle: LineStyle = LineStyle(rawValue: UserDefaults.standard.integer(forKey: "currentLineStyle")) ?? .solid
-    var currentArrowStyle: ArrowStyle = ArrowStyle(rawValue: UserDefaults.standard.integer(forKey: "currentArrowStyle")) ?? .single
-    var currentRectFillStyle: RectFillStyle = RectFillStyle(rawValue: UserDefaults.standard.integer(forKey: "currentRectFillStyle")) ?? .stroke
+    var currentLineStyle: LineStyle =
+        LineStyle(rawValue: UserDefaults.standard.integer(forKey: "currentLineStyle")) ?? .solid
+    var currentArrowStyle: ArrowStyle =
+        ArrowStyle(rawValue: UserDefaults.standard.integer(forKey: "currentArrowStyle")) ?? .single
+    var currentRectFillStyle: RectFillStyle =
+        RectFillStyle(rawValue: UserDefaults.standard.integer(forKey: "currentRectFillStyle"))
+        ?? .stroke
     private var optionsRectFillStyleRects: [NSRect] = []
     var currentStampImage: NSImage?  // selected emoji/image for stamp tool
-    var currentStampEmoji: String?   // emoji string for highlight tracking
-    private var stampPreviewPoint: NSPoint? // mouse position for stamp cursor preview
+    var currentStampEmoji: String?  // emoji string for highlight tracking
+    private var stampPreviewPoint: NSPoint?  // mouse position for stamp cursor preview
     static let emojiCategories: [(String, [String])] = [
-        ("😀", [  // Faces & People
-            "😀", "😂", "🤣", "😍", "🤔", "😎", "🤯", "😱",
-            "😤", "🥳", "🤡", "💩", "👻", "🤖", "👽", "😈",
-            "🙈", "🙉", "🙊", "💪", "👏", "🙌", "🤝", "🫡",
-        ]),
-        ("👆", [  // Hands & Gestures
-            "👆", "👇", "👈", "👉", "👍", "👎", "✊", "👊",
-            "🤞", "✌️", "🤟", "🫵", "☝️", "👋", "🖐️", "✋",
-        ]),
-        ("✅", [  // Symbols & Status
-            "✅", "❌", "⚠️", "❓", "❗", "⛔", "🚫", "💯",
-            "✏️", "🗑️", "📌", "🔒", "🔓", "🏷️", "📎", "🔗",
-            "⬆️", "⬇️", "⬅️", "➡️", "↩️", "🔄", "➕", "➖",
-        ]),
-        ("🔥", [  // Objects & Reactions
-            "🔥", "💡", "⭐", "❤️", "💀", "🐛", "🎯", "🚀",
-            "🎉", "💣", "🧨", "⚡", "💥", "🔔", "📢", "🏆",
-            "🛑", "🚧", "🏗️", "🧪", "🔬", "💻", "📱", "🖥️",
-        ]),
-        ("🚩", [  // Flags & Markers
-            "🚩", "🏁", "📍", "💬", "💭", "🗯️", "👁️", "👀",
-            "🔍", "🔎", "📝", "📋", "📊", "📈", "📉", "🗂️",
-        ]),
+        (
+            "😀",
+            [  // Faces & People
+                "😀", "😂", "🤣", "😍", "🤔", "😎", "🤯", "😱",
+                "😤", "🥳", "🤡", "💩", "👻", "🤖", "👽", "😈",
+                "🙈", "🙉", "🙊", "💪", "👏", "🙌", "🤝", "🫡",
+            ]
+        ),
+        (
+            "👆",
+            [  // Hands & Gestures
+                "👆", "👇", "👈", "👉", "👍", "👎", "✊", "👊",
+                "🤞", "✌️", "🤟", "🫵", "☝️", "👋", "🖐️", "✋",
+            ]
+        ),
+        (
+            "✅",
+            [  // Symbols & Status
+                "✅", "❌", "⚠️", "❓", "❗", "⛔", "🚫", "💯",
+                "✏️", "🗑️", "📌", "🔒", "🔓", "🏷️", "📎", "🔗",
+                "⬆️", "⬇️", "⬅️", "➡️", "↩️", "🔄", "➕", "➖",
+            ]
+        ),
+        (
+            "🔥",
+            [  // Objects & Reactions
+                "🔥", "💡", "⭐", "❤️", "💀", "🐛", "🎯", "🚀",
+                "🎉", "💣", "🧨", "⚡", "💥", "🔔", "📢", "🏆",
+                "🛑", "🚧", "🏗️", "🧪", "🔬", "💻", "📱", "🖥️",
+            ]
+        ),
+        (
+            "🚩",
+            [  // Flags & Markers
+                "🚩", "🏁", "📍", "💬", "💭", "🗯️", "👁️", "👀",
+                "🔍", "🔎", "📝", "📋", "📊", "📈", "📉", "🗂️",
+            ]
+        ),
     ]
     static let commonEmojis = [
-        "👆", "👇", "👈", "👉",           // point at things
-        "✅", "❌", "⚠️", "❓",            // approve / reject / warn / question
-        "🔥", "🐛", "💀", "🎉",           // reactions: hot, bug, dead, celebrate
-        "👀", "💡", "🎯", "⭐",           // look here, idea, bullseye, star
-        "❤️", "👍", "👎", "🚀",           // love, thumbs, launch
-        "✏️",                              // edit
+        "👆", "👇", "👈", "👉",  // point at things
+        "✅", "❌", "⚠️", "❓",  // approve / reject / warn / question
+        "🔥", "🐛", "💀", "🎉",  // reactions: hot, bug, dead, celebrate
+        "👀", "💡", "🎯", "⭐",  // look here, idea, bullseye, star
+        "❤️", "👍", "👎", "🚀",  // love, thumbs, launch
+        "✏️",  // edit
     ]
     var currentRectCornerRadius: CGFloat = {
         let v = UserDefaults.standard.object(forKey: "currentRectCornerRadius") as? Double
@@ -333,9 +356,11 @@ class OverlayView: NSView {
     // Stroke width picker popover
 
     // Pencil smoothing — persisted in UserDefaults
-    var pencilSmoothEnabled: Bool = UserDefaults.standard.object(forKey: "pencilSmoothEnabled") as? Bool ?? true
+    var pencilSmoothEnabled: Bool =
+        UserDefaults.standard.object(forKey: "pencilSmoothEnabled") as? Bool ?? true
     // Rounded rectangle corners — persisted in UserDefaults
-    private var roundedRectEnabled: Bool = UserDefaults.standard.object(forKey: "roundedRectEnabled") as? Bool ?? false
+    private var roundedRectEnabled: Bool =
+        UserDefaults.standard.object(forKey: "roundedRectEnabled") as? Bool ?? false
 
     // Upload confirm picker (toggle setting via right-click)
 
@@ -403,8 +428,8 @@ class OverlayView: NSView {
     private let barcodeDetector = BarcodeDetector()
 
     // Recording state
-    var isRecording: Bool = false       // true when recording toolbar is shown (mode entered)
-    var isCapturingVideo: Bool = false   // true when SCStream is actually capturing
+    var isRecording: Bool = false  // true when recording toolbar is shown (mode entered)
+    var isCapturingVideo: Bool = false  // true when SCStream is actually capturing
     var recordingElapsedSeconds: Int = 0
     var autoEnterRecordingMode: Bool = false  // set by "Record Screen" menu — enters recording mode after selection
     var autoOCRMode: Bool = false  // set by "Capture OCR" menu — triggers OCR immediately after selection
@@ -427,19 +452,22 @@ class OverlayView: NSView {
         let centerLocal = NSPoint(x: selectionRect.midX, y: selectionRect.midY)
         let centerScreen = win.convertToScreen(NSRect(origin: centerLocal, size: .zero)).origin
 
-        guard let windowList = CGWindowListCopyWindowInfo(
-            [.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID
-        ) as? [[String: Any]] else { return }
+        guard
+            let windowList = CGWindowListCopyWindowInfo(
+                [.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID
+            ) as? [[String: Any]]
+        else { return }
 
         let overlayWindowNumber = win.windowNumber
         let screenH = NSScreen.screens.first?.frame.height ?? 0
 
         for info in windowList {
             guard let layer = info[kCGWindowLayer as String] as? Int, layer == 0,
-                  let boundsDict = info[kCGWindowBounds as String] as? [String: CGFloat],
-                  let winNum = info[kCGWindowNumber as String] as? Int,
-                  let pid = info[kCGWindowOwnerPID as String] as? pid_t,
-                  winNum != overlayWindowNumber else { continue }
+                let boundsDict = info[kCGWindowBounds as String] as? [String: CGFloat],
+                let winNum = info[kCGWindowNumber as String] as? Int,
+                let pid = info[kCGWindowOwnerPID as String] as? pid_t,
+                winNum != overlayWindowNumber
+            else { continue }
 
             let cgX = boundsDict["X"] ?? 0
             let cgY = boundsDict["Y"] ?? 0
@@ -474,15 +502,18 @@ class OverlayView: NSView {
 
         // Install a global monitor so the Stop button (drawn at scrollCaptureStopRect) is still
         // clickable even though the overlay window ignores mouse events.
-        scrollCaptureClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: .leftMouseDown) { [weak self] _ in
+        scrollCaptureClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: .leftMouseDown) {
+            [weak self] _ in
             guard let self = self, self.isScrollCapturing else { return }
             guard let win = self.window else { return }
             // Global monitors: use NSEvent.mouseLocation (screen coords, bottom-left origin)
             let screenPt = NSEvent.mouseLocation
             let winLocal = win.convertFromScreen(NSRect(origin: screenPt, size: .zero)).origin
-            let viewPt   = self.convert(winLocal, from: nil)
+            let viewPt = self.convert(winLocal, from: nil)
             if self.scrollCaptureStopRect != .zero && self.scrollCaptureStopRect.contains(viewPt) {
-                DispatchQueue.main.async { self.overlayDelegate?.overlayViewDidRequestStopScrollCapture() }
+                DispatchQueue.main.async {
+                    self.overlayDelegate?.overlayViewDidRequestStopScrollCapture()
+                }
             }
         }
         needsDisplay = true
@@ -493,7 +524,10 @@ class OverlayView: NSView {
         scrollCaptureStripCount = 0
         scrollCapturePixelSize = .zero
         scrollCaptureStopRect = .zero
-        if let m = scrollCaptureClickMonitor { NSEvent.removeMonitor(m); scrollCaptureClickMonitor = nil }
+        if let m = scrollCaptureClickMonitor {
+            NSEvent.removeMonitor(m)
+            scrollCaptureClickMonitor = nil
+        }
         window?.ignoresMouseEvents = false
 
         needsDisplay = true
@@ -506,7 +540,7 @@ class OverlayView: NSView {
             guard isAnnotating != oldValue else { return }
             if isAnnotating { annotationModeEverUsed = true }
             window?.ignoresMouseEvents = !isAnnotating
-    
+
             if isAnnotating {
                 window?.makeKeyAndOrderFront(nil)
                 NSApp.activate(ignoringOtherApps: true)
@@ -559,7 +593,9 @@ class OverlayView: NSView {
         super.viewDidMoveToWindow()
         window?.makeFirstResponder(self)
         window?.acceptsMouseMovedEvents = true
-        let area = NSTrackingArea(rect: .zero, options: [.mouseMoved, .activeAlways, .inVisibleRect, .cursorUpdate], owner: self, userInfo: nil)
+        let area = NSTrackingArea(
+            rect: .zero, options: [.mouseMoved, .activeAlways, .inVisibleRect, .cursorUpdate],
+            owner: self, userInfo: nil)
         addTrackingArea(area)
     }
 
@@ -567,9 +603,15 @@ class OverlayView: NSView {
         let point = convert(event.locationInWindow, from: nil)
 
         // Stamp cursor preview — track in view coords (same as annotations)
-        if currentTool == .stamp && currentStampImage != nil && state == .selected && !isRecording && !showBeautifyInOptionsRow {
+        if currentTool == .stamp && currentStampImage != nil && state == .selected && !isRecording
+            && !showBeautifyInOptionsRow
+        {
             let canvasStampPt = viewToCanvas(point)
-            if stampPreviewPoint == nil || hypot(canvasStampPt.x - (stampPreviewPoint?.x ?? 0), canvasStampPt.y - (stampPreviewPoint?.y ?? 0)) > 0.5 {
+            if stampPreviewPoint == nil
+                || hypot(
+                    canvasStampPt.x - (stampPreviewPoint?.x ?? 0),
+                    canvasStampPt.y - (stampPreviewPoint?.y ?? 0)) > 0.5
+            {
                 stampPreviewPoint = canvasStampPt
                 needsDisplay = true
             }
@@ -581,14 +623,16 @@ class OverlayView: NSView {
         // Update cursor on every mouse move
         updateCursorForPoint(point)
 
-
-
         // Window snap: highlight hovered window in idle state.
         // CGWindowListCopyWindowInfo is expensive — run it on a background thread,
         // skipping new queries while one is already in flight.
         if state == .idle && windowSnapEnabled && !windowSnapQueryInFlight {
-            guard let screenPoint = window.map({ NSPoint(x: $0.frame.origin.x + point.x, y: $0.frame.origin.y + point.y) }),
-                  let viewWindow = window else { return }
+            guard
+                let screenPoint = window.map({
+                    NSPoint(x: $0.frame.origin.x + point.x, y: $0.frame.origin.y + point.y)
+                }),
+                let viewWindow = window
+            else { return }
             let overlayWindowNumber = viewWindow.windowNumber
             let windowOrigin = viewWindow.frame.origin
             let viewBounds = bounds
@@ -649,7 +693,6 @@ class OverlayView: NSView {
 
         // Toolbar hover handled by ToolbarButtonView (real NSView subviews)
 
-
         // Hover-to-move: only active for the core shape/drawing tools.
         let hoverMoveTools: Set<AnnotationTool> = [.arrow, .line, .rectangle, .ellipse]
         // Hover-to-move: when a drawing tool is active and the cursor is over a movable annotation,
@@ -664,9 +707,13 @@ class OverlayView: NSView {
             }
             return
         }
-        if state == .selected && hoverMoveTools.contains(currentTool) && !isDraggingAnnotation && !isResizingAnnotation {
+        if state == .selected && hoverMoveTools.contains(currentTool) && !isDraggingAnnotation
+            && !isResizingAnnotation
+        {
             let canvasPoint = viewToCanvas(point)
-            let newHovered = annotations.reversed().first { $0.isMovable && $0.hitTest(point: canvasPoint) }
+            let newHovered = annotations.reversed().first {
+                $0.isMovable && $0.hitTest(point: canvasPoint)
+            }
 
             if newHovered !== nil {
                 // Cursor is directly over an annotation — show controls immediately.
@@ -674,7 +721,7 @@ class OverlayView: NSView {
                 hoveredAnnotationClearTimer = nil
                 if newHovered !== hoveredAnnotation {
                     hoveredAnnotation = newHovered
-            
+
                     needsDisplay = true
                 }
             } else if hoveredAnnotation != nil {
@@ -688,14 +735,19 @@ class OverlayView: NSView {
                     let sin_r = sin(-ann.rotation)
                     let dx = point.x - center.x
                     let dy = point.y - center.y
-                    unrotatedPoint = NSPoint(x: center.x + dx * cos_r - dy * sin_r,
-                                             y: center.y + dx * sin_r + dy * cos_r)
+                    unrotatedPoint = NSPoint(
+                        x: center.x + dx * cos_r - dy * sin_r,
+                        y: center.y + dx * sin_r + dy * cos_r)
                 } else {
                     unrotatedPoint = point
                 }
-                let controlsActive = annotationDeleteButtonRect.contains(point)
-                    || annotationResizeHandleRects.contains { $0.1.insetBy(dx: -8, dy: -8).contains(unrotatedPoint) }
-                    || (annotationRotateHandleRect != .zero && annotationRotateHandleRect.insetBy(dx: -8, dy: -8).contains(point))
+                let controlsActive =
+                    annotationDeleteButtonRect.contains(point)
+                    || annotationResizeHandleRects.contains {
+                        $0.1.insetBy(dx: -8, dy: -8).contains(unrotatedPoint)
+                    }
+                    || (annotationRotateHandleRect != .zero
+                        && annotationRotateHandleRect.insetBy(dx: -8, dy: -8).contains(point))
 
                 if controlsActive {
                     // Inside a control rect — cancel any pending clear and stay active.
@@ -703,7 +755,9 @@ class OverlayView: NSView {
                     hoveredAnnotationClearTimer = nil
                 } else if hoveredAnnotationClearTimer == nil {
                     // Start a linger timer — gives the cursor time to travel to a nearby handle/button.
-                    hoveredAnnotationClearTimer = Timer.scheduledTimer(withTimeInterval: 0.45, repeats: false) { [weak self] _ in
+                    hoveredAnnotationClearTimer = Timer.scheduledTimer(
+                        withTimeInterval: 0.45, repeats: false
+                    ) { [weak self] _ in
                         guard let self = self else { return }
                         self.hoveredAnnotationClearTimer = nil
                         self.hoveredAnnotation = nil
@@ -711,18 +765,23 @@ class OverlayView: NSView {
                     }
                 }
             }
-        } else if hoveredAnnotation != nil && (!hoverMoveTools.contains(currentTool) || isDraggingAnnotation || isResizingAnnotation) {
+        } else if hoveredAnnotation != nil
+            && (!hoverMoveTools.contains(currentTool) || isDraggingAnnotation
+                || isResizingAnnotation)
+        {
             hoveredAnnotationClearTimer?.invalidate()
             hoveredAnnotationClearTimer = nil
             hoveredAnnotation = nil
-    
+
             needsDisplay = true
         }
     }
 
     // Custom cursors
     /// Render an SF Symbol as a cursor image: white icon with dark shadow for visibility on any background.
-    private static func cursorFromSymbol(_ name: String, pointSize: CGFloat, hotSpot: NSPoint, canvasSize: CGFloat = 22) -> NSCursor {
+    private static func cursorFromSymbol(
+        _ name: String, pointSize: CGFloat, hotSpot: NSPoint, canvasSize: CGFloat = 22
+    ) -> NSCursor {
         let size = canvasSize
         let image = NSImage(size: NSSize(width: size, height: size), flipped: false) { _ in
             if let sym = NSImage(systemSymbolName: name, accessibilityDescription: nil) {
@@ -750,7 +809,9 @@ class OverlayView: NSView {
                 for dx: CGFloat in [-1, 0, 1] {
                     for dy: CGFloat in [-1, 0, 1] {
                         if dx == 0 && dy == 0 { continue }
-                        dark.draw(in: iconRect.offsetBy(dx: dx, dy: dy), from: .zero, operation: .sourceOver, fraction: 1.0)
+                        dark.draw(
+                            in: iconRect.offsetBy(dx: dx, dy: dy), from: .zero,
+                            operation: .sourceOver, fraction: 1.0)
                     }
                 }
                 // Draw white icon on top
@@ -761,13 +822,18 @@ class OverlayView: NSView {
         return NSCursor(image: image, hotSpot: hotSpot)
     }
 
-    private static let penCursor: NSCursor = cursorFromSymbol("pencil", pointSize: 14, hotSpot: NSPoint(x: 2, y: 20))
-    private static let moveCursor: NSCursor = cursorFromSymbol("arrow.up.and.down.and.arrow.left.and.right", pointSize: 13, hotSpot: NSPoint(x: 11, y: 11))
+    private static let penCursor: NSCursor = cursorFromSymbol(
+        "pencil", pointSize: 14, hotSpot: NSPoint(x: 2, y: 20))
+    private static let moveCursor: NSCursor = cursorFromSymbol(
+        "arrow.up.and.down.and.arrow.left.and.right", pointSize: 13, hotSpot: NSPoint(x: 11, y: 11))
 
     // Diagonal resize cursors (macOS doesn't provide these publicly)
     private static let nwseCursor: NSCursor = {
         // Top-left <-> Bottom-right (backslash direction)
-        if let cursor = NSCursor.perform(NSSelectorFromString("_windowResizeNorthWestSouthEastCursor"))?.takeUnretainedValue() as? NSCursor {
+        if let cursor = NSCursor.perform(
+            NSSelectorFromString("_windowResizeNorthWestSouthEastCursor"))?.takeUnretainedValue()
+            as? NSCursor
+        {
             return cursor
         }
         return .crosshair
@@ -775,7 +841,10 @@ class OverlayView: NSView {
 
     private static let neswCursor: NSCursor = {
         // Top-right <-> Bottom-left (slash direction)
-        if let cursor = NSCursor.perform(NSSelectorFromString("_windowResizeNorthEastSouthWestCursor"))?.takeUnretainedValue() as? NSCursor {
+        if let cursor = NSCursor.perform(
+            NSSelectorFromString("_windowResizeNorthEastSouthWestCursor"))?.takeUnretainedValue()
+            as? NSCursor
+        {
             return cursor
         }
         return .crosshair
@@ -800,23 +869,37 @@ class OverlayView: NSView {
         }
 
         // Non-interactive states — simple cursors
-        if isRecording && !isAnnotating { NSCursor.arrow.set(); return }
-        if textEditView != nil { NSCursor.arrow.set(); return }
-        if state == .idle || state == .selecting { NSCursor.crosshair.set(); return }
+        if isRecording && !isAnnotating {
+            NSCursor.arrow.set()
+            return
+        }
+        if textEditView != nil {
+            NSCursor.arrow.set()
+            return
+        }
+        if state == .idle || state == .selecting {
+            NSCursor.crosshair.set()
+            return
+        }
         guard state == .selected else { return }
 
         // Chrome areas — arrow
-        if isPointOnChrome(point) { NSCursor.arrow.set(); return }
+        if isPointOnChrome(point) {
+            NSCursor.arrow.set()
+            return
+        }
 
         // Selection resize handles (overlay only)
         if !isEditorMode, let handleCursor = resizeHandleCursor(at: point) {
-            handleCursor.set(); return
+            handleCursor.set()
+            return
         }
 
         // Hover-to-move over annotations
         if [.arrow, .line, .rectangle, .ellipse, .select].contains(currentTool) {
             if let hovered = hoveredAnnotation, hovered.hitTest(point: viewToCanvas(point)) {
-                Self.moveCursor.set(); return
+                Self.moveCursor.set()
+                return
             }
         }
 
@@ -849,13 +932,21 @@ class OverlayView: NSView {
     /// Returns true if the point is over any chrome element (toolbars, options row, popovers, labels).
     private func isPointOnChrome(_ point: NSPoint) -> Bool {
         if showToolbars {
-            if let strip = bottomStripView, !strip.isHidden, strip.frame.contains(point) { return true }
-            if let strip = rightStripView, !strip.isHidden, strip.frame.contains(point) { return true }
-            if let row = toolOptionsRowView, !row.isHidden, row.frame.contains(point) { return true }
+            if let strip = bottomStripView, !strip.isHidden, strip.frame.contains(point) {
+                return true
+            }
+            if let strip = rightStripView, !strip.isHidden, strip.frame.contains(point) {
+                return true
+            }
+            if let row = toolOptionsRowView, !row.isHidden, row.frame.contains(point) {
+                return true
+            }
         }
         if updateCursorForChrome(at: point) { return true }
         if sizeLabelRect.contains(point) && sizeInputField == nil { return true }
-        if zoomLabelRect.contains(point) && zoomLabelOpacity > 0 && zoomInputField == nil { return true }
+        if zoomLabelRect.contains(point) && zoomLabelOpacity > 0 && zoomInputField == nil {
+            return true
+        }
         return false
     }
 
@@ -865,15 +956,32 @@ class OverlayView: NSView {
         let hs = handleSize + 4
         let edgeT: CGFloat = 6
         // Corner handles
-        if NSRect(x: r.minX - hs/2, y: r.maxY - hs/2, width: hs, height: hs).contains(point) ||
-           NSRect(x: r.maxX - hs/2, y: r.minY - hs/2, width: hs, height: hs).contains(point) { return Self.nwseCursor }
-        if NSRect(x: r.maxX - hs/2, y: r.maxY - hs/2, width: hs, height: hs).contains(point) ||
-           NSRect(x: r.minX - hs/2, y: r.minY - hs/2, width: hs, height: hs).contains(point) { return Self.neswCursor }
+        if NSRect(x: r.minX - hs / 2, y: r.maxY - hs / 2, width: hs, height: hs).contains(point)
+            || NSRect(x: r.maxX - hs / 2, y: r.minY - hs / 2, width: hs, height: hs).contains(point)
+        {
+            return Self.nwseCursor
+        }
+        if NSRect(x: r.maxX - hs / 2, y: r.maxY - hs / 2, width: hs, height: hs).contains(point)
+            || NSRect(x: r.minX - hs / 2, y: r.minY - hs / 2, width: hs, height: hs).contains(point)
+        {
+            return Self.neswCursor
+        }
         // Edge handles
-        if NSRect(x: r.minX + hs/2, y: r.maxY - edgeT/2, width: r.width - hs, height: edgeT).contains(point) ||
-           NSRect(x: r.minX + hs/2, y: r.minY - edgeT/2, width: r.width - hs, height: edgeT).contains(point) { return .resizeUpDown }
-        if NSRect(x: r.minX - edgeT/2, y: r.minY + hs/2, width: edgeT, height: r.height - hs).contains(point) ||
-           NSRect(x: r.maxX - edgeT/2, y: r.minY + hs/2, width: edgeT, height: r.height - hs).contains(point) { return .resizeLeftRight }
+        if NSRect(x: r.minX + hs / 2, y: r.maxY - edgeT / 2, width: r.width - hs, height: edgeT)
+            .contains(point)
+            || NSRect(x: r.minX + hs / 2, y: r.minY - edgeT / 2, width: r.width - hs, height: edgeT)
+                .contains(point)
+        {
+            return .resizeUpDown
+        }
+        if NSRect(x: r.minX - edgeT / 2, y: r.minY + hs / 2, width: edgeT, height: r.height - hs)
+            .contains(point)
+            || NSRect(
+                x: r.maxX - edgeT / 2, y: r.minY + hs / 2, width: edgeT, height: r.height - hs
+            ).contains(point)
+        {
+            return .resizeLeftRight
+        }
         return nil
     }
 
@@ -895,13 +1003,13 @@ class OverlayView: NSView {
     /// Override to draw editor background (dark canvas, centered image). Base does nothing.
     func drawEditorBackground(context: NSGraphicsContext) {
         guard isEditorMode else { return }
-        let padLeft:   CGFloat = 8
-        let padRight:  CGFloat = 52  // right toolbar width
+        let padLeft: CGFloat = 8
+        let padRight: CGFloat = 52  // right toolbar width
         let optionsRowExtra: CGFloat = toolHasOptionsRow ? 36 : 0  // 34 row + 2 gap
         let padBottom: CGFloat = 56 + optionsRowExtra  // bottom toolbar + options row + gap
         let editorTopBarH: CGFloat = 32
-        let padTop:    CGFloat = editorTopBarH + 4  // top bar + gap
-        let availW = bounds.width  - padLeft - padRight
+        let padTop: CGFloat = editorTopBarH + 4  // top bar + gap
+        let availW = bounds.width - padLeft - padRight
         let availH = bounds.height - padBottom - padTop
         let imgW = selectionRect.width
         let imgH = selectionRect.height
@@ -990,8 +1098,6 @@ class OverlayView: NSView {
         super.draw(dirtyRect)
 
         guard let context = NSGraphicsContext.current else { return }
-
-
 
         // In editor mode: dark background, draw image centered at natural size (no stretch).
         // selectionRect stays at (0, 0, imgW, imgH) — annotations always use image-relative coords.
@@ -1091,20 +1197,30 @@ class OverlayView: NSView {
                 let thirdH = cropDragRect.height / 3
                 for i in 1...2 {
                     let gridLine = NSBezierPath()
-                    gridLine.move(to: NSPoint(x: cropDragRect.minX + thirdW * CGFloat(i), y: cropDragRect.minY))
-                    gridLine.line(to: NSPoint(x: cropDragRect.minX + thirdW * CGFloat(i), y: cropDragRect.maxY))
+                    gridLine.move(
+                        to: NSPoint(
+                            x: cropDragRect.minX + thirdW * CGFloat(i), y: cropDragRect.minY))
+                    gridLine.line(
+                        to: NSPoint(
+                            x: cropDragRect.minX + thirdW * CGFloat(i), y: cropDragRect.maxY))
                     gridLine.lineWidth = 0.5
                     gridLine.stroke()
                     let hLine = NSBezierPath()
-                    hLine.move(to: NSPoint(x: cropDragRect.minX, y: cropDragRect.minY + thirdH * CGFloat(i)))
-                    hLine.line(to: NSPoint(x: cropDragRect.maxX, y: cropDragRect.minY + thirdH * CGFloat(i)))
+                    hLine.move(
+                        to: NSPoint(
+                            x: cropDragRect.minX, y: cropDragRect.minY + thirdH * CGFloat(i)))
+                    hLine.line(
+                        to: NSPoint(
+                            x: cropDragRect.maxX, y: cropDragRect.minY + thirdH * CGFloat(i)))
                     hLine.lineWidth = 0.5
                     hLine.stroke()
                 }
             }
 
             // Live loupe preview when loupe tool is active
-            if currentTool == .loupe && selectionRect.contains(loupeCursorPoint) && loupeCursorPoint != .zero {
+            if currentTool == .loupe && selectionRect.contains(loupeCursorPoint)
+                && loupeCursorPoint != .zero
+            {
                 drawLoupePreview(at: loupeCursorPoint)
             }
             if currentTool == .colorSampler && colorSamplerPoint != .zero {
@@ -1116,7 +1232,9 @@ class OverlayView: NSView {
             if !(isRecording && !isAnnotating) {
                 if let selected = selectedAnnotation, currentTool == .select {
                     drawAnnotationControls(for: selected)
-                } else if let hovered = hoveredAnnotation, [AnnotationTool.arrow, .line, .rectangle, .ellipse].contains(currentTool) {
+                } else if let hovered = hoveredAnnotation,
+                    [AnnotationTool.arrow, .line, .rectangle, .ellipse].contains(currentTool)
+                {
                     drawAnnotationControls(for: hovered)
                 }
             }
@@ -1144,14 +1262,18 @@ class OverlayView: NSView {
                     applyCanvasTransform(to: context)
                     if let selected = selectedAnnotation, currentTool == .select {
                         drawAnnotationControls(for: selected)
-                    } else if let hovered = hoveredAnnotation, [AnnotationTool.arrow, .line, .rectangle, .ellipse].contains(currentTool) {
+                    } else if let hovered = hoveredAnnotation,
+                        [AnnotationTool.arrow, .line, .rectangle, .ellipse].contains(currentTool)
+                    {
                         drawAnnotationControls(for: hovered)
                     }
                     context.restoreGraphicsState()
                 }
 
                 // Re-draw loupe preview on top of beautify so it stays visible
-                if currentTool == .loupe && selectionRect.contains(loupeCursorPoint) && loupeCursorPoint != .zero {
+                if currentTool == .loupe && selectionRect.contains(loupeCursorPoint)
+                    && loupeCursorPoint != .zero
+                {
                     context.saveGraphicsState()
                     applyCanvasTransform(to: context)
                     drawLoupePreview(at: loupeCursorPoint)
@@ -1175,7 +1297,8 @@ class OverlayView: NSView {
                 }
 
                 // Re-draw marker cursor preview on top of beautify
-                if currentTool == .marker && markerCursorPoint != .zero && currentAnnotation == nil {
+                if currentTool == .marker && markerCursorPoint != .zero && currentAnnotation == nil
+                {
                     context.saveGraphicsState()
                     applyCanvasTransform(to: context)
                     drawMarkerCursorPreview(at: markerCursorPoint)
@@ -1197,7 +1320,9 @@ class OverlayView: NSView {
 
             // Selection border — hidden in editor mode and when beautify preview is active,
             // red during scroll capture, purple otherwise
-            if shouldDrawSelectionBorder() && !(beautifyEnabled && state == .selected && !isScrollCapturing && !isRecording) {
+            if shouldDrawSelectionBorder()
+                && !(beautifyEnabled && state == .selected && !isScrollCapturing && !isRecording)
+            {
                 let borderPath = NSBezierPath(rect: selectionRect)
                 borderPath.lineWidth = isScrollCapturing ? 2.5 : 2.0
                 (isScrollCapturing ? NSColor.systemRed : ToolbarLayout.accentColor).setStroke()
@@ -1240,17 +1365,21 @@ class OverlayView: NSView {
                 // Text outline
                 if textOutlineEnabled {
                     textOutlineColorValue.setStroke()
-                    let outlinePath = NSBezierPath(roundedRect: pillRect, xRadius: cornerR, yRadius: cornerR)
+                    let outlinePath = NSBezierPath(
+                        roundedRect: pillRect, xRadius: cornerR, yRadius: cornerR)
                     outlinePath.lineWidth = 2
                     outlinePath.stroke()
                 }
 
                 // Draw text content when scroll view is hidden (color picker open)
-                if sv.isHidden, let tv = textEditView, let attrStr = tv.textStorage, attrStr.length > 0 {
+                if sv.isHidden, let tv = textEditView, let attrStr = tv.textStorage,
+                    attrStr.length > 0
+                {
                     let inset = tv.textContainerInset
-                    let textRect = NSRect(x: sv.frame.minX + inset.width, y: sv.frame.minY + inset.height,
-                                          width: sv.frame.width - inset.width * 2,
-                                          height: sv.frame.height - inset.height * 2)
+                    let textRect = NSRect(
+                        x: sv.frame.minX + inset.width, y: sv.frame.minY + inset.height,
+                        width: sv.frame.width - inset.width * 2,
+                        height: sv.frame.height - inset.height * 2)
                     context.saveGraphicsState()
                     let flipped = NSAffineTransform()
                     flipped.translateX(by: 0, yBy: sv.frame.maxY + sv.frame.minY)
@@ -1272,14 +1401,22 @@ class OverlayView: NSView {
                 let hs: CGFloat = 6
                 let handleColor = NSColor.white
                 let handleRects = [
-                    NSRect(x: sv.frame.minX - hs/2, y: sv.frame.minY - hs/2, width: hs, height: hs),  // bottom-left
-                    NSRect(x: sv.frame.maxX - hs/2, y: sv.frame.minY - hs/2, width: hs, height: hs),  // bottom-right
-                    NSRect(x: sv.frame.minX - hs/2, y: sv.frame.maxY - hs/2, width: hs, height: hs),  // top-left
-                    NSRect(x: sv.frame.maxX - hs/2, y: sv.frame.maxY - hs/2, width: hs, height: hs),  // top-right
-                    NSRect(x: sv.frame.midX - hs/2, y: sv.frame.minY - hs/2, width: hs, height: hs),  // bottom
-                    NSRect(x: sv.frame.midX - hs/2, y: sv.frame.maxY - hs/2, width: hs, height: hs),  // top
-                    NSRect(x: sv.frame.minX - hs/2, y: sv.frame.midY - hs/2, width: hs, height: hs),  // left
-                    NSRect(x: sv.frame.maxX - hs/2, y: sv.frame.midY - hs/2, width: hs, height: hs),  // right
+                    NSRect(
+                        x: sv.frame.minX - hs / 2, y: sv.frame.minY - hs / 2, width: hs, height: hs),  // bottom-left
+                    NSRect(
+                        x: sv.frame.maxX - hs / 2, y: sv.frame.minY - hs / 2, width: hs, height: hs),  // bottom-right
+                    NSRect(
+                        x: sv.frame.minX - hs / 2, y: sv.frame.maxY - hs / 2, width: hs, height: hs),  // top-left
+                    NSRect(
+                        x: sv.frame.maxX - hs / 2, y: sv.frame.maxY - hs / 2, width: hs, height: hs),  // top-right
+                    NSRect(
+                        x: sv.frame.midX - hs / 2, y: sv.frame.minY - hs / 2, width: hs, height: hs),  // bottom
+                    NSRect(
+                        x: sv.frame.midX - hs / 2, y: sv.frame.maxY - hs / 2, width: hs, height: hs),  // top
+                    NSRect(
+                        x: sv.frame.minX - hs / 2, y: sv.frame.midY - hs / 2, width: hs, height: hs),  // left
+                    NSRect(
+                        x: sv.frame.maxX - hs / 2, y: sv.frame.midY - hs / 2, width: hs, height: hs),  // right
                 ]
                 for hr in handleRects {
                     handleColor.setFill()
@@ -1290,15 +1427,20 @@ class OverlayView: NSView {
             }
 
             // Stamp cursor preview
-            if let previewPt = stampPreviewPoint, let img = currentStampImage, currentTool == .stamp, !isRecording {
+            if let previewPt = stampPreviewPoint, let img = currentStampImage,
+                currentTool == .stamp, !isRecording
+            {
                 let stampSize: CGFloat = 64
                 let aspect = img.size.width / max(img.size.height, 1)
                 let w = aspect >= 1 ? stampSize : stampSize * aspect
                 let h = aspect >= 1 ? stampSize / aspect : stampSize
-                let previewRect = NSRect(x: previewPt.x - w / 2, y: previewPt.y - h / 2, width: w, height: h)
+                let previewRect = NSRect(
+                    x: previewPt.x - w / 2, y: previewPt.y - h / 2, width: w, height: h)
                 context.saveGraphicsState()
                 applyCanvasTransform(to: context)
-                img.draw(in: previewRect, from: .zero, operation: .sourceOver, fraction: 0.5, respectFlipped: true, hints: nil)
+                img.draw(
+                    in: previewRect, from: .zero, operation: .sourceOver, fraction: 0.5,
+                    respectFlipped: true, hints: nil)
                 context.restoreGraphicsState()
             }
 
@@ -1333,7 +1475,6 @@ class OverlayView: NSView {
                 // Tooltips handled by ToolbarButtonView.toolTip
             }
 
-
             // Radial color wheel
             if colorWheel.isVisible {
                 colorWheel.draw(currentColor: currentColor)
@@ -1358,11 +1499,16 @@ class OverlayView: NSView {
             let msgRect = NSRect(x: msgX, y: msgY, width: msgW, height: msgH)
             NSColor(red: 0.8, green: 0.2, blue: 0.2, alpha: 0.9).setFill()
             NSBezierPath(roundedRect: msgRect, xRadius: 8, yRadius: 8).fill()
-            str.draw(at: NSPoint(x: msgRect.minX + padding, y: msgRect.minY + padding / 2), withAttributes: attrs)
+            str.draw(
+                at: NSPoint(x: msgRect.minX + padding, y: msgRect.minY + padding / 2),
+                withAttributes: attrs)
         }
 
         // Barcode / QR badge
-        if state == .selected { barcodeDetector.draw(selectionRect: selectionRect, bottomBarRect: bottomBarRect, viewBounds: bounds) }
+        if state == .selected {
+            barcodeDetector.draw(
+                selectionRect: selectionRect, bottomBarRect: bottomBarRect, viewBounds: bounds)
+        }
 
         // Recording HUD
         if isRecording {
@@ -1377,7 +1523,8 @@ class OverlayView: NSView {
 
     }
     private func drawIdleHelperText() {
-        let line1 = windowSnapEnabled
+        let line1 =
+            windowSnapEnabled
             ? "Click a window  ·  Drag for custom area  ·  F for full screen"
             : "Drag to select  ·  Click for full screen"
         let snapOn = windowSnapEnabled
@@ -1392,16 +1539,23 @@ class OverlayView: NSView {
         let snapColor = snapOn ? NSColor.systemGreen : NSColor.systemOrange
 
         let attrs1: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: textColor]
-        let attrs2prefix: [NSAttributedString.Key: Any] = [.font: smallFont, .foregroundColor: dimColor]
-        let attrs2state: [NSAttributedString.Key: Any]  = [.font: NSFont.systemFont(ofSize: 12, weight: .semibold), .foregroundColor: snapColor]
-        let attrs2suffix: [NSAttributedString.Key: Any] = [.font: smallFont, .foregroundColor: dimColor]
+        let attrs2prefix: [NSAttributedString.Key: Any] = [
+            .font: smallFont, .foregroundColor: dimColor,
+        ]
+        let attrs2state: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 12, weight: .semibold), .foregroundColor: snapColor,
+        ]
+        let attrs2suffix: [NSAttributedString.Key: Any] = [
+            .font: smallFont, .foregroundColor: dimColor,
+        ]
 
-        let size1       = (line1 as NSString).size(withAttributes: attrs1)
-        let size2pre    = (line3prefix as NSString).size(withAttributes: attrs2prefix)
-        let size2state  = (line3state as NSString).size(withAttributes: attrs2state)
-        let size2suf    = (line3suffix as NSString).size(withAttributes: attrs2suffix)
-        let size2total  = CGSize(width: size2pre.width + size2state.width + size2suf.width,
-                                 height: max(size2pre.height, size2state.height, size2suf.height))
+        let size1 = (line1 as NSString).size(withAttributes: attrs1)
+        let size2pre = (line3prefix as NSString).size(withAttributes: attrs2prefix)
+        let size2state = (line3state as NSString).size(withAttributes: attrs2state)
+        let size2suf = (line3suffix as NSString).size(withAttributes: attrs2suffix)
+        let size2total = CGSize(
+            width: size2pre.width + size2state.width + size2suf.width,
+            height: max(size2pre.height, size2state.height, size2suf.height))
 
         let lineSpacing: CGFloat = 6
         let padding: CGFloat = 14
@@ -1419,14 +1573,19 @@ class OverlayView: NSView {
         let textY1 = bgY + padding + size2total.height + lineSpacing
         let textY2 = bgY + padding
 
-        (line1 as NSString).draw(at: NSPoint(x: bounds.midX - size1.width / 2, y: textY1), withAttributes: attrs1)
+        (line1 as NSString).draw(
+            at: NSPoint(x: bounds.midX - size1.width / 2, y: textY1), withAttributes: attrs1)
 
         // Draw snap line as three segments with different colors
         let line2startX = bounds.midX - size2total.width / 2
         let line2Y = textY2 + (size2total.height - size2pre.height) / 2
-        (line3prefix as NSString).draw(at: NSPoint(x: line2startX, y: line2Y), withAttributes: attrs2prefix)
-        (line3state as NSString).draw(at: NSPoint(x: line2startX + size2pre.width, y: line2Y), withAttributes: attrs2state)
-        (line3suffix as NSString).draw(at: NSPoint(x: line2startX + size2pre.width + size2state.width, y: line2Y), withAttributes: attrs2suffix)
+        (line3prefix as NSString).draw(
+            at: NSPoint(x: line2startX, y: line2Y), withAttributes: attrs2prefix)
+        (line3state as NSString).draw(
+            at: NSPoint(x: line2startX + size2pre.width, y: line2Y), withAttributes: attrs2state)
+        (line3suffix as NSString).draw(
+            at: NSPoint(x: line2startX + size2pre.width + size2state.width, y: line2Y),
+            withAttributes: attrs2suffix)
     }
 
     private func drawSelectingHelperText() {
@@ -1458,7 +1617,9 @@ class OverlayView: NSView {
         NSColor.black.withAlphaComponent(0.65).setFill()
         NSBezierPath(roundedRect: bgRect, xRadius: 6, yRadius: 6).fill()
 
-        (text as NSString).draw(at: NSPoint(x: bgRect.minX + padding, y: bgRect.minY + padding / 2), withAttributes: attrs)
+        (text as NSString).draw(
+            at: NSPoint(x: bgRect.minX + padding, y: bgRect.minY + padding / 2),
+            withAttributes: attrs)
     }
 
     private func drawSizeLabel() {
@@ -1499,7 +1660,8 @@ class OverlayView: NSView {
 
         ToolbarLayout.bgColor.setFill()
         NSBezierPath(roundedRect: rect, xRadius: 4, yRadius: 4).fill()
-        (text as NSString).draw(at: NSPoint(x: rect.minX + padding, y: rect.minY + padding / 2), withAttributes: attrs)
+        (text as NSString).draw(
+            at: NSPoint(x: rect.minX + padding, y: rect.minY + padding / 2), withAttributes: attrs)
     }
 
     private func drawZoomLabel() {
@@ -1533,7 +1695,8 @@ class OverlayView: NSView {
         let bgColor = ToolbarLayout.bgColor.withAlphaComponent(alpha * 0.85)
         bgColor.setFill()
         NSBezierPath(roundedRect: rect, xRadius: 4, yRadius: 4).fill()
-        (text as NSString).draw(at: NSPoint(x: labelX + padding, y: labelY + padding / 2), withAttributes: attrs)
+        (text as NSString).draw(
+            at: NSPoint(x: labelX + padding, y: labelY + padding / 2), withAttributes: attrs)
     }
 
     private func showSizeInput() {
@@ -1546,7 +1709,8 @@ class OverlayView: NSView {
         let fieldX = sizeLabelRect.midX - fieldWidth / 2
         let fieldY = sizeLabelRect.minY + (sizeLabelRect.height - fieldHeight) / 2
 
-        let field = NSTextField(frame: NSRect(x: fieldX, y: fieldY, width: fieldWidth, height: fieldHeight))
+        let field = NSTextField(
+            frame: NSRect(x: fieldX, y: fieldY, width: fieldWidth, height: fieldHeight))
         field.stringValue = "\(pixelW) \u{00D7} \(pixelH)"
         field.font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium)
         field.alignment = .center
@@ -1603,7 +1767,9 @@ class OverlayView: NSView {
             currentText = "1"
         } else {
             let rounded = (zoomLevel * 10).rounded() / 10
-            currentText = rounded == rounded.rounded() ? String(format: "%.0f", rounded) : String(format: "%.1f", rounded)
+            currentText =
+                rounded == rounded.rounded()
+                ? String(format: "%.0f", rounded) : String(format: "%.1f", rounded)
         }
 
         let fieldWidth: CGFloat = 70
@@ -1611,7 +1777,8 @@ class OverlayView: NSView {
         let fieldX = zoomLabelRect.midX - fieldWidth / 2
         let fieldY = zoomLabelRect.minY + (zoomLabelRect.height - fieldHeight) / 2
 
-        let field = NSTextField(frame: NSRect(x: fieldX, y: fieldY, width: fieldWidth, height: fieldHeight))
+        let field = NSTextField(
+            frame: NSRect(x: fieldX, y: fieldY, width: fieldWidth, height: fieldHeight))
         field.stringValue = currentText
         field.font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium)
         field.alignment = .center
@@ -1637,7 +1804,9 @@ class OverlayView: NSView {
         guard let field = zoomInputField else { return }
         let input = field.stringValue.trimmingCharacters(in: .whitespaces)
         // Strip trailing × if user typed it
-        let cleaned = input.replacingOccurrences(of: "×", with: "").replacingOccurrences(of: "x", with: "").trimmingCharacters(in: .whitespaces)
+        let cleaned = input.replacingOccurrences(of: "×", with: "").replacingOccurrences(
+            of: "x", with: ""
+        ).trimmingCharacters(in: .whitespaces)
         if let value = Double(cleaned), value > 0 {
             let newLevel = max(zoomMin, min(zoomMax, CGFloat(value)))
             // Zoom toward selection center when set via text
@@ -1656,7 +1825,8 @@ class OverlayView: NSView {
             ToolbarLayout.handleColor.setFill()
             NSBezierPath(ovalIn: rect).fill()
         }
-    }    /// Compare two colors by RGB components (ignoring minor floating point differences)
+    }
+    /// Compare two colors by RGB components (ignoring minor floating point differences)
     private func colorsMatchRGB(_ a: NSColor, _ b: NSColor) -> Bool {
         guard let ac = a.usingColorSpace(.deviceRGB), let bc = b.usingColorSpace(.deviceRGB) else {
             return a == b
@@ -1719,7 +1889,8 @@ class OverlayView: NSView {
     /// Draw a gradient swatch — uses mesh rendering on macOS 15+ for mesh styles, linear otherwise.
     func drawStyleSwatch(style: BeautifyStyle, path: NSBezierPath, rect: NSRect) {
         if #available(macOS 15.0, *), let mesh = style.meshDef {
-            if let img = BeautifyRenderer.renderMeshSwatch(mesh, size: max(rect.width, rect.height)) {
+            if let img = BeautifyRenderer.renderMeshSwatch(mesh, size: max(rect.width, rect.height))
+            {
                 NSGraphicsContext.saveGraphicsState()
                 path.addClip()
                 img.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1.0)
@@ -1727,7 +1898,10 @@ class OverlayView: NSView {
                 return
             }
         }
-        if let grad = NSGradient(colors: style.stops.map { $0.0 }, atLocations: style.stops.map { $0.1 }, colorSpace: .deviceRGB) {
+        if let grad = NSGradient(
+            colors: style.stops.map { $0.0 }, atLocations: style.stops.map { $0.1 },
+            colorSpace: .deviceRGB)
+        {
             grad.draw(in: path, angle: style.angle - 90)  // NSGradient angle: 0=up, CG angle: 0=right
         }
     }
@@ -1798,14 +1972,20 @@ class OverlayView: NSView {
         let bgRect: NSRect
         if config.mode == .window {
             let titleBarH: CGFloat = 28
-            bgRect = NSRect(x: innerX, y: innerY, width: selectionRect.width + pad * 2, height: selectionRect.height + titleBarH + pad * 2)
+            bgRect = NSRect(
+                x: innerX, y: innerY, width: selectionRect.width + pad * 2,
+                height: selectionRect.height + titleBarH + pad * 2)
         } else {
-            bgRect = NSRect(x: innerX, y: innerY, width: selectionRect.width + pad * 2, height: selectionRect.height + pad * 2)
+            bgRect = NSRect(
+                x: innerX, y: innerY, width: selectionRect.width + pad * 2,
+                height: selectionRect.height + pad * 2)
         }
         context.cgContext.saveGState()
-        let bgPath = NSBezierPath(roundedRect: bgRect, xRadius: config.bgRadius, yRadius: config.bgRadius)
+        let bgPath = NSBezierPath(
+            roundedRect: bgRect, xRadius: config.bgRadius, yRadius: config.bgRadius)
         bgPath.addClip()
-        BeautifyRenderer.drawGradientBackground(in: bgRect, config: config, context: context.cgContext)
+        BeautifyRenderer.drawGradientBackground(
+            in: bgRect, config: config, context: context.cgContext)
         context.cgContext.restoreGState()
 
         // Compute the image rect inside the expanded frame
@@ -1847,7 +2027,8 @@ class OverlayView: NSView {
             shadow.shadowOffset = NSSize(width: 0, height: -shadowOffset)
             shadow.set()
             NSColor.white.setFill()
-            NSBezierPath(roundedRect: windowRect, xRadius: cornerRadius, yRadius: cornerRadius).fill()
+            NSBezierPath(roundedRect: windowRect, xRadius: cornerRadius, yRadius: cornerRadius)
+                .fill()
             NSGraphicsContext.restoreGraphicsState()
         }
 
@@ -1856,20 +2037,27 @@ class OverlayView: NSView {
             let titleBarH: CGFloat = 28
 
             context.cgContext.saveGState()
-            NSBezierPath(roundedRect: windowRect, xRadius: cornerRadius, yRadius: cornerRadius).addClip()
+            NSBezierPath(roundedRect: windowRect, xRadius: cornerRadius, yRadius: cornerRadius)
+                .addClip()
 
             // Window background
             NSColor(white: 0.97, alpha: 1.0).setFill()
             NSBezierPath(rect: windowRect).fill()
 
             // Title bar
-            let titleBarRect = NSRect(x: windowRect.minX, y: windowRect.maxY - titleBarH, width: windowRect.width, height: titleBarH)
+            let titleBarRect = NSRect(
+                x: windowRect.minX, y: windowRect.maxY - titleBarH, width: windowRect.width,
+                height: titleBarH)
             NSColor(white: 0.94, alpha: 1.0).setFill()
             NSBezierPath(rect: titleBarRect).fill()
 
             // Separator
             NSColor(white: 0.82, alpha: 1.0).setFill()
-            NSBezierPath(rect: NSRect(x: windowRect.minX, y: titleBarRect.minY - 0.5, width: windowRect.width, height: 0.5)).fill()
+            NSBezierPath(
+                rect: NSRect(
+                    x: windowRect.minX, y: titleBarRect.minY - 0.5, width: windowRect.width,
+                    height: 0.5)
+            ).fill()
 
             // Traffic lights
             let buttonY = titleBarRect.midY
@@ -1877,16 +2065,24 @@ class OverlayView: NSView {
             let buttonStartX = windowRect.minX + 14
             let buttonSpacing: CGFloat = 20
             let trafficLights: [(NSColor, NSColor)] = [
-                (NSColor(calibratedRed: 1.0, green: 0.38, blue: 0.35, alpha: 1.0),
-                 NSColor(calibratedRed: 0.85, green: 0.25, blue: 0.22, alpha: 1.0)),
-                (NSColor(calibratedRed: 1.0, green: 0.75, blue: 0.25, alpha: 1.0),
-                 NSColor(calibratedRed: 0.85, green: 0.60, blue: 0.15, alpha: 1.0)),
-                (NSColor(calibratedRed: 0.30, green: 0.80, blue: 0.35, alpha: 1.0),
-                 NSColor(calibratedRed: 0.20, green: 0.65, blue: 0.25, alpha: 1.0)),
+                (
+                    NSColor(calibratedRed: 1.0, green: 0.38, blue: 0.35, alpha: 1.0),
+                    NSColor(calibratedRed: 0.85, green: 0.25, blue: 0.22, alpha: 1.0)
+                ),
+                (
+                    NSColor(calibratedRed: 1.0, green: 0.75, blue: 0.25, alpha: 1.0),
+                    NSColor(calibratedRed: 0.85, green: 0.60, blue: 0.15, alpha: 1.0)
+                ),
+                (
+                    NSColor(calibratedRed: 0.30, green: 0.80, blue: 0.35, alpha: 1.0),
+                    NSColor(calibratedRed: 0.20, green: 0.65, blue: 0.25, alpha: 1.0)
+                ),
             ]
             for (i, (fill, ring)) in trafficLights.enumerated() {
                 let cx = buttonStartX + CGFloat(i) * buttonSpacing
-                let circleRect = NSRect(x: cx - buttonRadius, y: buttonY - buttonRadius, width: buttonRadius * 2, height: buttonRadius * 2)
+                let circleRect = NSRect(
+                    x: cx - buttonRadius, y: buttonY - buttonRadius, width: buttonRadius * 2,
+                    height: buttonRadius * 2)
                 fill.setFill()
                 NSBezierPath(ovalIn: circleRect).fill()
                 ring.setStroke()
@@ -1897,7 +2093,8 @@ class OverlayView: NSView {
 
             // Draw screenshot in content area (clipped to window shape)
             if let image = screenshotImage {
-                image.draw(in: imageRect, from: selectionRect, operation: .sourceOver, fraction: 1.0)
+                image.draw(
+                    in: imageRect, from: selectionRect, operation: .sourceOver, fraction: 1.0)
             }
 
             // Draw annotations shifted to the preview position (including current live annotation)
@@ -1918,7 +2115,8 @@ class OverlayView: NSView {
         } else {
             // Rounded mode — just rounded corners on the image
             context.cgContext.saveGState()
-            NSBezierPath(roundedRect: imageRect, xRadius: cornerRadius, yRadius: cornerRadius).addClip()
+            NSBezierPath(roundedRect: imageRect, xRadius: cornerRadius, yRadius: cornerRadius)
+                .addClip()
 
             if let image = screenshotImage {
                 image.draw(in: imageRect, from: selectionRect, operation: .copy, fraction: 1.0)
@@ -1947,7 +2145,8 @@ class OverlayView: NSView {
     /// Whether the current tool should show the options row
     var toolHasOptionsRow: Bool {
         switch currentTool {
-        case .pencil, .line, .arrow, .rectangle, .ellipse, .marker, .number, .loupe, .measure, .pixelate, .blur, .stamp:
+        case .pencil, .line, .arrow, .rectangle, .ellipse, .marker, .number, .loupe, .measure,
+            .pixelate, .blur, .stamp:
             return true
         case .text:
             return true
@@ -1955,32 +2154,15 @@ class OverlayView: NSView {
             return showBeautifyInOptionsRow
         }
     }
-    /// Curated font families for the font picker
-    static let fontFamilies: [String] = {
-        // "System" uses the default SF Pro; the rest are well-known macOS-bundled families
-        var families = ["System"]
-        let wanted = [
-            "Helvetica Neue", "Arial", "Avenir Next", "Futura",
-            "Georgia", "Times New Roman", "Palatino",
-            "Courier New", "Menlo", "SF Mono",
-            "Gill Sans", "Verdana", "Trebuchet MS",
-            "American Typewriter", "Didot", "Baskerville",
-            "Marker Felt", "Noteworthy", "Chalkboard SE",
-            "Copperplate", "Optima", "Phosphate",
-        ]
-        let available = Set(NSFontManager.shared.availableFontFamilies)
-        for name in wanted {
-            if available.contains(name) { families.append(name) }
-        }
-        return families
-    }()
 
     func renderEmoji(_ emoji: String, size: CGFloat = 128) -> NSImage {
         let attrs: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: size * 0.85)]
         let str = emoji as NSString
         let strSize = str.size(withAttributes: attrs)
         let img = NSImage(size: NSSize(width: size, height: size), flipped: false) { _ in
-            str.draw(at: NSPoint(x: (size - strSize.width) / 2, y: (size - strSize.height) / 2), withAttributes: attrs)
+            str.draw(
+                at: NSPoint(x: (size - strSize.width) / 2, y: (size - strSize.height) / 2),
+                withAttributes: attrs)
             return true
         }
         img.setName(emoji)
@@ -1995,7 +2177,8 @@ class OverlayView: NSView {
         panel.level = .statusBar + 3
         panel.begin { [weak self] response in
             guard let self = self, response == .OK, let url = panel.url,
-                  let image = NSImage(contentsOf: url) else { return }
+                let image = NSImage(contentsOf: url)
+            else { return }
             self.currentStampImage = image
             self.currentStampEmoji = nil
             self.needsDisplay = true
@@ -2006,8 +2189,12 @@ class OverlayView: NSView {
         beautifyToolbarAnimProgress = 0
         beautifyToolbarAnimTarget = beautifyEnabled
         beautifyToolbarAnimTimer?.invalidate()
-        beautifyToolbarAnimTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true) { [weak self] timer in
-            guard let self = self else { timer.invalidate(); return }
+        beautifyToolbarAnimTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true)
+        { [weak self] timer in
+            guard let self = self else {
+                timer.invalidate()
+                return
+            }
             self.beautifyToolbarAnimProgress += 0.08  // ~12 frames = 0.2s
             if self.beautifyToolbarAnimProgress >= 1.0 {
                 self.beautifyToolbarAnimProgress = 1.0
@@ -2017,7 +2204,6 @@ class OverlayView: NSView {
             self.needsDisplay = true
         }
     }
-
 
     // MARK: - Beautify Slider (used from options row)
 
@@ -2040,8 +2226,12 @@ class OverlayView: NSView {
 
         let font = NSFont.monospacedSystemFont(ofSize: 12, weight: .medium)
         let copyFont = NSFont.systemFont(ofSize: 10, weight: .regular)
-        let hexAttrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.white]
-        let copyAttrs: [NSAttributedString.Key: Any] = [.font: copyFont, .foregroundColor: NSColor.white.withAlphaComponent(0.5)]
+        let hexAttrs: [NSAttributedString.Key: Any] = [
+            .font: font, .foregroundColor: NSColor.white,
+        ]
+        let copyAttrs: [NSAttributedString.Key: Any] = [
+            .font: copyFont, .foregroundColor: NSColor.white.withAlphaComponent(0.5),
+        ]
 
         let hexSize = (hexStr as NSString).size(withAttributes: hexAttrs)
         let copyText = "Right-click to copy"
@@ -2062,9 +2252,10 @@ class OverlayView: NSView {
         NSBezierPath(roundedRect: labelRect, xRadius: 6, yRadius: 6).fill()
 
         // Color swatch
-        let swatchRect = NSRect(x: labelRect.minX + padding,
-                                y: labelRect.midY - swatchSize / 2,
-                                width: swatchSize, height: swatchSize)
+        let swatchRect = NSRect(
+            x: labelRect.minX + padding,
+            y: labelRect.midY - swatchSize / 2,
+            width: swatchSize, height: swatchSize)
         sampledColor.setFill()
         NSBezierPath(roundedRect: swatchRect, xRadius: 3, yRadius: 3).fill()
         NSColor.white.withAlphaComponent(0.4).setStroke()
@@ -2074,16 +2265,23 @@ class OverlayView: NSView {
 
         // Hex text + copy hint
         let textX = swatchRect.maxX + gap
-        (hexStr as NSString).draw(at: NSPoint(x: textX, y: labelRect.maxY - padding - hexSize.height), withAttributes: hexAttrs)
-        (copyText as NSString).draw(at: NSPoint(x: textX, y: labelRect.minY + padding), withAttributes: copyAttrs)
+        (hexStr as NSString).draw(
+            at: NSPoint(x: textX, y: labelRect.maxY - padding - hexSize.height),
+            withAttributes: hexAttrs)
+        (copyText as NSString).draw(
+            at: NSPoint(x: textX, y: labelRect.minY + padding), withAttributes: copyAttrs)
 
         context.restoreGraphicsState()
     }
 
     /// Sample a pixel color from the screenshot at the given canvas-space point.
     /// Returns (NSColor for display, hex string with raw sRGB values matching what other tools report).
-    private func sampleColor(from image: NSImage, at canvasPoint: NSPoint) -> (color: NSColor, hex: String)? {
-        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
+    private func sampleColor(from image: NSImage, at canvasPoint: NSPoint) -> (
+        color: NSColor, hex: String
+    )? {
+        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+            return nil
+        }
         let imgSize = image.size
         let drawRect = captureDrawRect
 
@@ -2100,12 +2298,18 @@ class OverlayView: NSView {
 
         // Render the single pixel into a known-format 1×1 sRGB bitmap to get correct raw values.
         let srgb = CGColorSpace(name: CGColorSpace.sRGB)!
-        guard let ctx = CGContext(data: nil, width: 1, height: 1,
-                                  bitsPerComponent: 8, bytesPerRow: 4,
-                                  space: srgb,
-                                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
-        ctx.draw(cgImage, in: CGRect(x: -CGFloat(cgX), y: -(CGFloat(cgImage.height) - 1 - CGFloat(cgY)),
-                                     width: CGFloat(cgImage.width), height: CGFloat(cgImage.height)))
+        guard
+            let ctx = CGContext(
+                data: nil, width: 1, height: 1,
+                bitsPerComponent: 8, bytesPerRow: 4,
+                space: srgb,
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        ctx.draw(
+            cgImage,
+            in: CGRect(
+                x: -CGFloat(cgX), y: -(CGFloat(cgImage.height) - 1 - CGFloat(cgY)),
+                width: CGFloat(cgImage.width), height: CGFloat(cgImage.height)))
         guard let data = ctx.data else { return nil }
         let ptr = data.assumingMemoryBound(to: UInt8.self)
         let a = CGFloat(ptr[3]) / 255
@@ -2116,7 +2320,8 @@ class OverlayView: NSView {
         let b = UInt8(min(255, CGFloat(ptr[2]) / a))
 
         let hex = String(format: "#%02X%02X%02X", r, g, b)
-        let color = NSColor(srgbRed: CGFloat(r)/255, green: CGFloat(g)/255, blue: CGFloat(b)/255, alpha: 1)
+        let color = NSColor(
+            srgbRed: CGFloat(r) / 255, green: CGFloat(g) / 255, blue: CGFloat(b) / 255, alpha: 1)
         return (color, hex)
     }
 
@@ -2124,19 +2329,24 @@ class OverlayView: NSView {
 
     func flipImageHorizontally() {
         guard let original = screenshotImage,
-              let cgImage = original.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return }
+            let cgImage = original.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        else { return }
 
         // Save state for undo
         let prevImage = original.copy() as! NSImage
         undoStack.append(.imageTransform(previousImage: prevImage, annotationOffsets: []))
         redoStack.removeAll()
 
-        let w = cgImage.width, h = cgImage.height
+        let w = cgImage.width
+        let h = cgImage.height
         let cs = cgImage.colorSpace ?? CGColorSpaceCreateDeviceRGB()
-        guard let ctx = CGContext(data: nil, width: w, height: h,
-                                  bitsPerComponent: cgImage.bitsPerComponent,
-                                  bytesPerRow: 0, space: cs,
-                                  bitmapInfo: cgImage.bitmapInfo.rawValue) else { return }
+        guard
+            let ctx = CGContext(
+                data: nil, width: w, height: h,
+                bitsPerComponent: cgImage.bitsPerComponent,
+                bytesPerRow: 0, space: cs,
+                bitmapInfo: cgImage.bitmapInfo.rawValue)
+        else { return }
         ctx.translateBy(x: CGFloat(w), y: 0)
         ctx.scaleBy(x: -1, y: 1)
         ctx.draw(cgImage, in: CGRect(x: 0, y: 0, width: w, height: h))
@@ -2150,11 +2360,14 @@ class OverlayView: NSView {
             ann.startPoint.x = selectionRect.minX + (selectionRect.maxX - ann.startPoint.x)
             ann.endPoint.x = selectionRect.minX + (selectionRect.maxX - ann.endPoint.x)
             if let cp = ann.controlPoint {
-                ann.controlPoint = NSPoint(x: selectionRect.minX + (selectionRect.maxX - cp.x), y: cp.y)
+                ann.controlPoint = NSPoint(
+                    x: selectionRect.minX + (selectionRect.maxX - cp.x), y: cp.y)
             }
             // Mirror freeform points
             if let pts = ann.points {
-                ann.points = pts.map { NSPoint(x: selectionRect.minX + (selectionRect.maxX - $0.x), y: $0.y) }
+                ann.points = pts.map {
+                    NSPoint(x: selectionRect.minX + (selectionRect.maxX - $0.x), y: $0.y)
+                }
             }
         }
 
@@ -2164,18 +2377,23 @@ class OverlayView: NSView {
 
     func flipImageVertically() {
         guard let original = screenshotImage,
-              let cgImage = original.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return }
+            let cgImage = original.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        else { return }
 
         let prevImage = original.copy() as! NSImage
         undoStack.append(.imageTransform(previousImage: prevImage, annotationOffsets: []))
         redoStack.removeAll()
 
-        let w = cgImage.width, h = cgImage.height
+        let w = cgImage.width
+        let h = cgImage.height
         let cs = cgImage.colorSpace ?? CGColorSpaceCreateDeviceRGB()
-        guard let ctx = CGContext(data: nil, width: w, height: h,
-                                  bitsPerComponent: cgImage.bitsPerComponent,
-                                  bytesPerRow: 0, space: cs,
-                                  bitmapInfo: cgImage.bitmapInfo.rawValue) else { return }
+        guard
+            let ctx = CGContext(
+                data: nil, width: w, height: h,
+                bitsPerComponent: cgImage.bitsPerComponent,
+                bytesPerRow: 0, space: cs,
+                bitmapInfo: cgImage.bitmapInfo.rawValue)
+        else { return }
         ctx.translateBy(x: 0, y: CGFloat(h))
         ctx.scaleBy(x: 1, y: -1)
         ctx.draw(cgImage, in: CGRect(x: 0, y: 0, width: w, height: h))
@@ -2188,10 +2406,13 @@ class OverlayView: NSView {
             ann.startPoint.y = selectionRect.minY + (selectionRect.maxY - ann.startPoint.y)
             ann.endPoint.y = selectionRect.minY + (selectionRect.maxY - ann.endPoint.y)
             if let cp = ann.controlPoint {
-                ann.controlPoint = NSPoint(x: cp.x, y: selectionRect.minY + (selectionRect.maxY - cp.y))
+                ann.controlPoint = NSPoint(
+                    x: cp.x, y: selectionRect.minY + (selectionRect.maxY - cp.y))
             }
             if let pts = ann.points {
-                ann.points = pts.map { NSPoint(x: $0.x, y: selectionRect.minY + (selectionRect.maxY - $0.y)) }
+                ann.points = pts.map {
+                    NSPoint(x: $0.x, y: selectionRect.minY + (selectionRect.maxY - $0.y))
+                }
             }
         }
 
@@ -2201,7 +2422,8 @@ class OverlayView: NSView {
 
     private func invertImageColors() {
         guard let original = screenshotImage,
-              let cgImage = original.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return }
+            let cgImage = original.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        else { return }
 
         let prevImage = original.copy() as! NSImage
         undoStack.append(.imageTransform(previousImage: prevImage, annotationOffsets: []))
@@ -2223,7 +2445,8 @@ class OverlayView: NSView {
     // MARK: - Snap/Alignment Guides
 
     /// Collect all snap target X and Y values from the selection rect and existing annotations.
-    private func collectSnapTargets(excluding: Annotation? = nil) -> (xs: [CGFloat], ys: [CGFloat]) {
+    private func collectSnapTargets(excluding: Annotation? = nil) -> (xs: [CGFloat], ys: [CGFloat])
+    {
         var xs: [CGFloat] = []
         var ys: [CGFloat] = []
 
@@ -2265,7 +2488,10 @@ class OverlayView: NSView {
                 snapGuideX = tx
             }
         }
-        if bestDx > snapThreshold { snapGuideX = nil; result.x = point.x }
+        if bestDx > snapThreshold {
+            snapGuideX = nil
+            result.x = point.x
+        }
 
         // Snap Y
         var bestDy: CGFloat = snapThreshold + 1
@@ -2277,14 +2503,19 @@ class OverlayView: NSView {
                 snapGuideY = ty
             }
         }
-        if bestDy > snapThreshold { snapGuideY = nil; result.y = point.y }
+        if bestDy > snapThreshold {
+            snapGuideY = nil
+            result.y = point.y
+        }
 
         return result
     }
 
     /// Snap a rect (for move operations) — checks all edges and center against targets.
     /// Returns the delta adjustment needed.
-    private func snapRectDelta(rect: NSRect, excluding: Annotation? = nil) -> (dx: CGFloat, dy: CGFloat) {
+    private func snapRectDelta(rect: NSRect, excluding: Annotation? = nil) -> (
+        dx: CGFloat, dy: CGFloat
+    ) {
         guard snapGuidesEnabled else {
             snapGuideX = nil
             snapGuideY = nil
@@ -2312,7 +2543,10 @@ class OverlayView: NSView {
                 }
             }
         }
-        if bestDx > snapThreshold { snapGuideX = nil; snapDx = 0 }
+        if bestDx > snapThreshold {
+            snapGuideX = nil
+            snapDx = 0
+        }
 
         for ey in edgesY {
             for ty in ys {
@@ -2324,7 +2558,10 @@ class OverlayView: NSView {
                 }
             }
         }
-        if bestDy > snapThreshold { snapGuideY = nil; snapDy = 0 }
+        if bestDy > snapThreshold {
+            snapGuideY = nil
+            snapDy = 0
+        }
 
         return (snapDx, snapDy)
     }
@@ -2371,7 +2608,8 @@ class OverlayView: NSView {
     /// by scanning outward until the pixel color changes significantly.
     private func computeAutoMeasure(vertical: Bool) -> Annotation? {
         guard let screenshot = screenshotImage,
-              let cgImage = screenshot.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
+            let cgImage = screenshot.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        else { return nil }
 
         guard let window = window else { return nil }
         let windowPoint = window.mouseLocationOutsideOfEventStream
@@ -2385,14 +2623,20 @@ class OverlayView: NSView {
         let pixelX = Int(normX * CGFloat(cgImage.width))
         let pixelY = Int((1.0 - normY) * CGFloat(cgImage.height))
 
-        guard pixelX >= 0, pixelX < cgImage.width, pixelY >= 0, pixelY < cgImage.height else { return nil }
+        guard pixelX >= 0, pixelX < cgImage.width, pixelY >= 0, pixelY < cgImage.height else {
+            return nil
+        }
 
-        let w = cgImage.width, h = cgImage.height
+        let w = cgImage.width
+        let h = cgImage.height
         let srgb = CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
-        guard let ctx = CGContext(data: nil, width: w, height: h,
-                                  bitsPerComponent: 8, bytesPerRow: w * 4,
-                                  space: srgb,
-                                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+        guard
+            let ctx = CGContext(
+                data: nil, width: w, height: h,
+                bitsPerComponent: 8, bytesPerRow: w * 4,
+                space: srgb,
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
         ctx.draw(cgImage, in: CGRect(x: 0, y: 0, width: w, height: h))
         guard let data = ctx.data else { return nil }
 
@@ -2413,11 +2657,13 @@ class OverlayView: NSView {
         func toCanvas(px: Int, py: Int) -> NSPoint {
             let nx = CGFloat(px) / CGFloat(w)
             let ny = 1.0 - CGFloat(py) / CGFloat(h)
-            return NSPoint(x: drawRect.minX + nx * drawRect.width,
-                           y: drawRect.minY + ny * drawRect.height)
+            return NSPoint(
+                x: drawRect.minX + nx * drawRect.width,
+                y: drawRect.minY + ny * drawRect.height)
         }
 
-        var startPx: Int, endPx: Int
+        var startPx: Int
+        var endPx: Int
 
         if vertical {
             startPx = pixelY
@@ -2432,8 +2678,9 @@ class OverlayView: NSView {
             }
             let p1 = toCanvas(px: pixelX, py: startPx)
             let p2 = toCanvas(px: pixelX, py: endPx)
-            let ann = Annotation(tool: .measure, startPoint: p1, endPoint: p2,
-                              color: annotationColor, strokeWidth: currentStrokeWidth)
+            let ann = Annotation(
+                tool: .measure, startPoint: p1, endPoint: p2,
+                color: annotationColor, strokeWidth: currentStrokeWidth)
             ann.measureInPoints = currentMeasureInPoints
             return ann
         } else {
@@ -2449,8 +2696,9 @@ class OverlayView: NSView {
             }
             let p1 = toCanvas(px: startPx, py: pixelY)
             let p2 = toCanvas(px: endPx, py: pixelY)
-            let ann = Annotation(tool: .measure, startPoint: p1, endPoint: p2,
-                              color: annotationColor, strokeWidth: currentStrokeWidth)
+            let ann = Annotation(
+                tool: .measure, startPoint: p1, endPoint: p2,
+                color: annotationColor, strokeWidth: currentStrokeWidth)
             ann.measureInPoints = currentMeasureInPoints
             return ann
         }
@@ -2461,19 +2709,32 @@ class OverlayView: NSView {
     private func drawCropPreview() {
         let dimColor = NSColor.black.withAlphaComponent(0.4)
         dimColor.setFill()
-        NSBezierPath(rect: NSRect(x: selectionRect.minX, y: cropDragRect.maxY,
-                                  width: selectionRect.width, height: selectionRect.maxY - cropDragRect.maxY)).fill()
-        NSBezierPath(rect: NSRect(x: selectionRect.minX, y: selectionRect.minY,
-                                  width: selectionRect.width, height: cropDragRect.minY - selectionRect.minY)).fill()
-        NSBezierPath(rect: NSRect(x: selectionRect.minX, y: cropDragRect.minY,
-                                  width: cropDragRect.minX - selectionRect.minX, height: cropDragRect.height)).fill()
-        NSBezierPath(rect: NSRect(x: cropDragRect.maxX, y: cropDragRect.minY,
-                                  width: selectionRect.maxX - cropDragRect.maxX, height: cropDragRect.height)).fill()
+        NSBezierPath(
+            rect: NSRect(
+                x: selectionRect.minX, y: cropDragRect.maxY,
+                width: selectionRect.width, height: selectionRect.maxY - cropDragRect.maxY)
+        ).fill()
+        NSBezierPath(
+            rect: NSRect(
+                x: selectionRect.minX, y: selectionRect.minY,
+                width: selectionRect.width, height: cropDragRect.minY - selectionRect.minY)
+        ).fill()
+        NSBezierPath(
+            rect: NSRect(
+                x: selectionRect.minX, y: cropDragRect.minY,
+                width: cropDragRect.minX - selectionRect.minX, height: cropDragRect.height)
+        ).fill()
+        NSBezierPath(
+            rect: NSRect(
+                x: cropDragRect.maxX, y: cropDragRect.minY,
+                width: selectionRect.maxX - cropDragRect.maxX, height: cropDragRect.height)
+        ).fill()
     }
 
     private func drawMarkerCursorPreview(at center: NSPoint) {
         let radius = (currentMarkerSize * 6) / 2
-        let circleRect = NSRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)
+        let circleRect = NSRect(
+            x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)
         let path = NSBezierPath(ovalIn: circleRect)
         // Fill with marker color at marker opacity
         currentColor.withAlphaComponent(0.35).setFill()
@@ -2487,9 +2748,12 @@ class OverlayView: NSView {
     // MARK: - Loupe Preview
 
     private func drawLoupePreview(at center: NSPoint) {
-        guard let screenshot = screenshotImage, let context = NSGraphicsContext.current else { return }
+        guard let screenshot = screenshotImage, let context = NSGraphicsContext.current else {
+            return
+        }
         let size = currentLoupeSize
-        let squareRect = NSRect(x: center.x - size/2, y: center.y - size/2, width: size, height: size)
+        let squareRect = NSRect(
+            x: center.x - size / 2, y: center.y - size / 2, width: size, height: size)
         let magnification: CGFloat = 2.0
 
         context.saveGraphicsState()
@@ -2501,14 +2765,16 @@ class OverlayView: NSView {
 
         // Draw magnified region directly from screenshot (no intermediate image)
         let srcSize = size / magnification
-        let srcRect = NSRect(x: center.x - srcSize/2, y: center.y - srcSize/2, width: srcSize, height: srcSize)
+        let srcRect = NSRect(
+            x: center.x - srcSize / 2, y: center.y - srcSize / 2, width: srcSize, height: srcSize)
         let imgSize = screenshot.size
         let drawRect = captureDrawRect
         let scaleX = imgSize.width / drawRect.width
         let scaleY = imgSize.height / drawRect.height
-        let fromRect = NSRect(x: (srcRect.origin.x - drawRect.origin.x) * scaleX,
-                              y: (srcRect.origin.y - drawRect.origin.y) * scaleY,
-                              width: srcRect.width * scaleX, height: srcRect.height * scaleY)
+        let fromRect = NSRect(
+            x: (srcRect.origin.x - drawRect.origin.x) * scaleX,
+            y: (srcRect.origin.y - drawRect.origin.y) * scaleY,
+            width: srcRect.width * scaleX, height: srcRect.height * scaleY)
         screenshot.draw(in: squareRect, from: fromRect, operation: .copy, fraction: 1.0)
 
         // Simple border
@@ -2529,7 +2795,8 @@ class OverlayView: NSView {
         for _ in 0..<iterations {
             var next: [NSPoint] = [result[0]]
             for i in 0..<result.count - 1 {
-                let p0 = result[i], p1 = result[i + 1]
+                let p0 = result[i]
+                let p1 = result[i + 1]
                 next.append(NSPoint(x: 0.75 * p0.x + 0.25 * p1.x, y: 0.75 * p0.y + 0.25 * p1.y))
                 next.append(NSPoint(x: 0.25 * p0.x + 0.75 * p1.x, y: 0.25 * p0.y + 0.75 * p1.y))
             }
@@ -2544,8 +2811,8 @@ class OverlayView: NSView {
     private func drawCheckerboard(in rect: NSRect) {
         let size: CGFloat = 8
         let light = NSColor(white: 0.75, alpha: 1.0)
-        let dark  = NSColor(white: 0.55, alpha: 1.0)
-        let cols = Int(ceil(rect.width  / size))
+        let dark = NSColor(white: 0.55, alpha: 1.0)
+        let cols = Int(ceil(rect.width / size))
         let rows = Int(ceil(rect.height / size))
         for row in 0..<rows {
             for col in 0..<cols {
@@ -2599,8 +2866,9 @@ class OverlayView: NSView {
         guard zoomAnchorCanvas != .zero || zoomAnchorView != .zero else { return }
         let cgCtx = context.cgContext
         // screen = anchorView + (canvas - anchorCanvas) * zoom
-        cgCtx.translateBy(x: zoomAnchorView.x - zoomAnchorCanvas.x * zoomLevel,
-                          y: zoomAnchorView.y - zoomAnchorCanvas.y * zoomLevel)
+        cgCtx.translateBy(
+            x: zoomAnchorView.x - zoomAnchorCanvas.x * zoomLevel,
+            y: zoomAnchorView.y - zoomAnchorCanvas.y * zoomLevel)
         cgCtx.scaleBy(x: zoomLevel, y: zoomLevel)
     }
 
@@ -2636,7 +2904,8 @@ class OverlayView: NSView {
     /// translate all annotations accordingly, and reset zoom.
     private func commitCrop(viewRect: NSRect) {
         guard let originalImage = screenshotImage,
-              let cgOriginal = originalImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return }
+            let cgOriginal = originalImage.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        else { return }
 
         // viewRect is already in canvas space (cropDragRect uses canvas coords).
         let canvasRect = viewRect
@@ -2662,7 +2931,8 @@ class OverlayView: NSView {
         )
 
         guard cgPixelRect.width > 0, cgPixelRect.height > 0,
-              let croppedCG = cgOriginal.cropping(to: cgPixelRect) else { return }
+            let croppedCG = cgOriginal.cropping(to: cgPixelRect)
+        else { return }
 
         // Save state for undo before modifying
         let prevImage = originalImage.copy() as! NSImage
@@ -2674,8 +2944,9 @@ class OverlayView: NSView {
         for ann in annotations { ann.move(dx: dx, dy: dy) }
 
         // Set NSImage size in points (not pixels) to preserve Retina scale
-        let croppedPointSize = NSSize(width: CGFloat(croppedCG.width) / pixScale,
-                                       height: CGFloat(croppedCG.height) / pixScale)
+        let croppedPointSize = NSSize(
+            width: CGFloat(croppedCG.width) / pixScale,
+            height: CGFloat(croppedCG.height) / pixScale)
         screenshotImage = NSImage(cgImage: croppedCG, size: croppedPointSize)
 
         // Update selectionRect to match new image size
@@ -2689,7 +2960,8 @@ class OverlayView: NSView {
             frame.size = croppedPointSize
             enclosingScrollView?.magnification = 1.0
             // Update top bar size label
-            if let topBar = chromeParentView?.subviews.compactMap({ $0 as? EditorTopBarView }).first {
+            if let topBar = chromeParentView?.subviews.compactMap({ $0 as? EditorTopBarView }).first
+            {
                 topBar.updateSizeLabel(width: croppedCG.width, height: croppedCG.height)
                 topBar.updateZoom(1.0)
             }
@@ -2750,7 +3022,8 @@ class OverlayView: NSView {
         zoomFadeTimer = nil
         if zoomLevel == 1.0 {
             // Back at 1× — fade out after a short pause
-            zoomFadeTimer = Timer.scheduledTimer(withTimeInterval: 0.8, repeats: false) { [weak self] _ in
+            zoomFadeTimer = Timer.scheduledTimer(withTimeInterval: 0.8, repeats: false) {
+                [weak self] _ in
                 self?.fadeOutZoomLabel()
             }
         }
@@ -2763,7 +3036,10 @@ class OverlayView: NSView {
         zoomFadingOut = true
         let step: CGFloat = 0.08
         Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { [weak self] t in
-            guard let self = self else { t.invalidate(); return }
+            guard let self = self else {
+                t.invalidate()
+                return
+            }
             // Abort fade if user zoomed during the animation
             if self.zoomLevel != 1.0 {
                 self.zoomLabelOpacity = 1.0
@@ -2815,8 +3091,10 @@ class OverlayView: NSView {
             }
 
             // Endpoint handles (start = .bottomLeft, end = .topRight)
-            let startRect = NSRect(x: pts.first!.x - s/2, y: pts.first!.y - s/2, width: s, height: s)
-            let endRect = NSRect(x: pts.last!.x - s/2, y: pts.last!.y - s/2, width: s, height: s)
+            let startRect = NSRect(
+                x: pts.first!.x - s / 2, y: pts.first!.y - s / 2, width: s, height: s)
+            let endRect = NSRect(
+                x: pts.last!.x - s / 2, y: pts.last!.y - s / 2, width: s, height: s)
             annotationResizeHandleRects.append((.bottomLeft, startRect))
             annotationResizeHandleRects.append((.topRight, endRect))
 
@@ -2830,11 +3108,14 @@ class OverlayView: NSView {
             }
 
             // Intermediate anchor handles (use .top, .bottom, .left, .right, etc. as unique handle IDs)
-            let anchorHandleIDs: [ResizeHandle] = [.top, .bottom, .left, .right, .topLeft, .topRight, .bottomLeft, .bottomRight]
+            let anchorHandleIDs: [ResizeHandle] = [
+                .top, .bottom, .left, .right, .topLeft, .topRight, .bottomLeft, .bottomRight,
+            ]
             if pts.count > 2 {
                 for i in 1..<(pts.count - 1) {
                     let handleID = i - 1 < anchorHandleIDs.count ? anchorHandleIDs[i - 1] : .top
-                    let midRect = NSRect(x: pts[i].x - sm/2, y: pts[i].y - sm/2, width: sm, height: sm)
+                    let midRect = NSRect(
+                        x: pts[i].x - sm / 2, y: pts[i].y - sm / 2, width: sm, height: sm)
                     annotationResizeHandleRects.append((handleID, midRect))
                     NSColor.white.withAlphaComponent(0.9).setFill()
                     NSBezierPath(ovalIn: midRect).fill()
@@ -2845,11 +3126,14 @@ class OverlayView: NSView {
                 }
             } else {
                 // Legacy single bend handle (or visual midpoint)
-                let midPt = annotation.controlPoint ?? NSPoint(
-                    x: (annotation.startPoint.x + annotation.endPoint.x) / 2,
-                    y: (annotation.startPoint.y + annotation.endPoint.y) / 2
-                )
-                let midRect = NSRect(x: midPt.x - sm/2, y: midPt.y - sm/2, width: sm, height: sm)
+                let midPt =
+                    annotation.controlPoint
+                    ?? NSPoint(
+                        x: (annotation.startPoint.x + annotation.endPoint.x) / 2,
+                        y: (annotation.startPoint.y + annotation.endPoint.y) / 2
+                    )
+                let midRect = NSRect(
+                    x: midPt.x - sm / 2, y: midPt.y - sm / 2, width: sm, height: sm)
                 annotationResizeHandleRects.append((.top, midRect))
                 NSColor.white.withAlphaComponent(0.9).setFill()
                 NSBezierPath(ovalIn: midRect).fill()
@@ -2861,7 +3145,9 @@ class OverlayView: NSView {
 
             // Delete button near endPoint
             let btnSize: CGFloat = 20
-            let deleteRect = NSRect(x: annotation.endPoint.x + 8, y: annotation.endPoint.y + 2, width: btnSize, height: btnSize)
+            let deleteRect = NSRect(
+                x: annotation.endPoint.x + 8, y: annotation.endPoint.y + 2, width: btnSize,
+                height: btnSize)
             annotationDeleteButtonRect = deleteRect
             NSColor(red: 0.9, green: 0.2, blue: 0.2, alpha: 0.9).setFill()
             NSBezierPath(ovalIn: deleteRect).fill()
@@ -2871,7 +3157,10 @@ class OverlayView: NSView {
             ]
             let xStr = "×" as NSString
             let xSize = xStr.size(withAttributes: xAttrs)
-            xStr.draw(at: NSPoint(x: deleteRect.midX - xSize.width/2, y: deleteRect.midY - xSize.height/2), withAttributes: xAttrs)
+            xStr.draw(
+                at: NSPoint(
+                    x: deleteRect.midX - xSize.width / 2, y: deleteRect.midY - xSize.height / 2),
+                withAttributes: xAttrs)
             annotationEditButtonRect = .zero
             return
         }
@@ -2880,27 +3169,48 @@ class OverlayView: NSView {
         switch annotation.tool {
         case .pencil, .marker:
             guard let points = annotation.points, !points.isEmpty else { return }
-            var minX = CGFloat.greatestFiniteMagnitude, minY = CGFloat.greatestFiniteMagnitude
-            var maxX = -CGFloat.greatestFiniteMagnitude, maxY = -CGFloat.greatestFiniteMagnitude
-            for p in points { minX = min(minX, p.x); minY = min(minY, p.y); maxX = max(maxX, p.x); maxY = max(maxY, p.y) }
+            var minX = CGFloat.greatestFiniteMagnitude
+            var minY = CGFloat.greatestFiniteMagnitude
+            var maxX = -CGFloat.greatestFiniteMagnitude
+            var maxY = -CGFloat.greatestFiniteMagnitude
+            for p in points {
+                minX = min(minX, p.x)
+                minY = min(minY, p.y)
+                maxX = max(maxX, p.x)
+                maxY = max(maxY, p.y)
+            }
             // Expand by the actual painted stroke radius so the box matches the visible stroke
-            let strokeRadius = (annotation.tool == .marker ? annotation.strokeWidth * 6 : annotation.strokeWidth) / 2
-            baseRect = NSRect(x: minX - strokeRadius, y: minY - strokeRadius,
-                              width: maxX - minX + strokeRadius * 2, height: maxY - minY + strokeRadius * 2)
+            let strokeRadius =
+                (annotation.tool == .marker ? annotation.strokeWidth * 6 : annotation.strokeWidth)
+                / 2
+            baseRect = NSRect(
+                x: minX - strokeRadius, y: minY - strokeRadius,
+                width: maxX - minX + strokeRadius * 2, height: maxY - minY + strokeRadius * 2)
         case .text:
             // startPoint = top-left, endPoint = bottom-right (set at commit time)
             if annotation.endPoint != annotation.startPoint {
                 baseRect = annotation.boundingRect
             } else {
                 // Legacy: recompute from attributed string size
-                let text = annotation.attributedText ?? annotation.text.map { NSAttributedString(string: $0, attributes: [.font: NSFont.systemFont(ofSize: annotation.fontSize)]) }
+                let text =
+                    annotation.attributedText
+                    ?? annotation.text.map {
+                        NSAttributedString(
+                            string: $0,
+                            attributes: [.font: NSFont.systemFont(ofSize: annotation.fontSize)])
+                    }
                 let size = text?.size() ?? NSSize(width: 50, height: 20)
                 baseRect = NSRect(origin: annotation.startPoint, size: size)
             }
         case .number:
             let radius = 8 + annotation.strokeWidth * 3
-            let circleRect = NSRect(x: annotation.startPoint.x - radius, y: annotation.startPoint.y - radius, width: radius * 2, height: radius * 2)
-            baseRect = circleRect.union(NSRect(x: annotation.endPoint.x - 2, y: annotation.endPoint.y - 2, width: 4, height: 4))
+            let circleRect = NSRect(
+                x: annotation.startPoint.x - radius, y: annotation.startPoint.y - radius,
+                width: radius * 2, height: radius * 2)
+            baseRect = circleRect.union(
+                NSRect(
+                    x: annotation.endPoint.x - 2, y: annotation.endPoint.y - 2, width: 4, height: 4)
+            )
         default:
             baseRect = annotation.boundingRect
         }
@@ -2979,23 +3289,30 @@ class OverlayView: NSView {
 
             // Draw rotate arrow icon — draw into a fixed square centered in the circle
             let iconSize: CGFloat = 10
-            let iconRect = NSRect(x: rotRect.midX - iconSize / 2, y: rotRect.midY - iconSize / 2,
-                                   width: iconSize, height: iconSize)
+            let iconRect = NSRect(
+                x: rotRect.midX - iconSize / 2, y: rotRect.midY - iconSize / 2,
+                width: iconSize, height: iconSize)
             let cfg = NSImage.SymbolConfiguration(pointSize: iconSize, weight: .bold)
-            if let img = NSImage(systemSymbolName: "arrow.trianglehead.2.clockwise.rotate.90", accessibilityDescription: nil)?.withSymbolConfiguration(cfg) {
+            if let img = NSImage(
+                systemSymbolName: "arrow.trianglehead.2.clockwise.rotate.90",
+                accessibilityDescription: nil)?.withSymbolConfiguration(cfg)
+            {
                 let tinted = NSImage(size: img.size, flipped: false) { rect in
                     img.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1)
                     NSColor.white.setFill()
                     rect.fill(using: .sourceAtop)
                     return true
                 }
-                tinted.draw(in: iconRect, from: .zero, operation: .sourceOver, fraction: 1.0, respectFlipped: true, hints: nil)
+                tinted.draw(
+                    in: iconRect, from: .zero, operation: .sourceOver, fraction: 1.0,
+                    respectFlipped: true, hints: nil)
             }
         }
 
         // Delete button (X) at top-right outside the box
         let btnSize: CGFloat = 20
-        let deleteRect = NSRect(x: padded.maxX + 4, y: padded.maxY - btnSize, width: btnSize, height: btnSize)
+        let deleteRect = NSRect(
+            x: padded.maxX + 4, y: padded.maxY - btnSize, width: btnSize, height: btnSize)
         annotationDeleteButtonRect = deleteRect
         NSColor(red: 0.9, green: 0.2, blue: 0.2, alpha: 0.9).setFill()
         NSBezierPath(ovalIn: deleteRect).fill()
@@ -3005,23 +3322,32 @@ class OverlayView: NSView {
         ]
         let xStr = "×" as NSString
         let xSize = xStr.size(withAttributes: xAttrs)
-        xStr.draw(at: NSPoint(x: deleteRect.midX - xSize.width/2, y: deleteRect.midY - xSize.height/2), withAttributes: xAttrs)
+        xStr.draw(
+            at: NSPoint(
+                x: deleteRect.midX - xSize.width / 2, y: deleteRect.midY - xSize.height / 2),
+            withAttributes: xAttrs)
 
         // Edit button (pencil) for text annotations
         if annotation.tool == .text {
-            let editRect = NSRect(x: padded.maxX + 4, y: padded.maxY - btnSize * 2 - 4, width: btnSize, height: btnSize)
+            let editRect = NSRect(
+                x: padded.maxX + 4, y: padded.maxY - btnSize * 2 - 4, width: btnSize,
+                height: btnSize)
             annotationEditButtonRect = editRect
             NSColor(white: 0.3, alpha: 0.9).setFill()
             NSBezierPath(ovalIn: editRect).fill()
             let symbolConfig = NSImage.SymbolConfiguration(pointSize: 10, weight: .medium)
-            if let img = NSImage(systemSymbolName: "pencil", accessibilityDescription: nil)?.withSymbolConfiguration(symbolConfig) {
+            if let img = NSImage(systemSymbolName: "pencil", accessibilityDescription: nil)?
+                .withSymbolConfiguration(symbolConfig)
+            {
                 let tinted = NSImage(size: img.size, flipped: false) { rect in
                     img.draw(in: rect)
                     NSColor.white.setFill()
                     rect.fill(using: .sourceAtop)
                     return true
                 }
-                let imgRect = NSRect(x: editRect.midX - img.size.width/2, y: editRect.midY - img.size.height/2, width: img.size.width, height: img.size.height)
+                let imgRect = NSRect(
+                    x: editRect.midX - img.size.width / 2, y: editRect.midY - img.size.height / 2,
+                    width: img.size.width, height: img.size.height)
                 tinted.draw(in: imgRect, from: .zero, operation: .sourceOver, fraction: 1.0)
             }
         } else {
@@ -3033,14 +3359,14 @@ class OverlayView: NSView {
         let s: CGFloat = 8
         let r = rect
         return [
-            (.topLeft,    NSRect(x: r.minX - s/2, y: r.maxY - s/2, width: s, height: s)),
-            (.topRight,   NSRect(x: r.maxX - s/2, y: r.maxY - s/2, width: s, height: s)),
-            (.bottomLeft, NSRect(x: r.minX - s/2, y: r.minY - s/2, width: s, height: s)),
-            (.bottomRight,NSRect(x: r.maxX - s/2, y: r.minY - s/2, width: s, height: s)),
-            (.top,        NSRect(x: r.midX - s/2, y: r.maxY - s/2, width: s, height: s)),
-            (.bottom,     NSRect(x: r.midX - s/2, y: r.minY - s/2, width: s, height: s)),
-            (.left,       NSRect(x: r.minX - s/2, y: r.midY - s/2, width: s, height: s)),
-            (.right,      NSRect(x: r.maxX - s/2, y: r.midY - s/2, width: s, height: s)),
+            (.topLeft, NSRect(x: r.minX - s / 2, y: r.maxY - s / 2, width: s, height: s)),
+            (.topRight, NSRect(x: r.maxX - s / 2, y: r.maxY - s / 2, width: s, height: s)),
+            (.bottomLeft, NSRect(x: r.minX - s / 2, y: r.minY - s / 2, width: s, height: s)),
+            (.bottomRight, NSRect(x: r.maxX - s / 2, y: r.minY - s / 2, width: s, height: s)),
+            (.top, NSRect(x: r.midX - s / 2, y: r.maxY - s / 2, width: s, height: s)),
+            (.bottom, NSRect(x: r.midX - s / 2, y: r.minY - s / 2, width: s, height: s)),
+            (.left, NSRect(x: r.minX - s / 2, y: r.midY - s / 2, width: s, height: s)),
+            (.right, NSRect(x: r.maxX - s / 2, y: r.midY - s / 2, width: s, height: s)),
         ]
     }
 
@@ -3049,8 +3375,9 @@ class OverlayView: NSView {
     private func actionEq(_ a: ToolbarButtonAction, _ b: ToolbarButtonAction) -> Bool {
         switch (a, b) {
         case (.undo, .undo), (.redo, .redo), (.copy, .copy), (.save, .save), (.upload, .upload),
-             (.pin, .pin), (.ocr, .ocr), (.autoRedact, .autoRedact), (.removeBackground, .removeBackground),
-             (.cancel, .cancel):
+            (.pin, .pin), (.ocr, .ocr), (.autoRedact, .autoRedact),
+            (.removeBackground, .removeBackground),
+            (.cancel, .cancel):
             return true
         default:
             return false
@@ -3063,7 +3390,8 @@ class OverlayView: NSView {
         overlayErrorTimer?.invalidate()
         overlayErrorMessage = message
         needsDisplay = true
-        overlayErrorTimer = Timer.scheduledTimer(withTimeInterval: 4.0, repeats: false) { [weak self] _ in
+        overlayErrorTimer = Timer.scheduledTimer(withTimeInterval: 4.0, repeats: false) {
+            [weak self] _ in
             self?.overlayErrorMessage = nil
             self?.needsDisplay = true
         }
@@ -3080,13 +3408,17 @@ class OverlayView: NSView {
         viewBounds: NSRect,
         screenH: CGFloat
     ) -> NSRect? {
-        guard let windowList = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else { return nil }
+        guard
+            let windowList = CGWindowListCopyWindowInfo(
+                [.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]]
+        else { return nil }
 
         for info in windowList {
             guard let layer = info[kCGWindowLayer as String] as? Int, layer == 0,
-                  let boundsDict = info[kCGWindowBounds as String] as? [String: CGFloat],
-                  let winNum = info[kCGWindowNumber as String] as? Int,
-                  winNum != overlayWindowNumber else { continue }
+                let boundsDict = info[kCGWindowBounds as String] as? [String: CGFloat],
+                let winNum = info[kCGWindowNumber as String] as? Int,
+                winNum != overlayWindowNumber
+            else { continue }
 
             let cgX = boundsDict["X"] ?? 0
             let cgY = boundsDict["Y"] ?? 0
@@ -3109,14 +3441,17 @@ class OverlayView: NSView {
     }
 
     private func drawWindowSnapHighlight() {
-        guard state == .idle, windowSnapEnabled, let rect = hoveredWindowRect, !rect.isEmpty else { return }
+        guard state == .idle, windowSnapEnabled, let rect = hoveredWindowRect, !rect.isEmpty else {
+            return
+        }
 
         // Tinted fill
         NSColor.systemBlue.withAlphaComponent(0.08).setFill()
         NSBezierPath(roundedRect: rect, xRadius: 4, yRadius: 4).fill()
 
         // Border
-        let border = NSBezierPath(roundedRect: rect.insetBy(dx: 0.5, dy: 0.5), xRadius: 4, yRadius: 4)
+        let border = NSBezierPath(
+            roundedRect: rect.insetBy(dx: 0.5, dy: 0.5), xRadius: 4, yRadius: 4)
         border.lineWidth = 2
         NSColor.systemBlue.withAlphaComponent(0.85).setStroke()
         border.stroke()
@@ -3128,7 +3463,9 @@ class OverlayView: NSView {
         barcodeDetector.cancel()
         needsDisplay = true
         guard state == .selected, let screenshot = screenshotImage else { return }
-        barcodeDetector.scan(image: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect) { [weak self] in
+        barcodeDetector.scan(
+            image: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect
+        ) { [weak self] in
             self?.needsDisplay = true
         }
     }
@@ -3142,7 +3479,7 @@ class OverlayView: NSView {
 
         let attrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .semibold),
-            .foregroundColor: NSColor.white
+            .foregroundColor: NSColor.white,
         ]
         let textSize = (fullStr as NSString).size(withAttributes: attrs)
         let pillH: CGFloat = 28
@@ -3160,8 +3497,9 @@ class OverlayView: NSView {
         NSBezierPath(roundedRect: pillRect, xRadius: pillH / 2, yRadius: pillH / 2).fill()
 
         // Text
-        let textOrigin = NSPoint(x: pillRect.minX + 12,
-                                 y: pillRect.minY + (pillH - textSize.height) / 2)
+        let textOrigin = NSPoint(
+            x: pillRect.minX + 12,
+            y: pillRect.minY + (pillH - textSize.height) / 2)
         (fullStr as NSString).draw(at: textOrigin, withAttributes: attrs)
     }
 
@@ -3175,7 +3513,9 @@ class OverlayView: NSView {
             guard age <= 0.3 else { continue }
             let alpha = max(0, 1.0 - age / 0.3)
             let radius: CGFloat = 18 + CGFloat(age) * 60  // expands outward faster
-            let rect = NSRect(x: entry.point.x - radius, y: entry.point.y - radius, width: radius * 2, height: radius * 2)
+            let rect = NSRect(
+                x: entry.point.x - radius, y: entry.point.y - radius, width: radius * 2,
+                height: radius * 2)
             NSColor.systemYellow.withAlphaComponent(0.35 * alpha).setFill()
             NSBezierPath(ovalIn: rect).fill()
             NSColor.systemYellow.withAlphaComponent(0.6 * alpha).setStroke()
@@ -3197,7 +3537,9 @@ class OverlayView: NSView {
 
     func startMouseHighlightMonitor() {
         guard globalMouseMonitor == nil else { return }
-        globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+        globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: [
+            .leftMouseDown, .rightMouseDown,
+        ]) { [weak self] event in
             guard let self = self else { return }
             // Convert screen point to view coordinates
             // For global monitors, event.locationInWindow is in screen coordinates
@@ -3220,8 +3562,6 @@ class OverlayView: NSView {
         mouseHighlightPoints.removeAll()
     }
 
-
-
     // MARK: - Scroll Capture HUD
 
     /// Drawn directly in the overlay while scroll capture is active.
@@ -3233,8 +3573,8 @@ class OverlayView: NSView {
 
     private func drawScrollCaptureHUD() {
         let barH: CGFloat = 36
-        let pad: CGFloat  = 8
-        let gap: CGFloat  = 6
+        let pad: CGFloat = 8
+        let gap: CGFloat = 6
 
         // --- Info label (left side) ---
         let stripLabel: String
@@ -3245,7 +3585,8 @@ class OverlayView: NSView {
             let ph = Int(scrollCapturePixelSize.height)
             let ptW = Int(CGFloat(pw) / (window?.backingScaleFactor ?? 2))
             let ptH = Int(CGFloat(ph) / (window?.backingScaleFactor ?? 2))
-            stripLabel = "Scroll Capture  ·  \(scrollCaptureStripCount) strip\(scrollCaptureStripCount == 1 ? "" : "s")  ·  \(ptW)×\(ptH)"
+            stripLabel =
+                "Scroll Capture  ·  \(scrollCaptureStripCount) strip\(scrollCaptureStripCount == 1 ? "" : "s")  ·  \(ptW)×\(ptH)"
         }
 
         let infoAttrs: [NSAttributedString.Key: Any] = [
@@ -3278,7 +3619,10 @@ class OverlayView: NSView {
 
         // Draw bar background
         ToolbarLayout.bgColor.setFill()
-        NSBezierPath(roundedRect: barRect, xRadius: ToolbarLayout.cornerRadius, yRadius: ToolbarLayout.cornerRadius).fill()
+        NSBezierPath(
+            roundedRect: barRect, xRadius: ToolbarLayout.cornerRadius,
+            yRadius: ToolbarLayout.cornerRadius
+        ).fill()
 
         // Draw info label
         let infoX = barRect.minX + pad
@@ -3306,7 +3650,8 @@ class OverlayView: NSView {
 
         let stopTextX = stopRect.midX - stopTextSize.width / 2
         let stopTextY = stopRect.midY - stopTextSize.height / 2
-        (stopText as NSString).draw(at: NSPoint(x: stopTextX, y: stopTextY), withAttributes: stopAttrs)
+        (stopText as NSString).draw(
+            at: NSPoint(x: stopTextX, y: stopTextY), withAttributes: stopAttrs)
 
         // Hint text above the selection border (top-left corner, semi-transparent)
         let hintStr = "Scroll to capture  ·  Esc to cancel"
@@ -3319,30 +3664,42 @@ class OverlayView: NSView {
         let hintY = selectionRect.maxY + 5
         // Clamp so it doesn't overflow top of screen
         let clampedHintY = min(hintY, bounds.maxY - hintSize.height - 4)
-        (hintStr as NSString).draw(at: NSPoint(x: hintX, y: clampedHintY), withAttributes: hintAttrs)
+        (hintStr as NSString).draw(
+            at: NSPoint(x: hintX, y: clampedHintY), withAttributes: hintAttrs)
     }
     // MARK: - Toolbar Layout
 
     /// Whether the selection covers (nearly) the full screen
     private var isFullScreenSelection: Bool {
         let margin: CGFloat = 50
-        return selectionRect.minX < bounds.minX + margin &&
-               selectionRect.minY < bounds.minY + margin &&
-               selectionRect.maxX > bounds.maxX - margin &&
-               selectionRect.maxY > bounds.maxY - margin
+        return selectionRect.minX < bounds.minX + margin
+            && selectionRect.minY < bounds.minY + margin
+            && selectionRect.maxX > bounds.maxX - margin
+            && selectionRect.maxY > bounds.maxY - margin
     }
 
     /// Rebuild toolbar button content. Call when tool, color, or state changes — NOT on every draw.
     func rebuildToolbarLayout() {
         let movableAnnotations = annotations.contains { $0.isMovable }
-        bottomButtons = ToolbarLayout.bottomButtons(selectedTool: currentTool, selectedColor: currentColor, beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex, hasAnnotations: movableAnnotations, isRecording: isRecording, isAnnotating: isAnnotating)
+        bottomButtons = ToolbarLayout.bottomButtons(
+            selectedTool: currentTool, selectedColor: currentColor,
+            beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex,
+            hasAnnotations: movableAnnotations, isRecording: isRecording, isAnnotating: isAnnotating
+        )
         if showBeautifyInOptionsRow {
             for i in bottomButtons.indices {
-                if case .tool = bottomButtons[i].action { bottomButtons[i].isSelected = false }
-                else if case .beautify = bottomButtons[i].action { bottomButtons[i].isSelected = true }
+                if case .tool = bottomButtons[i].action {
+                    bottomButtons[i].isSelected = false
+                } else if case .beautify = bottomButtons[i].action {
+                    bottomButtons[i].isSelected = true
+                }
             }
         }
-        rightButtons = ToolbarLayout.rightButtons(beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex, hasAnnotations: movableAnnotations, translateEnabled: translateEnabled, isRecording: isRecording, isCapturingVideo: isCapturingVideo, isAnnotating: isAnnotating, isEditorMode: isEditorMode)
+        rightButtons = ToolbarLayout.rightButtons(
+            beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex,
+            hasAnnotations: movableAnnotations, translateEnabled: translateEnabled,
+            isRecording: isRecording, isCapturingVideo: isCapturingVideo,
+            isAnnotating: isAnnotating, isEditorMode: isEditorMode)
 
         // Create strip views if needed — add to chrome parent (window content) when in scroll view
         let parent = chromeParentView ?? self
@@ -3398,7 +3755,8 @@ class OverlayView: NSView {
         let titleBarH: CGFloat = config.mode == .window ? 28 : 0
         let expandedAnchor = NSRect(
             x: selectionRect.minX - bPad, y: selectionRect.minY - bPad,
-            width: selectionRect.width + bPad * 2, height: selectionRect.height + titleBarH + bPad * 2)
+            width: selectionRect.width + bPad * 2,
+            height: selectionRect.height + titleBarH + bPad * 2)
         let anchorRect: NSRect
         if beautifyToolbarAnimProgress < 1.0 {
             let t = beautifyToolbarAnimProgress
@@ -3425,7 +3783,8 @@ class OverlayView: NSView {
             let cb = chromeParentView?.bounds ?? bounds
             bottomStrip.frame.origin = NSPoint(x: cb.midX - bottomSize.width / 2, y: 6)
             bottomStrip.autoresizingMask = [.minXMargin, .maxXMargin, .maxYMargin]
-            rightStrip.frame.origin = NSPoint(x: cb.maxX - rightSize.width - 6, y: cb.maxY - rightSize.height - 36)
+            rightStrip.frame.origin = NSPoint(
+                x: cb.maxX - rightSize.width - 6, y: cb.maxY - rightSize.height - 36)
             rightStrip.autoresizingMask = [.minXMargin, .minYMargin]
         } else {
             var bx = anchorRect.midX - bottomSize.width / 2
@@ -3448,7 +3807,8 @@ class OverlayView: NSView {
             // Avoid overlapping bottom bar — shift right bar horizontally if needed
             let bf = bottomStrip.frame
             if bf.width > 0 {
-                let rightRect = NSRect(x: rx, y: ry, width: rightSize.width, height: rightSize.height)
+                let rightRect = NSRect(
+                    x: rx, y: ry, width: rightSize.width, height: rightSize.height)
                 if rightRect.intersects(bf) {
                     // Move right bar to the right of the bottom bar
                     rx = bf.maxX + 4
@@ -3482,14 +3842,14 @@ class OverlayView: NSView {
         let r = selectionRect
         let s = handleSize
         return [
-            (.topLeft, NSRect(x: r.minX - s/2, y: r.maxY - s/2, width: s, height: s)),
-            (.topRight, NSRect(x: r.maxX - s/2, y: r.maxY - s/2, width: s, height: s)),
-            (.bottomLeft, NSRect(x: r.minX - s/2, y: r.minY - s/2, width: s, height: s)),
-            (.bottomRight, NSRect(x: r.maxX - s/2, y: r.minY - s/2, width: s, height: s)),
-            (.top, NSRect(x: r.midX - s/2, y: r.maxY - s/2, width: s, height: s)),
-            (.bottom, NSRect(x: r.midX - s/2, y: r.minY - s/2, width: s, height: s)),
-            (.left, NSRect(x: r.minX - s/2, y: r.midY - s/2, width: s, height: s)),
-            (.right, NSRect(x: r.maxX - s/2, y: r.midY - s/2, width: s, height: s)),
+            (.topLeft, NSRect(x: r.minX - s / 2, y: r.maxY - s / 2, width: s, height: s)),
+            (.topRight, NSRect(x: r.maxX - s / 2, y: r.maxY - s / 2, width: s, height: s)),
+            (.bottomLeft, NSRect(x: r.minX - s / 2, y: r.minY - s / 2, width: s, height: s)),
+            (.bottomRight, NSRect(x: r.maxX - s / 2, y: r.minY - s / 2, width: s, height: s)),
+            (.top, NSRect(x: r.midX - s / 2, y: r.maxY - s / 2, width: s, height: s)),
+            (.bottom, NSRect(x: r.midX - s / 2, y: r.minY - s / 2, width: s, height: s)),
+            (.left, NSRect(x: r.minX - s / 2, y: r.midY - s / 2, width: s, height: s)),
+            (.right, NSRect(x: r.maxX - s / 2, y: r.midY - s / 2, width: s, height: s)),
         ]
     }
 
@@ -3511,19 +3871,27 @@ class OverlayView: NSView {
         let edgeThickness: CGFloat = 8
         let r = selectionRect
         // Top edge
-        if NSRect(x: r.minX, y: r.maxY - edgeThickness/2, width: r.width, height: edgeThickness).contains(point) {
+        if NSRect(x: r.minX, y: r.maxY - edgeThickness / 2, width: r.width, height: edgeThickness)
+            .contains(point)
+        {
             return .top
         }
         // Bottom edge
-        if NSRect(x: r.minX, y: r.minY - edgeThickness/2, width: r.width, height: edgeThickness).contains(point) {
+        if NSRect(x: r.minX, y: r.minY - edgeThickness / 2, width: r.width, height: edgeThickness)
+            .contains(point)
+        {
             return .bottom
         }
         // Left edge
-        if NSRect(x: r.minX - edgeThickness/2, y: r.minY, width: edgeThickness, height: r.height).contains(point) {
+        if NSRect(x: r.minX - edgeThickness / 2, y: r.minY, width: edgeThickness, height: r.height)
+            .contains(point)
+        {
             return .left
         }
         // Right edge
-        if NSRect(x: r.maxX - edgeThickness/2, y: r.minY, width: edgeThickness, height: r.height).contains(point) {
+        if NSRect(x: r.maxX - edgeThickness / 2, y: r.minY, width: edgeThickness, height: r.height)
+            .contains(point)
+        {
             return .right
         }
 
@@ -3534,16 +3902,24 @@ class OverlayView: NSView {
     private func hitTestTextResize(point: NSPoint, scrollViewFrame: NSRect) -> ResizeHandle {
         let handleSize: CGFloat = 10
         let r = scrollViewFrame
-        let hs = handleSize + 4 // handle hit area
+        let hs = handleSize + 4  // handle hit area
 
         // Top-left
-        if NSRect(x: r.minX - hs/2, y: r.maxY - hs/2, width: hs, height: hs).contains(point) { return .topLeft }
+        if NSRect(x: r.minX - hs / 2, y: r.maxY - hs / 2, width: hs, height: hs).contains(point) {
+            return .topLeft
+        }
         // Top-right
-        if NSRect(x: r.maxX - hs/2, y: r.maxY - hs/2, width: hs, height: hs).contains(point) { return .topRight }
+        if NSRect(x: r.maxX - hs / 2, y: r.maxY - hs / 2, width: hs, height: hs).contains(point) {
+            return .topRight
+        }
         // Bottom-left
-        if NSRect(x: r.minX - hs/2, y: r.minY - hs/2, width: hs, height: hs).contains(point) { return .bottomLeft }
+        if NSRect(x: r.minX - hs / 2, y: r.minY - hs / 2, width: hs, height: hs).contains(point) {
+            return .bottomLeft
+        }
         // Bottom-right
-        if NSRect(x: r.maxX - hs/2, y: r.minY - hs/2, width: hs, height: hs).contains(point) { return .bottomRight }
+        if NSRect(x: r.maxX - hs / 2, y: r.minY - hs / 2, width: hs, height: hs).contains(point) {
+            return .bottomRight
+        }
 
         return .none
     }
@@ -3557,9 +3933,12 @@ class OverlayView: NSView {
 
         // Control-click = right-click for color sampler (supports BetterTouchTool and other tools
         // that simulate right-click via control-click instead of rightMouseDown)
-        if event.modifierFlags.contains(.control) && state == .selected && currentTool == .colorSampler {
+        if event.modifierFlags.contains(.control) && state == .selected
+            && currentTool == .colorSampler
+        {
             if let screenshot = screenshotImage,
-               let result = sampleColor(from: screenshot, at: viewToCanvas(point)) {
+                let result = sampleColor(from: screenshot, at: viewToCanvas(point))
+            {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(result.hex, forType: .string)
                 showOverlayError("Copied \(result.hex)")
@@ -3571,7 +3950,8 @@ class OverlayView: NSView {
         // Control-click on line/arrow: add anchor point (same as right-click)
         if event.modifierFlags.contains(.control) && state == .selected {
             if let ann = selectedAnnotation ?? hoveredAnnotation,
-               (ann.tool == .arrow || ann.tool == .line || ann.tool == .measure) {
+                ann.tool == .arrow || ann.tool == .line || ann.tool == .measure
+            {
                 let canvasPoint = viewToCanvas(point)
                 if ann.hitTest(point: canvasPoint) {
                     addAnchorPoint(to: ann, at: canvasPoint)
@@ -3611,9 +3991,6 @@ class OverlayView: NSView {
 
         let isTextEditing = textEditView != nil
 
-
-
-
         // Check text box resize handles when editing
         if isTextEditing && showToolbars {
             // Check text box resize handles
@@ -3621,14 +3998,29 @@ class OverlayView: NSView {
                 let hs: CGFloat = 10  // hit area
                 let f = sv.frame
                 let handles: [(ResizeHandle, NSRect)] = [
-                    (.bottomLeft,  NSRect(x: f.minX - hs/2, y: f.minY - hs/2, width: hs, height: hs)),
-                    (.bottomRight, NSRect(x: f.maxX - hs/2, y: f.minY - hs/2, width: hs, height: hs)),
-                    (.topLeft,     NSRect(x: f.minX - hs/2, y: f.maxY - hs/2, width: hs, height: hs)),
-                    (.topRight,    NSRect(x: f.maxX - hs/2, y: f.maxY - hs/2, width: hs, height: hs)),
-                    (.bottom,      NSRect(x: f.midX - hs/2, y: f.minY - hs/2, width: hs, height: hs)),
-                    (.top,         NSRect(x: f.midX - hs/2, y: f.maxY - hs/2, width: hs, height: hs)),
-                    (.left,        NSRect(x: f.minX - hs/2, y: f.midY - hs/2, width: hs, height: hs)),
-                    (.right,       NSRect(x: f.maxX - hs/2, y: f.midY - hs/2, width: hs, height: hs)),
+                    (
+                        .bottomLeft,
+                        NSRect(x: f.minX - hs / 2, y: f.minY - hs / 2, width: hs, height: hs)
+                    ),
+                    (
+                        .bottomRight,
+                        NSRect(x: f.maxX - hs / 2, y: f.minY - hs / 2, width: hs, height: hs)
+                    ),
+                    (
+                        .topLeft,
+                        NSRect(x: f.minX - hs / 2, y: f.maxY - hs / 2, width: hs, height: hs)
+                    ),
+                    (
+                        .topRight,
+                        NSRect(x: f.maxX - hs / 2, y: f.maxY - hs / 2, width: hs, height: hs)
+                    ),
+                    (
+                        .bottom,
+                        NSRect(x: f.midX - hs / 2, y: f.minY - hs / 2, width: hs, height: hs)
+                    ),
+                    (.top, NSRect(x: f.midX - hs / 2, y: f.maxY - hs / 2, width: hs, height: hs)),
+                    (.left, NSRect(x: f.minX - hs / 2, y: f.midY - hs / 2, width: hs, height: hs)),
+                    (.right, NSRect(x: f.maxX - hs / 2, y: f.midY - hs / 2, width: hs, height: hs)),
                 ]
                 for (handle, rect) in handles {
                     if rect.contains(point) {
@@ -3647,8 +4039,9 @@ class OverlayView: NSView {
         }
 
         // Don't commit text if clicking on text formatting controls in the options row
-        let isTextFormattingClick = textEditView != nil && currentTool == .text &&
-            ((toolOptionsRowView?.frame.contains(point) ?? false))
+        let isTextFormattingClick =
+            textEditView != nil && currentTool == .text
+            && ((toolOptionsRowView?.frame.contains(point) ?? false))
         if !isTextFormattingClick {
             commitTextFieldIfNeeded()
         }
@@ -3753,10 +4146,13 @@ class OverlayView: NSView {
                 x: max(selectionRect.minX, min(canvasPt.x, selectionRect.maxX)),
                 y: max(selectionRect.minY, min(canvasPt.y, selectionRect.maxY))
             )
-            let origin = NSPoint(x: min(cropDragStart.x, clampedPoint.x), y: min(cropDragStart.y, clampedPoint.y))
-            cropDragRect = NSRect(origin: origin,
-                                  size: NSSize(width: abs(clampedPoint.x - cropDragStart.x),
-                                               height: abs(clampedPoint.y - cropDragStart.y)))
+            let origin = NSPoint(
+                x: min(cropDragStart.x, clampedPoint.x), y: min(cropDragStart.y, clampedPoint.y))
+            cropDragRect = NSRect(
+                origin: origin,
+                size: NSSize(
+                    width: abs(clampedPoint.x - cropDragStart.x),
+                    height: abs(clampedPoint.y - cropDragStart.y)))
             needsDisplay = true
             return
         }
@@ -3771,24 +4167,44 @@ class OverlayView: NSView {
             let minH: CGFloat = max(28, textFontSize + 12)
 
             switch textBoxResizeHandle {
-            case .right:       newFrame.size.width = max(minW, orig.width + dx)
-            case .left:        newFrame.origin.x = min(orig.maxX - minW, orig.minX + dx); newFrame.size.width = orig.maxX - newFrame.minX
-            case .top:         newFrame.size.height = max(minH, orig.height + dy)
-            case .bottom:      let newMinY = min(orig.maxY - minH, orig.minY + dy); newFrame.origin.y = newMinY; newFrame.size.height = orig.maxY - newMinY
-            case .topRight:    newFrame.size.width = max(minW, orig.width + dx); newFrame.size.height = max(minH, orig.height + dy)
-            case .topLeft:     newFrame.origin.x = min(orig.maxX - minW, orig.minX + dx); newFrame.size.width = orig.maxX - newFrame.minX; newFrame.size.height = max(minH, orig.height + dy)
-            case .bottomRight: newFrame.size.width = max(minW, orig.width + dx); let newMinY = min(orig.maxY - minH, orig.minY + dy); newFrame.origin.y = newMinY; newFrame.size.height = orig.maxY - newMinY
-            case .bottomLeft:  newFrame.origin.x = min(orig.maxX - minW, orig.minX + dx); newFrame.size.width = orig.maxX - newFrame.minX; let newMinY = min(orig.maxY - minH, orig.minY + dy); newFrame.origin.y = newMinY; newFrame.size.height = orig.maxY - newMinY
+            case .right: newFrame.size.width = max(minW, orig.width + dx)
+            case .left:
+                newFrame.origin.x = min(orig.maxX - minW, orig.minX + dx)
+                newFrame.size.width = orig.maxX - newFrame.minX
+            case .top: newFrame.size.height = max(minH, orig.height + dy)
+            case .bottom:
+                let newMinY = min(orig.maxY - minH, orig.minY + dy)
+                newFrame.origin.y = newMinY
+                newFrame.size.height = orig.maxY - newMinY
+            case .topRight:
+                newFrame.size.width = max(minW, orig.width + dx)
+                newFrame.size.height = max(minH, orig.height + dy)
+            case .topLeft:
+                newFrame.origin.x = min(orig.maxX - minW, orig.minX + dx)
+                newFrame.size.width = orig.maxX - newFrame.minX
+                newFrame.size.height = max(minH, orig.height + dy)
+            case .bottomRight:
+                newFrame.size.width = max(minW, orig.width + dx)
+                let newMinY = min(orig.maxY - minH, orig.minY + dy)
+                newFrame.origin.y = newMinY
+                newFrame.size.height = orig.maxY - newMinY
+            case .bottomLeft:
+                newFrame.origin.x = min(orig.maxX - minW, orig.minX + dx)
+                newFrame.size.width = orig.maxX - newFrame.minX
+                let newMinY = min(orig.maxY - minH, orig.minY + dy)
+                newFrame.origin.y = newMinY
+                newFrame.size.height = orig.maxY - newMinY
             default: break
             }
 
             sv.frame = newFrame
             tv.frame.size = newFrame.size
-            tv.textContainer?.containerSize = NSSize(width: newFrame.width - tv.textContainerInset.width * 2, height: CGFloat.greatestFiniteMagnitude)
+            tv.textContainer?.containerSize = NSSize(
+                width: newFrame.width - tv.textContainerInset.width * 2,
+                height: CGFloat.greatestFiniteMagnitude)
             needsDisplay = true
             return
         }
-
 
         switch state {
         case .selecting:
@@ -3815,7 +4231,8 @@ class OverlayView: NSView {
             // Convert to canvas space for annotation interactions (accounts for zoom)
             let canvasPoint = viewToCanvas(point)
             if isRotatingAnnotation, let annotation = selectedAnnotation {
-                let center = NSPoint(x: annotation.boundingRect.midX, y: annotation.boundingRect.midY)
+                let center = NSPoint(
+                    x: annotation.boundingRect.midX, y: annotation.boundingRect.midY)
                 let currentAngle = atan2(canvasPoint.x - center.x, canvasPoint.y - center.y)
                 var newRotation = rotationOriginal - (currentAngle - rotationStartAngle)
                 // Shift: snap to 90° steps
@@ -3847,8 +4264,12 @@ class OverlayView: NSView {
                 let shiftHeld = event.modifierFlags.contains(.shift)
 
                 // Arrow/line/measure: .bottomLeft = startPoint, .topRight = endPoint, others = anchor points
-                if annotation.tool == .arrow || annotation.tool == .line || annotation.tool == .measure {
-                    let newPt = NSPoint(x: annotationResizeOrigControlPoint.x + dx, y: annotationResizeOrigControlPoint.y + dy)
+                if annotation.tool == .arrow || annotation.tool == .line
+                    || annotation.tool == .measure
+                {
+                    let newPt = NSPoint(
+                        x: annotationResizeOrigControlPoint.x + dx,
+                        y: annotationResizeOrigControlPoint.y + dy)
                     switch annotationResizeHandle {
                     case .bottomLeft:
                         var newStart = NSPoint(x: origStart.x + dx, y: origStart.y + dy)
@@ -3859,7 +4280,9 @@ class OverlayView: NSView {
                             let angle = atan2(ddy, ddx)
                             let snapped = (angle / (.pi / 4)).rounded() * (.pi / 4)
                             let dist = hypot(ddx, ddy)
-                            newStart = NSPoint(x: anchor.x + dist * cos(snapped), y: anchor.y + dist * sin(snapped))
+                            newStart = NSPoint(
+                                x: anchor.x + dist * cos(snapped), y: anchor.y + dist * sin(snapped)
+                            )
                         }
                         annotation.startPoint = newStart
                         if var anchors = annotation.anchorPoints, !anchors.isEmpty {
@@ -3875,7 +4298,9 @@ class OverlayView: NSView {
                             let angle = atan2(ddy, ddx)
                             let snapped = (angle / (.pi / 4)).rounded() * (.pi / 4)
                             let dist = hypot(ddx, ddy)
-                            newEnd = NSPoint(x: anchor.x + dist * cos(snapped), y: anchor.y + dist * sin(snapped))
+                            newEnd = NSPoint(
+                                x: anchor.x + dist * cos(snapped), y: anchor.y + dist * sin(snapped)
+                            )
                         }
                         annotation.endPoint = newEnd
                         if var anchors = annotation.anchorPoints, anchors.count >= 2 {
@@ -3898,63 +4323,65 @@ class OverlayView: NSView {
                         }
                     }
                 } else {
-                // Work in bounding-rect space so resize is correct regardless of draw direction
-                let origMinX = min(origStart.x, origEnd.x)
-                let origMaxX = max(origStart.x, origEnd.x)
-                let origMinY = min(origStart.y, origEnd.y)
-                let origMaxY = max(origStart.y, origEnd.y)
-                var newMinX = origMinX, newMaxX = origMaxX
-                var newMinY = origMinY, newMaxY = origMaxY
+                    // Work in bounding-rect space so resize is correct regardless of draw direction
+                    let origMinX = min(origStart.x, origEnd.x)
+                    let origMaxX = max(origStart.x, origEnd.x)
+                    let origMinY = min(origStart.y, origEnd.y)
+                    let origMaxY = max(origStart.y, origEnd.y)
+                    var newMinX = origMinX
+                    var newMaxX = origMaxX
+                    var newMinY = origMinY
+                    var newMaxY = origMaxY
 
-                switch annotationResizeHandle {
-                case .topLeft:
-                    newMinX = min(origMinX + dx, origMaxX - 10)
-                    newMaxY = max(origMaxY + dy, origMinY + 10)
-                case .topRight:
-                    newMaxX = max(origMaxX + dx, origMinX + 10)
-                    newMaxY = max(origMaxY + dy, origMinY + 10)
-                case .bottomLeft:
-                    newMinX = min(origMinX + dx, origMaxX - 10)
-                    newMinY = min(origMinY + dy, origMaxY - 10)
-                case .bottomRight:
-                    newMaxX = max(origMaxX + dx, origMinX + 10)
-                    newMinY = min(origMinY + dy, origMaxY - 10)
-                case .top:
-                    newMaxY = max(origMaxY + dy, origMinY + 10)
-                case .bottom:
-                    newMinY = min(origMinY + dy, origMaxY - 10)
-                case .left:
-                    newMinX = min(origMinX + dx, origMaxX - 10)
-                case .right:
-                    newMaxX = max(origMaxX + dx, origMinX + 10)
-                default:
-                    break
-                }
-
-                // Shift constraint: force square/circle for corner handles
-                if shiftHeld {
-                    let w = newMaxX - newMinX
-                    let h = newMaxY - newMinY
-                    let side = max(w, h)
                     switch annotationResizeHandle {
                     case .topLeft:
-                        newMinX = newMaxX - side
-                        newMaxY = newMinY + side
+                        newMinX = min(origMinX + dx, origMaxX - 10)
+                        newMaxY = max(origMaxY + dy, origMinY + 10)
                     case .topRight:
-                        newMaxX = newMinX + side
-                        newMaxY = newMinY + side
+                        newMaxX = max(origMaxX + dx, origMinX + 10)
+                        newMaxY = max(origMaxY + dy, origMinY + 10)
                     case .bottomLeft:
-                        newMinX = newMaxX - side
-                        newMinY = newMaxY - side
+                        newMinX = min(origMinX + dx, origMaxX - 10)
+                        newMinY = min(origMinY + dy, origMaxY - 10)
                     case .bottomRight:
-                        newMaxX = newMinX + side
-                        newMinY = newMaxY - side
-                    default: break
+                        newMaxX = max(origMaxX + dx, origMinX + 10)
+                        newMinY = min(origMinY + dy, origMaxY - 10)
+                    case .top:
+                        newMaxY = max(origMaxY + dy, origMinY + 10)
+                    case .bottom:
+                        newMinY = min(origMinY + dy, origMaxY - 10)
+                    case .left:
+                        newMinX = min(origMinX + dx, origMaxX - 10)
+                    case .right:
+                        newMaxX = max(origMaxX + dx, origMinX + 10)
+                    default:
+                        break
                     }
-                }
 
-                annotation.startPoint = NSPoint(x: newMinX, y: newMinY)
-                annotation.endPoint   = NSPoint(x: newMaxX, y: newMaxY)
+                    // Shift constraint: force square/circle for corner handles
+                    if shiftHeld {
+                        let w = newMaxX - newMinX
+                        let h = newMaxY - newMinY
+                        let side = max(w, h)
+                        switch annotationResizeHandle {
+                        case .topLeft:
+                            newMinX = newMaxX - side
+                            newMaxY = newMinY + side
+                        case .topRight:
+                            newMaxX = newMinX + side
+                            newMaxY = newMinY + side
+                        case .bottomLeft:
+                            newMinX = newMaxX - side
+                            newMinY = newMaxY - side
+                        case .bottomRight:
+                            newMaxX = newMinX + side
+                            newMinY = newMaxY - side
+                        default: break
+                        }
+                    }
+
+                    annotation.startPoint = NSPoint(x: newMinX, y: newMinY)
+                    annotation.endPoint = NSPoint(x: newMaxX, y: newMaxY)
                 }
                 cachedCompositedImage = nil
                 needsDisplay = true
@@ -3967,7 +4394,8 @@ class OverlayView: NSView {
                 let finalDx = rawDx + snap.dx
                 let finalDy = rawDy + snap.dy
                 annotation.move(dx: finalDx, dy: finalDy)
-                annotationDragStart = NSPoint(x: canvasPoint.x + snap.dx, y: canvasPoint.y + snap.dy)
+                annotationDragStart = NSPoint(
+                    x: canvasPoint.x + snap.dx, y: canvasPoint.y + snap.dy)
                 cachedCompositedImage = nil
                 needsDisplay = true
             } else if isDraggingSelection {
@@ -3986,11 +4414,14 @@ class OverlayView: NSView {
                     currentAnnotation!.endPoint.x += dx
                     currentAnnotation!.endPoint.y += dy
                     if let points = currentAnnotation!.points {
-                        currentAnnotation!.points = points.map { NSPoint(x: $0.x + dx, y: $0.y + dy) }
+                        currentAnnotation!.points = points.map {
+                            NSPoint(x: $0.x + dx, y: $0.y + dy)
+                        }
                     }
                     spaceRepositionLast = canvasPoint
                 } else {
-                    updateAnnotation(at: canvasPoint, shiftHeld: event.modifierFlags.contains(.shift))
+                    updateAnnotation(
+                        at: canvasPoint, shiftHeld: event.modifierFlags.contains(.shift))
                 }
                 lastDragPoint = canvasPoint
                 needsDisplay = true
@@ -4128,7 +4559,8 @@ class OverlayView: NSView {
         // Right-click on a selected/hovered line/arrow: add anchor point
         if state == .selected {
             if let ann = selectedAnnotation ?? hoveredAnnotation,
-               (ann.tool == .arrow || ann.tool == .line || ann.tool == .measure) {
+                ann.tool == .arrow || ann.tool == .line || ann.tool == .measure
+            {
                 let canvasPoint = viewToCanvas(point)
                 if ann.hitTest(point: canvasPoint) {
                     addAnchorPoint(to: ann, at: canvasPoint)
@@ -4142,7 +4574,8 @@ class OverlayView: NSView {
         if state == .selected && currentTool == .colorSampler {
             // Right-click with color sampler: copy hex to clipboard
             if let screenshot = screenshotImage,
-               let result = sampleColor(from: screenshot, at: viewToCanvas(point)) {
+                let result = sampleColor(from: screenshot, at: viewToCanvas(point))
+            {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(result.hex, forType: .string)
                 showOverlayError("Copied \(result.hex)")
@@ -4154,7 +4587,7 @@ class OverlayView: NSView {
         if state == .selected && pointIsInSelection(point) {
             // Show radial color wheel
             colorWheel.show(at: point)
-            
+
             colorWheel.hoveredIndex = -1
             needsDisplay = true
             return
@@ -4196,7 +4629,8 @@ class OverlayView: NSView {
                 let newMag = sv.magnification + delta * 0.05
                 sv.magnification = max(sv.minMagnification, min(sv.maxMagnification, newMag))
                 // Update zoom label
-                if let topBar = sv.superview?.subviews.compactMap({ $0 as? EditorTopBarView }).first {
+                if let topBar = sv.superview?.subviews.compactMap({ $0 as? EditorTopBarView }).first
+                {
                     topBar.updateZoom(sv.magnification)
                 }
             } else {
@@ -4211,7 +4645,10 @@ class OverlayView: NSView {
         // Phase-based (trackpad) scroll without Cmd → pan only, never zoom
         if isTrackpadPhased && !isCommandScroll {
             // Allow panning when zoomed OR when the image exceeds the view (tall/wide images in editor)
-            let imageExceedsView = canPanAtOneX() || (isEditorMode && (selectionRect.height > bounds.height || selectionRect.width > bounds.width))
+            let imageExceedsView =
+                canPanAtOneX()
+                || (isEditorMode
+                    && (selectionRect.height > bounds.height || selectionRect.width > bounds.width))
             guard zoomLevel != 1.0 || imageExceedsView else { return }
             let dx = event.scrollingDeltaX
             let dy = event.scrollingDeltaY
@@ -4231,7 +4668,10 @@ class OverlayView: NSView {
     }
 
     override func magnify(with event: NSEvent) {
-        if isInsideScrollView { enclosingScrollView?.magnify(with: event); return }
+        if isInsideScrollView {
+            enclosingScrollView?.magnify(with: event)
+            return
+        }
         guard state == .selected else { return }
         let cursor = convert(event.locationInWindow, from: nil)
         setZoom(zoomLevel + event.magnification, cursorView: cursor)
@@ -4272,7 +4712,8 @@ class OverlayView: NSView {
         case .topRight:
             let newMaxX = max(point.x, r.minX + minSize)
             let newMaxY = max(point.y, r.minY + minSize)
-            newRect = NSRect(x: r.minX, y: r.minY, width: newMaxX - r.minX, height: newMaxY - r.minY)
+            newRect = NSRect(
+                x: r.minX, y: r.minY, width: newMaxX - r.minX, height: newMaxY - r.minY)
         case .bottomLeft:
             let newX = min(point.x, r.maxX - minSize)
             let newY = min(point.y, r.maxY - minSize)
@@ -4307,19 +4748,24 @@ class OverlayView: NSView {
         switch action {
         case .autoRedact:
             PopoverHelper.dismiss()
-            showRedactTypePopover(anchorRect: anchorView.convert(anchorView.bounds, to: self), anchorView: anchorView)
+            showRedactTypePopover(
+                anchorRect: anchorView.convert(anchorView.bounds, to: self), anchorView: anchorView)
         case .save:
             let menu = NSMenu()
-            let saveAsItem = NSMenuItem(title: "Save As...", action: #selector(saveAsMenuAction), keyEquivalent: "")
+            let saveAsItem = NSMenuItem(
+                title: "Save As...", action: #selector(saveAsMenuAction), keyEquivalent: "")
             saveAsItem.target = self
             menu.addItem(saveAsItem)
-            menu.popUp(positioning: nil, at: NSPoint(x: 0, y: anchorView.bounds.height), in: anchorView)
+            menu.popUp(
+                positioning: nil, at: NSPoint(x: 0, y: anchorView.bounds.height), in: anchorView)
         case .upload:
             PopoverHelper.dismiss()
-            showUploadConfirmPopover(anchorRect: anchorView.convert(anchorView.bounds, to: self), anchorView: anchorView)
+            showUploadConfirmPopover(
+                anchorRect: anchorView.convert(anchorView.bounds, to: self), anchorView: anchorView)
         case .translate:
             PopoverHelper.dismiss()
-            showTranslatePopover(anchorRect: anchorView.convert(anchorView.bounds, to: self), anchorView: anchorView)
+            showTranslatePopover(
+                anchorRect: anchorView.convert(anchorView.bounds, to: self), anchorView: anchorView)
         default:
             break
         }
@@ -4329,7 +4775,8 @@ class OverlayView: NSView {
         // When recording but not in annotation mode, only allow recording-control actions
         if isRecording && !isAnnotating {
             switch action {
-            case .annotationMode, .startRecord, .stopRecord, .mouseHighlight, .systemAudio, .micAudio:
+            case .annotationMode, .startRecord, .stopRecord, .mouseHighlight, .systemAudio,
+                .micAudio:
                 break  // allowed — fall through to main switch
             default:
                 return
@@ -4363,7 +4810,10 @@ class OverlayView: NSView {
             // Start drag-to-move immediately (hold and drag, release to stop)
             isDraggingSelection = true
             moveMode = true
-            let mp = mousePoint == .zero ? (window.map { convert($0.mouseLocationOutsideOfEventStream, from: nil) } ?? .zero) : mousePoint
+            let mp =
+                mousePoint == .zero
+                ? (window.map { convert($0.mouseLocationOutsideOfEventStream, from: nil) } ?? .zero)
+                : mousePoint
             dragOffset = NSPoint(x: mp.x - selectionRect.origin.x, y: mp.y - selectionRect.origin.y)
             needsDisplay = true
         case .undo:
@@ -4446,7 +4896,9 @@ class OverlayView: NSView {
             // Actually start recording
             isCapturingVideo = true
             // Start monitors based on toggle state
-            if UserDefaults.standard.bool(forKey: "recordMouseHighlight") { startMouseHighlightMonitor() }
+            if UserDefaults.standard.bool(forKey: "recordMouseHighlight") {
+                startMouseHighlightMonitor()
+            }
             rebuildToolbarLayout()
             overlayDelegate?.overlayViewDidRequestStartRecording(rect: selectionRect)
         case .stopRecord:
@@ -4491,10 +4943,6 @@ class OverlayView: NSView {
     /// if the custom picker swatch was clicked, or picks from the HSB gradient.
     /// Returns nil if nothing was hit.
 
-
-
-
-
     private func applyColorToTextIfEditing() {
         if let tv = textEditView {
             let textColor = annotationColor
@@ -4533,7 +4981,8 @@ class OverlayView: NSView {
         // Note: point is already in canvas space (converted by caller).
         if currentTool == .colorSampler {
             if let screenshot = screenshotImage,
-               let result = sampleColor(from: screenshot, at: point) {
+                let result = sampleColor(from: screenshot, at: point)
+            {
                 currentColor = result.color
                 currentColorOpacity = 1.0
                 OverlayView.lastUsedOpacity = 1.0
@@ -4580,14 +5029,19 @@ class OverlayView: NSView {
                         annotations.remove(at: idx)
                         selectedAnnotation = nil
                     }
-                    showTextField(at: frame.origin, existingText: selected.attributedText, existingFrame: frame)
+                    showTextField(
+                        at: frame.origin, existingText: selected.attributedText,
+                        existingFrame: frame)
                     needsDisplay = true
                     return
                 }
                 // Rotation handle
-                if annotationRotateHandleRect != .zero && annotationRotateHandleRect.insetBy(dx: -6, dy: -6).contains(point) {
+                if annotationRotateHandleRect != .zero
+                    && annotationRotateHandleRect.insetBy(dx: -6, dy: -6).contains(point)
+                {
                     isRotatingAnnotation = true
-                    let center = NSPoint(x: selected.boundingRect.midX, y: selected.boundingRect.midY)
+                    let center = NSPoint(
+                        x: selected.boundingRect.midX, y: selected.boundingRect.midY)
                     rotationStartAngle = atan2(point.x - center.x, point.y - center.y)
                     rotationOriginal = selected.rotation
                     return
@@ -4595,13 +5049,15 @@ class OverlayView: NSView {
                 // Resize handles — unrotate point into annotation's local space
                 let handleTestPoint: NSPoint
                 if selected.rotation != 0 && selected.supportsRotation {
-                    let center = NSPoint(x: selected.boundingRect.midX, y: selected.boundingRect.midY)
+                    let center = NSPoint(
+                        x: selected.boundingRect.midX, y: selected.boundingRect.midY)
                     let cos_r = cos(-selected.rotation)
                     let sin_r = sin(-selected.rotation)
                     let dx = point.x - center.x
                     let dy = point.y - center.y
-                    handleTestPoint = NSPoint(x: center.x + dx * cos_r - dy * sin_r,
-                                              y: center.y + dx * sin_r + dy * cos_r)
+                    handleTestPoint = NSPoint(
+                        x: center.x + dx * cos_r - dy * sin_r,
+                        y: center.y + dx * sin_r + dy * cos_r)
                 } else {
                     handleTestPoint = point
                 }
@@ -4624,10 +5080,12 @@ class OverlayView: NSView {
                             }
                         } else if handle != .bottomLeft && handle != .topRight {
                             // Legacy single controlPoint
-                            annotationResizeOrigControlPoint = selected.controlPoint ?? NSPoint(
-                                x: (selected.startPoint.x + selected.endPoint.x) / 2,
-                                y: (selected.startPoint.y + selected.endPoint.y) / 2
-                            )
+                            annotationResizeOrigControlPoint =
+                                selected.controlPoint
+                                ?? NSPoint(
+                                    x: (selected.startPoint.x + selected.endPoint.x) / 2,
+                                    y: (selected.startPoint.y + selected.endPoint.y) / 2
+                                )
                         }
                         return
                     }
@@ -4662,8 +5120,9 @@ class OverlayView: NSView {
                 let sin_r = sin(-hovered.rotation)
                 let dx = point.x - center.x
                 let dy = point.y - center.y
-                hoverHandlePoint = NSPoint(x: center.x + dx * cos_r - dy * sin_r,
-                                           y: center.y + dx * sin_r + dy * cos_r)
+                hoverHandlePoint = NSPoint(
+                    x: center.x + dx * cos_r - dy * sin_r,
+                    y: center.y + dx * sin_r + dy * cos_r)
             } else {
                 hoverHandlePoint = point
             }
@@ -4687,17 +5146,21 @@ class OverlayView: NSView {
                             annotationResizeOrigControlPoint = anchors[anchorIdx]
                         }
                     } else if handle != .bottomLeft && handle != .topRight {
-                        annotationResizeOrigControlPoint = hovered.controlPoint ?? NSPoint(
-                            x: (hovered.startPoint.x + hovered.endPoint.x) / 2,
-                            y: (hovered.startPoint.y + hovered.endPoint.y) / 2
-                        )
+                        annotationResizeOrigControlPoint =
+                            hovered.controlPoint
+                            ?? NSPoint(
+                                x: (hovered.startPoint.x + hovered.endPoint.x) / 2,
+                                y: (hovered.startPoint.y + hovered.endPoint.y) / 2
+                            )
                     }
                     needsDisplay = true
                     return
                 }
             }
             // Check rotation handle
-            if annotationRotateHandleRect != .zero && annotationRotateHandleRect.insetBy(dx: -6, dy: -6).contains(point) {
+            if annotationRotateHandleRect != .zero
+                && annotationRotateHandleRect.insetBy(dx: -6, dy: -6).contains(point)
+            {
                 selectedAnnotation = hovered
                 isRotatingAnnotation = true
                 let center = NSPoint(x: hovered.boundingRect.midX, y: hovered.boundingRect.midY)
@@ -4733,8 +5196,8 @@ class OverlayView: NSView {
             let size = currentLoupeSize
             let loupeAnnotation = Annotation(
                 tool: .loupe,
-                startPoint: NSPoint(x: point.x - size/2, y: point.y - size/2),
-                endPoint: NSPoint(x: point.x + size/2, y: point.y + size/2),
+                startPoint: NSPoint(x: point.x - size / 2, y: point.y - size / 2),
+                endPoint: NSPoint(x: point.x + size / 2, y: point.y + size / 2),
                 color: currentColor,
                 strokeWidth: currentStrokeWidth
             )
@@ -4755,7 +5218,9 @@ class OverlayView: NSView {
         case .text:
             // Check if clicking on an existing text annotation → re-edit it
             // Note: point is already in canvas space (converted by caller).
-            if let existingAnn = annotations.reversed().first(where: { $0.tool == .text && $0.hitTest(point: point) }) {
+            if let existingAnn = annotations.reversed().first(where: {
+                $0.tool == .text && $0.hitTest(point: point)
+            }) {
                 // Remove from annotations (will be re-added on commit)
                 if let idx = annotations.firstIndex(where: { $0 === existingAnn }) {
                     annotations.remove(at: idx)
@@ -4773,16 +5238,19 @@ class OverlayView: NSView {
                 if let bg = existingAnn.textBgColor { textBgColorValue = bg }
                 textOutlineEnabled = existingAnn.textOutlineColor != nil
                 if let ol = existingAnn.textOutlineColor { textOutlineColorValue = ol }
-                showTextField(at: existingAnn.textDrawRect.origin,
-                              existingText: existingAnn.attributedText,
-                              existingFrame: existingAnn.textDrawRect)
+                showTextField(
+                    at: existingAnn.textDrawRect.origin,
+                    existingText: existingAnn.attributedText,
+                    existingFrame: existingAnn.textDrawRect)
             } else {
                 showTextField(at: point)
             }
             return
         case .number:
             numberCounter += 1
-            let annotation = Annotation(tool: .number, startPoint: point, endPoint: point, color: opacityApplied(for: .number), strokeWidth: currentNumberSize)
+            let annotation = Annotation(
+                tool: .number, startPoint: point, endPoint: point,
+                color: opacityApplied(for: .number), strokeWidth: currentNumberSize)
             annotation.number = numberCounter + (numberStartAt - 1)
             annotation.numberFormat = currentNumberFormat
             currentAnnotation = annotation
@@ -4799,9 +5267,10 @@ class OverlayView: NSView {
             let aspect = img.size.width / max(img.size.height, 1)
             let w = aspect >= 1 ? stampSize : stampSize * aspect
             let h = aspect >= 1 ? stampSize / aspect : stampSize
-            let annotation = Annotation(tool: .stamp, startPoint: NSPoint(x: point.x - w / 2, y: point.y - h / 2),
-                                        endPoint: NSPoint(x: point.x + w / 2, y: point.y + h / 2),
-                                        color: .clear, strokeWidth: 0)
+            let annotation = Annotation(
+                tool: .stamp, startPoint: NSPoint(x: point.x - w / 2, y: point.y - h / 2),
+                endPoint: NSPoint(x: point.x + w / 2, y: point.y + h / 2),
+                color: .clear, strokeWidth: 0)
             annotation.stampImage = img
             annotations.append(annotation)
             undoStack.append(.added(annotation))
@@ -4813,7 +5282,9 @@ class OverlayView: NSView {
         }
 
         let toolStroke: CGFloat = currentTool == .marker ? currentMarkerSize : currentStrokeWidth
-        let annotation = Annotation(tool: currentTool, startPoint: point, endPoint: point, color: opacityApplied(for: currentTool), strokeWidth: toolStroke)
+        let annotation = Annotation(
+            tool: currentTool, startPoint: point, endPoint: point,
+            color: opacityApplied(for: currentTool), strokeWidth: toolStroke)
         if currentTool == .pencil || currentTool == .marker {
             annotation.points = [point]
         }
@@ -4847,8 +5318,9 @@ class OverlayView: NSView {
             // For freeform tools (marker, pencil), snap relative to the last point
             // so each segment constrains independently. For other tools, snap from start.
             let refPoint: NSPoint
-            if (annotation.tool == .marker || annotation.tool == .pencil),
-               let lastPt = annotation.points?.last {
+            if annotation.tool == .marker || annotation.tool == .pencil,
+                let lastPt = annotation.points?.last
+            {
                 refPoint = lastPt
             } else {
                 refPoint = annotation.startPoint
@@ -4942,7 +5414,9 @@ class OverlayView: NSView {
 
     // MARK: - Text Field
 
-    private func showTextField(at point: NSPoint, existingText: NSAttributedString? = nil, existingFrame: NSRect = .zero) {
+    private func showTextField(
+        at point: NSPoint, existingText: NSAttributedString? = nil, existingFrame: NSRect = .zero
+    ) {
         let viewPt = canvasToView(point)
         let viewFrame: NSRect
         if existingFrame != .zero {
@@ -4951,7 +5425,9 @@ class OverlayView: NSView {
             let height = max(28, textFontSize + 12)
             viewFrame = NSRect(x: viewPt.x, y: viewPt.y - height, width: 200, height: height)
         }
-        textEditor.createTextView(in: self, at: viewPt, color: currentColor, existingText: existingText, existingFrame: viewFrame)
+        textEditor.createTextView(
+            in: self, at: viewPt, color: currentColor, existingText: existingText,
+            existingFrame: viewFrame)
         textEditor.textView?.delegate = self
         if existingText != nil { resizeTextViewToFit() }
         needsDisplay = true
@@ -4982,7 +5458,9 @@ class OverlayView: NSView {
 
     func toggleTextBold() {
         guard let tv = textEditView, let ts = tv.textStorage else {
-            textBold.toggle(); needsDisplay = true; return
+            textBold.toggle()
+            needsDisplay = true
+            return
         }
         textBold.toggle()
         let range = selectedOrAllRange()
@@ -4990,7 +5468,8 @@ class OverlayView: NSView {
             ts.beginEditing()
             ts.enumerateAttribute(.font, in: range) { value, attrRange, _ in
                 if let font = value as? NSFont {
-                    let newFont = self.applyBoldItalic(to: font, bold: self.textBold, italic: self.textItalic)
+                    let newFont = self.applyBoldItalic(
+                        to: font, bold: self.textBold, italic: self.textItalic)
                     ts.addAttribute(.font, value: newFont, range: attrRange)
                 }
             }
@@ -5003,7 +5482,9 @@ class OverlayView: NSView {
 
     func toggleTextItalic() {
         guard let tv = textEditView, let ts = tv.textStorage else {
-            textItalic.toggle(); needsDisplay = true; return
+            textItalic.toggle()
+            needsDisplay = true
+            return
         }
         textItalic.toggle()
         let range = selectedOrAllRange()
@@ -5011,7 +5492,8 @@ class OverlayView: NSView {
             ts.beginEditing()
             ts.enumerateAttribute(.font, in: range) { value, attrRange, _ in
                 if let font = value as? NSFont {
-                    let newFont = self.applyBoldItalic(to: font, bold: self.textBold, italic: self.textItalic)
+                    let newFont = self.applyBoldItalic(
+                        to: font, bold: self.textBold, italic: self.textItalic)
                     ts.addAttribute(.font, value: newFont, range: attrRange)
                 }
             }
@@ -5065,7 +5547,9 @@ class OverlayView: NSView {
 
     func toggleTextUnderline() {
         guard let tv = textEditView, let ts = tv.textStorage else {
-            textUnderline.toggle(); needsDisplay = true; return
+            textUnderline.toggle()
+            needsDisplay = true
+            return
         }
         let range = selectedOrAllRange()
         if range.length > 0 {
@@ -5075,7 +5559,8 @@ class OverlayView: NSView {
                 if current != 0 {
                     ts.removeAttribute(.underlineStyle, range: attrRange)
                 } else {
-                    ts.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: attrRange)
+                    ts.addAttribute(
+                        .underlineStyle, value: NSUnderlineStyle.single.rawValue, range: attrRange)
                 }
             }
             ts.endEditing()
@@ -5092,7 +5577,9 @@ class OverlayView: NSView {
 
     func toggleTextStrikethrough() {
         guard let tv = textEditView, let ts = tv.textStorage else {
-            textStrikethrough.toggle(); needsDisplay = true; return
+            textStrikethrough.toggle()
+            needsDisplay = true
+            return
         }
         let range = selectedOrAllRange()
         if range.length > 0 {
@@ -5102,7 +5589,9 @@ class OverlayView: NSView {
                 if current != 0 {
                     ts.removeAttribute(.strikethroughStyle, range: attrRange)
                 } else {
-                    ts.addAttribute(.strikethroughStyle, value: NSUnderlineStyle.single.rawValue, range: attrRange)
+                    ts.addAttribute(
+                        .strikethroughStyle, value: NSUnderlineStyle.single.rawValue,
+                        range: attrRange)
                 }
             }
             ts.endEditing()
@@ -5145,7 +5634,9 @@ class OverlayView: NSView {
                 if let font = value as? NSFont {
                     let newFont: NSFont
                     if family == "System" {
-                        newFont = NSFont.systemFont(ofSize: font.pointSize, weight: fm.traits(of: font).contains(.boldFontMask) ? .bold : .regular)
+                        newFont = NSFont.systemFont(
+                            ofSize: font.pointSize,
+                            weight: fm.traits(of: font).contains(.boldFontMask) ? .bold : .regular)
                     } else {
                         newFont = fm.convert(font, toFamily: family)
                     }
@@ -5196,24 +5687,28 @@ class OverlayView: NSView {
             let imgSize = sv.frame.size
             let inset = tv.textContainerInset
             let img = NSImage(size: imgSize, flipped: true) { _ in
-                attrStr.draw(in: NSRect(x: inset.width, y: inset.height,
-                                         width: imgSize.width - inset.width * 2,
-                                         height: imgSize.height - inset.height * 2))
+                attrStr.draw(
+                    in: NSRect(
+                        x: inset.width, y: inset.height,
+                        width: imgSize.width - inset.width * 2,
+                        height: imgSize.height - inset.height * 2))
                 return true
             }
 
             // Convert view-space frame to canvas-space for annotation positioning
             let canvasOrigin = viewToCanvas(sv.frame.origin)
             let canvasEnd = viewToCanvas(NSPoint(x: sv.frame.maxX, y: sv.frame.maxY))
-            let canvasFrame = NSRect(x: canvasOrigin.x, y: canvasOrigin.y,
-                                     width: canvasEnd.x - canvasOrigin.x,
-                                     height: canvasEnd.y - canvasOrigin.y)
+            let canvasFrame = NSRect(
+                x: canvasOrigin.x, y: canvasOrigin.y,
+                width: canvasEnd.x - canvasOrigin.x,
+                height: canvasEnd.y - canvasOrigin.y)
 
-            let annotation = Annotation(tool: .text,
-                                        startPoint: canvasFrame.origin,
-                                        endPoint: NSPoint(x: canvasFrame.maxX, y: canvasFrame.maxY),
-                                        color: opacityApplied(for: .text),
-                                        strokeWidth: currentStrokeWidth)
+            let annotation = Annotation(
+                tool: .text,
+                startPoint: canvasFrame.origin,
+                endPoint: NSPoint(x: canvasFrame.maxX, y: canvasFrame.maxY),
+                color: opacityApplied(for: .text),
+                strokeWidth: currentStrokeWidth)
             annotation.attributedText = attrStr
             annotation.text = text
             annotation.fontSize = textFontSize
@@ -5273,13 +5768,16 @@ class OverlayView: NSView {
     private func showMicPermissionAlert() {
         let alert = NSAlert()
         alert.messageText = "Microphone Access Required"
-        alert.informativeText = "macshot needs microphone permission to record voice audio. Open System Settings to grant access."
+        alert.informativeText =
+            "macshot needs microphone permission to record voice audio. Open System Settings to grant access."
         alert.alertStyle = .warning
         alert.addButton(withTitle: "Open Settings")
         alert.addButton(withTitle: "Cancel")
         let response = alert.runModal()
         if response == .alertFirstButtonReturn {
-            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
+            if let url = URL(
+                string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone"
+            ) {
                 NSWorkspace.shared.open(url)
             }
         }
@@ -5296,7 +5794,7 @@ class OverlayView: NSView {
         var bestIdx = 1
         var bestDist = CGFloat.greatestFiniteMagnitude
         for i in 1..<pts.count {
-            let d = distanceToSegment(point: canvasPoint, from: pts[i-1], to: pts[i])
+            let d = distanceToSegment(point: canvasPoint, from: pts[i - 1], to: pts[i])
             if d < bestDist {
                 bestDist = d
                 bestIdx = i
@@ -5306,9 +5804,14 @@ class OverlayView: NSView {
         // Project the point onto the segment for exact placement
         let a = pts[bestIdx - 1]
         let b = pts[bestIdx]
-        let dx = b.x - a.x, dy = b.y - a.y
+        let dx = b.x - a.x
+        let dy = b.y - a.y
         let lenSq = dx * dx + dy * dy
-        let t: CGFloat = lenSq < 0.001 ? 0.5 : max(0.05, min(0.95, ((canvasPoint.x - a.x) * dx + (canvasPoint.y - a.y) * dy) / lenSq))
+        let t: CGFloat =
+            lenSq < 0.001
+            ? 0.5
+            : max(
+                0.05, min(0.95, ((canvasPoint.x - a.x) * dx + (canvasPoint.y - a.y) * dy) / lenSq))
         let projected = NSPoint(x: a.x + t * dx, y: a.y + t * dy)
 
         pts.insert(projected, at: bestIdx)
@@ -5322,7 +5825,8 @@ class OverlayView: NSView {
     }
 
     private func distanceToSegment(point: NSPoint, from a: NSPoint, to b: NSPoint) -> CGFloat {
-        let dx = b.x - a.x, dy = b.y - a.y
+        let dx = b.x - a.x
+        let dy = b.y - a.y
         let lenSq = dx * dx + dy * dy
         if lenSq < 0.001 { return hypot(point.x - a.x, point.y - a.y) }
         var t = ((point.x - a.x) * dx + (point.y - a.y) * dy) / lenSq
@@ -5358,12 +5862,21 @@ class OverlayView: NSView {
         // Forward Cmd shortcuts to the text view when editing — the main menu
         // intercepts these before keyDown reaches the overlay window.
         if let tv = textEditView, event.modifierFlags.contains(.command),
-           let char = event.charactersIgnoringModifiers {
+            let char = event.charactersIgnoringModifiers
+        {
             switch char {
-            case "v": tv.paste(nil); return true
-            case "c": tv.copy(nil); return true
-            case "x": tv.cut(nil); return true
-            case "a": tv.selectAll(nil); return true
+            case "v":
+                tv.paste(nil)
+                return true
+            case "c":
+                tv.copy(nil)
+                return true
+            case "x":
+                tv.cut(nil)
+                return true
+            case "a":
+                tv.selectAll(nil)
+                return true
             case "z":
                 if event.modifierFlags.contains(.shift) {
                     tv.undoManager?.redo()
@@ -5384,7 +5897,9 @@ class OverlayView: NSView {
             if spaceRepositioning { return }
 
             if !event.isARepeat {
-                let isDraggingAnnotation = currentAnnotation != nil && currentAnnotation!.tool != .pencil && currentAnnotation!.tool != .marker
+                let isDraggingAnnotation =
+                    currentAnnotation != nil && currentAnnotation!.tool != .pencil
+                    && currentAnnotation!.tool != .marker
                 let isDraggingNewSelection = state == .selecting
 
                 if isDraggingAnnotation || isDraggingNewSelection {
@@ -5400,7 +5915,7 @@ class OverlayView: NSView {
         }
 
         switch event.keyCode {
-        case 53: // Escape
+        case 53:  // Escape
             if isScrollCapturing {
                 overlayDelegate?.overlayViewDidRequestStopScrollCapture()
                 return
@@ -5412,20 +5927,20 @@ class OverlayView: NSView {
                 textEditor.scrollView?.removeFromSuperview()
                 textEditor.dismiss()
                 window?.makeFirstResponder(self)
-        
+
                 needsDisplay = true
             } else if PopoverHelper.isVisible {
                 PopoverHelper.dismiss()
             } else {
                 overlayDelegate?.overlayViewDidCancel()
             }
-        case 48: // Tab — toggle window snapping (only in idle state)
+        case 48:  // Tab — toggle window snapping (only in idle state)
             if state == .idle {
                 windowSnapEnabled = !windowSnapEnabled
                 hoveredWindowRect = nil
                 needsDisplay = true
             }
-        case 3: // F — full screen capture (only in idle state with snap on)
+        case 3:  // F — full screen capture (only in idle state with snap on)
             if state == .idle && windowSnapEnabled {
                 selectionRect = bounds
                 state = .selected
@@ -5440,16 +5955,18 @@ class OverlayView: NSView {
                     needsDisplay = true
                 }
             }
-        case 36: // Return/Enter — only confirm overlay when not editing text
+        case 36:  // Return/Enter — only confirm overlay when not editing text
             if textEditView == nil, state == .selected {
-                let saveMode = !(UserDefaults.standard.object(forKey: "quickModeCopyToClipboard") as? Bool ?? false)
+                let saveMode =
+                    !(UserDefaults.standard.object(forKey: "quickModeCopyToClipboard") as? Bool
+                    ?? false)
                 if saveMode {
                     overlayDelegate?.overlayViewDidRequestQuickSave()
                 } else {
                     overlayDelegate?.overlayViewDidConfirm()
                 }
             }
-        case 51: // Backspace/Delete — remove selected or hovered annotation
+        case 51:  // Backspace/Delete — remove selected or hovered annotation
             guard textEditView == nil, state == .selected else { break }
             if let ann = selectedAnnotation {
                 if let idx = annotations.firstIndex(where: { $0 === ann }) {
@@ -5474,8 +5991,9 @@ class OverlayView: NSView {
             }
         default:
             // Auto-measure: hold "1" = vertical preview, hold "2" = horizontal preview
-            if state == .selected && currentTool == .measure && textEditView == nil &&
-               !event.modifierFlags.contains(.command) {
+            if state == .selected && currentTool == .measure && textEditView == nil
+                && !event.modifierFlags.contains(.command)
+            {
                 if let char = event.charactersIgnoringModifiers {
                     if char == "1" || char == "2" {
                         autoMeasureVertical = (char == "1")
@@ -5485,23 +6003,47 @@ class OverlayView: NSView {
                 }
             }
             // Single-key tool shortcuts (only when selected, not editing text, no modifiers)
-            if state == .selected && textEditView == nil &&
-               !event.modifierFlags.contains(.command) && !event.modifierFlags.contains(.option) &&
-               !event.modifierFlags.contains(.control) {
+            if state == .selected && textEditView == nil && !event.modifierFlags.contains(.command)
+                && !event.modifierFlags.contains(.option) && !event.modifierFlags.contains(.control)
+            {
                 if let char = event.charactersIgnoringModifiers?.lowercased() {
                     switch char {
-                    case "p": handleToolbarAction(.tool(.pencil)); return
-                    case "a": handleToolbarAction(.tool(.arrow)); return
-                    case "l": handleToolbarAction(.tool(.line)); return
-                    case "r": handleToolbarAction(.tool(.rectangle)); return
-                    case "t": handleToolbarAction(.tool(.text)); return
-                    case "m": handleToolbarAction(.tool(.marker)); return
-                    case "n": handleToolbarAction(.tool(.number)); return
-                    case "b": handleToolbarAction(.tool(.blur)); return
-                    case "x": handleToolbarAction(.tool(.pixelate)); return
-                    case "i": handleToolbarAction(.tool(.colorSampler)); return
-                    case "s": handleToolbarAction(.tool(.select)); return
-                    case "g": handleToolbarAction(.tool(.stamp)); return
+                    case "p":
+                        handleToolbarAction(.tool(.pencil))
+                        return
+                    case "a":
+                        handleToolbarAction(.tool(.arrow))
+                        return
+                    case "l":
+                        handleToolbarAction(.tool(.line))
+                        return
+                    case "r":
+                        handleToolbarAction(.tool(.rectangle))
+                        return
+                    case "t":
+                        handleToolbarAction(.tool(.text))
+                        return
+                    case "m":
+                        handleToolbarAction(.tool(.marker))
+                        return
+                    case "n":
+                        handleToolbarAction(.tool(.number))
+                        return
+                    case "b":
+                        handleToolbarAction(.tool(.blur))
+                        return
+                    case "x":
+                        handleToolbarAction(.tool(.pixelate))
+                        return
+                    case "i":
+                        handleToolbarAction(.tool(.colorSampler))
+                        return
+                    case "s":
+                        handleToolbarAction(.tool(.select))
+                        return
+                    case "g":
+                        handleToolbarAction(.tool(.stamp))
+                        return
                     case "e":
                         if shouldAllowDetach() { handleToolbarAction(.detach) }
                         return
@@ -5513,10 +6055,18 @@ class OverlayView: NSView {
                 // When editing text, forward text-editing shortcuts to the text view
                 if let tv = textEditView, let char = event.charactersIgnoringModifiers {
                     switch char {
-                    case "a": tv.selectAll(nil); return
-                    case "c": tv.copy(nil); return
-                    case "v": tv.paste(nil); return
-                    case "x": tv.cut(nil); return
+                    case "a":
+                        tv.selectAll(nil)
+                        return
+                    case "c":
+                        tv.copy(nil)
+                        return
+                    case "v":
+                        tv.paste(nil)
+                        return
+                    case "x":
+                        tv.cut(nil)
+                        return
                     case "z":
                         if event.modifierFlags.contains(.shift) {
                             tv.undoManager?.redo()
@@ -5681,42 +6231,7 @@ class OverlayView: NSView {
         needsDisplay = true
     }
 
-    // MARK: - Auto-Redact
-
-    private static let sensitivePatterns: [(name: String, pattern: NSRegularExpression)] = {
-        let patterns: [(String, String)] = [
-            // Email addresses
-            ("email", #"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"#),
-            // Phone numbers (international and US formats)
-            ("phone", #"(?:\+?1[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)\d{3}[-.\s]?\d{4}"#),
-            // SSN (US Social Security Number)
-            ("ssn", #"\b\d{3}[-\s]\d{2}[-\s]\d{4}\b"#),
-            // Credit card numbers: 13-19 digits with any separators, tolerating trailing OCR junk
-            ("credit_card", #"\d{4}[-\s]*\d{4}[-\s]*\d{4}[-\s]*\d{1,7}"#),
-            // Amex format: 4-6-5
-            ("credit_card", #"\d{4}[-\s]*\d{6}[-\s]*\d{5}"#),
-            // Any sequence of 2+ groups of 3-6 digits separated by spaces
-            ("credit_card", #"\d{3,6}\s+\d{3,6}(?:\s+\d{3,6}){0,3}"#),
-            // CVV (3-4 digit code near CVV/CVC/CSC label)
-            ("cvv", #"(?:CVV|CVC|CSC|CCV)\s*:?\s*\d{3,4}"#),
-            // Expiry dates (MM/YY, MM/YYYY, YYYY-MM, etc.)
-            ("expiry", #"\b(?:\d{2}[/\-]\d{2,4}|\d{4}[/\-]\d{2})\b"#),
-            // IPv4 addresses
-            ("ipv4", #"\b(?:\d{1,3}\.){3}\d{1,3}\b"#),
-            // AWS access keys
-            ("aws_key", #"\b(?:AKIA|ABIA|ACCA|ASIA)[0-9A-Z]{16}\b"#),
-            // Generic secret assignments (password=, token:, api_key=, etc.)
-            ("secret_assignment", #"(?:password|passwd|secret|token|api[_-]?key|access[_-]?key|private[_-]?key)\s*[:=]\s*\S+"#),
-            // Long hex strings (API keys, hashes — 32+ chars)
-            ("hex_key", #"\b[0-9a-fA-F]{32,}\b"#),
-            // Bearer tokens
-            ("bearer", #"Bearer\s+[A-Za-z0-9\-._~+/]+=*"#),
-        ]
-        return patterns.compactMap { (name, pat) in
-            guard let regex = try? NSRegularExpression(pattern: pat, options: [.caseInsensitive]) else { return nil }
-            return (name, regex)
-        }
-    }()    // MARK: - Translate    /// Samples the average color of a region in a CGImage. Returns a near-match fill color.    // MARK: - Output
+    // MARK: - Output
 
     /// Render screenshot + all existing annotations into a full-size image.
     /// Used as source for pixelate/blur so they operate on the composited result.
@@ -5732,7 +6247,9 @@ class OverlayView: NSView {
             guard let context = NSGraphicsContext.current else {
                 return true
             }
-            screenshot.draw(in: NSRect(origin: .zero, size: drawRect.size), from: .zero, operation: .copy, fraction: 1.0)
+            screenshot.draw(
+                in: NSRect(origin: .zero, size: drawRect.size), from: .zero, operation: .copy,
+                fraction: 1.0)
             // Translate so annotations at selectionRect coords render correctly
             context.cgContext.translateBy(x: -drawRect.origin.x, y: -drawRect.origin.y)
             for annotation in annotationsCopy {
@@ -5763,7 +6280,8 @@ class OverlayView: NSView {
         // captured while a Retina display is also connected.
         let scale: CGFloat
         if let screenshot = screenshotImage,
-           let cg = screenshot.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+            let cg = screenshot.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        {
             scale = CGFloat(cg.width) / screenshot.size.width
         } else {
             scale = window?.backingScaleFactor ?? 2.0
@@ -5773,14 +6291,16 @@ class OverlayView: NSView {
         let pixelH = Int(selectionRect.height * scale)
         let cs = CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
         let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue
-        guard let cgCtx = CGContext(
-            data: nil,
-            width: pixelW, height: pixelH,
-            bitsPerComponent: 8,
-            bytesPerRow: pixelW * 4,
-            space: cs,
-            bitmapInfo: bitmapInfo
-        ) else { return nil }
+        guard
+            let cgCtx = CGContext(
+                data: nil,
+                width: pixelW, height: pixelH,
+                bitsPerComponent: 8,
+                bytesPerRow: pixelW * 4,
+                space: cs,
+                bitmapInfo: bitmapInfo
+            )
+        else { return nil }
 
         // Scale the CG context so drawing in points maps to the correct pixels.
         cgCtx.scaleBy(x: scale, y: scale)
@@ -5905,28 +6425,44 @@ class OverlayView: NSView {
 
     func setActiveStrokeWidth(_ value: CGFloat, for tool: AnnotationTool) {
         switch tool {
-        case .number: currentNumberSize = value; UserDefaults.standard.set(Double(value), forKey: "numberStrokeWidth")
-        case .marker: currentMarkerSize = value; UserDefaults.standard.set(Double(value), forKey: "markerStrokeWidth")
-        case .loupe: currentLoupeSize = value; UserDefaults.standard.set(Double(value), forKey: "loupeSize")
-        default: currentStrokeWidth = value; UserDefaults.standard.set(Double(value), forKey: "currentStrokeWidth")
+        case .number:
+            currentNumberSize = value
+            UserDefaults.standard.set(Double(value), forKey: "numberStrokeWidth")
+        case .marker:
+            currentMarkerSize = value
+            UserDefaults.standard.set(Double(value), forKey: "markerStrokeWidth")
+        case .loupe:
+            currentLoupeSize = value
+            UserDefaults.standard.set(Double(value), forKey: "loupeSize")
+        default:
+            currentStrokeWidth = value
+            UserDefaults.standard.set(Double(value), forKey: "currentStrokeWidth")
         }
         needsDisplay = true
     }
 
-
     func updateTextFontSize() {
         guard let tv = textEditView else { return }
-        let range = tv.selectedRange().length > 0 ? tv.selectedRange() : NSRange(location: 0, length: tv.textStorage?.length ?? 0)
-        tv.textStorage?.addAttribute(.font, value: NSFont.systemFont(ofSize: textFontSize, weight: textBold ? .bold : .regular), range: range)
+        let range =
+            tv.selectedRange().length > 0
+            ? tv.selectedRange() : NSRange(location: 0, length: tv.textStorage?.length ?? 0)
+        tv.textStorage?.addAttribute(
+            .font,
+            value: NSFont.systemFont(ofSize: textFontSize, weight: textBold ? .bold : .regular),
+            range: range)
         needsDisplay = true
     }
 
     func performAutoRedact() {
         guard state == .selected, let screenshot = screenshotImage else { return }
-        let tool: AnnotationTool = currentTool == .blur ? .blur : (currentTool == .pixelate ? .pixelate : .rectangle)
+        let tool: AnnotationTool =
+            currentTool == .blur ? .blur : (currentTool == .pixelate ? .pixelate : .rectangle)
         let sourceImg = (tool == .blur || tool == .pixelate) ? compositedImage() : nil
-        AutoRedactor.redactPII(screenshot: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect,
-                               redactTool: tool, color: currentColor, sourceImage: sourceImg, sourceImageBounds: captureDrawRect) { [weak self] anns in
+        AutoRedactor.redactPII(
+            screenshot: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect,
+            redactTool: tool, color: currentColor, sourceImage: sourceImg,
+            sourceImageBounds: captureDrawRect
+        ) { [weak self] anns in
             guard let self = self, !anns.isEmpty else { return }
             self.annotations.append(contentsOf: anns)
             self.undoStack.append(contentsOf: anns.map { .added($0) })
@@ -5938,10 +6474,14 @@ class OverlayView: NSView {
 
     func performRedactAllText() {
         guard state == .selected, let screenshot = screenshotImage else { return }
-        let tool: AnnotationTool = currentTool == .blur ? .blur : (currentTool == .pixelate ? .pixelate : .rectangle)
+        let tool: AnnotationTool =
+            currentTool == .blur ? .blur : (currentTool == .pixelate ? .pixelate : .rectangle)
         let sourceImg = (tool == .blur || tool == .pixelate) ? compositedImage() : nil
-        AutoRedactor.redactAllText(screenshot: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect,
-                                   redactTool: tool, color: currentColor, sourceImage: sourceImg, sourceImageBounds: captureDrawRect) { [weak self] anns in
+        AutoRedactor.redactAllText(
+            screenshot: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect,
+            redactTool: tool, color: currentColor, sourceImage: sourceImg,
+            sourceImageBounds: captureDrawRect
+        ) { [weak self] anns in
             guard let self = self, !anns.isEmpty else { return }
             self.annotations.append(contentsOf: anns)
             self.undoStack.append(contentsOf: anns.map { .added($0) })
@@ -5961,7 +6501,9 @@ class OverlayView: NSView {
         isTranslating = true
         needsDisplay = true
 
-        TranslateOverlay.translate(screenshot: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect, targetLang: targetLang,
+        TranslateOverlay.translate(
+            screenshot: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect,
+            targetLang: targetLang,
             onError: { [weak self] msg in
                 self?.isTranslating = false
                 self?.showOverlayError(msg)
@@ -5985,7 +6527,7 @@ class OverlayView: NSView {
         let current = UserDefaults.standard.bool(forKey: "uploadConfirmEnabled")
         let picker = ListPickerView()
         picker.items = [
-            .init(title: "Confirm before upload", isSelected: current),
+            .init(title: "Confirm before upload", isSelected: current)
         ]
         picker.onSelect = { [weak self] _ in
             UserDefaults.standard.set(!current, forKey: "uploadConfirmEnabled")
@@ -5994,9 +6536,12 @@ class OverlayView: NSView {
         }
         let size = picker.preferredSize
         if let anchor = anchorView {
-            PopoverHelper.show(picker, size: size, relativeTo: anchor.bounds, of: anchor, preferredEdge: .maxY)
+            PopoverHelper.show(
+                picker, size: size, relativeTo: anchor.bounds, of: anchor, preferredEdge: .maxY)
         } else {
-            PopoverHelper.showAtPoint(picker, size: size, at: NSPoint(x: anchorRect.maxX + 4, y: anchorRect.midY), in: self, preferredEdge: .maxX)
+            PopoverHelper.showAtPoint(
+                picker, size: size, at: NSPoint(x: anchorRect.maxX + 4, y: anchorRect.midY),
+                in: self, preferredEdge: .maxX)
         }
     }
 
@@ -6004,22 +6549,29 @@ class OverlayView: NSView {
         let types = AutoRedactor.redactTypeNames
         let picker = ListPickerView()
         picker.items = types.map { item in
-            .init(title: item.label, isSelected: UserDefaults.standard.object(forKey: item.key) as? Bool ?? true)
+            .init(
+                title: item.label,
+                isSelected: UserDefaults.standard.object(forKey: item.key) as? Bool ?? true)
         }
         picker.onSelect = { [weak self] idx in
             let key = types[idx].key
             let current = UserDefaults.standard.object(forKey: key) as? Bool ?? true
             UserDefaults.standard.set(!current, forKey: key)
             picker.items = types.map { item in
-                .init(title: item.label, isSelected: UserDefaults.standard.object(forKey: item.key) as? Bool ?? true)
+                .init(
+                    title: item.label,
+                    isSelected: UserDefaults.standard.object(forKey: item.key) as? Bool ?? true)
             }
             self?.needsDisplay = true
         }
         let size = picker.preferredSize
         if let anchor = anchorView {
-            PopoverHelper.show(picker, size: size, relativeTo: anchor.bounds, of: anchor, preferredEdge: .maxY)
+            PopoverHelper.show(
+                picker, size: size, relativeTo: anchor.bounds, of: anchor, preferredEdge: .maxY)
         } else {
-            PopoverHelper.showAtPoint(picker, size: size, at: NSPoint(x: anchorRect.maxX + 4, y: anchorRect.midY), in: self, preferredEdge: .maxX)
+            PopoverHelper.showAtPoint(
+                picker, size: size, at: NSPoint(x: anchorRect.maxX + 4, y: anchorRect.midY),
+                in: self, preferredEdge: .maxX)
         }
     }
 
@@ -6037,9 +6589,12 @@ class OverlayView: NSView {
         }
         let size = NSSize(width: 160, height: min(400, CGFloat(languages.count) * 28 + 12))
         if let anchor = anchorView {
-            PopoverHelper.show(picker, size: size, relativeTo: anchor.bounds, of: anchor, preferredEdge: .maxY)
+            PopoverHelper.show(
+                picker, size: size, relativeTo: anchor.bounds, of: anchor, preferredEdge: .maxY)
         } else {
-            PopoverHelper.showAtPoint(picker, size: size, at: NSPoint(x: anchorRect.maxX + 4, y: anchorRect.midY), in: self, preferredEdge: .maxX)
+            PopoverHelper.showAtPoint(
+                picker, size: size, at: NSPoint(x: anchorRect.maxX + 4, y: anchorRect.midY),
+                in: self, preferredEdge: .maxX)
         }
     }
 
@@ -6050,7 +6605,9 @@ class OverlayView: NSView {
             UserDefaults.standard.set(idx, forKey: "beautifyStyleIndex")
             self?.needsDisplay = true
         }
-        PopoverHelper.showAtPoint(picker, size: picker.preferredSize, at: NSPoint(x: anchorRect.midX, y: anchorRect.midY), in: self, preferredEdge: .minY)
+        PopoverHelper.showAtPoint(
+            picker, size: picker.preferredSize, at: NSPoint(x: anchorRect.midX, y: anchorRect.midY),
+            in: self, preferredEdge: .minY)
     }
 
     func showEmojiPopover(anchorRect: NSRect) {
@@ -6060,7 +6617,9 @@ class OverlayView: NSView {
             self?.currentStampEmoji = emoji
             self?.needsDisplay = true
         }
-        PopoverHelper.showAtPoint(picker, size: picker.preferredSize, at: NSPoint(x: anchorRect.midX, y: anchorRect.midY), in: self, preferredEdge: .minY)
+        PopoverHelper.showAtPoint(
+            picker, size: picker.preferredSize, at: NSPoint(x: anchorRect.midX, y: anchorRect.midY),
+            in: self, preferredEdge: .minY)
     }
 
     func showSystemColorPicker(target: ColorPickerTarget) {
@@ -6086,12 +6645,16 @@ class OverlayView: NSView {
             applyColorToSelectedAnnotation()
         case .textBg:
             textBgColorValue = color
-            if let data = try? NSKeyedArchiver.archivedData(withRootObject: color, requiringSecureCoding: false) {
+            if let data = try? NSKeyedArchiver.archivedData(
+                withRootObject: color, requiringSecureCoding: false)
+            {
                 UserDefaults.standard.set(data, forKey: "textBgColor")
             }
         case .textOutline:
             textOutlineColorValue = color
-            if let data = try? NSKeyedArchiver.archivedData(withRootObject: color, requiringSecureCoding: false) {
+            if let data = try? NSKeyedArchiver.archivedData(
+                withRootObject: color, requiringSecureCoding: false)
+            {
                 UserDefaults.standard.set(data, forKey: "textOutlineColor")
             }
         }
@@ -6126,15 +6689,26 @@ class OverlayView: NSView {
         colorWheel.dismiss()
         beautifyEnabled = UserDefaults.standard.bool(forKey: "beautifyEnabled")
         beautifyStyleIndex = UserDefaults.standard.integer(forKey: "beautifyStyleIndex")
-        beautifyMode = BeautifyMode(rawValue: UserDefaults.standard.integer(forKey: "beautifyMode")) ?? .window
-        beautifyPadding = CGFloat(UserDefaults.standard.object(forKey: "beautifyPadding") as? Double ?? 48)
-        beautifyCornerRadius = CGFloat(UserDefaults.standard.object(forKey: "beautifyCornerRadius") as? Double ?? 10)
-        beautifyShadowRadius = CGFloat(UserDefaults.standard.object(forKey: "beautifyShadowRadius") as? Double ?? 20)
-        beautifyBgRadius = CGFloat(UserDefaults.standard.object(forKey: "beautifyBgRadius") as? Double ?? 8)
-        currentLineStyle = LineStyle(rawValue: UserDefaults.standard.integer(forKey: "currentLineStyle")) ?? .solid
-        currentArrowStyle = ArrowStyle(rawValue: UserDefaults.standard.integer(forKey: "currentArrowStyle")) ?? .single
-        currentRectFillStyle = RectFillStyle(rawValue: UserDefaults.standard.integer(forKey: "currentRectFillStyle")) ?? .stroke
-        currentRectCornerRadius = CGFloat(UserDefaults.standard.object(forKey: "currentRectCornerRadius") as? Double ?? 0)
+        beautifyMode =
+            BeautifyMode(rawValue: UserDefaults.standard.integer(forKey: "beautifyMode")) ?? .window
+        beautifyPadding = CGFloat(
+            UserDefaults.standard.object(forKey: "beautifyPadding") as? Double ?? 48)
+        beautifyCornerRadius = CGFloat(
+            UserDefaults.standard.object(forKey: "beautifyCornerRadius") as? Double ?? 10)
+        beautifyShadowRadius = CGFloat(
+            UserDefaults.standard.object(forKey: "beautifyShadowRadius") as? Double ?? 20)
+        beautifyBgRadius = CGFloat(
+            UserDefaults.standard.object(forKey: "beautifyBgRadius") as? Double ?? 8)
+        currentLineStyle =
+            LineStyle(rawValue: UserDefaults.standard.integer(forKey: "currentLineStyle")) ?? .solid
+        currentArrowStyle =
+            ArrowStyle(rawValue: UserDefaults.standard.integer(forKey: "currentArrowStyle"))
+            ?? .single
+        currentRectFillStyle =
+            RectFillStyle(rawValue: UserDefaults.standard.integer(forKey: "currentRectFillStyle"))
+            ?? .stroke
+        currentRectCornerRadius = CGFloat(
+            UserDefaults.standard.object(forKey: "currentRectCornerRadius") as? Double ?? 0)
         textEditor.scrollView?.removeFromSuperview()
         textEditor.dismiss()
         sizeInputField?.removeFromSuperview()
@@ -6160,7 +6734,9 @@ class OverlayView: NSView {
 // MARK: - NSTextFieldDelegate
 
 extension OverlayView: NSTextFieldDelegate {
-    func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+    func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector)
+        -> Bool
+    {
         if control.tag == 888 {
             if commandSelector == #selector(NSResponder.insertNewline(_:)) {
                 commitSizeInputIfNeeded()
@@ -6217,7 +6793,9 @@ extension OverlayView: NSTextViewDelegate {
 
     private func resizeTextViewToFit() {
         guard let tv = textEditView, let sv = textEditor.scrollView else { return }
-        guard let layoutManager = tv.layoutManager, let textContainer = tv.textContainer else { return }
+        guard let layoutManager = tv.layoutManager, let textContainer = tv.textContainer else {
+            return
+        }
 
         layoutManager.ensureLayout(for: textContainer)
         let usedRect = layoutManager.usedRect(for: textContainer)
@@ -6245,7 +6823,9 @@ class HoverButton: NSButton {
         if let existing = trackingArea {
             removeTrackingArea(existing)
         }
-        let area = NSTrackingArea(rect: bounds, options: [.mouseEnteredAndExited, .activeAlways], owner: self, userInfo: nil)
+        let area = NSTrackingArea(
+            rect: bounds, options: [.mouseEnteredAndExited, .activeAlways], owner: self,
+            userInfo: nil)
         addTrackingArea(area)
         trackingArea = area
     }
