@@ -780,6 +780,14 @@ extension AppDelegate: OverlayWindowControllerDelegate {
             // stopRecordingUI() will be called by onCompletion callback
         }
         dismissOverlays()
+
+        // Give focus back to the previously active app on cancel.
+        // NSApp.hide deactivates macshot, letting macOS activate the next app in the stack.
+        if recordingEngine == nil {
+            DispatchQueue.main.async {
+                NSApp.hide(nil)
+            }
+        }
     }
 
     func overlayDidConfirm(_ controller: OverlayWindowController, capturedImage: NSImage?) {
@@ -852,6 +860,14 @@ extension AppDelegate: OverlayWindowControllerDelegate {
 
     func overlayDidRequestOCR(_ controller: OverlayWindowController, text: String, image: NSImage?) {
         dismissOverlays()
+
+        // Auto-copy OCR text to clipboard (default: on)
+        let autoCopyOCR = UserDefaults.standard.object(forKey: "autoCopyOCRText") as? Bool ?? true
+        if autoCopyOCR && !text.isEmpty {
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(text, forType: .string)
+        }
+
         ocrController?.close()
         let ocr = OCRResultController(text: text, image: image)
         ocrController = ocr
@@ -868,6 +884,11 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         recordingScreenRect = rect
         recordingScreen = screen
 
+        // Capture session overrides before dismissing overlays (which destroys the overlay view)
+        let formatOverride = controller.sessionRecordingFormat
+        let fpsOverride = controller.sessionRecordingFPS
+        let onStopOverride = controller.sessionRecordingOnStop
+
         let engine = RecordingEngine()
         engine.onProgress = { [weak self] seconds in
             self?.updateRecordingHUD(seconds: seconds)
@@ -877,7 +898,13 @@ extension AppDelegate: OverlayWindowControllerDelegate {
             self.stopRecordingUI()
 
             if let url = url {
-                VideoEditorWindowController.open(url: url)
+                let onStop = onStopOverride ?? UserDefaults.standard.string(forKey: "recordingOnStop") ?? "editor"
+                switch onStop {
+                case "finder":
+                    NSWorkspace.shared.activateFileViewerSelecting([url])
+                default:
+                    VideoEditorWindowController.open(url: url)
+                }
             } else if let error = error {
                 #if DEBUG
                 print("Recording failed: \(error.localizedDescription)")
@@ -918,7 +945,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         enterRecordingMenuBarMode()
 
         // Start recording
-        engine.startRecording(rect: rect, screen: screen)
+        engine.startRecording(rect: rect, screen: screen, formatOverride: formatOverride, fpsOverride: fpsOverride)
     }
 
     func overlayDidRequestStopRecording(_ controller: OverlayWindowController) {

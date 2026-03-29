@@ -83,6 +83,7 @@ brew install sw33tlie/macshot/macshot
 - **Mouse click highlights** — visual ripple on clicks during recording
 - **Selection border** — visible capture region outline during recording
 - **Menu bar stop button** — stop recording from the menu bar icon (appears even if icon is hidden)
+- **Quick settings popover** — change format, FPS, and post-recording action on the fly without opening Preferences
 - **Video editor** — trim timeline, mute/strip audio, play/pause, save (with Save As), upload, reveal in Finder
 
 ### Output & Upload
@@ -104,7 +105,7 @@ brew install sw33tlie/macshot/macshot
 - 30 gradient styles including 7 mesh gradients (macOS 15+), adjustable padding/corner radius/shadow
 
 ### Other
-- **OCR** — extract text with Apple Vision (auto-detects all languages on macOS 13+), translate to 30+ languages, Google AI Search
+- **OCR** — extract text with Apple Vision (auto-detects all languages on macOS 13+), auto-copy to clipboard, translate to 30+ languages, Google AI Search
 - **Invert colors** — one-click color inversion, apply twice to revert
 - **Background removal** — Apple Vision foreground mask (macOS 14+)
 - **Pin to screen** — floating always-on-top window

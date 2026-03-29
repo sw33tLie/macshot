@@ -9,6 +9,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
     private var recordingSlot: HotkeyManager.HotkeySlot?
     private var savePathField: NSTextField!
     private var autoCopyCheckbox: NSButton!
+    private var autoCopyOCRCheckbox: NSButton!
     private var copySoundCheckbox: NSButton!
     private var rememberSelectionCheckbox: NSButton!
     private var thumbnailCheckbox: NSButton!
@@ -208,6 +209,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
 
         // Checkboxes
         autoCopyCheckbox = NSButton(checkboxWithTitle: "Auto-copy to clipboard on confirm", target: self, action: #selector(autoCopyChanged(_:)))
+        autoCopyOCRCheckbox = NSButton(checkboxWithTitle: "Auto-copy OCR text to clipboard", target: self, action: #selector(autoCopyOCRChanged(_:)))
         copySoundCheckbox = NSButton(checkboxWithTitle: "Play sound on copy", target: self, action: #selector(copySoundChanged(_:)))
         rememberSelectionCheckbox = NSButton(checkboxWithTitle: "Remember last selection area", target: self, action: #selector(rememberSelectionChanged(_:)))
         thumbnailCheckbox = NSButton(checkboxWithTitle: "Show floating thumbnail after capture", target: self, action: #selector(thumbnailChanged(_:)))
@@ -216,7 +218,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         captureCursorCheckbox = NSButton(checkboxWithTitle: "Capture mouse cursor in screenshot", target: self, action: #selector(captureCursorChanged(_:)))
         windowTitleCheckbox = NSButton(checkboxWithTitle: "Use window title in saved filename", target: self, action: #selector(windowTitleChanged(_:)))
 
-        for cb in [autoCopyCheckbox!, copySoundCheckbox!, rememberSelectionCheckbox!, thumbnailCheckbox!] {
+        for cb in [autoCopyCheckbox!, autoCopyOCRCheckbox!, copySoundCheckbox!, rememberSelectionCheckbox!, thumbnailCheckbox!] {
             stack.addArrangedSubview(indented(cb))
             stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
         }
@@ -641,7 +643,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
         recordingOnStopPopup = NSPopUpButton()
-        recordingOnStopPopup.addItems(withTitles: ["Show in Finder", "Do nothing"])
+        recordingOnStopPopup.addItems(withTitles: ["Open editor", "Show in Finder"])
         recordingOnStopPopup.target = self
         recordingOnStopPopup.action = #selector(recordingOnStopChanged(_:))
         stack.addArrangedSubview(labeledRow("When done:", controls: [recordingOnStopPopup]))
@@ -1246,6 +1248,9 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         let autoCopy = UserDefaults.standard.object(forKey: "autoCopyToClipboard") as? Bool ?? true
         autoCopyCheckbox.state = autoCopy ? .on : .off
 
+        let autoCopyOCR = UserDefaults.standard.object(forKey: "autoCopyOCRText") as? Bool ?? true
+        autoCopyOCRCheckbox.state = autoCopyOCR ? .on : .off
+
         let copySound = UserDefaults.standard.object(forKey: "playCopySound") as? Bool ?? true
         copySoundCheckbox.state = copySound ? .on : .off
 
@@ -1303,8 +1308,8 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         recordingFormatPopup.selectItem(at: recFormat == "gif" ? 1 : 0)
         updateFPSForFormat()
 
-        let onStop = UserDefaults.standard.string(forKey: "recordingOnStop") ?? "finder"
-        recordingOnStopPopup.selectItem(at: onStop == "nothing" ? 1 : 0)
+        let onStop = UserDefaults.standard.string(forKey: "recordingOnStop") ?? "editor"
+        recordingOnStopPopup.selectItem(at: onStop == "finder" ? 1 : 0)
 
         recSavePathField.stringValue = SaveDirectoryAccess.recordingDisplayPath
     }
@@ -1333,6 +1338,9 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
 
     @objc private func autoCopyChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "autoCopyToClipboard")
+    }
+    @objc private func autoCopyOCRChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: "autoCopyOCRText")
     }
     @objc private func copySoundChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "playCopySound")
@@ -1411,7 +1419,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         }
     }
     @objc private func recordingOnStopChanged(_ sender: NSPopUpButton) {
-        UserDefaults.standard.set(sender.indexOfSelectedItem == 1 ? "nothing" : "finder", forKey: "recordingOnStop")
+        UserDefaults.standard.set(sender.indexOfSelectedItem == 1 ? "finder" : "editor", forKey: "recordingOnStop")
     }
     @objc private func browseRecSavePath(_ sender: NSButton) {
         let panel = NSOpenPanel()

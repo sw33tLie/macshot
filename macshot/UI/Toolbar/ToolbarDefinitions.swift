@@ -34,6 +34,7 @@ enum ToolbarButtonAction {
     case detach
     case scrollCapture
     case addCapture  // editor only: capture a new region and append to the canvas
+    case recordSettings  // recording mode: open format/FPS/when-done popover
 }
 
 struct ToolbarButton {
@@ -226,6 +227,12 @@ class ToolbarLayout {
                 tooltip: "Record Microphone")
             micBtn.isSelected = micOn
             buttons.append(micBtn)
+
+            // Recording settings gear
+            buttons.append(
+                ToolbarButton(
+                    action: .recordSettings, sfSymbol: "gearshape", label: nil,
+                    tooltip: "Recording Settings"))
 
             // Allow moving the selection before starting
             buttons.append(

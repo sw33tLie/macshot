@@ -18,10 +18,11 @@ final class GIFEncoder {
     // Throttle: only keep every Nth frame to stay at target fps
     private let targetFPS: Int
     private var inputFrameCount = 0
-    private let sourceEstimatedFPS = 60  // SCStream delivers up to 60fps
+    private let sourceEstimatedFPS: Int
 
-    init(url: URL, fps: Int) {
+    init(url: URL, fps: Int, sourceFPS: Int) {
         self.url = url
+        self.sourceEstimatedFPS = max(sourceFPS, fps)
         // Cap GIF at 15fps for reasonable file size
         let gifFPS = min(fps, 15)
         self.targetFPS = gifFPS

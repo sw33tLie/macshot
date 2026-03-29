@@ -378,6 +378,11 @@ class OverlayView: NSView {
     var autoQuickSaveMode: Bool = false  // set by "Quick Capture" menu — quick-saves immediately after selection
     var autoConfirmMode: Bool = false  // set by "Add Capture" — auto-confirms selection (no toolbars, no save)
 
+    // Recording session overrides (popover settings — nil means use UserDefaults default)
+    var sessionRecordingFormat: String?
+    var sessionRecordingFPS: Int?
+    var sessionRecordingOnStop: String?
+
     // Scroll capture state
     var isScrollCapturing: Bool = false
     var scrollCaptureStripCount: Int = 0
@@ -1216,11 +1221,11 @@ class OverlayView: NSView {
                 if zoomLabelOpacity > 0 {
                     drawZoomLabel()
                 }
+            }
 
-                // Resize handles
-                if state == .selected {
-                    drawResizeHandles()
-                }
+            // Resize handles (drawn even in recording setup mode)
+            if state == .selected && !isEditorMode {
+                drawResizeHandles()
             }
 
             // Hide the text view when color picker is open for bg/outline (so picker isn't behind it)
@@ -4708,6 +4713,9 @@ class OverlayView: NSView {
             overlayDelegate?.overlayViewDidRequestScrollCapture(rect: selectionRect)
         case .addCapture:
             overlayDelegate?.overlayViewDidRequestAddCapture()
+        case .recordSettings:
+            let gearBtn = rightStripView?.buttonViews.first { if case .recordSettings = $0.action { return true }; return false }
+            showRecordingSettingsPopover(anchorView: gearBtn)
         }
 
         // Rebuild toolbars to reflect new state (selected tool, color, etc.)

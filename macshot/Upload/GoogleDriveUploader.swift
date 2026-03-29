@@ -25,6 +25,14 @@ final class GoogleDriveUploader: NSObject, ASWebAuthenticationPresentationContex
     private var authSession: ASWebAuthenticationSession?
     private weak var presentationWindow: NSWindow?
 
+    /// Dedicated session for uploads with longer timeouts to avoid "connection lost" on large files.
+    private lazy var uploadSession: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 300   // 5 min per request
+        config.timeoutIntervalForResource = 600  // 10 min total
+        return URLSession(configuration: config)
+    }()
+
     // MARK: - Public API
 
     var isSignedIn: Bool {
@@ -305,6 +313,10 @@ final class GoogleDriveUploader: NSObject, ASWebAuthenticationPresentationContex
     }
 
     private func uploadFile(data: Data, filename: String, mimeType: String, folderID: String, completion: @escaping (Result<String, Error>) -> Void) {
+        uploadFileWithRetry(data: data, filename: filename, mimeType: mimeType, folderID: folderID, attempt: 1, completion: completion)
+    }
+
+    private func uploadFileWithRetry(data fileData: Data, filename: String, mimeType: String, folderID: String, attempt: Int, completion: @escaping (Result<String, Error>) -> Void) {
         guard let token = loadAccessToken() else {
             completion(.failure(Self.error("No access token")))
             return
@@ -328,17 +340,44 @@ final class GoogleDriveUploader: NSObject, ASWebAuthenticationPresentationContex
         body.append(metadataData)
         body.append("\r\n--\(boundary)\r\n".data(using: .utf8)!)
         body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
-        body.append(data)
+        body.append(fileData)
         body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
 
         // Write body to temp file for uploadTask (enables progress tracking)
         let tmpFile = FileManager.default.temporaryDirectory.appendingPathComponent("macshot_upload_\(UUID().uuidString).tmp")
         try? body.write(to: tmpFile)
 
-        let task = URLSession.shared.uploadTask(with: request, fromFile: tmpFile) { [weak self] data, response, error in
+        let maxRetries = 3
+        let task = uploadSession.uploadTask(with: request, fromFile: tmpFile) { [weak self] data, response, error in
             try? FileManager.default.removeItem(at: tmpFile)
+
+            // Retry on transient network errors
+            if let error = error as? URLError,
+               [.networkConnectionLost, .timedOut, .notConnectedToInternet].contains(error.code),
+               attempt < maxRetries {
+                let delay = Double(attempt) * 2.0
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                    self?.uploadFileWithRetry(data: fileData, filename: filename, mimeType: mimeType,
+                                              folderID: folderID, attempt: attempt + 1, completion: completion)
+                }
+                return
+            }
+
             if let error = error {
                 DispatchQueue.main.async { completion(.failure(error)) }
+                return
+            }
+
+            // Retry on 401 (token expired mid-upload) — refresh token and try again
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 401, attempt < maxRetries {
+                self?.refreshAccessToken { success in
+                    guard success else {
+                        completion(.failure(Self.error("Authentication expired")))
+                        return
+                    }
+                    self?.uploadFileWithRetry(data: fileData, filename: filename, mimeType: mimeType,
+                                              folderID: folderID, attempt: attempt + 1, completion: completion)
+                }
                 return
             }
             guard let data = data,

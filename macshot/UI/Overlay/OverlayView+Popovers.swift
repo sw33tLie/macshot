@@ -135,7 +135,7 @@ extension OverlayView {
         picker.onSelect = { [weak self] idx in
             self?.beautifyStyleIndex = idx
             UserDefaults.standard.set(idx, forKey: "beautifyStyleIndex")
-            self?.rebuildToolbarLayout()
+            self?.cachedCompositedImage = nil
             self?.needsDisplay = true
         }
         if let anchor = anchorView {
@@ -166,6 +166,138 @@ extension OverlayView {
                 picker, size: picker.preferredSize,
                 at: NSPoint(x: anchorRect.midX, y: anchorRect.midY),
                 in: self, preferredEdge: .minY)
+        }
+    }
+
+    // MARK: - Recording Settings Popover
+
+    func showRecordingSettingsPopover(anchorView: NSView?) {
+        if PopoverHelper.isVisible {
+            PopoverHelper.dismiss()
+            return
+        }
+
+        let container = NSView(frame: NSRect(x: 0, y: 0, width: 240, height: 100))
+        var y: CGFloat = 8
+        let labelFont = NSFont.systemFont(ofSize: 11, weight: .medium)
+        let labelColor = NSColor.secondaryLabelColor
+
+        func addRow(label: String, control: NSView, controlWidth: CGFloat = 140) {
+            let lbl = NSTextField(labelWithString: label)
+            lbl.font = labelFont
+            lbl.textColor = labelColor
+            lbl.frame = NSRect(x: 10, y: y + 2, width: 76, height: 18)
+            container.addSubview(lbl)
+            control.frame = NSRect(x: 88, y: y, width: controlWidth, height: 22)
+            container.addSubview(control)
+            y += 28
+        }
+
+        // Read current effective values (session override > UserDefaults default)
+        let effectiveFormat = sessionRecordingFormat ?? UserDefaults.standard.string(forKey: "recordingFormat") ?? "mp4"
+        let effectiveFPS = sessionRecordingFPS ?? (UserDefaults.standard.integer(forKey: "recordingFPS") > 0 ? UserDefaults.standard.integer(forKey: "recordingFPS") : 30)
+        let effectiveOnStop = sessionRecordingOnStop ?? UserDefaults.standard.string(forKey: "recordingOnStop") ?? "editor"
+
+        // Format: MP4 / GIF
+        let formatSeg = NSSegmentedControl(labels: ["MP4", "GIF"], trackingMode: .selectOne,
+                                           target: nil, action: nil)
+        formatSeg.selectedSegment = effectiveFormat == "gif" ? 1 : 0
+        (formatSeg.cell as? NSSegmentedCell)?.segmentStyle = .roundRect
+
+        // FPS popup
+        let fpsPopup = NSPopUpButton()
+        fpsPopup.controlSize = .small
+        fpsPopup.font = NSFont.systemFont(ofSize: 11)
+
+        func populateFPS(isGIF: Bool, selectedFPS: Int) {
+            fpsPopup.removeAllItems()
+            if isGIF {
+                fpsPopup.addItems(withTitles: ["5", "10", "15"])
+                if selectedFPS <= 5 { fpsPopup.selectItem(at: 0) }
+                else if selectedFPS <= 10 { fpsPopup.selectItem(at: 1) }
+                else { fpsPopup.selectItem(at: 2) }
+            } else {
+                fpsPopup.addItems(withTitles: ["15", "30", "60", "120"])
+                if selectedFPS <= 15 { fpsPopup.selectItem(at: 0) }
+                else if selectedFPS <= 30 { fpsPopup.selectItem(at: 1) }
+                else if selectedFPS <= 60 { fpsPopup.selectItem(at: 2) }
+                else { fpsPopup.selectItem(at: 3) }
+            }
+        }
+        populateFPS(isGIF: effectiveFormat == "gif", selectedFPS: effectiveFPS)
+
+        // Handlers write to session overrides, not UserDefaults
+        class FormatHandler: NSObject {
+            weak var overlayView: OverlayView?
+            let fpsPopup: NSPopUpButton
+            let populateFPS: (Bool, Int) -> Void
+            init(overlayView: OverlayView?, fpsPopup: NSPopUpButton, populateFPS: @escaping (Bool, Int) -> Void) {
+                self.overlayView = overlayView; self.fpsPopup = fpsPopup; self.populateFPS = populateFPS; super.init()
+            }
+            @objc func changed(_ sender: NSSegmentedControl) {
+                let isGIF = sender.selectedSegment == 1
+                overlayView?.sessionRecordingFormat = isGIF ? "gif" : "mp4"
+                let currentFPS = overlayView?.sessionRecordingFPS ?? 30
+                populateFPS(isGIF, currentFPS)
+            }
+        }
+
+        class FPSHandler: NSObject {
+            weak var overlayView: OverlayView?
+            init(overlayView: OverlayView?) { self.overlayView = overlayView; super.init() }
+            @objc func changed(_ sender: NSPopUpButton) {
+                if let title = sender.selectedItem?.title, let fps = Int(title) {
+                    overlayView?.sessionRecordingFPS = fps
+                }
+            }
+        }
+
+        class WhenDoneHandler: NSObject {
+            weak var overlayView: OverlayView?
+            init(overlayView: OverlayView?) { self.overlayView = overlayView; super.init() }
+            @objc func changed(_ sender: NSPopUpButton) {
+                let values = ["editor", "finder"]
+                overlayView?.sessionRecordingOnStop = values[sender.indexOfSelectedItem]
+            }
+        }
+
+        let fpsHandler = FPSHandler(overlayView: self)
+        fpsPopup.target = fpsHandler
+        fpsPopup.action = #selector(FPSHandler.changed(_:))
+        objc_setAssociatedObject(fpsPopup, "handler", fpsHandler, .OBJC_ASSOCIATION_RETAIN)
+
+        let formatHandler = FormatHandler(overlayView: self, fpsPopup: fpsPopup, populateFPS: populateFPS)
+        formatSeg.target = formatHandler
+        formatSeg.action = #selector(FormatHandler.changed(_:))
+        objc_setAssociatedObject(formatSeg, "handler", formatHandler, .OBJC_ASSOCIATION_RETAIN)
+
+        // When done popup
+        let whenDonePopup = NSPopUpButton()
+        whenDonePopup.addItems(withTitles: ["Open editor", "Show in Finder"])
+        whenDonePopup.controlSize = .small
+        whenDonePopup.font = NSFont.systemFont(ofSize: 11)
+        whenDonePopup.selectItem(at: effectiveOnStop == "finder" ? 1 : 0)
+
+        let whenDoneHandler = WhenDoneHandler(overlayView: self)
+        whenDonePopup.target = whenDoneHandler
+        whenDonePopup.action = #selector(WhenDoneHandler.changed(_:))
+        objc_setAssociatedObject(whenDonePopup, "handler", whenDoneHandler, .OBJC_ASSOCIATION_RETAIN)
+
+        addRow(label: "Format:", control: formatSeg)
+        addRow(label: "FPS:", control: fpsPopup)
+        addRow(label: "When done:", control: whenDonePopup)
+
+        let size = NSSize(width: 240, height: y + 4)
+        container.frame.size = size
+
+        if let anchor = anchorView {
+            PopoverHelper.show(
+                container, size: size, relativeTo: anchor.bounds, of: anchor, preferredEdge: .maxY)
+        } else {
+            PopoverHelper.showAtPoint(
+                container, size: size,
+                at: NSPoint(x: bounds.midX, y: bounds.midY),
+                in: self, preferredEdge: .maxY)
         }
     }
 

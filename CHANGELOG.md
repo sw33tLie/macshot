@@ -1,5 +1,21 @@
 # Changelog
 
+## [3.4.2] - 2026-03-29
+
+### Added
+- **Recording settings popover** — gear icon in the recording toolbar opens a quick-access popover to change format (MP4/GIF), FPS, and post-recording action for the current session without changing Preferences defaults.
+- **Auto-copy OCR text** — OCR results are automatically copied to the clipboard when the OCR window opens. Toggle in Preferences > General (default: on).
+- **"Open editor" recording option** — new default post-recording action that opens the video editor. Available in both the toolbar popover and Preferences.
+
+### Changed
+- **Beautify gradient picker stays open** — clicking a gradient swatch no longer dismisses the popover, so you can quickly preview multiple styles.
+
+### Fixed
+- **ESC restores previous app focus** — pressing Escape to cancel a capture now returns focus to the previously active application (e.g. Chrome) instead of leaving macshot active with nothing visible.
+- **Resize handles in recording setup** — selection resize handles (corner/edge circles) now appear during recording setup mode, matching screenshot mode behavior.
+- **GIF recording speed** — fixed GIF recordings appearing sped up due to incorrect frame decimation math. The GIF encoder now uses the actual recording FPS instead of a hardcoded 60fps estimate.
+- **Google Drive upload reliability** — uploads now use a dedicated session with longer timeouts (5 min), automatic retry with backoff on network errors, and token refresh on 401 responses mid-upload.
+
 ## [3.4.1] - 2026-03-29
 
 ### Added

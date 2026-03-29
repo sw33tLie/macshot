@@ -68,7 +68,8 @@ final class RecordingEngine: NSObject {
     // MARK: - Public API
 
     /// Start recording the given rect (in NSScreen/AppKit coordinates, bottom-left origin).
-    func startRecording(rect: NSRect, screen: NSScreen) {
+    /// Optional overrides take precedence over UserDefaults for this session.
+    func startRecording(rect: NSRect, screen: NSScreen, formatOverride: String? = nil, fpsOverride: Int? = nil) {
         guard state == .idle else { return }
         state = .recording
 
@@ -83,9 +84,11 @@ final class RecordingEngine: NSObject {
                                width: rect.width,
                                height: rect.height)
 
-        self.format = RecordingFormat(rawValue: UserDefaults.standard.string(forKey: "recordingFormat") ?? "mp4") ?? .mp4
-        self.fps = UserDefaults.standard.integer(forKey: "recordingFPS") > 0
+        let effectiveFormat = formatOverride ?? UserDefaults.standard.string(forKey: "recordingFormat") ?? "mp4"
+        self.format = RecordingFormat(rawValue: effectiveFormat) ?? .mp4
+        let defaultFPS = UserDefaults.standard.integer(forKey: "recordingFPS") > 0
             ? UserDefaults.standard.integer(forKey: "recordingFPS") : 30
+        self.fps = fpsOverride ?? defaultFPS
         Task {
             // Resolve mic permission before starting capture so the prompt
             // doesn't block the UI while frames are already being recorded.
@@ -156,7 +159,7 @@ final class RecordingEngine: NSObject {
             if format == .mp4 {
                 try setupAssetWriter(url: outURL, width: pixelW, height: pixelH)
             } else {
-                gifEncoder = GIFEncoder(url: outURL, fps: min(fps, 15))
+                gifEncoder = GIFEncoder(url: outURL, fps: min(fps, 15), sourceFPS: fps)
             }
 
             let output = RecordingStreamOutput()
