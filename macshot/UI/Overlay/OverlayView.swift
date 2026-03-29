@@ -25,6 +25,7 @@ protocol OverlayViewDelegate: AnyObject {
     func overlayViewDidBeginSelection()
     func overlayViewRemoteSelectionDidChange(_ rect: NSRect)
     func overlayViewRemoteSelectionDidFinish(_ rect: NSRect)
+    func overlayViewDidRequestAddCapture()
 }
 
 /// An entry in the undo/redo history.
@@ -318,6 +319,7 @@ class OverlayView: NSView {
     }
 
     var cachedCompositedImage: NSImage? = nil  // invalidated when annotations change
+    private var cachedOpaqueRect: NSRect?  // cached opaque content bounds of screenshotImage
 
     var isTranslating: Bool = false
     var translateEnabled: Bool = false
@@ -374,6 +376,7 @@ class OverlayView: NSView {
     var autoEnterRecordingMode: Bool = false  // set by "Record Screen" menu — enters recording mode after selection
     var autoOCRMode: Bool = false  // set by "Capture OCR" menu — triggers OCR immediately after selection
     var autoQuickSaveMode: Bool = false  // set by "Quick Capture" menu — quick-saves immediately after selection
+    var autoConfirmMode: Bool = false  // set by "Add Capture" — auto-confirms selection (no toolbars, no save)
 
     // Scroll capture state
     var isScrollCapturing: Bool = false
@@ -503,7 +506,7 @@ class OverlayView: NSView {
         window?.makeFirstResponder(self)
         window?.acceptsMouseMovedEvents = true
         let area = NSTrackingArea(
-            rect: .zero, options: [.mouseMoved, .activeAlways, .inVisibleRect, .cursorUpdate],
+            rect: .zero, options: [.mouseMoved, .activeAlways, .inVisibleRect],
             owner: self, userInfo: nil)
         addTrackingArea(area)
     }
@@ -760,12 +763,13 @@ class OverlayView: NSView {
     }()
 
     override func cursorUpdate(with event: NSEvent) {
-        let point = convert(event.locationInWindow, from: nil)
-        updateCursorForPoint(point)
+        // Intentionally empty — cursor management is handled imperatively in mouseMoved
+        // via updateCursorForPoint(). Overriding prevents AppKit's default cursorUpdate
+        // from resetting our custom cursors.
     }
 
     override func resetCursorRects() {
-        // Handled by cursorUpdate via tracking area
+        // Handled imperatively in mouseMoved
     }
 
     /// Imperative cursor management. Called from mouseMoved and a 30fps timer.
@@ -2178,6 +2182,178 @@ class OverlayView: NSView {
 
         cachedCompositedImage = nil
         needsDisplay = true
+    }
+
+    /// Add a captured image as a draggable stamp annotation, placed below the current canvas.
+    /// The canvas auto-expands to fit. Used by "Add Capture" in the editor.
+    func addCaptureImage(_ newImage: NSImage) {
+        let imgW = newImage.size.width
+        let imgH = newImage.size.height
+
+        // Place below the current canvas, left-aligned
+        let placeY = -imgH  // just below origin (canvas will expand)
+
+        let ann = Annotation(
+            tool: .stamp,
+            startPoint: NSPoint(x: 0, y: placeY),
+            endPoint: NSPoint(x: imgW, y: placeY + imgH),
+            color: NSColor.white.withAlphaComponent(0),
+            strokeWidth: 0)
+        ann.stampImage = newImage
+
+        annotations.append(ann)
+        undoStack.append(.added(ann))
+        redoStack.removeAll()
+
+        // Auto-select so user can move/resize immediately
+        currentTool = .select
+        selectedAnnotation = ann
+        cachedCompositedImage = nil
+
+        // Expand the canvas to fit the new annotation
+        expandCanvasToFitAnnotations()
+        rebuildToolbarLayout()
+        needsDisplay = true
+    }
+
+    /// Resizes the canvas to tightly fit the original image content plus all annotations.
+    /// Grows or shrinks as needed. Shifts everything so origin stays at (0,0).
+    /// Only runs the expensive pixel scan when add-capture stamps are present.
+    func expandCanvasToFitAnnotations() {
+        guard isEditorMode, let original = screenshotImage,
+              let oldCG = original.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        else { return }
+
+        // Only resize canvas when there are add-capture image stamps that might be outside bounds.
+        // Normal annotations (arrows, text, etc.) don't need canvas resizing.
+        let hasImageStamps = annotations.contains { $0.tool == .stamp && $0.stampImage != nil }
+        guard hasImageStamps else { return }
+
+        let scale = CGFloat(oldCG.width) / original.size.width
+
+        // Detect the non-transparent bounding box of the original image.
+        let opaqueRect: NSRect
+        if let cached = cachedOpaqueRect {
+            opaqueRect = cached
+        } else {
+            opaqueRect = opaqueContentRect(of: oldCG, scale: scale)
+            cachedOpaqueRect = opaqueRect
+        }
+
+        // Compute bounding box of opaque image content + all annotations
+        var minX: CGFloat = opaqueRect.minX
+        var minY: CGFloat = opaqueRect.minY
+        var maxX: CGFloat = opaqueRect.maxX
+        var maxY: CGFloat = opaqueRect.maxY
+
+        for ann in annotations {
+            let r = ann.boundingRect
+            guard r.width > 0, r.height > 0 else { continue }
+            minX = min(minX, r.minX)
+            minY = min(minY, r.minY)
+            maxX = max(maxX, r.maxX)
+            maxY = max(maxY, r.maxY)
+        }
+
+        let targetRect = NSRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+
+        // If canvas already matches, nothing to do
+        if abs(minX) < 1 && abs(minY) < 1
+            && abs(maxX - selectionRect.width) < 1 && abs(maxY - selectionRect.height) < 1 {
+            return
+        }
+
+        let newPtW = targetRect.width
+        let newPtH = targetRect.height
+        let newPxW = max(1, Int(newPtW * scale))
+        let newPxH = max(1, Int(newPtH * scale))
+
+        let cs = oldCG.colorSpace ?? CGColorSpaceCreateDeviceRGB()
+        guard let ctx = CGContext(
+            data: nil, width: newPxW, height: newPxH,
+            bitsPerComponent: 8, bytesPerRow: 0, space: cs,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return }
+
+        // Draw old image offset so that targetRect.origin maps to (0,0)
+        let drawX = -targetRect.origin.x * scale
+        let drawY = -targetRect.origin.y * scale
+        ctx.draw(oldCG, in: CGRect(x: drawX, y: drawY, width: CGFloat(oldCG.width), height: CGFloat(oldCG.height)))
+
+        guard let newCG = ctx.makeImage() else { return }
+        let prevImage = original.copy() as! NSImage
+        let shiftDx = -targetRect.origin.x
+        let shiftDy = -targetRect.origin.y
+        let offsets = annotations.map { ($0, shiftDx, shiftDy) }
+        undoStack.append(.imageTransform(previousImage: prevImage, annotationOffsets: offsets))
+
+        screenshotImage = NSImage(cgImage: newCG, size: NSSize(width: newPtW, height: newPtH))
+        cachedOpaqueRect = nil  // invalidate — image content changed
+
+        // Shift all annotations so they align with the new origin
+        if shiftDx != 0 || shiftDy != 0 {
+            for ann in annotations {
+                ann.move(dx: shiftDx, dy: shiftDy)
+            }
+        }
+
+        selectionRect = NSRect(origin: .zero, size: NSSize(width: newPtW, height: newPtH))
+        frame.size = NSSize(width: newPtW, height: newPtH)
+        cachedCompositedImage = nil
+    }
+
+    /// Returns the bounding rect (in point coords) of non-transparent pixels in the image.
+    /// Uses fast row/column scanning on the raw pixel data.
+    private func opaqueContentRect(of cgImage: CGImage, scale: CGFloat) -> NSRect {
+        let w = cgImage.width
+        let h = cgImage.height
+        guard w > 0, h > 0,
+              let data = cgImage.dataProvider?.data,
+              let ptr = CFDataGetBytePtr(data) else {
+            return NSRect(x: 0, y: 0, width: CGFloat(w) / scale, height: CGFloat(h) / scale)
+        }
+
+        let bytesPerRow = cgImage.bytesPerRow
+        let bytesPerPixel = cgImage.bitsPerPixel / 8
+        guard bytesPerPixel >= 4 else {
+            return NSRect(x: 0, y: 0, width: CGFloat(w) / scale, height: CGFloat(h) / scale)
+        }
+
+        // Alpha channel offset depends on bitmap info
+        let alphaInfo = CGImageAlphaInfo(rawValue: cgImage.bitmapInfo.rawValue & CGBitmapInfo.alphaInfoMask.rawValue)
+        let alphaOffset: Int
+        switch alphaInfo {
+        case .premultipliedFirst, .first, .noneSkipFirst: alphaOffset = 0
+        case .premultipliedLast, .last, .noneSkipLast: alphaOffset = 3
+        default: alphaOffset = 3
+        }
+
+        var minRow = h, maxRow = 0, minCol = w, maxCol = 0
+
+        for row in 0..<h {
+            let rowBase = row * bytesPerRow
+            for col in 0..<w {
+                let alpha = ptr[rowBase + col * bytesPerPixel + alphaOffset]
+                if alpha > 0 {
+                    if row < minRow { minRow = row }
+                    if row > maxRow { maxRow = row }
+                    if col < minCol { minCol = col }
+                    if col > maxCol { maxCol = col }
+                }
+            }
+        }
+
+        if minRow > maxRow {
+            // Fully transparent — return full rect
+            return NSRect(x: 0, y: 0, width: CGFloat(w) / scale, height: CGFloat(h) / scale)
+        }
+
+        // CGImage rows are top-to-bottom, convert to AppKit bottom-left origin
+        let ptMinX = CGFloat(minCol) / scale
+        let ptMinY = CGFloat(h - 1 - maxRow) / scale
+        let ptMaxX = CGFloat(maxCol + 1) / scale
+        let ptMaxY = CGFloat(h - minRow) / scale
+        return NSRect(x: ptMinX, y: ptMinY, width: ptMaxX - ptMinX, height: ptMaxY - ptMinY)
     }
 
     private func invertImageColors() {
@@ -4030,19 +4206,19 @@ class OverlayView: NSView {
             if selectionRect.width > 5 || selectionRect.height > 5 {
                 // Real drag — use drawn rect as-is
                 state = .selected
-                if !autoOCRMode && !autoQuickSaveMode { showToolbars = true }
+                if !autoOCRMode && !autoQuickSaveMode && !autoConfirmMode { showToolbars = true }
                 overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
             } else if windowSnapEnabled, let snapRect = hoveredWindowRect, !snapRect.isEmpty {
                 // Click (no drag) with snap on — snap to hovered window
                 selectionRect = snapRect
                 state = .selected
-                if !autoOCRMode && !autoQuickSaveMode { showToolbars = true }
+                if !autoOCRMode && !autoQuickSaveMode && !autoConfirmMode { showToolbars = true }
                 overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
             } else {
                 // Click (no drag), snap off — expand to full screen
                 selectionRect = bounds
                 state = .selected
-                if !autoOCRMode && !autoQuickSaveMode { showToolbars = true }
+                if !autoOCRMode && !autoQuickSaveMode && !autoConfirmMode { showToolbars = true }
                 overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
             }
             hoveredWindowRect = nil
@@ -4067,6 +4243,11 @@ class OverlayView: NSView {
                 autoQuickSaveMode = false
                 overlayDelegate?.overlayViewDidRequestQuickSave()
             }
+            // Auto-confirm for "Add Capture" — just confirm selection, no save/copy
+            if autoConfirmMode {
+                autoConfirmMode = false
+                overlayDelegate?.overlayViewDidConfirm()
+            }
             needsDisplay = true
 
         case .selected:
@@ -4081,6 +4262,8 @@ class OverlayView: NSView {
                 if currentTool != .select {
                     selectedAnnotation = nil
                 }
+                // Auto-expand canvas if annotation was dragged outside bounds (editor mode)
+                expandCanvasToFitAnnotations()
                 needsDisplay = true
             } else if isDraggingSelection {
                 isDraggingSelection = false
@@ -4523,6 +4706,8 @@ class OverlayView: NSView {
             overlayDelegate?.overlayViewDidRequestDetach()
         case .scrollCapture:
             overlayDelegate?.overlayViewDidRequestScrollCapture(rect: selectionRect)
+        case .addCapture:
+            overlayDelegate?.overlayViewDidRequestAddCapture()
         }
 
         // Rebuild toolbars to reflect new state (selected tool, color, etc.)

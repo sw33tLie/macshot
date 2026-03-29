@@ -21,6 +21,7 @@ class EditorTopBarView: NSView {
         let cropBtn = makeButton("crop", tooltip: "Crop", action: #selector(cropClicked))
         let flipHBtn = makeButton("arrow.left.and.right.righttriangle.left.righttriangle.right", tooltip: "Flip Horizontal", action: #selector(flipHClicked))
         let flipVBtn = makeButton("arrow.up.and.down.righttriangle.up.righttriangle.down", tooltip: "Flip Vertical", action: #selector(flipVClicked))
+        let addCaptureBtn = makeButton("rectangle.badge.plus", tooltip: "Add Capture", action: #selector(addCaptureClicked))
         let resetBtn = makeButton("arrow.counterclockwise", tooltip: "Reset Zoom", action: #selector(resetZoomClicked))
 
         zoomLabel = makeLabel("100%")
@@ -35,7 +36,7 @@ class EditorTopBarView: NSView {
         addSubview(border)
 
         // Layout with constraints
-        for v in [sizeLabel!, cropBtn, flipHBtn, flipVBtn, resetBtn, zoomLabel!] {
+        for v in [sizeLabel!, cropBtn, flipHBtn, flipVBtn, addCaptureBtn, resetBtn, zoomLabel!] {
             v.translatesAutoresizingMaskIntoConstraints = false
             addSubview(v)
         }
@@ -60,6 +61,11 @@ class EditorTopBarView: NSView {
             flipVBtn.centerYAnchor.constraint(equalTo: centerYAnchor),
             flipVBtn.widthAnchor.constraint(equalToConstant: 24),
             flipVBtn.heightAnchor.constraint(equalToConstant: 22),
+
+            addCaptureBtn.leadingAnchor.constraint(equalTo: flipVBtn.trailingAnchor, constant: 12),
+            addCaptureBtn.centerYAnchor.constraint(equalTo: centerYAnchor),
+            addCaptureBtn.widthAnchor.constraint(equalToConstant: 24),
+            addCaptureBtn.heightAnchor.constraint(equalToConstant: 22),
 
             zoomLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
             zoomLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
@@ -116,6 +122,7 @@ class EditorTopBarView: NSView {
 
     @objc private func flipHClicked() { overlayView?.flipImageHorizontally() }
     @objc private func flipVClicked() { overlayView?.flipImageVertically() }
+    @objc private func addCaptureClicked() { overlayView?.overlayDelegate?.overlayViewDidRequestAddCapture() }
 
     @objc private func resetZoomClicked() {
         overlayView?.enclosingScrollView?.magnification = 1.0

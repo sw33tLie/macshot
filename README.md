@@ -95,6 +95,7 @@ brew install sw33tlie/macshot/macshot
 
 ### Editor Window
 - Standalone resizable window with full annotation tools, beautify preview
+- **Add Capture** — capture additional screen regions and compose them into a single image, drag to reposition
 - Crop (with rule-of-thirds grid), flip H/V, zoom 0.1x–8x
 - Top bar with pixel dimensions, zoom level
 

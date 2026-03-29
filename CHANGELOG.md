@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.4.1] - 2026-03-29
+
+### Added
+- **Add Capture** — new button in the editor top bar to capture additional screen regions and compose them into a single image. The added capture is placed as a draggable stamp; the canvas auto-resizes to fit all content and trims empty space when you reposition it.
+
+### Fixed
+- **Cursor update crash** — fixed an infinite recursion in AppKit's `cursorUpdate:` → `hitTest:` chain that caused a stack overflow crash, particularly when using the editor with scroll views.
+- **Checkbox text color in light mode** — "Smooth" (pencil) and "On" (beautify) toggle labels are now always white, fixing near-invisible black text on systems using light appearance.
+
 ## [3.4.0] - 2026-03-29
 
 ### Changed
