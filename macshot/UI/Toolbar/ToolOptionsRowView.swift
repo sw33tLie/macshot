@@ -518,18 +518,25 @@ class ToolOptionsRowView: NSView {
         curX += fontBtn.frame.width + 6
 
         // Bold / Italic / Underline / Strikethrough
-        let textStyles: [(String, String, Bool, Selector)] = [
-            ("bold", "B", ov.textEditor.bold, #selector(boldToggled)),
-            ("italic", "I", ov.textEditor.italic, #selector(italicToggled)),
-            ("underline", "U", ov.textEditor.underline, #selector(underlineToggled)),
-            ("strikethrough", "S", ov.textEditor.strikethrough, #selector(strikethroughToggled)),
+        let textStyles: [(String, String, Bool, Selector, Int)] = [
+            ("bold", "B", ov.textEditor.bold, #selector(boldToggled), 980),
+            ("italic", "I", ov.textEditor.italic, #selector(italicToggled), 981),
+            ("underline", "U", ov.textEditor.underline, #selector(underlineToggled), 982),
+            ("strikethrough", "S", ov.textEditor.strikethrough, #selector(strikethroughToggled), 983),
         ]
-        for (_, label, isOn, sel) in textStyles {
+        for (_, label, isOn, sel, tag) in textStyles {
             let btn = NSButton(title: label, target: self, action: sel)
-            btn.bezelStyle = .recessed
-            btn.state = isOn ? .on : .off
-            btn.setButtonType(.toggle)
-            btn.font = NSFont.systemFont(ofSize: 12, weight: isOn ? .bold : .regular)
+            btn.bezelStyle = .smallSquare
+            btn.isBordered = false
+            btn.wantsLayer = true
+            btn.tag = tag
+            btn.layer?.cornerRadius = 4
+            btn.layer?.backgroundColor = isOn ? ToolbarLayout.accentColor.withAlphaComponent(0.85).cgColor : nil
+            btn.font = NSFont.systemFont(ofSize: 12, weight: .semibold)
+            btn.attributedTitle = NSAttributedString(string: label, attributes: [
+                .foregroundColor: NSColor.white.withAlphaComponent(isOn ? 1.0 : 0.6),
+                .font: NSFont.systemFont(ofSize: 12, weight: .semibold),
+            ])
             btn.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: 26, height: 22)
             addSubview(btn)
             curX += 28
@@ -563,6 +570,8 @@ class ToolOptionsRowView: NSView {
         let minusBtn = NSButton(title: "−", target: self, action: #selector(fontSizeDecreased))
         minusBtn.bezelStyle = .recessed
         minusBtn.font = NSFont.systemFont(ofSize: 14, weight: .medium)
+        minusBtn.isContinuous = true
+        (minusBtn.cell as? NSButtonCell)?.setPeriodicDelay(0.3, interval: 0.05)
         minusBtn.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: 20, height: 22)
         addSubview(minusBtn)
         curX += 20
@@ -579,6 +588,8 @@ class ToolOptionsRowView: NSView {
         let plusBtn = NSButton(title: "+", target: self, action: #selector(fontSizeIncreased))
         plusBtn.bezelStyle = .recessed
         plusBtn.font = NSFont.systemFont(ofSize: 14, weight: .medium)
+        plusBtn.isContinuous = true
+        (plusBtn.cell as? NSButtonCell)?.setPeriodicDelay(0.3, interval: 0.05)
         plusBtn.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: 20, height: 22)
         addSubview(plusBtn)
         curX += 24
@@ -1027,6 +1038,13 @@ class ToolOptionsRowView: NSView {
         if let align = NSTextAlignment(rawValue: sender.tag) {
             ov.textEditor.alignment = align
             ov.textEditor.applyAlignment()
+            // Update all alignment buttons — only the selected one should be on
+            for case let btn as NSButton in subviews where
+                btn.tag == NSTextAlignment.left.rawValue ||
+                btn.tag == NSTextAlignment.center.rawValue ||
+                btn.tag == NSTextAlignment.right.rawValue {
+                btn.state = btn.tag == align.rawValue ? .on : .off
+            }
             ov.needsDisplay = true
         }
     }
@@ -1036,7 +1054,9 @@ class ToolOptionsRowView: NSView {
         ov.textEditor.fontSize = max(8, ov.textEditor.fontSize - 1)
         UserDefaults.standard.set(Double(ov.textEditor.fontSize), forKey: "textFontSize")
         ov.textEditor.applyFontSizeChange()
+        ov.textEditor.resizeToFit()
         if let label = viewWithTag(998) as? NSTextField { label.stringValue = "\(Int(ov.textEditor.fontSize))" }
+        ov.needsDisplay = true
     }
 
     @objc private func fontSizeIncreased() {
@@ -1044,7 +1064,9 @@ class ToolOptionsRowView: NSView {
         ov.textEditor.fontSize = min(200, ov.textEditor.fontSize + 1)
         UserDefaults.standard.set(Double(ov.textEditor.fontSize), forKey: "textFontSize")
         ov.textEditor.applyFontSizeChange()
+        ov.textEditor.resizeToFit()
         if let label = viewWithTag(998) as? NSTextField { label.stringValue = "\(Int(ov.textEditor.fontSize))" }
+        ov.needsDisplay = true
     }
 
     @objc private func textBgToggled(_ sender: NSButton) {

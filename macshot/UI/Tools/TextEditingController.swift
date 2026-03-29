@@ -289,19 +289,33 @@ class TextEditingController {
         tv.textColor = color
         tv.insertionPointColor = color
 
+        let paraStyle = NSMutableParagraphStyle()
+        paraStyle.alignment = alignment
+
         if let existing = existingText {
             tv.textStorage?.setAttributedString(existing)
-        } else {
-            tv.typingAttributes = [
-                .font: font,
-                .foregroundColor: color,
-            ]
         }
 
-        let style = NSMutableParagraphStyle()
-        style.alignment = alignment
+        // Build typingAttributes with ALL current style state
+        var attrs: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: color,
+            .paragraphStyle: paraStyle,
+        ]
+        if underline {
+            attrs[.underlineStyle] = NSUnderlineStyle.single.rawValue
+        }
+        if strikethrough {
+            attrs[.strikethroughStyle] = NSUnderlineStyle.single.rawValue
+        }
+        tv.typingAttributes = attrs
+        tv.alignment = alignment
+
+        // Apply paragraph style to any existing text
         let range = NSRange(location: 0, length: tv.textStorage?.length ?? 0)
-        tv.textStorage?.addAttribute(.paragraphStyle, value: style, range: range)
+        if range.length > 0 {
+            tv.textStorage?.addAttribute(.paragraphStyle, value: paraStyle, range: range)
+        }
 
         sv.documentView = tv
         parentView.addSubview(sv)

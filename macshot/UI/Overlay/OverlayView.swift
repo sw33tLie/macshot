@@ -3155,6 +3155,10 @@ class OverlayView: NSView {
 
     /// Rebuild toolbar button content. Call when tool, color, or state changes — NOT on every draw.
     func rebuildToolbarLayout() {
+        // Clear tooltip before rebuilding — old button views are about to be destroyed
+        hoveredTooltip = nil
+        hoveredTooltipButtonView = nil
+
         let movableAnnotations = annotations.contains { $0.isMovable }
         bottomButtons = ToolbarLayout.bottomButtons(
             selectedTool: currentTool, selectedColor: currentColor,
@@ -3189,27 +3193,36 @@ class OverlayView: NSView {
             rightStripView = strip
         }
 
-        bottomStripView?.setButtons(bottomButtons)
-        bottomStripView?.onClick = { [weak self] action in self?.handleToolbarAction(action) }
-        bottomStripView?.onRightClick = { [weak self] action, view in
-            self?.handleToolbarButtonRightClick(action, anchorView: view)
-        }
-        bottomStripView?.onHover = { [weak self] action, hovered in
-            self?.handleToolbarButtonHover(action, hovered: hovered, strip: self?.bottomStripView)
-        }
-        rightStripView?.setButtons(rightButtons)
-        rightStripView?.onClick = { [weak self] action in self?.handleToolbarAction(action) }
-        // Move button needs onMouseDown for press-and-drag (synchronous tracking loop)
-        for bv in rightStripView?.buttonViews ?? [] {
-            if case .moveSelection = bv.action {
-                bv.onMouseDown = { [weak self] _ in self?.handleToolbarAction(.moveSelection) }
+        // Update existing buttons if count matches, rebuild only if structure changed
+        if bottomStripView?.buttonViews.count == bottomButtons.count && bottomStripView?.buttonViews.count ?? 0 > 0 {
+            bottomStripView?.updateState(from: bottomButtons)
+        } else {
+            bottomStripView?.setButtons(bottomButtons)
+            bottomStripView?.onClick = { [weak self] action in self?.handleToolbarAction(action) }
+            bottomStripView?.onRightClick = { [weak self] action, view in
+                self?.handleToolbarButtonRightClick(action, anchorView: view)
+            }
+            bottomStripView?.onHover = { [weak self] action, hovered in
+                self?.handleToolbarButtonHover(action, hovered: hovered, strip: self?.bottomStripView)
             }
         }
-        rightStripView?.onRightClick = { [weak self] action, view in
-            self?.handleToolbarButtonRightClick(action, anchorView: view)
+        if rightStripView?.buttonViews.count == rightButtons.count && rightStripView?.buttonViews.count ?? 0 > 0 {
+            rightStripView?.updateState(from: rightButtons)
+        } else {
+            rightStripView?.setButtons(rightButtons)
+            rightStripView?.onClick = { [weak self] action in self?.handleToolbarAction(action) }
+            rightStripView?.onRightClick = { [weak self] action, view in
+                self?.handleToolbarButtonRightClick(action, anchorView: view)
+            }
+            rightStripView?.onHover = { [weak self] action, hovered in
+                self?.handleToolbarButtonHover(action, hovered: hovered, strip: self?.rightStripView)
+            }
         }
-        rightStripView?.onHover = { [weak self] action, hovered in
-            self?.handleToolbarButtonHover(action, hovered: hovered, strip: self?.rightStripView)
+        // Move button needs onMouseDown for press-and-drag (synchronous tracking loop)
+        for bv in rightStripView?.buttonViews ?? [] {
+            if case .moveSelection = bv.action, bv.onMouseDown == nil {
+                bv.onMouseDown = { [weak self] _ in self?.handleToolbarAction(.moveSelection) }
+            }
         }
 
         // Rebuild options row content

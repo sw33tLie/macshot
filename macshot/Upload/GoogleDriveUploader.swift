@@ -229,15 +229,21 @@ final class GoogleDriveUploader: NSObject, ASWebAuthenticationPresentationContex
         }
     }
 
-    private func fetchUserEmail(accessToken: String) {
+    func fetchUserEmail(accessToken: String? = nil, completion: (() -> Void)? = nil) {
+        let token = accessToken ?? loadAccessToken()
+        guard let token = token else { completion?(); return }
         var request = URLRequest(url: URL(string: "https://www.googleapis.com/oauth2/v2/userinfo")!)
-        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         URLSession.shared.dataTask(with: request) { data, _, _ in
-            guard let data = data,
-                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let email = json["email"] as? String else { return }
-            DispatchQueue.main.async {
-                UserDefaults.standard.set(email, forKey: "gdriveUserEmail")
+            if let data = data,
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let email = json["email"] as? String {
+                DispatchQueue.main.async {
+                    UserDefaults.standard.set(email, forKey: "gdriveUserEmail")
+                    completion?()
+                }
+            } else {
+                DispatchQueue.main.async { completion?() }
             }
         }.resume()
     }

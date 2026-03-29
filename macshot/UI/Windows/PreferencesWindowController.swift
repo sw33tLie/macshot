@@ -971,12 +971,16 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
             updateGDriveButton()
         } else {
             GoogleDriveUploader.shared.signIn(from: window) { [weak self] success in
-                guard let self = self else { return }
+                guard let self = self, success else {
+                    self?.updateGDriveStatus()
+                    self?.updateGDriveButton()
+                    return
+                }
                 self.window?.makeKeyAndOrderFront(nil)
-                // Delay slightly to let fetchUserEmail complete
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    self.updateGDriveStatus()
-                    self.updateGDriveButton()
+                self.updateGDriveButton()
+                // Fetch email then update status label
+                GoogleDriveUploader.shared.fetchUserEmail { [weak self] in
+                    self?.updateGDriveStatus()
                 }
             }
         }
