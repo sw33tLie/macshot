@@ -12,7 +12,7 @@ class ToolbarButtonView: NSView {
     var hasContextMenu: Bool = false
 
     private var isHovered: Bool = false
-    private var isPressed: Bool = false
+    var isPressed: Bool = false
     private var trackingArea: NSTrackingArea?
 
     var onClick: ((ToolbarButtonAction) -> Void)?

@@ -1,5 +1,24 @@
 # Changelog
 
+## [3.4.0] - 2026-03-29
+
+### Changed
+- **Simplified screen recording** — recording now dismisses the capture overlay when you press Start. A floating timer pill and selection border remain visible during recording. Stop recording via the clickable timer pill or the menu bar icon (which becomes a stop button).
+- **Menu bar stop button** — the menu bar icon turns into a red stop button during recording, even if the user had hidden it in Preferences. The icon restores to normal after recording ends.
+- **Capture Screen targets active monitor** — "Capture Screen" and "Record Screen" now only apply full-screen selection on the monitor where the mouse cursor is, instead of all connected screens.
+- **Improved audio quality** — mic recording upgraded to 192kbps stereo; system audio to 192kbps with max quality preset.
+- **Large internal refactor** — annotation tool handlers extracted into dedicated protocol-based classes, toolbar UI migrated to proper AppKit components (NSPopover, NSView-based strips), and recording flow simplified by removing annotation-during-recording mode.
+
+### Fixed
+- **Cross-screen resize handles** — resize handles now appear on both screens during a cross-screen selection, and dragging handles from the secondary screen correctly resizes the selection on the primary.
+- **Cross-screen resize sync** — resizing a selection edge from the secondary screen no longer snaps the opposite edge to the screen boundary.
+- **Window snap on secondary screen** — window snap highlights no longer appear on secondary screens while a selection is active.
+- **Selection resize during recording setup** — the selection area can now be resized and moved while in recording setup mode (before pressing Start).
+- **Move button stuck state** — the Move Selection button no longer stays visually pressed after releasing the drag.
+- **Tool preview cleanup on mode switch** — marker cursor preview, loupe preview, stamp preview, and color sampler preview are now properly cleared when switching to recording mode.
+- **Recording HUD on all desktops** — the recording timer pill now follows across desktop spaces (previously only visible on the space where recording started).
+- **Keyboard focus after cross-screen resize** — Enter/Cmd+C now work immediately after resizing a selection from the secondary screen.
+
 ## [3.3.0] - 2026-03-27
 
 ### Added

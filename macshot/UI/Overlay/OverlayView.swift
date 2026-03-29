@@ -23,6 +23,8 @@ protocol OverlayViewDelegate: AnyObject {
     func overlayViewDidRequestScrollCapture(rect: NSRect)
     func overlayViewDidRequestStopScrollCapture()
     func overlayViewDidBeginSelection()
+    func overlayViewRemoteSelectionDidChange(_ rect: NSRect)
+    func overlayViewRemoteSelectionDidFinish(_ rect: NSRect)
 }
 
 /// An entry in the undo/redo history.
@@ -102,6 +104,11 @@ class OverlayView: NSView {
     private(set) var selectionRect: NSRect = .zero
     /// Selection rect from another overlay (in this view's local coords), drawn during cross-screen drag.
     var remoteSelectionRect: NSRect = .zero
+    /// The full (unclipped) remote selection in this view's local coords — used for resize anchor calculation.
+    var remoteSelectionFullRect: NSRect = .zero
+    private var isResizingRemoteSelection: Bool = false
+    private var remoteResizeHandle: ResizeHandle = .none
+    private var remoteResizeAnchor: NSPoint = .zero  // the fixed corner during remote resize
     private var selectionStart: NSPoint = .zero
     private var isDraggingSelection: Bool = false
     private var isResizingSelection: Bool = false
@@ -349,35 +356,24 @@ class OverlayView: NSView {
     private let barcodeDetector = BarcodeDetector()
 
     // Recording state
-    var isRecording: Bool = false {  // true when recording toolbar is shown (mode entered)
+    var isRecording: Bool = false {  // true when recording toolbar is shown (pre-recording setup)
         didSet {
             if isRecording {
-                if recordingHUDPanel == nil {
-                    let panel = RecordingHUDPanel()
-                    panel.update(elapsedSeconds: recordingElapsedSeconds)
-                    if let win = window {
-                        panel.position(relativeTo: selectionRect, in: win)
-                    }
-                    panel.orderFront(nil)
-                    recordingHUDPanel = panel
-                }
-            } else {
-                recordingHUDPanel?.close()
-                recordingHUDPanel = nil
+                // Clear drawing previews so they don't linger from screenshot mode
+                commitTextFieldIfNeeded()
+                stampPreviewPoint = nil
+                loupeCursorPoint = .zero
+                markerCursorPoint = .zero
+                autoMeasurePreview = nil
+                hoveredAnnotation = nil
+                selectedAnnotation = nil
+                needsDisplay = true
             }
         }
     }
-    var isCapturingVideo: Bool = false  // true when SCStream is actually capturing
-    var recordingElapsedSeconds: Int = 0 {
-        didSet { updateRecordingHUD() }
-    }
-    private var recordingHUDPanel: RecordingHUDPanel?
     var autoEnterRecordingMode: Bool = false  // set by "Record Screen" menu — enters recording mode after selection
     var autoOCRMode: Bool = false  // set by "Capture OCR" menu — triggers OCR immediately after selection
     var autoQuickSaveMode: Bool = false  // set by "Quick Capture" menu — quick-saves immediately after selection
-    // Recording overlay features
-    var mouseHighlightPoints: [(point: NSPoint, time: Date)] = []
-    var globalMouseMonitor: Any?
 
     // Scroll capture state
     var isScrollCapturing: Bool = false
@@ -421,15 +417,6 @@ class OverlayView: NSView {
         }
     }
 
-    /// Call once when recording begins to activate pass-through without needing a didSet transition.
-    func startPassThroughMode() {
-        window?.ignoresMouseEvents = true
-        window?.resignKey()
-        window?.orderFrontRegardless()
-
-        needsDisplay = true
-    }
-
     func startScrollCaptureMode() {
         isScrollCapturing = true
         scrollCaptureStripCount = 0
@@ -468,13 +455,6 @@ class OverlayView: NSView {
     }
 
     /// Update the scroll capture HUD with new strip count and pixel size.
-    private func updateRecordingHUD() {
-        recordingHUDPanel?.update(elapsedSeconds: recordingElapsedSeconds)
-        if let win = window {
-            recordingHUDPanel?.position(relativeTo: selectionRect, in: win)
-        }
-    }
-
     func updateScrollCaptureHUD() {
         scrollCaptureHUDPanel?.hudView.update(
             stripCount: scrollCaptureStripCount,
@@ -555,7 +535,9 @@ class OverlayView: NSView {
         // Window snap: highlight hovered window in idle state.
         // CGWindowListCopyWindowInfo is expensive — run it on a background thread,
         // skipping new queries while one is already in flight.
-        if state == .idle && windowSnapEnabled && !windowSnapQueryInFlight {
+        if state == .idle && windowSnapEnabled && !windowSnapQueryInFlight
+            && !(remoteSelectionRect.width >= 1 && remoteSelectionRect.height >= 1)
+        {
             guard
                 let screenPoint = window.map({
                     NSPoint(x: $0.frame.origin.x + point.x, y: $0.frame.origin.y + point.y)
@@ -587,7 +569,7 @@ class OverlayView: NSView {
         }
 
         // Track cursor for loupe live preview (use canvas space for zoom correctness)
-        if state == .selected && currentTool == .loupe && !showBeautifyInOptionsRow {
+        if state == .selected && currentTool == .loupe && !isRecording && !showBeautifyInOptionsRow {
             let newPoint = viewToCanvas(convert(event.locationInWindow, from: nil))
             if newPoint != loupeCursorPoint {
                 loupeCursorPoint = newPoint
@@ -596,7 +578,7 @@ class OverlayView: NSView {
         }
 
         // Track cursor for marker size preview circle (canvas space so it scales with zoom)
-        if state == .selected && currentTool == .marker {
+        if state == .selected && currentTool == .marker && !isRecording {
             let canvasPoint = viewToCanvas(point)
             if canvasPoint != markerCursorPoint {
                 markerCursorPoint = canvasPoint
@@ -608,7 +590,7 @@ class OverlayView: NSView {
         }
 
         // Track cursor for color sampler tool (canvas space)
-        if state == .selected && currentTool == .colorSampler {
+        if state == .selected && currentTool == .colorSampler && !isRecording {
             let canvasPoint = viewToCanvas(point)
             if canvasPoint != colorSamplerPoint {
                 colorSamplerPoint = canvasPoint
@@ -790,15 +772,19 @@ class OverlayView: NSView {
     /// Simplified: arrow for chrome, resize cursors for handles, tool cursor for canvas.
     private func updateCursorForPoint(_ point: NSPoint) {
         // Non-interactive states — simple cursors
-        if isRecording {
-            NSCursor.arrow.set()
-            return
-        }
         if textEditView != nil {
             NSCursor.arrow.set()
             return
         }
         if state == .idle || state == .selecting {
+            // Show resize cursor for remote selection handles
+            if state == .idle && remoteSelectionRect.width >= 1 && remoteSelectionRect.height >= 1 {
+                let remoteHandle = hitTestRemoteHandle(at: point)
+                if remoteHandle != .none {
+                    cursorForHandle(remoteHandle).set()
+                    return
+                }
+            }
             NSCursor.crosshair.set()
             return
         }
@@ -909,6 +895,16 @@ class OverlayView: NSView {
         return nil
     }
 
+    private func cursorForHandle(_ handle: ResizeHandle) -> NSCursor {
+        switch handle {
+        case .topLeft, .bottomRight: return Self.nwseCursor
+        case .topRight, .bottomLeft: return Self.neswCursor
+        case .top, .bottom: return .resizeUpDown
+        case .left, .right: return .resizeLeftRight
+        case .none, .move: return .arrow
+        }
+    }
+
     // MARK: - Subclass override points
 
     /// Override to handle cursor for editor chrome (top bar). Base returns false.
@@ -1015,6 +1011,9 @@ class OverlayView: NSView {
             remoteBorder.lineWidth = 2.0
             ToolbarLayout.accentColor.setStroke()
             remoteBorder.stroke()
+
+            // Resize handles for remote selection
+            drawRemoteResizeHandles()
         }
 
         // Draw clear selection region
@@ -1376,10 +1375,6 @@ class OverlayView: NSView {
                 selectionRect: selectionRect, bottomBarRect: bottomBarRect, viewBounds: bounds)
         }
 
-        // Mouse click highlights (animated canvas overlays — must stay in draw)
-        if isRecording && UserDefaults.standard.bool(forKey: "recordMouseHighlight") {
-            drawMouseHighlights()
-        }
 
         // Instant tooltip for hovered toolbar button
         drawHoveredTooltip()
@@ -3126,7 +3121,7 @@ class OverlayView: NSView {
         rightButtons = ToolbarLayout.rightButtons(
             beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex,
             hasAnnotations: movableAnnotations, translateEnabled: translateEnabled,
-            isRecording: isRecording, isCapturingVideo: isCapturingVideo,
+            isRecording: isRecording,
             isEditorMode: isEditorMode)
 
         // Create strip views if needed — add to chrome parent (window content) when in scroll view
@@ -3381,6 +3376,61 @@ class OverlayView: NSView {
         return .none
     }
 
+    private func handleRectsForRect(_ r: NSRect) -> [(ResizeHandle, NSRect)] {
+        let s = handleSize
+        return [
+            (.topLeft, NSRect(x: r.minX - s / 2, y: r.maxY - s / 2, width: s, height: s)),
+            (.topRight, NSRect(x: r.maxX - s / 2, y: r.maxY - s / 2, width: s, height: s)),
+            (.bottomLeft, NSRect(x: r.minX - s / 2, y: r.minY - s / 2, width: s, height: s)),
+            (.bottomRight, NSRect(x: r.maxX - s / 2, y: r.minY - s / 2, width: s, height: s)),
+            (.top, NSRect(x: r.midX - s / 2, y: r.maxY - s / 2, width: s, height: s)),
+            (.bottom, NSRect(x: r.midX - s / 2, y: r.minY - s / 2, width: s, height: s)),
+            (.left, NSRect(x: r.minX - s / 2, y: r.midY - s / 2, width: s, height: s)),
+            (.right, NSRect(x: r.maxX - s / 2, y: r.midY - s / 2, width: s, height: s)),
+        ]
+    }
+
+    private func hitTestRemoteHandle(at point: NSPoint) -> ResizeHandle {
+        let r = remoteSelectionRect
+        guard r.width >= 1, r.height >= 1 else { return .none }
+        let hitPad: CGFloat = 2
+        for (handle, rect) in handleRectsForRect(r) {
+            switch handle {
+            case .topLeft, .topRight, .bottomLeft, .bottomRight:
+                if rect.insetBy(dx: -hitPad, dy: -hitPad).contains(point) { return handle }
+            default: break
+            }
+        }
+        let edgeThickness: CGFloat = 6
+        if NSRect(x: r.minX, y: r.maxY - edgeThickness / 2, width: r.width, height: edgeThickness).contains(point) { return .top }
+        if NSRect(x: r.minX, y: r.minY - edgeThickness / 2, width: r.width, height: edgeThickness).contains(point) { return .bottom }
+        if NSRect(x: r.minX - edgeThickness / 2, y: r.minY, width: edgeThickness, height: r.height).contains(point) { return .left }
+        if NSRect(x: r.maxX - edgeThickness / 2, y: r.minY, width: edgeThickness, height: r.height).contains(point) { return .right }
+        return .none
+    }
+
+    private func drawRemoteResizeHandles() {
+        for (_, rect) in handleRectsForRect(remoteSelectionRect) {
+            ToolbarLayout.handleColor.setFill()
+            NSBezierPath(ovalIn: rect).fill()
+        }
+    }
+
+    /// Returns the anchor point (fixed corner) for a given resize handle on a rect.
+    private func anchorForHandle(_ handle: ResizeHandle, in r: NSRect) -> NSPoint {
+        switch handle {
+        case .topLeft:     return NSPoint(x: r.maxX, y: r.minY)
+        case .topRight:    return NSPoint(x: r.minX, y: r.minY)
+        case .bottomLeft:  return NSPoint(x: r.maxX, y: r.maxY)
+        case .bottomRight: return NSPoint(x: r.minX, y: r.maxY)
+        case .top:         return NSPoint(x: r.midX, y: r.minY)
+        case .bottom:      return NSPoint(x: r.midX, y: r.maxY)
+        case .left:        return NSPoint(x: r.maxX, y: r.midY)
+        case .right:       return NSPoint(x: r.minX, y: r.midY)
+        case .none, .move:  return .zero
+        }
+    }
+
     // MARK: - Mouse Events
 
     override func mouseDown(with event: NSEvent) {
@@ -3508,6 +3558,17 @@ class OverlayView: NSView {
 
         switch state {
         case .idle:
+            // Check remote selection handles for cross-screen resize
+            if remoteSelectionRect.width >= 1 && remoteSelectionRect.height >= 1 {
+                let remoteHandle = hitTestRemoteHandle(at: point)
+                if remoteHandle != .none {
+                    isResizingRemoteSelection = true
+                    remoteResizeHandle = remoteHandle
+                    remoteResizeAnchor = anchorForHandle(remoteHandle, in: remoteSelectionFullRect)
+                    return
+                }
+                return
+            }
             // Always start a drag — snap is resolved in mouseUp if no real drag occurred
             selectionStart = point
             selectionRect = NSRect(origin: point, size: .zero)
@@ -3538,11 +3599,10 @@ class OverlayView: NSView {
 
             }
 
-            // Check handles (locked during recording, disabled in editor)
+            // Check handles (disabled in editor)
             if shouldAllowSelectionResize() {
                 let handle = hitTestHandle(at: point)
                 if handle != .none {
-                    guard !isRecording else { return }
                     isResizingSelection = true
                     resizeHandle = handle
                     return
@@ -3596,6 +3656,34 @@ class OverlayView: NSView {
 
     override func mouseDragged(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
+
+        // Remote selection resize (cross-screen)
+        if isResizingRemoteSelection {
+            let anchor = remoteResizeAnchor
+            let fullRect = remoteSelectionFullRect
+            var newRect = NSRect(
+                x: min(anchor.x, point.x), y: min(anchor.y, point.y),
+                width: abs(point.x - anchor.x), height: abs(point.y - anchor.y))
+            // For edge handles, preserve the dimension that shouldn't change
+            switch remoteResizeHandle {
+            case .top, .bottom:
+                newRect.origin.x = fullRect.origin.x
+                newRect.size.width = fullRect.width
+            case .left, .right:
+                newRect.origin.y = fullRect.origin.y
+                newRect.size.height = fullRect.height
+            default: break
+            }
+            // Update full rect and clip for local display
+            remoteSelectionFullRect = newRect
+            let screenBounds = NSRect(origin: .zero, size: bounds.size)
+            let clipped = newRect.intersection(screenBounds)
+            remoteSelectionRect = clipped.isEmpty ? .zero : clipped
+            // Update primary + other screens
+            overlayDelegate?.overlayViewRemoteSelectionDidChange(newRect)
+            needsDisplay = true
+            return
+        }
 
         // Crop drag update (in canvas coords)
         if isCropDragging {
@@ -3861,6 +3949,7 @@ class OverlayView: NSView {
                 needsDisplay = true
             } else if isResizingSelection {
                 resizeSelection(to: point)
+                overlayDelegate?.overlayViewSelectionDidChange(selectionRect)
                 needsDisplay = true
             } else if currentAnnotation != nil {
                 if spaceRepositioning {
@@ -3892,6 +3981,14 @@ class OverlayView: NSView {
 
     override func mouseUp(with event: NSEvent) {
         spaceRepositioning = false
+
+        // Finish remote selection resize — final sync + transfer focus to the primary
+        if isResizingRemoteSelection {
+            isResizingRemoteSelection = false
+            remoteResizeHandle = .none
+            overlayDelegate?.overlayViewRemoteSelectionDidFinish(remoteSelectionFullRect)
+            return
+        }
 
         // Crop commit
         if isCropDragging {
@@ -4270,16 +4367,6 @@ class OverlayView: NSView {
     }
 
     func handleToolbarAction(_ action: ToolbarButtonAction, mousePoint: NSPoint = .zero) {
-        // When recording, only allow recording-control actions
-        if isRecording {
-            switch action {
-            case .startRecord, .stopRecord, .mouseHighlight, .systemAudio, .micAudio:
-                break  // allowed — fall through to main switch
-            default:
-                return
-            }
-        }
-
         switch action {
         case .tool(let tool):
             if tool == .select && !annotations.contains(where: { $0.isMovable }) {
@@ -4305,7 +4392,7 @@ class OverlayView: NSView {
         case .sizeDisplay:
             break
         case .moveSelection:
-            guard !isRecording, let win = window else { break }
+            guard let win = window else { break }
             // Show drag hint tooltip
             hoveredTooltip = "Drag to reposition"
             needsDisplay = true
@@ -4321,8 +4408,12 @@ class OverlayView: NSView {
                 displayIfNeeded()
                 if event.type == .leftMouseUp { break }
             }
-            // Restore original tooltip
+            // Restore original tooltip and reset button pressed state
             hoveredTooltip = hoveredTooltipButtonView?.tooltipText
+            if let moveBtn = rightStripView?.buttonViews.first(where: { if case .moveSelection = $0.action { return true }; return false }) {
+                moveBtn.isPressed = false
+                moveBtn.needsDisplay = true
+            }
             scheduleBarcodeDetection()
             needsDisplay = true
         case .undo:
@@ -4406,33 +4497,19 @@ class OverlayView: NSView {
             }
             needsDisplay = true
         case .record:
-            // Enter recording mode — delegate handles pass-through + control window
+            // Enter recording mode — shows recording setup toolbar
             overlayDelegate?.overlayViewDidRequestEnterRecordingMode()
         case .startRecord:
-            // Actually start recording
-            isCapturingVideo = true
-            // Start monitors based on toggle state
-            if UserDefaults.standard.bool(forKey: "recordMouseHighlight") {
-                startMouseHighlightMonitor()
-            }
-            rebuildToolbarLayout()
+            // Start recording — overlay will be dismissed by AppDelegate
             overlayDelegate?.overlayViewDidRequestStartRecording(rect: selectionRect)
         case .stopRecord:
-            if isCapturingVideo {
-                overlayDelegate?.overlayViewDidRequestStopRecording()
-            } else {
-                // Not actually recording — just exit recording mode
-                isRecording = false
-                rebuildToolbarLayout()
-                needsDisplay = true
-            }
+            // Exit recording mode without starting (user changed mind)
+            isRecording = false
+            rebuildToolbarLayout()
+            needsDisplay = true
         case .mouseHighlight:
             let current = UserDefaults.standard.bool(forKey: "recordMouseHighlight")
             UserDefaults.standard.set(!current, forKey: "recordMouseHighlight")
-            // Start/stop monitor only if currently capturing
-            if isCapturingVideo {
-                if !current { startMouseHighlightMonitor() } else { stopMouseHighlightMonitor() }
-            }
             rebuildToolbarLayout()
         case .systemAudio:
             let current = UserDefaults.standard.bool(forKey: "recordSystemAudio")
@@ -4483,6 +4560,8 @@ class OverlayView: NSView {
     // MARK: - Annotation Creation
 
     private func startAnnotation(at point: NSPoint) {
+        // No drawing in recording setup mode
+        guard !isRecording else { return }
 
         // Hover-to-move: if the cursor is over a hovered annotation (while a drawing tool is active),
         // intercept the click and handle it like the select tool — resize handle or drag — without
@@ -4969,9 +5048,6 @@ class OverlayView: NSView {
                 overlayDelegate?.overlayViewDidRequestStopScrollCapture()
                 return
             }
-            // Block ESC only when actually capturing video; allow cancel
-            // when recording mode is entered but capture hasn't started yet.
-            guard !isCapturingVideo else { return }
             if textEditView != nil {
                 cancelTextEditing()
             } else if PopoverHelper.isVisible {
@@ -5416,6 +5492,7 @@ class OverlayView: NSView {
         state = .idle
         selectionRect = .zero
         remoteSelectionRect = .zero
+        remoteSelectionFullRect = .zero
         showToolbars = false
         needsDisplay = true
     }
@@ -5523,6 +5600,7 @@ class OverlayView: NSView {
         state = .idle
         selectionRect = .zero
         remoteSelectionRect = .zero
+        remoteSelectionFullRect = .zero
         annotations.removeAll()
         undoStack.removeAll()
         redoStack.removeAll()
@@ -5533,7 +5611,6 @@ class OverlayView: NSView {
         rightStripView?.isHidden = true
         toolOptionsRowView?.isHidden = true
         PopoverHelper.dismiss()
-        stopMouseHighlightMonitor()
         isTranslating = false
         translateEnabled = false
         autoMeasurePreview = nil
@@ -5578,8 +5655,6 @@ class OverlayView: NSView {
         barcodeDetector.cancel()
         hoveredWindowRect = nil
         isRecording = false
-        isCapturingVideo = false
-        recordingElapsedSeconds = 0
         needsDisplay = true
     }
 }

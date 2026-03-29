@@ -188,26 +188,22 @@ class ToolbarLayout {
     // Right toolbar items (output actions + cancel + delay)
     static func rightButtons(
         beautifyEnabled: Bool = false, beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false,
-        translateEnabled: Bool = false, isRecording: Bool = false, isCapturingVideo: Bool = false,
+        translateEnabled: Bool = false, isRecording: Bool = false,
         isEditorMode: Bool = false
     ) -> [ToolbarButton] {
         var buttons: [ToolbarButton] = []
 
-        // If in recording mode (toolbar shown), show recording controls
+        // Recording setup mode — show start button + toggles, then return early
         if isRecording {
-            if isCapturingVideo {
-                var stopBtn = ToolbarButton(
-                    action: .stopRecord, sfSymbol: "stop.circle.fill", label: nil,
-                    tooltip: "Stop Recording")
-                stopBtn.tintColor = .systemRed
-                buttons.append(stopBtn)
-            } else {
-                var startBtn = ToolbarButton(
-                    action: .startRecord, sfSymbol: "record.circle", label: nil,
-                    tooltip: "Start Recording")
-                startBtn.tintColor = .systemRed
-                buttons.append(startBtn)
-            }
+            var startBtn = ToolbarButton(
+                action: .startRecord, sfSymbol: "record.circle", label: nil,
+                tooltip: "Start Recording")
+            startBtn.tintColor = .systemRed
+            buttons.append(startBtn)
+
+            // Stop/cancel button to exit recording mode without starting
+            buttons.append(
+                ToolbarButton(action: .stopRecord, sfSymbol: "xmark", label: nil, tooltip: "Cancel Recording"))
 
             let mouseHighlightOn = UserDefaults.standard.bool(forKey: "recordMouseHighlight")
             var mouseBtn = ToolbarButton(
@@ -229,6 +225,12 @@ class ToolbarLayout {
                 tooltip: "Record Microphone")
             micBtn.isSelected = micOn
             buttons.append(micBtn)
+
+            // Allow moving the selection before starting
+            buttons.append(
+                ToolbarButton(
+                    action: .moveSelection, sfSymbol: "arrow.up.and.down.and.arrow.left.and.right",
+                    label: nil, tooltip: "Move Selection"))
 
             return buttons
         }

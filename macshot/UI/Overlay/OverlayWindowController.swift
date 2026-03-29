@@ -16,6 +16,8 @@ protocol OverlayWindowControllerDelegate: AnyObject {
     func overlayDidRequestStopScrollCapture(_ controller: OverlayWindowController)
     func overlayDidBeginSelection(_ controller: OverlayWindowController)
     func overlayDidChangeSelection(_ controller: OverlayWindowController, globalRect: NSRect)
+    func overlayDidRemoteResizeSelection(_ controller: OverlayWindowController, globalRect: NSRect)
+    func overlayDidFinishRemoteResize(_ controller: OverlayWindowController, globalRect: NSRect)
     func overlayCrossScreenImage(_ controller: OverlayWindowController) -> NSImage?
 }
 
@@ -29,8 +31,6 @@ class OverlayWindowController {
 
     private var overlayView: OverlayView?
     private var overlayWindow: OverlayWindow?
-    private var recordingControlWindow: NSWindow?
-    private var recordingControlView: RecordingControlView?
     private var shareDelegate: SharePickerDelegate?
     private weak var sharePanel: NSPanel?
     private var shareDismissTime: Date = .distantPast
@@ -79,6 +79,13 @@ class OverlayWindowController {
         }
     }
 
+    func makeKey() {
+        overlayWindow?.makeKeyAndOrderFront(nil)
+        if let view = overlayView {
+            overlayWindow?.makeFirstResponder(view)
+        }
+    }
+
     func applySelection(_ rect: NSRect) {
         overlayView?.applySelection(rect)
     }
@@ -87,8 +94,12 @@ class OverlayWindowController {
         overlayView?.clearSelection()
     }
 
-    func setRemoteSelection(_ rect: NSRect) {
+    func setRemoteSelection(_ rect: NSRect, fullRect: NSRect = .zero) {
         overlayView?.remoteSelectionRect = rect
+        overlayView?.remoteSelectionFullRect = fullRect.width >= 1 ? fullRect : rect
+        if rect.width >= 1 && rect.height >= 1 {
+            overlayView?.hoveredWindowRect = nil
+        }
         overlayView?.needsDisplay = true
     }
 
@@ -112,87 +123,16 @@ class OverlayWindowController {
         overlayView?.autoQuickSaveMode = true
     }
 
-    /// Enter recording mode — pass-through, control window, app underneath gets focus.
+    /// Enter recording mode — shows recording toolbar buttons in the normal toolbar.
     func enterRecordingMode() {
         overlayView?.isRecording = true
-        overlayView?.startPassThroughMode()
         overlayView?.rebuildToolbarLayout()
         overlayView?.needsDisplay = true
-        showRecordingControlWindow()
     }
 
     /// Auto-start recording immediately (used when timer + fullscreen record).
     func autoStartRecording() {
         overlayView?.overlayDelegate?.overlayViewDidRequestStartRecording(rect: overlayView?.selectionRect ?? .zero)
-    }
-
-    func setRecordingState(isRecording: Bool, elapsedSeconds: Int = 0) {
-        overlayView?.isRecording = isRecording
-        overlayView?.recordingElapsedSeconds = elapsedSeconds
-        if isRecording {
-            overlayView?.startPassThroughMode()
-            showRecordingControlWindow()
-        } else {
-            dismissRecordingControlWindow()
-        }
-        overlayView?.rebuildToolbarLayout()
-        overlayView?.needsDisplay = true
-    }
-
-    private func showRecordingControlWindow() {
-        dismissRecordingControlWindow()
-        guard let overlayView = overlayView, let overlayWindow = overlayWindow else { return }
-
-        // Wait one run-loop tick for rebuildToolbarLayout to compute rightBarRect
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self, let overlayView = self.overlayView else { return }
-            let rightBarLocal = overlayView.rightBarRect
-            guard rightBarLocal != .zero else { return }
-            let rightBarScreen = overlayWindow.convertToScreen(
-                overlayView.convert(rightBarLocal, to: nil)
-            )
-
-            let win = RecordingControlWindow(
-                contentRect: rightBarScreen,
-                styleMask: [.borderless],
-                backing: .buffered,
-                defer: false
-            )
-            win.level = .statusBar + 2
-            win.isOpaque = false
-            win.backgroundColor = .clear
-            win.hasShadow = false
-            win.ignoresMouseEvents = false
-            win.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-            win.isReleasedWhenClosed = false
-
-            let cv = RecordingControlView(frame: NSRect(origin: .zero, size: rightBarScreen.size))
-            cv.overlayView = overlayView
-            cv.rebuildButtons()
-            win.contentView = cv
-            win.orderFront(nil)
-            // Briefly activate macshot so the control window can become key for ESC handling,
-            // then re-activate the app underneath so it receives mouse/keyboard for normal use.
-            NSApp.activate(ignoringOtherApps: true)
-            win.makeKeyAndOrderFront(nil)
-            win.makeFirstResponder(cv)
-
-            self.recordingControlWindow = win
-            self.recordingControlView = cv
-        }
-    }
-
-    private func dismissRecordingControlWindow() {
-        recordingControlWindow?.orderOut(nil)
-        recordingControlWindow?.close()
-        recordingControlWindow = nil
-        recordingControlView = nil
-    }
-
-    func updateRecordingProgress(seconds: Int) {
-        overlayView?.recordingElapsedSeconds = seconds
-        overlayView?.needsDisplay = true
-        recordingControlView?.rebuildButtons()
     }
 
     func setScrollCaptureState(isActive: Bool, stripCount: Int = 0, pixelSize: CGSize = .zero) {
@@ -214,7 +154,6 @@ class OverlayWindowController {
     }
 
     func dismiss() {
-        dismissRecordingControlWindow()
         saveSelectionIfNeeded()
         overlayView?.reset()
         overlayView?.screenshotImage = nil
@@ -436,6 +375,23 @@ extension OverlayWindowController: OverlayViewDelegate {
 
     func overlayViewDidBeginSelection() {
         overlayDelegate?.overlayDidBeginSelection(self)
+    }
+
+    func overlayViewRemoteSelectionDidChange(_ rect: NSRect) {
+        // Convert local rect to global screen coords and forward to delegate
+        let screenOrigin = screen.frame.origin
+        let globalRect = NSRect(x: rect.origin.x + screenOrigin.x,
+                                y: rect.origin.y + screenOrigin.y,
+                                width: rect.width, height: rect.height)
+        overlayDelegate?.overlayDidRemoteResizeSelection(self, globalRect: globalRect)
+    }
+
+    func overlayViewRemoteSelectionDidFinish(_ rect: NSRect) {
+        let screenOrigin = screen.frame.origin
+        let globalRect = NSRect(x: rect.origin.x + screenOrigin.x,
+                                y: rect.origin.y + screenOrigin.y,
+                                width: rect.width, height: rect.height)
+        overlayDelegate?.overlayDidFinishRemoteResize(self, globalRect: globalRect)
     }
 
     func overlayViewDidRequestDetach() {

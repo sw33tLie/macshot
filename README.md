@@ -81,7 +81,8 @@ brew install sw33tlie/macshot/macshot
 - **System audio capture** — toggle on/off, excludes macshot's own sounds
 - **Microphone recording** — record voice narration alongside screen capture (permission requested on first use)
 - **Mouse click highlights** — visual ripple on clicks during recording
-- **Annotation mode** — draw on screen while recording
+- **Selection border** — visible capture region outline during recording
+- **Menu bar stop button** — stop recording from the menu bar icon (appears even if icon is hidden)
 - **Video editor** — trim timeline, mute/strip audio, play/pause, save (with Save As), upload, reveal in Finder
 
 ### Output & Upload

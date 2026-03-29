@@ -138,6 +138,8 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
     func overlayViewDidFinishSelection(_ rect: NSRect) {}
     func overlayViewSelectionDidChange(_ rect: NSRect) {}
     func overlayViewDidBeginSelection() {}
+    func overlayViewRemoteSelectionDidChange(_ rect: NSRect) {}
+    func overlayViewRemoteSelectionDidFinish(_ rect: NSRect) {}
     func overlayViewDidCancel() { window?.close() }
 
     func overlayViewDidConfirm() {

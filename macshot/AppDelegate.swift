@@ -23,6 +23,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var uploadToastController: UploadToastController?
     private var recordingEngine: RecordingEngine?
     private var recordingOverlayController: OverlayWindowController?
+    private var recordingHUDPanel: RecordingHUDPanel?
+    private var recordingScreenRect: NSRect = .zero  // screen-space capture rect
+    private var recordingScreen: NSScreen?
+    private var mouseHighlightOverlay: MouseHighlightOverlay?
+    private var selectionBorderOverlay: SelectionBorderOverlay?
+    private var menuBarIconWasHidden: Bool = false  // restore after recording if user had it hidden
     private var scrollCaptureController: ScrollCaptureController?
     /// The overlay controller whose selection is being scroll-captured.
     private var scrollCaptureOverlayController: OverlayWindowController?
@@ -140,7 +146,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setupStatusBar() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        applyNormalStatusBarIcon()
+        rebuildStatusBarMenu()
+    }
 
+    private func applyNormalStatusBarIcon() {
         if let button = statusItem.button {
             if let img = NSImage(named: "StatusBarIcon") {
                 img.isTemplate = true
@@ -149,8 +159,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             } else {
                 button.title = "macshot"
             }
+            button.target = nil
+            button.action = nil
         }
+    }
 
+    private func rebuildStatusBarMenu() {
         let menu = NSMenu()
 
         let captureAreaItem = NSMenuItem(title: "Capture Area", action: #selector(captureScreen), keyEquivalent: "")
@@ -349,6 +363,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func startCapture(fromMenu: Bool) {
         guard !isCapturing else { return }
+        // Don't allow captures while recording
+        guard recordingEngine == nil else { return }
         isCapturing = true
 
         // Grab focused window title before overlay steals focus
@@ -476,10 +492,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     controller.setAutoQuickSaveMode()
                 }
                 controller.showOverlay()
-                if self.pendingFullScreen || self.pendingFullScreenRecord {
+                let mouseScreen = NSScreen.screens.first { $0.frame.contains(NSEvent.mouseLocation) }
+                let isMouseScreen = (capture.screen == mouseScreen) || (mouseScreen == nil && capture.screen == NSScreen.main)
+                if (self.pendingFullScreen || self.pendingFullScreenRecord) && isMouseScreen {
                     controller.applyFullScreenSelection()
                 }
-                if self.pendingFullScreenRecord {
+                if self.pendingFullScreenRecord && isMouseScreen {
                     controller.enterRecordingMode()
                     if self.pendingFullScreenRecordAutoStart {
                         // Auto-start recording after a brief moment to let the overlay settle
@@ -540,8 +558,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func spaceDidChange() {
         guard !overlayControllers.isEmpty else { return }
-        // Don't dismiss during active recording — the overlay needs to stay
-        if recordingEngine != nil { return }
         dismissOverlays()
     }
 
@@ -757,11 +773,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 extension AppDelegate: OverlayWindowControllerDelegate {
     func overlayDidCancel(_ controller: OverlayWindowController) {
-        // Stop recording if the cancelled overlay was the recording overlay
+        // If the user cancels while in recording setup (before capture started),
+        // just dismiss. If recording is actively capturing, stop it.
         if controller === recordingOverlayController, let engine = recordingEngine {
             engine.stopRecording()
-            recordingEngine = nil
-            recordingOverlayController = nil
+            // stopRecordingUI() will be called by onCompletion callback
         }
         dismissOverlays()
     }
@@ -849,15 +865,16 @@ extension AppDelegate: OverlayWindowControllerDelegate {
     }
 
     func overlayDidRequestStartRecording(_ controller: OverlayWindowController, rect: NSRect, screen: NSScreen) {
+        recordingScreenRect = rect
+        recordingScreen = screen
+
         let engine = RecordingEngine()
-        engine.onProgress = { [weak controller] seconds in
-            controller?.updateRecordingProgress(seconds: seconds)
+        engine.onProgress = { [weak self] seconds in
+            self?.updateRecordingHUD(seconds: seconds)
         }
         engine.onCompletion = { [weak self] url, error in
             guard let self = self else { return }
-            self.dismissOverlays()
-            self.recordingEngine = nil
-            self.recordingOverlayController = nil
+            self.stopRecordingUI()
 
             if let url = url {
                 VideoEditorWindowController.open(url: url)
@@ -870,7 +887,37 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         recordingEngine = engine
         recordingOverlayController = controller
 
-        controller.setRecordingState(isRecording: true)
+        // Dismiss overlays — recording doesn't need them anymore
+        dismissOverlays()
+
+        // Show selection border so user knows what area is being captured
+        let border = SelectionBorderOverlay(screen: screen)
+        border.setSelectionRect(rect)
+        border.orderFront(nil)
+        selectionBorderOverlay = border
+
+        // Show the floating timer HUD
+        let hud = RecordingHUDPanel()
+        hud.update(elapsedSeconds: 0)
+        hud.positionOnScreen(relativeTo: rect, screen: screen)
+        hud.onStopRecording = { [weak self] in
+            self?.stopRecording()
+        }
+        hud.orderFront(nil)
+        recordingHUDPanel = hud
+
+        // Start mouse highlight overlay if enabled
+        if UserDefaults.standard.bool(forKey: "recordMouseHighlight") {
+            let overlay = MouseHighlightOverlay(screen: screen)
+            overlay.orderFront(nil)
+            overlay.startMonitoring()
+            mouseHighlightOverlay = overlay
+        }
+
+        // Turn menu bar icon into a stop button (ensure it's visible even if user hid it)
+        enterRecordingMenuBarMode()
+
+        // Start recording
         engine.startRecording(rect: rect, screen: screen)
     }
 
@@ -881,6 +928,62 @@ extension AppDelegate: OverlayWindowControllerDelegate {
             // Recording mode was entered but capture never started — just dismiss
             dismissOverlays()
         }
+    }
+
+    // MARK: - Recording UI
+
+    @objc private func stopRecording() {
+        guard let engine = recordingEngine else { return }
+        engine.stopRecording()
+    }
+
+    private func updateRecordingHUD(seconds: Int) {
+        recordingHUDPanel?.update(elapsedSeconds: seconds)
+        if let screen = recordingScreen {
+            recordingHUDPanel?.positionOnScreen(relativeTo: recordingScreenRect, screen: screen)
+        }
+    }
+
+    private func enterRecordingMenuBarMode() {
+        menuBarIconWasHidden = UserDefaults.standard.bool(forKey: "hideMenuBarIcon")
+        if menuBarIconWasHidden {
+            setMenuBarIconVisible(true)
+        }
+        // Replace menu with a single stop action, change icon to stop symbol
+        if let button = statusItem.button {
+            button.image = NSImage(systemSymbolName: "stop.circle.fill", accessibilityDescription: "Stop Recording")
+            button.image?.isTemplate = true
+            button.image?.size = NSSize(width: 22, height: 22)
+        }
+        statusItem.menu = nil
+        statusItem.button?.target = self
+        statusItem.button?.action = #selector(stopRecording)
+    }
+
+    private func exitRecordingMenuBarMode() {
+        applyNormalStatusBarIcon()
+        rebuildStatusBarMenu()
+
+        // Hide icon again if user had it hidden before recording
+        if menuBarIconWasHidden {
+            setMenuBarIconVisible(false)
+            menuBarIconWasHidden = false
+        }
+    }
+
+    private func stopRecordingUI() {
+        recordingHUDPanel?.close()
+        recordingHUDPanel = nil
+        selectionBorderOverlay?.close()
+        selectionBorderOverlay = nil
+        mouseHighlightOverlay?.stopMonitoring()
+        mouseHighlightOverlay?.close()
+        mouseHighlightOverlay = nil
+        recordingEngine = nil
+        recordingOverlayController = nil
+        recordingScreenRect = .zero
+        recordingScreen = nil
+        exitRecordingMenuBarMode()
     }
 
     func overlayDidRequestScrollCapture(_ controller: OverlayWindowController, rect: NSRect, screen: NSScreen) {
@@ -926,7 +1029,52 @@ extension AppDelegate: OverlayWindowControllerDelegate {
                                    y: globalRect.origin.y - otherOrigin.y,
                                    width: globalRect.width, height: globalRect.height)
             let clipped = localRect.intersection(NSRect(origin: .zero, size: other.screen.frame.size))
-            other.setRemoteSelection(clipped.isEmpty ? .zero : clipped)
+            other.setRemoteSelection(clipped.isEmpty ? .zero : clipped, fullRect: localRect)
+        }
+    }
+
+    func overlayDidRemoteResizeSelection(_ controller: OverlayWindowController, globalRect: NSRect) {
+        // Update the primary screen's actual selection
+        guard let primary = overlayControllers.first(where: { $0 !== controller && $0.selectionRect.width >= 1 }) else { return }
+        let primaryOrigin = primary.screen.frame.origin
+        let primaryLocal = NSRect(x: globalRect.origin.x - primaryOrigin.x,
+                                  y: globalRect.origin.y - primaryOrigin.y,
+                                  width: globalRect.width, height: globalRect.height)
+        primary.applySelection(primaryLocal)
+
+        // Update other secondary screens (not the caller — it manages its own remoteSelectionRect during drag)
+        for other in overlayControllers where other !== controller && other !== primary {
+            let otherOrigin = other.screen.frame.origin
+            let localRect = NSRect(x: globalRect.origin.x - otherOrigin.x,
+                                   y: globalRect.origin.y - otherOrigin.y,
+                                   width: globalRect.width, height: globalRect.height)
+            let clipped = localRect.intersection(NSRect(origin: .zero, size: other.screen.frame.size))
+            other.setRemoteSelection(clipped.isEmpty ? .zero : clipped, fullRect: localRect)
+        }
+    }
+
+    func overlayDidFinishRemoteResize(_ controller: OverlayWindowController, globalRect: NSRect) {
+        // Final sync after remote resize — update primary, re-sync ALL secondaries, transfer focus
+        guard let primary = overlayControllers.first(where: { $0 !== controller && $0.selectionRect.width >= 1 }) else { return }
+        let primaryOrigin = primary.screen.frame.origin
+        let primaryLocal = NSRect(x: globalRect.origin.x - primaryOrigin.x,
+                                  y: globalRect.origin.y - primaryOrigin.y,
+                                  width: globalRect.width, height: globalRect.height)
+        primary.applySelection(primaryLocal)
+        primary.makeKey()
+
+        // Re-sync ALL secondary screens (including the caller) from the primary's authoritative rect
+        let primarySel = primary.selectionRect
+        let primaryGlobal = NSRect(x: primarySel.origin.x + primaryOrigin.x,
+                                   y: primarySel.origin.y + primaryOrigin.y,
+                                   width: primarySel.width, height: primarySel.height)
+        for other in overlayControllers where other !== primary {
+            let otherOrigin = other.screen.frame.origin
+            let localRect = NSRect(x: primaryGlobal.origin.x - otherOrigin.x,
+                                   y: primaryGlobal.origin.y - otherOrigin.y,
+                                   width: primaryGlobal.width, height: primaryGlobal.height)
+            let clipped = localRect.intersection(NSRect(origin: .zero, size: other.screen.frame.size))
+            other.setRemoteSelection(clipped.isEmpty ? .zero : clipped, fullRect: localRect)
         }
     }
 
