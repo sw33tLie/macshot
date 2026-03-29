@@ -347,17 +347,22 @@ class OverlayView: NSView {
     // Recording state
     var isRecording: Bool = false {  // true when recording toolbar is shown (mode entered)
         didSet {
-            if isRecording && recordingHUDPanel == nil {
-                let panel = RecordingHUDPanel()
-                panel.update(elapsedSeconds: recordingElapsedSeconds)
-                if let win = window {
-                    panel.position(relativeTo: selectionRect, in: win)
+            if isRecording {
+                if recordingHUDPanel == nil {
+                    let panel = RecordingHUDPanel()
+                    panel.update(elapsedSeconds: recordingElapsedSeconds)
+                    if let win = window {
+                        panel.position(relativeTo: selectionRect, in: win)
+                    }
+                    panel.orderFront(nil)
+                    recordingHUDPanel = panel
                 }
-                panel.orderFront(nil)
-                recordingHUDPanel = panel
-            } else if !isRecording {
+                showRecordingToolbar()
+            } else {
                 recordingHUDPanel?.close()
                 recordingHUDPanel = nil
+                recordingToolbarPanel?.close()
+                recordingToolbarPanel = nil
             }
         }
     }
@@ -366,6 +371,7 @@ class OverlayView: NSView {
         didSet { updateRecordingHUD() }
     }
     private var recordingHUDPanel: RecordingHUDPanel?
+    private var recordingToolbarPanel: RecordingToolbarPanel?
     var autoEnterRecordingMode: Bool = false  // set by "Record Screen" menu — enters recording mode after selection
     var autoOCRMode: Bool = false  // set by "Capture OCR" menu — triggers OCR immediately after selection
     var autoQuickSaveMode: Bool = false  // set by "Quick Capture" menu — quick-saves immediately after selection
@@ -468,6 +474,29 @@ class OverlayView: NSView {
         if let win = window {
             recordingHUDPanel?.position(relativeTo: selectionRect, in: win)
         }
+    }
+
+    private func showRecordingToolbar() {
+        let panel: RecordingToolbarPanel
+        if let existing = recordingToolbarPanel {
+            panel = existing
+        } else {
+            panel = RecordingToolbarPanel()
+            panel.onClick = { [weak self] action in
+                self?.handleToolbarAction(action)
+            }
+            recordingToolbarPanel = panel
+        }
+        let buttons = ToolbarLayout.rightButtons(
+            beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex,
+            hasAnnotations: false, translateEnabled: translateEnabled,
+            isRecording: true, isCapturingVideo: isCapturingVideo,
+            isAnnotating: isAnnotating, isEditorMode: false)
+        panel.updateButtons(buttons)
+        if let win = window {
+            panel.position(relativeTo: selectionRect, in: win)
+        }
+        panel.orderFront(nil)
     }
 
     func updateScrollCaptureHUD() {
@@ -3178,6 +3207,11 @@ class OverlayView: NSView {
         }
 
         repositionToolbars()
+
+        // Update recording toolbar panel if active
+        if isRecording && recordingToolbarPanel != nil {
+            showRecordingToolbar()
+        }
     }
 
     /// Reposition toolbar strips based on current selection/bounds. Cheap — safe to call from draw().
@@ -3185,9 +3219,11 @@ class OverlayView: NSView {
         guard let bottomStrip = bottomStripView, let rightStrip = rightStripView else { return }
 
         let visible = showToolbars && state == .selected && !isScrollCapturing
-        bottomStrip.isHidden = !visible
-        rightStrip.isHidden = !visible
-        toolOptionsRowView?.isHidden = !visible || !toolHasOptionsRow
+        let bottomHasButtons = bottomStrip.buttonViews.count > 0
+        bottomStrip.isHidden = !visible || !bottomHasButtons
+        // Right strip hidden during recording — RecordingToolbarPanel handles it
+        rightStrip.isHidden = !visible || isRecording
+        toolOptionsRowView?.isHidden = !visible || !toolHasOptionsRow || !bottomHasButtons
         guard visible else { return }
 
         // Anchor rect: beautify-expanded when active, selection otherwise
