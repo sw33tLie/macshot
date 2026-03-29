@@ -21,6 +21,8 @@ class RecordingToolbarPanel: NSPanel {
         level = .statusBar + 2  // above the overlay window
         isMovableByWindowBackground = false
         hidesOnDeactivate = false
+        becomesKeyOnlyIfNeeded = true
+        acceptsMouseMovedEvents = true
 
         contentView = NSView()
         contentView?.addSubview(stripView)
@@ -56,4 +58,6 @@ class RecordingToolbarPanel: NSPanel {
 
         setFrameOrigin(NSPoint(x: px, y: py))
     }
+
+    override var canBecomeKey: Bool { true }
 }

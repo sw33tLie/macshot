@@ -3,7 +3,10 @@ import Cocoa
 extension OverlayView {
 
     func showUploadConfirmPopover(anchorRect: NSRect, anchorView: NSView? = nil) {
-        if PopoverHelper.isVisible { PopoverHelper.dismiss(); return }
+        if PopoverHelper.isVisible {
+            PopoverHelper.dismiss()
+            return
+        }
 
         let current = UserDefaults.standard.bool(forKey: "uploadConfirmEnabled")
         let container = NSView(frame: NSRect(x: 0, y: 0, width: 180, height: 32))
@@ -30,7 +33,8 @@ extension OverlayView {
         container.frame.size = size
 
         if let anchor = anchorView {
-            PopoverHelper.show(container, size: size, relativeTo: anchor.bounds, of: anchor, preferredEdge: .maxY)
+            PopoverHelper.show(
+                container, size: size, relativeTo: anchor.bounds, of: anchor, preferredEdge: .maxY)
         } else {
             PopoverHelper.showAtPoint(
                 container, size: size, at: NSPoint(x: anchorRect.maxX + 4, y: anchorRect.midY),
@@ -39,7 +43,10 @@ extension OverlayView {
     }
 
     func showRedactTypePopover(anchorRect: NSRect, anchorView: NSView? = nil) {
-        if PopoverHelper.isVisible { PopoverHelper.dismiss(); return }
+        if PopoverHelper.isVisible {
+            PopoverHelper.dismiss()
+            return
+        }
         let types = AutoRedactor.redactTypeNames
         let picker = ListPickerView()
         picker.items = types.map { item in
@@ -70,7 +77,10 @@ extension OverlayView {
     }
 
     func showTranslatePopover(anchorRect: NSRect, anchorView: NSView? = nil) {
-        if PopoverHelper.isVisible { PopoverHelper.dismiss(); return }
+        if PopoverHelper.isVisible {
+            PopoverHelper.dismiss()
+            return
+        }
         let languages = TranslationService.availableLanguages
         let currentCode = TranslationService.targetLanguage
         let picker = ListPickerView()
@@ -105,10 +115,12 @@ extension OverlayView {
 
         if let anchor = anchorView {
             PopoverHelper.show(
-                scrollView, size: popoverSize, relativeTo: anchor.bounds, of: anchor, preferredEdge: .maxY)
+                scrollView, size: popoverSize, relativeTo: anchor.bounds, of: anchor,
+                preferredEdge: .maxY)
         } else {
             PopoverHelper.showAtPoint(
-                scrollView, size: popoverSize, at: NSPoint(x: anchorRect.maxX + 4, y: anchorRect.midY),
+                scrollView, size: popoverSize,
+                at: NSPoint(x: anchorRect.maxX + 4, y: anchorRect.midY),
                 in: self, preferredEdge: .maxX)
         }
 
@@ -127,10 +139,13 @@ extension OverlayView {
             self?.needsDisplay = true
         }
         if let anchor = anchorView {
-            PopoverHelper.show(picker, size: picker.preferredSize, relativeTo: anchor.bounds, of: anchor, preferredEdge: .minY)
+            PopoverHelper.show(
+                picker, size: picker.preferredSize, relativeTo: anchor.bounds, of: anchor,
+                preferredEdge: .minY)
         } else {
             PopoverHelper.showAtPoint(
-                picker, size: picker.preferredSize, at: NSPoint(x: anchorRect.midX, y: anchorRect.midY),
+                picker, size: picker.preferredSize,
+                at: NSPoint(x: anchorRect.midX, y: anchorRect.midY),
                 in: self, preferredEdge: .minY)
         }
     }
@@ -143,10 +158,13 @@ extension OverlayView {
             self?.needsDisplay = true
         }
         if let anchor = anchorView {
-            PopoverHelper.show(picker, size: picker.preferredSize, relativeTo: anchor.bounds, of: anchor, preferredEdge: .minY)
+            PopoverHelper.show(
+                picker, size: picker.preferredSize, relativeTo: anchor.bounds, of: anchor,
+                preferredEdge: .minY)
         } else {
             PopoverHelper.showAtPoint(
-                picker, size: picker.preferredSize, at: NSPoint(x: anchorRect.midX, y: anchorRect.midY),
+                picker, size: picker.preferredSize,
+                at: NSPoint(x: anchorRect.midX, y: anchorRect.midY),
                 in: self, preferredEdge: .minY)
         }
     }

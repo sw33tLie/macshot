@@ -361,12 +361,9 @@ class OverlayView: NSView {
                     panel.orderFront(nil)
                     recordingHUDPanel = panel
                 }
-                showRecordingToolbar()
             } else {
                 recordingHUDPanel?.close()
                 recordingHUDPanel = nil
-                recordingToolbarPanel?.close()
-                recordingToolbarPanel = nil
             }
         }
     }
@@ -375,7 +372,6 @@ class OverlayView: NSView {
         didSet { updateRecordingHUD() }
     }
     private var recordingHUDPanel: RecordingHUDPanel?
-    private var recordingToolbarPanel: RecordingToolbarPanel?
     var autoEnterRecordingMode: Bool = false  // set by "Record Screen" menu — enters recording mode after selection
     var autoOCRMode: Bool = false  // set by "Capture OCR" menu — triggers OCR immediately after selection
     var autoQuickSaveMode: Bool = false  // set by "Quick Capture" menu — quick-saves immediately after selection
@@ -388,7 +384,6 @@ class OverlayView: NSView {
     var scrollCaptureStripCount: Int = 0
     var scrollCapturePixelSize: CGSize = .zero
     private var scrollCaptureHUDPanel: ScrollCaptureHUDPanel?
-    private var annotationModeEverUsed: Bool = false  // once true, never show frozen screenshot again
     /// Activate the app visible under the selection rect so the user doesn't need a warmup click.
     private func activateAppUnderSelection() {
         guard selectionRect.width > 0, let win = window else { return }
@@ -428,9 +423,9 @@ class OverlayView: NSView {
 
     /// Call once when recording begins to activate pass-through without needing a didSet transition.
     func startPassThroughMode() {
-        annotationModeEverUsed = true  // suppress frozen screenshot from the start
-        activateAppUnderSelection()
         window?.ignoresMouseEvents = true
+        window?.resignKey()
+        window?.orderFrontRegardless()
 
         needsDisplay = true
     }
@@ -480,29 +475,6 @@ class OverlayView: NSView {
         }
     }
 
-    private func showRecordingToolbar() {
-        let panel: RecordingToolbarPanel
-        if let existing = recordingToolbarPanel {
-            panel = existing
-        } else {
-            panel = RecordingToolbarPanel()
-            panel.onClick = { [weak self] action in
-                self?.handleToolbarAction(action)
-            }
-            recordingToolbarPanel = panel
-        }
-        let buttons = ToolbarLayout.rightButtons(
-            beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex,
-            hasAnnotations: false, translateEnabled: translateEnabled,
-            isRecording: true, isCapturingVideo: isCapturingVideo,
-            isAnnotating: isAnnotating, isEditorMode: false)
-        panel.updateButtons(buttons)
-        if let win = window {
-            panel.position(relativeTo: selectionRect, in: win)
-        }
-        panel.orderFront(nil)
-    }
-
     func updateScrollCaptureHUD() {
         scrollCaptureHUDPanel?.hudView.update(
             stripCount: scrollCaptureStripCount,
@@ -513,30 +485,7 @@ class OverlayView: NSView {
         }
     }
 
-    var onAnnotationModeChanged: ((Bool) -> Void)?
-
-    var isAnnotating: Bool = false {
-        didSet {
-            guard isAnnotating != oldValue else { return }
-            if isAnnotating { annotationModeEverUsed = true }
-            window?.ignoresMouseEvents = !isAnnotating
-
-            if isAnnotating {
-                window?.makeKeyAndOrderFront(nil)
-                NSApp.activate(ignoringOtherApps: true)
-            } else {
-                window?.orderFrontRegardless()
-                // Switching to pass-through — clear any hover state so annotations
-                // don't show edit controls while the cursor roams freely underneath.
-                hoveredAnnotationClearTimer?.invalidate()
-                hoveredAnnotationClearTimer = nil
-                hoveredAnnotation = nil
-                selectedAnnotation = nil
-            }
-            onAnnotationModeChanged?(isAnnotating)
-            needsDisplay = true
-        }
-    }
+    var isAnnotating: Bool = false
 
     // Window snapping
     var windowSnapEnabled: Bool {
@@ -677,8 +626,8 @@ class OverlayView: NSView {
         let hoverMoveTools: Set<AnnotationTool> = [.arrow, .line, .rectangle, .ellipse]
         // Hover-to-move: when a drawing tool is active and the cursor is over a movable annotation,
         // temporarily show the open-hand cursor so the user can move it without switching tools.
-        // Disabled entirely in pass-through mode (recording with annotation off).
-        if isRecording && !isAnnotating {
+        // Disabled entirely during recording (pass-through mode).
+        if isRecording {
             if hoveredAnnotation != nil {
                 hoveredAnnotationClearTimer?.invalidate()
                 hoveredAnnotationClearTimer = nil
@@ -841,7 +790,7 @@ class OverlayView: NSView {
     /// Simplified: arrow for chrome, resize cursors for handles, tool cursor for canvas.
     private func updateCursorForPoint(_ point: NSPoint) {
         // Non-interactive states — simple cursors
-        if isRecording && !isAnnotating {
+        if isRecording {
             NSCursor.arrow.set()
             return
         }
@@ -1030,7 +979,7 @@ class OverlayView: NSView {
             // During scroll capture: make the entire window transparent so the user sees
             // live screen content everywhere (not just inside the selection).
             context.cgContext.clear(bounds)
-        } else if !annotationModeEverUsed {
+        } else if !isRecording {
             // Draw screenshot
             if let image = screenshotImage {
                 image.draw(in: bounds, from: .zero, operation: .copy, fraction: 1.0)
@@ -1084,7 +1033,7 @@ class OverlayView: NSView {
                 context.saveGraphicsState()
                 NSBezierPath(rect: selectionRect).setClip()
                 applyZoomTransform(to: context)
-                if !isScrollCapturing, !annotationModeEverUsed, let image = screenshotImage {
+                if !isScrollCapturing, !isRecording, let image = screenshotImage {
                     image.draw(in: bounds, from: .zero, operation: .copy, fraction: 1.0)
                 }
                 context.restoreGraphicsState()
@@ -1155,8 +1104,8 @@ class OverlayView: NSView {
             }
 
             // Draw selection highlight for selected annotation (or hovered annotation in drawing mode)
-            // Suppressed in pass-through mode so annotations are purely visual overlays.
-            if !(isRecording && !isAnnotating) {
+            // Suppressed during recording so annotations are purely visual overlays.
+            if !isRecording {
                 if let selected = selectedAnnotation, currentTool == .select {
                     drawAnnotationControls(for: selected)
                 } else if let hovered = hoveredAnnotation,
@@ -1184,7 +1133,7 @@ class OverlayView: NSView {
                 context.restoreGraphicsState()
 
                 // Re-draw annotation controls on top of the beautify preview so they stay visible.
-                if !(isRecording && !isAnnotating) {
+                if !isRecording {
                     context.saveGraphicsState()
                     applyCanvasTransform(to: context)
                     if let selected = selectedAnnotation, currentTool == .select {
@@ -1376,7 +1325,7 @@ class OverlayView: NSView {
                 repositionToolbars()
                 // Toolbars are real NSView subviews (ToolbarStripView) — no custom drawing needed.
                 // Tool options row handled by ToolOptionsRowView (real NSView subview)
-                if !toolHasOptionsRow || (isRecording && !isAnnotating) {
+                if !toolHasOptionsRow || isRecording {
                     // options row rect managed by ToolOptionsRowView
                 }
 
@@ -3163,7 +3112,7 @@ class OverlayView: NSView {
         bottomButtons = ToolbarLayout.bottomButtons(
             selectedTool: currentTool, selectedColor: currentColor,
             beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex,
-            hasAnnotations: movableAnnotations, isRecording: isRecording, isAnnotating: isAnnotating
+            hasAnnotations: movableAnnotations, isRecording: isRecording
         )
         if showBeautifyInOptionsRow {
             for i in bottomButtons.indices {
@@ -3178,7 +3127,7 @@ class OverlayView: NSView {
             beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex,
             hasAnnotations: movableAnnotations, translateEnabled: translateEnabled,
             isRecording: isRecording, isCapturingVideo: isCapturingVideo,
-            isAnnotating: isAnnotating, isEditorMode: isEditorMode)
+            isEditorMode: isEditorMode)
 
         // Create strip views if needed — add to chrome parent (window content) when in scroll view
         let parent = chromeParentView ?? self
@@ -3238,10 +3187,6 @@ class OverlayView: NSView {
 
         repositionToolbars()
 
-        // Update recording toolbar panel if active
-        if isRecording && recordingToolbarPanel != nil {
-            showRecordingToolbar()
-        }
     }
 
     /// Reposition toolbar strips based on current selection/bounds. Cheap — safe to call from draw().
@@ -3251,8 +3196,8 @@ class OverlayView: NSView {
         let visible = showToolbars && state == .selected && !isScrollCapturing
         let bottomHasButtons = bottomStrip.buttonViews.count > 0
         bottomStrip.isHidden = !visible || !bottomHasButtons
-        // Right strip hidden during recording — RecordingToolbarPanel handles it
-        rightStrip.isHidden = !visible || isRecording
+        let rightHasButtons = rightStrip.buttonViews.count > 0
+        rightStrip.isHidden = !visible || !rightHasButtons
         toolOptionsRowView?.isHidden = !visible || !toolHasOptionsRow || !bottomHasButtons
         guard visible else { return }
 
@@ -4325,11 +4270,10 @@ class OverlayView: NSView {
     }
 
     func handleToolbarAction(_ action: ToolbarButtonAction, mousePoint: NSPoint = .zero) {
-        // When recording but not in annotation mode, only allow recording-control actions
-        if isRecording && !isAnnotating {
+        // When recording, only allow recording-control actions
+        if isRecording {
             switch action {
-            case .annotationMode, .startRecord, .stopRecord, .mouseHighlight, .systemAudio,
-                .micAudio:
+            case .startRecord, .stopRecord, .mouseHighlight, .systemAudio, .micAudio:
                 break  // allowed — fall through to main switch
             default:
                 return
@@ -4482,9 +4426,6 @@ class OverlayView: NSView {
                 rebuildToolbarLayout()
                 needsDisplay = true
             }
-        case .annotationMode:
-            isAnnotating.toggle()
-            rebuildToolbarLayout()
         case .mouseHighlight:
             let current = UserDefaults.standard.bool(forKey: "recordMouseHighlight")
             UserDefaults.standard.set(!current, forKey: "recordMouseHighlight")
@@ -5639,8 +5580,6 @@ class OverlayView: NSView {
         isRecording = false
         isCapturingVideo = false
         recordingElapsedSeconds = 0
-        isAnnotating = false
-        annotationModeEverUsed = false
         needsDisplay = true
     }
 }

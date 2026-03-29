@@ -304,7 +304,8 @@ final class RecordingEngine: NSObject {
                 AVFormatIDKey: kAudioFormatMPEG4AAC,
                 AVSampleRateKey: 48000,
                 AVNumberOfChannelsKey: 2,
-                AVEncoderBitRateKey: 128000,
+                AVEncoderBitRateKey: 192000,
+                AVEncoderAudioQualityKey: AVAudioQuality.max.rawValue,
             ]
             let audioIn = AVAssetWriterInput(mediaType: .audio, outputSettings: audioSettings)
             audioIn.expectsMediaDataInRealTime = true
@@ -317,8 +318,9 @@ final class RecordingEngine: NSObject {
             let micSettings: [String: Any] = [
                 AVFormatIDKey: kAudioFormatMPEG4AAC,
                 AVSampleRateKey: 48000,
-                AVNumberOfChannelsKey: 1,
-                AVEncoderBitRateKey: 96000,
+                AVNumberOfChannelsKey: 2,
+                AVEncoderBitRateKey: 192000,
+                AVEncoderAudioQualityKey: AVAudioQuality.max.rawValue,
             ]
             let micIn = AVAssetWriterInput(mediaType: .audio, outputSettings: micSettings)
             micIn.expectsMediaDataInRealTime = true

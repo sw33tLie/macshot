@@ -100,6 +100,8 @@ class ToolbarButtonView: NSView {
         addTrackingArea(trackingArea!)
     }
 
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+
     override func mouseEntered(with event: NSEvent) { isHovered = true; needsDisplay = true; onHover?(action, true) }
     override func mouseExited(with event: NSEvent) { isHovered = false; needsDisplay = true; onHover?(action, false) }
 
