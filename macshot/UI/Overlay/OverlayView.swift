@@ -13,7 +13,7 @@ protocol OverlayViewDelegate: AnyObject {
     func overlayViewDidRequestOCR()
     func overlayViewDidRequestQuickSave()
     func overlayViewDidRequestUpload()
-    func overlayViewDidRequestShare()
+    func overlayViewDidRequestShare(anchorView: NSView?)
     @available(macOS 14.0, *)
     func overlayViewDidRequestRemoveBackground()
     func overlayViewDidRequestEnterRecordingMode()
@@ -313,7 +313,7 @@ class OverlayView: NSView {
     var cachedCompositedImage: NSImage? = nil  // invalidated when annotations change
 
     var isTranslating: Bool = false
-    private var translateEnabled: Bool = false
+    var translateEnabled: Bool = false
 
     // Crop tool state
     private var isCropDragging: Bool = false
@@ -339,6 +339,10 @@ class OverlayView: NSView {
 
     // Overlay error message
     private var overlayErrorMessage: String? = nil
+
+    // Instant tooltip for hovered toolbar button
+    private var hoveredTooltip: String?
+    private var hoveredTooltipButtonView: ToolbarButtonView?
     private var overlayErrorTimer: Timer? = nil
 
     // Barcode / QR detection
@@ -1057,6 +1061,11 @@ class OverlayView: NSView {
                 }
                 context.restoreGraphicsState()
             }
+            // Purple border for remote selection
+            let remoteBorder = NSBezierPath(rect: remoteSelectionRect)
+            remoteBorder.lineWidth = 2.0
+            ToolbarLayout.accentColor.setStroke()
+            remoteBorder.stroke()
         }
 
         // Draw clear selection region
@@ -1423,7 +1432,8 @@ class OverlayView: NSView {
             drawMouseHighlights()
         }
 
-        // Keep cursor rects in sync with current selection
+        // Instant tooltip for hovered toolbar button
+        drawHoveredTooltip()
 
     }
     private func drawIdleHelperText() {
@@ -2851,13 +2861,11 @@ class OverlayView: NSView {
                 border.stroke()
             }
 
-            // Intermediate anchor handles (use .top, .bottom, .left, .right, etc. as unique handle IDs)
-            let anchorHandleIDs: [ResizeHandle] = [
-                .top, .bottom, .left, .right, .topLeft, .topRight, .bottomLeft, .bottomRight,
-            ]
+            // Intermediate anchor handles — use .none as handle ID since we identify
+            // them by array index (annotationResizeAnchorIndex), not by ResizeHandle enum.
             if pts.count > 2 {
                 for i in 1..<(pts.count - 1) {
-                    let handleID = i - 1 < anchorHandleIDs.count ? anchorHandleIDs[i - 1] : .top
+                    let handleID: ResizeHandle = .none
                     let midRect = NSRect(
                         x: pts[i].x - sm / 2, y: pts[i].y - sm / 2, width: sm, height: sm)
                     annotationResizeHandleRects.append((handleID, midRect))
@@ -3186,13 +3194,22 @@ class OverlayView: NSView {
         bottomStripView?.onRightClick = { [weak self] action, view in
             self?.handleToolbarButtonRightClick(action, anchorView: view)
         }
+        bottomStripView?.onHover = { [weak self] action, hovered in
+            self?.handleToolbarButtonHover(action, hovered: hovered, strip: self?.bottomStripView)
+        }
         rightStripView?.setButtons(rightButtons)
         rightStripView?.onClick = { [weak self] action in self?.handleToolbarAction(action) }
-        rightStripView?.onMouseDown = { [weak self] action in
-            if case .moveSelection = action { self?.handleToolbarAction(action) }
+        // Move button needs onMouseDown for press-and-drag (synchronous tracking loop)
+        for bv in rightStripView?.buttonViews ?? [] {
+            if case .moveSelection = bv.action {
+                bv.onMouseDown = { [weak self] _ in self?.handleToolbarAction(.moveSelection) }
+            }
         }
         rightStripView?.onRightClick = { [weak self] action, view in
             self?.handleToolbarButtonRightClick(action, anchorView: view)
+        }
+        rightStripView?.onHover = { [weak self] action, hovered in
+            self?.handleToolbarButtonHover(action, hovered: hovered, strip: self?.rightStripView)
         }
 
         // Rebuild options row content
@@ -3264,16 +3281,47 @@ class OverlayView: NSView {
                 x: cb.maxX - rightSize.width - 6, y: cb.maxY - rightSize.height - 36)
             rightStrip.autoresizingMask = [.minXMargin, .minYMargin]
         } else {
+            // Total space needed below selection: bottom bar + gap + options row (always assumed present)
+            let optionsRowH: CGFloat = 38  // rowHeight(34) + gap(4)
+            let totalBelowH = bottomSize.height + optionsRowH + 6
+
             var bx = anchorRect.midX - bottomSize.width / 2
-            var by = anchorRect.minY - bottomSize.height - 6
-            if by < bounds.minY + 4 { by = anchorRect.maxY + 6 }
+
+            // Check if the full stack (bar + options row) fits below the selection
+            let belowY = anchorRect.minY - bottomSize.height - 6
+            let belowFits = (belowY - optionsRowH) >= bounds.minY + 4
+
+            // Check if the full stack fits above the selection
+            let aboveY = anchorRect.maxY + optionsRowH + 6
+            let aboveFits = (aboveY + bottomSize.height) <= bounds.maxY - 4
+
+            var by: CGFloat
+            if belowFits {
+                by = belowY
+            } else if aboveFits {
+                by = aboveY
+            } else {
+                // Neither fits fully — place inside selection
+                by = selectionRect.minY + optionsRowH + 6
+                by = max(bounds.minY + optionsRowH + 4, min(by, bounds.maxY - bottomSize.height - 4))
+            }
+
             bx = max(bounds.minX + 4, min(bx, bounds.maxX - bottomSize.width - 4))
             bottomStrip.frame.origin = NSPoint(x: bx, y: by)
 
             // Right: to the right of selection, flip to left if no room
-            var rx = anchorRect.maxX + 6
-            if rx + rightSize.width > bounds.maxX - 4 {
+            let rightMargin: CGFloat = 50
+            let rightFitsRight = anchorRect.maxX < bounds.maxX - rightMargin
+            let rightFitsLeft = anchorRect.minX > bounds.minX + rightMargin
+
+            var rx: CGFloat
+            if rightFitsRight {
+                rx = anchorRect.maxX + 6
+            } else if rightFitsLeft {
                 rx = anchorRect.minX - rightSize.width - 6
+            } else {
+                // Inside: at the right edge of the selection
+                rx = selectionRect.maxX - rightSize.width - 6
             }
             rx = max(bounds.minX + 4, min(rx, bounds.maxX - rightSize.width - 4))
 
@@ -3287,7 +3335,6 @@ class OverlayView: NSView {
                 let rightRect = NSRect(
                     x: rx, y: ry, width: rightSize.width, height: rightSize.height)
                 if rightRect.intersects(bf) {
-                    // Move right bar to the right of the bottom bar
                     rx = bf.maxX + 4
                     rx = max(bounds.minX + 4, min(rx, bounds.maxX - rightSize.width - 4))
                 }
@@ -4182,10 +4229,67 @@ class OverlayView: NSView {
     // MARK: - Toolbar Actions
 
     /// Handle right-click on a toolbar button (context menus, popovers).
+    private func handleToolbarButtonHover(_ action: ToolbarButtonAction, hovered: Bool, strip: ToolbarStripView?) {
+        if hovered {
+            let btn = strip?.buttonViews.first { bv in
+                // Compare by identity — find the button that triggered the hover
+                if case .tool(let t1) = bv.action, case .tool(let t2) = action { return t1 == t2 }
+                // For non-tool actions, compare string representation
+                return "\(bv.action)" == "\(action)"
+            }
+            hoveredTooltip = btn?.tooltipText
+            hoveredTooltipButtonView = btn
+        } else {
+            hoveredTooltip = nil
+            hoveredTooltipButtonView = nil
+        }
+        needsDisplay = true
+    }
+
+    private func drawHoveredTooltip() {
+        guard let tooltip = hoveredTooltip, !tooltip.isEmpty,
+              let btn = hoveredTooltipButtonView,
+              !PopoverHelper.isVisible else { return }
+
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 11, weight: .medium),
+            .foregroundColor: NSColor.white,
+        ]
+        let str = tooltip as NSString
+        let textSize = str.size(withAttributes: attrs)
+        let pad: CGFloat = 6
+        let tipW = textSize.width + pad * 2
+        let tipH = textSize.height + pad
+
+        // Convert button position to OverlayView coordinates
+        let btnFrame = btn.convert(btn.bounds, to: self)
+        let isBottomBar = btn.superview === bottomStripView
+        let tipRect: NSRect
+
+        if isBottomBar {
+            // Above bottom bar, or below if no room
+            var tipY = bottomBarRect.maxY + 4
+            if tipY + tipH > bounds.maxY - 2 { tipY = bottomBarRect.minY - tipH - 4 }
+            tipRect = NSRect(x: btnFrame.midX - tipW / 2, y: tipY, width: tipW, height: tipH)
+        } else {
+            // Left of right bar
+            tipRect = NSRect(x: btnFrame.minX - tipW - 6, y: btnFrame.midY - tipH / 2, width: tipW, height: tipH)
+        }
+
+        // Clamp to bounds
+        let clamped = NSRect(
+            x: max(bounds.minX + 2, min(tipRect.minX, bounds.maxX - tipW - 2)),
+            y: max(bounds.minY + 2, min(tipRect.minY, bounds.maxY - tipH - 2)),
+            width: tipW, height: tipH)
+
+        ToolbarLayout.bgColor.setFill()
+        NSBezierPath(roundedRect: clamped, xRadius: 4, yRadius: 4).fill()
+        str.draw(at: NSPoint(x: clamped.minX + pad, y: clamped.minY + pad / 2), withAttributes: attrs)
+    }
+
     private func handleToolbarButtonRightClick(_ action: ToolbarButtonAction, anchorView: NSView) {
         switch action {
         case .autoRedact:
-            PopoverHelper.dismiss()
             showRedactTypePopover(
                 anchorRect: anchorView.convert(anchorView.bounds, to: self), anchorView: anchorView)
         case .save:
@@ -4197,11 +4301,9 @@ class OverlayView: NSView {
             menu.popUp(
                 positioning: nil, at: NSPoint(x: 0, y: anchorView.bounds.height), in: anchorView)
         case .upload:
-            PopoverHelper.dismiss()
             showUploadConfirmPopover(
                 anchorRect: anchorView.convert(anchorView.bounds, to: self), anchorView: anchorView)
         case .translate:
-            PopoverHelper.dismiss()
             showTranslatePopover(
                 anchorRect: anchorView.convert(anchorView.bounds, to: self), anchorView: anchorView)
         default:
@@ -4240,12 +4342,17 @@ class OverlayView: NSView {
             currentTool = .loupe
             needsDisplay = true
         case .color:
+            if PopoverHelper.isVisible { PopoverHelper.dismiss(); break }
             let colorBtn = bottomStripView?.buttonViews.first { if case .color = $0.action { return true }; return false }
             showColorPickerPopover(target: .drawColor, anchorView: colorBtn)
         case .sizeDisplay:
             break
         case .moveSelection:
             guard !isRecording, let win = window else { break }
+            // Show drag hint tooltip
+            hoveredTooltip = "Drag to reposition"
+            needsDisplay = true
+            displayIfNeeded()
             // Synchronous drag loop: tracks mouse from button press until release
             let startPoint = convert(win.mouseLocationOutsideOfEventStream, from: nil)
             let offset = NSPoint(x: startPoint.x - selectionRect.origin.x, y: startPoint.y - selectionRect.origin.y)
@@ -4257,6 +4364,8 @@ class OverlayView: NSView {
                 displayIfNeeded()
                 if event.type == .leftMouseUp { break }
             }
+            // Restore original tooltip
+            hoveredTooltip = hoveredTooltipButtonView?.tooltipText
             scheduleBarcodeDetection()
             needsDisplay = true
         case .undo:
@@ -4283,14 +4392,21 @@ class OverlayView: NSView {
                 alert.addButton(withTitle: "Upload")
                 alert.addButton(withTitle: "Cancel")
                 alert.alertStyle = .informational
-                if alert.runModal() == .alertFirstButtonReturn {
+                // Temporarily lower window level so the alert is visible
+                let originalLevel = window?.level ?? .statusBar
+                window?.level = .normal
+                let response = alert.runModal()
+                window?.level = originalLevel
+                if response == .alertFirstButtonReturn {
                     overlayDelegate?.overlayViewDidRequestUpload()
                 }
             } else {
                 overlayDelegate?.overlayViewDidRequestUpload()
             }
         case .share:
-            overlayDelegate?.overlayViewDidRequestShare()
+            // Show share picker anchored to the share button, then dismiss on selection
+            let shareBtn = rightStripView?.buttonViews.first { if case .share = $0.action { return true }; return false }
+            overlayDelegate?.overlayViewDidRequestShare(anchorView: shareBtn)
         case .pin:
             overlayDelegate?.overlayViewDidRequestPin()
         case .ocr:
@@ -4526,14 +4642,16 @@ class OverlayView: NSView {
                                 annotationResizeAnchorIndex = anchorIdx
                                 annotationResizeOrigControlPoint = anchors[anchorIdx]
                             }
-                        } else if handle != .bottomLeft && handle != .topRight {
-                            // Legacy single controlPoint
-                            annotationResizeOrigControlPoint =
-                                selected.controlPoint
-                                ?? NSPoint(
-                                    x: (selected.startPoint.x + selected.endPoint.x) / 2,
-                                    y: (selected.startPoint.y + selected.endPoint.y) / 2
-                                )
+                        } else if handle == .none || (handle != .bottomLeft && handle != .topRight) {
+                            // Legacy single controlPoint or intermediate anchor
+                            if annotationResizeAnchorIndex < 0 {
+                                annotationResizeOrigControlPoint =
+                                    selected.controlPoint
+                                    ?? NSPoint(
+                                        x: (selected.startPoint.x + selected.endPoint.x) / 2,
+                                        y: (selected.startPoint.y + selected.endPoint.y) / 2
+                                    )
+                            }
                         }
                         return
                     }
@@ -4629,13 +4747,15 @@ class OverlayView: NSView {
                         annotationResizeAnchorIndex = anchorIdx
                         annotationResizeOrigControlPoint = anchors[anchorIdx]
                     }
-                } else if handle != .bottomLeft && handle != .topRight {
-                    annotationResizeOrigControlPoint =
-                        hovered.controlPoint
-                        ?? NSPoint(
-                            x: (hovered.startPoint.x + hovered.endPoint.x) / 2,
-                            y: (hovered.startPoint.y + hovered.endPoint.y) / 2
-                        )
+                } else if handle == .none || (handle != .bottomLeft && handle != .topRight) {
+                    if annotationResizeAnchorIndex < 0 {
+                        annotationResizeOrigControlPoint =
+                            hovered.controlPoint
+                            ?? NSPoint(
+                                x: (hovered.startPoint.x + hovered.endPoint.x) / 2,
+                                y: (hovered.startPoint.y + hovered.endPoint.y) / 2
+                            )
+                    }
                 }
                 needsDisplay = true
                 return true

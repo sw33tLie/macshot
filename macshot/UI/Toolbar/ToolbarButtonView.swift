@@ -18,15 +18,18 @@ class ToolbarButtonView: NSView {
     var onClick: ((ToolbarButtonAction) -> Void)?
     var onMouseDown: ((ToolbarButtonAction) -> Void)?
     var onRightClick: ((ToolbarButtonAction, NSView) -> Void)?
+    var onHover: ((ToolbarButtonAction, Bool) -> Void)?  // (action, isHovered)
 
     static let size: CGFloat = 32
     private static let radius: CGFloat = 6
 
+    var tooltipText: String = ""
+
     init(action: ToolbarButtonAction, sfSymbol: String?, tooltip: String) {
         self.action = action
         self.sfSymbol = sfSymbol
+        self.tooltipText = tooltip
         super.init(frame: NSRect(x: 0, y: 0, width: Self.size, height: Self.size))
-        self.toolTip = tooltip
     }
 
     required init?(coder: NSCoder) { fatalError() }
@@ -97,8 +100,8 @@ class ToolbarButtonView: NSView {
         addTrackingArea(trackingArea!)
     }
 
-    override func mouseEntered(with event: NSEvent) { isHovered = true; needsDisplay = true }
-    override func mouseExited(with event: NSEvent) { isHovered = false; needsDisplay = true }
+    override func mouseEntered(with event: NSEvent) { isHovered = true; needsDisplay = true; onHover?(action, true) }
+    override func mouseExited(with event: NSEvent) { isHovered = false; needsDisplay = true; onHover?(action, false) }
 
     private var forwardingDrag = false
     /// The view that should receive forwarded drag events (set by onMouseDown handler).

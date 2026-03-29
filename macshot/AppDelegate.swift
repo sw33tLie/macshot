@@ -540,6 +540,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func spaceDidChange() {
         guard !overlayControllers.isEmpty else { return }
+        // Don't dismiss during active recording — the overlay needs to stay
+        if recordingEngine != nil { return }
         dismissOverlays()
     }
 
@@ -755,6 +757,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 extension AppDelegate: OverlayWindowControllerDelegate {
     func overlayDidCancel(_ controller: OverlayWindowController) {
+        // Stop recording if the cancelled overlay was the recording overlay
+        if controller === recordingOverlayController, let engine = recordingEngine {
+            engine.stopRecording()
+            recordingEngine = nil
+            recordingOverlayController = nil
+        }
         dismissOverlays()
     }
 

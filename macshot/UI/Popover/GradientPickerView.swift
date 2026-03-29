@@ -33,8 +33,14 @@ class GradientPickerView: NSView {
             let sr = NSRect(x: sx, y: sy, width: swSize, height: swSize)
 
             let path = NSBezierPath(roundedRect: sr, xRadius: 6, yRadius: 6)
-            // Draw gradient
-            if let grad = NSGradient(colors: style.stops.map { $0.0 }, atLocations: style.stops.map { $0.1 }, colorSpace: .deviceRGB) {
+            // Draw gradient — use mesh rendering on macOS 15+ for mesh styles
+            if #available(macOS 15.0, *), let mesh = style.meshDef,
+               let img = BeautifyRenderer.renderMeshSwatch(mesh, size: swSize) {
+                NSGraphicsContext.saveGraphicsState()
+                path.addClip()
+                img.draw(in: sr, from: .zero, operation: .sourceOver, fraction: 1.0)
+                NSGraphicsContext.restoreGraphicsState()
+            } else if let grad = NSGradient(colors: style.stops.map { $0.0 }, atLocations: style.stops.map { $0.1 }, colorSpace: .deviceRGB) {
                 grad.draw(in: path, angle: style.angle - 90)
             }
 

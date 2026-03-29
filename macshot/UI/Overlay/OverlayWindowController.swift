@@ -31,6 +31,9 @@ class OverlayWindowController {
     private var overlayWindow: OverlayWindow?
     private var recordingControlWindow: NSWindow?
     private var recordingControlView: RecordingControlView?
+    private var shareDelegate: SharePickerDelegate?
+    private weak var sharePanel: NSPanel?
+    private var shareDismissTime: Date = .distantPast
     var windowNumber: CGWindowID { overlayWindow.map { CGWindowID($0.windowNumber) } ?? CGWindowID.max }
     private(set) var screen: NSScreen = NSScreen.main ?? NSScreen.screens.first ?? NSScreen()
     var screenshotImage: NSImage? { overlayView?.screenshotImage }
@@ -352,7 +355,13 @@ extension OverlayWindowController: OverlayViewDelegate {
         overlayDelegate?.overlayDidRequestUpload(self, image: image)
     }
 
-    func overlayViewDidRequestShare() {
+    func overlayViewDidRequestShare(anchorView: NSView?) {
+        // Prevent re-entry: if a share session is active or was just dismissed, ignore
+        if shareDelegate != nil { return }
+        if Date().timeIntervalSince(shareDismissTime) < 0.5 {
+            return
+        }
+
         guard var image = captureRegion() else { return }
         image = applyBeautifyIfNeeded(image) ?? image
         guard let imageData = ImageEncoder.encode(image) else { return }
@@ -360,23 +369,50 @@ extension OverlayWindowController: OverlayViewDelegate {
             .appendingPathComponent("macshot_\(Self.formattedTimestamp()).\(ImageEncoder.fileExtension)")
         try? imageData.write(to: tempURL)
 
-        playCopySound()
-        dismiss()
-        overlayDelegate?.overlayDidConfirm(self, capturedImage: image)
-
-        // Show share picker after overlay is dismissed
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            guard let screen = NSScreen.main else { return }
-            // Create a tiny temporary window to anchor the share picker
-            let anchorWindow = NSWindow(contentRect: NSRect(x: screen.frame.midX - 1, y: screen.frame.midY - 1, width: 2, height: 2),
-                                         styleMask: [.borderless], backing: .buffered, defer: false)
-            anchorWindow.isOpaque = false
-            anchorWindow.backgroundColor = .clear
-            anchorWindow.level = .floating
-            anchorWindow.orderFrontRegardless()
-            let picker = NSSharingServicePicker(items: [tempURL])
-            picker.show(relativeTo: .zero, of: anchorWindow.contentView!, preferredEdge: .minY)
+        // Get the screen position of the share button
+        let screenRect: NSRect
+        if let anchor = anchorView, let win = anchor.window {
+            let viewRect = anchor.convert(anchor.bounds, to: nil)
+            screenRect = win.convertToScreen(viewRect)
+        } else {
+            let mid = NSScreen.main?.frame ?? NSRect(x: 400, y: 400, width: 100, height: 100)
+            screenRect = NSRect(x: mid.midX - 20, y: mid.midY - 20, width: 40, height: 40)
         }
+
+        // Create a small floating panel at the button position to anchor the share picker
+        let panel = NSPanel(
+            contentRect: screenRect,
+            styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered, defer: false)
+        panel.isOpaque = false
+        panel.backgroundColor = .clear
+        panel.hasShadow = false
+        panel.level = .floating
+        panel.orderFrontRegardless()
+        sharePanel = panel
+
+        let picker = NSSharingServicePicker(items: [tempURL])
+        let delegate = SharePickerDelegate(
+            onPick: { [weak self, weak panel] in
+                panel?.close()
+                guard let self = self else { return }
+                self.sharePanel = nil
+                self.shareDelegate = nil
+                self.playCopySound()
+                let img = image
+                self.dismiss()
+                self.overlayDelegate?.overlayDidConfirm(self, capturedImage: img)
+            },
+            onDismiss: { [weak self, weak panel] in
+                panel?.close()
+                self?.sharePanel = nil
+                self?.shareDelegate = nil
+                self?.shareDismissTime = Date()
+            }
+        )
+        shareDelegate = delegate
+        picker.delegate = delegate
+        picker.show(relativeTo: panel.contentView!.bounds, of: panel.contentView!, preferredEdge: .minX)
     }
 
     func overlayViewDidRequestEnterRecordingMode() {
@@ -584,3 +620,22 @@ class OverlayWindow: NSWindow {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { true }
 }
+
+/// Retained delegate for NSSharingServicePicker — dismisses overlay only when user picks a service.
+private class SharePickerDelegate: NSObject, NSSharingServicePickerDelegate {
+    let onPick: () -> Void
+    let onDismiss: () -> Void
+    init(onPick: @escaping () -> Void, onDismiss: @escaping () -> Void) {
+        self.onPick = onPick
+        self.onDismiss = onDismiss
+    }
+
+    func sharingServicePicker(_ sharingServicePicker: NSSharingServicePicker, didChoose service: NSSharingService?) {
+        if service != nil {
+            onPick()
+        } else {
+            onDismiss()
+        }
+    }
+}
+

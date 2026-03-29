@@ -12,6 +12,7 @@ class ToolbarStripView: NSView {
     var onClick: ((ToolbarButtonAction) -> Void)?
     var onMouseDown: ((ToolbarButtonAction) -> Void)?
     var onRightClick: ((ToolbarButtonAction, NSView) -> Void)?
+    var onHover: ((ToolbarButtonAction, Bool) -> Void)?
 
     private let padding: CGFloat = 4
     private let spacing: CGFloat = 2
@@ -35,8 +36,8 @@ class ToolbarStripView: NSView {
             bv.swatchColor = data.bgColor
             bv.hasContextMenu = data.hasContextMenu
             bv.onClick = { [weak self] action in self?.onClick?(action) }
-            bv.onMouseDown = { [weak self] action in self?.onMouseDown?(action) }
             bv.onRightClick = { [weak self] action, view in self?.onRightClick?(action, view) }
+            bv.onHover = { [weak self] action, hovered in self?.onHover?(action, hovered) }
             addSubview(bv)
             buttonViews.append(bv)
         }

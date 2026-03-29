@@ -105,6 +105,7 @@ class ToolOptionsRowView: NSView {
 
         // ── Number format + start-at ──
         if tool == .number {
+            curX = addSeparator(at: curX)
             curX = addNumberOptions(at: curX, ov: ov)
         }
 
@@ -381,6 +382,22 @@ class ToolOptionsRowView: NSView {
             return NSImage(size: NSSize(width: size, height: size))
         }
         let style = styles[styleIndex]
+        // Use mesh rendering on macOS 15+ for mesh styles
+        if #available(macOS 15.0, *), let mesh = style.meshDef,
+           let meshImg = BeautifyRenderer.renderMeshSwatch(mesh, size: size) {
+            return NSImage(size: NSSize(width: size, height: size), flipped: false) { _ in
+                let r = NSRect(x: 0, y: 0, width: size, height: size)
+                let path = NSBezierPath(roundedRect: r, xRadius: 4, yRadius: 4)
+                NSGraphicsContext.saveGraphicsState()
+                path.addClip()
+                meshImg.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1.0)
+                NSGraphicsContext.restoreGraphicsState()
+                NSColor.white.withAlphaComponent(0.3).setStroke()
+                path.lineWidth = 0.5
+                path.stroke()
+                return true
+            }
+        }
         return NSImage(size: NSSize(width: size, height: size), flipped: false) { _ in
             let r = NSRect(x: 0, y: 0, width: size, height: size)
             let path = NSBezierPath(roundedRect: r, xRadius: 4, yRadius: 4)
@@ -825,8 +842,8 @@ class ToolOptionsRowView: NSView {
     }
 
     @objc private func beautifyGradientClicked(_ sender: NSButton) {
+        if PopoverHelper.isVisible { PopoverHelper.dismiss(); return }
         guard let ov = overlayView else { return }
-        // Find the swatch button to anchor the popover to it
         let swatchBtn = viewWithTag(995) as? NSButton ?? sender
         ov.showBeautifyGradientPopover(anchorView: swatchBtn)
     }
@@ -954,6 +971,7 @@ class ToolOptionsRowView: NSView {
     }
 
     @objc private func moreEmojisClicked(_ sender: NSButton) {
+        if PopoverHelper.isVisible { PopoverHelper.dismiss(); return }
         guard let ov = overlayView else { return }
         ov.showEmojiPopover(anchorView: sender)
     }
@@ -976,6 +994,7 @@ class ToolOptionsRowView: NSView {
     }
 
     @objc private func redactTypesClicked(_ sender: NSButton) {
+        if PopoverHelper.isVisible { PopoverHelper.dismiss(); return }
         guard let ov = overlayView else { return }
         ov.showRedactTypePopover(anchorRect: .zero, anchorView: sender)
     }

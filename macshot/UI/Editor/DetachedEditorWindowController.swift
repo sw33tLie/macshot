@@ -224,7 +224,7 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
         (NSApp.delegate as? AppDelegate)?.uploadImage(image)
     }
 
-    func overlayViewDidRequestShare() {
+    func overlayViewDidRequestShare(anchorView: NSView?) {
         guard var image = overlayView?.captureSelectedRegion() else { return }
         if overlayView?.beautifyEnabled == true {
             image = BeautifyRenderer.render(image: image, config: overlayView?.beautifyConfig ?? BeautifyConfig()) ?? image
@@ -235,7 +235,9 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
         try? imageData.write(to: tempURL)
 
         let picker = NSSharingServicePicker(items: [tempURL])
-        if let view = overlayView {
+        if let anchor = anchorView {
+            picker.show(relativeTo: anchor.bounds, of: anchor, preferredEdge: .minX)
+        } else if let view = overlayView {
             picker.show(relativeTo: .zero, of: view, preferredEdge: .minY)
         }
     }
