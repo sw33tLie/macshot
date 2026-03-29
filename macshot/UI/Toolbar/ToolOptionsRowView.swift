@@ -451,6 +451,14 @@ class ToolOptionsRowView: NSView {
         btn.state = isOn ? .on : .off
         btn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
         btn.contentTintColor = NSColor.white.withAlphaComponent(0.7)
+        // Force white text regardless of system appearance (toolbar is always dark)
+        if let cell = btn.cell as? NSButtonCell {
+            let attrTitle = NSAttributedString(string: title, attributes: [
+                .foregroundColor: NSColor.white.withAlphaComponent(0.7),
+                .font: NSFont.systemFont(ofSize: 10, weight: .medium)
+            ])
+            cell.attributedTitle = attrTitle
+        }
         btn.sizeToFit()
         btn.frame.origin = NSPoint(x: curX, y: (rowHeight - btn.frame.height) / 2)
         let handler = ToggleHandler(action: action)
@@ -831,6 +839,12 @@ class ToolOptionsRowView: NSView {
         let toggleBtn = NSButton(checkboxWithTitle: "On", target: self, action: #selector(beautifyToggleChanged(_:)))
         toggleBtn.state = ov.beautifyEnabled ? .on : .off
         toggleBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
+        if let cell = toggleBtn.cell as? NSButtonCell {
+            cell.attributedTitle = NSAttributedString(string: "On", attributes: [
+                .foregroundColor: NSColor.white.withAlphaComponent(0.7),
+                .font: NSFont.systemFont(ofSize: 10, weight: .medium)
+            ])
+        }
         toggleBtn.sizeToFit()
         toggleBtn.frame.origin = NSPoint(x: curX, y: (rowHeight - toggleBtn.frame.height) / 2)
         addSubview(toggleBtn)

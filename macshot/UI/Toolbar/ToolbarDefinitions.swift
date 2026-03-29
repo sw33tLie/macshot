@@ -33,6 +33,7 @@ enum ToolbarButtonAction {
     case micAudio
     case detach
     case scrollCapture
+    case addCapture  // editor only: capture a new region and append to the canvas
 }
 
 struct ToolbarButton {

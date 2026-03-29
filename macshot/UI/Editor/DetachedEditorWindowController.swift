@@ -11,6 +11,7 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
 
     private var window: NSWindow?
     private var overlayView: OverlayView?
+    private var addCaptureHandler: AddCaptureOverlayHandler?
     private static var activeControllers: [DetachedEditorWindowController] = []
 
     /// Open an editor window with the given image (typically from captureSelectedRegion).
@@ -279,10 +280,169 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
     func overlayViewDidRequestScrollCapture(rect: NSRect) {}
     func overlayViewDidRequestStopScrollCapture() {}
 
+    func overlayViewDidRequestAddCapture() {
+        guard let editorWindow = window else { return }
+
+        // Hide editor window while capturing
+        editorWindow.orderOut(nil)
+
+        ScreenCaptureManager.captureAllScreens { [weak self] captures in
+            guard let self = self else { return }
+            guard !captures.isEmpty else {
+                editorWindow.makeKeyAndOrderFront(nil)
+                return
+            }
+
+            let handler = AddCaptureOverlayHandler()
+            handler.onCapture = { [weak self] image in
+                guard let self = self else { return }
+                self.addCapturedImage(image)
+                self.addCaptureHandler = nil
+            }
+            handler.onCancel = { [weak self] in
+                self?.window?.makeKeyAndOrderFront(nil)
+                NSApp.activate(ignoringOtherApps: true)
+                self?.addCaptureHandler = nil
+            }
+            self.addCaptureHandler = handler
+
+            NSApp.activate(ignoringOtherApps: true)
+            for capture in captures {
+                let controller = OverlayWindowController(capture: capture)
+                controller.overlayDelegate = handler
+                controller.setAutoConfirmMode()  // no toolbars, auto-confirm on selection
+                controller.showOverlay()
+                handler.overlayControllers.append(controller)
+            }
+        }
+    }
+
+    private func addCapturedImage(_ image: NSImage) {
+        guard let view = overlayView else { return }
+
+        view.addCaptureImage(image)
+
+        // Update top bar size label
+        if let cg = view.screenshotImage?.cgImage(forProposedRect: nil, context: nil, hints: nil),
+           let container = window?.contentView {
+            for sub in container.subviews {
+                if let topBar = sub as? EditorTopBarView {
+                    topBar.updateSizeLabel(width: cg.width, height: cg.height)
+                    break
+                }
+            }
+        }
+
+        window?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        window?.makeFirstResponder(view)
+    }
+
     private func playCopySound() {
         let enabled = UserDefaults.standard.object(forKey: "playCopySound") as? Bool ?? true
         guard enabled else { return }
         AppDelegate.captureSound?.stop()
         AppDelegate.captureSound?.play()
+    }
+}
+
+// MARK: - Add Capture Overlay Handler
+
+/// Lightweight delegate that handles the temporary overlay lifecycle during "Add Capture".
+/// Captures the selected region and returns it to the editor controller.
+@MainActor
+private class AddCaptureOverlayHandler: NSObject, OverlayWindowControllerDelegate {
+
+    var overlayControllers: [OverlayWindowController] = []
+    var onCapture: ((NSImage) -> Void)?
+    var onCancel: (() -> Void)?
+
+    private func dismissOverlays() {
+        for controller in overlayControllers {
+            controller.dismiss()
+        }
+        overlayControllers.removeAll()
+    }
+
+    func overlayDidCancel(_ controller: OverlayWindowController) {
+        dismissOverlays()
+        onCancel?()
+    }
+
+    func overlayDidConfirm(_ controller: OverlayWindowController, capturedImage: NSImage?) {
+        let image = capturedImage ?? overlayCrossScreenImage(controller)
+        dismissOverlays()
+        if let image = image {
+            onCapture?(image)
+        } else {
+            onCancel?()
+        }
+    }
+
+    func overlayDidRequestPin(_ controller: OverlayWindowController, image: NSImage) {
+        dismissOverlays()
+        onCapture?(image)
+    }
+    func overlayDidRequestOCR(_ controller: OverlayWindowController, text: String, image: NSImage?) {}
+    func overlayDidRequestUpload(_ controller: OverlayWindowController, image: NSImage) {}
+    func overlayDidRequestStartRecording(_ controller: OverlayWindowController, rect: NSRect, screen: NSScreen) {}
+    func overlayDidRequestStopRecording(_ controller: OverlayWindowController) {}
+    func overlayDidRequestScrollCapture(_ controller: OverlayWindowController, rect: NSRect, screen: NSScreen) {}
+    func overlayDidRequestStopScrollCapture(_ controller: OverlayWindowController) {}
+    func overlayDidBeginSelection(_ controller: OverlayWindowController) {
+        // Clear selections on other overlays
+        for other in overlayControllers where other !== controller {
+            other.clearSelection()
+            other.setRemoteSelection(.zero)
+        }
+    }
+    func overlayDidChangeSelection(_ controller: OverlayWindowController, globalRect: NSRect) {
+        for other in overlayControllers where other !== controller {
+            let otherOrigin = other.screen.frame.origin
+            let localRect = NSRect(x: globalRect.origin.x - otherOrigin.x,
+                                   y: globalRect.origin.y - otherOrigin.y,
+                                   width: globalRect.width, height: globalRect.height)
+            let clipped = localRect.intersection(NSRect(origin: .zero, size: other.screen.frame.size))
+            other.setRemoteSelection(clipped.isEmpty ? .zero : clipped, fullRect: localRect)
+        }
+    }
+    func overlayDidRemoteResizeSelection(_ controller: OverlayWindowController, globalRect: NSRect) {}
+    func overlayDidFinishRemoteResize(_ controller: OverlayWindowController, globalRect: NSRect) {}
+
+    func overlayCrossScreenImage(_ controller: OverlayWindowController) -> NSImage? {
+        let others = overlayControllers.filter { $0 !== controller && $0.remoteSelectionRect.width >= 1 }
+        guard !others.isEmpty else { return nil }
+        // Use AppDelegate's stitch method via direct replication (avoid tight coupling)
+        let primaryOrigin = controller.screen.frame.origin
+        let primarySel = controller.selectionRect
+        let globalRect = NSRect(x: primarySel.origin.x + primaryOrigin.x,
+                                y: primarySel.origin.y + primaryOrigin.y,
+                                width: primarySel.width, height: primarySel.height)
+        let scale = controller.screen.backingScaleFactor
+        let pixelW = Int(globalRect.width * scale)
+        let pixelH = Int(globalRect.height * scale)
+        let cs = CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
+        guard let cgCtx = CGContext(data: nil, width: pixelW, height: pixelH,
+                                     bitsPerComponent: 8, bytesPerRow: pixelW * 4,
+                                     space: cs, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+        cgCtx.scaleBy(x: scale, y: scale)
+        let allControllers = [controller] + others
+        for c in allControllers {
+            guard let screenshot = c.screenshotImage else { continue }
+            let screenFrame = c.screen.frame
+            let drawX = screenFrame.origin.x - globalRect.origin.x
+            let drawY = screenFrame.origin.y - globalRect.origin.y
+            let drawRect = NSRect(x: drawX, y: drawY, width: screenFrame.width, height: screenFrame.height)
+            cgCtx.saveGState()
+            cgCtx.clip(to: CGRect(x: 0, y: 0, width: globalRect.width, height: globalRect.height))
+            let nsContext = NSGraphicsContext(cgContext: cgCtx, flipped: false)
+            NSGraphicsContext.saveGraphicsState()
+            NSGraphicsContext.current = nsContext
+            screenshot.draw(in: drawRect, from: .zero, operation: .copy, fraction: 1.0)
+            NSGraphicsContext.restoreGraphicsState()
+            cgCtx.restoreGState()
+        }
+        guard let cgImage = cgCtx.makeImage() else { return nil }
+        return NSImage(cgImage: cgImage, size: globalRect.size)
     }
 }

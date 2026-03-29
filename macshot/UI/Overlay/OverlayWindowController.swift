@@ -123,6 +123,11 @@ class OverlayWindowController {
         overlayView?.autoQuickSaveMode = true
     }
 
+    /// Set flag so overlay auto-confirms immediately after selection (no toolbars, no save).
+    func setAutoConfirmMode() {
+        overlayView?.autoConfirmMode = true
+    }
+
     /// Enter recording mode — shows recording toolbar buttons in the normal toolbar.
     func enterRecordingMode() {
         overlayView?.isRecording = true
@@ -376,6 +381,8 @@ extension OverlayWindowController: OverlayViewDelegate {
     func overlayViewDidBeginSelection() {
         overlayDelegate?.overlayDidBeginSelection(self)
     }
+
+    func overlayViewDidRequestAddCapture() {}  // editor-only
 
     func overlayViewRemoteSelectionDidChange(_ rect: NSRect) {
         // Convert local rect to global screen coords and forward to delegate
