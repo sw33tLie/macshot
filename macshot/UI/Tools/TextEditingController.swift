@@ -15,6 +15,7 @@ protocol TextEditingCanvas: AnyObject {
 
 /// Manages inline text editing for the text annotation tool.
 /// Owns ALL text state: style, NSTextView lifecycle, formatting, commit, cancel.
+@MainActor
 class TextEditingController {
 
     // MARK: - Text style state
