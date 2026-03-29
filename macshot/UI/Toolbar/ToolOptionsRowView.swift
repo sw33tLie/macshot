@@ -596,25 +596,62 @@ class ToolOptionsRowView: NSView {
 
         curX = addSeparator(at: curX)
 
-        // Fill / Outline toggles
-        let fillBtn = NSButton(checkboxWithTitle: "Fill", target: self, action: #selector(textBgToggled(_:)))
-        fillBtn.state = ov.textEditor.bgEnabled ? .on : .off
-        fillBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
-        fillBtn.sizeToFit()
-        fillBtn.frame.origin = NSPoint(x: curX, y: (rowHeight - fillBtn.frame.height) / 2)
-        addSubview(fillBtn)
-        curX += fillBtn.frame.width + 4
+        // Fill: clickable label (toggles on/off) + color swatch (opens color picker)
+        let fillSwatchSize: CGFloat = 18
+        let fillLabelBtn = NSButton(title: "Fill", target: self, action: #selector(textBgToggled(_:)))
+        fillLabelBtn.bezelStyle = .recessed
+        fillLabelBtn.setButtonType(.toggle)
+        fillLabelBtn.state = ov.textEditor.bgEnabled ? .on : .off
+        fillLabelBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
+        fillLabelBtn.sizeToFit()
+        fillLabelBtn.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: max(30, fillLabelBtn.frame.width), height: 22)
+        addSubview(fillLabelBtn)
+        curX += fillLabelBtn.frame.width + 2
 
-        let outlineBtn = NSButton(checkboxWithTitle: "Outline", target: self, action: #selector(textOutlineToggled(_:)))
-        outlineBtn.state = ov.textEditor.outlineEnabled ? .on : .off
-        outlineBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
-        outlineBtn.sizeToFit()
-        outlineBtn.frame.origin = NSPoint(x: curX, y: (rowHeight - outlineBtn.frame.height) / 2)
-        addSubview(outlineBtn)
-        curX += outlineBtn.frame.width
+        let fillSwatch = NSButton(frame: NSRect(x: curX, y: (rowHeight - fillSwatchSize) / 2, width: fillSwatchSize, height: fillSwatchSize))
+        fillSwatch.title = ""
+        fillSwatch.isBordered = false
+        fillSwatch.wantsLayer = true
+        fillSwatch.layer?.backgroundColor = ov.textEditor.bgColor.cgColor
+        fillSwatch.layer?.cornerRadius = 3
+        fillSwatch.layer?.borderWidth = 1.5
+        fillSwatch.layer?.borderColor = NSColor.white.withAlphaComponent(0.4).cgColor
+        fillSwatch.layer?.opacity = ov.textEditor.bgEnabled ? 1.0 : 0.3
+        fillSwatch.tag = 975
+        fillSwatch.target = self
+        fillSwatch.action = #selector(textBgColorClicked(_:))
+        addSubview(fillSwatch)
+        curX += fillSwatchSize + 6
+
+        // Outline: clickable label (toggles on/off) + color swatch (opens color picker)
+        let outlineLabelBtn = NSButton(title: "Outline", target: self, action: #selector(textOutlineToggled(_:)))
+        outlineLabelBtn.bezelStyle = .recessed
+        outlineLabelBtn.setButtonType(.toggle)
+        outlineLabelBtn.state = ov.textEditor.outlineEnabled ? .on : .off
+        outlineLabelBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
+        outlineLabelBtn.sizeToFit()
+        outlineLabelBtn.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: max(50, outlineLabelBtn.frame.width), height: 22)
+        addSubview(outlineLabelBtn)
+        curX += outlineLabelBtn.frame.width + 2
+
+        let outlineSwatch = NSButton(frame: NSRect(x: curX, y: (rowHeight - fillSwatchSize) / 2, width: fillSwatchSize, height: fillSwatchSize))
+        outlineSwatch.title = ""
+        outlineSwatch.isBordered = false
+        outlineSwatch.wantsLayer = true
+        outlineSwatch.layer?.backgroundColor = ov.textEditor.outlineColor.cgColor
+        outlineSwatch.layer?.cornerRadius = 3
+        outlineSwatch.layer?.borderWidth = 1.5
+        outlineSwatch.layer?.borderColor = NSColor.white.withAlphaComponent(0.4).cgColor
+        outlineSwatch.layer?.opacity = ov.textEditor.outlineEnabled ? 1.0 : 0.3
+        outlineSwatch.tag = 976
+        outlineSwatch.target = self
+        outlineSwatch.action = #selector(textOutlineColorClicked(_:))
+        addSubview(outlineSwatch)
+        curX += fillSwatchSize
 
         // Cancel / Confirm — only when actively editing text, right-aligned
         if ov.textEditor.isEditing {
+            curX = addSeparator(at: curX)
             let cancelBtn = NSButton(title: "✕", target: self, action: #selector(textCancelClicked))
             cancelBtn.bezelStyle = .smallSquare
             cancelBtn.isBordered = false
@@ -1073,6 +1110,8 @@ class ToolOptionsRowView: NSView {
         guard let ov = overlayView else { return }
         ov.textEditor.bgEnabled = sender.state == .on
         UserDefaults.standard.set(ov.textEditor.bgEnabled, forKey: "textBgEnabled")
+        // Update swatch opacity
+        if let swatch = viewWithTag(975) { swatch.layer?.opacity = ov.textEditor.bgEnabled ? 1.0 : 0.3 }
         ov.needsDisplay = true
     }
 
@@ -1080,7 +1119,20 @@ class ToolOptionsRowView: NSView {
         guard let ov = overlayView else { return }
         ov.textEditor.outlineEnabled = sender.state == .on
         UserDefaults.standard.set(ov.textEditor.outlineEnabled, forKey: "textOutlineEnabled")
+        if let swatch = viewWithTag(976) { swatch.layer?.opacity = ov.textEditor.outlineEnabled ? 1.0 : 0.3 }
         ov.needsDisplay = true
+    }
+
+    @objc private func textBgColorClicked(_ sender: NSButton) {
+        if PopoverHelper.isVisible { PopoverHelper.dismiss(); return }
+        guard let ov = overlayView else { return }
+        ov.showColorPickerPopover(target: .textBg, anchorView: sender)
+    }
+
+    @objc private func textOutlineColorClicked(_ sender: NSButton) {
+        if PopoverHelper.isVisible { PopoverHelper.dismiss(); return }
+        guard let ov = overlayView else { return }
+        ov.showColorPickerPopover(target: .textOutline, anchorView: sender)
     }
 
     @objc private func textCancelClicked() {

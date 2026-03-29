@@ -28,7 +28,6 @@ enum ToolbarButtonAction {
     case record  // enters recording mode (shows recording toolbar)
     case startRecord  // actually starts recording
     case stopRecord
-    case annotationMode
     case mouseHighlight
     case systemAudio
     case micAudio
@@ -55,7 +54,7 @@ class ToolbarLayout {
     // Theme colors matching Flameshot purple style
     static let accentColor = NSColor(calibratedRed: 0.55, green: 0.30, blue: 0.85, alpha: 1.0)
     static let handleColor = accentColor
-    static let bgColor = NSColor(white: 0.12, alpha: 0.92)
+    static let bgColor = NSColor(white: 0.12, alpha: 1.0)
     static let selectedBg = accentColor
     static let buttonSize: CGFloat = 32
     static let buttonSpacing: CGFloat = 2
@@ -65,11 +64,10 @@ class ToolbarLayout {
     // Bottom toolbar items (drawing tools + colors + undo/redo + processing actions)
     static func bottomButtons(
         selectedTool: AnnotationTool, selectedColor: NSColor, beautifyEnabled: Bool = false,
-        beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false, isRecording: Bool = false,
-        isAnnotating: Bool = false
+        beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false, isRecording: Bool = false
     ) -> [ToolbarButton] {
-        // Hide the bottom bar entirely while recording outside annotation mode
-        if isRecording && !isAnnotating { return [] }
+        // Hide the bottom bar entirely while recording
+        if isRecording { return [] }
 
         var buttons: [ToolbarButton] = []
 
@@ -191,34 +189,25 @@ class ToolbarLayout {
     static func rightButtons(
         beautifyEnabled: Bool = false, beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false,
         translateEnabled: Bool = false, isRecording: Bool = false, isCapturingVideo: Bool = false,
-        isAnnotating: Bool = false, isEditorMode: Bool = false
+        isEditorMode: Bool = false
     ) -> [ToolbarButton] {
         var buttons: [ToolbarButton] = []
 
         // If in recording mode (toolbar shown), show recording controls
         if isRecording {
             if isCapturingVideo {
-                // Recording is active — show stop button
                 var stopBtn = ToolbarButton(
                     action: .stopRecord, sfSymbol: "stop.circle.fill", label: nil,
                     tooltip: "Stop Recording")
                 stopBtn.tintColor = .systemRed
                 buttons.append(stopBtn)
             } else {
-                // Recording mode but not started — show red record button
                 var startBtn = ToolbarButton(
                     action: .startRecord, sfSymbol: "record.circle", label: nil,
                     tooltip: "Start Recording")
                 startBtn.tintColor = .systemRed
                 buttons.append(startBtn)
             }
-
-            var annotateBtn = ToolbarButton(
-                action: .annotationMode, sfSymbol: "pencil.tip", label: nil,
-                tooltip: isAnnotating ? "Stop Annotating" : "Annotate (draw on screen)")
-            annotateBtn.tintColor = .white
-            annotateBtn.isSelected = isAnnotating
-            buttons.append(annotateBtn)
 
             let mouseHighlightOn = UserDefaults.standard.bool(forKey: "recordMouseHighlight")
             var mouseBtn = ToolbarButton(

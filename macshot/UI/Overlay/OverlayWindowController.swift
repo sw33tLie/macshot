@@ -69,10 +69,6 @@ class OverlayWindowController {
         window.contentView = view
         self.overlayWindow = window
         self.overlayView = view
-
-        view.onAnnotationModeChanged = { [weak self] isAnnotating in
-            self?.updateAnnotationMode(isAnnotating: isAnnotating)
-        }
     }
 
     func showOverlay() {
@@ -197,16 +193,6 @@ class OverlayWindowController {
         overlayView?.recordingElapsedSeconds = seconds
         overlayView?.needsDisplay = true
         recordingControlView?.rebuildButtons()
-    }
-
-    func updateAnnotationMode(isAnnotating: Bool) {
-        // When annotating: hide control window, show main overlay interactive
-        // When not annotating: show control window, main overlay ignores events
-        if isAnnotating {
-            recordingControlWindow?.orderOut(nil)
-        } else {
-            recordingControlWindow?.orderFront(nil)
-        }
     }
 
     func setScrollCaptureState(isActive: Bool, stripCount: Int = 0, pixelSize: CGSize = .zero) {
