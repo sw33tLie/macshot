@@ -43,6 +43,28 @@ final class BlurToolHandler: AnnotationToolHandler {
             canvas.setNeedsDisplay()
             return
         }
-        commitAnnotation(annotation, canvas: canvas)
+
+        if UserDefaults.standard.bool(forKey: "blurPixelateTextOnly") {
+            let drawnRect = annotation.boundingRect
+            let sourceImg = annotation.sourceImage
+            let sourceImgBounds = annotation.sourceImageBounds
+            canvas.activeAnnotation = nil
+            canvas.setNeedsDisplay()
+            guard let screenshot = canvas.screenshotImage else { return }
+            AutoRedactor.redactAllText(
+                screenshot: screenshot, selectionRect: drawnRect,
+                captureDrawRect: canvas.captureDrawRect,
+                redactTool: .blur, color: canvas.currentColor,
+                sourceImage: sourceImg, sourceImageBounds: sourceImgBounds
+            ) { [weak canvas] anns in
+                guard let canvas = canvas, !anns.isEmpty else { return }
+                canvas.annotations.append(contentsOf: anns)
+                canvas.undoStack.append(contentsOf: anns.map { .added($0) })
+                canvas.redoStack.removeAll()
+                canvas.setNeedsDisplay()
+            }
+        } else {
+            commitAnnotation(annotation, canvas: canvas)
+        }
     }
 }

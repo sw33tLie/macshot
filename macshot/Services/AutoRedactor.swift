@@ -122,6 +122,102 @@ enum AutoRedactor {
         }
     }
 
+    // MARK: - Face redaction
+
+    /// Detect faces in the selected region and create blur/pixelate/filled-rect annotations over each face.
+    static func redactFaces(
+        screenshot: NSImage,
+        selectionRect: NSRect,
+        captureDrawRect: NSRect,
+        redactTool: AnnotationTool,
+        color: NSColor,
+        sourceImage: NSImage?,
+        sourceImageBounds: NSRect,
+        completion: @escaping ([Annotation]) -> Void
+    ) {
+        let cgImage = cropToCGImage(screenshot: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect)
+        guard let cgImage = cgImage else { completion([]); return }
+
+        let request = VNDetectFaceRectanglesRequest { request, _ in
+            guard let observations = request.results as? [VNFaceObservation] else { completion([]); return }
+            let groupID = UUID()
+            let padding: CGFloat = 4
+            var annotations: [Annotation] = []
+
+            for observation in observations {
+                let box = observation.boundingBox
+                let viewX = selectionRect.origin.x + box.origin.x * selectionRect.width - padding
+                let viewY = selectionRect.origin.y + box.origin.y * selectionRect.height - padding
+                let viewW = box.width * selectionRect.width + padding * 2
+                let viewH = box.height * selectionRect.height + padding * 2
+                let ann = Annotation(tool: redactTool,
+                    startPoint: NSPoint(x: viewX, y: viewY),
+                    endPoint: NSPoint(x: viewX + viewW, y: viewY + viewH),
+                    color: color, strokeWidth: 0)
+                ann.groupID = groupID
+                if redactTool == .rectangle { ann.rectFillStyle = .fill }
+                else if redactTool == .blur || redactTool == .pixelate {
+                    ann.sourceImage = sourceImage
+                    ann.sourceImageBounds = sourceImageBounds
+                }
+                annotations.append(ann)
+            }
+            for ann in annotations { ann.bakePixelate() }
+            DispatchQueue.main.async { completion(annotations) }
+        }
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            try? VNImageRequestHandler(cgImage: cgImage, options: [:]).perform([request])
+        }
+    }
+
+    /// Detect human bodies in the selected region and create blur/pixelate/filled-rect annotations over each person.
+    static func redactPeople(
+        screenshot: NSImage,
+        selectionRect: NSRect,
+        captureDrawRect: NSRect,
+        redactTool: AnnotationTool,
+        color: NSColor,
+        sourceImage: NSImage?,
+        sourceImageBounds: NSRect,
+        completion: @escaping ([Annotation]) -> Void
+    ) {
+        let cgImage = cropToCGImage(screenshot: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect)
+        guard let cgImage = cgImage else { completion([]); return }
+
+        let request = VNDetectHumanRectanglesRequest { request, _ in
+            guard let observations = request.results as? [VNHumanObservation] else { completion([]); return }
+            let groupID = UUID()
+            let padding: CGFloat = 4
+            var annotations: [Annotation] = []
+
+            for observation in observations {
+                let box = observation.boundingBox
+                let viewX = selectionRect.origin.x + box.origin.x * selectionRect.width - padding
+                let viewY = selectionRect.origin.y + box.origin.y * selectionRect.height - padding
+                let viewW = box.width * selectionRect.width + padding * 2
+                let viewH = box.height * selectionRect.height + padding * 2
+                let ann = Annotation(tool: redactTool,
+                    startPoint: NSPoint(x: viewX, y: viewY),
+                    endPoint: NSPoint(x: viewX + viewW, y: viewY + viewH),
+                    color: color, strokeWidth: 0)
+                ann.groupID = groupID
+                if redactTool == .rectangle { ann.rectFillStyle = .fill }
+                else if redactTool == .blur || redactTool == .pixelate {
+                    ann.sourceImage = sourceImage
+                    ann.sourceImageBounds = sourceImageBounds
+                }
+                annotations.append(ann)
+            }
+            for ann in annotations { ann.bakePixelate() }
+            DispatchQueue.main.async { completion(annotations) }
+        }
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            try? VNImageRequestHandler(cgImage: cgImage, options: [:]).perform([request])
+        }
+    }
+
     // MARK: - Helpers
 
     private static func cropToCGImage(screenshot: NSImage, selectionRect: NSRect, captureDrawRect: NSRect) -> CGImage? {

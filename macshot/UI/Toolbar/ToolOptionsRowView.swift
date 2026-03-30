@@ -755,7 +755,39 @@ class ToolOptionsRowView: NSView {
         var curX = x
         let toolName = ov.currentTool == .blur ? "Blur" : "Pixelate"
 
-        let allTextBtn = NSButton(title: "\(toolName) All Text", target: self, action: #selector(redactAllTextClicked))
+        // — Draw mode: All / Text Only segmented control —
+        let drawLabel = NSTextField(labelWithString: "Draw:")
+        drawLabel.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
+        drawLabel.textColor = NSColor.white.withAlphaComponent(0.4)
+        drawLabel.sizeToFit()
+        drawLabel.frame.origin = NSPoint(x: curX, y: (rowHeight - drawLabel.frame.height) / 2)
+        addSubview(drawLabel)
+        curX += drawLabel.frame.width + 4
+
+        let textOnly = UserDefaults.standard.bool(forKey: "blurPixelateTextOnly")
+        let drawSeg = NSSegmentedControl(labels: ["All", "Text Only"], trackingMode: .selectOne,
+                                          target: self, action: #selector(drawModeChanged(_:)))
+        drawSeg.selectedSegment = textOnly ? 1 : 0
+        drawSeg.controlSize = .small
+        drawSeg.font = NSFont.systemFont(ofSize: 10, weight: .medium)
+        (drawSeg.cell as? NSSegmentedCell)?.segmentStyle = .roundRect
+        drawSeg.sizeToFit()
+        drawSeg.frame.origin = NSPoint(x: curX, y: (rowHeight - drawSeg.frame.height) / 2)
+        addSubview(drawSeg)
+        curX += drawSeg.frame.width + 4
+
+        curX = addSeparator(at: curX)
+
+        // — Auto-detect: All Text, PII, Types —
+        let autoLabel = NSTextField(labelWithString: "Auto:")
+        autoLabel.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
+        autoLabel.textColor = NSColor.white.withAlphaComponent(0.4)
+        autoLabel.sizeToFit()
+        autoLabel.frame.origin = NSPoint(x: curX, y: (rowHeight - autoLabel.frame.height) / 2)
+        addSubview(autoLabel)
+        curX += autoLabel.frame.width + 4
+
+        let allTextBtn = NSButton(title: "All Text", target: self, action: #selector(redactAllTextClicked))
         allTextBtn.bezelStyle = .recessed
         allTextBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
         allTextBtn.sizeToFit()
@@ -763,7 +795,7 @@ class ToolOptionsRowView: NSView {
         addSubview(allTextBtn)
         curX += allTextBtn.frame.width + 4
 
-        let piiBtn = NSButton(title: "\(toolName) PII", target: self, action: #selector(redactPIIClicked))
+        let piiBtn = NSButton(title: "PII", target: self, action: #selector(redactPIIClicked))
         piiBtn.bezelStyle = .recessed
         piiBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
         piiBtn.sizeToFit()
@@ -778,6 +810,25 @@ class ToolOptionsRowView: NSView {
         typeBtn.frame.origin = NSPoint(x: curX, y: (rowHeight - typeBtn.frame.height) / 2)
         addSubview(typeBtn)
         curX += typeBtn.frame.width + 4
+
+        curX = addSeparator(at: curX)
+
+        // — Face & people detection —
+        let facesBtn = NSButton(title: "Faces", target: self, action: #selector(redactFacesClicked))
+        facesBtn.bezelStyle = .recessed
+        facesBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
+        facesBtn.sizeToFit()
+        facesBtn.frame.origin = NSPoint(x: curX, y: (rowHeight - facesBtn.frame.height) / 2)
+        addSubview(facesBtn)
+        curX += facesBtn.frame.width + 4
+
+        let peopleBtn = NSButton(title: "People", target: self, action: #selector(redactPeopleClicked))
+        peopleBtn.bezelStyle = .recessed
+        peopleBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
+        peopleBtn.sizeToFit()
+        peopleBtn.frame.origin = NSPoint(x: curX, y: (rowHeight - peopleBtn.frame.height) / 2)
+        addSubview(peopleBtn)
+        curX += peopleBtn.frame.width + 4
 
         return curX
     }
@@ -1047,12 +1098,24 @@ class ToolOptionsRowView: NSView {
         }
     }
 
+    @objc private func drawModeChanged(_ sender: NSSegmentedControl) {
+        UserDefaults.standard.set(sender.selectedSegment == 1, forKey: "blurPixelateTextOnly")
+    }
+
     @objc private func redactAllTextClicked() {
         overlayView?.performRedactAllText()
     }
 
     @objc private func redactPIIClicked() {
         overlayView?.performAutoRedact()
+    }
+
+    @objc private func redactFacesClicked() {
+        overlayView?.performRedactFaces()
+    }
+
+    @objc private func redactPeopleClicked() {
+        overlayView?.performRedactPeople()
     }
 
     @objc private func redactTypesClicked(_ sender: NSButton) {

@@ -68,7 +68,7 @@ brew install sw33tlie/macshot/macshot
 - **Pencil & Marker** — freeform drawing with optional smoothing
 - **Numbered markers** — auto-incrementing (1/I/A/a formats), with optional pointer cone
 - **Stamp / Emoji** — 21 quick emojis, 100+ in categorized picker, or load any image
-- **Pixelate & Blur** — irreversible redaction; auto-redact PII (emails, phones, credit cards, SSNs, API keys) with one click
+- **Pixelate & Blur** — irreversible redaction; auto-redact PII (emails, phones, credit cards, SSNs, API keys), auto-detect faces and people, or draw in "Text Only" mode to blur just the text in a region
 - **Measure** — pixel ruler with px/pt toggle; hold `1` or `2` for auto-measure
 - **Loupe** — 2x magnifier
 - **Color sampler** — eyedropper to pick any color; right-click to copy hex; auto-saves to custom palette slots
@@ -103,6 +103,12 @@ brew install sw33tlie/macshot/macshot
 ### Beautify
 - macOS window frame with traffic lights, shadow, and gradient background
 - 30 gradient styles including 7 mesh gradients (macOS 15+), adjustable padding/corner radius/shadow
+
+### Image Effects (Adjust)
+- Non-destructive CIFilter adjustments: Brightness, Contrast, Saturation, Sharpness
+- 8 presets: Noir, Mono, Sepia, Chrome, Fade, Instant, Vivid
+- Works independently or combined with Beautify
+- Live preview in the overlay
 
 ### Other
 - **OCR** — extract text with Apple Vision (auto-detects all languages on macOS 13+), auto-copy to clipboard, translate to 30+ languages, Google AI Search

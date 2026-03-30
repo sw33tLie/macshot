@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.4.4] - 2026-03-30
+
+### Added
+- **Image effects (Adjust)** — new "Adjust" button in the toolbar with non-destructive CIFilter-based image effects. Includes 8 presets (Noir, Mono, Sepia, Chrome, Fade, Instant, Vivid) and 4 adjustment sliders (Brightness, Contrast, Saturation, Sharpness). Works independently of Beautify — use effects alone, with Beautify, or both. Live preview in the overlay.
+- **Auto-blur/pixelate faces** — one-click face detection using Apple Vision to blur or pixelate all faces in the selection. Available in the blur/pixelate tool options row.
+- **Auto-blur/pixelate people** — one-click human body detection to blur or pixelate all people in the selection.
+- **Text Only draw mode** — segmented control in blur/pixelate options to switch between "All" (blur everything in drawn rectangle) and "Text Only" (OCR the drawn rectangle, blur only detected text lines). Matches Shottr-style content-aware blur.
+
+### Changed
+- **Improved blur/pixelate options row** — reorganized with clear grouping: "Draw" mode selector, "Auto" detection buttons (All Text, PII, Types), and detection buttons (Faces, People). Dimmed section labels and pipe separators make the layout easier to scan.
+- **Centralized post-processing pipeline** — effects and beautify are now applied through a single `applyPostProcessing` method in the editor, reducing code duplication across 6 output paths.
+
 ## [3.4.3] - 2026-03-29
 
 ### Fixed

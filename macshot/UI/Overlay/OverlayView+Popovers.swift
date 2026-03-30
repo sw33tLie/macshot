@@ -345,6 +345,79 @@ extension OverlayView {
         performAutoRedact()
     }
 
+    func performRedactFaces() {
+        guard state == .selected, let screenshot = screenshotImage else { return }
+        let tool: AnnotationTool =
+            currentTool == .blur ? .blur : (currentTool == .pixelate ? .pixelate : .rectangle)
+        let sourceImg = (tool == .blur || tool == .pixelate) ? compositedImage() : nil
+        AutoRedactor.redactFaces(
+            screenshot: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect,
+            redactTool: tool, color: currentColor, sourceImage: sourceImg,
+            sourceImageBounds: captureDrawRect
+        ) { [weak self] anns in
+            guard let self = self, !anns.isEmpty else { return }
+            self.annotations.append(contentsOf: anns)
+            self.undoStack.append(contentsOf: anns.map { .added($0) })
+            self.redoStack.removeAll()
+            self.cachedCompositedImage = nil
+            self.needsDisplay = true
+        }
+    }
+
+    func performRedactPeople() {
+        guard state == .selected, let screenshot = screenshotImage else { return }
+        let tool: AnnotationTool =
+            currentTool == .blur ? .blur : (currentTool == .pixelate ? .pixelate : .rectangle)
+        let sourceImg = (tool == .blur || tool == .pixelate) ? compositedImage() : nil
+        AutoRedactor.redactPeople(
+            screenshot: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect,
+            redactTool: tool, color: currentColor, sourceImage: sourceImg,
+            sourceImageBounds: captureDrawRect
+        ) { [weak self] anns in
+            guard let self = self, !anns.isEmpty else { return }
+            self.annotations.append(contentsOf: anns)
+            self.undoStack.append(contentsOf: anns.map { .added($0) })
+            self.redoStack.removeAll()
+            self.cachedCompositedImage = nil
+            self.needsDisplay = true
+        }
+    }
+
+    func showEffectsPopover(anchorView: NSView? = nil, anchorRect: NSRect = .zero) {
+        if PopoverHelper.isVisible {
+            PopoverHelper.dismiss()
+            return
+        }
+        let picker = EffectsPickerView(config: effectsConfig)
+        picker.onConfigChanged = { [weak self] config in
+            guard let self = self else { return }
+            self.effectsPreset = config.preset
+            self.effectsBrightness = config.brightness
+            self.effectsContrast = config.contrast
+            self.effectsSaturation = config.saturation
+            self.effectsSharpness = config.sharpness
+            UserDefaults.standard.set(config.preset.rawValue, forKey: "effectsPreset")
+            UserDefaults.standard.set(Double(config.brightness), forKey: "effectsBrightness")
+            UserDefaults.standard.set(Double(config.contrast), forKey: "effectsContrast")
+            UserDefaults.standard.set(Double(config.saturation), forKey: "effectsSaturation")
+            UserDefaults.standard.set(Double(config.sharpness), forKey: "effectsSharpness")
+            self.cachedCompositedImage = nil
+            self.cachedEffectsScreenshot = nil
+            self.rebuildToolbarLayout()
+            self.needsDisplay = true
+        }
+        let size = picker.preferredSize
+        if let anchor = anchorView {
+            PopoverHelper.show(
+                picker, size: size, relativeTo: anchor.bounds, of: anchor, preferredEdge: .maxY)
+        } else {
+            PopoverHelper.showAtPoint(
+                picker, size: size,
+                at: NSPoint(x: anchorRect.midX, y: anchorRect.midY),
+                in: self, preferredEdge: .maxY)
+        }
+    }
+
     func performTranslate(targetLang: String) {
         guard state == .selected, let screenshot = screenshotImage else { return }
         annotations.removeAll { $0.tool == .translateOverlay }

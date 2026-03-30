@@ -60,6 +60,11 @@ struct OverlayEditorState {
     var numberCounter: Int
     var beautifyEnabled: Bool
     var beautifyStyleIndex: Int
+    var effectsPreset: ImageEffectPreset
+    var effectsBrightness: Float
+    var effectsContrast: Float
+    var effectsSaturation: Float
+    var effectsSharpness: Float
 }
 
 class OverlayView: NSView {
@@ -123,6 +128,7 @@ class OverlayView: NSView {
     var annotations: [Annotation] = [] {
         didSet {
             cachedCompositedImage = nil
+            cachedEffectsScreenshot = nil
             // Update move button enabled state when annotations change
             if showToolbars { rebuildToolbarLayout() }
         }
@@ -265,6 +271,40 @@ class OverlayView: NSView {
     }
 
     var showBeautifyInOptionsRow: Bool = false
+
+    // Image effects
+    var effectsPreset: ImageEffectPreset =
+        ImageEffectPreset(rawValue: UserDefaults.standard.integer(forKey: "effectsPreset")) ?? .none
+    var effectsBrightness: Float = {
+        let v = UserDefaults.standard.object(forKey: "effectsBrightness") as? Double
+        return v != nil ? Float(v!) : 0
+    }()
+    var effectsContrast: Float = {
+        let v = UserDefaults.standard.object(forKey: "effectsContrast") as? Double
+        return v != nil ? Float(v!) : 1.0
+    }()
+    var effectsSaturation: Float = {
+        let v = UserDefaults.standard.object(forKey: "effectsSaturation") as? Double
+        return v != nil ? Float(v!) : 1.0
+    }()
+    var effectsSharpness: Float = {
+        let v = UserDefaults.standard.object(forKey: "effectsSharpness") as? Double
+        return v != nil ? Float(v!) : 0
+    }()
+
+    var effectsConfig: ImageEffectsConfig {
+        ImageEffectsConfig(
+            preset: effectsPreset,
+            brightness: effectsBrightness,
+            contrast: effectsContrast,
+            saturation: effectsSaturation,
+            sharpness: effectsSharpness
+        )
+    }
+    var effectsActive: Bool { !effectsConfig.isIdentity }
+
+    /// Cached effects-processed screenshot for live preview. Invalidated when effects or annotations change.
+    var cachedEffectsScreenshot: NSImage?
 
     // Color picker target
     enum ColorPickerTarget { case drawColor, textBg, textOutline }
@@ -1134,7 +1174,10 @@ class OverlayView: NSView {
             context.restoreGraphicsState()
 
             // Live beautify preview — draw gradient background, shadow, and rounded image around selection
-            if beautifyEnabled && state == .selected && !isScrollCapturing && !isRecording {
+            let showBeautifyPreview = beautifyEnabled && state == .selected && !isScrollCapturing && !isRecording
+            let showEffectsPreview = effectsActive && state == .selected && !isScrollCapturing && !isRecording && !beautifyEnabled
+
+            if showBeautifyPreview {
                 context.saveGraphicsState()
                 applyCanvasTransform(to: context)
                 drawBeautifyPreview(context: context)
@@ -1202,10 +1245,55 @@ class OverlayView: NSView {
                 }
             }
 
-            // Selection border — hidden in editor mode and when beautify preview is active,
+            // Effects-only preview (no beautify) — draw effects-processed screenshot in selection
+            if showEffectsPreview, let screenshot = screenshotImage {
+                context.saveGraphicsState()
+                applyCanvasTransform(to: context)
+                NSBezierPath(rect: selectionRect).setClip()
+                let effectsImage = effectsProcessedScreenshot(screenshot)
+                effectsImage.draw(in: captureDrawRect, from: .zero, operation: .copy, fraction: 1.0)
+                // Re-draw annotations on top
+                for annotation in annotations { annotation.draw(in: context) }
+                currentAnnotation?.draw(in: context)
+                context.restoreGraphicsState()
+
+                // Re-draw overlays on top of effects preview
+                if let selected = selectedAnnotation, currentTool == .select {
+                    context.saveGraphicsState()
+                    applyCanvasTransform(to: context)
+                    drawAnnotationControls(for: selected)
+                    context.restoreGraphicsState()
+                }
+                if currentTool == .loupe && selectionRect.contains(loupeCursorPoint) && loupeCursorPoint != .zero {
+                    context.saveGraphicsState()
+                    applyCanvasTransform(to: context)
+                    drawLoupePreview(at: loupeCursorPoint)
+                    context.restoreGraphicsState()
+                }
+                if currentTool == .colorSampler && colorSamplerPoint != .zero {
+                    context.saveGraphicsState()
+                    applyCanvasTransform(to: context)
+                    drawColorSamplerPreview(at: colorSamplerPoint)
+                    context.restoreGraphicsState()
+                }
+                if currentTool == .marker && markerCursorPoint != .zero && currentAnnotation == nil {
+                    context.saveGraphicsState()
+                    applyCanvasTransform(to: context)
+                    drawMarkerCursorPreview(at: markerCursorPoint)
+                    context.restoreGraphicsState()
+                }
+                if snapGuideX != nil || snapGuideY != nil {
+                    context.saveGraphicsState()
+                    applyCanvasTransform(to: context)
+                    drawSnapGuides()
+                    context.restoreGraphicsState()
+                }
+            }
+
+            // Selection border — hidden in editor mode and when beautify/effects preview is active,
             // red during scroll capture, purple otherwise
             if shouldDrawSelectionBorder()
-                && !(beautifyEnabled && state == .selected && !isScrollCapturing && !isRecording)
+                && !showBeautifyPreview && !showEffectsPreview
             {
                 let borderPath = NSBezierPath(rect: selectionRect)
                 borderPath.lineWidth = isScrollCapturing ? 2.5 : 2.0
@@ -1897,9 +1985,10 @@ class OverlayView: NSView {
                 border.stroke()
             }
 
-            // Draw screenshot in content area (clipped to window shape)
+            // Draw screenshot in content area (clipped to window shape), with effects if active
             if let image = screenshotImage {
-                image.draw(
+                let drawImage = effectsActive ? effectsProcessedScreenshot(image) : image
+                drawImage.draw(
                     in: imageRect, from: selectionRect, operation: .sourceOver, fraction: 1.0)
             }
 
@@ -1925,7 +2014,8 @@ class OverlayView: NSView {
                 .addClip()
 
             if let image = screenshotImage {
-                image.draw(in: imageRect, from: selectionRect, operation: .copy, fraction: 1.0)
+                let drawImage = effectsActive ? effectsProcessedScreenshot(image) : image
+                drawImage.draw(in: imageRect, from: selectionRect, operation: .copy, fraction: 1.0)
             }
 
             // Draw annotations shifted to preview position (including current live annotation)
@@ -3288,7 +3378,8 @@ class OverlayView: NSView {
         bottomButtons = ToolbarLayout.bottomButtons(
             selectedTool: currentTool, selectedColor: currentColor,
             beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex,
-            hasAnnotations: movableAnnotations, isRecording: isRecording
+            hasAnnotations: movableAnnotations, isRecording: isRecording,
+            effectsActive: effectsActive
         )
         if showBeautifyInOptionsRow {
             for i in bottomButtons.indices {
@@ -4655,6 +4746,9 @@ class OverlayView: NSView {
             }
         case .invertColors:
             invertImageColors()
+        case .effects:
+            let btn = bottomStripView?.buttonViews.first { if case .effects = $0.action { return true }; return false }
+            showEffectsPopover(anchorView: btn)
         case .beautify:
             commitTextFieldIfNeeded()
             stampPreviewPoint = nil
@@ -5649,7 +5743,12 @@ class OverlayView: NSView {
             currentNumberSize: currentNumberSize,
             numberCounter: numberCounter,
             beautifyEnabled: beautifyEnabled,
-            beautifyStyleIndex: beautifyStyleIndex
+            beautifyStyleIndex: beautifyStyleIndex,
+            effectsPreset: effectsPreset,
+            effectsBrightness: effectsBrightness,
+            effectsContrast: effectsContrast,
+            effectsSaturation: effectsSaturation,
+            effectsSharpness: effectsSharpness
         )
     }
 
@@ -5911,6 +6010,20 @@ extension OverlayView: NSTextViewDelegate {
 }
 
 // MARK: - AnnotationCanvas conformance
+
+// MARK: - Image Effects helpers
+
+extension OverlayView {
+    /// Returns the effects-processed screenshot, cached for performance during draw().
+    func effectsProcessedScreenshot(_ screenshot: NSImage) -> NSImage {
+        if let cached = cachedEffectsScreenshot { return cached }
+        let config = effectsConfig
+        guard !config.isIdentity else { return screenshot }
+        let processed = ImageEffects.apply(to: screenshot, config: config)
+        cachedEffectsScreenshot = processed
+        return processed
+    }
+}
 
 extension OverlayView: AnnotationCanvas {
     var activeAnnotation: Annotation? {

@@ -572,6 +572,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
             (1010, "Scroll Capture"),
             (1011, "Invert Colors"),
             (1012, "Share"),
+            (1013, "Adjust (Image Effects)"),
         ]
         let enabledActions = UserDefaults.standard.array(forKey: "enabledActions") as? [Int]
         let actionsGrid = makeToggleGrid(items: actionItems,

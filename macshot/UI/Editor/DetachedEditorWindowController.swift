@@ -131,6 +131,18 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
             }
         }
     }
+
+    /// Apply image effects and beautify to the captured image.
+    private func applyPostProcessing(_ image: NSImage) -> NSImage {
+        var result = image
+        if let view = overlayView, view.effectsActive {
+            result = ImageEffects.apply(to: result, config: view.effectsConfig)
+        }
+        if let view = overlayView, view.beautifyEnabled {
+            result = BeautifyRenderer.render(image: result, config: view.beautifyConfig)
+        }
+        return result
+    }
 }
 
 // MARK: - OverlayViewDelegate
@@ -144,10 +156,8 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
     func overlayViewDidCancel() { window?.close() }
 
     func overlayViewDidConfirm() {
-        guard var image = overlayView?.captureSelectedRegion() else { return }
-        if overlayView?.beautifyEnabled == true {
-            image = BeautifyRenderer.render(image: image, config: overlayView?.beautifyConfig ?? BeautifyConfig()) ?? image
-        }
+        guard let raw = overlayView?.captureSelectedRegion() else { return }
+        let image = applyPostProcessing(raw)
         let autoCopy = UserDefaults.standard.object(forKey: "autoCopyToClipboard") as? Bool ?? true
         if autoCopy { ImageEncoder.copyToClipboard(image) }
         playCopySound()
@@ -156,10 +166,8 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
 
     func overlayViewDidRequestSave() {
         guard let view = overlayView,
-              var image = view.captureSelectedRegion() else { return }
-        if view.beautifyEnabled {
-            image = BeautifyRenderer.render(image: image, config: view.beautifyConfig)
-        }
+              let raw = view.captureSelectedRegion() else { return }
+        let image = applyPostProcessing(raw)
         guard let imageData = ImageEncoder.encode(image) else { return }
         let savePanel = NSSavePanel()
         savePanel.allowedContentTypes = [ImageEncoder.utType]
@@ -175,10 +183,8 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
     }
 
     func overlayViewDidRequestPin() {
-        guard var image = overlayView?.captureSelectedRegion() else { return }
-        if overlayView?.beautifyEnabled == true {
-            image = BeautifyRenderer.render(image: image, config: overlayView?.beautifyConfig ?? BeautifyConfig()) ?? image
-        }
+        guard let raw = overlayView?.captureSelectedRegion() else { return }
+        let image = applyPostProcessing(raw)
         playCopySound()
         (NSApp.delegate as? AppDelegate)?.showPin(image: image)
     }
@@ -200,10 +206,8 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
 
     func overlayViewDidRequestQuickSave() {
         guard let view = overlayView,
-              var image = view.captureSelectedRegion() else { return }
-        if view.beautifyEnabled {
-            image = BeautifyRenderer.render(image: image, config: view.beautifyConfig)
-        }
+              let raw = view.captureSelectedRegion() else { return }
+        let image = applyPostProcessing(raw)
         playCopySound()
 
         let dirURL = SaveDirectoryAccess.resolve()
@@ -219,19 +223,15 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
         }
     }
     func overlayViewDidRequestUpload() {
-        guard var image = overlayView?.captureSelectedRegion() else { return }
-        if overlayView?.beautifyEnabled == true {
-            image = BeautifyRenderer.render(image: image, config: overlayView?.beautifyConfig ?? BeautifyConfig()) ?? image
-        }
+        guard let raw = overlayView?.captureSelectedRegion() else { return }
+        let image = applyPostProcessing(raw)
         playCopySound()
         (NSApp.delegate as? AppDelegate)?.uploadImage(image)
     }
 
     func overlayViewDidRequestShare(anchorView: NSView?) {
-        guard var image = overlayView?.captureSelectedRegion() else { return }
-        if overlayView?.beautifyEnabled == true {
-            image = BeautifyRenderer.render(image: image, config: overlayView?.beautifyConfig ?? BeautifyConfig()) ?? image
-        }
+        guard let raw = overlayView?.captureSelectedRegion() else { return }
+        let image = applyPostProcessing(raw)
         guard let imageData = ImageEncoder.encode(image) else { return }
         let tempURL = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("macshot_\(OverlayWindowController.formattedTimestamp()).\(ImageEncoder.fileExtension)")

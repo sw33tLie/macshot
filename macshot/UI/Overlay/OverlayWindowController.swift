@@ -196,8 +196,17 @@ class OverlayWindowController {
     }
 
     private func applyBeautifyIfNeeded(_ image: NSImage?) -> NSImage? {
-        guard let image = image, let view = overlayView, view.beautifyEnabled else { return image }
-        return BeautifyRenderer.render(image: image, config: view.beautifyConfig)
+        guard let image = image, let view = overlayView else { return image }
+        var result = image
+        // Apply image effects first (non-destructive CIFilter adjustments)
+        if view.effectsActive {
+            result = ImageEffects.apply(to: result, config: view.effectsConfig)
+        }
+        // Apply beautify second (gradient background wrapping)
+        if view.beautifyEnabled {
+            result = BeautifyRenderer.render(image: result, config: view.beautifyConfig)
+        }
+        return result
     }
 
     private func copyImageToClipboard(_ image: NSImage) {

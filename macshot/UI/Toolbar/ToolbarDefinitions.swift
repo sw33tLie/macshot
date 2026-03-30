@@ -35,6 +35,7 @@ enum ToolbarButtonAction {
     case scrollCapture
     case addCapture  // editor only: capture a new region and append to the canvas
     case recordSettings  // recording mode: open format/FPS/when-done popover
+    case effects  // image effects (CIFilter adjustments + presets)
 }
 
 struct ToolbarButton {
@@ -66,7 +67,8 @@ class ToolbarLayout {
     // Bottom toolbar items (drawing tools + colors + undo/redo + processing actions)
     static func bottomButtons(
         selectedTool: AnnotationTool, selectedColor: NSColor, beautifyEnabled: Bool = false,
-        beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false, isRecording: Bool = false
+        beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false, isRecording: Bool = false,
+        effectsActive: Bool = false
     ) -> [ToolbarButton] {
         // Hide the bottom bar entirely while recording
         if isRecording { return [] }
@@ -167,6 +169,17 @@ class ToolbarLayout {
                     tooltip: "Invert Colors"))
         }
 
+        if !isRecording && actionEnabled(1013) {
+            var effectsBtn = ToolbarButton(
+                action: .effects, sfSymbol: "slider.horizontal.3", label: nil,
+                tooltip: "Adjust")
+            if effectsActive {
+                effectsBtn.tintColor = NSColor(
+                    calibratedRed: 1.0, green: 0.8, blue: 0.2, alpha: 1.0)
+            }
+            buttons.append(effectsBtn)
+        }
+
         if !isRecording && actionEnabled(1004) {
             var beautifyBtn = ToolbarButton(
                 action: .beautify, sfSymbol: "sparkles", label: nil, tooltip: "Beautify")
@@ -244,7 +257,7 @@ class ToolbarLayout {
         }
 
         let allKnownActionTags: [Int] = [
-            1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011, 1012,
+            1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011, 1012, 1013,
         ]
         // Migrate: only add action tags that are brand-new (never seen before).
         // knownActionTags tracks which tags have been introduced so user-disabled tags are
