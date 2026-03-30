@@ -820,11 +820,6 @@ class OverlayView: NSView {
     /// Imperative cursor management. Called from mouseMoved and a 30fps timer.
     /// Simplified: arrow for chrome, resize cursors for handles, tool cursor for canvas.
     private func updateCursorForPoint(_ point: NSPoint) {
-        // Non-interactive states — simple cursors
-        if textEditView != nil {
-            NSCursor.arrow.set()
-            return
-        }
         if state == .idle || state == .selecting {
             // Show resize cursor for remote selection handles
             if state == .idle && remoteSelectionRect.width >= 1 && remoteSelectionRect.height >= 1 {
@@ -839,35 +834,13 @@ class OverlayView: NSView {
         }
         guard state == .selected else { return }
 
-        // Chrome areas — arrow
-        if isPointOnChrome(point) {
-            NSCursor.arrow.set()
-            return
-        }
-
         // Selection resize handles (overlay only)
         if !isEditorMode, let handleCursor = resizeHandleCursor(at: point) {
             handleCursor.set()
             return
         }
 
-        // Hover-to-move over annotations
-        if [.arrow, .line, .rectangle, .ellipse, .select].contains(currentTool) {
-            if let hovered = hoveredAnnotation, hovered.hitTest(point: viewToCanvas(point)) {
-                Self.moveCursor.set()
-                return
-            }
-        }
-
-        // Tool cursor — use handler's cursor if available, else legacy switch
-        if let handler = toolHandlers[currentTool], let cursor = handler.cursor {
-            cursor.set()
-        } else {
-            switch currentTool {
-            case .select: NSCursor.arrow.set()
-            default: NSCursor.crosshair.set()
-            }
-        }
+        NSCursor.arrow.set()
     }
 
     // MARK: - Hit Testing
