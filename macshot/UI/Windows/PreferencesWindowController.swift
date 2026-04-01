@@ -679,7 +679,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
         recordingOnStopPopup = NSPopUpButton()
-        recordingOnStopPopup.addItems(withTitles: ["Open editor", "Show in Finder"])
+        recordingOnStopPopup.addItems(withTitles: ["Open editor", "Show in Finder", "Copy to clipboard"])
         recordingOnStopPopup.target = self
         recordingOnStopPopup.action = #selector(recordingOnStopChanged(_:))
         stack.addArrangedSubview(labeledRow("When done:", controls: [recordingOnStopPopup]))
@@ -1397,7 +1397,11 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         updateFPSForFormat()
 
         let onStop = UserDefaults.standard.string(forKey: "recordingOnStop") ?? "editor"
-        recordingOnStopPopup.selectItem(at: onStop == "finder" ? 1 : 0)
+        switch onStop {
+        case "finder": recordingOnStopPopup.selectItem(at: 1)
+        case "clipboard": recordingOnStopPopup.selectItem(at: 2)
+        default: recordingOnStopPopup.selectItem(at: 0)
+        }
 
         recSavePathField.stringValue = SaveDirectoryAccess.recordingDisplayPath
 
@@ -1519,7 +1523,8 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         }
     }
     @objc private func recordingOnStopChanged(_ sender: NSPopUpButton) {
-        UserDefaults.standard.set(sender.indexOfSelectedItem == 1 ? "finder" : "editor", forKey: "recordingOnStop")
+        let values = ["editor", "finder", "clipboard"]
+        UserDefaults.standard.set(values[sender.indexOfSelectedItem], forKey: "recordingOnStop")
     }
     @objc private func browseRecSavePath(_ sender: NSButton) {
         let panel = NSOpenPanel()

@@ -1,5 +1,23 @@
 # Changelog
 
+## [3.5.1] - 2026-04-02
+
+### Added
+- **Window snap beautify with native chrome** — snapping a window now captures it independently (with transparent corners) and renders it on the gradient background using the real window chrome instead of a synthetic title bar.
+- **"Copy to clipboard" recording option** — new post-recording action in both the toolbar popover and Preferences. GIF recordings copy inline data; MP4 copies the file URL.
+- **"Open from Clipboard" menu item** — paste an image from the clipboard directly into the editor.
+- **Quick capture mode dropdown** — replaced the "Auto-copy to clipboard" checkbox with a 3-option dropdown: Save / Copy / Save+Copy.
+
+### Changed
+- **Auto-measure: click to commit** — holding `1`/`2` shows a live preview that follows the cursor; click to place the measurement, release the key to dismiss. Previously committed on key release, causing accidental placements.
+- **Auto-measure performance** — cached bitmap context and helper text size to eliminate per-frame allocations during mouse tracking.
+- **Options row centering in editor** — the tool options bar now centers correctly relative to the editor container, not the document view.
+
+### Fixed
+- **Clipboard copy pastes as JPG in browsers** — clipboard now explicitly sets PNG data instead of using NSImage's default TIFF representation, matching native macOS screenshot behavior. Previously, apps like browsers would interpret the TIFF as JPG.
+- **Save button not applying beautify/effects** — the Save toolbar button now applies post-processing (effects, beautify) before saving, matching the confirm flow.
+- **Preferences toolbar actions layout** — split the tools list into "Bottom Toolbar Actions" and "Right Toolbar Actions" sections matching their actual positions.
+
 ## [3.5.0] - 2026-04-01
 
 ### Added

@@ -1043,6 +1043,8 @@ extension AppDelegate: OverlayWindowControllerDelegate {
                 switch onStop {
                 case "finder":
                     NSWorkspace.shared.activateFileViewerSelecting([url])
+                case "clipboard":
+                    self.copyRecordingToClipboard(url: url)
                 default:
                     VideoEditorWindowController.open(url: url)
                 }
@@ -1137,6 +1139,25 @@ extension AppDelegate: OverlayWindowControllerDelegate {
             setMenuBarIconVisible(false)
             menuBarIconWasHidden = false
         }
+    }
+
+    private func copyRecordingToClipboard(url: URL) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+
+        let ext = url.pathExtension.lowercased()
+        if ext == "gif", let data = try? Data(contentsOf: url) {
+            // Write raw GIF data so apps can render the animation inline
+            let item = NSPasteboardItem()
+            item.setData(data, forType: NSPasteboard.PasteboardType("com.compuserve.gif"))
+            // Also add file URL for Finder compatibility
+            item.setString(url.absoluteString, forType: .fileURL)
+            pasteboard.writeObjects([item])
+        } else {
+            // MP4: write file URL (apps like Slack/Discord accept file drops)
+            pasteboard.writeObjects([url as NSURL])
+        }
+        playCopySound()
     }
 
     private func stopRecordingUI() {

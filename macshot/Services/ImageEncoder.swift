@@ -180,14 +180,14 @@ enum ImageEncoder {
 
     // MARK: - Clipboard
 
-    /// Copy image to pasteboard in the configured format.
-    /// Uses a single bitmap conversion to avoid redundant encoding.
+    /// Copy image to pasteboard as PNG.
+    /// Explicitly sets PNG data so receiving apps (browsers, editors) get
+    /// a lossless PNG instead of the TIFF that NSImage.writeObjects provides.
     static func copyToClipboard(_ image: NSImage) {
-        // Use writeObjects with NSImage for lazy encoding — the pasteboard
-        // only encodes when another app reads it. This makes copy instant
-        // regardless of format (PNG/JPEG/HEIC/WebP).
+        guard let bitmap = makeBitmap(image),
+              let pngData = bitmap.representation(using: .png, properties: [:]) else { return }
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
-        pasteboard.writeObjects([image])
+        pasteboard.setData(pngData, forType: .png)
     }
 }
