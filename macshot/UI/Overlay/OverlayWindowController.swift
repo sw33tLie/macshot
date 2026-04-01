@@ -16,6 +16,7 @@ protocol OverlayWindowControllerDelegate: AnyObject {
     func overlayDidRequestScrollCapture(
         _ controller: OverlayWindowController, rect: NSRect, screen: NSScreen)
     func overlayDidRequestStopScrollCapture(_ controller: OverlayWindowController)
+    func overlayDidRequestToggleAutoScroll(_ controller: OverlayWindowController)
     func overlayDidBeginSelection(_ controller: OverlayWindowController)
     func overlayDidChangeSelection(_ controller: OverlayWindowController, globalRect: NSRect)
     func overlayDidRemoteResizeSelection(_ controller: OverlayWindowController, globalRect: NSRect)
@@ -138,6 +139,11 @@ class OverlayWindowController {
         overlayView?.autoQuickSaveMode = true
     }
 
+    /// Set flag so overlay triggers scroll capture immediately after user makes a selection.
+    func setAutoScrollCaptureMode() {
+        overlayView?.autoScrollCaptureMode = true
+    }
+
     /// Set flag so overlay auto-confirms immediately after selection (no toolbars, no save).
     func setAutoConfirmMode() {
         overlayView?.autoConfirmMode = true
@@ -156,7 +162,9 @@ class OverlayWindowController {
             rect: overlayView?.selectionRect ?? .zero)
     }
 
-    func setScrollCaptureState(isActive: Bool, stripCount: Int = 0, pixelSize: CGSize = .zero) {
+    func setScrollCaptureState(isActive: Bool, stripCount: Int = 0, pixelSize: CGSize = .zero,
+                               maxHeight: Int = 0) {
+        overlayView?.scrollCaptureMaxHeight = maxHeight
         if isActive {
             overlayView?.startScrollCaptureMode()
         } else {
@@ -167,9 +175,11 @@ class OverlayWindowController {
         overlayView?.needsDisplay = true
     }
 
-    func updateScrollCaptureProgress(stripCount: Int, pixelSize: CGSize) {
+    func updateScrollCaptureProgress(stripCount: Int, pixelSize: CGSize,
+                                     autoScrolling: Bool = false) {
         overlayView?.scrollCaptureStripCount = stripCount
         overlayView?.scrollCapturePixelSize = pixelSize
+        overlayView?.scrollCaptureAutoScrolling = autoScrolling
         overlayView?.updateScrollCaptureHUD()
         overlayView?.needsDisplay = true
     }
@@ -433,6 +443,10 @@ extension OverlayWindowController: OverlayViewDelegate {
         overlayDelegate?.overlayDidRequestStopScrollCapture(self)
     }
 
+    func overlayViewDidRequestToggleAutoScroll() {
+        overlayDelegate?.overlayDidRequestToggleAutoScroll(self)
+    }
+
     func overlayViewDidBeginSelection() {
         overlayDelegate?.overlayDidBeginSelection(self)
     }
@@ -467,13 +481,27 @@ extension OverlayWindowController: OverlayViewDelegate {
             overlayDelegate?.overlayCrossScreenImage(self)
             ?? {
                 guard let src = view.screenshotImage else { return nil }
-                let img = NSImage(size: sel.size, flipped: false) { _ in
-                    src.draw(
-                        in: NSRect(origin: .zero, size: sel.size),
-                        from: sel, operation: .copy, fraction: 1.0)
-                    return true
-                }
-                return img
+                // Render the crop into a concrete 8-bit bitmap now, so the editor
+                // doesn't hit a 16-bit float conversion on first draw.
+                let scale = view.window?.backingScaleFactor ?? 2.0
+                let pxW = Int(sel.width * scale)
+                let pxH = Int(sel.height * scale)
+                let cs = CGColorSpaceCreateDeviceRGB()
+                let bitmapInfo = CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue
+                guard let ctx = CGContext(
+                    data: nil, width: pxW, height: pxH,
+                    bitsPerComponent: 8, bytesPerRow: pxW * 4,
+                    space: cs, bitmapInfo: bitmapInfo
+                ) else { return nil }
+                let gctx = NSGraphicsContext(cgContext: ctx, flipped: false)
+                NSGraphicsContext.saveGraphicsState()
+                NSGraphicsContext.current = gctx
+                src.draw(
+                    in: NSRect(origin: .zero, size: NSSize(width: pxW, height: pxH)),
+                    from: sel, operation: .copy, fraction: 1.0)
+                NSGraphicsContext.restoreGraphicsState()
+                guard let cgImage = ctx.makeImage() else { return nil }
+                return NSImage(cgImage: cgImage, size: sel.size)
             }()
         guard let image = croppedImage else { return }
 

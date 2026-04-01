@@ -59,33 +59,14 @@ class ScreenshotHistory {
         let max = maxEntries
         guard max > 0 else { return }
 
-        // Always save history as PNG — it's internal storage, format setting doesn't matter
-        guard let tiff = image.tiffRepresentation,
-              let bitmap = NSBitmapImageRep(data: tiff),
-              let imageData = bitmap.representation(using: .png, properties: [:]) else { return }
-
         let id = UUID().uuidString
         let ext = "png"
-        let fileURL = historyDir.appendingPathComponent("\(id).\(ext)")
-        let thumbURL = historyDir.appendingPathComponent("\(id)_thumb.png")
 
-        // Write image to disk
-        do {
-            try imageData.write(to: fileURL, options: .atomic)
-        } catch {
-            return
-        }
-
-        // Write thumbnail to disk
+        // Generate thumbnail on the main thread (needs NSImage, quick operation)
         let thumb = makeThumbnail(image: image, maxWidth: 36)
-        if let thumbTiff = thumb.tiffRepresentation,
-           let thumbBitmap = NSBitmapImageRep(data: thumbTiff),
-           let thumbPng = thumbBitmap.representation(using: .png, properties: [:]) {
-            try? thumbPng.write(to: thumbURL, options: .atomic)
-        }
-
         let size = image.size
         let scale: CGFloat = ImageEncoder.downscaleRetina ? 1.0 : (NSScreen.main?.backingScaleFactor ?? 2.0)
+
         let entry = HistoryEntry(
             id: id,
             fileExtension: ext,
@@ -103,6 +84,22 @@ class ScreenshotHistory {
         }
 
         saveIndex()
+
+        // PNG encode + disk write on background thread (the expensive part)
+        let fileURL = historyDir.appendingPathComponent("\(id).\(ext)")
+        let thumbURL = historyDir.appendingPathComponent("\(id)_thumb.png")
+        DispatchQueue.global(qos: .utility).async {
+            if let tiff = image.tiffRepresentation,
+               let bitmap = NSBitmapImageRep(data: tiff),
+               let imageData = bitmap.representation(using: .png, properties: [:]) {
+                try? imageData.write(to: fileURL, options: .atomic)
+            }
+            if let thumbTiff = thumb.tiffRepresentation,
+               let thumbBitmap = NSBitmapImageRep(data: thumbTiff),
+               let thumbPng = thumbBitmap.representation(using: .png, properties: [:]) {
+                try? thumbPng.write(to: thumbURL, options: .atomic)
+            }
+        }
     }
 
     func pruneToMax() {

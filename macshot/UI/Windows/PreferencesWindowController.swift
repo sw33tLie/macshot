@@ -2,6 +2,17 @@ import Cocoa
 import Carbon
 import ServiceManagement
 
+/// Preferences window that intercepts Cmd+Q to close itself instead of quitting the app.
+private class PreferencesWindow: NSWindow {
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        if event.modifierFlags.contains(.command) && event.charactersIgnoringModifiers == "q" {
+            close()
+            return true
+        }
+        return super.performKeyEquivalent(with: event)
+    }
+}
+
 class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWindowDelegate {
 
     private var hotkeyFields: [HotkeyManager.HotkeySlot: NSTextField] = [:]
@@ -12,6 +23,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
     private var autoCopyOCRCheckbox: NSButton!
     private var copySoundCheckbox: NSButton!
     private var rememberSelectionCheckbox: NSButton!
+    private var rememberToolCheckbox: NSButton!
     private var thumbnailCheckbox: NSButton!
     private var thumbnailAutoDismissStepper: NSStepper!
     private var thumbnailAutoDismissField: NSTextField!
@@ -51,11 +63,17 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
     private var recordingFPSPopup: NSPopUpButton!
     private var recordingOnStopPopup: NSPopUpButton!
     private var recSavePathField: NSTextField!
+    // Scroll capture controls
+    private var scrollAutoScrollCheckbox: NSButton!
+    private var scrollSpeedPopup: NSPopUpButton!
+    private var scrollMaxHeightField: NSTextField!
+    private var scrollMaxHeightStepper: NSStepper!
+    private var scrollFrozenDetectionCheckbox: NSButton!
 
     var onHotkeyChanged: (() -> Void)?
 
     init() {
-        let window = NSWindow(
+        let window = PreferencesWindow(
             contentRect: NSRect(x: 0, y: 0, width: 480, height: 660),
             styleMask: [.titled, .closable],
             backing: .buffered,
@@ -212,13 +230,14 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         autoCopyOCRCheckbox = NSButton(checkboxWithTitle: "Auto-copy OCR text to clipboard", target: self, action: #selector(autoCopyOCRChanged(_:)))
         copySoundCheckbox = NSButton(checkboxWithTitle: "Play sound on copy", target: self, action: #selector(copySoundChanged(_:)))
         rememberSelectionCheckbox = NSButton(checkboxWithTitle: "Remember last selection area", target: self, action: #selector(rememberSelectionChanged(_:)))
+        rememberToolCheckbox = NSButton(checkboxWithTitle: "Remember last selected tool", target: self, action: #selector(rememberToolChanged(_:)))
         thumbnailCheckbox = NSButton(checkboxWithTitle: "Show floating thumbnail after capture", target: self, action: #selector(thumbnailChanged(_:)))
         launchAtLoginCheckbox = NSButton(checkboxWithTitle: "Launch at login", target: self, action: #selector(launchAtLoginChanged(_:)))
         snapGuidesCheckbox = NSButton(checkboxWithTitle: "Show snap alignment guides", target: self, action: #selector(snapGuidesChanged(_:)))
         captureCursorCheckbox = NSButton(checkboxWithTitle: "Capture mouse cursor in screenshot", target: self, action: #selector(captureCursorChanged(_:)))
         windowTitleCheckbox = NSButton(checkboxWithTitle: "Use window title in saved filename", target: self, action: #selector(windowTitleChanged(_:)))
 
-        for cb in [autoCopyCheckbox!, autoCopyOCRCheckbox!, copySoundCheckbox!, rememberSelectionCheckbox!, thumbnailCheckbox!] {
+        for cb in [autoCopyCheckbox!, autoCopyOCRCheckbox!, copySoundCheckbox!, rememberSelectionCheckbox!, rememberToolCheckbox!, thumbnailCheckbox!] {
             stack.addArrangedSubview(indented(cb))
             stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
         }
@@ -553,31 +572,49 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.addArrangedSubview(toolsGrid)
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
-        // ── Toolbar Actions ───────────────────────────────────
-        stack.addArrangedSubview(sectionHeader("Toolbar Actions"))
+        // ── Bottom Toolbar Actions ───────────────────────────
+        stack.addArrangedSubview(sectionHeader("Bottom Toolbar Actions"))
         stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
 
-        let noteB = NSTextField(labelWithString: "Hidden actions are removed from the right toolbar.")
+        let noteB = NSTextField(labelWithString: "Hidden actions are removed from the bottom toolbar.")
         noteB.font = NSFont.systemFont(ofSize: 11)
         noteB.textColor = .secondaryLabelColor
         stack.addArrangedSubview(noteB)
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
-        let actionItems: [(tag: Int, label: String)] = [
+        let bottomActionItems: [(tag: Int, label: String)] = [
+            (1011, "Invert Colors"),
+            (1013, "Adjust (Image Effects)"),
+            (1004, "Beautify"),
+            (1005, "Remove Background"),
+        ]
+        let enabledActions = UserDefaults.standard.array(forKey: "enabledActions") as? [Int]
+        let bottomActionsGrid = makeToggleGrid(items: bottomActionItems,
+                                               defaultsKey: "enabledActions", enabledValues: enabledActions)
+        stack.addArrangedSubview(bottomActionsGrid)
+        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
+
+        // ── Right Toolbar Actions ────────────────────────────
+        stack.addArrangedSubview(sectionHeader("Right Toolbar Actions"))
+        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+
+        let noteC = NSTextField(labelWithString: "Hidden actions are removed from the right toolbar.")
+        noteC.font = NSFont.systemFont(ofSize: 11)
+        noteC.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(noteC)
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        let rightActionItems: [(tag: Int, label: String)] = [
             (1001, "Upload"), (1002, "Pin (floating window)"),
-            (1003, "OCR (extract text)"), (1004, "Beautify"),
-            (1005, "Remove Background"), (1006, "Auto-Redact sensitive data"),
+            (1003, "OCR (extract text)"), (1006, "Auto-Redact sensitive data"),
             (1008, "Translate"),
             (1009, "Record screen"),
             (1010, "Scroll Capture"),
-            (1011, "Invert Colors"),
             (1012, "Share"),
-            (1013, "Adjust (Image Effects)"),
         ]
-        let enabledActions = UserDefaults.standard.array(forKey: "enabledActions") as? [Int]
-        let actionsGrid = makeToggleGrid(items: actionItems,
-                                         defaultsKey: "enabledActions", enabledValues: enabledActions)
-        stack.addArrangedSubview(actionsGrid)
+        let rightActionsGrid = makeToggleGrid(items: rightActionItems,
+                                              defaultsKey: "enabledActions", enabledValues: enabledActions)
+        stack.addArrangedSubview(rightActionsGrid)
 
         let clipView = scroll.contentView
         scroll.documentView = stack
@@ -648,6 +685,48 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         recordingOnStopPopup.target = self
         recordingOnStopPopup.action = #selector(recordingOnStopChanged(_:))
         stack.addArrangedSubview(labeledRow("When done:", controls: [recordingOnStopPopup]))
+        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
+
+        // ── Scroll Capture ────────────────────────────────────
+        stack.addArrangedSubview(sectionHeader("Scroll Capture"))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        scrollAutoScrollCheckbox = NSButton(checkboxWithTitle: "Auto-scroll (sends synthetic scroll events)",
+                                            target: self, action: #selector(scrollAutoScrollChanged(_:)))
+        stack.addArrangedSubview(scrollAutoScrollCheckbox)
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        scrollSpeedPopup = NSPopUpButton()
+        scrollSpeedPopup.addItems(withTitles: ["Slow", "Medium", "Fast", "Very fast"])
+        scrollSpeedPopup.target = self
+        scrollSpeedPopup.action = #selector(scrollSpeedChanged(_:))
+        stack.addArrangedSubview(labeledRow("Scroll speed:", controls: [scrollSpeedPopup]))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        scrollMaxHeightField = NSTextField()
+        scrollMaxHeightField.isEditable = false
+        scrollMaxHeightField.isSelectable = false
+        scrollMaxHeightField.font = .monospacedDigitSystemFont(ofSize: 13, weight: .regular)
+        scrollMaxHeightField.translatesAutoresizingMaskIntoConstraints = false
+        scrollMaxHeightField.widthAnchor.constraint(equalToConstant: 60).isActive = true
+
+        scrollMaxHeightStepper = NSStepper()
+        scrollMaxHeightStepper.minValue = 0
+        scrollMaxHeightStepper.maxValue = 100000
+        scrollMaxHeightStepper.increment = 5000
+        scrollMaxHeightStepper.valueWraps = false
+        scrollMaxHeightStepper.target = self
+        scrollMaxHeightStepper.action = #selector(scrollMaxHeightChanged(_:))
+
+        let maxHeightNote = NSTextField(labelWithString: "px (0 = unlimited)")
+        maxHeightNote.font = .systemFont(ofSize: 11)
+        maxHeightNote.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(labeledRow("Max height:", controls: [scrollMaxHeightField, scrollMaxHeightStepper, maxHeightNote]))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        scrollFrozenDetectionCheckbox = NSButton(checkboxWithTitle: "Detect fixed/sticky headers",
+                                                 target: self, action: #selector(scrollFrozenDetectionChanged(_:)))
+        stack.addArrangedSubview(scrollFrozenDetectionCheckbox)
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // Spacer to absorb remaining height, keeping content pinned to top
@@ -1257,6 +1336,9 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
 
         rememberSelectionCheckbox.state = UserDefaults.standard.bool(forKey: "rememberLastSelection") ? .on : .off
 
+        let rememberTool = UserDefaults.standard.object(forKey: "rememberLastTool") as? Bool ?? true
+        rememberToolCheckbox.state = rememberTool ? .on : .off
+
         let thumbnail = UserDefaults.standard.object(forKey: "showFloatingThumbnail") as? Bool ?? true
         thumbnailCheckbox.state = thumbnail ? .on : .off
 
@@ -1313,6 +1395,18 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         recordingOnStopPopup.selectItem(at: onStop == "finder" ? 1 : 0)
 
         recSavePathField.stringValue = SaveDirectoryAccess.recordingDisplayPath
+
+        // Scroll Capture
+        let autoScroll = UserDefaults.standard.object(forKey: "scrollAutoScrollEnabled") as? Bool ?? false
+        scrollAutoScrollCheckbox.state = autoScroll ? .on : .off
+        let speed = UserDefaults.standard.object(forKey: "scrollAutoScrollSpeed") as? Int ?? 3
+        scrollSpeedPopup.selectItem(at: max(0, min(3, speed - 1)))
+        scrollSpeedPopup.isEnabled = autoScroll
+        let maxH = UserDefaults.standard.object(forKey: "scrollMaxHeight") as? Int ?? 20000
+        scrollMaxHeightField.integerValue = maxH
+        scrollMaxHeightStepper.integerValue = maxH
+        let frozenDetect = UserDefaults.standard.object(forKey: "scrollFrozenDetection") as? Bool ?? true
+        scrollFrozenDetectionCheckbox.state = frozenDetect ? .on : .off
     }
 
     private func updateQualityVisibility() {
@@ -1348,6 +1442,9 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
     }
     @objc private func rememberSelectionChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "rememberLastSelection")
+    }
+    @objc private func rememberToolChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: "rememberLastTool")
     }
     @objc private func thumbnailChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "showFloatingThumbnail")
@@ -1437,6 +1534,23 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
     @objc private func clearRecSavePath(_ sender: NSButton) {
         SaveDirectoryAccess.clearRecordingDirectory()
         recSavePathField.stringValue = SaveDirectoryAccess.recordingDisplayPath
+    }
+    // MARK: - Scroll Capture actions
+    @objc private func scrollAutoScrollChanged(_ sender: NSButton) {
+        let on = sender.state == .on
+        UserDefaults.standard.set(on, forKey: "scrollAutoScrollEnabled")
+        scrollSpeedPopup.isEnabled = on
+    }
+    @objc private func scrollSpeedChanged(_ sender: NSPopUpButton) {
+        // 0=Slow(1), 1=Medium(2), 2=Fast(3), 3=VeryFast(4)
+        UserDefaults.standard.set(sender.indexOfSelectedItem + 1, forKey: "scrollAutoScrollSpeed")
+    }
+    @objc private func scrollMaxHeightChanged(_ sender: NSStepper) {
+        scrollMaxHeightField.integerValue = sender.integerValue
+        UserDefaults.standard.set(sender.integerValue, forKey: "scrollMaxHeight")
+    }
+    @objc private func scrollFrozenDetectionChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: "scrollFrozenDetection")
     }
     @objc private func toggleItemChanged(_ sender: NSButton) {
         let key = sender.identifier?.rawValue ?? "enabledTools"

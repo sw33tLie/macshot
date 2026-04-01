@@ -95,4 +95,8 @@ class ToolbarStripView: NSView {
 
     override func mouseDown(with event: NSEvent) {}
     override func mouseUp(with event: NSEvent) {}
+
+    override func resetCursorRects() {
+        addCursorRect(bounds, cursor: .arrow)
+    }
 }

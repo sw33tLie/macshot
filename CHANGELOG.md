@@ -1,5 +1,23 @@
 # Changelog
 
+## [3.5.0] - 2026-04-01
+
+### Added
+- **Scroll capture auto-scroll button** — new "Auto Scroll" button in the scroll capture HUD replaces unreliable keyboard shortcuts. Click to start/stop automatic scrolling of the target window.
+- **Accessibility permission prompt** — clicking Auto Scroll when Accessibility permission is not granted shows a dialog explaining why it's needed and offers to open System Settings.
+- **"Remember last selected tool" preference** — new toggle in Preferences > General (on by default). When disabled, each new capture starts with the Arrow tool and resets effects/beautify.
+
+### Changed
+- **Scroll capture stitching quality** — improved stitch accuracy with triple-fallback shift detection (exact row matching → pixel refinement → original offset), scroll-settle-capture cycle to avoid mid-render captures, and wider search bands for alignment.
+- **Scroll capture auto-stop** — no longer triggers when cursor hovers over the HUD panel; only counts zero-shift frames when cursor is inside the capture region.
+- **Tool options row width** — the secondary toolbar now expands to fit its content when wider than the main toolbar, preventing controls from being clipped when tools are disabled.
+- **Preferences "Tools" tab reorganized** — toolbar actions split into "Bottom Toolbar Actions" and "Right Toolbar Actions" sections matching where buttons actually appear.
+
+### Fixed
+- **Scroll capture keyboard shortcuts unreliable** — Tab key was intercepted by the target app (e.g. browser) instead of toggling auto-scroll. Replaced with clickable HUD buttons.
+- **Auto-scroll not scrolling target window** — fixed cursor warp coordinate conversion for multi-monitor, target app re-activation after HUD click, and switched to line-based scroll units for broad app compatibility.
+- **Effects preset persisting unexpectedly** — when "Remember last selected tool" is off, effects and beautify state are now properly cleared between captures.
+
 ## [3.4.5] - 2026-03-31
 
 ### Added

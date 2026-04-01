@@ -6,14 +6,16 @@ class ToolbarButtonView: NSView {
 
     let action: ToolbarButtonAction
     var sfSymbol: String?
-    var isOn: Bool = false { didSet { if oldValue != isOn { needsDisplay = true } } }
-    var tintColor: NSColor = .white { didSet { needsDisplay = true } }
+    var isOn: Bool = false { didSet { if oldValue != isOn { cachedIcon = nil; needsDisplay = true } } }
+    var tintColor: NSColor = .white { didSet { cachedIcon = nil; cachedIconIsOn = nil; needsDisplay = true } }
     var swatchColor: NSColor? { didSet { needsDisplay = true } }
     var hasContextMenu: Bool = false
 
     private var isHovered: Bool = false
     var isPressed: Bool = false
     private var trackingArea: NSTrackingArea?
+    private var cachedIcon: NSImage?       // cached tinted SF Symbol for current state
+    private var cachedIconIsOn: Bool?       // the isOn state when icon was cached
 
     var onClick: ((ToolbarButtonAction) -> Void)?
     var onMouseDown: ((ToolbarButtonAction) -> Void)?
@@ -62,21 +64,31 @@ class ToolbarButtonView: NSView {
             return
         }
 
-        // SF Symbol
+        // SF Symbol (cached to avoid expensive re-render every frame)
         guard let name = sfSymbol else { return }
-        let cfg = NSImage.SymbolConfiguration(pointSize: 14, weight: .medium)
-        guard let img = NSImage(systemSymbolName: name, accessibilityDescription: nil)?
-                .withSymbolConfiguration(cfg) else { return }
-        let color = isOn ? NSColor.white : tintColor
-        let tinted = NSImage(size: img.size, flipped: false) { r in
-            img.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1.0)
-            color.setFill()
-            r.fill(using: .sourceAtop)
-            return true
+        let currentIsOn = isOn
+        if cachedIcon == nil || cachedIconIsOn != currentIsOn {
+            let cfg = NSImage.SymbolConfiguration(pointSize: 14, weight: .medium)
+            if let img = NSImage(systemSymbolName: name, accessibilityDescription: nil)?
+                    .withSymbolConfiguration(cfg) {
+                let color = currentIsOn ? NSColor.white : tintColor
+                let tinted = NSImage(size: img.size, flipped: false) { r in
+                    img.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1.0)
+                    color.setFill()
+                    r.fill(using: .sourceAtop)
+                    return true
+                }
+                // Force the image to render now so it's a bitmap, not a lazy drawing block
+                tinted.lockFocus(); tinted.unlockFocus()
+                cachedIcon = tinted
+                cachedIconIsOn = currentIsOn
+            }
         }
-        let x = bounds.midX - img.size.width / 2
-        let y = bounds.midY - img.size.height / 2
-        tinted.draw(at: NSPoint(x: x, y: y), from: .zero, operation: .sourceOver, fraction: 1.0)
+        if let icon = cachedIcon {
+            let x = bounds.midX - icon.size.width / 2
+            let y = bounds.midY - icon.size.height / 2
+            icon.draw(at: NSPoint(x: x, y: y), from: .zero, operation: .sourceOver, fraction: 1.0)
+        }
 
         // Context menu triangle
         if hasContextMenu {
@@ -143,5 +155,9 @@ class ToolbarButtonView: NSView {
 
     override func rightMouseDown(with event: NSEvent) {
         onRightClick?(action, self)
+    }
+
+    override func resetCursorRects() {
+        addCursorRect(bounds, cursor: .arrow)
     }
 }

@@ -128,4 +128,8 @@ class EditorTopBarView: NSView {
         overlayView?.enclosingScrollView?.magnification = 1.0
         updateZoom(1.0)
     }
+
+    override func resetCursorRects() {
+        addCursorRect(bounds, cursor: .arrow)
+    }
 }

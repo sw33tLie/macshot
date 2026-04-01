@@ -13,6 +13,28 @@
 			</array>
 		</dict>
 	</array>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Image</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.png</string>
+				<string>public.jpeg</string>
+				<string>public.tiff</string>
+				<string>com.compuserve.gif</string>
+				<string>public.heic</string>
+				<string>public.heif</string>
+				<string>org.webmproject.webp</string>
+				<string>com.microsoft.bmp</string>
+			</array>
+		</dict>
+	</array>
 	<key>Privacy - Screen Capture Usage Description</key>
 	<string>macshot needs screen recording permission to capture screenshots.</string>
 	<key>NSMicrophoneUsageDescription</key>

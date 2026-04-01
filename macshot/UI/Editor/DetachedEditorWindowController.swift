@@ -2,6 +2,17 @@ import Cocoa
 import Vision
 import CoreImage
 
+/// Editor window that intercepts Cmd+Q to close itself instead of quitting the app.
+private class EditorWindow: NSWindow {
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        if event.modifierFlags.contains(.command) && event.charactersIgnoringModifiers == "q" {
+            close()
+            return true
+        }
+        return super.performKeyEquivalent(with: event)
+    }
+}
+
 /// Hosts a captured screenshot in a standalone editor window.
 /// The image (with any overlay annotations baked in) is displayed in a fresh OverlayView
 /// that fills the entire window. selectionRect == bounds == image size, so all coordinate
@@ -36,7 +47,7 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         let winW = min(maxW, max(minW, imgSize.width + 100))
         let winH = min(maxH, max(minH, imgSize.height + 100))
 
-        let win = NSWindow(
+        let win = EditorWindow(
             contentRect: NSRect(x: screenFrame.midX - winW/2,
                                 y: screenFrame.midY - winH/2,
                                 width: winW, height: winH),
@@ -69,9 +80,19 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         scrollView.autohidesScrollers = true
         scrollView.drawsBackground = true
         scrollView.backgroundColor = NSColor(white: 0.15, alpha: 1.0)
-        scrollView.allowsMagnification = true
+        // We handle magnification ourselves in OverlayView.scrollWheel/magnify
+        // to avoid NSScrollView's internal elastic physics at the zoom boundary.
+        // Setting allowsMagnification=false prevents NSScrollView from fighting our zoom.
+        scrollView.allowsMagnification = false
         scrollView.minMagnification = 0.1
         scrollView.maxMagnification = 8.0
+        scrollView.horizontalScrollElasticity = .allowed
+        scrollView.verticalScrollElasticity = .allowed
+        scrollView.usesPredominantAxisScrolling = false
+        // Insets so user can scroll past document edges to see content behind toolbars:
+        // top=32 (top bar), bottom=80 (bottom toolbar + options row), right=46 (right toolbar)
+        scrollView.automaticallyAdjustsContentInsets = false
+        scrollView.contentInsets = NSEdgeInsets(top: 36, left: 0, bottom: 84, right: 50)
 
         let clipView = CenteringClipView(frame: scrollView.contentView.frame)
         clipView.drawsBackground = false
@@ -282,6 +303,7 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
     func overlayViewDidRequestDetach() {}
     func overlayViewDidRequestScrollCapture(rect: NSRect) {}
     func overlayViewDidRequestStopScrollCapture() {}
+    func overlayViewDidRequestToggleAutoScroll() {}
 
     func overlayViewDidRequestAddCapture() {
         guard let editorWindow = window else { return }
@@ -392,6 +414,7 @@ private class AddCaptureOverlayHandler: NSObject, OverlayWindowControllerDelegat
     func overlayDidRequestStopRecording(_ controller: OverlayWindowController) {}
     func overlayDidRequestScrollCapture(_ controller: OverlayWindowController, rect: NSRect, screen: NSScreen) {}
     func overlayDidRequestStopScrollCapture(_ controller: OverlayWindowController) {}
+    func overlayDidRequestToggleAutoScroll(_ controller: OverlayWindowController) {}
     func overlayDidBeginSelection(_ controller: OverlayWindowController) {
         // Clear selections on other overlays
         for other in overlayControllers where other !== controller {

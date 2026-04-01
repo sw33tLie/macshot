@@ -1,6 +1,7 @@
 import Cocoa
 import Carbon
 import Sparkle
+import UniformTypeIdentifiers
 
 @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
@@ -191,6 +192,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         quickCaptureItem.image = NSImage(systemSymbolName: "square.and.arrow.down", accessibilityDescription: nil)
         menu.addItem(quickCaptureItem)
 
+        let scrollCaptureItem = NSMenuItem(title: "Scroll Capture", action: #selector(scrollCapture), keyEquivalent: "")
+        scrollCaptureItem.target = self
+        scrollCaptureItem.image = NSImage(systemSymbolName: "scroll", accessibilityDescription: nil)
+        menu.addItem(scrollCaptureItem)
+
         // Capture Delay submenu
         let delayItem = NSMenuItem(title: "Capture Delay", action: nil, keyEquivalent: "")
         delayItem.image = NSImage(systemSymbolName: "timer", accessibilityDescription: nil)
@@ -238,6 +244,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         historyOverlayItem.toolTip = HotkeyManager.displayString(for: .historyOverlay)
         historyOverlayItem.image = NSImage(systemSymbolName: "square.grid.2x2", accessibilityDescription: nil)
         menu.addItem(historyOverlayItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        let openImageItem = NSMenuItem(title: "Open Image...", action: #selector(openImageFromMenu), keyEquivalent: "")
+        openImageItem.target = self
+        openImageItem.image = NSImage(systemSymbolName: "photo.on.rectangle.angled", accessibilityDescription: nil)
+        menu.addItem(openImageItem)
 
         menu.addItem(NSMenuItem.separator())
 
@@ -299,6 +312,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var pendingFullScreenRecordAutoStart: Bool = false
     private var pendingOCRMode: Bool = false
     private var pendingQuickCaptureMode: Bool = false
+    private var pendingScrollCaptureMode: Bool = false
     private var capturedWindowTitle: String?
 
     // MARK: - Capture
@@ -337,6 +351,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         startCapture(fromMenu: true)
     }
 
+    @objc private func scrollCapture() {
+        pendingScrollCaptureMode = true
+        startCapture(fromMenu: true)
+    }
+
     @objc private func recordArea() {
         pendingRecordMode = true
         startCapture(fromMenu: true)
@@ -361,11 +380,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func startCapture(fromMenu: Bool) {
+    private func startCapture(fromMenu: Bool = false) {
         guard !isCapturing else { return }
         // Don't allow captures while recording
         guard recordingEngine == nil else { return }
         isCapturing = true
+
+        // When "remember last tool" is off, clear persisted effects/beautify
+        // so new OverlayView instances start clean
+        let rememberTool = UserDefaults.standard.object(forKey: "rememberLastTool") as? Bool ?? true
+        if !rememberTool {
+            UserDefaults.standard.removeObject(forKey: "effectsPreset")
+            UserDefaults.standard.removeObject(forKey: "effectsBrightness")
+            UserDefaults.standard.removeObject(forKey: "effectsContrast")
+            UserDefaults.standard.removeObject(forKey: "effectsSaturation")
+            UserDefaults.standard.removeObject(forKey: "effectsSharpness")
+            UserDefaults.standard.set(false, forKey: "beautifyEnabled")
+        }
 
         // Grab focused window title before overlay steals focus
         capturedWindowTitle = Self.focusedWindowTitle()
@@ -374,18 +405,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let delay = UserDefaults.standard.integer(forKey: "captureDelaySeconds")
         if delay > 0 {
-            // Show countdown, then capture
-            if fromMenu {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
-                    self?.showPreCaptureCountdown(seconds: delay)
-                }
-            } else {
-                showPreCaptureCountdown(seconds: delay)
-            }
-        } else if fromMenu {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
-                self?.performCapture()
-            }
+            showPreCaptureCountdown(seconds: delay)
         } else {
             performCapture()
         }
@@ -463,6 +483,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         pendingFullScreenRecordAutoStart = false
         pendingOCRMode = false
         pendingQuickCaptureMode = false
+        pendingScrollCaptureMode = false
     }
 
     private func performCapture() {
@@ -489,6 +510,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 if self.pendingQuickCaptureMode {
                     controller.setAutoQuickSaveMode()
                 }
+                if self.pendingScrollCaptureMode {
+                    controller.setAutoScrollCaptureMode()
+                }
                 controller.showOverlay()
                 let mouseScreen = NSScreen.screens.first { $0.frame.contains(NSEvent.mouseLocation) }
                 let isMouseScreen = (capture.screen == mouseScreen) || (mouseScreen == nil && capture.screen == NSScreen.main)
@@ -514,6 +538,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self.pendingFullScreenRecordAutoStart = false
             self.pendingOCRMode = false
             self.pendingQuickCaptureMode = false
+            self.pendingScrollCaptureMode = false
             if !self.pendingFullScreen && !self.pendingFullScreenRecord {
                 self.restoreLastSelectionIfNeeded(controllers: self.overlayControllers)
             }
@@ -790,6 +815,45 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    // MARK: - Open Image
+
+    @objc private func openImageFromMenu() {
+        openImageWithPanel()
+    }
+
+    private func openImageWithPanel() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = true
+        panel.allowedContentTypes = [.png, .jpeg, .tiff, .bmp, .gif, .heic, .webP, .image]
+        panel.message = "Choose an image to open in macshot editor"
+
+        NSApp.activate(ignoringOtherApps: true)
+        panel.begin { response in
+            guard response == .OK else { return }
+            for url in panel.urls {
+                self.openImageFile(url: url)
+            }
+        }
+    }
+
+    private func openImageFile(url: URL) {
+        guard let image = NSImage(contentsOf: url) else { return }
+        // Use the filename (without extension) for the editor window title
+        DetachedEditorWindowController.open(image: image)
+    }
+
+    /// Handle files opened via Finder "Open With", drag-to-dock, or command line.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        let imageExtensions: Set<String> = ["png", "jpg", "jpeg", "tiff", "tif", "bmp", "gif", "heic", "heif", "webp", "icns"]
+        for url in urls {
+            let ext = url.pathExtension.lowercased()
+            guard imageExtensions.contains(ext) else { continue }
+            openImageFile(url: url)
+        }
+    }
+
     // MARK: - Preferences
 
     @objc private func openPreferences() {
@@ -867,7 +931,15 @@ extension AppDelegate: OverlayWindowControllerDelegate {
 
         let pixelW = Int(globalRect.width * scale)
         let pixelH = Int(globalRect.height * scale)
-        let cs = CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
+        // Use the source image's color space to avoid expensive conversion
+        let cs: CGColorSpace
+        if let screenshot = primary.screenshotImage,
+           let cg = screenshot.cgImage(forProposedRect: nil, context: nil, hints: nil),
+           let srcCS = cg.colorSpace {
+            cs = srcCS
+        } else {
+            cs = CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
+        }
         guard let cgCtx = CGContext(data: nil, width: pixelW, height: pixelH,
                                      bitsPerComponent: 8, bytesPerRow: pixelW * 4,
                                      space: cs, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
@@ -1066,19 +1138,27 @@ extension AppDelegate: OverlayWindowControllerDelegate {
     func overlayDidRequestScrollCapture(_ controller: OverlayWindowController, rect: NSRect, screen: NSScreen) {
         scrollCaptureOverlayController = controller
 
-        // Tell the triggering overlay to enter scroll capture mode (red border, pass-through, minimal HUD)
-        controller.setScrollCaptureState(isActive: true)
-
-        // Other overlay controllers on other screens just stay visible and normal
-        // (no action needed — the scroll event monitor catches global scroll events)
-
         let scc = ScrollCaptureController(captureRect: rect, screen: screen)
         scc.excludedWindowIDs = overlayControllers.map { $0.windowNumber }
         scrollCaptureController = scc
 
+        // Read max height for the overlay HUD progress bar
+        let maxH = UserDefaults.standard.object(forKey: "scrollMaxHeight") as? Int ?? 20000
+
+        // Tell the triggering overlay to enter scroll capture mode
+        controller.setScrollCaptureState(isActive: true, maxHeight: maxH)
+
         scc.onStripAdded = { [weak self, weak controller] count in
             guard let self = self, let scc = self.scrollCaptureController else { return }
-            controller?.updateScrollCaptureProgress(stripCount: count, pixelSize: scc.stitchedPixelSize)
+            controller?.updateScrollCaptureProgress(
+                stripCount: count, pixelSize: scc.stitchedPixelSize,
+                autoScrolling: scc.autoScrollActive)
+        }
+        scc.onAutoScrollStarted = { [weak self, weak controller] in
+            guard let self = self, let scc = self.scrollCaptureController else { return }
+            controller?.updateScrollCaptureProgress(
+                stripCount: scc.stripCount, pixelSize: scc.stitchedPixelSize,
+                autoScrolling: true)
         }
         scc.onSessionDone = { [weak self] finalImage in
             self?.handleScrollCaptureCompleted(finalImage: finalImage)
@@ -1090,6 +1170,44 @@ extension AppDelegate: OverlayWindowControllerDelegate {
     func overlayDidRequestStopScrollCapture(_ controller: OverlayWindowController) {
         scrollCaptureController?.stopSession()
         // onSessionDone fires asynchronously via handleScrollCaptureCompleted
+    }
+
+    func overlayDidRequestToggleAutoScroll(_ controller: OverlayWindowController) {
+        guard let scc = scrollCaptureController else { return }
+
+        // If turning on, check Accessibility permission first
+        if !scc.autoScrollActive {
+            if !AXIsProcessTrusted() {
+                // Cancel session without delivering a result, then dismiss overlays
+                scc.cancelSession()
+                scrollCaptureController = nil
+                scrollCaptureOverlayController?.setScrollCaptureState(isActive: false)
+                scrollCaptureOverlayController = nil
+                dismissOverlays()
+
+                let opts = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
+                AXIsProcessTrustedWithOptions(opts)
+                let alert = NSAlert()
+                alert.messageText = "Accessibility Access Required"
+                alert.informativeText = "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again."
+                alert.alertStyle = .warning
+                alert.addButton(withTitle: "Open Settings")
+                alert.addButton(withTitle: "Cancel")
+                let response = alert.runModal()
+                if response == .alertFirstButtonReturn {
+                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }
+                return
+            }
+        }
+
+        scc.toggleAutoScroll()
+        let autoScrolling = scc.isActive && scc.autoScrollActive
+        controller.updateScrollCaptureProgress(
+            stripCount: scc.stripCount, pixelSize: scc.stitchedPixelSize,
+            autoScrolling: autoScrolling)
     }
 
     func overlayDidBeginSelection(_ controller: OverlayWindowController) {

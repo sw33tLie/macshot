@@ -5,10 +5,12 @@ import Cocoa
 class ScrollCaptureHUDView: NSView {
 
     private let infoLabel = NSTextField(labelWithString: "")
+    private let autoScrollButton = NSButton()
     private let stopButton = NSButton()
-    private let hintLabel = NSTextField(labelWithString: "")
+    private var isAutoScrolling = false
 
     var onStop: (() -> Void)?
+    var onToggleAutoScroll: (() -> Void)?
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -24,6 +26,18 @@ class ScrollCaptureHUDView: NSView {
         infoLabel.lineBreakMode = .byTruncatingTail
         addSubview(infoLabel)
 
+        autoScrollButton.title = "Auto Scroll"
+        autoScrollButton.bezelStyle = .recessed
+        autoScrollButton.isBordered = false
+        autoScrollButton.wantsLayer = true
+        autoScrollButton.layer?.backgroundColor = NSColor.systemBlue.withAlphaComponent(0.85).cgColor
+        autoScrollButton.layer?.cornerRadius = 12
+        autoScrollButton.contentTintColor = .white
+        autoScrollButton.font = .systemFont(ofSize: 12, weight: .semibold)
+        autoScrollButton.target = self
+        autoScrollButton.action = #selector(autoScrollClicked)
+        addSubview(autoScrollButton)
+
         stopButton.title = "Stop"
         stopButton.bezelStyle = .recessed
         stopButton.isBordered = false
@@ -35,47 +49,63 @@ class ScrollCaptureHUDView: NSView {
         stopButton.target = self
         stopButton.action = #selector(stopClicked)
         addSubview(stopButton)
-
-        hintLabel.font = .systemFont(ofSize: 11)
-        hintLabel.textColor = .white.withAlphaComponent(0.55)
-        hintLabel.isEditable = false
-        hintLabel.isBordered = false
-        hintLabel.drawsBackground = false
-        hintLabel.stringValue = "Scroll to capture  ·  Esc to cancel"
-        // Hint is added to the panel's content view, not this view (positioned separately)
     }
 
     required init?(coder: NSCoder) { fatalError() }
 
-    func update(stripCount: Int, pixelSize: CGSize, backingScale: CGFloat) {
-        if stripCount == 0 {
-            infoLabel.stringValue = "Scroll Capture  ·  Capturing first frame…"
+    func update(stripCount: Int, pixelSize: CGSize, backingScale: CGFloat,
+                maxScrollHeight: Int = 0, autoScrolling: Bool = false) {
+        let pw = Int(pixelSize.width)
+        let ph = Int(pixelSize.height)
+        let ptW = Int(CGFloat(pw) / backingScale)
+        let ptH = Int(CGFloat(ph) / backingScale)
+
+        if ptW > 0 && ptH > 0 {
+            infoLabel.stringValue = "Scroll Capture  ·  \(ptW)×\(ptH)"
         } else {
-            let pw = Int(pixelSize.width)
-            let ph = Int(pixelSize.height)
-            let ptW = Int(CGFloat(pw) / backingScale)
-            let ptH = Int(CGFloat(ph) / backingScale)
-            infoLabel.stringValue =
-                "Scroll Capture  ·  \(stripCount) strip\(stripCount == 1 ? "" : "s")  ·  \(ptW)×\(ptH)"
+            infoLabel.stringValue = "Scroll Capture"
         }
+
+        updateAutoScrollState(autoScrolling)
         infoLabel.sizeToFit()
         layoutSubviews()
     }
 
+    private func updateAutoScrollState(_ active: Bool) {
+        isAutoScrolling = active
+        if active {
+            autoScrollButton.title = "Scrolling..."
+            autoScrollButton.layer?.backgroundColor = NSColor.systemOrange.withAlphaComponent(0.85).cgColor
+        } else {
+            autoScrollButton.title = "Auto Scroll"
+            autoScrollButton.layer?.backgroundColor = NSColor.systemBlue.withAlphaComponent(0.85).cgColor
+        }
+    }
+
     func layoutSubviews() {
         let pad: CGFloat = 8
-        let btnW: CGFloat = 56
+        let stopBtnW: CGFloat = 56
+        let autoBtnW: CGFloat = isAutoScrolling ? 90 : 86
         let btnH: CGFloat = 24
+        let barH: CGFloat = 36
 
         let infoW = infoLabel.frame.width
-        let totalW = pad + infoW + pad * 2 + btnW + pad
-        let barH: CGFloat = 36
+        let totalW = pad + infoW + pad + autoBtnW + pad + stopBtnW + pad
 
         frame.size = NSSize(width: totalW, height: barH)
 
-        infoLabel.frame.origin = NSPoint(x: pad, y: (barH - infoLabel.frame.height) / 2)
+        let infoH = infoLabel.frame.height
+        let infoY = (barH - infoH) / 2
+        infoLabel.frame.origin = NSPoint(x: pad, y: infoY)
+
+        autoScrollButton.frame = NSRect(
+            x: pad + infoW + pad, y: (barH - btnH) / 2, width: autoBtnW, height: btnH)
         stopButton.frame = NSRect(
-            x: totalW - pad - btnW, y: (barH - btnH) / 2, width: btnW, height: btnH)
+            x: totalW - pad - stopBtnW, y: (barH - btnH) / 2, width: stopBtnW, height: btnH)
+    }
+
+    @objc private func autoScrollClicked() {
+        onToggleAutoScroll?()
     }
 
     @objc private func stopClicked() {
@@ -85,11 +115,9 @@ class ScrollCaptureHUDView: NSView {
     var preferredSize: NSSize {
         infoLabel.sizeToFit()
         let pad: CGFloat = 8
-        let btnW: CGFloat = 56
-        return NSSize(
-            width: pad + infoLabel.frame.width + pad * 2 + btnW + pad,
-            height: 36
-        )
+        let stopBtnW: CGFloat = 56
+        let autoBtnW: CGFloat = isAutoScrolling ? 90 : 86
+        return NSSize(width: pad + infoLabel.frame.width + pad + autoBtnW + pad + stopBtnW + pad, height: 36)
     }
 }
 
@@ -98,7 +126,6 @@ class ScrollCaptureHUDView: NSView {
 class ScrollCaptureHUDPanel: NSPanel {
 
     let hudView = ScrollCaptureHUDView()
-    let hintLabel = NSTextField(labelWithString: "Scroll to capture  ·  Esc to cancel")
 
     init() {
         super.init(
@@ -116,24 +143,14 @@ class ScrollCaptureHUDPanel: NSPanel {
         let container = NSView()
         contentView = container
         container.addSubview(hudView)
-
-        hintLabel.font = .systemFont(ofSize: 11)
-        hintLabel.textColor = .white.withAlphaComponent(0.55)
-        hintLabel.isEditable = false
-        hintLabel.isBordered = false
-        hintLabel.drawsBackground = false
-        container.addSubview(hintLabel)
     }
 
     func position(relativeTo selectionRect: NSRect, in overlayWindow: NSWindow) {
         hudView.layoutSubviews()
         let hudSize = hudView.frame.size
-        hintLabel.sizeToFit()
-        let hintSize = hintLabel.frame.size
 
-        // Total content: HUD bar + hint label below or above
-        let totalH = hudSize.height + 4 + hintSize.height
-        let totalW = max(hudSize.width, hintSize.width + 12)
+        let totalH = hudSize.height
+        let totalW = hudSize.width
 
         // Convert selection rect to screen coords
         let selScreen = overlayWindow.convertToScreen(selectionRect)
@@ -154,8 +171,7 @@ class ScrollCaptureHUDPanel: NSPanel {
         setFrame(NSRect(x: barX, y: barY, width: totalW, height: totalH), display: true)
 
         // Layout inside content view
-        hudView.frame.origin = NSPoint(x: (totalW - hudSize.width) / 2, y: hintSize.height + 4)
-        hintLabel.frame.origin = NSPoint(x: 6, y: 0)
+        hudView.frame.origin = NSPoint(x: (totalW - hudSize.width) / 2, y: 0)
 
         contentView?.frame = NSRect(origin: .zero, size: NSSize(width: totalW, height: totalH))
     }

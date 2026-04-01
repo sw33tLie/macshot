@@ -39,15 +39,25 @@ class ScreenCaptureManager {
                             if #available(macOS 14.0, *) {
                                 config.captureResolution = .best
                             }
-                            guard let image = try? await Self.captureSingleFrame(filter: filter, config: config) else {
-                                return nil
+
+                            if #available(macOS 14.0, *) {
+                                // SCScreenshotManager: single-shot API, no stream overhead
+                                guard let image = try? await SCScreenshotManager.captureImage(
+                                    contentFilter: filter, configuration: config
+                                ) else { return nil }
+                                // SCScreenshotManager returns ARGB16F (GPU-native). Convert to
+                                // 8-bit BGRA here on the background thread so the first draw()
+                                // on the main thread is instant (no vImage pixel conversion).
+                                let cpuImage = Self.copyTo8BitBGRA(image) ?? image
+                                return ScreenCapture(screen: screen, image: cpuImage)
+                            } else {
+                                // macOS 12.3–13.x: SCStream single-frame fallback
+                                // (already returns 8-bit from createCGImage(from:))
+                                guard let image = try? await Self.captureSingleFrame(
+                                    filter: filter, config: config
+                                ) else { return nil }
+                                return ScreenCapture(screen: screen, image: image)
                             }
-                            // Blit into a CPU-backed bitmap now, while we're already on a
-                            // background thread, so the first draw and tiffRepresentation calls
-                            // at confirm-time are instant instead of stalling the main thread
-                            // with a ~1 s GPU→CPU readback.
-                            let cpuImage = Self.copyToCPUBacked(image) ?? image
-                            return ScreenCapture(screen: screen, image: cpuImage)
                         }
                     }
                     var results: [ScreenCapture] = []
@@ -69,10 +79,10 @@ class ScreenCaptureManager {
         }
     }
 
-    // MARK: - SCStream single-frame capture (works on macOS 12.3+)
+    // MARK: - SCStream single-frame capture (macOS 12.3–13.x only)
 
     /// Start an SCStream, grab the first frame, then stop.
-    /// This replaces SCScreenshotManager.captureImage() which requires macOS 14+.
+    /// Only used on macOS 12.3–13.x where SCScreenshotManager is unavailable.
     private static func captureSingleFrame(filter: SCContentFilter, config: SCStreamConfiguration) async throws -> CGImage? {
         let handler = SingleFrameHandler()
         let stream = SCStream(filter: filter, configuration: config, delegate: nil)
@@ -95,13 +105,15 @@ class ScreenCaptureManager {
         return image
     }
 
-    /// Blit an IOSurface-backed CGImage into a plain CPU-backed bitmap.
-    /// This forces the GPU→CPU readback on the calling (background) thread so it
-    /// never blocks the main thread later when the image is first drawn or encoded.
-    private static func copyToCPUBacked(_ src: CGImage) -> CGImage? {
+    /// Convert a CGImage (potentially ARGB16F or other GPU format) into an 8-bit BGRA bitmap.
+    /// This forces the pixel format conversion on the current (background) thread so it
+    /// doesn't stall the main thread when the image is first drawn.
+    private static func copyTo8BitBGRA(_ src: CGImage) -> CGImage? {
         let w = src.width
         let h = src.height
-        let cs = CGColorSpaceCreateDeviceRGB()
+        // Use the source image's color space (typically display P3 on modern Macs) so
+        // CoreGraphics doesn't need a color space conversion when drawing to screen.
+        let cs = src.colorSpace ?? CGColorSpaceCreateDeviceRGB()
         let bitmapInfo = CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue
         guard let ctx = CGContext(
             data: nil,
@@ -112,13 +124,18 @@ class ScreenCaptureManager {
             bitmapInfo: bitmapInfo
         ) else { return nil }
         ctx.draw(src, in: CGRect(x: 0, y: 0, width: w, height: h))
-        return ctx.makeImage()
+        guard let result = ctx.makeImage() else { return nil }
+        // Force pixel data to materialize now (not lazily on first draw).
+        // Accessing the data provider triggers any deferred rendering.
+        _ = result.dataProvider?.data
+        return result
     }
 }
 
 // MARK: - Single-frame stream output handler
 
 /// Receives exactly one frame from an SCStream and exposes it via async/await.
+/// Only used on macOS 12.3–13.x.
 private final class SingleFrameHandler: NSObject, SCStreamOutput, @unchecked Sendable {
     private var continuation: CheckedContinuation<CGImage?, Never>?
     private var capturedImage: CGImage?
@@ -142,22 +159,58 @@ private final class SingleFrameHandler: NSObject, SCStreamOutput, @unchecked Sen
 
     func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, of type: SCStreamOutputType) {
         guard type == .screen else { return }
-
-        // Skip frames without valid image data (blank, idle, suspended)
         guard let pixelBuffer = sampleBuffer.imageBuffer else { return }
 
-        let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
-        let context = CIContext()
-        let cgImage = context.createCGImage(ciImage, from: ciImage.extent)
+        // Extract a CPU-backed CGImage directly from the pixel buffer — no CIImage/CIContext overhead.
+        let image = Self.createCGImage(from: pixelBuffer)
 
         lock.lock()
         guard !delivered else { lock.unlock(); return }
         delivered = true
-        capturedImage = cgImage
+        capturedImage = image
         let cont = continuation
         continuation = nil
         lock.unlock()
 
-        cont?.resume(returning: cgImage)
+        cont?.resume(returning: image)
+    }
+
+    /// Create a CGImage from a CVPixelBuffer by blitting into a CPU-backed bitmap context.
+    /// This avoids the CIImage → CIContext.createCGImage() GPU render pass and produces
+    /// a fully CPU-resident image in a single copy.
+    private static func createCGImage(from pixelBuffer: CVPixelBuffer) -> CGImage? {
+        CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
+        defer { CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly) }
+
+        let w = CVPixelBufferGetWidth(pixelBuffer)
+        let h = CVPixelBufferGetHeight(pixelBuffer)
+        let srcBytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
+        guard let srcBase = CVPixelBufferGetBaseAddress(pixelBuffer) else { return nil }
+
+        let cs = CGColorSpaceCreateDeviceRGB()
+        let bitmapInfo = CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue
+        guard let ctx = CGContext(
+            data: nil,
+            width: w, height: h,
+            bitsPerComponent: 8,
+            bytesPerRow: w * 4,
+            space: cs,
+            bitmapInfo: bitmapInfo
+        ) else { return nil }
+
+        guard let dstBase = ctx.data else { return nil }
+        let dstBytesPerRow = ctx.bytesPerRow
+
+        // Fast row-by-row copy (src may have padding bytes per row)
+        if srcBytesPerRow == dstBytesPerRow {
+            memcpy(dstBase, srcBase, h * srcBytesPerRow)
+        } else {
+            let copyBytes = min(srcBytesPerRow, dstBytesPerRow)
+            for y in 0..<h {
+                memcpy(dstBase + y * dstBytesPerRow, srcBase + y * srcBytesPerRow, copyBytes)
+            }
+        }
+
+        return ctx.makeImage()
     }
 }

@@ -8,6 +8,8 @@ class ToolOptionsRowView: NSView {
     private var currentTool: AnnotationTool?
     private let rowHeight: CGFloat = 34
     private let padding: CGFloat = 8
+    /// The natural content width calculated during rebuild, before any external resizing.
+    private(set) var contentWidth: CGFloat = 200
     private let accent = ToolbarLayout.accentColor
 
     // Consume clicks on gaps between controls so they don't fall through to OverlayView
@@ -20,6 +22,10 @@ class ToolOptionsRowView: NSView {
 
     override func mouseDown(with event: NSEvent) {}
     override func mouseUp(with event: NSEvent) {}
+
+    override func resetCursorRects() {
+        addCursorRect(bounds, cursor: .arrow)
+    }
 
     /// Auto-tint controls to match toolbar accent color.
     /// Buttons with tag 990+ are excluded (they have custom colors like red/green/white).
@@ -52,6 +58,7 @@ class ToolOptionsRowView: NSView {
         if ov.showBeautifyInOptionsRow {
             curX = addBeautifyOptions(at: curX, ov: ov)
             let totalW = max(curX + padding, 200)
+            contentWidth = totalW
             frame.size = NSSize(width: totalW, height: rowHeight)
             return
         }
@@ -131,6 +138,7 @@ class ToolOptionsRowView: NSView {
 
         // Size the row
         let totalW = max(curX + padding, 200)
+        contentWidth = totalW
         frame.size = NSSize(width: totalW, height: rowHeight)
 
         // Right-align cancel/confirm buttons for text tool
