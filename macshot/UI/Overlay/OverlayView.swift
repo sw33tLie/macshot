@@ -273,7 +273,8 @@ class OverlayView: NSView {
             padding: beautifyPadding,
             cornerRadius: beautifyCornerRadius,
             shadowRadius: beautifyShadowRadius,
-            bgRadius: 0
+            bgRadius: 0,
+            isWindowSnap: selectionIsWindowSnap
         )
     }
 
@@ -565,6 +566,13 @@ class OverlayView: NSView {
         set { UserDefaults.standard.set(newValue, forKey: "windowSnapEnabled") }
     }
     var hoveredWindowRect: NSRect? = nil
+    var hoveredWindowID: CGWindowID? = nil
+    /// True when the current selection was made via window snap (click without drag).
+    /// Cleared when the user manually resizes the selection.
+    var selectionIsWindowSnap: Bool = false
+    var snappedWindowID: CGWindowID? = nil
+    /// Independently captured window image (with transparent corners) for beautify snap mode.
+    var snappedWindowImage: NSImage? = nil
     private var windowSnapQueryInFlight: Bool = false
     private var customColors: [NSColor?] = Array(repeating: nil, count: 7)
     private var selectedColorSlot: Int = 0  // which custom slot is selected for saving colors
@@ -661,7 +669,7 @@ class OverlayView: NSView {
             let screenH = NSScreen.screens.first?.frame.height ?? NSScreen.main?.frame.height ?? 0
             windowSnapQueryInFlight = true
             DispatchQueue.global(qos: .userInteractive).async { [weak self] in
-                let newRect = Self.windowRectOnBackground(
+                let result = Self.windowRectOnBackground(
                     screenPoint: screenPoint,
                     overlayWindowNumber: overlayWindowNumber,
                     windowOrigin: windowOrigin,
@@ -671,8 +679,10 @@ class OverlayView: NSView {
                 DispatchQueue.main.async {
                     guard let self = self else { return }
                     self.windowSnapQueryInFlight = false
+                    let newRect = result?.rect
                     if newRect != self.hoveredWindowRect {
                         self.hoveredWindowRect = newRect
+                        self.hoveredWindowID = result?.windowID
                         self.needsDisplay = true
                     }
                 }
@@ -1901,7 +1911,7 @@ class OverlayView: NSView {
         let config = beautifyConfig
         let pad = config.padding
         let shadowBleed = config.shadowRadius + min(config.shadowRadius * 0.4, 10)
-        let titleBarH: CGFloat = config.mode == .window ? 28 : 0
+        let titleBarH: CGFloat = (config.mode == .window && !config.isWindowSnap) ? 28 : 0
         return NSRect(
             x: selectionRect.minX - pad - shadowBleed,
             y: selectionRect.minY - pad - shadowBleed,
@@ -1913,7 +1923,7 @@ class OverlayView: NSView {
     private func drawBeautifyPreview(context: NSGraphicsContext) {
         let config = beautifyConfig
         let pad = config.padding
-        let cornerRadius = config.cornerRadius
+        let cornerRadius = config.isWindowSnap ? 10 : config.cornerRadius  // native macOS corner radius for snapped windows
         let shadowRadius = config.shadowRadius
         let shadowOffset = min(shadowRadius * 0.4, 10)
 
@@ -1921,7 +1931,7 @@ class OverlayView: NSView {
         // Shadow extends downward (negative Y in AppKit), so expand the origin down.
         let shadowBleed = shadowRadius + shadowOffset
         let expandedRect: NSRect
-        if config.mode == .window {
+        if config.mode == .window && !config.isWindowSnap {
             let titleBarH: CGFloat = 28
             expandedRect = NSRect(
                 x: selectionRect.minX - pad - shadowBleed,
@@ -1959,7 +1969,7 @@ class OverlayView: NSView {
 
         // Draw gradient background (inner rect without shadow bleed)
         let bgRect: NSRect
-        if config.mode == .window {
+        if config.mode == .window && !config.isWindowSnap {
             let titleBarH: CGFloat = 28
             bgRect = NSRect(
                 x: innerX, y: innerY, width: selectionRect.width + pad * 2,
@@ -1981,7 +1991,7 @@ class OverlayView: NSView {
         let imageRect: NSRect
         let windowRect: NSRect
 
-        if config.mode == .window {
+        if config.mode == .window && !config.isWindowSnap {
             let titleBarH: CGFloat = 28
             let windowW = selectionRect.width
             let windowH = selectionRect.height + titleBarH
@@ -2007,8 +2017,8 @@ class OverlayView: NSView {
             windowRect = imageRect
         }
 
-        // Drop shadow
-        if shadowRadius > 0 {
+        // Drop shadow (not for snapped windows — handled via transparency layer below)
+        if shadowRadius > 0 && !config.isWindowSnap {
             NSGraphicsContext.saveGraphicsState()
             let shadow = NSShadow()
             shadow.shadowColor = NSColor.black.withAlphaComponent(0.35)
@@ -2021,7 +2031,45 @@ class OverlayView: NSView {
             NSGraphicsContext.restoreGraphicsState()
         }
 
-        if config.mode == .window {
+        if config.isWindowSnap {
+            // Snapped window: use independently captured window image (has real transparent corners).
+            // Draw it directly on top of the gradient — transparent corners reveal the gradient.
+            context.cgContext.saveGState()
+
+            // Drop shadow from the window shape
+            if shadowRadius > 0 {
+                let shadow = NSShadow()
+                shadow.shadowColor = NSColor.black.withAlphaComponent(0.35)
+                shadow.shadowBlurRadius = shadowRadius
+                shadow.shadowOffset = NSSize(width: 0, height: -shadowOffset)
+                shadow.set()
+            }
+
+            if let windowImg = snappedWindowImage {
+                windowImg.draw(in: imageRect, from: .zero, operation: .sourceOver, fraction: 1.0)
+            } else if let image = screenshotImage {
+                // Fallback: crop from screenshot (before window capture completes)
+                let drawImage = effectsActive ? effectsProcessedScreenshot(image) : image
+                drawImage.draw(
+                    in: imageRect, from: selectionRect, operation: .sourceOver, fraction: 1.0)
+            }
+
+            // Draw annotations shifted to the preview position
+            let dx = imageRect.minX - selectionRect.minX
+            let dy = imageRect.minY - selectionRect.minY
+            if dx != 0 || dy != 0 {
+                context.cgContext.translateBy(x: dx, y: dy)
+            }
+            for annotation in annotations {
+                annotation.draw(in: context)
+            }
+            currentAnnotation?.draw(in: context)
+            if dx != 0 || dy != 0 {
+                context.cgContext.translateBy(x: -dx, y: -dy)
+            }
+
+            context.cgContext.restoreGState()
+        } else if config.mode == .window {
             // Draw window chrome
             let titleBarH: CGFloat = 28
 
@@ -4014,6 +4062,9 @@ class OverlayView: NSView {
                 let handle = hitTestHandle(at: point)
                 if handle != .none {
                     isResizingSelection = true
+                    selectionIsWindowSnap = false
+                    snappedWindowID = nil
+                    snappedWindowImage = nil
                     resizeHandle = handle
                     return
                 }
@@ -4445,6 +4496,19 @@ class OverlayView: NSView {
             } else if windowSnapEnabled, let snapRect = hoveredWindowRect, !snapRect.isEmpty {
                 // Click (no drag) with snap on — snap to hovered window
                 selectionRect = snapRect
+                selectionIsWindowSnap = true
+                snappedWindowID = hoveredWindowID
+                // Capture the window independently for beautify (transparent corners)
+                if let wid = hoveredWindowID, let screen = window?.screen {
+                    Task {
+                        if let cgImage = await ScreenCaptureManager.captureWindow(windowID: wid, screen: screen) {
+                            self.snappedWindowImage = NSImage(cgImage: cgImage,
+                                size: NSSize(width: CGFloat(cgImage.width) / screen.backingScaleFactor,
+                                             height: CGFloat(cgImage.height) / screen.backingScaleFactor))
+                            self.needsDisplay = true
+                        }
+                    }
+                }
                 state = .selected
                 if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode { showToolbars = true }
                 overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
@@ -4946,6 +5010,13 @@ class OverlayView: NSView {
             break
         case .moveSelection:
             guard let win = window else { break }
+            // Moving breaks window snap — revert to normal beautify mode
+            if selectionIsWindowSnap {
+                selectionIsWindowSnap = false
+                snappedWindowID = nil
+                snappedWindowImage = nil
+                rebuildToolbarLayout()
+            }
             // Show drag hint tooltip
             hoveredTooltip = "Drag to reposition"
             needsDisplay = true
@@ -6165,6 +6236,9 @@ class OverlayView: NSView {
     func reset() {
         state = .idle
         selectionRect = .zero
+        selectionIsWindowSnap = false
+        snappedWindowID = nil
+        snappedWindowImage = nil
         remoteSelectionRect = .zero
         remoteSelectionFullRect = .zero
         annotations.removeAll()

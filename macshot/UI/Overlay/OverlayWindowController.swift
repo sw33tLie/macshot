@@ -270,6 +270,7 @@ extension OverlayWindowController: OverlayViewDelegate {
         let effectsCfg = overlayView?.effectsConfig ?? ImageEffectsConfig()
         let hasBeautify = overlayView?.beautifyEnabled ?? false
         let beautifyCfg = overlayView?.beautifyConfig ?? BeautifyConfig()
+        let snapWindowImg = overlayView?.snappedWindowImage
 
         // Capture the raw composited image
         guard let rawImage = captureRegion() else {
@@ -288,7 +289,9 @@ extension OverlayWindowController: OverlayViewDelegate {
             finalImage = ImageEffects.apply(to: finalImage, config: effectsCfg)
         }
         if hasBeautify {
-            finalImage = BeautifyRenderer.render(image: finalImage, config: beautifyCfg)
+            // For snapped windows, use the independently captured window image (transparent corners)
+            let beautifyInput = (beautifyCfg.isWindowSnap && snapWindowImg != nil) ? snapWindowImg! : finalImage
+            finalImage = BeautifyRenderer.render(image: beautifyInput, config: beautifyCfg)
         }
 
         // Copy button / Cmd+C always copies to clipboard
@@ -594,6 +597,7 @@ extension OverlayWindowController: OverlayViewDelegate {
         let effectsCfg = overlayView?.effectsConfig ?? ImageEffectsConfig()
         let hasBeautify = overlayView?.beautifyEnabled ?? false
         let beautifyCfg = overlayView?.beautifyConfig ?? BeautifyConfig()
+        let snapWindowImg = overlayView?.snappedWindowImage
 
         guard let rawImage = captureRegion() else {
             dismiss()
@@ -607,7 +611,10 @@ extension OverlayWindowController: OverlayViewDelegate {
         // Apply post-processing
         var image = rawImage
         if hasEffects { image = ImageEffects.apply(to: image, config: effectsCfg) }
-        if hasBeautify { image = BeautifyRenderer.render(image: image, config: beautifyCfg) }
+        if hasBeautify {
+            let beautifyInput = (beautifyCfg.isWindowSnap && snapWindowImg != nil) ? snapWindowImg! : image
+            image = BeautifyRenderer.render(image: beautifyInput, config: beautifyCfg)
+        }
 
         // quickCaptureMode: 0=save, 1=copy, 2=both
         let mode = UserDefaults.standard.object(forKey: "quickCaptureMode") as? Int ?? 1
@@ -629,6 +636,7 @@ extension OverlayWindowController: OverlayViewDelegate {
         let effectsCfg = overlayView?.effectsConfig ?? ImageEffectsConfig()
         let hasBeautify = overlayView?.beautifyEnabled ?? false
         let beautifyCfg = overlayView?.beautifyConfig ?? BeautifyConfig()
+        let snapWindowImg = overlayView?.snappedWindowImage
 
         guard let rawImage = captureRegion() else {
             dismiss()
@@ -642,7 +650,10 @@ extension OverlayWindowController: OverlayViewDelegate {
         // Apply post-processing
         var image = rawImage
         if hasEffects { image = ImageEffects.apply(to: image, config: effectsCfg) }
-        if hasBeautify { image = BeautifyRenderer.render(image: image, config: beautifyCfg) }
+        if hasBeautify {
+            let beautifyInput = (beautifyCfg.isWindowSnap && snapWindowImg != nil) ? snapWindowImg! : image
+            image = BeautifyRenderer.render(image: beautifyInput, config: beautifyCfg)
+        }
 
         overlayDelegate?.overlayDidConfirm(self, capturedImage: image)
         saveImageToDirectory(image)

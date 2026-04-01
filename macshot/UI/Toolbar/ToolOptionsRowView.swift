@@ -843,23 +843,28 @@ class ToolOptionsRowView: NSView {
 
     private func addBeautifyOptions(at x: CGFloat, ov: OverlayView) -> CGFloat {
         var curX = x
+        let isSnap = ov.selectionIsWindowSnap
 
-        // Mode toggle: Window / Rounded
-        let modeSeg = NSSegmentedControl(labels: ["W", "R"], trackingMode: .selectOne,
-                                         target: self, action: #selector(beautifyModeChanged(_:)))
-        modeSeg.selectedSegment = ov.beautifyMode == .window ? 0 : 1
-        modeSeg.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: 56, height: 22)
-        (modeSeg.cell as? NSSegmentedCell)?.segmentStyle = .roundRect
-        addSubview(modeSeg)
-        curX += 56
+        // Mode toggle: Window / Rounded — hidden for snapped windows (always uses native chrome)
+        if !isSnap {
+            let modeSeg = NSSegmentedControl(labels: ["W", "R"], trackingMode: .selectOne,
+                                             target: self, action: #selector(beautifyModeChanged(_:)))
+            modeSeg.selectedSegment = ov.beautifyMode == .window ? 0 : 1
+            modeSeg.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: 56, height: 22)
+            (modeSeg.cell as? NSSegmentedCell)?.segmentStyle = .roundRect
+            addSubview(modeSeg)
+            curX += 56
 
-        curX = addSeparator(at: curX)
+            curX = addSeparator(at: curX)
+        }
 
         // Padding slider
         curX = addBeautifySlider(at: curX, label: "Pad", value: ov.beautifyPadding, min: 16, max: 96, action: #selector(beautifyPaddingChanged(_:)))
 
-        // Corner radius slider
-        curX = addBeautifySlider(at: curX, label: "Radius", value: ov.beautifyCornerRadius, min: 0, max: 30, action: #selector(beautifyCornerChanged(_:)))
+        // Corner radius slider — hidden for snapped windows (native corners are baked in)
+        if !isSnap {
+            curX = addBeautifySlider(at: curX, label: "Radius", value: ov.beautifyCornerRadius, min: 0, max: 30, action: #selector(beautifyCornerChanged(_:)))
+        }
 
         // Shadow slider
         curX = addBeautifySlider(at: curX, label: "Shadow", value: ov.beautifyShadowRadius, min: 0, max: 40, action: #selector(beautifyShadowChanged(_:)))

@@ -130,6 +130,45 @@ class ScreenCaptureManager {
         _ = result.dataProvider?.data
         return result
     }
+    // MARK: - Single window capture (with transparency)
+
+    /// Captures a single window by its CGWindowID, returning an image with transparent corners.
+    /// Uses `desktopIndependentWindow` filter so the window is rendered without the desktop behind it.
+    static func captureWindow(windowID: CGWindowID, screen: NSScreen) async -> CGImage? {
+        guard let content = try? await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true) else { return nil }
+        guard let scWindow = content.windows.first(where: { CGWindowID($0.windowID) == windowID }) else { return nil }
+
+        let filter: SCContentFilter
+        if #available(macOS 14.2, *) {
+            filter = SCContentFilter(desktopIndependentWindow: scWindow)
+        } else {
+            // Fallback: capture display excluding all other windows
+            guard let display = content.displays.first(where: {
+                let screenID = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID
+                return screenID != nil && $0.displayID == screenID!
+            }) ?? content.displays.first else { return nil }
+            let otherWindows = content.windows.filter { CGWindowID($0.windowID) != windowID }
+            filter = SCContentFilter(display: display, excludingWindows: otherWindows)
+        }
+
+        let config = SCStreamConfiguration()
+        let scale = Int(screen.backingScaleFactor)
+        config.width = Int(scWindow.frame.width) * scale
+        config.height = Int(scWindow.frame.height) * scale
+        config.showsCursor = false
+        if #available(macOS 14.0, *) {
+            config.captureResolution = .best
+        }
+
+        if #available(macOS 14.0, *) {
+            guard let image = try? await SCScreenshotManager.captureImage(
+                contentFilter: filter, configuration: config
+            ) else { return nil }
+            return copyTo8BitBGRA(image) ?? image
+        } else {
+            return try? await captureSingleFrame(filter: filter, config: config)
+        }
+    }
 }
 
 // MARK: - Single-frame stream output handler

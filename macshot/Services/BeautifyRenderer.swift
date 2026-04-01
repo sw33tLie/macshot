@@ -52,6 +52,7 @@ struct BeautifyConfig {
     var cornerRadius: CGFloat = 10  // 0..30
     var shadowRadius: CGFloat = 20  // 0..40
     var bgRadius: CGFloat = 8      // 0..30 (outer background corner radius)
+    var isWindowSnap: Bool = false  // true = selection came from window snap, skip synthetic title bar
 
     /// Convenience: the resolved style from styles array
     var style: BeautifyStyle {
@@ -290,6 +291,10 @@ struct BeautifyConfig {
     // MARK: - New configurable API
 
     static func render(image: NSImage, config: BeautifyConfig) -> NSImage {
+        // Snapped windows always use the dedicated renderer (no synthetic chrome needed)
+        if config.isWindowSnap {
+            return renderSnappedWindow(image: image, config: config)
+        }
         switch config.mode {
         case .window:
             return renderWindow(image: image, config: config)
@@ -463,6 +468,54 @@ struct BeautifyConfig {
         }
         if !success {
             // Force the drawing handler to run so we can check `success`
+            _ = result.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        }
+        return success ? result : image
+    }
+
+    // MARK: - Snapped window mode (native window chrome, no synthetic title bar)
+
+    /// Renders a snapped window: the image already contains the native window chrome
+    /// (title bar, traffic lights, rounded corners). We just place it on the gradient
+    /// background with a drop shadow — no synthetic elements needed.
+    private static func renderSnappedWindow(image: NSImage, config: BeautifyConfig) -> NSImage {
+        let imgSize = image.size
+        let padding = config.padding
+        let shadowRadius = config.shadowRadius
+        let shadowOffset = min(shadowRadius * 0.3, 8)
+        // macOS window corner radius is 10pt
+        let nativeCornerRadius: CGFloat = 10
+
+        let totalWidth = imgSize.width + padding * 2
+        let totalHeight = imgSize.height + padding * 2
+
+        var success = false
+        let result = NSImage(size: NSSize(width: totalWidth, height: totalHeight), flipped: false) { _ in
+            guard let context = NSGraphicsContext.current?.cgContext else { return true }
+
+            // Gradient background
+            let bgRect = NSRect(x: 0, y: 0, width: totalWidth, height: totalHeight)
+            context.saveGState()
+            drawGradientBackground(in: bgRect, config: config, context: context)
+            context.restoreGState()
+
+            let imageRect = NSRect(x: padding, y: padding, width: imgSize.width, height: imgSize.height)
+
+            // Draw the window image with shadow on top of the gradient.
+            // The image has transparent corners, so the gradient shows through naturally.
+            if shadowRadius > 0 {
+                let shadow = NSShadow()
+                shadow.shadowColor = NSColor.black.withAlphaComponent(0.35)
+                shadow.shadowBlurRadius = shadowRadius
+                shadow.shadowOffset = NSSize(width: 0, height: -shadowOffset)
+                shadow.set()
+            }
+            image.draw(in: imageRect, from: .zero, operation: .sourceOver, fraction: 1.0)
+
+            success = true
+            return true
+        }
+        if !success {
             _ = result.cgImage(forProposedRect: nil, context: nil, hints: nil)
         }
         return success ? result : image

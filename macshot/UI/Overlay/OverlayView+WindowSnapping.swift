@@ -2,6 +2,12 @@ import Cocoa
 
 extension OverlayView {
 
+    /// Result of window snap detection: the rect and optional window ID.
+    struct WindowSnapResult {
+        let rect: NSRect
+        let windowID: CGWindowID
+    }
+
     /// Returns the frontmost visible window rect (in view coordinates) that contains `screenPoint`.
     /// `screenPoint` is in AppKit screen coordinates (origin bottom-left of main screen).
     static func windowRectOnBackground(
@@ -10,7 +16,7 @@ extension OverlayView {
         windowOrigin: NSPoint,
         viewBounds: NSRect,
         screenH: CGFloat
-    ) -> NSRect? {
+    ) -> WindowSnapResult? {
         guard
             let windowList = CGWindowListCopyWindowInfo(
                 [.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]]
@@ -37,7 +43,10 @@ extension OverlayView {
                     width: appKitRect.width,
                     height: appKitRect.height
                 )
-                return viewRect.intersection(viewBounds)
+                return WindowSnapResult(
+                    rect: viewRect.intersection(viewBounds),
+                    windowID: CGWindowID(winNum)
+                )
             }
         }
         return nil
