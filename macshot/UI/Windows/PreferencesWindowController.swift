@@ -19,7 +19,6 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
     private var hotkeyButtons: [HotkeyManager.HotkeySlot: NSButton] = [:]
     private var recordingSlot: HotkeyManager.HotkeySlot?
     private var savePathField: NSTextField!
-    private var autoCopyCheckbox: NSButton!
     private var autoCopyOCRCheckbox: NSButton!
     private var copySoundCheckbox: NSButton!
     private var rememberSelectionCheckbox: NSButton!
@@ -218,7 +217,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
 
         // Enter key action
         quickModePopup = NSPopUpButton()
-        quickModePopup.addItems(withTitles: ["Save to file", "Copy to clipboard"])
+        quickModePopup.addItems(withTitles: ["Save to file", "Copy to clipboard", "Save + copy to clipboard"])
         quickModePopup.target = self
         quickModePopup.action = #selector(quickModeChanged(_:))
 
@@ -226,7 +225,6 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.setCustomSpacing(12, after: stack.arrangedSubviews.last!)
 
         // Checkboxes
-        autoCopyCheckbox = NSButton(checkboxWithTitle: "Auto-copy to clipboard on confirm", target: self, action: #selector(autoCopyChanged(_:)))
         autoCopyOCRCheckbox = NSButton(checkboxWithTitle: "Auto-copy OCR text to clipboard", target: self, action: #selector(autoCopyOCRChanged(_:)))
         copySoundCheckbox = NSButton(checkboxWithTitle: "Play sound on copy", target: self, action: #selector(copySoundChanged(_:)))
         rememberSelectionCheckbox = NSButton(checkboxWithTitle: "Remember last selection area", target: self, action: #selector(rememberSelectionChanged(_:)))
@@ -237,7 +235,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         captureCursorCheckbox = NSButton(checkboxWithTitle: "Capture mouse cursor in screenshot", target: self, action: #selector(captureCursorChanged(_:)))
         windowTitleCheckbox = NSButton(checkboxWithTitle: "Use window title in saved filename", target: self, action: #selector(windowTitleChanged(_:)))
 
-        for cb in [autoCopyCheckbox!, autoCopyOCRCheckbox!, copySoundCheckbox!, rememberSelectionCheckbox!, rememberToolCheckbox!, thumbnailCheckbox!] {
+        for cb in [autoCopyOCRCheckbox!, copySoundCheckbox!, rememberSelectionCheckbox!, rememberToolCheckbox!, thumbnailCheckbox!] {
             stack.addArrangedSubview(indented(cb))
             stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
         }
@@ -1325,9 +1323,6 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
 
         savePathField.stringValue = SaveDirectoryAccess.displayPath
 
-        let autoCopy = UserDefaults.standard.object(forKey: "autoCopyToClipboard") as? Bool ?? true
-        autoCopyCheckbox.state = autoCopy ? .on : .off
-
         let autoCopyOCR = UserDefaults.standard.object(forKey: "autoCopyOCRText") as? Bool ?? true
         autoCopyOCRCheckbox.state = autoCopyOCR ? .on : .off
 
@@ -1364,8 +1359,18 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         historySizeField.integerValue = historySize
         historySizeStepper.integerValue = historySize
 
-        let quickModeCopy = UserDefaults.standard.object(forKey: "quickModeCopyToClipboard") as? Bool ?? true
-        quickModePopup.selectItem(at: quickModeCopy ? 1 : 0)
+        // Migrate old bool setting to new int: 0=save, 1=copy, 2=both
+        if let oldBool = UserDefaults.standard.object(forKey: "quickModeCopyToClipboard") as? Bool {
+            let mode = oldBool ? 1 : 0
+            // If old autoCopy was on + save mode, migrate to "both"
+            let hadAutoCopy = UserDefaults.standard.object(forKey: "autoCopyToClipboard") as? Bool ?? true
+            let migratedMode = (!oldBool && hadAutoCopy) ? 2 : mode
+            UserDefaults.standard.set(migratedMode, forKey: "quickCaptureMode")
+            UserDefaults.standard.removeObject(forKey: "quickModeCopyToClipboard")
+            UserDefaults.standard.removeObject(forKey: "autoCopyToClipboard")
+        }
+        let quickMode = UserDefaults.standard.object(forKey: "quickCaptureMode") as? Int ?? 1
+        quickModePopup.selectItem(at: quickMode)
 
         let format = ImageEncoder.format
         switch format {
@@ -1431,9 +1436,6 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         }
     }
 
-    @objc private func autoCopyChanged(_ sender: NSButton) {
-        UserDefaults.standard.set(sender.state == .on, forKey: "autoCopyToClipboard")
-    }
     @objc private func autoCopyOCRChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "autoCopyOCRText")
     }
@@ -1457,7 +1459,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         UserDefaults.standard.set(sender.indexOfSelectedItem == 0, forKey: "thumbnailStacking")
     }
     @objc private func quickModeChanged(_ sender: NSPopUpButton) {
-        UserDefaults.standard.set(sender.indexOfSelectedItem == 1, forKey: "quickModeCopyToClipboard")
+        UserDefaults.standard.set(sender.indexOfSelectedItem, forKey: "quickCaptureMode")
     }
     @objc private func openGitHub() {
         if let url = URL(string: "https://github.com/sw33tLie/macshot") { NSWorkspace.shared.open(url) }

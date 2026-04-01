@@ -179,8 +179,7 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
     func overlayViewDidConfirm() {
         guard let raw = overlayView?.captureSelectedRegion() else { return }
         let image = applyPostProcessing(raw)
-        let autoCopy = UserDefaults.standard.object(forKey: "autoCopyToClipboard") as? Bool ?? true
-        if autoCopy { ImageEncoder.copyToClipboard(image) }
+        ImageEncoder.copyToClipboard(image)
         playCopySound()
         (NSApp.delegate as? AppDelegate)?.showFloatingThumbnail(image: image)
     }

@@ -265,8 +265,6 @@ extension OverlayWindowController: OverlayViewDelegate {
     }
 
     func overlayViewDidConfirm() {
-        let autoCopy = UserDefaults.standard.object(forKey: "autoCopyToClipboard") as? Bool ?? true
-
         // Snapshot post-processing config before dismissing (view will be torn down)
         let hasEffects = overlayView?.effectsActive ?? false
         let effectsCfg = overlayView?.effectsConfig ?? ImageEffectsConfig()
@@ -293,10 +291,8 @@ extension OverlayWindowController: OverlayViewDelegate {
             finalImage = BeautifyRenderer.render(image: finalImage, config: beautifyCfg)
         }
 
-        // Clipboard copy is now instant (lazy encoding via writeObjects)
-        if autoCopy {
-            ImageEncoder.copyToClipboard(finalImage)
-        }
+        // Copy button / Cmd+C always copies to clipboard
+        ImageEncoder.copyToClipboard(finalImage)
 
         overlayDelegate?.overlayDidConfirm(self, capturedImage: finalImage)
     }
@@ -572,9 +568,8 @@ extension OverlayWindowController: OverlayViewDelegate {
                 let finalNSImage = NSImage(cgImage: finalCGImage, size: image.size)
 
                 DispatchQueue.main.async {
-                    let autoCopy =
-                        UserDefaults.standard.object(forKey: "autoCopyToClipboard") as? Bool ?? true
-                    if autoCopy {
+                    let mode = UserDefaults.standard.object(forKey: "quickCaptureMode") as? Int ?? 1
+                    if mode >= 1 {
                         self.copyImageToClipboard(finalNSImage)
                     }
                     self.playCopySound()
@@ -594,30 +589,13 @@ extension OverlayWindowController: OverlayViewDelegate {
     }
 
     func overlayViewDidRequestQuickSave() {
-        guard let image = captureRegion() else {
-            dismiss()
-            overlayDelegate?.overlayDidCancel(self)
-            return
-        }
+        // Snapshot post-processing config before dismissing
+        let hasEffects = overlayView?.effectsActive ?? false
+        let effectsCfg = overlayView?.effectsConfig ?? ImageEffectsConfig()
+        let hasBeautify = overlayView?.beautifyEnabled ?? false
+        let beautifyCfg = overlayView?.beautifyConfig ?? BeautifyConfig()
 
-        let copyMode =
-            UserDefaults.standard.object(forKey: "quickModeCopyToClipboard") as? Bool ?? true
-
-        if copyMode {
-            ImageEncoder.copyToClipboard(image)
-            playCopySound()
-            dismiss()
-            overlayDelegate?.overlayDidConfirm(self, capturedImage: image)
-        } else {
-            playCopySound()
-            dismiss()
-            overlayDelegate?.overlayDidConfirm(self, capturedImage: image)
-            saveImageToDirectory(image)
-        }
-    }
-
-    func overlayViewDidRequestFileSave() {
-        guard let image = captureRegion() else {
+        guard let rawImage = captureRegion() else {
             dismiss()
             overlayDelegate?.overlayDidCancel(self)
             return
@@ -625,6 +603,47 @@ extension OverlayWindowController: OverlayViewDelegate {
 
         playCopySound()
         dismiss()
+
+        // Apply post-processing
+        var image = rawImage
+        if hasEffects { image = ImageEffects.apply(to: image, config: effectsCfg) }
+        if hasBeautify { image = BeautifyRenderer.render(image: image, config: beautifyCfg) }
+
+        // quickCaptureMode: 0=save, 1=copy, 2=both
+        let mode = UserDefaults.standard.object(forKey: "quickCaptureMode") as? Int ?? 1
+
+        if mode == 1 || mode == 2 {
+            ImageEncoder.copyToClipboard(image)
+        }
+
+        overlayDelegate?.overlayDidConfirm(self, capturedImage: image)
+
+        if mode == 0 || mode == 2 {
+            saveImageToDirectory(image)
+        }
+    }
+
+    func overlayViewDidRequestFileSave() {
+        // Snapshot post-processing config before dismissing
+        let hasEffects = overlayView?.effectsActive ?? false
+        let effectsCfg = overlayView?.effectsConfig ?? ImageEffectsConfig()
+        let hasBeautify = overlayView?.beautifyEnabled ?? false
+        let beautifyCfg = overlayView?.beautifyConfig ?? BeautifyConfig()
+
+        guard let rawImage = captureRegion() else {
+            dismiss()
+            overlayDelegate?.overlayDidCancel(self)
+            return
+        }
+
+        playCopySound()
+        dismiss()
+
+        // Apply post-processing
+        var image = rawImage
+        if hasEffects { image = ImageEffects.apply(to: image, config: effectsCfg) }
+        if hasBeautify { image = BeautifyRenderer.render(image: image, config: beautifyCfg) }
+
         overlayDelegate?.overlayDidConfirm(self, capturedImage: image)
         saveImageToDirectory(image)
     }

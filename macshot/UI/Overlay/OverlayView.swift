@@ -357,6 +357,10 @@ class OverlayView: NSView {
     // Auto-measure preview (live while holding 1 or 2 key)
     private var autoMeasurePreview: Annotation?  // temporary, drawn but not in annotations[]
     private var autoMeasureVertical: Bool = true  // true = "1" key, false = "2" key
+    private var autoMeasureKeyHeld: Bool = false  // true while 1 or 2 is held down
+    private var autoMeasureBitmapCtx: CGContext?  // cached pixel data for fast scanning
+    private var autoMeasureBitmapW: Int = 0
+    private var autoMeasureBitmapH: Int = 0
     // Snap/alignment guides
     var snapGuideX: CGFloat? = nil  // vertical guide line X
     var snapGuideY: CGFloat? = nil  // horizontal guide line Y
@@ -633,6 +637,11 @@ class OverlayView: NSView {
 
         // Update cursor on every mouse move
         updateCursorForPoint(point)
+
+        // Auto-measure: update preview as cursor moves while key is held
+        if autoMeasureKeyHeld {
+            updateAutoMeasurePreview()
+        }
 
         // Window snap: highlight hovered window in idle state.
         // CGWindowListCopyWindowInfo is expensive — run it on a background thread,
@@ -1623,16 +1632,19 @@ class OverlayView: NSView {
             withAttributes: attrs2suffix)
     }
 
+    private static let helperText = "Release to annotate and edit"
+    private static let helperTextAttrs: [NSAttributedString.Key: Any] = [
+        .font: NSFont.systemFont(ofSize: 12, weight: .medium),
+        .foregroundColor: NSColor.white,
+    ]
+    private static let helperTextSize: NSSize = (helperText as NSString).size(withAttributes: helperTextAttrs)
+
     private func drawSelectingHelperText() {
         guard selectionRect.width >= 1, selectionRect.height >= 1 else { return }
 
-        let text = "Release to annotate and edit"
-
-        let attrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 12, weight: .medium),
-            .foregroundColor: NSColor.white,
-        ]
-        let size = (text as NSString).size(withAttributes: attrs)
+        let text = Self.helperText
+        let attrs = Self.helperTextAttrs
+        let size = Self.helperTextSize
         let padding: CGFloat = 10
         let bgWidth = size.width + padding * 2
         let bgHeight = size.height + padding
@@ -2734,26 +2746,32 @@ class OverlayView: NSView {
         let normX = (canvasPoint.x - drawRect.minX) / drawRect.width
         let normY = (canvasPoint.y - drawRect.minY) / drawRect.height
 
-        let pixelX = Int(normX * CGFloat(cgImage.width))
-        let pixelY = Int((1.0 - normY) * CGFloat(cgImage.height))
+        let w = cgImage.width
+        let h = cgImage.height
 
-        guard pixelX >= 0, pixelX < cgImage.width, pixelY >= 0, pixelY < cgImage.height else {
+        let pixelX = Int(normX * CGFloat(w))
+        let pixelY = Int((1.0 - normY) * CGFloat(h))
+
+        guard pixelX >= 0, pixelX < w, pixelY >= 0, pixelY < h else {
             return nil
         }
 
-        let w = cgImage.width
-        let h = cgImage.height
-        let srgb = CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
-        guard
-            let ctx = CGContext(
+        // Cache the bitmap context — only recreate if the image dimensions changed
+        if autoMeasureBitmapCtx == nil || autoMeasureBitmapW != w || autoMeasureBitmapH != h {
+            let srgb = CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
+            guard let ctx = CGContext(
                 data: nil, width: w, height: h,
                 bitsPerComponent: 8, bytesPerRow: w * 4,
                 space: srgb,
                 bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
-        else { return nil }
-        ctx.draw(cgImage, in: CGRect(x: 0, y: 0, width: w, height: h))
-        guard let data = ctx.data else { return nil }
+            else { return nil }
+            ctx.draw(cgImage, in: CGRect(x: 0, y: 0, width: w, height: h))
+            autoMeasureBitmapCtx = ctx
+            autoMeasureBitmapW = w
+            autoMeasureBitmapH = h
+        }
 
+        guard let data = autoMeasureBitmapCtx?.data else { return nil }
         let ptr = data.assumingMemoryBound(to: UInt8.self)
 
         func pixelAt(_ x: Int, _ y: Int) -> (UInt8, UInt8, UInt8) {
@@ -3677,17 +3695,20 @@ class OverlayView: NSView {
             // Use the wider of the bottom bar and the row's natural content width
             let rowW = max(bottomBarRect.width, row.contentWidth)
             row.frame.size.width = rowW
-            // Center the options row relative to the bottom bar, clamped to view bounds
-            var rowX = bottomBarRect.midX - rowW / 2
-            rowX = max(4, min(rowX, bounds.maxX - rowW - 4))
             let rowY: CGFloat
             if isEditorMode {
-                rowY = bottomBarRect.maxY + 2
+                // In editor mode, center the options row the same way as the bottom bar
+                let cb = chromeParentView?.bounds ?? bounds
+                let rowX = max(4, cb.midX - rowW / 2)
+                row.frame.origin = NSPoint(x: rowX, y: bottomBarRect.maxY + 2)
+                row.autoresizingMask = [.minXMargin, .maxXMargin, .maxYMargin]
             } else {
+                // Center the options row relative to the bottom bar, clamped to view bounds
+                var rowX = bottomBarRect.midX - rowW / 2
+                rowX = max(4, min(rowX, bounds.maxX - rowW - 4))
                 rowY = bottomBarRect.minY - row.frame.height - 2
+                row.frame.origin = NSPoint(x: rowX, y: rowY)
             }
-            row.frame.origin = NSPoint(x: rowX, y: rowY)
-            if isEditorMode { row.autoresizingMask = [.minXMargin, .maxXMargin, .maxYMargin] }
         }
     }
 
@@ -3814,6 +3835,17 @@ class OverlayView: NSView {
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
 
+        // Auto-measure: click to commit the preview annotation
+        if autoMeasureKeyHeld, let preview = autoMeasurePreview {
+            annotations.append(preview)
+            undoStack.append(.added(preview))
+            redoStack.removeAll()
+            autoMeasurePreview = nil
+            cachedCompositedImage = nil
+            // Recompute a new preview at the current position
+            updateAutoMeasurePreview()
+            return
+        }
 
         // Note: toolbar strips and options row are routed by hitTest() — they never reach here
 
@@ -5606,16 +5638,9 @@ class OverlayView: NSView {
                     needsDisplay = true
                 }
             }
-        case 36:  // Return/Enter — only confirm overlay when not editing text
+        case 36:  // Return/Enter — quick capture (respects quickCaptureMode setting)
             if textEditView == nil, state == .selected {
-                let saveMode =
-                    !(UserDefaults.standard.object(forKey: "quickModeCopyToClipboard") as? Bool
-                    ?? true)
-                if saveMode {
-                    overlayDelegate?.overlayViewDidRequestQuickSave()
-                } else {
-                    overlayDelegate?.overlayViewDidConfirm()
-                }
+                overlayDelegate?.overlayViewDidRequestQuickSave()
             }
         case 51:  // Backspace/Delete — remove selected or hovered annotation
             guard textEditView == nil, state == .selected else { break }
@@ -5648,7 +5673,10 @@ class OverlayView: NSView {
                 if let char = event.charactersIgnoringModifiers {
                     if char == "1" || char == "2" {
                         autoMeasureVertical = (char == "1")
-                        updateAutoMeasurePreview()
+                        if !autoMeasureKeyHeld {
+                            autoMeasureKeyHeld = true
+                            updateAutoMeasurePreview()
+                        }
                         return
                     }
                 }
@@ -5758,14 +5786,12 @@ class OverlayView: NSView {
             spaceRepositioning = false
             return
         }
-        // Commit auto-measure preview on key release
-        if let preview = autoMeasurePreview {
-            if let char = event.charactersIgnoringModifiers, char == "1" || char == "2" {
-                annotations.append(preview)
-                undoStack.append(.added(preview))
-                redoStack.removeAll()
+        // Clear auto-measure preview on key release (click to commit instead)
+        if let char = event.charactersIgnoringModifiers, char == "1" || char == "2" {
+            if autoMeasureKeyHeld {
+                autoMeasureKeyHeld = false
                 autoMeasurePreview = nil
-                cachedCompositedImage = nil
+                autoMeasureBitmapCtx = nil  // free cached bitmap
                 needsDisplay = true
                 return
             }
@@ -6156,6 +6182,8 @@ class OverlayView: NSView {
         isTranslating = false
         translateEnabled = false
         autoMeasurePreview = nil
+        autoMeasureKeyHeld = false
+        autoMeasureBitmapCtx = nil
         selectedAnnotation = nil
         isDraggingAnnotation = false
         hoveredAnnotationClearTimer?.invalidate()

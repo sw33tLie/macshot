@@ -252,6 +252,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         openImageItem.image = NSImage(systemSymbolName: "photo.on.rectangle.angled", accessibilityDescription: nil)
         menu.addItem(openImageItem)
 
+        let pasteImageItem = NSMenuItem(title: "Open from Clipboard", action: #selector(openImageFromClipboard), keyEquivalent: "")
+        pasteImageItem.target = self
+        pasteImageItem.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: nil)
+        menu.addItem(pasteImageItem)
+
         menu.addItem(NSMenuItem.separator())
 
         let prefsItem = NSMenuItem(title: "Preferences...", action: #selector(openPreferences), keyEquivalent: ",")
@@ -628,8 +633,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         controller.onCopy = { [weak self] in
             guard let self = self else { return }
-            let autoCopy = UserDefaults.standard.object(forKey: "autoCopyToClipboard") as? Bool ?? true
-            if autoCopy { ImageEncoder.copyToClipboard(image) }
+            ImageEncoder.copyToClipboard(image)
             self.playCopySound()
         }
         controller.onSave = { [weak self] in
@@ -819,6 +823,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func openImageFromMenu() {
         openImageWithPanel()
+    }
+
+    @objc private func openImageFromClipboard() {
+        let pasteboard = NSPasteboard.general
+        guard let image = NSImage(pasteboard: pasteboard), image.isValid,
+              image.size.width > 0, image.size.height > 0 else {
+            let alert = NSAlert()
+            alert.messageText = "No Image on Clipboard"
+            alert.informativeText = "Copy an image to the clipboard first, then try again."
+            alert.alertStyle = .informational
+            alert.addButton(withTitle: "OK")
+            alert.runModal()
+            return
+        }
+        DetachedEditorWindowController.open(image: image)
     }
 
     private func openImageWithPanel() {
@@ -1289,8 +1308,14 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         guard let image = finalImage else { return }
 
         ScreenshotHistory.shared.add(image: image)
-        let autoCopy = UserDefaults.standard.object(forKey: "autoCopyToClipboard") as? Bool ?? true
-        if autoCopy { ImageEncoder.copyToClipboard(image) }
+        // quickCaptureMode: 0=save, 1=copy, 2=both
+        let mode = UserDefaults.standard.object(forKey: "quickCaptureMode") as? Int ?? 1
+        if mode == 1 || mode == 2 {
+            ImageEncoder.copyToClipboard(image)
+        }
+        if mode == 0 || mode == 2 {
+            saveImageToFile(image)
+        }
         playCopySound()
         showFloatingThumbnail(image: image)
     }
