@@ -529,9 +529,8 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
             if modifiers.contains(.shift)   { carbonMods |= UInt32(shiftKey) }
             if modifiers.contains(.option)  { carbonMods |= UInt32(optionKey) }
             if modifiers.contains(.control) { carbonMods |= UInt32(controlKey) }
-            if carbonMods == 0 { return nil }
-
             let keyCode = UInt32(event.keyCode)
+            if carbonMods == 0 && !HotkeyManager.isFunctionKey(keyCode) { return nil }
             HotkeyManager.saveHotkey(for: slot, keyCode: keyCode, modifiers: carbonMods)
             self.hotkeyFields[slot]?.stringValue = HotkeyManager.displayString(for: slot)
             self.stopShortcutRecording()
