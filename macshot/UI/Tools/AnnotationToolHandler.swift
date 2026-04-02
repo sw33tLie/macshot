@@ -15,6 +15,7 @@ protocol AnnotationCanvas: AnyObject {
     var currentMeasureInPoints: Bool { get }
     var currentLoupeSize: CGFloat { get }
     var pencilSmoothEnabled: Bool { get }
+    var smartMarkerEnabled: Bool { get }
 
     // Number tool
     var currentNumberSize: CGFloat { get }
@@ -78,11 +79,16 @@ protocol AnnotationToolHandler {
 
     /// The cursor to show when this tool is active. Nil means use default crosshair.
     var cursor: NSCursor? { get }
+
+    /// State-aware cursor — override when the cursor depends on canvas state (e.g. smart marker toggle).
+    func cursorForCanvas(_ canvas: AnnotationCanvas) -> NSCursor?
 }
 
 /// Default implementations for common patterns.
 extension AnnotationToolHandler {
     var cursor: NSCursor? { nil }
+
+    func cursorForCanvas(_ canvas: AnnotationCanvas) -> NSCursor? { cursor }
 
     /// Commit the active annotation to the canvas annotations array + undo stack.
     func commitAnnotation(_ annotation: Annotation, canvas: AnnotationCanvas) {

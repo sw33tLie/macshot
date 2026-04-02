@@ -344,6 +344,8 @@ class OverlayView: NSView {
 
     var pencilSmoothEnabled: Bool =
         UserDefaults.standard.object(forKey: "pencilSmoothEnabled") as? Bool ?? true
+    var smartMarkerEnabled: Bool =
+        UserDefaults.standard.object(forKey: "smartMarkerEnabled") as? Bool ?? false
     private var roundedRectEnabled: Bool =
         UserDefaults.standard.object(forKey: "roundedRectEnabled") as? Bool ?? false
 
@@ -701,7 +703,8 @@ class OverlayView: NSView {
         }
 
         // Track cursor for marker size preview circle (canvas space so it scales with zoom)
-        if state == .selected && currentTool == .marker && !isRecording {
+        // Skip in smart marker mode — stroke size is auto-determined by text detection
+        if state == .selected && currentTool == .marker && !isRecording && !smartMarkerEnabled {
             let canvasPoint = viewToCanvas(point)
             if canvasPoint != markerCursorPoint {
                 let oldPt = markerCursorPoint
@@ -945,8 +948,8 @@ class OverlayView: NSView {
             }
         }
 
-        // Tool cursor — use handler's cursor if available, else legacy switch
-        if let handler = toolHandlers[currentTool], let cursor = handler.cursor {
+        // Tool cursor — use handler's state-aware cursor if available, else legacy switch
+        if let handler = toolHandlers[currentTool], let cursor = handler.cursorForCanvas(self) {
             cursor.set()
         } else {
             switch currentTool {
@@ -954,6 +957,13 @@ class OverlayView: NSView {
             default: NSCursor.crosshair.set()
             }
         }
+    }
+
+    /// Re-evaluate the cursor for the current tool (e.g. after toggling smart marker).
+    func updateCursorForCurrentTool() {
+        guard let win = window else { return }
+        let point = convert(win.mouseLocationOutsideOfEventStream, from: nil)
+        updateCursorForPoint(point)
     }
 
     // MARK: - Hit Testing
@@ -3714,19 +3724,35 @@ class OverlayView: NSView {
             let overlapsVertically = bottomMaxY > ry && bottomMinY < ry + rightSize.height
 
             if overlapsVertically {
-                // Check if centered position already clears the right bar
+                // Check if centered bottom bar already clears the right bar horizontally
                 if bx + bottomSize.width <= rx - 4 || bx >= rx + rightSize.width + 4 {
-                    // No overlap — keep centered
+                    // No overlap — keep both as-is
                 } else {
-                    // Need to shift. Try left of right bar first, then right.
-                    let leftBx = rx - bottomSize.width - 4
-                    let rightBx = rx + rightSize.width + 4
-                    if leftBx >= bounds.minX + 4 {
-                        bx = leftBx
-                    } else if rightBx + bottomSize.width <= bounds.maxX - 4 {
-                        bx = rightBx
+                    // Overlap: move the RIGHT bar out of the way, keep bottom bar centered.
+                    // Try pushing right bar further right (past bottom bar's right edge).
+                    let pushRight = bx + bottomSize.width + 4
+                    // Try pushing right bar to the left (before bottom bar's left edge).
+                    let pushLeft = bx - rightSize.width - 4
+
+                    if pushRight + rightSize.width <= bounds.maxX - 4 {
+                        rx = pushRight
+                    } else if pushLeft >= bounds.minX + 4 {
+                        rx = pushLeft
+                    } else {
+                        // Right bar can't dodge horizontally — push it vertically.
+                        // Try below the bottom bar + options row zone.
+                        let rightPushDown = by - optRowH - rightSize.height - 4
+                        if rightPushDown >= bounds.minY + 4 {
+                            ry = rightPushDown
+                        } else {
+                            // Try above the bottom bar
+                            let rightPushUp = by + bottomSize.height + 4
+                            if rightPushUp + rightSize.height <= bounds.maxY - 4 {
+                                ry = rightPushUp
+                            }
+                            // else: truly no room, accept overlap
+                        }
                     }
-                    // else: no room, keep centered and accept overlap
                 }
             }
             bx = max(bounds.minX + 4, min(bx, bounds.maxX - bottomSize.width - 4))

@@ -284,7 +284,7 @@ jobs:
             git push origin main
           }
 
-      # ── 13. Update Homebrew formula ────────────────────────────────────────
+      # ── 13. Update Homebrew formula (personal tap) ─────────────────────────
       - name: Update Homebrew formula
         env:
           GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
@@ -303,7 +303,19 @@ jobs:
           git commit -m "macshot $VERSION"
           git push
 
-      # ── 14. Cleanup keychain ────────────────────────────────────────────────
+      # ── 14. Bump homebrew-cask (official) ──────────────────────────────────
+      - name: Bump homebrew-cask
+        env:
+          HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          brew tap homebrew/cask 2>/dev/null || true
+          brew bump-cask-pr macshot \
+            --version "$VERSION" \
+            --sha256 "$SHA256" \
+            --no-browse \
+            || echo "⚠️ homebrew-cask bump failed (cask may not exist yet or is already up to date)"
+
+      # ── 15. Cleanup keychain ────────────────────────────────────────────────
       - name: Cleanup keychain
         if: always()
         run: |

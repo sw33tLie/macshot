@@ -110,6 +110,37 @@ class ToolOptionsRowView: NSView {
             }
         }
 
+        // ── Smart marker toggle ──
+        if tool == .marker {
+            curX = addSeparator(at: curX)
+            curX = addToggle(at: curX, title: "Smart", isOn: ov.smartMarkerEnabled) { [weak ov, weak self] isOn in
+                ov?.smartMarkerEnabled = isOn
+                UserDefaults.standard.set(isOn, forKey: "smartMarkerEnabled")
+                ov?.updateCursorForCurrentTool()
+                ov?.needsDisplay = true
+                // Rebuild to update stroke slider enabled state
+                self?.rebuild(for: .marker)
+            }
+            // Disable stroke slider when smart marker is on (auto-sized)
+            if ov.smartMarkerEnabled {
+                for sub in subviews {
+                    if let slider = sub as? NSSlider, slider.tag == AnnotationTool.marker.rawValue {
+                        slider.isEnabled = false
+                        slider.alphaValue = 0.35
+                    }
+                }
+                if let label = viewWithTag(997) as? NSTextField {
+                    label.alphaValue = 0.35
+                }
+                // Also dim the "Stroke" label
+                for sub in subviews {
+                    if let tf = sub as? NSTextField, tf.stringValue == "Stroke", tf.tag == 0 {
+                        tf.alphaValue = 0.35
+                    }
+                }
+            }
+        }
+
         // ── Number format + start-at ──
         if tool == .number {
             curX = addSeparator(at: curX)
