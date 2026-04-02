@@ -145,7 +145,6 @@ class Annotation {
     var number: Int?
     var numberFormat: NumberFormat = .decimal
     var points: [NSPoint]?
-    var pointWidths: [CGFloat]?  // per-point stroke width for velocity-sensitive drawing
     var sourceImage: NSImage?    // for pixelate: temporary reference during drawing (cleared after bake)
     var sourceImageBounds: NSRect = .zero  // the bounds the image was drawn into
     var bakedBlurNSImage: NSImage?    // baked result for pixelate/blur (NSImage avoids CGImage flip issues)
@@ -188,6 +187,7 @@ class Annotation {
     var rectCornerRadius: CGFloat = 0 // 0..30, actual corner radius for rect tools
     var lineStyle: LineStyle = .solid // line/arrow/rect/ellipse stroke style
     var arrowStyle: ArrowStyle = .single // arrow head style
+    var arrowReversed: Bool = false      // head at start instead of end
     var rectFillStyle: RectFillStyle = .stroke // rectangle fill mode
     var stampImage: NSImage?          // rendered emoji or loaded picture for stamp tool
     var measureInPoints: Bool = false  // true = show pt, false = show px
@@ -211,7 +211,6 @@ class Annotation {
         c.number = number
         c.numberFormat = numberFormat
         c.points = points
-        c.pointWidths = pointWidths
         c.bakedBlurNSImage = bakedBlurNSImage
         c.textImage = textImage
         c.textDrawRect = textDrawRect
@@ -228,6 +227,7 @@ class Annotation {
         c.rectCornerRadius = rectCornerRadius
         c.lineStyle = lineStyle
         c.arrowStyle = arrowStyle
+        c.arrowReversed = arrowReversed
         c.rectFillStyle = rectFillStyle
         c.stampImage = stampImage
         c.measureInPoints = measureInPoints
@@ -268,6 +268,17 @@ class Annotation {
 
     /// Hit-test: returns true if the point is close enough to this annotation
     func hitTest(point: NSPoint, threshold: CGFloat = 8) -> Bool {
+        // For rotated annotations, un-rotate the test point around the annotation's center
+        var point = point
+        if rotation != 0 && supportsRotation {
+            let center = NSPoint(x: boundingRect.midX, y: boundingRect.midY)
+            let dx = point.x - center.x
+            let dy = point.y - center.y
+            let cosR = cos(-rotation)
+            let sinR = sin(-rotation)
+            point = NSPoint(x: center.x + dx * cosR - dy * sinR,
+                            y: center.y + dx * sinR + dy * cosR)
+        }
         switch tool {
         case .pencil, .marker:
             guard let points = points else { return false }
@@ -416,10 +427,8 @@ class Annotation {
         path.lineWidth = 1.5
         let pattern: [CGFloat] = [4, 4]
         path.setLineDash(pattern, count: 2, phase: 0)
-        NSColor.white.withAlphaComponent(0.8).setStroke()
+        ToolbarLayout.accentColor.withAlphaComponent(0.6).setStroke()
         path.stroke()
-        ToolbarLayout.accentColor.withAlphaComponent(0.3).setFill()
-        NSBezierPath(roundedRect: padded, xRadius: 3, yRadius: 3).fill()
     }
 
     // MARK: - Geometry helpers
@@ -612,40 +621,6 @@ class Annotation {
             return
         }
 
-        // Variable-width path: per-point widths from velocity tracking
-        if let widths = pointWidths, widths.count == points.count {
-            ctx.setAlpha(alpha)
-            ctx.beginTransparencyLayer(auxiliaryInfo: nil)
-            color.withAlphaComponent(1.0).setFill()
-
-            // Draw filled circles at each point + trapezoid quads between consecutive points
-            for i in 0..<points.count {
-                let r = widths[i] / 2
-                let rect = NSRect(x: points[i].x - r, y: points[i].y - r, width: r * 2, height: r * 2)
-                NSBezierPath(ovalIn: rect).fill()
-            }
-            for i in 0..<points.count - 1 {
-                let p0 = points[i], p1 = points[i + 1]
-                let r0 = widths[i] / 2, r1 = widths[i + 1] / 2
-                let dx = p1.x - p0.x, dy = p1.y - p0.y
-                let len = hypot(dx, dy)
-                guard len > 0.1 else { continue }
-                // Perpendicular unit vector
-                let nx = -dy / len, ny = dx / len
-                let quad = NSBezierPath()
-                quad.move(to: NSPoint(x: p0.x + nx * r0, y: p0.y + ny * r0))
-                quad.line(to: NSPoint(x: p1.x + nx * r1, y: p1.y + ny * r1))
-                quad.line(to: NSPoint(x: p1.x - nx * r1, y: p1.y - ny * r1))
-                quad.line(to: NSPoint(x: p0.x - nx * r0, y: p0.y - ny * r0))
-                quad.close()
-                quad.fill()
-            }
-
-            ctx.endTransparencyLayer()
-            ctx.setAlpha(1.0)
-            return
-        }
-
         // Use a transparency layer so self-overlapping segments don't compound alpha
         ctx.setAlpha(alpha)
         ctx.beginTransparencyLayer(auxiliaryInfo: nil)
@@ -769,7 +744,7 @@ class Annotation {
             return
         }
 
-        let pts = waypoints
+        let pts = arrowReversed ? waypoints.reversed() : waypoints
         guard pts.count >= 2 else { return }
         let firstPt = pts.first!
         let lastPt = pts.last!
@@ -939,7 +914,7 @@ class Annotation {
     }
 
     private func drawThickArrow() {
-        let pts = waypoints
+        let pts = arrowReversed ? waypoints.reversed() : waypoints
         let firstPt = pts.first ?? startPoint
         let lastPt = pts.last ?? endPoint
         let totalLen = hasMultiAnchor ? Self.smoothPathLength(pts) : hypot(lastPt.x - firstPt.x, lastPt.y - firstPt.y)

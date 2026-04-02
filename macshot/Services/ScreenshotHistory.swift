@@ -102,6 +102,51 @@ class ScreenshotHistory {
         }
     }
 
+    /// Add a GIF recording to history by copying the file and extracting a thumbnail from the first frame.
+    func addRecording(url: URL) {
+        let max = maxEntries
+        guard max > 0 else { return }
+
+        let ext = url.pathExtension.lowercased()
+        guard ext == "gif" else { return }  // only GIF for now — MP4 thumbnails need AVAsset
+
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+              CGImageSourceGetCount(source) > 0,
+              let cgImage = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return }
+
+        let id = UUID().uuidString
+        let image = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
+        let thumb = makeThumbnail(image: image, maxWidth: 36)
+
+        let entry = HistoryEntry(
+            id: id,
+            fileExtension: ext,
+            timestamp: Date(),
+            pixelWidth: cgImage.width,
+            pixelHeight: cgImage.height,
+            thumbnail: thumb
+        )
+        entries.insert(entry, at: 0)
+
+        while entries.count > max {
+            let removed = entries.removeLast()
+            deleteFiles(for: removed.id, ext: removed.fileExtension)
+        }
+        saveIndex()
+
+        // Copy GIF + save thumbnail on background thread
+        let destURL = historyDir.appendingPathComponent("\(id).\(ext)")
+        let thumbURL = historyDir.appendingPathComponent("\(id)_thumb.png")
+        DispatchQueue.global(qos: .utility).async {
+            try? FileManager.default.copyItem(at: url, to: destURL)
+            if let thumbTiff = thumb.tiffRepresentation,
+               let thumbBitmap = NSBitmapImageRep(data: thumbTiff),
+               let thumbPng = thumbBitmap.representation(using: .png, properties: [:]) {
+                try? thumbPng.write(to: thumbURL, options: .atomic)
+            }
+        }
+    }
+
     func pruneToMax() {
         let max = maxEntries
         if max <= 0 {

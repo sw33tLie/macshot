@@ -42,9 +42,31 @@ class CenteringClipView: NSClipView {
 
     override func scrollWheel(with event: NSEvent) {
         let isTrackpad = event.phase != [] || event.momentumPhase != []
-        if !isTrackpad, let editorView = documentView as? OverlayView, editorView.isInsideScrollView {
-            editorView.scrollWheel(with: event)
+
+        if !isTrackpad {
+            // Mouse wheel: scroll vertically if there's scrollable content, otherwise do nothing
+            guard let sv = enclosingScrollView else { return }
+            let docFrame = documentView?.frame ?? .zero
+            let canScrollV = docFrame.height > bounds.height + 1
+            if canScrollV {
+                let delta = event.scrollingDeltaY * (event.hasPreciseScrollingDeltas ? 1.0 : 10.0)
+                var newOrigin = bounds.origin
+                newOrigin.y -= delta
+                scroll(newOrigin)
+            }
             return
+        }
+
+        // Trackpad: check if document exceeds clip bounds before forwarding
+        if let sv = enclosingScrollView {
+            let docFrame = documentView?.frame ?? .zero
+            let canScrollH = docFrame.width > bounds.width + 1
+            let canScrollV = docFrame.height > bounds.height + 1
+            if !canScrollH && !canScrollV {
+                return  // swallow — no scrollable content, no bounce
+            }
+            sv.horizontalScrollElasticity = canScrollH ? .allowed : .none
+            sv.verticalScrollElasticity = canScrollV ? .allowed : .none
         }
         super.scrollWheel(with: event)
     }

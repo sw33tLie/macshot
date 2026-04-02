@@ -33,6 +33,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var scrollCaptureController: ScrollCaptureController?
     /// The overlay controller whose selection is being scroll-captured.
     private var scrollCaptureOverlayController: OverlayWindowController?
+    private var scrollCapturePreviewPanel: ScrollCapturePreviewPanel?
 
     /// Shared capture sound — loaded once, reused everywhere.
     static let captureSound: NSSound? = {
@@ -1039,6 +1040,10 @@ extension AppDelegate: OverlayWindowControllerDelegate {
             self.stopRecordingUI()
 
             if let url = url {
+                // Add GIF recordings to screenshot history
+                if url.pathExtension.lowercased() == "gif" {
+                    ScreenshotHistory.shared.addRecording(url: url)
+                }
                 let onStop = onStopOverride ?? UserDefaults.standard.string(forKey: "recordingOnStop") ?? "editor"
                 switch onStop {
                 case "finder":
@@ -1188,11 +1193,21 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         // Tell the triggering overlay to enter scroll capture mode
         controller.setScrollCaptureState(isActive: true, maxHeight: maxH)
 
+        // Create live preview panel if there's space beside the capture region
+        let overlayLevel = 257  // matches overlay window level
+        if let previewPanel = ScrollCapturePreviewPanel(captureRect: rect, screen: screen, overlayLevel: overlayLevel) {
+            previewPanel.orderFront(nil)
+            scrollCapturePreviewPanel = previewPanel
+        }
+
         scc.onStripAdded = { [weak self, weak controller] count in
             guard let self = self, let scc = self.scrollCaptureController else { return }
             controller?.updateScrollCaptureProgress(
                 stripCount: count, pixelSize: scc.stitchedPixelSize,
                 autoScrolling: scc.autoScrollActive)
+        }
+        scc.onPreviewUpdated = { [weak self] image in
+            self?.scrollCapturePreviewPanel?.updatePreview(image: image)
         }
         scc.onAutoScrollStarted = { [weak self, weak controller] in
             guard let self = self, let scc = self.scrollCaptureController else { return }
@@ -1221,6 +1236,8 @@ extension AppDelegate: OverlayWindowControllerDelegate {
                 // Cancel session without delivering a result, then dismiss overlays
                 scc.cancelSession()
                 scrollCaptureController = nil
+                scrollCapturePreviewPanel?.close()
+                scrollCapturePreviewPanel = nil
                 scrollCaptureOverlayController?.setScrollCaptureState(isActive: false)
                 scrollCaptureOverlayController = nil
                 dismissOverlays()
@@ -1320,6 +1337,8 @@ extension AppDelegate: OverlayWindowControllerDelegate {
     }
 
     private func handleScrollCaptureCompleted(finalImage: NSImage?) {
+        scrollCapturePreviewPanel?.close()
+        scrollCapturePreviewPanel = nil
         scrollCaptureOverlayController?.setScrollCaptureState(isActive: false)
         scrollCaptureOverlayController = nil
         scrollCaptureController = nil

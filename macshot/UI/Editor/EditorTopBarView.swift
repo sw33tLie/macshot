@@ -1,12 +1,12 @@
 import Cocoa
 
 /// Real NSView top bar for the editor window. Pinned to top of container.
-/// Contains: pixel dimensions, crop/flip/add-capture buttons, zoom display.
+/// Contains: pixel dimensions, crop/flip/add-capture buttons, zoom dropdown.
 class EditorTopBarView: NSView {
 
     weak var overlayView: OverlayView?
     private var sizeLabel: NSTextField!
-    private var zoomLabel: NSTextField!
+    private var zoomButton: NSButton!
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -22,11 +22,16 @@ class EditorTopBarView: NSView {
         let flipHBtn = makeButton("arrow.left.and.right.righttriangle.left.righttriangle.right", tooltip: "Flip Horizontal", action: #selector(flipHClicked))
         let flipVBtn = makeButton("arrow.up.and.down.righttriangle.up.righttriangle.down", tooltip: "Flip Vertical", action: #selector(flipVClicked))
         let addCaptureBtn = makeButton("rectangle.badge.plus", tooltip: "Add Capture", action: #selector(addCaptureClicked))
-        let resetBtn = makeButton("arrow.counterclockwise", tooltip: "Reset Zoom", action: #selector(resetZoomClicked))
 
-        zoomLabel = makeLabel("100%")
-        zoomLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium)
-        zoomLabel.textColor = NSColor.white.withAlphaComponent(0.45)
+        // Zoom dropdown button
+        zoomButton = NSButton()
+        zoomButton.bezelStyle = .recessed
+        zoomButton.isBordered = false
+        zoomButton.title = "100% ▾"
+        zoomButton.font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium)
+        zoomButton.contentTintColor = NSColor.white.withAlphaComponent(0.45)
+        zoomButton.target = self
+        zoomButton.action = #selector(zoomButtonClicked)
 
         // Bottom border
         let border = NSView()
@@ -36,7 +41,7 @@ class EditorTopBarView: NSView {
         addSubview(border)
 
         // Layout with constraints
-        for v in [sizeLabel!, cropBtn, flipHBtn, flipVBtn, addCaptureBtn, resetBtn, zoomLabel!] {
+        for v: NSView in [sizeLabel, cropBtn, flipHBtn, flipVBtn, addCaptureBtn, zoomButton] {
             v.translatesAutoresizingMaskIntoConstraints = false
             addSubview(v)
         }
@@ -67,13 +72,8 @@ class EditorTopBarView: NSView {
             addCaptureBtn.widthAnchor.constraint(equalToConstant: 24),
             addCaptureBtn.heightAnchor.constraint(equalToConstant: 22),
 
-            zoomLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
-            zoomLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
-
-            resetBtn.trailingAnchor.constraint(equalTo: zoomLabel.leadingAnchor, constant: -6),
-            resetBtn.centerYAnchor.constraint(equalTo: centerYAnchor),
-            resetBtn.widthAnchor.constraint(equalToConstant: 24),
-            resetBtn.heightAnchor.constraint(equalToConstant: 22),
+            zoomButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
+            zoomButton.centerYAnchor.constraint(equalTo: centerYAnchor),
 
             border.leadingAnchor.constraint(equalTo: leadingAnchor),
             border.trailingAnchor.constraint(equalTo: trailingAnchor),
@@ -110,8 +110,86 @@ class EditorTopBarView: NSView {
     }
 
     func updateZoom(_ magnification: CGFloat) {
-        zoomLabel.stringValue = "\(Int(magnification * 100))%"
+        zoomButton.title = "\(Int(magnification * 100))% ▾"
     }
+
+    // MARK: - Zoom dropdown
+
+    @objc private func zoomButtonClicked() {
+        let menu = NSMenu()
+        menu.autoenablesItems = false
+
+        let zoomIn = NSMenuItem(title: "Zoom In", action: #selector(zoomInAction), keyEquivalent: "+")
+        zoomIn.keyEquivalentModifierMask = .command
+        zoomIn.target = self
+        menu.addItem(zoomIn)
+
+        let zoomOut = NSMenuItem(title: "Zoom Out", action: #selector(zoomOutAction), keyEquivalent: "-")
+        zoomOut.keyEquivalentModifierMask = .command
+        zoomOut.target = self
+        menu.addItem(zoomOut)
+
+        menu.addItem(.separator())
+
+        let fitCanvas = NSMenuItem(title: "Fit Canvas", action: #selector(fitCanvasAction), keyEquivalent: "1")
+        fitCanvas.keyEquivalentModifierMask = .command
+        fitCanvas.target = self
+        menu.addItem(fitCanvas)
+
+        menu.addItem(.separator())
+
+        let presets: [(String, CGFloat, String)] = [
+            ("50%", 0.5, ""),
+            ("100%", 1.0, "0"),
+            ("200%", 2.0, ""),
+        ]
+        let currentMag = overlayView?.enclosingScrollView?.magnification ?? 1.0
+        for (title, mag, key) in presets {
+            let item = NSMenuItem(title: title, action: #selector(zoomPresetAction(_:)), keyEquivalent: key)
+            if !key.isEmpty { item.keyEquivalentModifierMask = .command }
+            item.target = self
+            item.tag = Int(mag * 100)
+            if abs(currentMag - mag) < 0.01 { item.state = .on }
+            menu.addItem(item)
+        }
+
+        menu.popUp(positioning: nil, at: NSPoint(x: 0, y: zoomButton.bounds.height + 2), in: zoomButton)
+    }
+
+    @objc private func zoomInAction() {
+        guard let sv = overlayView?.enclosingScrollView, let doc = sv.documentView else { return }
+        let newMag = min(sv.maxMagnification, sv.magnification * 1.25)
+        sv.setMagnification(newMag, centeredAt: NSPoint(x: doc.bounds.midX, y: doc.bounds.midY))
+        updateZoom(newMag)
+    }
+
+    @objc private func zoomOutAction() {
+        guard let sv = overlayView?.enclosingScrollView, let doc = sv.documentView else { return }
+        let newMag = max(sv.minMagnification, sv.magnification / 1.25)
+        sv.setMagnification(newMag, centeredAt: NSPoint(x: doc.bounds.midX, y: doc.bounds.midY))
+        updateZoom(newMag)
+    }
+
+    @objc private func fitCanvasAction() {
+        guard let sv = overlayView?.enclosingScrollView, let doc = sv.documentView else { return }
+        let docUnscaledW = doc.frame.width / sv.magnification
+        let docUnscaledH = doc.frame.height / sv.magnification
+        guard docUnscaledW > 0, docUnscaledH > 0 else { return }
+        let clipSize = sv.contentView.bounds.size
+        let fitMag = min(clipSize.width / docUnscaledW, clipSize.height / docUnscaledH)
+        let clamped = max(sv.minMagnification, min(sv.maxMagnification, fitMag))
+        sv.magnification = clamped
+        updateZoom(clamped)
+    }
+
+    @objc private func zoomPresetAction(_ sender: NSMenuItem) {
+        let mag = CGFloat(sender.tag) / 100.0
+        guard let sv = overlayView?.enclosingScrollView else { return }
+        sv.magnification = mag
+        updateZoom(mag)
+    }
+
+    // MARK: - Top bar actions
 
     @objc private func cropClicked() {
         guard let ov = overlayView else { return }
@@ -123,11 +201,6 @@ class EditorTopBarView: NSView {
     @objc private func flipHClicked() { overlayView?.flipImageHorizontally() }
     @objc private func flipVClicked() { overlayView?.flipImageVertically() }
     @objc private func addCaptureClicked() { overlayView?.overlayDelegate?.overlayViewDidRequestAddCapture() }
-
-    @objc private func resetZoomClicked() {
-        overlayView?.enclosingScrollView?.magnification = 1.0
-        updateZoom(1.0)
-    }
 
     override func resetCursorRects() {
         addCursorRect(bounds, cursor: .arrow)

@@ -86,13 +86,15 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         scrollView.allowsMagnification = false
         scrollView.minMagnification = 0.1
         scrollView.maxMagnification = 8.0
-        scrollView.horizontalScrollElasticity = .allowed
-        scrollView.verticalScrollElasticity = .allowed
+        scrollView.horizontalScrollElasticity = .none
+        scrollView.verticalScrollElasticity = .none
         scrollView.usesPredominantAxisScrolling = false
         // Insets so user can scroll past document edges to see content behind toolbars:
         // top=32 (top bar), bottom=80 (bottom toolbar + options row), right=46 (right toolbar)
         scrollView.automaticallyAdjustsContentInsets = false
         scrollView.contentInsets = NSEdgeInsets(top: 36, left: 0, bottom: 84, right: 50)
+        // Extend scrollbar tracks to window edges (negate content insets effect on scrollers)
+        scrollView.scrollerInsets = NSEdgeInsets(top: -36, left: 0, bottom: -84, right: -50)
 
         let clipView = CenteringClipView(frame: scrollView.contentView.frame)
         clipView.drawsBackground = false

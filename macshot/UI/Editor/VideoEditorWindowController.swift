@@ -712,7 +712,11 @@ private final class VideoEditorView: NSView {
     }
 
     private func saveVideo() {
-        let dirURL = SaveDirectoryAccess.resolveRecordingDirectory()
+        guard let dirURL = SaveDirectoryAccess.resolveRecordingDirectoryIfAccessible() else {
+            // No valid bookmark — fall back to Save As panel
+            saveVideoAs()
+            return
+        }
         let ext = videoURL.pathExtension
         let name = videoURL.deletingPathExtension().lastPathComponent + ".\(ext)"
         let destURL = dirURL.appendingPathComponent(name)
@@ -745,7 +749,12 @@ private final class VideoEditorView: NSView {
                 showStatus("Saved to \(destURL.lastPathComponent)")
                 needsDisplay = true
             } catch {
-                showStatus("Save failed", isError: true)
+                if dirURL != nil {
+                    // Bookmarked directory failed — fall back to Save As
+                    saveVideoAs()
+                } else {
+                    showStatus("Save failed", isError: true)
+                }
             }
             return
         }

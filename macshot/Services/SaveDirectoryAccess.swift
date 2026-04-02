@@ -113,6 +113,26 @@ enum SaveDirectoryAccess {
         return resolve()
     }
 
+    /// Like resolveRecordingDirectory(), but returns nil if no valid security-scoped bookmark exists.
+    /// Use this to decide whether to fall back to a Save As panel.
+    static func resolveRecordingDirectoryIfAccessible() -> URL? {
+        guard let bookmarkData = UserDefaults.standard.data(forKey: recBookmarkKey) else { return nil }
+        var isStale = false
+        guard let url = try? URL(resolvingBookmarkData: bookmarkData,
+                                  options: .withSecurityScope,
+                                  relativeTo: nil,
+                                  bookmarkDataIsStale: &isStale) else { return nil }
+        if isStale {
+            if let fresh = try? url.bookmarkData(options: .withSecurityScope,
+                                                  includingResourceValuesForKeys: nil,
+                                                  relativeTo: nil) {
+                UserDefaults.standard.set(fresh, forKey: recBookmarkKey)
+            }
+        }
+        guard url.startAccessingSecurityScopedResource() else { return nil }
+        return url
+    }
+
     static func recordingDirectoryHint() -> URL? {
         if let path = UserDefaults.standard.string(forKey: recPathKey) {
             return URL(fileURLWithPath: path)

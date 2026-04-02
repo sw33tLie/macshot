@@ -77,10 +77,16 @@ class ToolOptionsRowView: NSView {
             curX = addLineStyleSegment(at: curX, ov: ov)
         }
 
-        // ── Arrow style ──
+        // ── Arrow style + reverse toggle ──
         if tool == .arrow {
             curX = addSeparator(at: curX)
             curX = addArrowStyleSegment(at: curX, ov: ov)
+            curX = addSeparator(at: curX)
+            curX = addToggle(at: curX, title: "Flip", isOn: ov.arrowReversed) { [weak ov] isOn in
+                ov?.arrowReversed = isOn
+                UserDefaults.standard.set(isOn, forKey: "arrowReversed")
+                ov?.needsDisplay = true
+            }
         }
 
         // ── Shape fill style (rectangle, ellipse) ──
@@ -107,11 +113,6 @@ class ToolOptionsRowView: NSView {
             curX = addToggle(at: curX, title: "Smooth", isOn: ov.pencilSmoothEnabled) { [weak ov] isOn in
                 ov?.pencilSmoothEnabled = isOn
                 UserDefaults.standard.set(isOn, forKey: "pencilSmoothEnabled")
-                ov?.needsDisplay = true
-            }
-            curX = addToggle(at: curX, title: "Velocity", isOn: ov.pencilVelocityEnabled) { [weak ov] isOn in
-                ov?.pencilVelocityEnabled = isOn
-                UserDefaults.standard.set(isOn, forKey: "pencilVelocityEnabled")
                 ov?.needsDisplay = true
             }
         }

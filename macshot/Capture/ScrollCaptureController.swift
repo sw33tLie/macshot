@@ -74,11 +74,11 @@ final class ScrollCaptureController {
     private let captureInterval: TimeInterval = 0.04  // ~25 fps for fast scroll tracking
 
     // Manual scroll: throttle + settlement (kept as fallback when auto-scroll is off)
-    private let manualCaptureInterval: TimeInterval = 0.04
+    private let manualCaptureInterval: TimeInterval = 0.15
     private var lastCaptureTime: TimeInterval = 0
     private var pendingCaptureTask: Task<Void, Never>?
     private var settlementTimer: Timer?
-    private let settlementInterval: TimeInterval = 0.10
+    private let settlementInterval: TimeInterval = 0.20
 
     // Guard: only one capture at a time
     private var isCapturing: Bool = false
@@ -931,33 +931,33 @@ final class ScrollCaptureController {
 
     // MARK: - Strip capture
 
-    /// Capture a stable frame: read the latest frame, wait briefly, read again.
-    /// If both frames are identical (no tearing/mid-render), return it.
-    /// Retries up to 5 times to get a clean frame.
+    /// Capture a stable frame: grab frames, convert to CPU-backed, compare consecutive
+    /// pairs until two match (content has settled). Exponential backoff between attempts.
     private func captureStrip() async -> CGImage? {
         guard let stream = persistentStream else { return nil }
 
-        for _ in 0..<5 {
-            guard let frame1 = stream.latestFrame else {
-                try? await Task.sleep(nanoseconds: 30_000_000)  // 30ms
+        var previousCPU: CGImage?
+        var waitNs: UInt64 = 10_000_000  // start at 10ms
+
+        for _ in 0..<8 {
+            guard let raw = stream.latestFrame,
+                  let cpu = copyToCPUBacked(raw) else {
+                try? await Task.sleep(nanoseconds: 30_000_000)
                 continue
             }
-            // Wait for the next frame to arrive (~1 frame at 120fps)
-            try? await Task.sleep(nanoseconds: 10_000_000)  // 10ms
-            guard let frame2 = stream.latestFrame else { continue }
 
-            // Quick check: compare a few sample rows between the two frames.
-            // If they match, the content has settled (no tearing).
-            if framesMatch(frame1, frame2) {
-                return copyToCPUBacked(frame2) ?? frame2
+            if let prev = previousCPU, framesMatch(prev, cpu) {
+                // Two consecutive CPU-backed frames match — content has settled
+                return cpu
             }
-            // Frames differ — content is still rendering. Wait and retry.
-            try? await Task.sleep(nanoseconds: 50_000_000)  // 50ms
+
+            previousCPU = cpu
+            try? await Task.sleep(nanoseconds: waitNs)
+            waitNs = min(waitNs * 3 / 2, 80_000_000)  // backoff: 10→15→22→33→50→75→80ms
         }
 
-        // Fallback: return whatever we have
-        guard let raw = stream.latestFrame else { return nil }
-        return copyToCPUBacked(raw) ?? raw
+        // Fallback: return last captured frame
+        return previousCPU
     }
 
     /// Quick comparison of two frames by sampling a few rows. Returns true if they're nearly identical.

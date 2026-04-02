@@ -329,6 +329,8 @@ class OverlayView: NSView {
         LineStyle(rawValue: UserDefaults.standard.integer(forKey: "currentLineStyle")) ?? .solid
     var currentArrowStyle: ArrowStyle =
         ArrowStyle(rawValue: UserDefaults.standard.integer(forKey: "currentArrowStyle")) ?? .single
+    var arrowReversed: Bool =
+        UserDefaults.standard.bool(forKey: "arrowReversed")
     var currentRectFillStyle: RectFillStyle =
         RectFillStyle(rawValue: UserDefaults.standard.integer(forKey: "currentRectFillStyle"))
         ?? .stroke
@@ -344,8 +346,6 @@ class OverlayView: NSView {
 
     var pencilSmoothEnabled: Bool =
         UserDefaults.standard.object(forKey: "pencilSmoothEnabled") as? Bool ?? true
-    var pencilVelocityEnabled: Bool =
-        UserDefaults.standard.object(forKey: "pencilVelocityEnabled") as? Bool ?? false
     var smartMarkerEnabled: Bool =
         UserDefaults.standard.object(forKey: "smartMarkerEnabled") as? Bool ?? false
     private var roundedRectEnabled: Bool =
@@ -976,6 +976,11 @@ class OverlayView: NSView {
     }
 
     /// Re-evaluate the cursor for the current tool (e.g. after toggling smart marker).
+    /// Find the EditorTopBarView in the chrome parent (for updating zoom label from keyboard shortcuts).
+    private func findTopBar() -> EditorTopBarView? {
+        chromeParentView?.subviews.compactMap { $0 as? EditorTopBarView }.first
+    }
+
     func updateCursorForCurrentTool() {
         guard let win = window else { return }
         let point = convert(win.mouseLocationOutsideOfEventStream, from: nil)
@@ -3371,25 +3376,34 @@ class OverlayView: NSView {
             xform.concat()
         }
 
-        // Draw dashed border
-        let path = NSBezierPath(roundedRect: padded, xRadius: 3, yRadius: 3)
-        path.lineWidth = 1.5
-        path.setLineDash([4, 4], count: 2, phase: 0)
-        NSColor.white.withAlphaComponent(0.8).setStroke()
-        path.stroke()
-        ToolbarLayout.accentColor.withAlphaComponent(0.3).setFill()
-        NSBezierPath(roundedRect: padded, xRadius: 3, yRadius: 3).fill()
+        // Draw accent highlight on the annotation's actual shape
+        let accentHighlight = ToolbarLayout.accentColor.withAlphaComponent(0.55)
+        accentHighlight.setStroke()
+        let shapePath: NSBezierPath
+        switch annotation.tool {
+        case .rectangle, .filledRectangle:
+            let r = annotation.rectCornerRadius
+            shapePath = NSBezierPath(roundedRect: annotation.boundingRect, xRadius: r, yRadius: r)
+        case .ellipse:
+            shapePath = NSBezierPath(ovalIn: annotation.boundingRect)
+        default:
+            shapePath = NSBezierPath(roundedRect: padded, xRadius: 2, yRadius: 2)
+        }
+        shapePath.lineWidth = annotation.strokeWidth + 6
+        shapePath.lineCapStyle = .round
+        shapePath.lineJoinStyle = .round
+        shapePath.stroke()
 
         // Draw resize handles (8 positions) — loupe/pencil/marker don't support resize
         if annotation.tool != .loupe && annotation.tool != .pencil && annotation.tool != .marker {
             let handles = annotationAllHandleRects(for: padded)
             annotationResizeHandleRects = handles
             for (_, rect) in handles {
-                ToolbarLayout.accentColor.setFill()
+                NSColor.white.setFill()
                 NSBezierPath(ovalIn: rect).fill()
-                NSColor.white.withAlphaComponent(0.8).setStroke()
+                ToolbarLayout.accentColor.setStroke()
                 let border = NSBezierPath(ovalIn: rect.insetBy(dx: 0.5, dy: 0.5))
-                border.lineWidth = 1
+                border.lineWidth = 1.5
                 border.stroke()
             }
         } else {
@@ -3675,10 +3689,10 @@ class OverlayView: NSView {
 
         if isEditorMode {
             let cb = chromeParentView?.bounds ?? bounds
-            bottomStrip.frame.origin = NSPoint(x: cb.midX - bottomSize.width / 2, y: 6)
+            bottomStrip.frame.origin = NSPoint(x: cb.midX - bottomSize.width / 2, y: 20)
             bottomStrip.autoresizingMask = [.minXMargin, .maxXMargin, .maxYMargin]
             rightStrip.frame.origin = NSPoint(
-                x: cb.maxX - rightSize.width - 6, y: cb.maxY - rightSize.height - 36)
+                x: cb.maxX - rightSize.width - 20, y: cb.maxY - rightSize.height - 36)
             rightStrip.autoresizingMask = [.minXMargin, .minYMargin]
         } else {
             let optRowH: CGFloat = 38  // options row height + gap
@@ -4284,9 +4298,9 @@ class OverlayView: NSView {
                     x: annotation.boundingRect.midX, y: annotation.boundingRect.midY)
                 let currentAngle = atan2(canvasPoint.x - center.x, canvasPoint.y - center.y)
                 var newRotation = rotationOriginal - (currentAngle - rotationStartAngle)
-                // Shift: snap to 90° steps
+                // Shift: snap to 45° steps
                 if NSEvent.modifierFlags.contains(.shift) {
-                    let step = CGFloat.pi / 2
+                    let step = CGFloat.pi / 4
                     newRotation = (newRotation / step).rounded() * step
                 }
                 annotation.rotation = newRotation
@@ -4774,16 +4788,9 @@ class OverlayView: NSView {
     }
 
     override func scrollWheel(with event: NSEvent) {
+        // Editor mode: all scroll handling is done by CenteringClipView
         if isInsideScrollView {
-            guard let sv = enclosingScrollView else { return }
-            let isTrackpad = event.phase != [] || event.momentumPhase != []
-            if !isTrackpad {
-                // Mouse wheel: larger step + animated for smooth zoom
-                let factor = pow(1.15, event.deltaY)
-                editorZoom(by: factor, cursorInWindow: event.locationInWindow, animated: true)
-            } else {
-                sv.scrollWheel(with: event)
-            }
+            enclosingScrollView?.scrollWheel(with: event)
             return
         }
         guard state == .selected else { return }
@@ -5882,12 +5889,46 @@ class OverlayView: NSView {
                     return
                 }
                 if event.charactersIgnoringModifiers == "0" {
-                    if state == .selected && zoomLevel != 1.0 {
+                    if isInsideScrollView, let sv = enclosingScrollView {
+                        sv.magnification = 1.0
+                        findTopBar()?.updateZoom(1.0)
+                    } else if state == .selected && zoomLevel != 1.0 {
                         resetZoom()
                         showZoomLabel()
                         needsDisplay = true
                     }
                     return
+                }
+                if isInsideScrollView {
+                    if event.charactersIgnoringModifiers == "=" || event.charactersIgnoringModifiers == "+" {
+                        if let sv = enclosingScrollView, let doc = sv.documentView {
+                            let newMag = min(sv.maxMagnification, sv.magnification * 1.25)
+                            sv.setMagnification(newMag, centeredAt: NSPoint(x: doc.bounds.midX, y: doc.bounds.midY))
+                            findTopBar()?.updateZoom(newMag)
+                        }
+                        return
+                    }
+                    if event.charactersIgnoringModifiers == "-" {
+                        if let sv = enclosingScrollView, let doc = sv.documentView {
+                            let newMag = max(sv.minMagnification, sv.magnification / 1.25)
+                            sv.setMagnification(newMag, centeredAt: NSPoint(x: doc.bounds.midX, y: doc.bounds.midY))
+                            findTopBar()?.updateZoom(newMag)
+                        }
+                        return
+                    }
+                    if event.charactersIgnoringModifiers == "1" {
+                        if let sv = enclosingScrollView, let doc = sv.documentView {
+                            let unscaledW = doc.frame.width / sv.magnification
+                            let unscaledH = doc.frame.height / sv.magnification
+                            guard unscaledW > 0, unscaledH > 0 else { return }
+                            let clipSize = sv.contentView.bounds.size
+                            let fitMag = min(clipSize.width / unscaledW, clipSize.height / unscaledH)
+                            let clamped = max(sv.minMagnification, min(sv.maxMagnification, fitMag))
+                            sv.magnification = clamped
+                            findTopBar()?.updateZoom(clamped)
+                        }
+                        return
+                    }
                 }
             }
             super.keyDown(with: event)
