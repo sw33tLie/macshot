@@ -1,5 +1,37 @@
 # Changelog
 
+## [3.5.2] - 2026-04-02
+
+### Added
+- **Smart marker mode** — OCR-based text detection snaps the marker's vertical position and height to actual text lines. Respects the user's horizontal drag range while auto-aligning to the nearest text. Toggle in marker tool options. Vertical pill cursor when active.
+- **Scroll capture live preview panel** — floating panel beside the capture region shows the stitched image updating in real-time as you scroll. Bottom-aligned with the selection rectangle, grows upward.
+- **Editor zoom dropdown** — the zoom percentage in the editor top bar is now a clickable dropdown with Zoom In/Out, Fit Canvas, and preset levels (50%/100%/200%). Replaces the old reset-zoom button.
+- **Editor keyboard zoom** — `Cmd+=`/`Cmd+-` to zoom in/out, `Cmd+0` for 100%, `Cmd+1` for fit canvas in the editor window.
+- **Arrow flip toggle** — new "Flip" button in arrow tool options to reverse the arrowhead direction (head at start instead of end).
+- **Toolbar color customization** — accent and icon colors are now configurable in Preferences with live preview and reset-to-default.
+- **GIF recordings in history** — GIF recordings now appear in the screenshot history with a thumbnail from the first frame.
+- **Homebrew Cask CI** — release workflow auto-bumps the Homebrew cask formula via `brew bump-cask-pr`.
+
+### Changed
+- **Scroll capture frame stability** — fixed a critical bug where the frame stability check was non-functional: it compared GPU-backed frames whose pixel data was inaccessible, so the comparison always failed silently. Every capture was essentially grabbing whatever frame happened to be available, including mid-scroll and mid-render states. Now properly converts frames to CPU-backed memory before comparing, with exponential backoff (10ms–80ms) for apps with slow compositors like Chrome.
+- **Scroll capture speed** — persistent capture stream runs at 120fps (was 60fps) for fresher frames. Auto-scroll cycle reduced from ~200ms to ~80ms per frame. Manual scroll settlement tuned for reliable captures without unnecessary delays.
+- **Annotation selection highlight** — replaced the dashed rectangle with semi-transparent fill with a clean accent-colored outline that follows the annotation's actual shape (rounded rect corners, ellipse outline, etc.). Resize handles now use white fill with accent border.
+- **Rotation snap** — holding Shift while rotating now snaps to 45-degree steps instead of 90-degree.
+- **Rotation hit-testing** — hit-test for rotated annotations now properly un-rotates the test point, fixing cases where clicking on a rotated shape wouldn't select it.
+- **Pencil cursor** — larger (25% bigger) with black outline for better visibility on light backgrounds.
+- **Thick arrow sizing** — reduced to match proportions of other arrow styles at the same stroke width.
+- **Editor scroll behavior** — mouse wheel now scrolls content vertically (instead of zooming). No elastic bounce when content fits within the window. Scrollbar tracks extend to window edges.
+- **Editor toolbar spacing** — increased margins for bottom and right toolbars in the editor window.
+- **Toolbar overlap** — right toolbar moves out of the bottom toolbar's way instead of vice versa, with vertical fallback when horizontal shift isn't enough.
+- **Hotkey display** — added F13–F20, arrow keys, and other special keys to the key name map in Preferences.
+
+### Fixed
+- **Scroll capture stitch glitches** — the frame stability fix above is the primary fix. Previously, capturing mid-render frames (especially in Chrome and Electron apps) produced horizontal line artifacts, shifted rows, and misaligned seams in the stitched output.
+- **Video editor save failure** — when the recording directory bookmark is invalid or inaccessible, the save button now falls back to a Save As panel instead of silently failing.
+
+### Removed
+- **Velocity pencil mode** — removed the experimental per-point stroke width feature. The variable-width rendering had visual artifacts and the velocity tracking was unreliable with Chaikin smoothing.
+
 ## [3.5.1] - 2026-04-02
 
 ### Added

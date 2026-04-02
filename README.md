@@ -55,17 +55,17 @@ brew install sw33tlie/macshot/macshot
 ### Capture
 - **Instant capture** — global hotkey freezes your screen, select any region
 - **Window snap** — hover over a window and click to capture it exactly; `Tab` toggles snap, `F` for full screen
-- **Scroll capture** — auto-detects vertical or horizontal scrolling, stitches with Apple Vision
+- **Scroll capture** — auto-detects vertical or horizontal scrolling, stitches with Apple Vision, live preview panel beside the capture region
 - **Capture delay** — 3/5/10/30 second countdown before capture, set via menu bar. Escape to cancel.
 - **Multi-monitor** — captures all screens simultaneously; drag a selection across screens for a stitched image
 - **Quick save** — `Cmd+Shift+S` to select and save/copy instantly without annotation. Enter key also saves/copies based on preference.
 - **Quick OCR** — `Cmd+Shift+T` to select and extract text instantly
 
 ### Annotation Tools
-- **Arrow** — 5 styles: single, thick/banner, double, open, tail; right-click to add anchor points for complex curves
+- **Arrow** — 5 styles: single, thick/banner, double, open, tail; flip direction toggle; right-click to add anchor points for complex curves
 - **Shapes** — rectangle and ellipse with 3 fill modes (stroke, stroke+fill, fill), corner radius slider
 - **Text** — rich formatting (bold/italic/underline/strikethrough), resizable text box, left/center/right alignment, background fill & outline colors, click to re-edit
-- **Pencil & Marker** — freeform drawing with optional smoothing
+- **Pencil & Marker** — freeform drawing with optional smoothing; smart marker mode snaps to text lines via OCR
 - **Numbered markers** — auto-incrementing (1/I/A/a formats), with optional pointer cone
 - **Stamp / Emoji** — 21 quick emojis, 100+ in categorized picker, or load any image
 - **Pixelate & Blur** — irreversible redaction; auto-redact PII (emails, phones, credit cards, SSNs, API keys), auto-detect faces and people, or draw in "Text Only" mode to blur just the text in a region
@@ -98,7 +98,7 @@ brew install sw33tlie/macshot/macshot
 - Standalone resizable window with full annotation tools, beautify preview
 - **Add Capture** — capture additional screen regions and compose them into a single image, drag to reposition
 - Crop (with rule-of-thirds grid), flip H/V, zoom 0.1x–8x
-- Top bar with pixel dimensions, zoom level
+- Top bar with pixel dimensions, zoom dropdown (presets, fit canvas, zoom in/out)
 
 ### Beautify
 - macOS window frame with traffic lights, shadow, and gradient background
