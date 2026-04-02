@@ -7,7 +7,7 @@ class ToolbarButtonView: NSView {
     let action: ToolbarButtonAction
     var sfSymbol: String?
     var isOn: Bool = false { didSet { if oldValue != isOn { cachedIcon = nil; needsDisplay = true } } }
-    var tintColor: NSColor = .white { didSet { cachedIcon = nil; cachedIconIsOn = nil; needsDisplay = true } }
+    var tintColor: NSColor = ToolbarLayout.iconColor { didSet { cachedIcon = nil; cachedIconIsOn = nil; needsDisplay = true } }
     var swatchColor: NSColor? { didSet { needsDisplay = true } }
     var hasContextMenu: Bool = false
 
@@ -44,7 +44,7 @@ class ToolbarButtonView: NSView {
         } else if isOn {
             bg = ToolbarLayout.accentColor
         } else if isHovered {
-            bg = NSColor.white.withAlphaComponent(0.12)
+            bg = ToolbarLayout.iconColor.withAlphaComponent(0.12)
         } else {
             bg = NSColor.clear
         }
@@ -57,7 +57,7 @@ class ToolbarButtonView: NSView {
             let r = bounds.insetBy(dx: inset, dy: inset)
             swatch.setFill()
             NSBezierPath(roundedRect: r, xRadius: 4, yRadius: 4).fill()
-            NSColor.white.withAlphaComponent(0.4).setStroke()
+            ToolbarLayout.iconColor.withAlphaComponent(0.4).setStroke()
             let border = NSBezierPath(roundedRect: r, xRadius: 4, yRadius: 4)
             border.lineWidth = 0.5
             border.stroke()
@@ -71,7 +71,7 @@ class ToolbarButtonView: NSView {
             let cfg = NSImage.SymbolConfiguration(pointSize: 14, weight: .medium)
             if let img = NSImage(systemSymbolName: name, accessibilityDescription: nil)?
                     .withSymbolConfiguration(cfg) {
-                let color = currentIsOn ? NSColor.white : tintColor
+                let color = currentIsOn ? ToolbarLayout.iconColor : tintColor
                 let tinted = NSImage(size: img.size, flipped: false) { r in
                     img.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1.0)
                     color.setFill()
@@ -98,7 +98,7 @@ class ToolbarButtonView: NSView {
             path.line(to: NSPoint(x: bounds.maxX - 3, y: bounds.minY + 3))
             path.line(to: NSPoint(x: bounds.maxX - 3, y: bounds.minY + 3 + s))
             path.close()
-            NSColor.white.withAlphaComponent(0.4).setFill()
+            ToolbarLayout.iconColor.withAlphaComponent(0.4).setFill()
             path.fill()
         }
     }

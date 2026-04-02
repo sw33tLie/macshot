@@ -5,12 +5,13 @@ import Cocoa
 class ToolOptionsRowView: NSView {
 
     weak var overlayView: OverlayView?
-    private var currentTool: AnnotationTool?
+    private(set) var currentTool: AnnotationTool?
     private let rowHeight: CGFloat = 34
     private let padding: CGFloat = 8
     /// The natural content width calculated during rebuild, before any external resizing.
     private(set) var contentWidth: CGFloat = 200
-    private let accent = ToolbarLayout.accentColor
+    private var accent: NSColor { ToolbarLayout.accentColor }
+    private var iconColor: NSColor { ToolbarLayout.iconColor }
 
     // Consume clicks on gaps between controls so they don't fall through to OverlayView
     override func hitTest(_ point: NSPoint) -> NSView? {
@@ -31,9 +32,9 @@ class ToolOptionsRowView: NSView {
     /// Buttons with tag 990+ are excluded (they have custom colors like red/green/white).
     override func addSubview(_ view: NSView) {
         super.addSubview(view)
-        if let btn = view as? NSButton, btn.tag < 990 { btn.contentTintColor = accent }
-        if let slider = view as? NSSlider { slider.trackFillColor = accent }
-        if let seg = view as? NSSegmentedControl { seg.selectedSegmentBezelColor = accent }
+        if let btn = view as? NSButton, btn.tag < 990 { btn.contentTintColor = ToolbarLayout.accentColor }
+        if let slider = view as? NSSlider { slider.trackFillColor = ToolbarLayout.accentColor }
+        if let seg = view as? NSSegmentedControl { seg.selectedSegmentBezelColor = ToolbarLayout.accentColor }
     }
 
     override init(frame: NSRect) {
@@ -100,12 +101,17 @@ class ToolOptionsRowView: NSView {
             curX = addHintLabel(at: curX, text: "Right-click to add points")
         }
 
-        // ── Pencil smooth toggle ──
+        // ── Pencil smooth + velocity toggles ──
         if tool == .pencil {
             curX = addSeparator(at: curX)
             curX = addToggle(at: curX, title: "Smooth", isOn: ov.pencilSmoothEnabled) { [weak ov] isOn in
                 ov?.pencilSmoothEnabled = isOn
                 UserDefaults.standard.set(isOn, forKey: "pencilSmoothEnabled")
+                ov?.needsDisplay = true
+            }
+            curX = addToggle(at: curX, title: "Velocity", isOn: ov.pencilVelocityEnabled) { [weak ov] isOn in
+                ov?.pencilVelocityEnabled = isOn
+                UserDefaults.standard.set(isOn, forKey: "pencilVelocityEnabled")
                 ov?.needsDisplay = true
             }
         }
@@ -186,7 +192,7 @@ class ToolOptionsRowView: NSView {
     private func addSeparator(at x: CGFloat) -> CGFloat {
         let sep = NSView(frame: NSRect(x: x + 6, y: 8, width: 1, height: rowHeight - 16))
         sep.wantsLayer = true
-        sep.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.1).cgColor
+        sep.layer?.backgroundColor = ToolbarLayout.iconColor.withAlphaComponent(0.1).cgColor
         addSubview(sep)
         return x + 13
     }
@@ -196,7 +202,7 @@ class ToolOptionsRowView: NSView {
 
         let nameLabel = NSTextField(labelWithString: tool == .loupe ? "Size" : "Stroke")
         nameLabel.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
-        nameLabel.textColor = NSColor.white.withAlphaComponent(0.4)
+        nameLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.4)
         nameLabel.sizeToFit()
         nameLabel.frame.origin = NSPoint(x: curX, y: (rowHeight - nameLabel.frame.height) / 2)
         addSubview(nameLabel)
@@ -217,7 +223,7 @@ class ToolOptionsRowView: NSView {
         let labelW: CGFloat = tool == .loupe ? 32 : 28
         let label = NSTextField(labelWithString: valStr)
         label.font = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .medium)
-        label.textColor = NSColor.white.withAlphaComponent(0.6)
+        label.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.6)
         label.alignment = .right
         label.frame = NSRect(x: curX, y: (rowHeight - 14) / 2, width: labelW, height: 14)
         label.tag = 997  // stroke value label
@@ -297,7 +303,7 @@ class ToolOptionsRowView: NSView {
             path.lineWidth = 2
             path.lineCapStyle = .round
             style.apply(to: path)
-            NSColor.white.setStroke()
+            ToolbarLayout.iconColor.setStroke()
             path.move(to: NSPoint(x: 4, y: size.height / 2))
             path.line(to: NSPoint(x: size.width - 4, y: size.height / 2))
             path.stroke()
@@ -311,8 +317,8 @@ class ToolOptionsRowView: NSView {
             let mid = size.height / 2
             let from = NSPoint(x: 3, y: mid)
             let to = NSPoint(x: size.width - 3, y: mid)
-            NSColor.white.setStroke()
-            NSColor.white.setFill()
+            ToolbarLayout.iconColor.setStroke()
+            ToolbarLayout.iconColor.setFill()
 
             switch style {
             case .single:
@@ -400,15 +406,15 @@ class ToolOptionsRowView: NSView {
             path.lineWidth = 1.5
             switch style {
             case .stroke:
-                NSColor.white.setStroke()
+                ToolbarLayout.iconColor.setStroke()
                 path.stroke()
             case .strokeAndFill:
-                NSColor.white.withAlphaComponent(0.4).setFill()
+                ToolbarLayout.iconColor.withAlphaComponent(0.4).setFill()
                 path.fill()
-                NSColor.white.setStroke()
+                ToolbarLayout.iconColor.setStroke()
                 path.stroke()
             case .fill:
-                NSColor.white.setFill()
+                ToolbarLayout.iconColor.setFill()
                 path.fill()
             }
             return true
@@ -431,7 +437,7 @@ class ToolOptionsRowView: NSView {
                 path.addClip()
                 meshImg.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1.0)
                 NSGraphicsContext.restoreGraphicsState()
-                NSColor.white.withAlphaComponent(0.3).setStroke()
+                ToolbarLayout.iconColor.withAlphaComponent(0.3).setStroke()
                 path.lineWidth = 0.5
                 path.stroke()
                 return true
@@ -447,7 +453,7 @@ class ToolOptionsRowView: NSView {
             {
                 grad.draw(in: path, angle: style.angle - 90)
             }
-            NSColor.white.withAlphaComponent(0.3).setStroke()
+            ToolbarLayout.iconColor.withAlphaComponent(0.3).setStroke()
             path.lineWidth = 0.5
             path.stroke()
             return true
@@ -458,7 +464,7 @@ class ToolOptionsRowView: NSView {
         var curX = x
         let label = NSTextField(labelWithString: "Radius")
         label.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
-        label.textColor = NSColor.white.withAlphaComponent(0.4)
+        label.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.4)
         label.sizeToFit()
         label.frame.origin = NSPoint(x: curX, y: (rowHeight - label.frame.height) / 2)
         addSubview(label)
@@ -474,7 +480,7 @@ class ToolOptionsRowView: NSView {
 
         let valLabel = NSTextField(labelWithString: "\(Int(ov.currentRectCornerRadius))px")
         valLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .medium)
-        valLabel.textColor = NSColor.white.withAlphaComponent(0.6)
+        valLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.6)
         valLabel.alignment = .right
         valLabel.frame = NSRect(x: curX, y: (rowHeight - 14) / 2, width: 28, height: 14)
         valLabel.tag = 996  // corner radius value label
@@ -489,11 +495,11 @@ class ToolOptionsRowView: NSView {
         let btn = NSButton(checkboxWithTitle: title, target: nil, action: nil)
         btn.state = isOn ? .on : .off
         btn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
-        btn.contentTintColor = NSColor.white.withAlphaComponent(0.7)
+        btn.contentTintColor = ToolbarLayout.iconColor.withAlphaComponent(0.7)
         // Force white text regardless of system appearance (toolbar is always dark)
         if let cell = btn.cell as? NSButtonCell {
             let attrTitle = NSAttributedString(string: title, attributes: [
-                .foregroundColor: NSColor.white.withAlphaComponent(0.7),
+                .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(0.7),
                 .font: NSFont.systemFont(ofSize: 10, weight: .medium)
             ])
             cell.attributedTitle = attrTitle
@@ -524,7 +530,7 @@ class ToolOptionsRowView: NSView {
 
         let startLabel = NSTextField(labelWithString: "Start:")
         startLabel.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
-        startLabel.textColor = NSColor.white.withAlphaComponent(0.4)
+        startLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.4)
         startLabel.sizeToFit()
         startLabel.frame.origin = NSPoint(x: curX, y: (rowHeight - startLabel.frame.height) / 2)
         addSubview(startLabel)
@@ -541,7 +547,7 @@ class ToolOptionsRowView: NSView {
 
         let valLabel = NSTextField(labelWithString: ov.currentNumberFormat.format(ov.numberStartAt))
         valLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium)
-        valLabel.textColor = NSColor.white.withAlphaComponent(0.85)
+        valLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.85)
         valLabel.tag = 999  // tag for finding later
         valLabel.sizeToFit()
         valLabel.frame.origin = NSPoint(x: curX + 22, y: (rowHeight - valLabel.frame.height) / 2)
@@ -581,7 +587,7 @@ class ToolOptionsRowView: NSView {
             btn.layer?.backgroundColor = isOn ? ToolbarLayout.accentColor.withAlphaComponent(0.85).cgColor : nil
             btn.font = NSFont.systemFont(ofSize: 12, weight: .semibold)
             btn.attributedTitle = NSAttributedString(string: label, attributes: [
-                .foregroundColor: NSColor.white.withAlphaComponent(isOn ? 1.0 : 0.6),
+                .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(isOn ? 1.0 : 0.6),
                 .font: NSFont.systemFont(ofSize: 12, weight: .semibold),
             ])
             btn.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: 26, height: 22)
@@ -625,7 +631,7 @@ class ToolOptionsRowView: NSView {
 
         let sizeLabel = NSTextField(labelWithString: "\(Int(ov.textEditor.fontSize))")
         sizeLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .medium)
-        sizeLabel.textColor = NSColor.white.withAlphaComponent(0.7)
+        sizeLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.7)
         sizeLabel.alignment = .center
         sizeLabel.tag = 998
         sizeLabel.frame = NSRect(x: curX, y: (rowHeight - 14) / 2, width: 26, height: 14)
@@ -662,7 +668,7 @@ class ToolOptionsRowView: NSView {
         fillSwatch.layer?.backgroundColor = ov.textEditor.bgColor.cgColor
         fillSwatch.layer?.cornerRadius = 3
         fillSwatch.layer?.borderWidth = 1.5
-        fillSwatch.layer?.borderColor = NSColor.white.withAlphaComponent(0.4).cgColor
+        fillSwatch.layer?.borderColor = ToolbarLayout.iconColor.withAlphaComponent(0.4).cgColor
         fillSwatch.layer?.opacity = ov.textEditor.bgEnabled ? 1.0 : 0.3
         fillSwatch.tag = 975
         fillSwatch.target = self
@@ -688,7 +694,7 @@ class ToolOptionsRowView: NSView {
         outlineSwatch.layer?.backgroundColor = ov.textEditor.outlineColor.cgColor
         outlineSwatch.layer?.cornerRadius = 3
         outlineSwatch.layer?.borderWidth = 1.5
-        outlineSwatch.layer?.borderColor = NSColor.white.withAlphaComponent(0.4).cgColor
+        outlineSwatch.layer?.borderColor = ToolbarLayout.iconColor.withAlphaComponent(0.4).cgColor
         outlineSwatch.layer?.opacity = ov.textEditor.outlineEnabled ? 1.0 : 0.3
         outlineSwatch.tag = 976
         outlineSwatch.target = self
@@ -771,7 +777,7 @@ class ToolOptionsRowView: NSView {
         moreBtn.action = #selector(moreEmojisClicked(_:))
         moreBtn.frame = NSRect(x: curX, y: (rowHeight - 26) / 2, width: 28, height: 26)
         addSubview(moreBtn)
-        moreBtn.contentTintColor = .white  // after addSubview to override auto-tint
+        moreBtn.contentTintColor = ToolbarLayout.iconColor  // after addSubview to override auto-tint
         curX += 30
 
         let loadBtn = NSButton()
@@ -784,7 +790,7 @@ class ToolOptionsRowView: NSView {
         loadBtn.action = #selector(loadImageClicked)
         loadBtn.frame = NSRect(x: curX, y: (rowHeight - 26) / 2, width: 28, height: 26)
         addSubview(loadBtn)
-        loadBtn.contentTintColor = .white  // after addSubview to override auto-tint
+        loadBtn.contentTintColor = ToolbarLayout.iconColor  // after addSubview to override auto-tint
         curX += 30
 
         return curX
@@ -797,7 +803,7 @@ class ToolOptionsRowView: NSView {
         // — Draw mode: All / Text Only segmented control —
         let drawLabel = NSTextField(labelWithString: "Draw:")
         drawLabel.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
-        drawLabel.textColor = NSColor.white.withAlphaComponent(0.4)
+        drawLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.4)
         drawLabel.sizeToFit()
         drawLabel.frame.origin = NSPoint(x: curX, y: (rowHeight - drawLabel.frame.height) / 2)
         addSubview(drawLabel)
@@ -820,7 +826,7 @@ class ToolOptionsRowView: NSView {
         // — Auto-detect: All Text, PII, Types —
         let autoLabel = NSTextField(labelWithString: "Auto:")
         autoLabel.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
-        autoLabel.textColor = NSColor.white.withAlphaComponent(0.4)
+        autoLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.4)
         autoLabel.sizeToFit()
         autoLabel.frame.origin = NSPoint(x: curX, y: (rowHeight - autoLabel.frame.height) / 2)
         addSubview(autoLabel)
@@ -925,7 +931,7 @@ class ToolOptionsRowView: NSView {
         arrowBtn.target = self
         arrowBtn.action = #selector(beautifyGradientClicked(_:))
         addSubview(arrowBtn)
-        arrowBtn.contentTintColor = .white.withAlphaComponent(0.6)
+        arrowBtn.contentTintColor = ToolbarLayout.iconColor.withAlphaComponent(0.6)
         curX += 18
 
         curX = addSeparator(at: curX)
@@ -936,7 +942,7 @@ class ToolOptionsRowView: NSView {
         toggleBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
         if let cell = toggleBtn.cell as? NSButtonCell {
             cell.attributedTitle = NSAttributedString(string: "On", attributes: [
-                .foregroundColor: NSColor.white.withAlphaComponent(0.7),
+                .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(0.7),
                 .font: NSFont.systemFont(ofSize: 10, weight: .medium)
             ])
         }
@@ -952,7 +958,7 @@ class ToolOptionsRowView: NSView {
         var curX = x
         let lbl = NSTextField(labelWithString: label)
         lbl.font = NSFont.systemFont(ofSize: 9, weight: .medium)
-        lbl.textColor = NSColor.white.withAlphaComponent(0.5)
+        lbl.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.5)
         lbl.sizeToFit()
         lbl.frame.origin = NSPoint(x: curX, y: (rowHeight - lbl.frame.height) / 2)
         addSubview(lbl)
@@ -1015,7 +1021,7 @@ class ToolOptionsRowView: NSView {
     private func addHintLabel(at x: CGFloat, text: String) -> CGFloat {
         let label = NSTextField(labelWithString: text)
         label.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
-        label.textColor = NSColor.white.withAlphaComponent(0.3)
+        label.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.3)
         label.sizeToFit()
         label.frame.origin = NSPoint(x: x, y: (rowHeight - label.frame.height) / 2)
         addSubview(label)

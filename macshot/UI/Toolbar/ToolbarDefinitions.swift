@@ -1,5 +1,9 @@
 import Cocoa
 
+extension Notification.Name {
+    static let toolbarColorsDidChange = Notification.Name("toolbarColorsDidChange")
+}
+
 // Toolbar buttons drawn directly in the OverlayView (not a separate window).
 // This avoids window-level z-order issues and matches Flameshot's look.
 
@@ -47,22 +51,59 @@ struct ToolbarButton {
     var isSelected: Bool = false
     var isHovered: Bool = false
     var isPressed: Bool = false
-    var tintColor: NSColor = .white
+    var tintColor: NSColor = ToolbarLayout.iconColor
     var bgColor: NSColor? = nil  // for color swatches
     var hasContextMenu: Bool = false  // draw small corner triangle to indicate right-click options
 }
 
 class ToolbarLayout {
 
-    // Theme colors matching Flameshot purple style
-    static let accentColor = NSColor(calibratedRed: 0.55, green: 0.30, blue: 0.85, alpha: 1.0)
-    static let handleColor = accentColor
-    static let bgColor = NSColor(white: 0.12, alpha: 1.0)
-    static let selectedBg = accentColor
+    // Default theme colors (Flameshot purple style)
+    static let defaultAccentColor = NSColor(calibratedRed: 0.55, green: 0.30, blue: 0.85, alpha: 1.0)
+    static let defaultIconColor = NSColor.white
+
+    // User-customizable colors — read from UserDefaults with defaults matching the original look
+    static var accentColor: NSColor {
+        if let data = UserDefaults.standard.data(forKey: "toolbarAccentColor"),
+           let color = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data) {
+            return color
+        }
+        return defaultAccentColor
+    }
+    static var iconColor: NSColor {
+        if let data = UserDefaults.standard.data(forKey: "toolbarIconColor"),
+           let color = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data) {
+            return color
+        }
+        return defaultIconColor
+    }
+    static var handleColor: NSColor { accentColor }
+    static var bgColor = NSColor(white: 0.12, alpha: 1.0)
+    static var selectedBg: NSColor { accentColor }
     static let buttonSize: CGFloat = 32
     static let buttonSpacing: CGFloat = 2
     static let toolbarPadding: CGFloat = 4
     static let cornerRadius: CGFloat = 6
+
+    /// Save accent color to UserDefaults.
+    static func saveAccentColor(_ color: NSColor) {
+        if let data = try? NSKeyedArchiver.archivedData(withRootObject: color, requiringSecureCoding: false) {
+            UserDefaults.standard.set(data, forKey: "toolbarAccentColor")
+        }
+    }
+
+    /// Save icon color to UserDefaults.
+    static func saveIconColor(_ color: NSColor) {
+        if let data = try? NSKeyedArchiver.archivedData(withRootObject: color, requiringSecureCoding: false) {
+            UserDefaults.standard.set(data, forKey: "toolbarIconColor")
+        }
+    }
+
+    /// Reset both colors to defaults.
+    static func resetColors() {
+        UserDefaults.standard.removeObject(forKey: "toolbarAccentColor")
+        UserDefaults.standard.removeObject(forKey: "toolbarIconColor")
+    }
 
     // Bottom toolbar items (drawing tools + colors + undo/redo + processing actions)
     static func bottomButtons(
@@ -80,7 +121,7 @@ class ToolbarLayout {
             action: .tool(.select), sfSymbol: "cursor.rays", label: nil, tooltip: "Select & Edit")
         selectBtn.isSelected = (selectedTool == .select)
         if !hasAnnotations {
-            selectBtn.tintColor = NSColor.white.withAlphaComponent(0.3)
+            selectBtn.tintColor = ToolbarLayout.iconColor.withAlphaComponent(0.3)
         }
         buttons.append(selectBtn)
 
@@ -356,7 +397,7 @@ class ToolbarLayout {
         if !isEditorMode && actionEnabled(1009) {
             var recordBtn = ToolbarButton(
                 action: .record, sfSymbol: "video.fill", label: nil, tooltip: "Record")
-            recordBtn.tintColor = .white
+            recordBtn.tintColor = ToolbarLayout.iconColor
             buttons.append(recordBtn)
         }
 

@@ -1,6 +1,17 @@
 import Cocoa
 import Vision
 
+private func tintedMarkerCopy(of image: NSImage, color: NSColor) -> NSImage {
+    let img = NSImage(size: image.size, flipped: false) { r in
+        image.draw(in: r)
+        color.setFill()
+        r.fill(using: .sourceAtop)
+        return true
+    }
+    img.lockFocus(); img.unlockFocus()
+    return img
+}
+
 /// Handles marker/highlighter tool interaction.
 /// Accumulates freeform points on drag, semi-transparent wide stroke.
 /// Smart mode: detects text lines via Vision OCR and snaps the marker to cover them with a straight highlight.
@@ -20,20 +31,32 @@ final class MarkerToolHandler: AnnotationToolHandler {
     }
 
     private static let penCursor: NSCursor = {
-        let size: CGFloat = 20
+        let size: CGFloat = 25
         let config = NSImage.SymbolConfiguration(pointSize: size, weight: .medium)
-        guard let img = NSImage(systemSymbolName: "pencil", accessibilityDescription: nil)?
+        guard let base = NSImage(systemSymbolName: "pencil", accessibilityDescription: nil)?
                 .withSymbolConfiguration(config) else {
             return NSCursor.crosshair
         }
-        let tinted = NSImage(size: img.size, flipped: false) { r in
-            img.draw(in: r)
-            NSColor.white.setFill()
-            r.fill(using: .sourceAtop)
+        let blackImg = tintedMarkerCopy(of: base, color: .black)
+        let whiteImg = tintedMarkerCopy(of: base, color: .white)
+
+        let pad: CGFloat = 2
+        let outSize = NSSize(width: base.size.width + pad * 2, height: base.size.height + pad * 2)
+        let result = NSImage(size: outSize, flipped: false) { _ in
+            let drawRect = NSRect(x: pad, y: pad, width: base.size.width, height: base.size.height)
+            for ox: CGFloat in [-1, 0, 1] {
+                for oy: CGFloat in [-1, 0, 1] {
+                    guard ox != 0 || oy != 0 else { continue }
+                    blackImg.draw(in: drawRect.offsetBy(dx: ox, dy: oy))
+                }
+            }
+            whiteImg.draw(in: drawRect)
             return true
         }
-        return NSCursor(image: tinted, hotSpot: NSPoint(x: 2, y: tinted.size.height - 2))
+        result.lockFocus(); result.unlockFocus()
+        return NSCursor(image: result, hotSpot: NSPoint(x: pad + 2, y: result.size.height - pad - 2))
     }()
+
 
     /// Cursor for smart marker mode — vertical pill shape (taller than wide, like a marker tip).
     private static let smartCursor: NSCursor = {

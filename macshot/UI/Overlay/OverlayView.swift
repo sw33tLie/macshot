@@ -344,6 +344,8 @@ class OverlayView: NSView {
 
     var pencilSmoothEnabled: Bool =
         UserDefaults.standard.object(forKey: "pencilSmoothEnabled") as? Bool ?? true
+    var pencilVelocityEnabled: Bool =
+        UserDefaults.standard.object(forKey: "pencilVelocityEnabled") as? Bool ?? false
     var smartMarkerEnabled: Bool =
         UserDefaults.standard.object(forKey: "smartMarkerEnabled") as? Bool ?? false
     private var roundedRectEnabled: Bool =
@@ -608,6 +610,20 @@ class OverlayView: NSView {
             rect: .zero, options: [.mouseMoved, .activeAlways, .inVisibleRect],
             owner: self, userInfo: nil)
         addTrackingArea(area)
+
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(handleToolbarColorsChanged),
+            name: .toolbarColorsDidChange, object: nil)
+    }
+
+    @objc private func handleToolbarColorsChanged() {
+        // Rebuild toolbars and options row with new colors
+        toolOptionsRowView?.layer?.backgroundColor = ToolbarLayout.bgColor.cgColor
+        rebuildToolbarLayout()
+        if let tool = toolOptionsRowView?.currentTool {
+            toolOptionsRowView?.rebuild(for: tool)
+        }
+        needsDisplay = true
     }
 
     /// Invalidate only the rect around a cursor preview (old + new position) instead of the whole view.

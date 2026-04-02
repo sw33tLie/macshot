@@ -145,6 +145,7 @@ class Annotation {
     var number: Int?
     var numberFormat: NumberFormat = .decimal
     var points: [NSPoint]?
+    var pointWidths: [CGFloat]?  // per-point stroke width for velocity-sensitive drawing
     var sourceImage: NSImage?    // for pixelate: temporary reference during drawing (cleared after bake)
     var sourceImageBounds: NSRect = .zero  // the bounds the image was drawn into
     var bakedBlurNSImage: NSImage?    // baked result for pixelate/blur (NSImage avoids CGImage flip issues)
@@ -210,6 +211,7 @@ class Annotation {
         c.number = number
         c.numberFormat = numberFormat
         c.points = points
+        c.pointWidths = pointWidths
         c.bakedBlurNSImage = bakedBlurNSImage
         c.textImage = textImage
         c.textDrawRect = textDrawRect
@@ -610,6 +612,40 @@ class Annotation {
             return
         }
 
+        // Variable-width path: per-point widths from velocity tracking
+        if let widths = pointWidths, widths.count == points.count {
+            ctx.setAlpha(alpha)
+            ctx.beginTransparencyLayer(auxiliaryInfo: nil)
+            color.withAlphaComponent(1.0).setFill()
+
+            // Draw filled circles at each point + trapezoid quads between consecutive points
+            for i in 0..<points.count {
+                let r = widths[i] / 2
+                let rect = NSRect(x: points[i].x - r, y: points[i].y - r, width: r * 2, height: r * 2)
+                NSBezierPath(ovalIn: rect).fill()
+            }
+            for i in 0..<points.count - 1 {
+                let p0 = points[i], p1 = points[i + 1]
+                let r0 = widths[i] / 2, r1 = widths[i + 1] / 2
+                let dx = p1.x - p0.x, dy = p1.y - p0.y
+                let len = hypot(dx, dy)
+                guard len > 0.1 else { continue }
+                // Perpendicular unit vector
+                let nx = -dy / len, ny = dx / len
+                let quad = NSBezierPath()
+                quad.move(to: NSPoint(x: p0.x + nx * r0, y: p0.y + ny * r0))
+                quad.line(to: NSPoint(x: p1.x + nx * r1, y: p1.y + ny * r1))
+                quad.line(to: NSPoint(x: p1.x - nx * r1, y: p1.y - ny * r1))
+                quad.line(to: NSPoint(x: p0.x - nx * r0, y: p0.y - ny * r0))
+                quad.close()
+                quad.fill()
+            }
+
+            ctx.endTransparencyLayer()
+            ctx.setAlpha(1.0)
+            return
+        }
+
         // Use a transparency layer so self-overlapping segments don't compound alpha
         ctx.setAlpha(alpha)
         ctx.beginTransparencyLayer(auxiliaryInfo: nil)
@@ -935,9 +971,9 @@ class Annotation {
 
         // Sizing — scale everything down when arrow is short
         let sizeScale = min(1.0, max(0.2, totalLen / 120))
-        let tailHalf = max(2, strokeWidth * 0.8) * sizeScale
-        let shaftHalf = max(6, strokeWidth * 2.5) * sizeScale
-        let headHalf = shaftHalf * 2.2
+        let tailHalf = max(2, strokeWidth * 0.5) * sizeScale
+        let shaftHalf = max(4, strokeWidth * 1.5) * sizeScale
+        let headHalf = shaftHalf * 2.0
         let headLen = min(totalLen * 0.35, headHalf * 1.8)
         let r: CGFloat = min(headLen * 0.22, headHalf * 0.3)  // corner rounding
 

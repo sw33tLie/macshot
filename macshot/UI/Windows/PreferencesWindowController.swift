@@ -34,6 +34,8 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
     private var snapGuidesCheckbox: NSButton!
     private var captureCursorCheckbox: NSButton!
     private var windowTitleCheckbox: NSButton!
+    private var accentColorWell: NSColorWell!
+    private var iconColorWell: NSColorWell!
     private var quickModePopup: NSPopUpButton!
     private var imageFormatPopup: NSPopUpButton!
     private var qualitySlider: NSSlider!
@@ -387,6 +389,31 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         histNote.textColor = .secondaryLabelColor
 
         stack.addArrangedSubview(labeledRow("History size:", controls: [historySizeField, historySizeStepper, histNote]))
+        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
+
+        // ── Appearance ───────────────────────────────────────
+        stack.addArrangedSubview(sectionHeader("Appearance"))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        accentColorWell = NSColorWell(frame: NSRect(x: 0, y: 0, width: 36, height: 24))
+        accentColorWell.color = ToolbarLayout.accentColor
+        accentColorWell.target = self
+        accentColorWell.action = #selector(accentColorChanged(_:))
+
+        iconColorWell = NSColorWell(frame: NSRect(x: 0, y: 0, width: 36, height: 24))
+        iconColorWell.color = ToolbarLayout.iconColor
+        iconColorWell.target = self
+        iconColorWell.action = #selector(iconColorChanged(_:))
+
+        let resetColorsBtn = NSButton(title: "Reset", target: self, action: #selector(resetToolbarColors(_:)))
+        resetColorsBtn.bezelStyle = .rounded
+        resetColorsBtn.controlSize = .small
+
+        stack.addArrangedSubview(indented(labeledRow("Accent color:", controls: [accentColorWell])))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+        stack.addArrangedSubview(indented(labeledRow("Icon color:", controls: [iconColorWell])))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+        stack.addArrangedSubview(indented(labeledRow("", controls: [resetColorsBtn])))
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // Make stack fill scroll width
@@ -1355,6 +1382,9 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         captureCursorCheckbox.state = UserDefaults.standard.bool(forKey: "captureCursor") ? .on : .off
         windowTitleCheckbox.state = UserDefaults.standard.bool(forKey: "useWindowTitleInFilename") ? .on : .off
 
+        accentColorWell.color = ToolbarLayout.accentColor
+        iconColorWell.color = ToolbarLayout.iconColor
+
         let historySize = UserDefaults.standard.object(forKey: "historySize") as? Int ?? 10
         historySizeField.integerValue = historySize
         historySizeStepper.integerValue = historySize
@@ -1569,6 +1599,23 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         if sender.state == .on { if !enabled.contains(sender.tag) { enabled.append(sender.tag) } }
         else { enabled.removeAll { $0 == sender.tag } }
         UserDefaults.standard.set(enabled, forKey: key)
+    }
+    @objc private func accentColorChanged(_ sender: NSColorWell) {
+        ToolbarLayout.saveAccentColor(sender.color)
+        notifyToolbarColorChange()
+    }
+    @objc private func iconColorChanged(_ sender: NSColorWell) {
+        ToolbarLayout.saveIconColor(sender.color)
+        notifyToolbarColorChange()
+    }
+    @objc private func resetToolbarColors(_ sender: NSButton) {
+        ToolbarLayout.resetColors()
+        accentColorWell.color = ToolbarLayout.defaultAccentColor
+        iconColorWell.color = ToolbarLayout.defaultIconColor
+        notifyToolbarColorChange()
+    }
+    private func notifyToolbarColorChange() {
+        NotificationCenter.default.post(name: .toolbarColorsDidChange, object: nil)
     }
     @objc private func copyUploadURL(_ sender: NSButton) {
         guard let id = sender.identifier?.rawValue, id.hasPrefix("link::") else { return }
