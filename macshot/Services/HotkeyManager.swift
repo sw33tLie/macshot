@@ -92,7 +92,7 @@ class HotkeyManager {
         }
 
         let (keyCode, modifiers) = Self.readHotkey(for: slot)
-        guard modifiers != 0 else { return }  // no modifiers = disabled
+        guard modifiers != 0 || Self.isFunctionKey(keyCode) else { return }  // no modifiers = disabled (unless function key)
 
         installEventHandler()
         var ref: EventHotKeyRef?
@@ -207,6 +207,18 @@ class HotkeyManager {
     /// Legacy display string (for capture area).
     static func shortcutDisplayString() -> String {
         return displayString(for: .captureArea)
+    }
+
+    /// Returns true if the keyCode is a function key (F1–F20), safe to use without modifiers.
+    static func isFunctionKey(_ keyCode: UInt32) -> Bool {
+        let functionKeyCodes: Set<UInt32> = [
+            UInt32(kVK_F1), UInt32(kVK_F2), UInt32(kVK_F3), UInt32(kVK_F4),
+            UInt32(kVK_F5), UInt32(kVK_F6), UInt32(kVK_F7), UInt32(kVK_F8),
+            UInt32(kVK_F9), UInt32(kVK_F10), UInt32(kVK_F11), UInt32(kVK_F12),
+            UInt32(kVK_F13), UInt32(kVK_F14), UInt32(kVK_F15), UInt32(kVK_F16),
+            UInt32(kVK_F17), UInt32(kVK_F18), UInt32(kVK_F19), UInt32(kVK_F20),
+        ]
+        return functionKeyCodes.contains(keyCode)
     }
 
     // MARK: - String Helpers
