@@ -64,14 +64,16 @@ enum LineStyle: Int, CaseIterable {
             let adjDash = adjustedCycle * ratio
             let adjGap = adjustedCycle * (1 - ratio)
             let pattern: [CGFloat] = [adjDash, adjGap]
-            path.setLineDash(pattern, count: 2, phase: 0)
+            // Center dashes on the path start so the pattern wraps symmetrically
+            path.setLineDash(pattern, count: 2, phase: adjDash / 2)
         case .dotted:
             path.lineCapStyle = .round
             let gap = max(path.lineWidth * 2, 6)
             let count = max(1, round(pathLength / gap))
             let adjustedGap = pathLength / count
             let pattern: [CGFloat] = [0, adjustedGap]
-            path.setLineDash(pattern, count: 2, phase: 0)
+            // Offset by half a gap so dots are centered on each side, not bunched at the path start
+            path.setLineDash(pattern, count: 2, phase: adjustedGap / 2)
         }
     }
 }
@@ -123,6 +125,20 @@ enum NumberFormat: Int, CaseIterable {
         let base = uppercase ? Character("A") : Character("a")
         let idx = ((max(1, n) - 1) % 26)
         return String(Character(UnicodeScalar(base.asciiValue! + UInt8(idx))))
+    }
+}
+
+enum CensorMode: Int, CaseIterable {
+    case pixelate = 0
+    case blur = 1
+    case solid = 2
+
+    var label: String {
+        switch self {
+        case .pixelate: return "Pixelate"
+        case .blur: return "Blur"
+        case .solid: return "Solid"
+        }
     }
 }
 
@@ -191,6 +207,7 @@ class Annotation {
     var rectFillStyle: RectFillStyle = .stroke // rectangle fill mode
     var stampImage: NSImage?          // rendered emoji or loaded picture for stamp tool
     var measureInPoints: Bool = false  // true = show pt, false = show px
+    var censorMode: CensorMode = .pixelate
     var textBgColor: NSColor?         // background pill color (nil = no background)
     var textOutlineColor: NSColor?    // text outline/stroke color (nil = no outline)
     var textAlignment: NSTextAlignment = .left // text alignment within the box
@@ -231,6 +248,7 @@ class Annotation {
         c.rectFillStyle = rectFillStyle
         c.stampImage = stampImage
         c.measureInPoints = measureInPoints
+        c.censorMode = censorMode
         c.textBgColor = textBgColor
         c.textOutlineColor = textOutlineColor
         c.textAlignment = textAlignment
@@ -258,6 +276,7 @@ class Annotation {
         fontFamilyName = src.fontFamilyName
         numberFormat = src.numberFormat
         measureInPoints = src.measureInPoints
+        censorMode = src.censorMode
     }
 
     var boundingRect: NSRect {
@@ -422,21 +441,21 @@ class Annotation {
         // Pencil/marker: trace the actual stroke path with a glowing outline
         if tool == .pencil || tool == .marker {
             guard let points = points, points.count >= 2 else { return }
+            let ctx = NSGraphicsContext.current?.cgContext
+            ctx?.saveGState()
+            ctx?.setAlpha(0.35)
+            ctx?.beginTransparencyLayer(auxiliaryInfo: nil)
             let path = NSBezierPath()
             path.move(to: points[0])
-            for i in 1..<points.count {
-                path.line(to: points[i])
-            }
+            for i in 1..<points.count { path.line(to: points[i]) }
             let effectiveWidth = tool == .marker ? strokeWidth * 6 : strokeWidth
             path.lineWidth = effectiveWidth + 6
             path.lineCapStyle = .round
             path.lineJoinStyle = .round
-            ToolbarLayout.accentColor.withAlphaComponent(0.35).setStroke()
+            ToolbarLayout.accentColor.setStroke()
             path.stroke()
-            // Inner bright edge
-            path.lineWidth = effectiveWidth + 2
-            ToolbarLayout.accentColor.withAlphaComponent(0.15).setStroke()
-            path.stroke()
+            ctx?.endTransparencyLayer()
+            ctx?.restoreGState()
             return
         }
 
@@ -578,9 +597,11 @@ class Annotation {
         case .number:
             drawNumber()
         case .pixelate:
-            drawPixelate(in: context)
+            drawCensor(in: context)
         case .blur:
-            drawBlur(in: context)
+            // Legacy: existing blur annotations from before the merge
+            censorMode = .blur
+            drawCensor(in: context)
         case .measure:
             drawMeasure()
         case .loupe:
@@ -1397,77 +1418,104 @@ class Annotation {
 
     /// Bake the processed image from source, then release the source screenshot reference.
     /// Called once when the annotation is finalized (mouseUp).
+    /// Bake the censored region (pixelate, blur, or solid fill).
+    /// Called by commitAnnotation() on finalization. Also handles legacy `.blur` tool.
     func bakePixelate() {
-        if tool == .blur {
-            bakeBlur()
-            return
-        }
-        guard tool == .pixelate, bakedBlurNSImage == nil, let _ = sourceImage else { return }
+        // Legacy blur annotations + unified pixelate tool
+        guard (tool == .pixelate || tool == .blur), bakedBlurNSImage == nil else { return }
+        // Legacy .blur tool → set censorMode so drawing dispatches correctly
+        if tool == .blur { censorMode = .blur }
 
-        guard let regionImage = cropRegionFromSource() else { return }
+        let mode = censorMode
         let rect = boundingRect
 
-        // Convert to CGImage for pixelation
+        // Solid mode: no source image needed — just a filled rect
+        if mode == .solid {
+            let img = NSImage(size: rect.size, flipped: false) { drawRect in
+                self.color.setFill()
+                NSBezierPath(rect: drawRect).fill()
+                return true
+            }
+            bakedBlurNSImage = img
+            self.sourceImage = nil
+            return
+        }
+
+        guard let _ = sourceImage, let regionImage = cropRegionFromSource() else { return }
         guard let tiffData = regionImage.tiffRepresentation,
               let bitmap = NSBitmapImageRep(data: tiffData),
-              let cropped = bitmap.cgImage else { return }
+              let cgImage = bitmap.cgImage else { return }
 
-        // Fixed block size of ~8px on screen (scaled for Retina)
-        let pixelBlock = 8
-        let tinyW = max(1, cropped.width / pixelBlock)
-        let tinyH = max(1, cropped.height / pixelBlock)
-        let cs = CGColorSpaceCreateDeviceRGB()
-        let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue
+        if mode == .blur {
+            guard let blurredCG = applyGaussianBlur(to: cgImage) else { return }
+            bakedBlurNSImage = NSImage(cgImage: blurredCG, size: rect.size)
+        } else {
+            // Pixelate: down-sample → up-scale with nearest-neighbor
+            let pixelBlock = 8
+            let tinyW = max(1, cgImage.width / pixelBlock)
+            let tinyH = max(1, cgImage.height / pixelBlock)
+            let cs = CGColorSpaceCreateDeviceRGB()
+            let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue
 
-        guard let ctx1 = CGContext(data: nil, width: tinyW, height: tinyH,
-                                    bitsPerComponent: 8, bytesPerRow: 0, space: cs, bitmapInfo: bitmapInfo) else { return }
-        ctx1.interpolationQuality = .low
-        ctx1.draw(cropped, in: CGRect(x: 0, y: 0, width: tinyW, height: tinyH))
-        guard let tiny1 = ctx1.makeImage() else { return }
+            guard let ctx1 = CGContext(data: nil, width: tinyW, height: tinyH,
+                                        bitsPerComponent: 8, bytesPerRow: 0, space: cs, bitmapInfo: bitmapInfo) else { return }
+            ctx1.interpolationQuality = .low
+            ctx1.draw(cgImage, in: CGRect(x: 0, y: 0, width: tinyW, height: tinyH))
+            guard let tiny1 = ctx1.makeImage() else { return }
 
-        let tinyW2 = max(1, tinyW / 2)
-        let tinyH2 = max(1, tinyH / 2)
-        guard let ctx2 = CGContext(data: nil, width: tinyW2, height: tinyH2,
-                                    bitsPerComponent: 8, bytesPerRow: 0, space: cs, bitmapInfo: bitmapInfo) else { return }
-        ctx2.interpolationQuality = .low
-        ctx2.draw(tiny1, in: CGRect(x: 0, y: 0, width: tinyW2, height: tinyH2))
-        guard let tiny2 = ctx2.makeImage() else { return }
+            let tinyW2 = max(1, tinyW / 2)
+            let tinyH2 = max(1, tinyH / 2)
+            guard let ctx2 = CGContext(data: nil, width: tinyW2, height: tinyH2,
+                                        bitsPerComponent: 8, bytesPerRow: 0, space: cs, bitmapInfo: bitmapInfo) else { return }
+            ctx2.interpolationQuality = .low
+            ctx2.draw(tiny1, in: CGRect(x: 0, y: 0, width: tinyW2, height: tinyH2))
+            guard let tiny2 = ctx2.makeImage() else { return }
 
-        let finalW = max(1, Int(rect.width * 2))
-        let finalH = max(1, Int(rect.height * 2))
-        guard let ctx3 = CGContext(data: nil, width: finalW, height: finalH,
-                                    bitsPerComponent: 8, bytesPerRow: 0, space: cs, bitmapInfo: bitmapInfo) else { return }
-        ctx3.interpolationQuality = .none
-        ctx3.draw(tiny2, in: CGRect(x: 0, y: 0, width: finalW, height: finalH))
+            let finalW = max(1, Int(rect.width * 2))
+            let finalH = max(1, Int(rect.height * 2))
+            guard let ctx3 = CGContext(data: nil, width: finalW, height: finalH,
+                                        bitsPerComponent: 8, bytesPerRow: 0, space: cs, bitmapInfo: bitmapInfo) else { return }
+            ctx3.interpolationQuality = .none
+            ctx3.draw(tiny2, in: CGRect(x: 0, y: 0, width: finalW, height: finalH))
 
-        guard let pixelatedCG = ctx3.makeImage() else { return }
-        bakedBlurNSImage = NSImage(cgImage: pixelatedCG, size: rect.size)
+            guard let pixelatedCG = ctx3.makeImage() else { return }
+            bakedBlurNSImage = NSImage(cgImage: pixelatedCG, size: rect.size)
+        }
         self.sourceImage = nil
     }
 
-    private func drawPixelate(in context: NSGraphicsContext) {
+    /// Unified censor drawing — dispatches based on censorMode.
+    private func drawCensor(in context: NSGraphicsContext) {
         let rect = boundingRect
         guard rect.width > 4, rect.height > 4 else { return }
 
-        // Use baked image if available (finalized annotation)
+        // Baked (finalized) — draw the result
         if let baked = bakedBlurNSImage {
             baked.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1.0)
             return
         }
 
-        // Live preview while drawing: frosted overlay indicator (real pixelation applied on mouseUp)
-        NSColor.black.withAlphaComponent(0.3).setFill()
-        NSBezierPath(rect: rect).fill()
+        // Live preview while drawing
+        switch censorMode {
+        case .pixelate:
+            NSColor.black.withAlphaComponent(0.3).setFill()
+            NSBezierPath(rect: rect).fill()
+        case .blur:
+            NSColor.white.withAlphaComponent(0.35).setFill()
+            NSBezierPath(rect: rect).fill()
+        case .solid:
+            color.setFill()
+            NSBezierPath(rect: rect).fill()
+            return  // no border for solid
+        }
 
         let border = NSBezierPath(rect: rect)
         border.lineWidth = 1.5
         let pattern: [CGFloat] = [4, 4]
         border.setLineDash(pattern, count: 2, phase: 0)
-        NSColor.white.withAlphaComponent(0.5).setStroke()
+        NSColor.white.withAlphaComponent(censorMode == .blur ? 0.7 : 0.5).setStroke()
         border.stroke()
     }
-
-    // MARK: - Blur
 
     private static let ciContext = CIContext()
 
@@ -1478,7 +1526,6 @@ class Annotation {
 
         let ciImage = CIImage(cgImage: cgImage)
 
-        // Clamp edges to avoid dark border artifacts
         guard let clamp = CIFilter(name: "CIAffineClamp") else { return nil }
         clamp.setValue(ciImage, forKey: kCIInputImageKey)
         clamp.setValue(NSAffineTransform(), forKey: kCIInputTransformKey)
@@ -1489,45 +1536,8 @@ class Annotation {
         blur.setValue(radius, forKey: kCIInputRadiusKey)
         guard let output = blur.outputImage else { return nil }
 
-        // Render exactly at the original pixel dimensions
         let outputRect = CGRect(x: 0, y: 0, width: w, height: h)
         return Annotation.ciContext.createCGImage(output, from: outputRect)
-    }
-
-    private func bakeBlur() {
-        guard tool == .blur, bakedBlurNSImage == nil, let _ = sourceImage else { return }
-
-        guard let regionImage = cropRegionFromSource() else { return }
-        let rect = boundingRect
-
-        guard let tiffData = regionImage.tiffRepresentation,
-              let bitmap = NSBitmapImageRep(data: tiffData),
-              let cgImage = bitmap.cgImage,
-              let blurredCG = applyGaussianBlur(to: cgImage) else { return }
-
-        bakedBlurNSImage = NSImage(cgImage: blurredCG, size: rect.size)
-        self.sourceImage = nil
-    }
-
-    private func drawBlur(in context: NSGraphicsContext) {
-        let rect = boundingRect
-        guard rect.width > 4, rect.height > 4 else { return }
-
-        if let blurred = bakedBlurNSImage {
-            blurred.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1.0)
-            return
-        }
-
-        // Live preview while dragging: frosted overlay indicator (real blur applied on mouseUp)
-        NSColor.white.withAlphaComponent(0.35).setFill()
-        NSBezierPath(rect: rect).fill()
-
-        let border = NSBezierPath(rect: rect)
-        border.lineWidth = 1.5
-        let pattern: [CGFloat] = [4, 4]
-        border.setLineDash(pattern, count: 2, phase: 0)
-        NSColor.white.withAlphaComponent(0.7).setStroke()
-        border.stroke()
     }
 
     // MARK: - Loupe (Magnifying Glass)

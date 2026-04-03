@@ -1,12 +1,14 @@
 import Cocoa
 
-/// Handles pixelate tool interaction.
-/// Shift-constrains to square. Captures composited image source for baking.
+/// Handles the unified censor tool (pixelate, blur, solid).
+/// Mode is read from UserDefaults "censorMode". Shift-constrains to square.
+/// Captures composited image source for pixelate/blur baking.
 final class PixelateToolHandler: AnnotationToolHandler {
 
     let tool: AnnotationTool = .pixelate
 
     func start(at point: NSPoint, canvas: AnnotationCanvas) -> Annotation? {
+        let mode = CensorMode(rawValue: UserDefaults.standard.integer(forKey: "censorMode")) ?? .pixelate
         let annotation = Annotation(
             tool: .pixelate,
             startPoint: point,
@@ -14,8 +16,12 @@ final class PixelateToolHandler: AnnotationToolHandler {
             color: canvas.opacityAppliedColor(for: .pixelate),
             strokeWidth: canvas.currentStrokeWidth
         )
-        annotation.sourceImage = canvas.compositedImage()
-        annotation.sourceImageBounds = canvas.captureDrawRect
+        annotation.censorMode = mode
+        // Solid mode doesn't need a source image
+        if mode != .solid {
+            annotation.sourceImage = canvas.compositedImage()
+            annotation.sourceImageBounds = canvas.captureDrawRect
+        }
         return annotation
     }
 
@@ -44,7 +50,7 @@ final class PixelateToolHandler: AnnotationToolHandler {
             return
         }
 
-        if UserDefaults.standard.bool(forKey: "blurPixelateTextOnly") {
+        if UserDefaults.standard.bool(forKey: "censorTextOnly") {
             let drawnRect = annotation.boundingRect
             let sourceImg = annotation.sourceImage
             let sourceImgBounds = annotation.sourceImageBounds

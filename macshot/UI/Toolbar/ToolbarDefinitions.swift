@@ -116,15 +116,6 @@ class ToolbarLayout {
 
         var buttons: [ToolbarButton] = []
 
-        // Move tool always present (disabled look when no annotations)
-        var selectBtn = ToolbarButton(
-            action: .tool(.select), sfSymbol: "cursor.rays", label: nil, tooltip: "Select & Edit")
-        selectBtn.isSelected = (selectedTool == .select)
-        if !hasAnnotations {
-            selectBtn.tintColor = ToolbarLayout.iconColor.withAlphaComponent(0.3)
-        }
-        buttons.append(selectBtn)
-
         // Get enabled tools from UserDefaults — migrate: only add tools that are brand-new.
         // Track introduced tools in `knownToolRawValues` so user-disabled tools are never re-enabled.
         let allKnownToolRawValues = AnnotationTool.allCases
@@ -157,8 +148,7 @@ class ToolbarLayout {
             (.marker, "paintbrush.pointed.fill", "Marker"),
             (.text, "textformat", "Text"),
             (.number, "1.circle.fill", "Number"),
-            (.pixelate, "squareshape.split.2x2", "Pixelate"),
-            (.blur, "aqi.medium", "Blur"),
+            (.pixelate, "squareshape.split.2x2", "Censor (Pixelate / Blur / Solid)"),
             (.loupe, "magnifyingglass", "Magnify (Loupe)"),
             (.stamp, "face.smiling", "Stamp / Emoji"),
             (.colorSampler, "eyedropper", "Color Picker"),

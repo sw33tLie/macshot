@@ -209,8 +209,10 @@ class ToolOptionsRowView: NSView {
             curX = addStampOptions(at: curX, ov: ov)
         }
 
-        // ── Blur/pixelate redact buttons ──
-        if tool == .pixelate || tool == .blur {
+        // ── Censor tool: mode selector + redact buttons ──
+        if tool == .pixelate {
+            curX = addCensorModeSegment(at: curX, ov: ov)
+            curX = addSeparator(at: curX)
             curX = addRedactOptions(at: curX, ov: ov)
         }
 
@@ -252,7 +254,7 @@ class ToolOptionsRowView: NSView {
         let currentVal = editingAnnotation?.strokeWidth ?? ov.activeStrokeWidthForTool(tool)
         let sliderW: CGFloat = 100
         let slider = NSSlider(value: Double(currentVal),
-                              minValue: tool == .loupe ? 40 : 1, maxValue: tool == .loupe ? 320 : 20,
+                              minValue: tool == .loupe ? 40 : 1, maxValue: tool == .loupe ? 320 : 30,
                               target: self, action: #selector(strokeSliderChanged(_:)))
         slider.frame = NSRect(x: curX, y: (rowHeight - 20) / 2, width: sliderW, height: 20)
         slider.isContinuous = true
@@ -333,6 +335,28 @@ class ToolOptionsRowView: NSView {
         (seg.cell as? NSSegmentedCell)?.segmentStyle = .roundRect
         addSubview(seg)
         curX += segW
+        return curX
+    }
+
+    private func addCensorModeSegment(at x: CGFloat, ov: OverlayView) -> CGFloat {
+        var curX = x
+        let seg = NSSegmentedControl()
+        seg.segmentCount = CensorMode.allCases.count
+        seg.trackingMode = .selectOne
+        seg.target = self
+        seg.action = #selector(censorModeChanged(_:))
+        for (i, mode) in CensorMode.allCases.enumerated() {
+            seg.setLabel(mode.label, forSegment: i)
+            seg.setWidth(0, forSegment: i)  // auto-size
+        }
+        let currentMode = CensorMode(rawValue: UserDefaults.standard.integer(forKey: "censorMode")) ?? .pixelate
+        seg.selectedSegment = currentMode.rawValue
+        seg.sizeToFit()
+        seg.frame.origin = NSPoint(x: curX, y: (rowHeight - 22) / 2)
+        seg.frame.size.height = 22
+        (seg.cell as? NSSegmentedCell)?.segmentStyle = .roundRect
+        addSubview(seg)
+        curX += seg.frame.width
         return curX
     }
 
@@ -841,7 +865,6 @@ class ToolOptionsRowView: NSView {
 
     private func addRedactOptions(at x: CGFloat, ov: OverlayView) -> CGFloat {
         var curX = x
-        let toolName = ov.currentTool == .blur ? "Blur" : "Pixelate"
 
         // — Draw mode: All / Text Only segmented control —
         let drawLabel = NSTextField(labelWithString: "Draw:")
@@ -852,7 +875,7 @@ class ToolOptionsRowView: NSView {
         addSubview(drawLabel)
         curX += drawLabel.frame.width + 4
 
-        let textOnly = UserDefaults.standard.bool(forKey: "blurPixelateTextOnly")
+        let textOnly = UserDefaults.standard.bool(forKey: "censorTextOnly")
         let drawSeg = NSSegmentedControl(labels: ["All", "Text Only"], trackingMode: .selectOne,
                                           target: self, action: #selector(drawModeChanged(_:)))
         drawSeg.selectedSegment = textOnly ? 1 : 0
@@ -939,7 +962,7 @@ class ToolOptionsRowView: NSView {
         }
 
         // Padding slider
-        curX = addBeautifySlider(at: curX, label: "Pad", value: ov.beautifyPadding, min: 16, max: 96, action: #selector(beautifyPaddingChanged(_:)))
+        curX = addBeautifySlider(at: curX, label: "Padding", value: ov.beautifyPadding, min: 16, max: 96, action: #selector(beautifyPaddingChanged(_:)))
 
         // Corner radius slider — hidden for snapped windows (native corners are baked in)
         if !isSnap {
@@ -1151,6 +1174,11 @@ class ToolOptionsRowView: NSView {
         ov.needsDisplay = true
     }
 
+    @objc private func censorModeChanged(_ sender: NSSegmentedControl) {
+        guard let mode = CensorMode(rawValue: sender.selectedSegment) else { return }
+        UserDefaults.standard.set(mode.rawValue, forKey: "censorMode")
+    }
+
     @objc private func numberFormatChanged(_ sender: NSSegmentedControl) {
         guard let ov = overlayView else { return }
         if let fmt = NumberFormat(rawValue: sender.selectedSegment) {
@@ -1224,7 +1252,7 @@ class ToolOptionsRowView: NSView {
     }
 
     @objc private func drawModeChanged(_ sender: NSSegmentedControl) {
-        UserDefaults.standard.set(sender.selectedSegment == 1, forKey: "blurPixelateTextOnly")
+        UserDefaults.standard.set(sender.selectedSegment == 1, forKey: "censorTextOnly")
     }
 
     @objc private func redactAllTextClicked() {

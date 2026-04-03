@@ -66,7 +66,8 @@ enum AutoRedactor {
                 redactTool: redactTool, color: color,
                 sourceImage: sourceImage, sourceImageBounds: sourceImageBounds
             )
-            for ann in annotations { ann.bakePixelate() }
+            let censorMode = CensorMode(rawValue: UserDefaults.standard.integer(forKey: "censorMode")) ?? .pixelate
+            for ann in annotations { ann.censorMode = censorMode; ann.bakePixelate() }
             DispatchQueue.main.async { completion(annotations) }
         }
 
@@ -113,7 +114,8 @@ enum AutoRedactor {
                 }
                 annotations.append(ann)
             }
-            for ann in annotations { ann.bakePixelate() }
+            let censorMode = CensorMode(rawValue: UserDefaults.standard.integer(forKey: "censorMode")) ?? .pixelate
+            for ann in annotations { ann.censorMode = censorMode; ann.bakePixelate() }
             DispatchQueue.main.async { completion(annotations) }
         }
 
@@ -162,7 +164,8 @@ enum AutoRedactor {
                 }
                 annotations.append(ann)
             }
-            for ann in annotations { ann.bakePixelate() }
+            let censorMode = CensorMode(rawValue: UserDefaults.standard.integer(forKey: "censorMode")) ?? .pixelate
+            for ann in annotations { ann.censorMode = censorMode; ann.bakePixelate() }
             DispatchQueue.main.async { completion(annotations) }
         }
 
@@ -209,7 +212,8 @@ enum AutoRedactor {
                 }
                 annotations.append(ann)
             }
-            for ann in annotations { ann.bakePixelate() }
+            let censorMode = CensorMode(rawValue: UserDefaults.standard.integer(forKey: "censorMode")) ?? .pixelate
+            for ann in annotations { ann.censorMode = censorMode; ann.bakePixelate() }
             DispatchQueue.main.async { completion(annotations) }
         }
 

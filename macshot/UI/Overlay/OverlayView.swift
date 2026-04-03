@@ -155,7 +155,6 @@ class OverlayView: NSView {
             FilledRectangleToolHandler(),
             EllipseToolHandler(),
             PixelateToolHandler(),
-            BlurToolHandler(),
             LoupeToolHandler(),
             MeasureToolHandler(),
             NumberToolHandler(),
@@ -1253,6 +1252,15 @@ class OverlayView: NSView {
                 drawBeautifyPreview(context: context)
                 context.restoreGraphicsState()
 
+                // Re-draw in-progress annotation on top of beautify so it stays visible
+                if currentAnnotation != nil || autoMeasurePreview != nil {
+                    context.saveGraphicsState()
+                    applyCanvasTransform(to: context)
+                    currentAnnotation?.draw(in: context)
+                    autoMeasurePreview?.draw(in: context)
+                    context.restoreGraphicsState()
+                }
+
                 // Re-draw annotation controls on top of the beautify preview so they stay visible.
                 if !isRecording, let selected = selectedAnnotation {
                     context.saveGraphicsState()
@@ -1322,7 +1330,7 @@ class OverlayView: NSView {
                 context.restoreGraphicsState()
 
                 // Re-draw overlays on top of effects preview
-                if let selected = selectedAnnotation, currentTool == .select {
+                if let selected = selectedAnnotation {
                     context.saveGraphicsState()
                     applyCanvasTransform(to: context)
                     drawAnnotationControls(for: selected)
@@ -2158,7 +2166,7 @@ class OverlayView: NSView {
         }
         switch currentTool {
         case .pencil, .line, .arrow, .rectangle, .ellipse, .marker, .number, .loupe, .measure,
-            .pixelate, .blur, .stamp:
+            .pixelate, .stamp:
             return true
         case .text:
             return true
@@ -3321,20 +3329,47 @@ class OverlayView: NSView {
         // Draw accent highlight on the annotation's actual shape
         let accentHighlight = ToolbarLayout.accentColor.withAlphaComponent(0.55)
         accentHighlight.setStroke()
-        let shapePath: NSBezierPath
         switch annotation.tool {
+        case .pencil, .marker:
+            // Trace the actual stroke path with a glow, using a transparency layer
+            // to prevent alpha compounding at self-intersections and line joins
+            if let points = annotation.points, points.count >= 2 {
+                let ctx = NSGraphicsContext.current?.cgContext
+                ctx?.saveGState()
+                ctx?.setAlpha(0.55)
+                ctx?.beginTransparencyLayer(auxiliaryInfo: nil)
+                let path = NSBezierPath()
+                path.move(to: points[0])
+                for i in 1..<points.count { path.line(to: points[i]) }
+                let effectiveWidth = annotation.tool == .marker ? annotation.strokeWidth * 6 : annotation.strokeWidth
+                path.lineWidth = effectiveWidth + 6
+                path.lineCapStyle = .round
+                path.lineJoinStyle = .round
+                ToolbarLayout.accentColor.setStroke()
+                path.stroke()
+                ctx?.endTransparencyLayer()
+                ctx?.restoreGState()
+            }
         case .rectangle, .filledRectangle:
             let r = annotation.rectCornerRadius
-            shapePath = NSBezierPath(roundedRect: annotation.boundingRect, xRadius: r, yRadius: r)
+            let shapePath = NSBezierPath(roundedRect: annotation.boundingRect, xRadius: r, yRadius: r)
+            shapePath.lineWidth = annotation.strokeWidth + 6
+            shapePath.lineCapStyle = .round
+            shapePath.lineJoinStyle = .round
+            shapePath.stroke()
         case .ellipse:
-            shapePath = NSBezierPath(ovalIn: annotation.boundingRect)
+            let shapePath = NSBezierPath(ovalIn: annotation.boundingRect)
+            shapePath.lineWidth = annotation.strokeWidth + 6
+            shapePath.lineCapStyle = .round
+            shapePath.lineJoinStyle = .round
+            shapePath.stroke()
         default:
-            shapePath = NSBezierPath(roundedRect: padded, xRadius: 2, yRadius: 2)
+            let shapePath = NSBezierPath(roundedRect: padded, xRadius: 2, yRadius: 2)
+            shapePath.lineWidth = annotation.strokeWidth + 6
+            shapePath.lineCapStyle = .round
+            shapePath.lineJoinStyle = .round
+            shapePath.stroke()
         }
-        shapePath.lineWidth = annotation.strokeWidth + 6
-        shapePath.lineCapStyle = .round
-        shapePath.lineJoinStyle = .round
-        shapePath.stroke()
 
         // Draw resize handles (8 positions) — loupe/pencil/marker don't support resize
         if annotation.tool != .loupe && annotation.tool != .pencil && annotation.tool != .marker {
@@ -4477,6 +4512,7 @@ class OverlayView: NSView {
         }
         if isRotatingAnnotation {
             isRotatingAnnotation = false
+            NSCursor.openHand.set()
             needsDisplay = true
             return
         }
@@ -4486,10 +4522,7 @@ class OverlayView: NSView {
             if let ann = selectedAnnotation, ann.tool == .loupe {
                 ann.bakeLoupe()
             }
-            // If this resize was initiated via hover-to-move (not the select tool), clear selectedAnnotation
-            if currentTool != .select {
-                selectedAnnotation = nil
-            }
+            NSCursor.openHand.set()
             needsDisplay = true
             return
         }
@@ -5256,114 +5289,6 @@ class OverlayView: NSView {
             return
         }
 
-        // Select/move tool: find annotation under cursor
-        if currentTool == .select {
-            // Check annotation control buttons first
-            if let selected = selectedAnnotation {
-                // Delete button
-                if annotationDeleteButtonRect.contains(point) {
-                    if let idx = annotations.firstIndex(where: { $0 === selected }) {
-                        annotations.remove(at: idx)
-                        undoStack.append(.deleted(selected, idx))
-                        redoStack.removeAll()
-                    }
-                    selectedAnnotation = nil
-                    needsDisplay = true
-                    return
-                }
-                // Edit button (text only)
-                if annotationEditButtonRect != .zero && annotationEditButtonRect.contains(point) {
-                    textEditor.restoreState(from: selected)
-                    if let idx = annotations.firstIndex(where: { $0 === selected }) {
-                        annotations.remove(at: idx)
-                        selectedAnnotation = nil
-                    }
-                    showTextField(
-                        at: selected.textDrawRect.origin, existingText: selected.attributedText,
-                        existingFrame: selected.textDrawRect)
-                    needsDisplay = true
-                    return
-                }
-                // Rotation handle
-                if annotationRotateHandleRect != .zero
-                    && annotationRotateHandleRect.insetBy(dx: -6, dy: -6).contains(point)
-                {
-                    isRotatingAnnotation = true
-                    let center = NSPoint(
-                        x: selected.boundingRect.midX, y: selected.boundingRect.midY)
-                    rotationStartAngle = atan2(point.x - center.x, point.y - center.y)
-                    rotationOriginal = selected.rotation
-                    return
-                }
-                // Resize handles — unrotate point into annotation's local space
-                let handleTestPoint: NSPoint
-                if selected.rotation != 0 && selected.supportsRotation {
-                    let center = NSPoint(
-                        x: selected.boundingRect.midX, y: selected.boundingRect.midY)
-                    let cos_r = cos(-selected.rotation)
-                    let sin_r = sin(-selected.rotation)
-                    let dx = point.x - center.x
-                    let dy = point.y - center.y
-                    handleTestPoint = NSPoint(
-                        x: center.x + dx * cos_r - dy * sin_r,
-                        y: center.y + dx * sin_r + dy * cos_r)
-                } else {
-                    handleTestPoint = point
-                }
-                for (handleIdx, handleEntry) in annotationResizeHandleRects.enumerated() {
-                    let (handle, rect) = handleEntry
-                    if rect.insetBy(dx: -4, dy: -4).contains(handleTestPoint) {
-                        isResizingAnnotation = true
-                        annotationResizeHandle = handle
-                        annotationResizeOrigStart = selected.startPoint
-                        annotationResizeOrigEnd = selected.endPoint
-                        annotationResizeOrigTextOrigin = selected.textDrawRect.origin
-                        annotationResizeMouseStart = point
-                        // For multi-anchor: handleIdx 0=start, 1=end, 2+=intermediate anchors
-                        annotationResizeAnchorIndex = -1
-                        if let anchors = selected.anchorPoints, anchors.count >= 3, handleIdx >= 2 {
-                            let anchorIdx = handleIdx - 2 + 1  // anchors[0]=start, so intermediate starts at 1
-                            if anchorIdx > 0 && anchorIdx < anchors.count - 1 {
-                                annotationResizeAnchorIndex = anchorIdx
-                                annotationResizeOrigControlPoint = anchors[anchorIdx]
-                            }
-                        } else if handle == .none || (handle != .bottomLeft && handle != .topRight) {
-                            // Legacy single controlPoint or intermediate anchor
-                            if annotationResizeAnchorIndex < 0 {
-                                annotationResizeOrigControlPoint =
-                                    selected.controlPoint
-                                    ?? NSPoint(
-                                        x: (selected.startPoint.x + selected.endPoint.x) / 2,
-                                        y: (selected.startPoint.y + selected.endPoint.y) / 2
-                                    )
-                            }
-                        }
-                        return
-                    }
-                }
-            }
-
-            // Search in reverse (topmost first)
-            for annotation in annotations.reversed() {
-                if annotation.isMovable && annotation.hitTest(point: point) {
-                    selectedAnnotation = annotation
-                    isDraggingAnnotation = true
-                    didMoveAnnotation = false
-                    annotationDragStart = point
-                    NSCursor.closedHand.set()
-                    needsDisplay = true
-                    return
-                }
-            }
-            // Clicked empty space — deselect
-            selectedAnnotation = nil
-            needsDisplay = true
-            return
-        }
-
-        // Deselect when using other tools
-        selectedAnnotation = nil
-
         if currentTool == .text {
             // Check if clicking on an existing text annotation → re-edit it
             // Note: point is already in canvas space (converted by caller).
@@ -5444,6 +5369,7 @@ class OverlayView: NSView {
                             )
                     }
                 }
+                NSCursor.closedHand.set()
                 needsDisplay = true
                 return true
             }
@@ -5456,6 +5382,20 @@ class OverlayView: NSView {
             let center = NSPoint(x: selected.boundingRect.midX, y: selected.boundingRect.midY)
             rotationStartAngle = atan2(point.x - center.x, point.y - center.y)
             rotationOriginal = selected.rotation
+            NSCursor.closedHand.set()
+            needsDisplay = true
+            return true
+        }
+        // Check edit button (text annotations)
+        if annotationEditButtonRect != .zero && annotationEditButtonRect.contains(point) {
+            textEditor.restoreState(from: selected)
+            if let idx = annotations.firstIndex(where: { $0 === selected }) {
+                annotations.remove(at: idx)
+                selectedAnnotation = nil
+            }
+            showTextField(
+                at: selected.textDrawRect.origin, existingText: selected.attributedText,
+                existingFrame: selected.textDrawRect)
             needsDisplay = true
             return true
         }
@@ -5792,10 +5732,7 @@ class OverlayView: NSView {
                     case "n":
                         handleToolbarAction(.tool(.number))
                         return
-                    case "b":
-                        handleToolbarAction(.tool(.blur))
-                        return
-                    case "x":
+                    case "b", "x":
                         handleToolbarAction(.tool(.pixelate))
                         return
                     case "i":

@@ -340,9 +340,8 @@ extension OverlayView {
 
     func performAutoRedact() {
         guard state == .selected, let screenshot = screenshotImage else { return }
-        let tool: AnnotationTool =
-            currentTool == .blur ? .blur : (currentTool == .pixelate ? .pixelate : .rectangle)
-        let sourceImg = (tool == .blur || tool == .pixelate) ? compositedImage() : nil
+        let tool: AnnotationTool = currentTool == .pixelate ? .pixelate : .rectangle
+        let sourceImg = tool == .pixelate ? compositedImage() : nil
         AutoRedactor.redactPII(
             screenshot: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect,
             redactTool: tool, color: currentColor, sourceImage: sourceImg,
@@ -359,9 +358,8 @@ extension OverlayView {
 
     func performRedactAllText() {
         guard state == .selected, let screenshot = screenshotImage else { return }
-        let tool: AnnotationTool =
-            currentTool == .blur ? .blur : (currentTool == .pixelate ? .pixelate : .rectangle)
-        let sourceImg = (tool == .blur || tool == .pixelate) ? compositedImage() : nil
+        let tool: AnnotationTool = currentTool == .pixelate ? .pixelate : .rectangle
+        let sourceImg = tool == .pixelate ? compositedImage() : nil
         AutoRedactor.redactAllText(
             screenshot: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect,
             redactTool: tool, color: currentColor, sourceImage: sourceImg,
@@ -382,9 +380,8 @@ extension OverlayView {
 
     func performRedactFaces() {
         guard state == .selected, let screenshot = screenshotImage else { return }
-        let tool: AnnotationTool =
-            currentTool == .blur ? .blur : (currentTool == .pixelate ? .pixelate : .rectangle)
-        let sourceImg = (tool == .blur || tool == .pixelate) ? compositedImage() : nil
+        let tool: AnnotationTool = currentTool == .pixelate ? .pixelate : .rectangle
+        let sourceImg = tool == .pixelate ? compositedImage() : nil
         AutoRedactor.redactFaces(
             screenshot: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect,
             redactTool: tool, color: currentColor, sourceImage: sourceImg,
@@ -401,9 +398,8 @@ extension OverlayView {
 
     func performRedactPeople() {
         guard state == .selected, let screenshot = screenshotImage else { return }
-        let tool: AnnotationTool =
-            currentTool == .blur ? .blur : (currentTool == .pixelate ? .pixelate : .rectangle)
-        let sourceImg = (tool == .blur || tool == .pixelate) ? compositedImage() : nil
+        let tool: AnnotationTool = currentTool == .pixelate ? .pixelate : .rectangle
+        let sourceImg = tool == .pixelate ? compositedImage() : nil
         AutoRedactor.redactPeople(
             screenshot: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect,
             redactTool: tool, color: currentColor, sourceImage: sourceImg,
