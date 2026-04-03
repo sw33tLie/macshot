@@ -1440,7 +1440,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         let speed = UserDefaults.standard.object(forKey: "scrollAutoScrollSpeed") as? Int ?? 3
         scrollSpeedPopup.selectItem(at: max(0, min(3, speed - 1)))
         scrollSpeedPopup.isEnabled = autoScroll
-        let maxH = UserDefaults.standard.object(forKey: "scrollMaxHeight") as? Int ?? 20000
+        let maxH = UserDefaults.standard.object(forKey: "scrollMaxHeight") as? Int ?? 30000
         scrollMaxHeightField.integerValue = maxH
         scrollMaxHeightStepper.integerValue = maxH
         let frozenDetect = UserDefaults.standard.object(forKey: "scrollFrozenDetection") as? Bool ?? true

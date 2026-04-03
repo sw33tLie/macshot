@@ -1,5 +1,20 @@
 # Changelog
 
+## [3.5.3] - 2026-04-03
+
+### Added
+- **18 new mesh gradient styles** — replaced the previous 7 mesh gradients with 18 new high-contrast styles featuring displaced grid points and bolder color combinations. Added "Charcoal" linear gradient style.
+- **Scroll capture live stitching** — frames are now captured and stitched continuously during manual scrolling, not just after the scroll gesture ends. Preview updates in real time as you scroll.
+
+### Changed
+- **Scroll capture engine rewrite** — completely rewritten for reliability. Uses on-demand frame capture (`CGWindowListCreateImage`) instead of persistent streams, TIFF byte-by-byte comparison for pixel-perfect frame settlement, Vision-based offset detection, and incremental stitching. Handles Chrome smooth scrolling, lazy-loaded content, and scrollbar interference. Max scroll height increased from 20,000 to 30,000 pixels.
+- **Beautify shadow slider range** — increased maximum from 40 to 100 for more dramatic shadow effects.
+- **Hotkey modal dismiss** — pressing the capture hotkey while a modal dialog is open (e.g. Preferences, permission prompts) now dismisses the modal and triggers the capture, instead of being silently ignored.
+- **Status bar menu reliability** — clicking the menu bar icon while a modal is open now properly dismisses the modal before showing the menu.
+
+### Fixed
+- **Function key hotkeys** — F1–F20 can now be used as capture hotkeys without requiring modifier keys (Cmd/Shift/Option/Ctrl). Fixes support for non-Mac keyboards with dedicated function keys.
+
 ## [3.5.2] - 2026-04-02
 
 ### Added

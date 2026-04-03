@@ -1212,7 +1212,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         scrollCaptureController = scc
 
         // Read max height for the overlay HUD progress bar
-        let maxH = UserDefaults.standard.object(forKey: "scrollMaxHeight") as? Int ?? 20000
+        let maxH = UserDefaults.standard.object(forKey: "scrollMaxHeight") as? Int ?? 30000
 
         // Tell the triggering overlay to enter scroll capture mode
         controller.setScrollCaptureState(isActive: true, maxHeight: maxH)
