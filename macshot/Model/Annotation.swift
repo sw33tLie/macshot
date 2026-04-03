@@ -300,8 +300,9 @@ class Annotation {
             if arrowStyle == .thick {
                 let totalLen = hypot(endPoint.x - startPoint.x, endPoint.y - startPoint.y)
                 let sizeScale = min(1.0, max(0.2, totalLen / 120))
-                let shapeWidth = max(6, strokeWidth * 2.5) * sizeScale * 2.2
-                let hitThreshold = max(threshold, shapeWidth)
+                // Match the actual drawn shape width: shaft is strokeWidth*1.5, head is strokeWidth*3
+                let shaftHalf = max(4, strokeWidth * 1.5) * sizeScale
+                let hitThreshold = max(threshold, shaftHalf + 4)
                 if hasMultiAnchor {
                     return distanceToPolyline(point: point, waypoints: waypoints) < hitThreshold
                 }
