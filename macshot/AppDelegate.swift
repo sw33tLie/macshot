@@ -34,6 +34,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     /// The overlay controller whose selection is being scroll-captured.
     private var scrollCaptureOverlayController: OverlayWindowController?
     private var scrollCapturePreviewPanel: ScrollCapturePreviewPanel?
+    private var statusBarMenu: NSMenu?
 
     /// Shared capture sound — loaded once, reused everywhere.
     static let captureSound: NSSound? = {
@@ -161,13 +162,38 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             } else {
                 button.title = "macshot"
             }
-            button.target = nil
-            button.action = nil
+            // Use custom click handler so we can dismiss modals before showing the menu
+            button.target = self
+            button.action = #selector(statusBarIconClicked(_:))
+            button.sendAction(on: [.leftMouseDown, .rightMouseDown])
+            (button.cell as? NSButtonCell)?.highlightsBy = .pushInCellMask
+        }
+    }
+
+    @objc private func statusBarIconClicked(_ sender: NSStatusBarButton) {
+        if let modalWin = NSApp.modalWindow {
+            // Modal is active — dismiss it, then show menu after it unwinds
+            NSApp.stopModal()
+            modalWin.close()
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self, let menu = self.statusBarMenu else { return }
+                // Show via the standard statusItem path so it looks native (no arrow)
+                self.statusItem.menu = menu
+                sender.performClick(nil)
+                self.statusItem.menu = nil
+            }
+        } else {
+            // No modal — show menu normally via standard NSStatusItem path
+            guard let menu = statusBarMenu else { return }
+            statusItem.menu = menu
+            sender.performClick(nil)
+            statusItem.menu = nil
         }
     }
 
     private func rebuildStatusBarMenu() {
         let menu = NSMenu()
+        menu.autoenablesItems = false
 
         let captureAreaItem = NSMenuItem(title: "Capture Area", action: #selector(captureScreen), keyEquivalent: "")
         captureAreaItem.target = self
@@ -276,11 +302,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         quitItem.target = self
         menu.addItem(quitItem)
 
-        statusItem.menu = menu
+        statusBarMenu = menu
     }
 
     private func refreshMenu() {
-        guard let menu = statusItem.menu, let captureItem = menu.items.first else { return }
+        guard let menu = statusBarMenu, let captureItem = menu.items.first else { return }
         captureItem.toolTip = HotkeyManager.shortcutDisplayString()
     }
 
@@ -333,7 +359,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func showHistoryOverlay() {
-        // Toggle: if already showing, dismiss
         if let existing = historyOverlayController {
             existing.dismiss()
             historyOverlayController = nil
@@ -369,7 +394,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func recordFullScreen() {
         pendingFullScreenRecord = true
-        // If delay is set, auto-start recording after countdown (no user interaction needed)
         if UserDefaults.standard.integer(forKey: "captureDelaySeconds") > 0 {
             pendingFullScreenRecordAutoStart = true
         }

@@ -50,7 +50,7 @@ struct BeautifyConfig {
     var styleIndex: Int = 0
     var padding: CGFloat = 48       // 16..96
     var cornerRadius: CGFloat = 10  // 0..30
-    var shadowRadius: CGFloat = 20  // 0..40
+    var shadowRadius: CGFloat = 20  // 0..100
     var bgRadius: CGFloat = 8      // 0..30 (outer background corner radius)
     var isWindowSnap: Bool = false  // true = selection came from window snap, skip synthetic title bar
 
@@ -62,84 +62,243 @@ struct BeautifyConfig {
 
 @MainActor class BeautifyRenderer {
 
-    // Standard 3×3 mesh grid points
-    private static let meshGrid: [SIMD2<Float>] = [
-        SIMD2(0, 0), SIMD2(0.5, 0), SIMD2(1, 0),
-        SIMD2(0, 0.5), SIMD2(0.5, 0.5), SIMD2(1, 0.5),
-        SIMD2(0, 1), SIMD2(0.5, 1), SIMD2(1, 1),
-    ]
-
-    private static func meshStyle(name: String, colors: [NSColor], fallbackStops: [(NSColor, CGFloat)], fallbackAngle: CGFloat = 135) -> BeautifyStyle {
+    private static func meshStyle(name: String, points: [SIMD2<Float>], colors: [NSColor], fallbackStops: [(NSColor, CGFloat)], fallbackAngle: CGFloat = 135) -> BeautifyStyle {
         BeautifyStyle(
             name: name,
             stops: fallbackStops,
             angle: fallbackAngle,
-            mesh: MeshGradientDef(width: 3, height: 3, points: meshGrid, colors: colors)
+            mesh: MeshGradientDef(width: 3, height: 3, points: points, colors: colors)
         )
     }
 
     static let styles: [BeautifyStyle] = {
         var s: [BeautifyStyle] = []
 
-        // Mesh gradients — macOS 15+ only (shown first)
+        // Mesh gradients — macOS 15+ only (18 = 3 rows of 6)
+        // Bold colors, high contrast between neighbors, aggressive point displacement
         if #available(macOS 15.0, *) {
             let c = { (r: CGFloat, g: CGFloat, b: CGFloat) in NSColor(calibratedRed: r, green: g, blue: b, alpha: 1) }
             s.append(contentsOf: [
-                // Opal — orange top-left, cyan right, purple bottom-left
-                meshStyle(name: "Opal", colors: [
-                    c(1.0, 0.65, 0.20), c(0.95, 0.85, 0.50), c(0.40, 0.85, 0.95),
-                    c(0.85, 0.45, 0.55), c(0.70, 0.75, 0.90), c(0.30, 0.70, 0.95),
-                    c(0.55, 0.20, 0.75), c(0.50, 0.40, 0.90), c(0.35, 0.60, 0.95),
+                // Row 1
+                // Ultraviolet — vivid purple/magenta with electric blue
+                meshStyle(name: "Ultraviolet", points: [
+                    SIMD2(0, 0),    SIMD2(0.7, 0),   SIMD2(1, 0),
+                    SIMD2(0, 0.3),  SIMD2(0.25, 0.7), SIMD2(1, 0.6),
+                    SIMD2(0, 1),    SIMD2(0.65, 1),  SIMD2(1, 1),
+                ], colors: [
+                    c(0.55, 0.10, 0.95), c(0.80, 0.15, 0.80), c(1.0, 0.30, 0.55),
+                    c(0.30, 0.15, 0.98), c(0.90, 0.40, 0.90), c(1.0, 0.50, 0.60),
+                    c(0.15, 0.20, 0.95), c(0.50, 0.25, 0.95), c(0.85, 0.35, 0.70),
                 ], fallbackStops: [
-                    (c(1.0, 0.65, 0.20), 0), (c(0.70, 0.75, 0.90), 0.5), (c(0.55, 0.20, 0.75), 1),
+                    (c(0.55, 0.10, 0.95), 0), (c(0.90, 0.40, 0.90), 0.5), (c(0.85, 0.35, 0.70), 1),
                 ]),
-                // Prism — pink/magenta top, green/teal bottom, blue center
-                meshStyle(name: "Prism", colors: [
-                    c(0.95, 0.35, 0.55), c(0.90, 0.50, 0.80), c(0.50, 0.45, 0.95),
-                    c(0.90, 0.65, 0.35), c(0.55, 0.75, 0.70), c(0.30, 0.55, 0.90),
-                    c(0.30, 0.80, 0.50), c(0.25, 0.85, 0.75), c(0.20, 0.65, 0.90),
+                // Inferno — hot pink/red smashing into orange/yellow
+                meshStyle(name: "Inferno", points: [
+                    SIMD2(0, 0),    SIMD2(0.3, 0),   SIMD2(1, 0),
+                    SIMD2(0, 0.65), SIMD2(0.75, 0.35), SIMD2(1, 0.5),
+                    SIMD2(0, 1),    SIMD2(0.4, 1),   SIMD2(1, 1),
+                ], colors: [
+                    c(1.0, 0.25, 0.40), c(1.0, 0.50, 0.20), c(1.0, 0.85, 0.25),
+                    c(0.95, 0.15, 0.50), c(1.0, 0.65, 0.30), c(1.0, 0.90, 0.40),
+                    c(0.85, 0.10, 0.35), c(1.0, 0.40, 0.25), c(1.0, 0.75, 0.20),
                 ], fallbackStops: [
-                    (c(0.95, 0.35, 0.55), 0), (c(0.55, 0.75, 0.70), 0.5), (c(0.25, 0.85, 0.75), 1),
+                    (c(1.0, 0.25, 0.40), 0), (c(1.0, 0.65, 0.30), 0.5), (c(1.0, 0.85, 0.25), 1),
                 ]),
-                // Plasma — vivid pink/orange/blue/purple
-                meshStyle(name: "Plasma", colors: [
-                    c(0.95, 0.30, 0.45), c(1.0, 0.55, 0.25), c(1.0, 0.80, 0.30),
-                    c(0.70, 0.20, 0.80), c(0.85, 0.50, 0.60), c(0.40, 0.80, 0.70),
-                    c(0.30, 0.25, 0.90), c(0.35, 0.50, 0.95), c(0.20, 0.75, 0.85),
+                // Deep Ocean — rich blue/teal with bright cyan burst
+                meshStyle(name: "Deep Ocean", points: [
+                    SIMD2(0, 0),    SIMD2(0.6, 0),   SIMD2(1, 0),
+                    SIMD2(0, 0.4),  SIMD2(0.3, 0.65), SIMD2(1, 0.55),
+                    SIMD2(0, 1),    SIMD2(0.7, 1),   SIMD2(1, 1),
+                ], colors: [
+                    c(0.05, 0.15, 0.60), c(0.10, 0.40, 0.90), c(0.05, 0.20, 0.70),
+                    c(0.08, 0.25, 0.75), c(0.20, 0.90, 0.95), c(0.10, 0.50, 0.85),
+                    c(0.03, 0.10, 0.45), c(0.08, 0.35, 0.80), c(0.05, 0.18, 0.55),
                 ], fallbackStops: [
-                    (c(0.95, 0.30, 0.45), 0), (c(0.85, 0.50, 0.60), 0.5), (c(0.30, 0.25, 0.90), 1),
+                    (c(0.05, 0.15, 0.60), 0), (c(0.20, 0.90, 0.95), 0.5), (c(0.05, 0.18, 0.55), 1),
                 ]),
-                // Silk — soft pastel pink/blue/lavender
-                meshStyle(name: "Silk", colors: [
-                    c(0.95, 0.80, 0.85), c(0.85, 0.78, 0.95), c(0.75, 0.80, 0.98),
-                    c(0.95, 0.75, 0.78), c(0.88, 0.82, 0.95), c(0.70, 0.82, 0.95),
-                    c(0.90, 0.85, 0.80), c(0.82, 0.88, 0.92), c(0.75, 0.88, 0.95),
+                // Candy Floss — saturated pink/peach/lavender
+                meshStyle(name: "Candy Floss", points: [
+                    SIMD2(0, 0),    SIMD2(0.45, 0),  SIMD2(1, 0),
+                    SIMD2(0, 0.6),  SIMD2(0.7, 0.4),  SIMD2(1, 0.55),
+                    SIMD2(0, 1),    SIMD2(0.35, 1),  SIMD2(1, 1),
+                ], colors: [
+                    c(1.0, 0.60, 0.70), c(1.0, 0.75, 0.55), c(0.95, 0.55, 0.75),
+                    c(0.95, 0.50, 0.80), c(1.0, 0.85, 0.70), c(0.80, 0.55, 0.95),
+                    c(0.85, 0.45, 0.90), c(0.95, 0.70, 0.80), c(0.70, 0.50, 0.98),
                 ], fallbackStops: [
-                    (c(0.95, 0.80, 0.85), 0), (c(0.88, 0.82, 0.95), 0.5), (c(0.75, 0.88, 0.95), 1),
+                    (c(1.0, 0.60, 0.70), 0), (c(1.0, 0.85, 0.70), 0.5), (c(0.70, 0.50, 0.98), 1),
                 ]),
-                // Nebula — deep purple/blue with warm accents
-                meshStyle(name: "Nebula", colors: [
-                    c(0.15, 0.08, 0.35), c(0.30, 0.15, 0.55), c(0.10, 0.25, 0.60),
-                    c(0.45, 0.15, 0.50), c(0.25, 0.20, 0.55), c(0.15, 0.40, 0.70),
-                    c(0.60, 0.25, 0.40), c(0.40, 0.30, 0.60), c(0.20, 0.50, 0.65),
+                // Emerald Fire — vivid green clashing with hot orange
+                meshStyle(name: "Emerald Fire", points: [
+                    SIMD2(0, 0),    SIMD2(0.55, 0),  SIMD2(1, 0),
+                    SIMD2(0, 0.5),  SIMD2(0.25, 0.55), SIMD2(1, 0.4),
+                    SIMD2(0, 1),    SIMD2(0.6, 1),   SIMD2(1, 1),
+                ], colors: [
+                    c(0.10, 0.85, 0.40), c(0.30, 0.95, 0.50), c(0.90, 0.75, 0.15),
+                    c(0.05, 0.70, 0.35), c(0.60, 0.90, 0.30), c(1.0, 0.60, 0.15),
+                    c(0.08, 0.55, 0.30), c(0.40, 0.80, 0.25), c(1.0, 0.45, 0.10),
                 ], fallbackStops: [
-                    (c(0.15, 0.08, 0.35), 0), (c(0.25, 0.20, 0.55), 0.5), (c(0.20, 0.50, 0.65), 1),
+                    (c(0.10, 0.85, 0.40), 0), (c(0.60, 0.90, 0.30), 0.5), (c(1.0, 0.45, 0.10), 1),
                 ]),
-                // Lagoon — teal/green/blue tropical
-                meshStyle(name: "Lagoon", colors: [
-                    c(0.15, 0.80, 0.65), c(0.25, 0.85, 0.80), c(0.30, 0.70, 0.95),
-                    c(0.10, 0.65, 0.50), c(0.20, 0.75, 0.75), c(0.35, 0.60, 0.90),
-                    c(0.05, 0.50, 0.45), c(0.15, 0.60, 0.65), c(0.25, 0.50, 0.85),
+                // Electric Dusk — neon pink/orange sunset over deep blue
+                meshStyle(name: "Electric Dusk", points: [
+                    SIMD2(0, 0),    SIMD2(0.5, 0),   SIMD2(1, 0),
+                    SIMD2(0, 0.35), SIMD2(0.65, 0.55), SIMD2(1, 0.4),
+                    SIMD2(0, 1),    SIMD2(0.45, 1),  SIMD2(1, 1),
+                ], colors: [
+                    c(1.0, 0.50, 0.30), c(1.0, 0.35, 0.50), c(0.90, 0.25, 0.70),
+                    c(1.0, 0.65, 0.20), c(0.85, 0.30, 0.60), c(0.45, 0.15, 0.80),
+                    c(0.15, 0.10, 0.50), c(0.10, 0.12, 0.55), c(0.08, 0.08, 0.40),
                 ], fallbackStops: [
-                    (c(0.15, 0.80, 0.65), 0), (c(0.20, 0.75, 0.75), 0.5), (c(0.25, 0.50, 0.85), 1),
+                    (c(1.0, 0.50, 0.30), 0), (c(0.85, 0.30, 0.60), 0.5), (c(0.08, 0.08, 0.40), 1),
+                ], fallbackAngle: 180),
+
+                // Row 2
+                // Plasma — magenta/cyan/yellow high-energy
+                meshStyle(name: "Plasma", points: [
+                    SIMD2(0, 0),    SIMD2(0.25, 0),  SIMD2(1, 0),
+                    SIMD2(0, 0.7),  SIMD2(0.8, 0.3),  SIMD2(1, 0.5),
+                    SIMD2(0, 1),    SIMD2(0.55, 1),  SIMD2(1, 1),
+                ], colors: [
+                    c(0.95, 0.20, 0.60), c(1.0, 0.50, 0.15), c(1.0, 0.90, 0.20),
+                    c(0.70, 0.10, 0.90), c(0.20, 0.85, 0.85), c(0.50, 0.95, 0.40),
+                    c(0.25, 0.15, 0.95), c(0.15, 0.60, 0.95), c(0.10, 0.90, 0.70),
+                ], fallbackStops: [
+                    (c(0.95, 0.20, 0.60), 0), (c(0.20, 0.85, 0.85), 0.5), (c(0.25, 0.15, 0.95), 1),
                 ]),
-                // Ember Glow — warm amber/rose/gold organic blend
-                meshStyle(name: "Ember Glow", colors: [
-                    c(0.95, 0.55, 0.20), c(1.0, 0.75, 0.35), c(0.98, 0.85, 0.55),
-                    c(0.90, 0.35, 0.35), c(0.95, 0.60, 0.45), c(0.98, 0.78, 0.50),
-                    c(0.75, 0.20, 0.40), c(0.85, 0.40, 0.45), c(0.95, 0.65, 0.40),
+                // Silk Storm — whites/grays with vivid color pockets
+                meshStyle(name: "Silk Storm", points: [
+                    SIMD2(0, 0),    SIMD2(0.65, 0),  SIMD2(1, 0),
+                    SIMD2(0, 0.45), SIMD2(0.3, 0.6),  SIMD2(1, 0.55),
+                    SIMD2(0, 1),    SIMD2(0.5, 1),   SIMD2(1, 1),
+                ], colors: [
+                    c(0.92, 0.90, 0.95), c(0.70, 0.80, 0.98), c(0.55, 0.60, 0.98),
+                    c(0.95, 0.85, 0.88), c(0.85, 0.75, 0.95), c(0.50, 0.70, 0.95),
+                    c(0.98, 0.92, 0.88), c(0.90, 0.82, 0.90), c(0.65, 0.75, 0.95),
                 ], fallbackStops: [
-                    (c(0.95, 0.55, 0.20), 0), (c(0.95, 0.60, 0.45), 0.5), (c(0.75, 0.20, 0.40), 1),
+                    (c(0.92, 0.90, 0.95), 0), (c(0.85, 0.75, 0.95), 0.5), (c(0.65, 0.75, 0.95), 1),
+                ]),
+                // Opal — orange/teal/violet iridescent clash
+                meshStyle(name: "Opal", points: [
+                    SIMD2(0, 0),    SIMD2(0.7, 0),   SIMD2(1, 0),
+                    SIMD2(0, 0.4),  SIMD2(0.25, 0.65), SIMD2(1, 0.5),
+                    SIMD2(0, 1),    SIMD2(0.6, 1),   SIMD2(1, 1),
+                ], colors: [
+                    c(1.0, 0.60, 0.15), c(1.0, 0.85, 0.30), c(0.20, 0.90, 0.90),
+                    c(0.95, 0.40, 0.40), c(0.65, 0.70, 0.95), c(0.15, 0.75, 0.95),
+                    c(0.60, 0.15, 0.85), c(0.40, 0.35, 0.95), c(0.20, 0.55, 0.95),
+                ], fallbackStops: [
+                    (c(1.0, 0.60, 0.15), 0), (c(0.65, 0.70, 0.95), 0.5), (c(0.60, 0.15, 0.85), 1),
+                ]),
+                // Nebula — deep purple/blue with hot pink explosion
+                meshStyle(name: "Nebula", points: [
+                    SIMD2(0, 0),    SIMD2(0.55, 0),  SIMD2(1, 0),
+                    SIMD2(0, 0.55), SIMD2(0.3, 0.4),  SIMD2(1, 0.65),
+                    SIMD2(0, 1),    SIMD2(0.7, 1),   SIMD2(1, 1),
+                ], colors: [
+                    c(0.10, 0.05, 0.40), c(0.30, 0.08, 0.60), c(0.08, 0.15, 0.55),
+                    c(0.50, 0.10, 0.65), c(1.0, 0.30, 0.55), c(0.15, 0.30, 0.80),
+                    c(0.65, 0.15, 0.50), c(0.35, 0.20, 0.70), c(0.10, 0.40, 0.75),
+                ], fallbackStops: [
+                    (c(0.10, 0.05, 0.40), 0), (c(1.0, 0.30, 0.55), 0.5), (c(0.10, 0.40, 0.75), 1),
+                ]),
+                // Sunset Blaze — intense orange/red to deep indigo
+                meshStyle(name: "Sunset Blaze", points: [
+                    SIMD2(0, 0),    SIMD2(0.5, 0),   SIMD2(1, 0),
+                    SIMD2(0, 0.35), SIMD2(0.4, 0.55), SIMD2(1, 0.4),
+                    SIMD2(0, 1),    SIMD2(0.6, 1),   SIMD2(1, 1),
+                ], colors: [
+                    c(1.0, 0.85, 0.25), c(1.0, 0.55, 0.15), c(1.0, 0.30, 0.25),
+                    c(1.0, 0.50, 0.10), c(0.90, 0.25, 0.40), c(0.55, 0.12, 0.60),
+                    c(0.12, 0.08, 0.35), c(0.10, 0.06, 0.45), c(0.08, 0.05, 0.35),
+                ], fallbackStops: [
+                    (c(1.0, 0.85, 0.25), 0), (c(0.90, 0.25, 0.40), 0.5), (c(0.08, 0.05, 0.35), 1),
+                ], fallbackAngle: 180),
+                // Lagoon — vivid teal/cyan/deep blue tropical
+                meshStyle(name: "Lagoon", points: [
+                    SIMD2(0, 0),    SIMD2(0.4, 0),   SIMD2(1, 0),
+                    SIMD2(0, 0.5),  SIMD2(0.7, 0.6),  SIMD2(1, 0.45),
+                    SIMD2(0, 1),    SIMD2(0.35, 1),  SIMD2(1, 1),
+                ], colors: [
+                    c(0.10, 0.95, 0.70), c(0.20, 0.95, 0.90), c(0.15, 0.65, 0.98),
+                    c(0.05, 0.80, 0.55), c(0.15, 0.90, 0.85), c(0.25, 0.50, 0.95),
+                    c(0.03, 0.55, 0.40), c(0.08, 0.70, 0.65), c(0.10, 0.35, 0.85),
+                ], fallbackStops: [
+                    (c(0.10, 0.95, 0.70), 0), (c(0.15, 0.90, 0.85), 0.5), (c(0.10, 0.35, 0.85), 1),
+                ]),
+
+                // Row 3 — maximum drama
+                // Molten Core — black with searing orange/white-hot center
+                meshStyle(name: "Molten Core", points: [
+                    SIMD2(0, 0),    SIMD2(0.6, 0),   SIMD2(1, 0),
+                    SIMD2(0, 0.5),  SIMD2(0.35, 0.45), SIMD2(1, 0.6),
+                    SIMD2(0, 1),    SIMD2(0.5, 1),   SIMD2(1, 1),
+                ], colors: [
+                    c(0.08, 0.05, 0.05), c(0.20, 0.05, 0.02), c(0.10, 0.03, 0.05),
+                    c(0.30, 0.08, 0.02), c(1.0, 0.70, 0.15), c(0.45, 0.10, 0.03),
+                    c(0.05, 0.03, 0.03), c(0.85, 0.35, 0.05), c(0.08, 0.04, 0.04),
+                ], fallbackStops: [
+                    (c(0.08, 0.05, 0.05), 0), (c(1.0, 0.70, 0.15), 0.5), (c(0.08, 0.04, 0.04), 1),
+                ]),
+                // Aurora Borealis — green/cyan curtains over dark sky
+                meshStyle(name: "Aurora Borealis", points: [
+                    SIMD2(0, 0),    SIMD2(0.35, 0),  SIMD2(1, 0),
+                    SIMD2(0, 0.6),  SIMD2(0.75, 0.35), SIMD2(1, 0.55),
+                    SIMD2(0, 1),    SIMD2(0.45, 1),  SIMD2(1, 1),
+                ], colors: [
+                    c(0.05, 0.90, 0.50), c(0.10, 0.95, 0.80), c(0.20, 0.70, 0.95),
+                    c(0.08, 0.70, 0.40), c(0.15, 0.85, 0.70), c(0.30, 0.50, 0.90),
+                    c(0.03, 0.08, 0.18), c(0.05, 0.10, 0.25), c(0.04, 0.06, 0.20),
+                ], fallbackStops: [
+                    (c(0.05, 0.90, 0.50), 0), (c(0.15, 0.85, 0.70), 0.5), (c(0.04, 0.06, 0.20), 1),
+                ], fallbackAngle: 180),
+                // Prism Burst — rainbow refraction: every color at full saturation
+                meshStyle(name: "Prism Burst", points: [
+                    SIMD2(0, 0),    SIMD2(0.3, 0),   SIMD2(1, 0),
+                    SIMD2(0, 0.55), SIMD2(0.7, 0.5),  SIMD2(1, 0.45),
+                    SIMD2(0, 1),    SIMD2(0.4, 1),   SIMD2(1, 1),
+                ], colors: [
+                    c(0.20, 0.40, 1.0),  c(1.0, 0.60, 0.10), c(1.0, 0.25, 0.50),
+                    c(0.10, 0.85, 0.70), c(1.0, 0.95, 0.50), c(0.90, 0.20, 0.80),
+                    c(0.15, 0.90, 0.35), c(0.95, 0.80, 0.15), c(0.60, 0.10, 0.95),
+                ], fallbackStops: [
+                    (c(0.20, 0.40, 1.0), 0), (c(1.0, 0.95, 0.50), 0.5), (c(0.60, 0.10, 0.95), 1),
+                ]),
+                // Velvet Night — dark burgundy/plum with rose-gold glow
+                meshStyle(name: "Velvet Night", points: [
+                    SIMD2(0, 0),    SIMD2(0.55, 0),  SIMD2(1, 0),
+                    SIMD2(0, 0.55), SIMD2(0.3, 0.4),  SIMD2(1, 0.5),
+                    SIMD2(0, 1),    SIMD2(0.65, 1),  SIMD2(1, 1),
+                ], colors: [
+                    c(0.25, 0.05, 0.15), c(0.40, 0.08, 0.20), c(0.30, 0.06, 0.25),
+                    c(0.35, 0.10, 0.18), c(0.95, 0.65, 0.50), c(0.45, 0.12, 0.35),
+                    c(0.20, 0.05, 0.15), c(0.60, 0.30, 0.30), c(0.25, 0.08, 0.22),
+                ], fallbackStops: [
+                    (c(0.25, 0.05, 0.15), 0), (c(0.95, 0.65, 0.50), 0.5), (c(0.25, 0.08, 0.22), 1),
+                ]),
+                // Cosmic Reef — deep space with teal/coral/gold nebula clouds
+                meshStyle(name: "Cosmic Reef", points: [
+                    SIMD2(0, 0),    SIMD2(0.65, 0),  SIMD2(1, 0),
+                    SIMD2(0, 0.4),  SIMD2(0.25, 0.65), SIMD2(1, 0.55),
+                    SIMD2(0, 1),    SIMD2(0.55, 1),  SIMD2(1, 1),
+                ], colors: [
+                    c(0.06, 0.04, 0.20), c(0.15, 0.60, 0.70), c(0.08, 0.08, 0.30),
+                    c(0.90, 0.45, 0.30), c(0.10, 0.10, 0.25), c(0.20, 0.50, 0.80),
+                    c(1.0, 0.80, 0.25),  c(0.06, 0.06, 0.22), c(0.12, 0.35, 0.65),
+                ], fallbackStops: [
+                    (c(0.06, 0.04, 0.20), 0), (c(0.90, 0.45, 0.30), 0.4), (c(1.0, 0.80, 0.25), 1),
+                ]),
+                // Ember Glow — searing warm gradient: gold/coral/crimson
+                meshStyle(name: "Ember Glow", points: [
+                    SIMD2(0, 0),    SIMD2(0.45, 0),  SIMD2(1, 0),
+                    SIMD2(0, 0.6),  SIMD2(0.7, 0.4),  SIMD2(1, 0.5),
+                    SIMD2(0, 1),    SIMD2(0.35, 1),  SIMD2(1, 1),
+                ], colors: [
+                    c(1.0, 0.85, 0.35), c(1.0, 0.65, 0.25), c(1.0, 0.50, 0.30),
+                    c(1.0, 0.55, 0.20), c(0.95, 0.40, 0.35), c(0.90, 0.30, 0.45),
+                    c(0.80, 0.20, 0.25), c(0.90, 0.30, 0.30), c(0.75, 0.15, 0.40),
+                ], fallbackStops: [
+                    (c(1.0, 0.85, 0.35), 0), (c(0.95, 0.40, 0.35), 0.5), (c(0.75, 0.15, 0.40), 1),
                 ]),
             ])
         }
@@ -276,6 +435,11 @@ struct BeautifyConfig {
                 (NSColor(calibratedRed: 0.45, green: 0.50, blue: 0.58, alpha: 1), 0.5),
                 (NSColor(calibratedRed: 0.60, green: 0.65, blue: 0.72, alpha: 1), 1),
             ], angle: 135),
+            BeautifyStyle(name: "Charcoal", stops: [
+                (NSColor(calibratedRed: 0.15, green: 0.15, blue: 0.18, alpha: 1), 0),
+                (NSColor(calibratedRed: 0.25, green: 0.25, blue: 0.30, alpha: 1), 0.5),
+                (NSColor(calibratedRed: 0.35, green: 0.35, blue: 0.40, alpha: 1), 1),
+            ], angle: 150),
         ])
 
         return s

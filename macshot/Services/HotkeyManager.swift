@@ -134,7 +134,7 @@ class HotkeyManager {
         let selfPtr = Unmanaged.passUnretained(self).toOpaque()
 
         InstallEventHandler(
-            GetApplicationEventTarget(),
+            GetEventDispatcherTarget(),
             { (_, event, userData) -> OSStatus in
                 guard let userData = userData, let event = event else { return OSStatus(eventNotHandledErr) }
                 let mgr = Unmanaged<HotkeyManager>.fromOpaque(userData).takeUnretainedValue()
@@ -143,8 +143,14 @@ class HotkeyManager {
                 GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID),
                                   nil, MemoryLayout<EventHotKeyID>.size, nil, &hotkeyID)
 
-                if let slot = HotkeySlot(rawValue: Int(hotkeyID.id)) {
-                    mgr.callbacks[slot]?()
+                if let slot = HotkeySlot(rawValue: Int(hotkeyID.id)), let callback = mgr.callbacks[slot] {
+                    if NSApp.modalWindow != nil {
+                        NSApp.stopModal()
+                        NSApp.modalWindow?.close()
+                        DispatchQueue.main.async { callback() }
+                    } else {
+                        callback()
+                    }
                 }
                 return noErr
             },

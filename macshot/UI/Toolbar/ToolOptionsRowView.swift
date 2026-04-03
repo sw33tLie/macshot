@@ -905,7 +905,7 @@ class ToolOptionsRowView: NSView {
         }
 
         // Shadow slider
-        curX = addBeautifySlider(at: curX, label: "Shadow", value: ov.beautifyShadowRadius, min: 0, max: 40, action: #selector(beautifyShadowChanged(_:)))
+        curX = addBeautifySlider(at: curX, label: "Shadow", value: ov.beautifyShadowRadius, min: 0, max: 100, action: #selector(beautifyShadowChanged(_:)))
 
         curX = addSeparator(at: curX)
 
