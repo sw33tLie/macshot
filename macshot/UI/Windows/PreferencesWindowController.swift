@@ -34,6 +34,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
     private var snapGuidesCheckbox: NSButton!
     private var captureCursorCheckbox: NSButton!
     private var windowTitleCheckbox: NSButton!
+    private var autoUpdateCheckbox: NSButton!
     private var accentColorWell: NSColorWell!
     private var iconColorWell: NSColorWell!
     private var quickModePopup: NSPopUpButton!
@@ -292,6 +293,10 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         hideNote.font = NSFont.systemFont(ofSize: 10)
         hideNote.textColor = .secondaryLabelColor
         stack.addArrangedSubview(indented(hideNote))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+
+        autoUpdateCheckbox = NSButton(checkboxWithTitle: "Check for updates automatically", target: self, action: #selector(autoUpdateChanged(_:)))
+        stack.addArrangedSubview(indented(autoUpdateCheckbox))
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
@@ -1381,6 +1386,9 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         captureCursorCheckbox.state = UserDefaults.standard.bool(forKey: "captureCursor") ? .on : .off
         windowTitleCheckbox.state = UserDefaults.standard.bool(forKey: "useWindowTitleInFilename") ? .on : .off
 
+        let autoUpdate = UserDefaults.standard.object(forKey: "SUEnableAutomaticChecks") as? Bool ?? true
+        autoUpdateCheckbox.state = autoUpdate ? .on : .off
+
         accentColorWell.color = ToolbarLayout.accentColor
         iconColorWell.color = ToolbarLayout.iconColor
 
@@ -1653,6 +1661,10 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         let hidden = sender.state == .on
         UserDefaults.standard.set(hidden, forKey: "hideMenuBarIcon")
         (NSApp.delegate as? AppDelegate)?.setMenuBarIconVisible(!hidden)
+    }
+
+    @objc private func autoUpdateChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: "SUEnableAutomaticChecks")
     }
 
     // MARK: - NSTabViewDelegate
