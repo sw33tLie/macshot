@@ -8,6 +8,8 @@ class ToolbarStripView: NSView {
 
     let orientation: Orientation
     private(set) var buttonViews: [ToolbarButtonView] = []
+    /// Set to true in editor mode so gap clicks pass through to the image beneath.
+    var passesThrough = false
 
     var onClick: ((ToolbarButtonAction) -> Void)?
     var onMouseDown: ((ToolbarButtonAction) -> Void)?
@@ -85,11 +87,14 @@ class ToolbarStripView: NSView {
         NSBezierPath(roundedRect: bounds, xRadius: 6, yRadius: 6).fill()
     }
 
-    // Consume clicks on gaps between buttons so they don't fall through to OverlayView
+    // Consume clicks on gaps between buttons so they don't fall through to OverlayView.
+    // In editor mode (passesThrough), let gap clicks pass through so drawing works
+    // over the toolbar area.
     override func hitTest(_ point: NSPoint) -> NSView? {
         let local = convert(point, from: superview)
         guard bounds.contains(local) else { return nil }
         if let result = super.hitTest(point), result !== self { return result }
+        if passesThrough { return nil }
         return self
     }
 

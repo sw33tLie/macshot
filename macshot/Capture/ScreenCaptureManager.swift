@@ -58,18 +58,16 @@ class ScreenCaptureManager {
                 let captures = await withTaskGroup(of: ScreenCapture?.self, returning: [ScreenCapture].self) { group in
                     for (display, screen) in pairs {
                         group.addTask {
-                            let filter = SCContentFilter(display: display, excludingWindows: [])
-                            let config = SCStreamConfiguration()
-                            let scale = Int(screen.backingScaleFactor)
-                            config.width = display.width * scale
-                            config.height = display.height * scale
-                            config.showsCursor = UserDefaults.standard.bool(forKey: "captureCursor")
-                            if #available(macOS 14.0, *) {
-                                config.captureResolution = .best
-                            }
-
                             if #available(macOS 14.0, *) {
                                 // SCScreenshotManager: single-shot API, no stream overhead
+                                let filter = SCContentFilter(display: display, excludingWindows: [])
+                                let config = SCStreamConfiguration()
+                                let scale = Int(screen.backingScaleFactor)
+                                config.width = display.width * scale
+                                config.height = display.height * scale
+                                config.showsCursor = UserDefaults.standard.bool(forKey: "captureCursor")
+                                config.captureResolution = .best
+
                                 guard let image = try? await SCScreenshotManager.captureImage(
                                     contentFilter: filter, configuration: config
                                 ) else { return nil }
@@ -79,10 +77,18 @@ class ScreenCaptureManager {
                                 let cpuImage = Self.copyTo8BitBGRA(image) ?? image
                                 return ScreenCapture(screen: screen, image: cpuImage)
                             } else {
-                                // macOS 12.3–13.x: SCStream single-frame fallback
-                                // (already returns 8-bit from createCGImage(from:))
-                                guard let image = try? await Self.captureSingleFrame(
-                                    filter: filter, config: config
+                                // macOS 12.3–13.x: use CGWindowListCreateImage which returns
+                                // a CGImage directly — no pixel buffer format ambiguity.
+                                // Convert the AppKit screen frame (bottom-left origin) to the
+                                // CGDisplay coordinate space (top-left origin) for the capture rect.
+                                let mainHeight = NSScreen.screens.first?.frame.height ?? screen.frame.height
+                                let cgRect = CGRect(
+                                    x: screen.frame.origin.x,
+                                    y: mainHeight - screen.frame.origin.y - screen.frame.height,
+                                    width: screen.frame.width,
+                                    height: screen.frame.height)
+                                guard let image = CGWindowListCreateImage(
+                                    cgRect, .optionAll, kCGNullWindowID, .bestResolution
                                 ) else { return nil }
                                 return ScreenCapture(screen: screen, image: image)
                             }
@@ -105,32 +111,6 @@ class ScreenCaptureManager {
                 await MainActor.run { completion([]) }
             }
         }
-    }
-
-    // MARK: - SCStream single-frame capture (macOS 12.3–13.x only)
-
-    /// Start an SCStream, grab the first frame, then stop.
-    /// Only used on macOS 12.3–13.x where SCScreenshotManager is unavailable.
-    private static func captureSingleFrame(filter: SCContentFilter, config: SCStreamConfiguration) async throws -> CGImage? {
-        let handler = SingleFrameHandler()
-        let stream = SCStream(filter: filter, configuration: config, delegate: nil)
-        try stream.addStreamOutput(handler, type: .screen, sampleHandlerQueue: DispatchQueue(label: "macshot.singleframe"))
-        try await stream.startCapture()
-
-        // Wait for frame with a timeout to prevent hanging if no frame arrives
-        let image = await withTaskGroup(of: CGImage?.self) { group -> CGImage? in
-            group.addTask { await handler.waitForFrame() }
-            group.addTask {
-                try? await Task.sleep(nanoseconds: 3_000_000_000) // 3 second timeout
-                return nil
-            }
-            let result = await group.next() ?? nil
-            group.cancelAll()
-            return result
-        }
-
-        try? await stream.stopCapture()
-        return image
     }
 
     /// Convert a CGImage (potentially ARGB16F or other GPU format) into an 8-bit BGRA bitmap.
@@ -161,123 +141,40 @@ class ScreenCaptureManager {
     // MARK: - Single window capture (with transparency)
 
     /// Captures a single window by its CGWindowID, returning an image with transparent corners.
-    /// Uses `desktopIndependentWindow` filter so the window is rendered without the desktop behind it.
+    /// On macOS 14+, uses `desktopIndependentWindow` filter for clean transparent background.
+    /// On macOS 12–13, uses `CGWindowListCreateImage` targeting the specific window.
     static func captureWindow(windowID: CGWindowID, screen: NSScreen) async -> CGImage? {
-        guard let content = try? await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true) else { return nil }
-        guard let scWindow = content.windows.first(where: { CGWindowID($0.windowID) == windowID }) else { return nil }
-
-        let filter: SCContentFilter
-        if #available(macOS 14.2, *) {
-            filter = SCContentFilter(desktopIndependentWindow: scWindow)
-        } else {
-            // Fallback: capture display excluding all other windows
-            guard let display = content.displays.first(where: {
-                let screenID = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID
-                return screenID != nil && $0.displayID == screenID!
-            }) ?? content.displays.first else { return nil }
-            let otherWindows = content.windows.filter { CGWindowID($0.windowID) != windowID }
-            filter = SCContentFilter(display: display, excludingWindows: otherWindows)
-        }
-
-        let config = SCStreamConfiguration()
-        let scale = Int(screen.backingScaleFactor)
-        config.width = Int(scWindow.frame.width) * scale
-        config.height = Int(scWindow.frame.height) * scale
-        config.showsCursor = false
         if #available(macOS 14.0, *) {
+            guard let content = try? await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true) else { return nil }
+            guard let scWindow = content.windows.first(where: { CGWindowID($0.windowID) == windowID }) else { return nil }
+
+            let filter: SCContentFilter
+            if #available(macOS 14.2, *) {
+                filter = SCContentFilter(desktopIndependentWindow: scWindow)
+            } else {
+                guard let display = content.displays.first(where: {
+                    let screenID = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID
+                    return screenID != nil && $0.displayID == screenID!
+                }) ?? content.displays.first else { return nil }
+                let otherWindows = content.windows.filter { CGWindowID($0.windowID) != windowID }
+                filter = SCContentFilter(display: display, excludingWindows: otherWindows)
+            }
+
+            let config = SCStreamConfiguration()
+            let scale = Int(screen.backingScaleFactor)
+            config.width = Int(scWindow.frame.width) * scale
+            config.height = Int(scWindow.frame.height) * scale
+            config.showsCursor = false
             config.captureResolution = .best
-        }
 
-        if #available(macOS 14.0, *) {
             guard let image = try? await SCScreenshotManager.captureImage(
                 contentFilter: filter, configuration: config
             ) else { return nil }
             return copyTo8BitBGRA(image) ?? image
         } else {
-            return try? await captureSingleFrame(filter: filter, config: config)
+            // macOS 12.3–13.x: CGWindowListCreateImage targeting the specific window
+            return CGWindowListCreateImage(
+                .null, .optionIncludingWindow, windowID, .bestResolution)
         }
-    }
-}
-
-// MARK: - Single-frame stream output handler
-
-/// Receives exactly one frame from an SCStream and exposes it via async/await.
-/// Only used on macOS 12.3–13.x.
-private final class SingleFrameHandler: NSObject, SCStreamOutput, @unchecked Sendable {
-    private var continuation: CheckedContinuation<CGImage?, Never>?
-    private var capturedImage: CGImage?
-    private var delivered = false
-    private let lock = NSLock()
-
-    func waitForFrame() async -> CGImage? {
-        await withCheckedContinuation { cont in
-            lock.lock()
-            if delivered {
-                // Frame already arrived before we started waiting
-                let image = capturedImage
-                lock.unlock()
-                cont.resume(returning: image)
-            } else {
-                continuation = cont
-                lock.unlock()
-            }
-        }
-    }
-
-    func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, of type: SCStreamOutputType) {
-        guard type == .screen else { return }
-        guard let pixelBuffer = sampleBuffer.imageBuffer else { return }
-
-        // Extract a CPU-backed CGImage directly from the pixel buffer — no CIImage/CIContext overhead.
-        let image = Self.createCGImage(from: pixelBuffer)
-
-        lock.lock()
-        guard !delivered else { lock.unlock(); return }
-        delivered = true
-        capturedImage = image
-        let cont = continuation
-        continuation = nil
-        lock.unlock()
-
-        cont?.resume(returning: image)
-    }
-
-    /// Create a CGImage from a CVPixelBuffer by blitting into a CPU-backed bitmap context.
-    /// This avoids the CIImage → CIContext.createCGImage() GPU render pass and produces
-    /// a fully CPU-resident image in a single copy.
-    private static func createCGImage(from pixelBuffer: CVPixelBuffer) -> CGImage? {
-        CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
-        defer { CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly) }
-
-        let w = CVPixelBufferGetWidth(pixelBuffer)
-        let h = CVPixelBufferGetHeight(pixelBuffer)
-        let srcBytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
-        guard let srcBase = CVPixelBufferGetBaseAddress(pixelBuffer) else { return nil }
-
-        let cs = CGColorSpaceCreateDeviceRGB()
-        let bitmapInfo = CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue
-        guard let ctx = CGContext(
-            data: nil,
-            width: w, height: h,
-            bitsPerComponent: 8,
-            bytesPerRow: w * 4,
-            space: cs,
-            bitmapInfo: bitmapInfo
-        ) else { return nil }
-
-        guard let dstBase = ctx.data else { return nil }
-        let dstBytesPerRow = ctx.bytesPerRow
-
-        // Fast row-by-row copy (src may have padding bytes per row)
-        if srcBytesPerRow == dstBytesPerRow {
-            memcpy(dstBase, srcBase, h * srcBytesPerRow)
-        } else {
-            let copyBytes = min(srcBytesPerRow, dstBytesPerRow)
-            for y in 0..<h {
-                memcpy(dstBase + y * dstBytesPerRow, srcBase + y * srcBytesPerRow, copyBytes)
-            }
-        }
-
-        return ctx.makeImage()
     }
 }

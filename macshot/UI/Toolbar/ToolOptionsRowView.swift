@@ -13,11 +13,13 @@ class ToolOptionsRowView: NSView {
     private var accent: NSColor { ToolbarLayout.accentColor }
     private var iconColor: NSColor { ToolbarLayout.iconColor }
 
-    // Consume clicks on gaps between controls so they don't fall through to OverlayView
+    // Consume clicks on gaps between controls so they don't fall through to OverlayView.
+    // In editor mode, let gap clicks pass through so drawing works over the options area.
     override func hitTest(_ point: NSPoint) -> NSView? {
         let local = convert(point, from: superview)
         guard bounds.contains(local) else { return nil }
         if let result = super.hitTest(point), result !== self { return result }
+        if overlayView?.isEditorMode == true { return nil }
         return self
     }
 

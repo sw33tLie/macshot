@@ -88,6 +88,12 @@ final class HistoryOverlayController: NSObject, QLPreviewPanelDataSource, QLPrev
         view.loadEntries()
     }
 
+    /// Hide windows immediately so drag-and-drop can reach target apps.
+    func hideForDrag() {
+        backdropWindow?.orderOut(nil)
+        panel?.alphaValue = 0.0
+    }
+
     func dismiss() {
         guard let win = panel else { return }
 
@@ -619,10 +625,8 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
     }
 
     func draggingSession(_ session: NSDraggingSession, endedAt screenPoint: NSPoint, operation: NSDragOperation) {
-        if operation != [] {
-            // Successful drop — dismiss the panel
-            controller?.dismiss()
-        }
+        // Dismiss regardless of whether drop succeeded — panel is already hidden
+        controller?.dismiss()
         isDragging = false
     }
 
@@ -630,12 +634,12 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
         guard filterIndex >= 0, filterIndex < filteredIndices.count else { return }
         let globalIndex = filteredIndices[filterIndex]
         let entry = entries[globalIndex]
-        let fileURL = ScreenshotHistory.shared.fileURL(for: entry)
+        let fileURL = ScreenshotHistory.shared.fileURL(for: entry) as NSURL
 
-        let pasteboardItem = NSPasteboardItem()
-        pasteboardItem.setString(fileURL.absoluteString, forType: .fileURL)
-
-        let dragItem = NSDraggingItem(pasteboardWriter: pasteboardItem)
+        // Use NSURL as the pasteboard writer — it automatically provides
+        // the file URL in all standard pasteboard types that apps expect
+        // (kPasteboardTypeFileURLPromise, NSFilenamesPboardType, public.file-url, etc.)
+        let dragItem = NSDraggingItem(pasteboardWriter: fileURL)
 
         // Use the preview as the drag image
         var cardRect = cardRects[filterIndex]
@@ -643,6 +647,10 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
         if let preview = previews[entry.id] {
             dragItem.setDraggingFrame(cardRect, contents: preview)
         }
+
+        // Hide the panel and backdrop so the drag can reach the target app
+        // (our windows are above everything and would block drop targets otherwise)
+        controller?.hideForDrag()
 
         beginDraggingSession(with: [dragItem], event: event, source: self)
     }

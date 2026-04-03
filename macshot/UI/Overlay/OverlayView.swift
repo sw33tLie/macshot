@@ -992,22 +992,29 @@ class OverlayView: NSView {
     override func hitTest(_ point: NSPoint) -> NSView? {
         // Let real NSView subviews (toolbar strips, options row) handle their own events.
         // This prevents our mouseDown override from intercepting slider drags etc.
-        let localPoint = convert(point, from: superview)
-        if let strip = bottomStripView, !strip.isHidden, strip.frame.contains(localPoint) {
-            return strip.hitTest(convert(point, to: strip.superview))
-        }
-        if let strip = rightStripView, !strip.isHidden, strip.frame.contains(localPoint) {
-            return strip.hitTest(convert(point, to: strip.superview))
-        }
-        if let row = toolOptionsRowView, !row.isHidden, row.frame.contains(localPoint) {
-            return row.hitTest(convert(point, to: row.superview))
+        // In editor mode the strips live in chromeParentView (a sibling container), not in
+        // this view — AppKit's normal hit testing on the container handles them. Routing them
+        // here would compare coordinates in different spaces and cause false matches.
+        if !isEditorMode {
+            let localPoint = convert(point, from: superview)
+            if let strip = bottomStripView, !strip.isHidden, strip.frame.contains(localPoint) {
+                return strip.hitTest(convert(point, to: strip.superview))
+            }
+            if let strip = rightStripView, !strip.isHidden, strip.frame.contains(localPoint) {
+                return strip.hitTest(convert(point, to: strip.superview))
+            }
+            if let row = toolOptionsRowView, !row.isHidden, row.frame.contains(localPoint) {
+                return row.hitTest(convert(point, to: row.superview))
+            }
         }
         return super.hitTest(point)
     }
 
     /// Returns true if the point is over any chrome element (toolbars, options row, popovers, labels).
     private func isPointOnChrome(_ point: NSPoint) -> Bool {
-        if showToolbars {
+        // In editor mode, strips are in chromeParentView — different coordinate space.
+        // Don't check them here; they handle their own hit testing as container subviews.
+        if showToolbars && !isEditorMode {
             if let strip = bottomStripView, !strip.isHidden, strip.frame.contains(point) {
                 return true
             }
@@ -3648,6 +3655,10 @@ class OverlayView: NSView {
     /// Reposition toolbar strips based on current selection/bounds. Cheap — safe to call from draw().
     private func repositionToolbars() {
         guard let bottomStrip = bottomStripView, let rightStrip = rightStripView else { return }
+
+        // In editor mode, let toolbar gap clicks pass through to the image beneath
+        bottomStrip.passesThrough = isEditorMode
+        rightStrip.passesThrough = isEditorMode
 
         let visible = showToolbars && state == .selected && !isScrollCapturing
         let bottomHasButtons = bottomStrip.buttonViews.count > 0
