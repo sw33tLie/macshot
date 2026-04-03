@@ -171,6 +171,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func statusBarIconClicked(_ sender: NSStatusBarButton) {
+        // Pre-warm ScreenCaptureKit content while the user browses the menu
+        ScreenCaptureManager.prewarm()
+
         if let modalWin = NSApp.modalWindow {
             // Modal is active — dismiss it, then show menu after it unwinds
             NSApp.stopModal()
@@ -415,6 +418,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Don't allow captures while recording
         guard recordingEngine == nil else { return }
         isCapturing = true
+
+        // Kick off SCShareableContent enumeration early — the cache will be ready
+        // by the time performCapture() needs it (covers hotkey path where menu wasn't opened)
+        ScreenCaptureManager.prewarm()
 
         // When "remember last tool" is off, clear persisted effects/beautify
         // so new OverlayView instances start clean

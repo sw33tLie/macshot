@@ -8,10 +8,38 @@ struct ScreenCapture {
 
 class ScreenCaptureManager {
 
+    // MARK: - SCShareableContent cache
+
+    /// Cached shareable content to avoid repeated (slow) enumeration.
+    private static var cachedContent: SCShareableContent?
+    private static var cachedContentTime: Date = .distantPast
+    /// Cache is valid for 2 seconds — long enough to survive the hotkey→capture gap,
+    /// short enough that display changes are picked up.
+    private static let cacheTTL: TimeInterval = 2.0
+
+    /// Fetch shareable content, using a short-lived cache to avoid redundant enumeration.
+    private static func shareableContent() async throws -> SCShareableContent {
+        if let cached = cachedContent, Date().timeIntervalSince(cachedContentTime) < cacheTTL {
+            return cached
+        }
+        let content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: true)
+        cachedContent = content
+        cachedContentTime = Date()
+        return content
+    }
+
+    /// Pre-warm the shareable content cache so the next capture is instant.
+    /// Call this when the menu bar opens or a hotkey is pressed — before the actual capture starts.
+    static func prewarm() {
+        Task {
+            _ = try? await shareableContent()
+        }
+    }
+
     static func captureAllScreens(completion: @escaping ([ScreenCapture]) -> Void) {
         Task {
             do {
-                let content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: false)
+                let content = try await shareableContent()
                 let displays = content.displays
                 let screens = NSScreen.screens
 
