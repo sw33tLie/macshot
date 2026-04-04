@@ -1,0 +1,400 @@
+/* Filipino — macshot localization
+ *
+ * To add a new language:
+ * 1. Create a new folder: macshot/<lang-code>.lproj/
+ * 2. Copy this file into that folder
+ * 3. Translate all values (right side of = sign)
+ * 4. Add the language to LanguageManager.availableLanguages in Services/LanguageManager.swift
+ * 5. Add the language code to knownRegions in macshot.xcodeproj/project.pbxproj
+ * 6. Submit a pull request!
+ *
+ * Keys use the English text. Values should be the translation.
+ * Format strings use %@ for strings, %d for integers.
+ * Keep keyboard shortcuts (like ⌘C) untranslated.
+ * Keep brand names (macshot, Google Drive, imgbb, S3) untranslated.
+ */
+
+/* Menu Bar */
+"Capture Area" = "Kunan ang Lugar";
+"Capture Screen" = "Kunan ang Screen";
+"Capture OCR" = "Kunan ang OCR";
+"Quick Capture" = "Mabilisang Pagkuha";
+"Scroll Capture" = "Scroll Capture";
+"Capture Delay" = "Pagkaantala ng Pagkuha";
+"None" = "Wala";
+"%d seconds" = "%d segundo";
+"Record Area" = "I-record ang Lugar";
+"Record Screen" = "I-record ang Screen";
+"Recent Captures" = "Mga Kamakailang Pagkuha";
+"Show History Panel" = "Ipakita ang Panel ng Kasaysayan";
+"Open Image..." = "Buksan ang Larawan...";
+"Open from Clipboard" = "Buksan mula sa Clipboard";
+"Preferences..." = "Mga Kagustuhan...";
+"Check for Updates..." = "Tingnan ang mga Update...";
+"Quit macshot" = "Isara ang macshot";
+"No recent captures" = "Walang kamakailang pagkuha";
+"Clear History" = "Burahin ang Kasaysayan";
+
+/* History Panel */
+"Copy" = "Kopyahin";
+"Save As..." = "I-save Bilang...";
+"Open in Editor" = "Buksan sa Editor";
+"Pin to Screen" = "I-pin sa Screen";
+"Quick Look" = "Mabilisang Tingin";
+"Delete" = "Tanggalin";
+"All" = "Lahat";
+"Screenshots" = "Mga Screenshot";
+"GIFs" = "Mga GIF";
+"Click to copy · Drag to app" = "I-click upang kopyahin · I-drag sa app";
+"No captures yet" = "Wala pang mga pagkuha";
+
+/* Floating Thumbnail */
+"Close All" = "Isara Lahat";
+"Save All to Folder…" = "I-save Lahat sa Folder…";
+"Save" = "I-save";
+
+/* Editor Top Bar */
+"Zoom In" = "Palakihin";
+"Zoom Out" = "Paliitin";
+"Fit Canvas" = "Iayon sa Canvas";
+"Crop" = "I-crop";
+"Flip Horizontal" = "I-flip Pahalang";
+"Flip Vertical" = "I-flip Patayo";
+"Add Capture" = "Magdagdag ng Pagkuha";
+
+/* Toolbar - Tools */
+"Arrow" = "Palaso";
+"Line" = "Linya";
+"Rectangle" = "Parihaba";
+"Ellipse" = "Elipse";
+"Pencil" = "Lapis";
+"Pencil (Draw)" = "Lapis (Gumuhit)";
+"Marker" = "Marker";
+"Text" = "Teksto";
+"Number" = "Numero";
+"Number / Counter" = "Numero / Bilang";
+"Stamp / Emoji" = "Stamp / Emoji";
+"Censor" = "Sensura";
+"Censor (Pixelate / Blur / Solid)" = "Sensura (Pixelate / Blur / Solid)";
+"Measure" = "Sukat";
+"Measure (px)" = "Sukat (px)";
+"Magnify (Loupe)" = "Palakihin (Loupe)";
+"Color Sampler" = "Tagakuha ng Kulay";
+"Color Picker" = "Tagapili ng Kulay";
+"Select & Edit" = "Pumili at I-edit";
+"Color" = "Kulay";
+
+/* Toolbar - Actions */
+"Copy to Clipboard" = "Kopyahin sa Clipboard";
+"Save to File" = "I-save sa File";
+"Save to" = "I-save sa";
+"Open in Editor Window" = "Buksan sa Editor Window";
+"Pin on Screen" = "I-pin sa Screen";
+"Pin" = "I-pin";
+"Pin (floating window)" = "I-pin (lumulutang na window)";
+"OCR" = "OCR";
+"OCR Text" = "OCR Teksto";
+"OCR (extract text)" = "OCR (kunin ang teksto)";
+"Upload" = "I-upload";
+"Share" = "Ibahagi";
+"Undo" = "I-undo";
+"Redo" = "I-redo";
+"Close" = "Isara";
+"Remove Background" = "Alisin ang Background";
+"Beautify" = "Pagandahin";
+"Adjust" = "Ayusin";
+"Adjust (Image Effects)" = "Ayusin (Mga Effect ng Larawan)";
+"Invert Colors" = "Baligtarin ang mga Kulay";
+"Record" = "I-record";
+"Record screen" = "I-record ang screen";
+"Translate" = "Isalin";
+"Auto-Redact sensitive data" = "Auto-Redact ng sensitibong datos";
+"Move Selection" = "Ilipat ang Pinili";
+
+/* Toolbar - Recording */
+"Start Recording" = "Simulan ang Pag-record";
+"Cancel Recording" = "Kanselahin ang Pag-record";
+"Highlight Mouse Clicks" = "I-highlight ang mga Pag-click ng Mouse";
+"Record System Audio" = "I-record ang Audio ng Sistema";
+"Record Microphone" = "I-record ang Mikropono";
+"Recording Settings" = "Mga Setting ng Pag-record";
+
+/* Tool Options */
+"Size" = "Laki";
+"Stroke" = "Guhit";
+"Radius" = "Radius";
+"Start:" = "Simula:";
+"Draw:" = "Guhit:";
+"Auto:" = "Auto:";
+"Fill" = "Punan";
+"Outline" = "Balangkas";
+"More Emojis" = "Higit Pang mga Emoji";
+"Load Image" = "Mag-load ng Larawan";
+"Gradient Style" = "Estilo ng Gradient";
+"On" = "Bukas";
+"Text Only" = "Teksto Lamang";
+"All Text" = "Lahat ng Teksto";
+"PII" = "PII";
+"Faces" = "Mga Mukha";
+"People" = "Mga Tao";
+"Confirm before upload" = "Kumpirmahin bago i-upload";
+"Flip" = "I-flip";
+"Smooth" = "Makinis";
+"Smart" = "Matalino";
+"Padding" = "Padding";
+"Shadow" = "Anino";
+"Right-click to add points" = "I-right-click upang magdagdag ng mga punto";
+"Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "Pindutin 1 auto-patayo  ·  Pindutin 2 auto-pahalang";
+
+/* Overlay / Canvas */
+"Click a window  ·  Drag for custom area  ·  F for full screen" = "I-click ang window  ·  I-drag para sa custom na lugar  ·  F para sa buong screen";
+"Drag to select  ·  Click for full screen" = "I-drag upang pumili  ·  I-click para sa buong screen";
+"Release to annotate and edit" = "Bitawan upang mag-annotate at mag-edit";
+"Window snap: " = "Window snap: ";
+"ON" = "ON";
+"OFF" = "OFF";
+"  (Tab to toggle)" = "  (Tab upang i-toggle)";
+"Right-click to copy" = "I-right-click upang kopyahin";
+"Copied %@" = "Nakopya ang %@";
+"Set color %@" = "Itakda ang kulay %@";
+"Draw something first to use the move tool." = "Gumuhit muna bago gamitin ang move tool.";
+"Drag to reposition" = "I-drag upang ilipat";
+
+/* Overlay - Popovers */
+"Format:" = "Format:";
+"FPS:" = "FPS:";
+"When done:" = "Kapag tapos na:";
+"Open editor" = "Buksan ang editor";
+"Show in Finder" = "Ipakita sa Finder";
+"Copy to clipboard" = "Kopyahin sa clipboard";
+
+/* Preferences - General */
+"macshot Preferences" = "Mga Kagustuhan ng macshot";
+"General" = "Pangkalahatan";
+"Tools" = "Mga Kasangkapan";
+"Recording" = "Pag-record";
+"About" = "Tungkol sa";
+"Shortcuts" = "Mga Shortcut";
+"Uploads" = "Mga Upload";
+"Language" = "Wika";
+"Language:" = "Wika:";
+"Restart the app to fully apply the new language." = "I-restart ang app upang ganap na mailapat ang bagong wika.";
+"Capture" = "Pagkuha";
+"Play sound on copy" = "Magpatugtog ng tunog kapag kinopya";
+"Remember last selection area" = "Tandaan ang huling napiling lugar";
+"Remember last selected tool" = "Tandaan ang huling napiling kasangkapan";
+"Show floating thumbnail after capture" = "Ipakita ang lumulutang na thumbnail pagkatapos kumuha";
+"Launch at login" = "Buksan kapag nag-login";
+"Show snap alignment guides" = "Ipakita ang mga gabay sa pagkakahanay";
+"Capture mouse cursor in screenshot" = "Isama ang cursor ng mouse sa screenshot";
+"Use window title in saved filename" = "Gamitin ang pamagat ng window sa na-save na filename";
+"Hide menu bar icon" = "Itago ang icon sa menu bar";
+"Hotkeys still work. To show the icon again, re-launch macshot." = "Gumagana pa rin ang mga hotkey. Upang ipakita muli ang icon, i-restart ang macshot.";
+"Check for updates automatically" = "Awtomatikong tingnan ang mga update";
+"Thumbnail" = "Thumbnail";
+"  Dismiss after:" = "  I-dismiss pagkatapos ng:";
+"seconds before auto-dismiss (0 = never)" = "segundo bago mag-auto-dismiss (0 = hindi kailanman)";
+"  Multiple previews:" = "  Maramihang preview:";
+"Stack (keep all)" = "Patong-patungin (panatilihin lahat)";
+"Replace (show only latest)" = "Palitan (ipakita lang ang pinakabago)";
+"Output" = "Output";
+"Image format:" = "Format ng larawan:";
+"Quality:" = "Kalidad:";
+"%d%%" = "%d%%";
+"Save at standard resolution (1x)" = "I-save sa standard na resolusyon (1x)";
+"Halves dimensions on Retina displays, ~4x smaller files" = "Hinahati ang dimensyon sa Retina display, ~4x na mas maliliit na file";
+"Embed sRGB color profile" = "I-embed ang sRGB color profile";
+"Ensures consistent colors across different displays" = "Tinitiyak ang pare-parehong kulay sa iba't ibang display";
+"Screenshot History" = "Kasaysayan ng Screenshot";
+"History size:" = "Laki ng kasaysayan:";
+"screenshots kept on disk (0 = off)" = "mga screenshot na nakatago sa disk (0 = naka-off)";
+"Save Directory" = "Direktoryo ng Pag-save";
+"Save folder:" = "Folder na pag-save-an:";
+"Browse…" = "Mag-browse…";
+"Appearance" = "Hitsura";
+"Accent color:" = "Kulay ng accent:";
+"Icon color:" = "Kulay ng icon:";
+"Reset" = "I-reset";
+"OCR Capture:" = "OCR Capture:";
+"Show window + copy to clipboard" = "Ipakita ang window + kopyahin sa clipboard";
+"Show window only" = "Ipakita ang window lamang";
+"Copy to clipboard only" = "Kopyahin sa clipboard lamang";
+"Enter / Quick Capture:" = "Enter / Mabilisang Pagkuha:";
+"Save to file" = "I-save sa file";
+"Save + copy to clipboard" = "I-save + kopyahin sa clipboard";
+"OCR Action" = "Aksyon ng OCR";
+
+/* Preferences - Shortcuts */
+"Keyboard Shortcuts" = "Mga Keyboard Shortcut";
+"Hotkeys" = "Mga Hotkey";
+"Clear shortcut" = "Burahin ang shortcut";
+"Press keys..." = "Pindutin ang mga key...";
+"Waiting..." = "Naghihintay...";
+
+/* Preferences - Tools */
+"Annotation Tools" = "Mga Kasangkapan sa Pag-annotate";
+"Hidden tools are removed from the bottom toolbar." = "Ang mga nakatagong kasangkapan ay tinanggal mula sa ibabang toolbar.";
+"Capture Actions" = "Mga Aksyon sa Pagkuha";
+"Bottom Toolbar Actions" = "Mga Aksyon sa Ibabang Toolbar";
+"Hidden actions are removed from the bottom toolbar." = "Ang mga nakatagong aksyon ay tinanggal mula sa ibabang toolbar.";
+"Editor Actions" = "Mga Aksyon sa Editor";
+"Right Toolbar Actions" = "Mga Aksyon sa Kanang Toolbar";
+"Hidden actions are removed from the right toolbar." = "Ang mga nakatagong aksyon ay tinanggal mula sa kanang toolbar.";
+
+/* Preferences - Recording */
+"Frame rate:" = "Frame rate:";
+"After recording:" = "Pagkatapos mag-record:";
+"Save recording to:" = "I-save ang recording sa:";
+"Clear" = "Burahin";
+"Max height:" = "Pinakamataas na taas:";
+"px (0 = unlimited)" = "px (0 = walang limitasyon)";
+"Behavior" = "Gawi";
+"Auto-scroll (sends synthetic scroll events)" = "Auto-scroll (nagpapadala ng synthetic scroll event)";
+"Detect fixed/sticky headers" = "Tukuyin ang fixed/sticky header";
+"Scroll speed:" = "Bilis ng scroll:";
+"Slow" = "Mabagal";
+"Medium" = "Katamtaman";
+"Fast" = "Mabilis";
+"Very fast" = "Napakabilis";
+"5 fps" = "5 fps";
+"10 fps" = "10 fps";
+"15 fps" = "15 fps";
+"24 fps" = "24 fps";
+"30 fps" = "30 fps";
+"60 fps" = "60 fps";
+"120 fps" = "120 fps";
+"MP4 (H.264)" = "MP4 (H.264)";
+"GIF" = "GIF";
+
+/* Preferences - Upload */
+"Upload Service" = "Serbisyo ng Pag-upload";
+"Upload Provider" = "Tagapagbigay ng Upload";
+"Provider:" = "Tagapagbigay:";
+"Google Drive" = "Google Drive";
+"Google Drive (images + videos)" = "Google Drive (mga larawan + video)";
+"imgbb (images only)" = "imgbb (mga larawan lamang)";
+"S3-Compatible (images + videos)" = "S3-Compatible (mga larawan + video)";
+"S3-Compatible Storage" = "S3-Compatible Storage";
+"Sign In with Google" = "Mag-sign In gamit ang Google";
+"Sign Out" = "Mag-sign Out";
+"Signed in" = "Naka-sign in";
+"Not signed in" = "Hindi naka-sign in";
+"Account:" = "Account:";
+"Test Connection" = "Subukan ang Koneksyon";
+"Fill in endpoint, bucket, and credentials first" = "Punan muna ang endpoint, bucket, at mga kredensyal";
+"Testing..." = "Sinusubukan...";
+"Connection successful!" = "Matagumpay ang koneksyon!";
+"Leave empty to use default" = "Iwanang walang laman upang gamitin ang default";
+"Endpoint:" = "Endpoint:";
+"Region:" = "Rehiyon:";
+"Bucket:" = "Bucket:";
+"Access Key:" = "Access Key:";
+"Secret Key:" = "Secret Key:";
+"Public URL:" = "Public URL:";
+"Path Prefix:" = "Path Prefix:";
+"API key:" = "API key:";
+"Upload History" = "Kasaysayan ng Pag-upload";
+"No uploads yet." = "Wala pang mga upload.";
+"Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "Base URL para sa pampublikong access. Kung walang laman, ang S3 endpoint URL ang gagamitin (maaaring hindi pampublikong ma-access).";
+"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "May kasamang shared key — kumuha ng sariling libreng key sa imgbb.com/api kung naabot ang rate limit. Mga larawan lamang (walang suporta sa video).";
+"Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "Gumagana sa AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, at iba pang S3-compatible na serbisyo. Sumusuporta sa mga larawan at video.";
+"Configure S3 in Preferences" = "I-configure ang S3 sa Mga Kagustuhan";
+"Sign in to Google Drive in Preferences" = "Mag-sign in sa Google Drive sa Mga Kagustuhan";
+"Video upload requires Google Drive or S3" = "Ang pag-upload ng video ay nangangailangan ng Google Drive o S3";
+
+/* Preferences - About */
+"macshot" = "macshot";
+"Version %@ (%@)" = "Bersyon %@ (%@)";
+"Made by" = "Ginawa ni";
+"Licensed under the GPLv3" = "Lisensiyado sa ilalim ng GPLv3";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "Isang libre at open-source na kasangkapan sa screenshot at pag-record ng screen para sa macOS.\nGanap na native — binuo gamit ang Swift at AppKit.";
+
+/* Alerts */
+"No Image on Clipboard" = "Walang Larawan sa Clipboard";
+"Copy an image to the clipboard first, then try again." = "Kopyahin muna ang isang larawan sa clipboard, pagkatapos ay subukang muli.";
+"OK" = "OK";
+"Accessibility Access Required" = "Kinakailangan ang Accessibility Access";
+"macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "Kailangan ng macshot ang Accessibility permission upang mag-auto-scroll sa ibang app. Pakibigyan ng access sa System Settings, pagkatapos ay subukang muli.";
+"Open Settings" = "Buksan ang Settings";
+"Cancel" = "Kanselahin";
+"Microphone Access Required" = "Kinakailangan ang Access sa Mikropono";
+"macshot needs microphone permission to record voice audio. Open System Settings to grant access." = "Kailangan ng macshot ang microphone permission upang mag-record ng boses. Buksan ang System Settings upang bigyan ng access.";
+"Upload to Google Drive?" = "I-upload sa Google Drive?";
+"Upload to S3?" = "I-upload sa S3?";
+"Upload to imgbb.com?" = "I-upload sa imgbb.com?";
+"Your screenshot will be uploaded." = "Ia-upload ang iyong screenshot.";
+
+/* Permission Onboarding */
+"Welcome to macshot" = "Maligayang pagdating sa macshot";
+"macshot needs one permission" = "Kailangan ng macshot ang isang permission";
+"Screen Recording not yet granted" = "Hindi pa naibibigay ang Screen Recording";
+"Screen Recording granted!" = "Naibigay na ang Screen Recording!";
+"Enable macshot, then try taking a screenshot" = "I-enable ang macshot, pagkatapos ay subukang kumuha ng screenshot";
+"Open Screen Recording Settings" = "Buksan ang Screen Recording Settings";
+"Continue" = "Magpatuloy";
+
+/* OCR Window */
+"Text Recognition" = "Pagkilala ng Teksto";
+"Translate to:" = "Isalin sa:";
+"%d chars · %d words" = "%d karakter · %d salita";
+"Copy  ⌘↩" = "Kopyahin  ⌘↩";
+"AI Search" = "AI Search";
+"Show Original" = "Ipakita ang Orihinal";
+"Translation Failed" = "Nabigo ang Pagsasalin";
+"Translation" = "Pagsasalin";
+"(No text detected in the selected area)" = "(Walang tekstong nakita sa napiling lugar)";
+
+/* Upload Toast */
+"URL copied to the clipboard" = "Nakopya ang URL sa clipboard";
+"Uploading... %d%%" = "Ina-upload... %d%%";
+"Upload failed: %@" = "Nabigo ang pag-upload: %@";
+"Uploaded! Link copied." = "Na-upload na! Nakopya ang link.";
+"Uploading to %@... %d%%" = "Ina-upload sa %@... %d%%";
+"Open" = "Buksan";
+
+/* Recording Toast */
+"Recording saved" = "Na-save ang recording";
+"%@ • Recording saved" = "%@ • Na-save ang recording";
+"Copy Path" = "Kopyahin ang Path";
+"Path copied!" = "Nakopya ang path!";
+
+/* Video Editor */
+"macshot Video Editor" = "macshot Video Editor";
+"%@ selected" = "%@ ang napili";
+"Exporting..." = "Ini-export...";
+"Export failed" = "Nabigo ang pag-export";
+"Saved to %@" = "Na-save sa %@";
+"Save failed" = "Nabigo ang pag-save";
+
+/* Barcode Detector */
+/* "Open" and "Copy" are shared with other sections */
+
+/* Save Panel */
+"Save As..." = "I-save Bilang...";
+"Choose a folder" = "Pumili ng folder";
+"Save All to Folder…" = "I-save Lahat sa Folder…";
+
+/* Scroll Capture HUD */
+"Auto Scroll" = "Auto Scroll";
+"Stop" = "Itigil";
+"Scrolling..." = "Ini-scroll...";
+
+/* Effects Picker (Adjust popover) */
+"Presets" = "Mga Preset";
+"Adjustments" = "Mga Pagsasaayos";
+"Brightness" = "Liwanag";
+"Contrast" = "Contrast";
+"Saturation" = "Saturation";
+"Sharpness" = "Talas";
+
+/* Time Ago */
+"just now" = "ngayon lang";
+"%ds ago" = "%ds ang nakalipas";
+"%dm ago" = "%dm ang nakalipas";
+"%dh ago" = "%dh ang nakalipas";
+
+/* Hotkey Labels */
+"History" = "Kasaysayan";
+
+/* Preferences - Shortcuts note */
+"Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "I-click ang \"Record\" at pindutin ang isang kombinasyon ng key na may kahit isang modifier (⌘, ⌥, ⌃, ⇧) upang magtakda ng shortcut.";

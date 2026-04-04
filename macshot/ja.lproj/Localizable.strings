@@ -1,0 +1,400 @@
+/* 日本語 — macshot localization
+ *
+ * To add a new language:
+ * 1. Create a new folder: macshot/<lang-code>.lproj/
+ * 2. Copy this file into that folder
+ * 3. Translate all values (right side of = sign)
+ * 4. Add the language to LanguageManager.availableLanguages in Services/LanguageManager.swift
+ * 5. Add the language code to knownRegions in macshot.xcodeproj/project.pbxproj
+ * 6. Submit a pull request!
+ *
+ * Keys use the English text. Values should be the translation.
+ * Format strings use %@ for strings, %d for integers.
+ * Keep keyboard shortcuts (like ⌘C) untranslated.
+ * Keep brand names (macshot, Google Drive, imgbb, S3) untranslated.
+ */
+
+/* Menu Bar */
+"Capture Area" = "エリアをキャプチャ";
+"Capture Screen" = "画面をキャプチャ";
+"Capture OCR" = "OCR キャプチャ";
+"Quick Capture" = "クイックキャプチャ";
+"Scroll Capture" = "スクロールキャプチャ";
+"Capture Delay" = "キャプチャ遅延";
+"None" = "なし";
+"%d seconds" = "%d 秒";
+"Record Area" = "エリアを録画";
+"Record Screen" = "画面を録画";
+"Recent Captures" = "最近のキャプチャ";
+"Show History Panel" = "履歴パネルを表示";
+"Open Image..." = "画像を開く...";
+"Open from Clipboard" = "クリップボードから開く";
+"Preferences..." = "環境設定...";
+"Check for Updates..." = "アップデートを確認...";
+"Quit macshot" = "macshot を終了";
+"No recent captures" = "最近のキャプチャはありません";
+"Clear History" = "履歴を消去";
+
+/* History Panel */
+"Copy" = "コピー";
+"Save As..." = "名前を付けて保存...";
+"Open in Editor" = "エディタで開く";
+"Pin to Screen" = "画面にピン留め";
+"Quick Look" = "クイックルック";
+"Delete" = "削除";
+"All" = "すべて";
+"Screenshots" = "スクリーンショット";
+"GIFs" = "GIF";
+"Click to copy · Drag to app" = "クリックでコピー · ドラッグでアプリへ";
+"No captures yet" = "キャプチャはまだありません";
+
+/* Floating Thumbnail */
+"Close All" = "すべて閉じる";
+"Save All to Folder…" = "すべてフォルダに保存…";
+"Save" = "保存";
+
+/* Editor Top Bar */
+"Zoom In" = "拡大";
+"Zoom Out" = "縮小";
+"Fit Canvas" = "キャンバスに合わせる";
+"Crop" = "切り取り";
+"Flip Horizontal" = "左右反転";
+"Flip Vertical" = "上下反転";
+"Add Capture" = "キャプチャを追加";
+
+/* Toolbar - Tools */
+"Arrow" = "矢印";
+"Line" = "線";
+"Rectangle" = "四角形";
+"Ellipse" = "楕円";
+"Pencil" = "鉛筆";
+"Pencil (Draw)" = "鉛筆 (描画)";
+"Marker" = "マーカー";
+"Text" = "テキスト";
+"Number" = "番号";
+"Number / Counter" = "番号 / カウンター";
+"Stamp / Emoji" = "スタンプ / 絵文字";
+"Censor" = "モザイク";
+"Censor (Pixelate / Blur / Solid)" = "モザイク (ピクセル化 / ぼかし / 塗りつぶし)";
+"Measure" = "計測";
+"Measure (px)" = "計測 (px)";
+"Magnify (Loupe)" = "拡大鏡 (ルーペ)";
+"Color Sampler" = "カラーサンプラー";
+"Color Picker" = "カラーピッカー";
+"Select & Edit" = "選択して編集";
+"Color" = "カラー";
+
+/* Toolbar - Actions */
+"Copy to Clipboard" = "クリップボードにコピー";
+"Save to File" = "ファイルに保存";
+"Save to" = "保存先";
+"Open in Editor Window" = "エディタウインドウで開く";
+"Pin on Screen" = "画面にピン留め";
+"Pin" = "ピン留め";
+"Pin (floating window)" = "ピン留め (フローティングウインドウ)";
+"OCR" = "OCR";
+"OCR Text" = "OCR テキスト";
+"OCR (extract text)" = "OCR (テキスト抽出)";
+"Upload" = "アップロード";
+"Share" = "共有";
+"Undo" = "取り消す";
+"Redo" = "やり直す";
+"Close" = "閉じる";
+"Remove Background" = "背景を削除";
+"Beautify" = "美化";
+"Adjust" = "調整";
+"Adjust (Image Effects)" = "調整 (画像エフェクト)";
+"Invert Colors" = "色を反転";
+"Record" = "録画";
+"Record screen" = "画面を録画";
+"Translate" = "翻訳";
+"Auto-Redact sensitive data" = "機密データを自動墨消し";
+"Move Selection" = "選択範囲を移動";
+
+/* Toolbar - Recording */
+"Start Recording" = "録画を開始";
+"Cancel Recording" = "録画をキャンセル";
+"Highlight Mouse Clicks" = "マウスクリックをハイライト";
+"Record System Audio" = "システムオーディオを録音";
+"Record Microphone" = "マイクを録音";
+"Recording Settings" = "録画設定";
+
+/* Tool Options */
+"Size" = "サイズ";
+"Stroke" = "線幅";
+"Radius" = "半径";
+"Start:" = "開始:";
+"Draw:" = "描画:";
+"Auto:" = "自動:";
+"Fill" = "塗りつぶし";
+"Outline" = "アウトライン";
+"More Emojis" = "もっと絵文字";
+"Load Image" = "画像を読み込む";
+"Gradient Style" = "グラデーションスタイル";
+"On" = "オン";
+"Text Only" = "テキストのみ";
+"All Text" = "すべてのテキスト";
+"PII" = "個人情報";
+"Faces" = "顔";
+"People" = "人物";
+"Confirm before upload" = "アップロード前に確認";
+"Flip" = "反転";
+"Smooth" = "スムーズ";
+"Smart" = "スマート";
+"Padding" = "余白";
+"Shadow" = "シャドウ";
+"Right-click to add points" = "右クリックでポイントを追加";
+"Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "1 長押しで自動垂直  ·  2 長押しで自動水平";
+
+/* Overlay / Canvas */
+"Click a window  ·  Drag for custom area  ·  F for full screen" = "ウインドウをクリック · ドラッグで範囲選択 · F でフルスクリーン";
+"Drag to select  ·  Click for full screen" = "ドラッグで選択 · クリックでフルスクリーン";
+"Release to annotate and edit" = "離して注釈・編集";
+"Window snap: " = "ウインドウスナップ: ";
+"ON" = "オン";
+"OFF" = "オフ";
+"  (Tab to toggle)" = "  (Tab で切替)";
+"Right-click to copy" = "右クリックでコピー";
+"Copied %@" = "%@ をコピーしました";
+"Set color %@" = "カラーを %@ に設定";
+"Draw something first to use the move tool." = "移動ツールを使うには、先に何か描いてください。";
+"Drag to reposition" = "ドラッグで位置を変更";
+
+/* Overlay - Popovers */
+"Format:" = "形式:";
+"FPS:" = "FPS:";
+"When done:" = "完了時:";
+"Open editor" = "エディタを開く";
+"Show in Finder" = "Finder で表示";
+"Copy to clipboard" = "クリップボードにコピー";
+
+/* Preferences - General */
+"macshot Preferences" = "macshot 環境設定";
+"General" = "一般";
+"Tools" = "ツール";
+"Recording" = "録画";
+"About" = "macshot について";
+"Shortcuts" = "ショートカット";
+"Uploads" = "アップロード";
+"Language" = "言語";
+"Language:" = "言語:";
+"Restart the app to fully apply the new language." = "新しい言語を完全に適用するには、アプリを再起動してください。";
+"Capture" = "キャプチャ";
+"Play sound on copy" = "コピー時にサウンドを再生";
+"Remember last selection area" = "前回の選択範囲を記憶";
+"Remember last selected tool" = "前回選択したツールを記憶";
+"Show floating thumbnail after capture" = "キャプチャ後にフローティングサムネイルを表示";
+"Launch at login" = "ログイン時に起動";
+"Show snap alignment guides" = "スナップ整列ガイドを表示";
+"Capture mouse cursor in screenshot" = "スクリーンショットにマウスカーソルを含める";
+"Use window title in saved filename" = "保存ファイル名にウインドウタイトルを使用";
+"Hide menu bar icon" = "メニューバーアイコンを隠す";
+"Hotkeys still work. To show the icon again, re-launch macshot." = "ホットキーは引き続き使用できます。アイコンを再表示するには、macshot を再起動してください。";
+"Check for updates automatically" = "自動的にアップデートを確認";
+"Thumbnail" = "サムネイル";
+"  Dismiss after:" = "  自動非表示:";
+"seconds before auto-dismiss (0 = never)" = "秒後に自動非表示 (0 = 無効)";
+"  Multiple previews:" = "  複数プレビュー:";
+"Stack (keep all)" = "スタック (すべて保持)";
+"Replace (show only latest)" = "置き換え (最新のみ表示)";
+"Output" = "出力";
+"Image format:" = "画像形式:";
+"Quality:" = "品質:";
+"%d%%" = "%d%%";
+"Save at standard resolution (1x)" = "標準解像度 (1x) で保存";
+"Halves dimensions on Retina displays, ~4x smaller files" = "Retina ディスプレイで解像度を半分に、ファイルサイズ約 1/4";
+"Embed sRGB color profile" = "sRGB カラープロファイルを埋め込む";
+"Ensures consistent colors across different displays" = "異なるディスプレイ間で一貫した色を保証";
+"Screenshot History" = "スクリーンショット履歴";
+"History size:" = "履歴サイズ:";
+"screenshots kept on disk (0 = off)" = "枚をディスクに保存 (0 = 無効)";
+"Save Directory" = "保存先ディレクトリ";
+"Save folder:" = "保存フォルダ:";
+"Browse…" = "参照…";
+"Appearance" = "外観";
+"Accent color:" = "アクセントカラー:";
+"Icon color:" = "アイコンカラー:";
+"Reset" = "リセット";
+"OCR Capture:" = "OCR キャプチャ:";
+"Show window + copy to clipboard" = "ウインドウを表示 + クリップボードにコピー";
+"Show window only" = "ウインドウのみ表示";
+"Copy to clipboard only" = "クリップボードにコピーのみ";
+"Enter / Quick Capture:" = "Enter / クイックキャプチャ:";
+"Save to file" = "ファイルに保存";
+"Save + copy to clipboard" = "保存 + クリップボードにコピー";
+"OCR Action" = "OCR アクション";
+
+/* Preferences - Shortcuts */
+"Keyboard Shortcuts" = "キーボードショートカット";
+"Hotkeys" = "ホットキー";
+"Clear shortcut" = "ショートカットを消去";
+"Press keys..." = "キーを押してください...";
+"Waiting..." = "入力待ち...";
+
+/* Preferences - Tools */
+"Annotation Tools" = "注釈ツール";
+"Hidden tools are removed from the bottom toolbar." = "非表示のツールは下部ツールバーから除外されます。";
+"Capture Actions" = "キャプチャアクション";
+"Bottom Toolbar Actions" = "下部ツールバーアクション";
+"Hidden actions are removed from the bottom toolbar." = "非表示のアクションは下部ツールバーから除外されます。";
+"Editor Actions" = "エディタアクション";
+"Right Toolbar Actions" = "右側ツールバーアクション";
+"Hidden actions are removed from the right toolbar." = "非表示のアクションは右側ツールバーから除外されます。";
+
+/* Preferences - Recording */
+"Frame rate:" = "フレームレート:";
+"After recording:" = "録画後:";
+"Save recording to:" = "録画の保存先:";
+"Clear" = "クリア";
+"Max height:" = "最大高さ:";
+"px (0 = unlimited)" = "px (0 = 無制限)";
+"Behavior" = "動作";
+"Auto-scroll (sends synthetic scroll events)" = "自動スクロール (合成スクロールイベントを送信)";
+"Detect fixed/sticky headers" = "固定/スティッキーヘッダーを検出";
+"Scroll speed:" = "スクロール速度:";
+"Slow" = "遅い";
+"Medium" = "中";
+"Fast" = "速い";
+"Very fast" = "非常に速い";
+"5 fps" = "5 fps";
+"10 fps" = "10 fps";
+"15 fps" = "15 fps";
+"24 fps" = "24 fps";
+"30 fps" = "30 fps";
+"60 fps" = "60 fps";
+"120 fps" = "120 fps";
+"MP4 (H.264)" = "MP4 (H.264)";
+"GIF" = "GIF";
+
+/* Preferences - Upload */
+"Upload Service" = "アップロードサービス";
+"Upload Provider" = "アップロードプロバイダ";
+"Provider:" = "プロバイダ:";
+"Google Drive" = "Google Drive";
+"Google Drive (images + videos)" = "Google Drive (画像 + 動画)";
+"imgbb (images only)" = "imgbb (画像のみ)";
+"S3-Compatible (images + videos)" = "S3 互換 (画像 + 動画)";
+"S3-Compatible Storage" = "S3 互換ストレージ";
+"Sign In with Google" = "Google でサインイン";
+"Sign Out" = "サインアウト";
+"Signed in" = "サインイン済み";
+"Not signed in" = "未サインイン";
+"Account:" = "アカウント:";
+"Test Connection" = "接続テスト";
+"Fill in endpoint, bucket, and credentials first" = "先にエンドポイント、バケット、認証情報を入力してください";
+"Testing..." = "テスト中...";
+"Connection successful!" = "接続に成功しました!";
+"Leave empty to use default" = "デフォルトを使用する場合は空欄";
+"Endpoint:" = "エンドポイント:";
+"Region:" = "リージョン:";
+"Bucket:" = "バケット:";
+"Access Key:" = "アクセスキー:";
+"Secret Key:" = "シークレットキー:";
+"Public URL:" = "パブリック URL:";
+"Path Prefix:" = "パスプレフィックス:";
+"API key:" = "API キー:";
+"Upload History" = "アップロード履歴";
+"No uploads yet." = "アップロードはまだありません。";
+"Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "公開アクセス用のベース URL。空の場合、S3 エンドポイント URL が使用されます (公開アクセスできない場合があります)。";
+"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "共有キーが含まれています — レート制限に達した場合は imgbb.com/api で無料キーを取得してください。画像のみ (動画は非対応)。";
+"Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "AWS S3、Cloudflare R2、MinIO、DigitalOcean Spaces、Backblaze B2、その他の S3 互換サービスで利用できます。画像と動画に対応。";
+"Configure S3 in Preferences" = "環境設定で S3 を設定してください";
+"Sign in to Google Drive in Preferences" = "環境設定で Google Drive にサインインしてください";
+"Video upload requires Google Drive or S3" = "動画のアップロードには Google Drive または S3 が必要です";
+
+/* Preferences - About */
+"macshot" = "macshot";
+"Version %@ (%@)" = "バージョン %@ (%@)";
+"Made by" = "作者";
+"Licensed under the GPLv3" = "GPLv3 ライセンス";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "macOS 用の無料・オープンソースのスクリーンショット & 画面録画ツール。\n完全ネイティブ — Swift と AppKit で構築。";
+
+/* Alerts */
+"No Image on Clipboard" = "クリップボードに画像がありません";
+"Copy an image to the clipboard first, then try again." = "先にクリップボードに画像をコピーしてから、もう一度お試しください。";
+"OK" = "OK";
+"Accessibility Access Required" = "アクセシビリティの許可が必要です";
+"macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot が他のアプリを自動スクロールするには、アクセシビリティの許可が必要です。システム設定でアクセスを許可してから、もう一度お試しください。";
+"Open Settings" = "設定を開く";
+"Cancel" = "キャンセル";
+"Microphone Access Required" = "マイクのアクセスが必要です";
+"macshot needs microphone permission to record voice audio. Open System Settings to grant access." = "macshot が音声を録音するには、マイクの許可が必要です。システム設定を開いてアクセスを許可してください。";
+"Upload to Google Drive?" = "Google Drive にアップロードしますか?";
+"Upload to S3?" = "S3 にアップロードしますか?";
+"Upload to imgbb.com?" = "imgbb.com にアップロードしますか?";
+"Your screenshot will be uploaded." = "スクリーンショットがアップロードされます。";
+
+/* Permission Onboarding */
+"Welcome to macshot" = "macshot へようこそ";
+"macshot needs one permission" = "macshot には1つの許可が必要です";
+"Screen Recording not yet granted" = "画面収録がまだ許可されていません";
+"Screen Recording granted!" = "画面収録が許可されました!";
+"Enable macshot, then try taking a screenshot" = "macshot を有効にして、スクリーンショットを撮ってみてください";
+"Open Screen Recording Settings" = "画面収録の設定を開く";
+"Continue" = "続ける";
+
+/* OCR Window */
+"Text Recognition" = "テキスト認識";
+"Translate to:" = "翻訳先:";
+"%d chars · %d words" = "%d 文字 · %d 単語";
+"Copy  ⌘↩" = "コピー  ⌘↩";
+"AI Search" = "AI 検索";
+"Show Original" = "原文を表示";
+"Translation Failed" = "翻訳に失敗しました";
+"Translation" = "翻訳";
+"(No text detected in the selected area)" = "(選択範囲にテキストが検出されませんでした)";
+
+/* Upload Toast */
+"URL copied to the clipboard" = "URL をクリップボードにコピーしました";
+"Uploading... %d%%" = "アップロード中... %d%%";
+"Upload failed: %@" = "アップロード失敗: %@";
+"Uploaded! Link copied." = "アップロード完了! リンクをコピーしました。";
+"Uploading to %@... %d%%" = "%@ にアップロード中... %d%%";
+"Open" = "開く";
+
+/* Recording Toast */
+"Recording saved" = "録画を保存しました";
+"%@ • Recording saved" = "%@ · 録画を保存しました";
+"Copy Path" = "パスをコピー";
+"Path copied!" = "パスをコピーしました!";
+
+/* Video Editor */
+"macshot Video Editor" = "macshot ビデオエディタ";
+"%@ selected" = "%@ を選択中";
+"Exporting..." = "書き出し中...";
+"Export failed" = "書き出しに失敗しました";
+"Saved to %@" = "%@ に保存しました";
+"Save failed" = "保存に失敗しました";
+
+/* Barcode Detector */
+/* "Open" and "Copy" are shared with other sections */
+
+/* Save Panel */
+"Save As..." = "名前を付けて保存...";
+"Choose a folder" = "フォルダを選択";
+"Save All to Folder…" = "すべてフォルダに保存…";
+
+/* Scroll Capture HUD */
+"Auto Scroll" = "自動スクロール";
+"Stop" = "停止";
+"Scrolling..." = "スクロール中...";
+
+/* Effects Picker (Adjust popover) */
+"Presets" = "プリセット";
+"Adjustments" = "調整";
+"Brightness" = "明るさ";
+"Contrast" = "コントラスト";
+"Saturation" = "彩度";
+"Sharpness" = "シャープネス";
+
+/* Time Ago */
+"just now" = "たった今";
+"%ds ago" = "%d秒前";
+"%dm ago" = "%d分前";
+"%dh ago" = "%d時間前";
+
+/* Hotkey Labels */
+"History" = "履歴";
+
+/* Preferences - Shortcuts note */
+"Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "「録画」をクリックし、修飾キー (⌘, ⌥, ⌃, ⇧) を1つ以上含むキーの組み合わせを押して、ショートカットを設定してください。";

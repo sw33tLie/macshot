@@ -1,0 +1,400 @@
+/* 简体中文 — macshot localization
+ *
+ * To add a new language:
+ * 1. Create a new folder: macshot/<lang-code>.lproj/
+ * 2. Copy this file into that folder
+ * 3. Translate all values (right side of = sign)
+ * 4. Add the language to LanguageManager.availableLanguages in Services/LanguageManager.swift
+ * 5. Add the language code to knownRegions in macshot.xcodeproj/project.pbxproj
+ * 6. Submit a pull request!
+ *
+ * Keys use the English text. Values should be the translation.
+ * Format strings use %@ for strings, %d for integers.
+ * Keep keyboard shortcuts (like ⌘C) untranslated.
+ * Keep brand names (macshot, Google Drive, imgbb, S3) untranslated.
+ */
+
+/* Menu Bar */
+"Capture Area" = "捕获区域";
+"Capture Screen" = "捕获屏幕";
+"Capture OCR" = "捕获 OCR";
+"Quick Capture" = "快速捕获";
+"Scroll Capture" = "滚动捕获";
+"Capture Delay" = "延时捕获";
+"None" = "无";
+"%d seconds" = "%d 秒";
+"Record Area" = "录制区域";
+"Record Screen" = "录制屏幕";
+"Recent Captures" = "最近捕获";
+"Show History Panel" = "显示历史面板";
+"Open Image..." = "打开图片...";
+"Open from Clipboard" = "从剪贴板打开";
+"Preferences..." = "偏好设置...";
+"Check for Updates..." = "检查更新...";
+"Quit macshot" = "退出 macshot";
+"No recent captures" = "暂无最近捕获";
+"Clear History" = "清除历史";
+
+/* History Panel */
+"Copy" = "拷贝";
+"Save As..." = "存储为...";
+"Open in Editor" = "在编辑器中打开";
+"Pin to Screen" = "固定到屏幕";
+"Quick Look" = "快速预览";
+"Delete" = "删除";
+"All" = "全部";
+"Screenshots" = "截图";
+"GIFs" = "GIF";
+"Click to copy · Drag to app" = "点按拷贝 · 拖拽到应用";
+"No captures yet" = "暂无捕获";
+
+/* Floating Thumbnail */
+"Close All" = "关闭全部";
+"Save All to Folder…" = "全部存储到文件夹…";
+"Save" = "存储";
+
+/* Editor Top Bar */
+"Zoom In" = "放大";
+"Zoom Out" = "缩小";
+"Fit Canvas" = "适合画布";
+"Crop" = "裁剪";
+"Flip Horizontal" = "水平翻转";
+"Flip Vertical" = "垂直翻转";
+"Add Capture" = "添加捕获";
+
+/* Toolbar - Tools */
+"Arrow" = "箭头";
+"Line" = "线条";
+"Rectangle" = "矩形";
+"Ellipse" = "椭圆";
+"Pencil" = "铅笔";
+"Pencil (Draw)" = "铅笔（绘制）";
+"Marker" = "记号笔";
+"Text" = "文字";
+"Number" = "编号";
+"Number / Counter" = "编号 / 计数器";
+"Stamp / Emoji" = "图章 / 表情";
+"Censor" = "遮挡";
+"Censor (Pixelate / Blur / Solid)" = "遮挡（像素化 / 模糊 / 纯色）";
+"Measure" = "测量";
+"Measure (px)" = "测量 (px)";
+"Magnify (Loupe)" = "放大镜";
+"Color Sampler" = "取色器";
+"Color Picker" = "颜色选取器";
+"Select & Edit" = "选择与编辑";
+"Color" = "颜色";
+
+/* Toolbar - Actions */
+"Copy to Clipboard" = "拷贝到剪贴板";
+"Save to File" = "存储到文件";
+"Save to" = "存储到";
+"Open in Editor Window" = "在编辑器窗口中打开";
+"Pin on Screen" = "固定在屏幕上";
+"Pin" = "固定";
+"Pin (floating window)" = "固定（浮动窗口）";
+"OCR" = "OCR";
+"OCR Text" = "OCR 文字";
+"OCR (extract text)" = "OCR（提取文字）";
+"Upload" = "上传";
+"Share" = "共享";
+"Undo" = "撤销";
+"Redo" = "重做";
+"Close" = "关闭";
+"Remove Background" = "移除背景";
+"Beautify" = "美化";
+"Adjust" = "调整";
+"Adjust (Image Effects)" = "调整（图像效果）";
+"Invert Colors" = "反转颜色";
+"Record" = "录制";
+"Record screen" = "录制屏幕";
+"Translate" = "翻译";
+"Auto-Redact sensitive data" = "自动遮蔽敏感数据";
+"Move Selection" = "移动选区";
+
+/* Toolbar - Recording */
+"Start Recording" = "开始录制";
+"Cancel Recording" = "取消录制";
+"Highlight Mouse Clicks" = "高亮鼠标点击";
+"Record System Audio" = "录制系统音频";
+"Record Microphone" = "录制麦克风";
+"Recording Settings" = "录制设置";
+
+/* Tool Options */
+"Size" = "大小";
+"Stroke" = "描边";
+"Radius" = "半径";
+"Start:" = "起始:";
+"Draw:" = "绘制:";
+"Auto:" = "自动:";
+"Fill" = "填充";
+"Outline" = "轮廓";
+"More Emojis" = "更多表情";
+"Load Image" = "加载图片";
+"Gradient Style" = "渐变样式";
+"On" = "开";
+"Text Only" = "仅文字";
+"All Text" = "全部文字";
+"PII" = "PII";
+"Faces" = "面部";
+"People" = "人物";
+"Confirm before upload" = "上传前确认";
+"Flip" = "翻转";
+"Smooth" = "平滑";
+"Smart" = "智能";
+"Padding" = "边距";
+"Shadow" = "阴影";
+"Right-click to add points" = "右键点按以添加控制点";
+"Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "按住 1 自动垂直  ·  按住 2 自动水平";
+
+/* Overlay / Canvas */
+"Click a window  ·  Drag for custom area  ·  F for full screen" = "点按窗口  ·  拖拽自定义区域  ·  F 全屏";
+"Drag to select  ·  Click for full screen" = "拖拽选择  ·  点按全屏捕获";
+"Release to annotate and edit" = "松开以标注和编辑";
+"Window snap: " = "窗口吸附: ";
+"ON" = "开";
+"OFF" = "关";
+"  (Tab to toggle)" = "  (Tab 切换)";
+"Right-click to copy" = "右键点按拷贝";
+"Copied %@" = "已拷贝 %@";
+"Set color %@" = "设置颜色 %@";
+"Draw something first to use the move tool." = "请先绘制标注，然后才能使用移动工具。";
+"Drag to reposition" = "拖拽以重新定位";
+
+/* Overlay - Popovers */
+"Format:" = "格式:";
+"FPS:" = "FPS:";
+"When done:" = "完成后:";
+"Open editor" = "打开编辑器";
+"Show in Finder" = "在 Finder 中显示";
+"Copy to clipboard" = "拷贝到剪贴板";
+
+/* Preferences - General */
+"macshot Preferences" = "macshot 偏好设置";
+"General" = "通用";
+"Tools" = "工具";
+"Recording" = "录制";
+"About" = "关于";
+"Shortcuts" = "快捷键";
+"Uploads" = "上传";
+"Language" = "语言";
+"Language:" = "语言:";
+"Restart the app to fully apply the new language." = "重新启动应用以完全应用新语言。";
+"Capture" = "捕获";
+"Play sound on copy" = "拷贝时播放声音";
+"Remember last selection area" = "记住上次选择区域";
+"Remember last selected tool" = "记住上次选择的工具";
+"Show floating thumbnail after capture" = "捕获后显示浮动缩略图";
+"Launch at login" = "登录时启动";
+"Show snap alignment guides" = "显示对齐辅助线";
+"Capture mouse cursor in screenshot" = "在截图中捕获鼠标指针";
+"Use window title in saved filename" = "在保存文件名中使用窗口标题";
+"Hide menu bar icon" = "隐藏菜单栏图标";
+"Hotkeys still work. To show the icon again, re-launch macshot." = "快捷键仍可使用。若要再次显示图标，请重新启动 macshot。";
+"Check for updates automatically" = "自动检查更新";
+"Thumbnail" = "缩略图";
+"  Dismiss after:" = "  自动消失:";
+"seconds before auto-dismiss (0 = never)" = "秒后自动消失（0 = 永不）";
+"  Multiple previews:" = "  多个预览:";
+"Stack (keep all)" = "堆叠（保留全部）";
+"Replace (show only latest)" = "替换（仅显示最新）";
+"Output" = "输出";
+"Image format:" = "图片格式:";
+"Quality:" = "质量:";
+"%d%%" = "%d%%";
+"Save at standard resolution (1x)" = "以标准分辨率 (1x) 存储";
+"Halves dimensions on Retina displays, ~4x smaller files" = "在 Retina 显示器上将尺寸减半，文件约缩小 4 倍";
+"Embed sRGB color profile" = "嵌入 sRGB 颜色配置文件";
+"Ensures consistent colors across different displays" = "确保在不同显示器上颜色一致";
+"Screenshot History" = "截图历史";
+"History size:" = "历史数量:";
+"screenshots kept on disk (0 = off)" = "张截图保存在磁盘上（0 = 关闭）";
+"Save Directory" = "存储目录";
+"Save folder:" = "存储文件夹:";
+"Browse…" = "浏览…";
+"Appearance" = "外观";
+"Accent color:" = "强调色:";
+"Icon color:" = "图标颜色:";
+"Reset" = "重置";
+"OCR Capture:" = "OCR 捕获:";
+"Show window + copy to clipboard" = "显示窗口 + 拷贝到剪贴板";
+"Show window only" = "仅显示窗口";
+"Copy to clipboard only" = "仅拷贝到剪贴板";
+"Enter / Quick Capture:" = "回车 / 快速捕获:";
+"Save to file" = "存储到文件";
+"Save + copy to clipboard" = "存储 + 拷贝到剪贴板";
+"OCR Action" = "OCR 操作";
+
+/* Preferences - Shortcuts */
+"Keyboard Shortcuts" = "键盘快捷键";
+"Hotkeys" = "快捷键";
+"Clear shortcut" = "清除快捷键";
+"Press keys..." = "按下按键...";
+"Waiting..." = "等待中...";
+
+/* Preferences - Tools */
+"Annotation Tools" = "标注工具";
+"Hidden tools are removed from the bottom toolbar." = "隐藏的工具将从底部工具栏中移除。";
+"Capture Actions" = "捕获操作";
+"Bottom Toolbar Actions" = "底部工具栏操作";
+"Hidden actions are removed from the bottom toolbar." = "隐藏的操作将从底部工具栏中移除。";
+"Editor Actions" = "编辑器操作";
+"Right Toolbar Actions" = "右侧工具栏操作";
+"Hidden actions are removed from the right toolbar." = "隐藏的操作将从右侧工具栏中移除。";
+
+/* Preferences - Recording */
+"Frame rate:" = "帧率:";
+"After recording:" = "录制完成后:";
+"Save recording to:" = "录制文件存储到:";
+"Clear" = "清除";
+"Max height:" = "最大高度:";
+"px (0 = unlimited)" = "px（0 = 无限制）";
+"Behavior" = "行为";
+"Auto-scroll (sends synthetic scroll events)" = "自动滚动（发送模拟滚动事件）";
+"Detect fixed/sticky headers" = "检测固定/粘性头部";
+"Scroll speed:" = "滚动速度:";
+"Slow" = "慢";
+"Medium" = "中";
+"Fast" = "快";
+"Very fast" = "极快";
+"5 fps" = "5 fps";
+"10 fps" = "10 fps";
+"15 fps" = "15 fps";
+"24 fps" = "24 fps";
+"30 fps" = "30 fps";
+"60 fps" = "60 fps";
+"120 fps" = "120 fps";
+"MP4 (H.264)" = "MP4 (H.264)";
+"GIF" = "GIF";
+
+/* Preferences - Upload */
+"Upload Service" = "上传服务";
+"Upload Provider" = "上传服务商";
+"Provider:" = "服务商:";
+"Google Drive" = "Google Drive";
+"Google Drive (images + videos)" = "Google Drive（图片 + 视频）";
+"imgbb (images only)" = "imgbb（仅图片）";
+"S3-Compatible (images + videos)" = "S3 兼容（图片 + 视频）";
+"S3-Compatible Storage" = "S3 兼容存储";
+"Sign In with Google" = "使用 Google 登录";
+"Sign Out" = "退出登录";
+"Signed in" = "已登录";
+"Not signed in" = "未登录";
+"Account:" = "账户:";
+"Test Connection" = "测试连接";
+"Fill in endpoint, bucket, and credentials first" = "请先填写端点、存储桶和凭证";
+"Testing..." = "测试中...";
+"Connection successful!" = "连接成功！";
+"Leave empty to use default" = "留空以使用默认值";
+"Endpoint:" = "端点:";
+"Region:" = "区域:";
+"Bucket:" = "存储桶:";
+"Access Key:" = "访问密钥:";
+"Secret Key:" = "私有密钥:";
+"Public URL:" = "公共 URL:";
+"Path Prefix:" = "路径前缀:";
+"API key:" = "API 密钥:";
+"Upload History" = "上传历史";
+"No uploads yet." = "暂无上传记录。";
+"Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "用于公共访问的基础 URL。留空时将使用 S3 端点 URL（可能无法公开访问）。";
+"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "已内置共享密钥 - 如遇到频率限制，请在 imgbb.com/api 获取免费密钥。仅支持图片（不支持视频）。";
+"Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "兼容 AWS S3、Cloudflare R2、MinIO、DigitalOcean Spaces、Backblaze B2 及其他 S3 兼容服务。支持图片和视频。";
+"Configure S3 in Preferences" = "在偏好设置中配置 S3";
+"Sign in to Google Drive in Preferences" = "在偏好设置中登录 Google Drive";
+"Video upload requires Google Drive or S3" = "视频上传需要 Google Drive 或 S3";
+
+/* Preferences - About */
+"macshot" = "macshot";
+"Version %@ (%@)" = "版本 %@（%@）";
+"Made by" = "开发者";
+"Licensed under the GPLv3" = "基于 GPLv3 许可协议";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "一款免费、开源的 macOS 截图与录屏工具。\n完全原生 - 使用 Swift 和 AppKit 构建。";
+
+/* Alerts */
+"No Image on Clipboard" = "剪贴板中没有图片";
+"Copy an image to the clipboard first, then try again." = "请先将图片拷贝到剪贴板，然后重试。";
+"OK" = "好";
+"Accessibility Access Required" = "需要辅助功能权限";
+"macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot 需要辅助功能权限才能自动滚动其他应用。请在系统设置中授予权限，然后重试。";
+"Open Settings" = "打开设置";
+"Cancel" = "取消";
+"Microphone Access Required" = "需要麦克风权限";
+"macshot needs microphone permission to record voice audio. Open System Settings to grant access." = "macshot 需要麦克风权限来录制语音。请打开系统设置以授予权限。";
+"Upload to Google Drive?" = "上传到 Google Drive？";
+"Upload to S3?" = "上传到 S3？";
+"Upload to imgbb.com?" = "上传到 imgbb.com？";
+"Your screenshot will be uploaded." = "您的截图将被上传。";
+
+/* Permission Onboarding */
+"Welcome to macshot" = "欢迎使用 macshot";
+"macshot needs one permission" = "macshot 需要一项权限";
+"Screen Recording not yet granted" = "尚未授予屏幕录制权限";
+"Screen Recording granted!" = "屏幕录制权限已授予！";
+"Enable macshot, then try taking a screenshot" = "启用 macshot，然后尝试截图";
+"Open Screen Recording Settings" = "打开屏幕录制设置";
+"Continue" = "继续";
+
+/* OCR Window */
+"Text Recognition" = "文字识别";
+"Translate to:" = "翻译为:";
+"%d chars · %d words" = "%d 个字符 · %d 个词";
+"Copy  ⌘↩" = "拷贝  ⌘↩";
+"AI Search" = "AI 搜索";
+"Show Original" = "显示原文";
+"Translation Failed" = "翻译失败";
+"Translation" = "翻译";
+"(No text detected in the selected area)" = "（未在选定区域中检测到文字）";
+
+/* Upload Toast */
+"URL copied to the clipboard" = "URL 已拷贝到剪贴板";
+"Uploading... %d%%" = "上传中... %d%%";
+"Upload failed: %@" = "上传失败: %@";
+"Uploaded! Link copied." = "上传完成！链接已拷贝。";
+"Uploading to %@... %d%%" = "正在上传到 %@... %d%%";
+"Open" = "打开";
+
+/* Recording Toast */
+"Recording saved" = "录制已保存";
+"%@ • Recording saved" = "%@ · 录制已保存";
+"Copy Path" = "拷贝路径";
+"Path copied!" = "路径已拷贝！";
+
+/* Video Editor */
+"macshot Video Editor" = "macshot 视频编辑器";
+"%@ selected" = "已选择 %@";
+"Exporting..." = "导出中...";
+"Export failed" = "导出失败";
+"Saved to %@" = "已存储到 %@";
+"Save failed" = "存储失败";
+
+/* Barcode Detector */
+/* "Open" and "Copy" are shared with other sections */
+
+/* Save Panel */
+"Save As..." = "存储为...";
+"Choose a folder" = "选取文件夹";
+"Save All to Folder…" = "全部存储到文件夹…";
+
+/* Scroll Capture HUD */
+"Auto Scroll" = "自动滚动";
+"Stop" = "停止";
+"Scrolling..." = "滚动中...";
+
+/* Effects Picker (Adjust popover) */
+"Presets" = "预设";
+"Adjustments" = "调整";
+"Brightness" = "亮度";
+"Contrast" = "对比度";
+"Saturation" = "饱和度";
+"Sharpness" = "锐度";
+
+/* Time Ago */
+"just now" = "刚刚";
+"%ds ago" = "%d秒前";
+"%dm ago" = "%d分钟前";
+"%dh ago" = "%d小时前";
+
+/* Hotkey Labels */
+"History" = "历史";
+
+/* Preferences - Shortcuts note */
+"Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "点按\"录制\"并按下至少包含一个修饰键（⌘、⌥、⌃、⇧）的组合键来设置快捷键。";

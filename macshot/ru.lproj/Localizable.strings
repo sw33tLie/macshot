@@ -1,0 +1,400 @@
+/* Русский — macshot localization
+ *
+ * To add a new language:
+ * 1. Create a new folder: macshot/<lang-code>.lproj/
+ * 2. Copy this file into that folder
+ * 3. Translate all values (right side of = sign)
+ * 4. Add the language to LanguageManager.availableLanguages in Services/LanguageManager.swift
+ * 5. Add the language code to knownRegions in macshot.xcodeproj/project.pbxproj
+ * 6. Submit a pull request!
+ *
+ * Keys use the English text. Values should be the translation.
+ * Format strings use %@ for strings, %d for integers.
+ * Keep keyboard shortcuts (like ⌘C) untranslated.
+ * Keep brand names (macshot, Google Drive, imgbb, S3) untranslated.
+ */
+
+/* Menu Bar */
+"Capture Area" = "Захват области";
+"Capture Screen" = "Захват экрана";
+"Capture OCR" = "Захват OCR";
+"Quick Capture" = "Быстрый захват";
+"Scroll Capture" = "Захват прокрутки";
+"Capture Delay" = "Захват с задержкой";
+"None" = "Нет";
+"%d seconds" = "%d сек.";
+"Record Area" = "Запись области";
+"Record Screen" = "Запись экрана";
+"Recent Captures" = "Недавние снимки";
+"Show History Panel" = "Показать панель истории";
+"Open Image..." = "Открыть изображение...";
+"Open from Clipboard" = "Открыть из буфера обмена";
+"Preferences..." = "Настройки...";
+"Check for Updates..." = "Проверить обновления...";
+"Quit macshot" = "Завершить macshot";
+"No recent captures" = "Нет недавних снимков";
+"Clear History" = "Очистить историю";
+
+/* History Panel */
+"Copy" = "Копировать";
+"Save As..." = "Сохранить как...";
+"Open in Editor" = "Открыть в редакторе";
+"Pin to Screen" = "Закрепить на экране";
+"Quick Look" = "Быстрый просмотр";
+"Delete" = "Удалить";
+"All" = "Все";
+"Screenshots" = "Снимки экрана";
+"GIFs" = "GIF-файлы";
+"Click to copy · Drag to app" = "Нажмите, чтобы скопировать · Перетащите в приложение";
+"No captures yet" = "Снимков пока нет";
+
+/* Floating Thumbnail */
+"Close All" = "Закрыть все";
+"Save All to Folder…" = "Сохранить все в папку…";
+"Save" = "Сохранить";
+
+/* Editor Top Bar */
+"Zoom In" = "Увеличить";
+"Zoom Out" = "Уменьшить";
+"Fit Canvas" = "Вписать в окно";
+"Crop" = "Обрезать";
+"Flip Horizontal" = "Отразить по горизонтали";
+"Flip Vertical" = "Отразить по вертикали";
+"Add Capture" = "Добавить снимок";
+
+/* Toolbar - Tools */
+"Arrow" = "Стрелка";
+"Line" = "Линия";
+"Rectangle" = "Прямоугольник";
+"Ellipse" = "Эллипс";
+"Pencil" = "Карандаш";
+"Pencil (Draw)" = "Карандаш (Рисование)";
+"Marker" = "Маркер";
+"Text" = "Текст";
+"Number" = "Номер";
+"Number / Counter" = "Номер / Счётчик";
+"Stamp / Emoji" = "Штамп / Эмодзи";
+"Censor" = "Цензура";
+"Censor (Pixelate / Blur / Solid)" = "Цензура (Пикселизация / Размытие / Заливка)";
+"Measure" = "Линейка";
+"Measure (px)" = "Линейка (px)";
+"Magnify (Loupe)" = "Лупа";
+"Color Sampler" = "Пипетка";
+"Color Picker" = "Палитра";
+"Select & Edit" = "Выбрать и изменить";
+"Color" = "Цвет";
+
+/* Toolbar - Actions */
+"Copy to Clipboard" = "Копировать в буфер обмена";
+"Save to File" = "Сохранить в файл";
+"Save to" = "Сохранить в";
+"Open in Editor Window" = "Открыть в окне редактора";
+"Pin on Screen" = "Закрепить на экране";
+"Pin" = "Закрепить";
+"Pin (floating window)" = "Закрепить (плавающее окно)";
+"OCR" = "OCR";
+"OCR Text" = "OCR-текст";
+"OCR (extract text)" = "OCR (распознать текст)";
+"Upload" = "Загрузить";
+"Share" = "Поделиться";
+"Undo" = "Отменить";
+"Redo" = "Повторить";
+"Close" = "Закрыть";
+"Remove Background" = "Удалить фон";
+"Beautify" = "Оформление";
+"Adjust" = "Коррекция";
+"Adjust (Image Effects)" = "Коррекция (Эффекты)";
+"Invert Colors" = "Инвертировать цвета";
+"Record" = "Запись";
+"Record screen" = "Запись экрана";
+"Translate" = "Перевести";
+"Auto-Redact sensitive data" = "Авто-скрытие конфиденциальных данных";
+"Move Selection" = "Переместить выделение";
+
+/* Toolbar - Recording */
+"Start Recording" = "Начать запись";
+"Cancel Recording" = "Отменить запись";
+"Highlight Mouse Clicks" = "Подсвечивать щелчки мыши";
+"Record System Audio" = "Записывать системный звук";
+"Record Microphone" = "Записывать микрофон";
+"Recording Settings" = "Настройки записи";
+
+/* Tool Options */
+"Size" = "Размер";
+"Stroke" = "Обводка";
+"Radius" = "Радиус";
+"Start:" = "Начало:";
+"Draw:" = "Рисовать:";
+"Auto:" = "Авто:";
+"Fill" = "Заливка";
+"Outline" = "Контур";
+"More Emojis" = "Ещё эмодзи";
+"Load Image" = "Загрузить изображение";
+"Gradient Style" = "Стиль градиента";
+"On" = "Вкл.";
+"Text Only" = "Только текст";
+"All Text" = "Весь текст";
+"PII" = "PII";
+"Faces" = "Лица";
+"People" = "Люди";
+"Confirm before upload" = "Подтверждать перед загрузкой";
+"Flip" = "Отразить";
+"Smooth" = "Сглаживание";
+"Smart" = "Умное";
+"Padding" = "Отступ";
+"Shadow" = "Тень";
+"Right-click to add points" = "Нажмите правую кнопку, чтобы добавить точки";
+"Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "Удерживайте 1 — авто-вертикаль  ·  Удерживайте 2 — авто-горизонталь";
+
+/* Overlay / Canvas */
+"Click a window  ·  Drag for custom area  ·  F for full screen" = "Нажмите на окно  ·  Выделите область  ·  F для полного экрана";
+"Drag to select  ·  Click for full screen" = "Выделите область  ·  Нажмите для полного экрана";
+"Release to annotate and edit" = "Отпустите для аннотации и редактирования";
+"Window snap: " = "Привязка к окнам: ";
+"ON" = "ВКЛ";
+"OFF" = "ВЫКЛ";
+"  (Tab to toggle)" = "  (Tab для переключения)";
+"Right-click to copy" = "Нажмите правой кнопкой, чтобы скопировать";
+"Copied %@" = "Скопировано: %@";
+"Set color %@" = "Установлен цвет %@";
+"Draw something first to use the move tool." = "Сначала нарисуйте что-нибудь, чтобы использовать инструмент перемещения.";
+"Drag to reposition" = "Перетащите для перемещения";
+
+/* Overlay - Popovers */
+"Format:" = "Формат:";
+"FPS:" = "FPS:";
+"When done:" = "После завершения:";
+"Open editor" = "Открыть редактор";
+"Show in Finder" = "Показать в Finder";
+"Copy to clipboard" = "Копировать в буфер обмена";
+
+/* Preferences - General */
+"macshot Preferences" = "Настройки macshot";
+"General" = "Основные";
+"Tools" = "Инструменты";
+"Recording" = "Запись";
+"About" = "О программе";
+"Shortcuts" = "Быстрые клавиши";
+"Uploads" = "Загрузки";
+"Language" = "Язык";
+"Language:" = "Язык:";
+"Restart the app to fully apply the new language." = "Перезапустите приложение для полного применения нового языка.";
+"Capture" = "Захват";
+"Play sound on copy" = "Воспроизводить звук при копировании";
+"Remember last selection area" = "Запоминать последнюю область выделения";
+"Remember last selected tool" = "Запоминать последний выбранный инструмент";
+"Show floating thumbnail after capture" = "Показывать миниатюру после захвата";
+"Launch at login" = "Запускать при входе в систему";
+"Show snap alignment guides" = "Показывать направляющие привязки";
+"Capture mouse cursor in screenshot" = "Захватывать курсор мыши на снимке экрана";
+"Use window title in saved filename" = "Использовать заголовок окна в имени файла";
+"Hide menu bar icon" = "Скрыть значок в строке меню";
+"Hotkeys still work. To show the icon again, re-launch macshot." = "Горячие клавиши по-прежнему работают. Чтобы вернуть значок, перезапустите macshot.";
+"Check for updates automatically" = "Автоматически проверять обновления";
+"Thumbnail" = "Миниатюра";
+"  Dismiss after:" = "  Скрывать через:";
+"seconds before auto-dismiss (0 = never)" = "секунд до автоскрытия (0 = никогда)";
+"  Multiple previews:" = "  Несколько превью:";
+"Stack (keep all)" = "Стопка (сохранять все)";
+"Replace (show only latest)" = "Заменять (только последнее)";
+"Output" = "Вывод";
+"Image format:" = "Формат изображения:";
+"Quality:" = "Качество:";
+"%d%%" = "%d%%";
+"Save at standard resolution (1x)" = "Сохранять в стандартном разрешении (1x)";
+"Halves dimensions on Retina displays, ~4x smaller files" = "Уменьшает размеры вдвое на Retina-дисплеях, файлы ~4x меньше";
+"Embed sRGB color profile" = "Встраивать цветовой профиль sRGB";
+"Ensures consistent colors across different displays" = "Обеспечивает одинаковые цвета на разных дисплеях";
+"Screenshot History" = "История снимков экрана";
+"History size:" = "Размер истории:";
+"screenshots kept on disk (0 = off)" = "снимков хранится на диске (0 = выкл.)";
+"Save Directory" = "Папка сохранения";
+"Save folder:" = "Папка сохранения:";
+"Browse…" = "Обзор…";
+"Appearance" = "Оформление";
+"Accent color:" = "Цвет акцента:";
+"Icon color:" = "Цвет значка:";
+"Reset" = "Сбросить";
+"OCR Capture:" = "Захват OCR:";
+"Show window + copy to clipboard" = "Показать окно и скопировать";
+"Show window only" = "Только показать окно";
+"Copy to clipboard only" = "Только скопировать";
+"Enter / Quick Capture:" = "Enter / Быстрый захват:";
+"Save to file" = "Сохранить в файл";
+"Save + copy to clipboard" = "Сохранить и скопировать";
+"OCR Action" = "Действие OCR";
+
+/* Preferences - Shortcuts */
+"Keyboard Shortcuts" = "Сочетания клавиш";
+"Hotkeys" = "Горячие клавиши";
+"Clear shortcut" = "Очистить сочетание";
+"Press keys..." = "Нажмите клавиши...";
+"Waiting..." = "Ожидание...";
+
+/* Preferences - Tools */
+"Annotation Tools" = "Инструменты аннотации";
+"Hidden tools are removed from the bottom toolbar." = "Скрытые инструменты удаляются из нижней панели.";
+"Capture Actions" = "Действия захвата";
+"Bottom Toolbar Actions" = "Действия нижней панели";
+"Hidden actions are removed from the bottom toolbar." = "Скрытые действия удаляются из нижней панели.";
+"Editor Actions" = "Действия редактора";
+"Right Toolbar Actions" = "Действия правой панели";
+"Hidden actions are removed from the right toolbar." = "Скрытые действия удаляются из правой панели.";
+
+/* Preferences - Recording */
+"Frame rate:" = "Частота кадров:";
+"After recording:" = "После записи:";
+"Save recording to:" = "Сохранять запись в:";
+"Clear" = "Очистить";
+"Max height:" = "Макс. высота:";
+"px (0 = unlimited)" = "px (0 = без ограничений)";
+"Behavior" = "Поведение";
+"Auto-scroll (sends synthetic scroll events)" = "Авто-прокрутка (отправляет синтетические события прокрутки)";
+"Detect fixed/sticky headers" = "Обнаруживать фиксированные заголовки";
+"Scroll speed:" = "Скорость прокрутки:";
+"Slow" = "Медленно";
+"Medium" = "Средне";
+"Fast" = "Быстро";
+"Very fast" = "Очень быстро";
+"5 fps" = "5 fps";
+"10 fps" = "10 fps";
+"15 fps" = "15 fps";
+"24 fps" = "24 fps";
+"30 fps" = "30 fps";
+"60 fps" = "60 fps";
+"120 fps" = "120 fps";
+"MP4 (H.264)" = "MP4 (H.264)";
+"GIF" = "GIF";
+
+/* Preferences - Upload */
+"Upload Service" = "Сервис загрузки";
+"Upload Provider" = "Провайдер загрузки";
+"Provider:" = "Провайдер:";
+"Google Drive" = "Google Drive";
+"Google Drive (images + videos)" = "Google Drive (изображения и видео)";
+"imgbb (images only)" = "imgbb (только изображения)";
+"S3-Compatible (images + videos)" = "S3-совместимый (изображения и видео)";
+"S3-Compatible Storage" = "S3-совместимое хранилище";
+"Sign In with Google" = "Войти через Google";
+"Sign Out" = "Выйти";
+"Signed in" = "Вход выполнен";
+"Not signed in" = "Вход не выполнен";
+"Account:" = "Аккаунт:";
+"Test Connection" = "Проверить подключение";
+"Fill in endpoint, bucket, and credentials first" = "Сначала заполните адрес, бакет и учётные данные";
+"Testing..." = "Проверка...";
+"Connection successful!" = "Подключение успешно!";
+"Leave empty to use default" = "Оставьте пустым для значения по умолчанию";
+"Endpoint:" = "Адрес:";
+"Region:" = "Регион:";
+"Bucket:" = "Бакет:";
+"Access Key:" = "Ключ доступа:";
+"Secret Key:" = "Секретный ключ:";
+"Public URL:" = "Публичный URL:";
+"Path Prefix:" = "Префикс пути:";
+"API key:" = "API-ключ:";
+"Upload History" = "История загрузок";
+"No uploads yet." = "Загрузок пока нет.";
+"Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "Базовый URL для публичного доступа. Если пуст, используется URL S3 (может быть недоступен публично).";
+"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "Используется общий ключ — получите свой бесплатный ключ на imgbb.com/api при превышении лимитов. Только изображения (видео не поддерживается).";
+"Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "Работает с AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 и другими S3-совместимыми сервисами. Поддерживает изображения и видео.";
+"Configure S3 in Preferences" = "Настройте S3 в Настройках";
+"Sign in to Google Drive in Preferences" = "Войдите в Google Drive в Настройках";
+"Video upload requires Google Drive or S3" = "Загрузка видео требует Google Drive или S3";
+
+/* Preferences - About */
+"macshot" = "macshot";
+"Version %@ (%@)" = "Версия %@ (%@)";
+"Made by" = "Разработал";
+"Licensed under the GPLv3" = "Лицензия GPLv3";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "Бесплатный инструмент для снимков экрана и записи видео с открытым исходным кодом для macOS.\nПолностью нативный — создан на Swift и AppKit.";
+
+/* Alerts */
+"No Image on Clipboard" = "Нет изображения в буфере обмена";
+"Copy an image to the clipboard first, then try again." = "Сначала скопируйте изображение в буфер обмена, затем попробуйте снова.";
+"OK" = "ОК";
+"Accessibility Access Required" = "Требуется доступ к Универсальному доступу";
+"macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot требуется разрешение Универсального доступа для авто-прокрутки других приложений. Предоставьте доступ в Системных настройках и попробуйте снова.";
+"Open Settings" = "Открыть Настройки";
+"Cancel" = "Отменить";
+"Microphone Access Required" = "Требуется доступ к микрофону";
+"macshot needs microphone permission to record voice audio. Open System Settings to grant access." = "macshot требуется разрешение на использование микрофона для записи голоса. Откройте Системные настройки для предоставления доступа.";
+"Upload to Google Drive?" = "Загрузить на Google Drive?";
+"Upload to S3?" = "Загрузить на S3?";
+"Upload to imgbb.com?" = "Загрузить на imgbb.com?";
+"Your screenshot will be uploaded." = "Ваш снимок экрана будет загружен.";
+
+/* Permission Onboarding */
+"Welcome to macshot" = "Добро пожаловать в macshot";
+"macshot needs one permission" = "macshot требуется одно разрешение";
+"Screen Recording not yet granted" = "Разрешение на запись экрана не предоставлено";
+"Screen Recording granted!" = "Разрешение на запись экрана получено!";
+"Enable macshot, then try taking a screenshot" = "Включите macshot, затем попробуйте сделать снимок экрана";
+"Open Screen Recording Settings" = "Открыть настройки записи экрана";
+"Continue" = "Продолжить";
+
+/* OCR Window */
+"Text Recognition" = "Распознавание текста";
+"Translate to:" = "Перевести на:";
+"%d chars · %d words" = "%d символов · %d слов";
+"Copy  ⌘↩" = "Копировать  ⌘↩";
+"AI Search" = "AI-поиск";
+"Show Original" = "Показать оригинал";
+"Translation Failed" = "Ошибка перевода";
+"Translation" = "Перевод";
+"(No text detected in the selected area)" = "(Текст в выбранной области не обнаружен)";
+
+/* Upload Toast */
+"URL copied to the clipboard" = "URL скопирован в буфер обмена";
+"Uploading... %d%%" = "Загрузка... %d%%";
+"Upload failed: %@" = "Ошибка загрузки: %@";
+"Uploaded! Link copied." = "Загружено! Ссылка скопирована.";
+"Uploading to %@... %d%%" = "Загрузка на %@... %d%%";
+"Open" = "Открыть";
+
+/* Recording Toast */
+"Recording saved" = "Запись сохранена";
+"%@ • Recording saved" = "%@ • Запись сохранена";
+"Copy Path" = "Копировать путь";
+"Path copied!" = "Путь скопирован!";
+
+/* Video Editor */
+"macshot Video Editor" = "Видеоредактор macshot";
+"%@ selected" = "%@ выбрано";
+"Exporting..." = "Экспорт...";
+"Export failed" = "Ошибка экспорта";
+"Saved to %@" = "Сохранено в %@";
+"Save failed" = "Ошибка сохранения";
+
+/* Barcode Detector */
+/* "Open" and "Copy" are shared with other sections */
+
+/* Save Panel */
+"Save As..." = "Сохранить как...";
+"Choose a folder" = "Выберите папку";
+"Save All to Folder…" = "Сохранить все в папку…";
+
+/* Scroll Capture HUD */
+"Auto Scroll" = "Авто-прокрутка";
+"Stop" = "Стоп";
+"Scrolling..." = "Прокрутка...";
+
+/* Effects Picker (Adjust popover) */
+"Presets" = "Пресеты";
+"Adjustments" = "Коррекция";
+"Brightness" = "Яркость";
+"Contrast" = "Контрастность";
+"Saturation" = "Насыщенность";
+"Sharpness" = "Резкость";
+
+/* Time Ago */
+"just now" = "только что";
+"%ds ago" = "%d сек. назад";
+"%dm ago" = "%d мин. назад";
+"%dh ago" = "%d ч. назад";
+
+/* Hotkey Labels */
+"History" = "История";
+
+/* Preferences - Shortcuts note */
+"Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Нажмите \"Запись\" и введите сочетание клавиш с хотя бы одним модификатором (⌘, ⌥, ⌃, ⇧), чтобы задать быструю клавишу.";

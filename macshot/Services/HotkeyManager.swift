@@ -45,13 +45,13 @@ class HotkeyManager {
 
         var label: String {
             switch self {
-            case .captureArea: return "Capture Area"
-            case .captureFullScreen: return "Capture Screen"
-            case .recordArea: return "Record Area"
-            case .recordScreen: return "Record Screen"
-            case .historyOverlay: return "History"
-            case .captureOCR: return "Capture OCR"
-            case .quickCapture: return "Quick Capture"
+            case .captureArea: return L("Capture Area")
+            case .captureFullScreen: return L("Capture Screen")
+            case .recordArea: return L("Record Area")
+            case .recordScreen: return L("Record Screen")
+            case .historyOverlay: return L("History")
+            case .captureOCR: return L("Capture OCR")
+            case .quickCapture: return L("Quick Capture")
             }
         }
 

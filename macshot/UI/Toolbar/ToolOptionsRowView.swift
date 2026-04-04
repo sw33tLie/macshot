@@ -116,7 +116,7 @@ class ToolOptionsRowView: NSView {
             curX = addArrowStyleSegment(at: curX, ov: ov)
             curX = addSeparator(at: curX)
             let flipIsOn = editingAnnotation?.arrowReversed ?? ov.arrowReversed
-            curX = addToggle(at: curX, title: "Flip", isOn: flipIsOn) { [weak self, weak ov] isOn in
+            curX = addToggle(at: curX, title: L("Flip"), isOn: flipIsOn) { [weak self, weak ov] isOn in
                 if let ann = self?.editingAnnotation {
                     self?.ensureSnapshot()
                     ann.arrowReversed = isOn
@@ -144,13 +144,13 @@ class ToolOptionsRowView: NSView {
         // ── Right-click hint for line/arrow ──
         if tool == .line || tool == .arrow {
             curX += 8
-            curX = addHintLabel(at: curX, text: "Right-click to add points")
+            curX = addHintLabel(at: curX, text: L("Right-click to add points"))
         }
 
         // ── Pencil smooth + velocity toggles ──
         if tool == .pencil {
             curX = addSeparator(at: curX)
-            curX = addToggle(at: curX, title: "Smooth", isOn: ov.pencilSmoothEnabled) { [weak ov] isOn in
+            curX = addToggle(at: curX, title: L("Smooth"), isOn: ov.pencilSmoothEnabled) { [weak ov] isOn in
                 ov?.pencilSmoothEnabled = isOn
                 UserDefaults.standard.set(isOn, forKey: "pencilSmoothEnabled")
                 ov?.needsDisplay = true
@@ -160,7 +160,7 @@ class ToolOptionsRowView: NSView {
         // ── Smart marker toggle ──
         if tool == .marker {
             curX = addSeparator(at: curX)
-            curX = addToggle(at: curX, title: "Smart", isOn: ov.smartMarkerEnabled) { [weak ov, weak self] isOn in
+            curX = addToggle(at: curX, title: L("Smart"), isOn: ov.smartMarkerEnabled) { [weak ov, weak self] isOn in
                 ov?.smartMarkerEnabled = isOn
                 UserDefaults.standard.set(isOn, forKey: "smartMarkerEnabled")
                 ov?.updateCursorForCurrentTool()
@@ -181,7 +181,7 @@ class ToolOptionsRowView: NSView {
                 }
                 // Also dim the "Stroke" label
                 for sub in subviews {
-                    if let tf = sub as? NSTextField, tf.stringValue == "Stroke", tf.tag == 0 {
+                    if let tf = sub as? NSTextField, tf.stringValue == L("Stroke"), tf.tag == 0 {
                         tf.alphaValue = 0.35
                     }
                 }
@@ -243,7 +243,7 @@ class ToolOptionsRowView: NSView {
     private func addStrokeSlider(at x: CGFloat, tool: AnnotationTool, ov: OverlayView) -> CGFloat {
         var curX = x
 
-        let nameLabel = NSTextField(labelWithString: tool == .loupe ? "Size" : "Stroke")
+        let nameLabel = NSTextField(labelWithString: tool == .loupe ? L("Size") : L("Stroke"))
         nameLabel.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
         nameLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.4)
         nameLabel.sizeToFit()
@@ -570,7 +570,7 @@ class ToolOptionsRowView: NSView {
 
     private func addCornerRadiusSlider(at x: CGFloat, ov: OverlayView) -> CGFloat {
         var curX = x
-        let label = NSTextField(labelWithString: "Radius")
+        let label = NSTextField(labelWithString: L("Radius"))
         label.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
         label.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.4)
         label.sizeToFit()
@@ -637,7 +637,7 @@ class ToolOptionsRowView: NSView {
 
         curX = addSeparator(at: curX)
 
-        let startLabel = NSTextField(labelWithString: "Start:")
+        let startLabel = NSTextField(labelWithString: L("Start:"))
         startLabel.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
         startLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.4)
         startLabel.sizeToFit()
@@ -760,7 +760,7 @@ class ToolOptionsRowView: NSView {
 
         // Fill: clickable label (toggles on/off) + color swatch (opens color picker)
         let fillSwatchSize: CGFloat = 18
-        let fillLabelBtn = NSButton(title: "Fill", target: self, action: #selector(textBgToggled(_:)))
+        let fillLabelBtn = NSButton(title: L("Fill"), target: self, action: #selector(textBgToggled(_:)))
         fillLabelBtn.bezelStyle = .recessed
         fillLabelBtn.setButtonType(.toggle)
         fillLabelBtn.state = ov.textEditor.bgEnabled ? .on : .off
@@ -786,7 +786,7 @@ class ToolOptionsRowView: NSView {
         curX += fillSwatchSize + 6
 
         // Outline: clickable label (toggles on/off) + color swatch (opens color picker)
-        let outlineLabelBtn = NSButton(title: "Outline", target: self, action: #selector(textOutlineToggled(_:)))
+        let outlineLabelBtn = NSButton(title: L("Outline"), target: self, action: #selector(textOutlineToggled(_:)))
         outlineLabelBtn.bezelStyle = .recessed
         outlineLabelBtn.setButtonType(.toggle)
         outlineLabelBtn.state = ov.textEditor.outlineEnabled ? .on : .off
@@ -856,7 +856,7 @@ class ToolOptionsRowView: NSView {
         curX += 72
 
         // Hint
-        curX = addHintLabel(at: curX, text: "Hold 1 auto-vertical  ·  Hold 2 auto-horizontal")
+        curX = addHintLabel(at: curX, text: L("Hold 1 auto-vertical  ·  Hold 2 auto-horizontal"))
         return curX
     }
 
@@ -879,9 +879,9 @@ class ToolOptionsRowView: NSView {
         let moreBtn = NSButton()
         moreBtn.bezelStyle = .recessed
         moreBtn.isBordered = false
-        moreBtn.image = NSImage(systemSymbolName: "face.smiling", accessibilityDescription: "More Emojis")?
+        moreBtn.image = NSImage(systemSymbolName: "face.smiling", accessibilityDescription: L("More Emojis"))?
             .withSymbolConfiguration(.init(pointSize: 14, weight: .medium))
-        moreBtn.toolTip = "More Emojis"
+        moreBtn.toolTip = L("More Emojis")
         moreBtn.target = self
         moreBtn.action = #selector(moreEmojisClicked(_:))
         moreBtn.frame = NSRect(x: curX, y: (rowHeight - 26) / 2, width: 28, height: 26)
@@ -892,9 +892,9 @@ class ToolOptionsRowView: NSView {
         let loadBtn = NSButton()
         loadBtn.bezelStyle = .recessed
         loadBtn.isBordered = false
-        loadBtn.image = NSImage(systemSymbolName: "photo", accessibilityDescription: "Load Image")?
+        loadBtn.image = NSImage(systemSymbolName: "photo", accessibilityDescription: L("Load Image"))?
             .withSymbolConfiguration(.init(pointSize: 14, weight: .medium))
-        loadBtn.toolTip = "Load Image"
+        loadBtn.toolTip = L("Load Image")
         loadBtn.target = self
         loadBtn.action = #selector(loadImageClicked)
         loadBtn.frame = NSRect(x: curX, y: (rowHeight - 26) / 2, width: 28, height: 26)
@@ -909,7 +909,7 @@ class ToolOptionsRowView: NSView {
         var curX = x
 
         // — Draw mode: All / Text Only segmented control —
-        let drawLabel = NSTextField(labelWithString: "Draw:")
+        let drawLabel = NSTextField(labelWithString: L("Draw:"))
         drawLabel.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
         drawLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.4)
         drawLabel.sizeToFit()
@@ -918,7 +918,7 @@ class ToolOptionsRowView: NSView {
         curX += drawLabel.frame.width + 4
 
         let textOnly = UserDefaults.standard.bool(forKey: "censorTextOnly")
-        let drawSeg = NSSegmentedControl(labels: ["All", "Text Only"], trackingMode: .selectOne,
+        let drawSeg = NSSegmentedControl(labels: [L("All"), L("Text Only")], trackingMode: .selectOne,
                                           target: self, action: #selector(drawModeChanged(_:)))
         drawSeg.selectedSegment = textOnly ? 1 : 0
         drawSeg.font = NSFont.systemFont(ofSize: 10, weight: .medium)
@@ -931,7 +931,7 @@ class ToolOptionsRowView: NSView {
         curX = addSeparator(at: curX)
 
         // — Auto-detect buttons —
-        let autoLabel = NSTextField(labelWithString: "Auto:")
+        let autoLabel = NSTextField(labelWithString: L("Auto:"))
         autoLabel.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
         autoLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.4)
         autoLabel.sizeToFit()
@@ -943,18 +943,18 @@ class ToolOptionsRowView: NSView {
         let btnFont = NSFont.systemFont(ofSize: 10, weight: .medium)
         let btnY = (rowHeight - btnH) / 2
 
-        curX = addRedactButton(at: curX, title: "All Text", action: #selector(redactAllTextClicked),
+        curX = addRedactButton(at: curX, title: L("All Text"), action: #selector(redactAllTextClicked),
                                font: btnFont, height: btnH, y: btnY)
 
         // PII button with dropdown arrow for type selection
-        curX = addRedactButton(at: curX, title: "PII", action: #selector(redactPIIClicked),
+        curX = addRedactButton(at: curX, title: L("PII"), action: #selector(redactPIIClicked),
                                font: btnFont, height: btnH, y: btnY,
                                dropdownAction: #selector(redactTypesClicked(_:)))
 
-        curX = addRedactButton(at: curX, title: "Faces", action: #selector(redactFacesClicked),
+        curX = addRedactButton(at: curX, title: L("Faces"), action: #selector(redactFacesClicked),
                                font: btnFont, height: btnH, y: btnY)
 
-        curX = addRedactButton(at: curX, title: "People", action: #selector(redactPeopleClicked),
+        curX = addRedactButton(at: curX, title: L("People"), action: #selector(redactPeopleClicked),
                                font: btnFont, height: btnH, y: btnY)
 
         return curX
@@ -978,15 +978,15 @@ class ToolOptionsRowView: NSView {
         }
 
         // Padding slider
-        curX = addBeautifySlider(at: curX, label: "Padding", value: ov.beautifyPadding, min: 16, max: 96, action: #selector(beautifyPaddingChanged(_:)))
+        curX = addBeautifySlider(at: curX, label: L("Padding"), value: ov.beautifyPadding, min: 16, max: 96, action: #selector(beautifyPaddingChanged(_:)))
 
         // Corner radius slider — hidden for snapped windows (native corners are baked in)
         if !isSnap {
-            curX = addBeautifySlider(at: curX, label: "Radius", value: ov.beautifyCornerRadius, min: 0, max: 30, action: #selector(beautifyCornerChanged(_:)))
+            curX = addBeautifySlider(at: curX, label: L("Radius"), value: ov.beautifyCornerRadius, min: 0, max: 30, action: #selector(beautifyCornerChanged(_:)))
         }
 
         // Shadow slider
-        curX = addBeautifySlider(at: curX, label: "Shadow", value: ov.beautifyShadowRadius, min: 0, max: 100, action: #selector(beautifyShadowChanged(_:)))
+        curX = addBeautifySlider(at: curX, label: L("Shadow"), value: ov.beautifyShadowRadius, min: 0, max: 100, action: #selector(beautifyShadowChanged(_:)))
 
         curX = addSeparator(at: curX)
 
@@ -1000,7 +1000,7 @@ class ToolOptionsRowView: NSView {
         swatchBtn.imageScaling = .scaleProportionallyUpOrDown
         swatchBtn.target = self
         swatchBtn.action = #selector(beautifyGradientClicked(_:))
-        swatchBtn.toolTip = "Gradient Style"
+        swatchBtn.toolTip = L("Gradient Style")
         swatchBtn.tag = 995
         addSubview(swatchBtn)
         curX += swatchSize + 2
@@ -1019,11 +1019,11 @@ class ToolOptionsRowView: NSView {
         curX = addSeparator(at: curX)
 
         // On/off toggle
-        let toggleBtn = NSButton(checkboxWithTitle: "On", target: self, action: #selector(beautifyToggleChanged(_:)))
+        let toggleBtn = NSButton(checkboxWithTitle: L("On"), target: self, action: #selector(beautifyToggleChanged(_:)))
         toggleBtn.state = ov.beautifyEnabled ? .on : .off
         toggleBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
         if let cell = toggleBtn.cell as? NSButtonCell {
-            cell.attributedTitle = NSAttributedString(string: "On", attributes: [
+            cell.attributedTitle = NSAttributedString(string: L("On"), attributes: [
                 .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(0.7),
                 .font: NSFont.systemFont(ofSize: 10, weight: .medium)
             ])

@@ -67,7 +67,7 @@ class EffectsPickerView: NSView {
 
         // "Presets" label
         y -= labelH
-        let presetsLabel = makeLabel("Presets", at: NSPoint(x: padding, y: y))
+        let presetsLabel = makeLabel(L("Presets"), at: NSPoint(x: padding, y: y))
         addSubview(presetsLabel)
         y -= 4
 
@@ -86,22 +86,22 @@ class EffectsPickerView: NSView {
 
         // "Adjustments" label
         y -= labelH
-        let adjLabel = makeLabel("Adjustments", at: NSPoint(x: padding, y: y))
+        let adjLabel = makeLabel(L("Adjustments"), at: NSPoint(x: padding, y: y))
         addSubview(adjLabel)
         y -= 6
 
         // Sliders
-        brightnessSlider = addSliderRow(label: "Brightness", y: &y, min: -0.5, max: 0.5, value: Double(config.brightness), action: #selector(brightnessChanged(_:)))
-        contrastSlider = addSliderRow(label: "Contrast", y: &y, min: 0.5, max: 2.0, value: Double(config.contrast), action: #selector(contrastChanged(_:)))
-        saturationSlider = addSliderRow(label: "Saturation", y: &y, min: 0.0, max: 2.0, value: Double(config.saturation), action: #selector(saturationChanged(_:)))
-        sharpnessSlider = addSliderRow(label: "Sharpness", y: &y, min: 0.0, max: 2.0, value: Double(config.sharpness), action: #selector(sharpnessChanged(_:)))
+        brightnessSlider = addSliderRow(label: L("Brightness"), y: &y, min: -0.5, max: 0.5, value: Double(config.brightness), action: #selector(brightnessChanged(_:)))
+        contrastSlider = addSliderRow(label: L("Contrast"), y: &y, min: 0.5, max: 2.0, value: Double(config.contrast), action: #selector(contrastChanged(_:)))
+        saturationSlider = addSliderRow(label: L("Saturation"), y: &y, min: 0.0, max: 2.0, value: Double(config.saturation), action: #selector(saturationChanged(_:)))
+        sharpnessSlider = addSliderRow(label: L("Sharpness"), y: &y, min: 0.0, max: 2.0, value: Double(config.sharpness), action: #selector(sharpnessChanged(_:)))
 
         y -= 8
 
         // Reset button
         y -= resetBtnH
         let resetBtn = NSButton(frame: NSRect(x: contentW - padding - 60, y: y, width: 60, height: resetBtnH))
-        resetBtn.title = "Reset"
+        resetBtn.title = L("Reset")
         resetBtn.bezelStyle = .recessed
         resetBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
         resetBtn.target = self

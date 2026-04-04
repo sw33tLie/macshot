@@ -71,6 +71,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
     private var scrollMaxHeightField: NSTextField!
     private var scrollMaxHeightStepper: NSStepper!
     private var scrollFrozenDetectionCheckbox: NSButton!
+    private var languagePopup: NSPopUpButton!
 
     var onHotkeyChanged: (() -> Void)?
 
@@ -81,7 +82,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
             backing: .buffered,
             defer: false
         )
-        window.title = "macshot Preferences"
+        window.title = L("macshot Preferences")
         window.center()
         window.isReleasedWhenClosed = false
         super.init(window: window)
@@ -109,32 +110,32 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         tabView.delegate = self
 
         let generalTab = NSTabViewItem(identifier: "general")
-        generalTab.label = "General"
+        generalTab.label = L("General")
         generalTab.view = makeGeneralTabView()
         tabView.addTabViewItem(generalTab)
 
         let shortcutsTab = NSTabViewItem(identifier: "shortcuts")
-        shortcutsTab.label = "Shortcuts"
+        shortcutsTab.label = L("Shortcuts")
         shortcutsTab.view = makeShortcutsTabView()
         tabView.addTabViewItem(shortcutsTab)
 
         let toolsTab = NSTabViewItem(identifier: "tools")
-        toolsTab.label = "Tools"
+        toolsTab.label = L("Tools")
         toolsTab.view = makeToolsTabView()
         tabView.addTabViewItem(toolsTab)
 
         let recordingTab = NSTabViewItem(identifier: "recording")
-        recordingTab.label = "Recording"
+        recordingTab.label = L("Recording")
         recordingTab.view = makeRecordingTabView()
         tabView.addTabViewItem(recordingTab)
 
         let uploadsTab = NSTabViewItem(identifier: "uploads")
-        uploadsTab.label = "Uploads"
+        uploadsTab.label = L("Uploads")
         uploadsTab.view = makeUploadsTabView()
         tabView.addTabViewItem(uploadsTab)
 
         let aboutTab = NSTabViewItem(identifier: "about")
-        aboutTab.label = "About"
+        aboutTab.label = L("About")
         aboutTab.view = makeAboutTabView()
         tabView.addTabViewItem(aboutTab)
 
@@ -144,7 +145,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         sep.translatesAutoresizingMaskIntoConstraints = false
 
         // Footer labels
-        let madeBy = NSTextField(labelWithString: "Made by sw33tLie")
+        let madeBy = NSTextField(labelWithString: "\(L("Made by")) sw33tLie")
         madeBy.font = NSFont.systemFont(ofSize: 11)
         madeBy.textColor = .secondaryLabelColor
         madeBy.translatesAutoresizingMaskIntoConstraints = false
@@ -214,41 +215,65 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.translatesAutoresizingMaskIntoConstraints = false
         stack.edgeInsets = NSEdgeInsets(top: 0, left: 20, bottom: 16, right: 20)
 
+        // ── Language ──────────────────────────────────────────
+        stack.addArrangedSubview(sectionHeader(L("Language")))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        languagePopup = NSPopUpButton()
+        for lang in LanguageManager.availableLanguages {
+            languagePopup.addItem(withTitle: lang.name)
+        }
+        let currentLang = LanguageManager.shared.currentLanguage
+        if let idx = LanguageManager.availableLanguages.firstIndex(where: { $0.code == currentLang }) {
+            languagePopup.selectItem(at: idx)
+        }
+        languagePopup.target = self
+        languagePopup.action = #selector(languageChanged(_:))
+
+        stack.addArrangedSubview(labeledRow(L("Language:"), controls: [languagePopup]))
+        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+
+        let langNote = NSTextField(wrappingLabelWithString: L("Restart the app to fully apply the new language."))
+        langNote.font = NSFont.systemFont(ofSize: 10)
+        langNote.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(indented(langNote))
+        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
+
         // ── Capture ──────────────────────────────────────────
-        stack.addArrangedSubview(sectionHeader("Capture"))
+        stack.addArrangedSubview(sectionHeader(L("Capture")))
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
         // Enter key action
         quickModePopup = NSPopUpButton()
-        quickModePopup.addItems(withTitles: ["Save to file", "Copy to clipboard", "Save + copy to clipboard"])
+        quickModePopup.addItems(withTitles: [L("Save to file"), L("Copy to clipboard"), L("Save + copy to clipboard")])
         quickModePopup.target = self
         quickModePopup.action = #selector(quickModeChanged(_:))
 
-        stack.addArrangedSubview(labeledRow("Enter / Quick Capture:", controls: [quickModePopup]))
+        stack.addArrangedSubview(labeledRow(L("Enter / Quick Capture:"), controls: [quickModePopup]))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         // OCR action dropdown
         ocrActionPopup = NSPopUpButton()
         ocrActionPopup.addItems(withTitles: [
-            "Show window + copy to clipboard",
-            "Show window only",
-            "Copy to clipboard only",
+            L("Show window + copy to clipboard"),
+            L("Show window only"),
+            L("Copy to clipboard only"),
         ])
         ocrActionPopup.target = self
         ocrActionPopup.action = #selector(ocrActionChanged(_:))
 
-        stack.addArrangedSubview(labeledRow("OCR Capture:", controls: [ocrActionPopup]))
+        stack.addArrangedSubview(labeledRow(L("OCR Capture:"), controls: [ocrActionPopup]))
         stack.setCustomSpacing(12, after: stack.arrangedSubviews.last!)
 
         // Checkboxes
-        copySoundCheckbox = NSButton(checkboxWithTitle: "Play sound on copy", target: self, action: #selector(copySoundChanged(_:)))
-        rememberSelectionCheckbox = NSButton(checkboxWithTitle: "Remember last selection area", target: self, action: #selector(rememberSelectionChanged(_:)))
-        rememberToolCheckbox = NSButton(checkboxWithTitle: "Remember last selected tool", target: self, action: #selector(rememberToolChanged(_:)))
-        thumbnailCheckbox = NSButton(checkboxWithTitle: "Show floating thumbnail after capture", target: self, action: #selector(thumbnailChanged(_:)))
-        launchAtLoginCheckbox = NSButton(checkboxWithTitle: "Launch at login", target: self, action: #selector(launchAtLoginChanged(_:)))
-        snapGuidesCheckbox = NSButton(checkboxWithTitle: "Show snap alignment guides", target: self, action: #selector(snapGuidesChanged(_:)))
-        captureCursorCheckbox = NSButton(checkboxWithTitle: "Capture mouse cursor in screenshot", target: self, action: #selector(captureCursorChanged(_:)))
-        windowTitleCheckbox = NSButton(checkboxWithTitle: "Use window title in saved filename", target: self, action: #selector(windowTitleChanged(_:)))
+        copySoundCheckbox = NSButton(checkboxWithTitle: L("Play sound on copy"), target: self, action: #selector(copySoundChanged(_:)))
+        rememberSelectionCheckbox = NSButton(checkboxWithTitle: L("Remember last selection area"), target: self, action: #selector(rememberSelectionChanged(_:)))
+        rememberToolCheckbox = NSButton(checkboxWithTitle: L("Remember last selected tool"), target: self, action: #selector(rememberToolChanged(_:)))
+        thumbnailCheckbox = NSButton(checkboxWithTitle: L("Show floating thumbnail after capture"), target: self, action: #selector(thumbnailChanged(_:)))
+        launchAtLoginCheckbox = NSButton(checkboxWithTitle: L("Launch at login"), target: self, action: #selector(launchAtLoginChanged(_:)))
+        snapGuidesCheckbox = NSButton(checkboxWithTitle: L("Show snap alignment guides"), target: self, action: #selector(snapGuidesChanged(_:)))
+        captureCursorCheckbox = NSButton(checkboxWithTitle: L("Capture mouse cursor in screenshot"), target: self, action: #selector(captureCursorChanged(_:)))
+        windowTitleCheckbox = NSButton(checkboxWithTitle: L("Use window title in saved filename"), target: self, action: #selector(windowTitleChanged(_:)))
 
         for cb in [copySoundCheckbox!, rememberSelectionCheckbox!, rememberToolCheckbox!, thumbnailCheckbox!] {
             stack.addArrangedSubview(indented(cb))
@@ -269,20 +294,20 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         thumbnailAutoDismissStepper.target = self
         thumbnailAutoDismissStepper.action = #selector(thumbnailAutoDismissChanged(_:))
 
-        let dismissNote = NSTextField(labelWithString: "seconds before auto-dismiss (0 = never)")
+        let dismissNote = NSTextField(labelWithString: L("seconds before auto-dismiss (0 = never)"))
         dismissNote.font = NSFont.systemFont(ofSize: 11)
         dismissNote.textColor = .secondaryLabelColor
 
-        stack.addArrangedSubview(indented(labeledRow("  Dismiss after:", controls: [thumbnailAutoDismissField!, thumbnailAutoDismissStepper!, dismissNote])))
+        stack.addArrangedSubview(indented(labeledRow(L("  Dismiss after:"), controls: [thumbnailAutoDismissField!, thumbnailAutoDismissStepper!, dismissNote])))
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
         // Thumbnail stacking popup
         thumbnailStackingPopup = NSPopUpButton()
-        thumbnailStackingPopup.addItems(withTitles: ["Stack (keep all)", "Replace (show only latest)"])
+        thumbnailStackingPopup.addItems(withTitles: [L("Stack (keep all)"), L("Replace (show only latest)")])
         thumbnailStackingPopup.target = self
         thumbnailStackingPopup.action = #selector(thumbnailStackingChanged(_:))
 
-        stack.addArrangedSubview(indented(labeledRow("  Multiple previews:", controls: [thumbnailStackingPopup!])))
+        stack.addArrangedSubview(indented(labeledRow(L("  Multiple previews:"), controls: [thumbnailStackingPopup!])))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         stack.addArrangedSubview(indented(snapGuidesCheckbox))
@@ -297,24 +322,24 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.addArrangedSubview(indented(launchAtLoginCheckbox))
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
-        hideMenuBarIconCheckbox = NSButton(checkboxWithTitle: "Hide menu bar icon", target: self, action: #selector(hideMenuBarIconChanged(_:)))
+        hideMenuBarIconCheckbox = NSButton(checkboxWithTitle: L("Hide menu bar icon"), target: self, action: #selector(hideMenuBarIconChanged(_:)))
         stack.addArrangedSubview(indented(hideMenuBarIconCheckbox))
         stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
 
-        let hideNote = NSTextField(wrappingLabelWithString: "Hotkeys still work. To show the icon again, re-launch macshot.")
+        let hideNote = NSTextField(wrappingLabelWithString: L("Hotkeys still work. To show the icon again, re-launch macshot."))
         hideNote.font = NSFont.systemFont(ofSize: 10)
         hideNote.textColor = .secondaryLabelColor
         stack.addArrangedSubview(indented(hideNote))
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
-        autoUpdateCheckbox = NSButton(checkboxWithTitle: "Check for updates automatically", target: self, action: #selector(autoUpdateChanged(_:)))
+        autoUpdateCheckbox = NSButton(checkboxWithTitle: L("Check for updates automatically"), target: self, action: #selector(autoUpdateChanged(_:)))
         stack.addArrangedSubview(indented(autoUpdateCheckbox))
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // ── Output ───────────────────────────────────────────
-        stack.addArrangedSubview(sectionHeader("Output"))
+        stack.addArrangedSubview(sectionHeader(L("Output")))
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
         // Save folder
@@ -323,10 +348,10 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         savePathField.isSelectable = false
         savePathField.lineBreakMode = .byTruncatingMiddle
 
-        let browseBtn = NSButton(title: "Browse…", target: self, action: #selector(browseSavePath(_:)))
+        let browseBtn = NSButton(title: L("Browse…"), target: self, action: #selector(browseSavePath(_:)))
         browseBtn.bezelStyle = .rounded
 
-        stack.addArrangedSubview(labeledRow("Save folder:", controls: [savePathField, browseBtn]))
+        stack.addArrangedSubview(labeledRow(L("Save folder:"), controls: [savePathField, browseBtn]))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         // Image format
@@ -335,7 +360,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         imageFormatPopup.target = self
         imageFormatPopup.action = #selector(imageFormatChanged(_:))
 
-        stack.addArrangedSubview(labeledRow("Image format:", controls: [imageFormatPopup]))
+        stack.addArrangedSubview(labeledRow(L("Image format:"), controls: [imageFormatPopup]))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         // Quality (applies to JPEG and HEIC)
@@ -346,11 +371,11 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         qualitySlider.action = #selector(qualityChanged(_:))
         qualitySlider.widthAnchor.constraint(equalToConstant: 160).isActive = true
 
-        qualityLabel = NSTextField(labelWithString: "85%")
+        qualityLabel = NSTextField(labelWithString: String(format: L("%d%%"), 85))
         qualityLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .regular)
         qualityLabel.widthAnchor.constraint(equalToConstant: 44).isActive = true
 
-        qualityRowLabel = NSTextField(labelWithString: "Quality:")
+        qualityRowLabel = NSTextField(labelWithString: L("Quality:"))
         qualityRowLabel.font = NSFont.systemFont(ofSize: 13)
         qualityRowLabel.alignment = .right
         qualityRowLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -366,22 +391,22 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         // Downscale Retina
-        downscaleRetinaCheckbox = NSButton(checkboxWithTitle: "Save at standard resolution (1x)", target: self, action: #selector(downscaleRetinaChanged(_:)))
+        downscaleRetinaCheckbox = NSButton(checkboxWithTitle: L("Save at standard resolution (1x)"), target: self, action: #selector(downscaleRetinaChanged(_:)))
         stack.addArrangedSubview(indented(downscaleRetinaCheckbox))
         stack.setCustomSpacing(2, after: stack.arrangedSubviews.last!)
 
-        let downscaleNote = NSTextField(labelWithString: "Halves dimensions on Retina displays, ~4x smaller files")
+        let downscaleNote = NSTextField(labelWithString: L("Halves dimensions on Retina displays, ~4x smaller files"))
         downscaleNote.font = NSFont.systemFont(ofSize: 10)
         downscaleNote.textColor = .tertiaryLabelColor
         stack.addArrangedSubview(indented(downscaleNote))
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
         // Embed color profile
-        embedColorProfileCheckbox = NSButton(checkboxWithTitle: "Embed sRGB color profile", target: self, action: #selector(embedColorProfileChanged(_:)))
+        embedColorProfileCheckbox = NSButton(checkboxWithTitle: L("Embed sRGB color profile"), target: self, action: #selector(embedColorProfileChanged(_:)))
         stack.addArrangedSubview(indented(embedColorProfileCheckbox))
         stack.setCustomSpacing(2, after: stack.arrangedSubviews.last!)
 
-        let profileNote = NSTextField(labelWithString: "Ensures consistent colors across different displays")
+        let profileNote = NSTextField(labelWithString: L("Ensures consistent colors across different displays"))
         profileNote.font = NSFont.systemFont(ofSize: 10)
         profileNote.textColor = .tertiaryLabelColor
         stack.addArrangedSubview(indented(profileNote))
@@ -401,15 +426,15 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         historySizeStepper.target = self
         historySizeStepper.action = #selector(historySizeChanged(_:))
 
-        let histNote = NSTextField(labelWithString: "screenshots kept on disk (0 = off)")
+        let histNote = NSTextField(labelWithString: L("screenshots kept on disk (0 = off)"))
         histNote.font = NSFont.systemFont(ofSize: 11)
         histNote.textColor = .secondaryLabelColor
 
-        stack.addArrangedSubview(labeledRow("History size:", controls: [historySizeField, historySizeStepper, histNote]))
+        stack.addArrangedSubview(labeledRow(L("History size:"), controls: [historySizeField, historySizeStepper, histNote]))
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // ── Appearance ───────────────────────────────────────
-        stack.addArrangedSubview(sectionHeader("Appearance"))
+        stack.addArrangedSubview(sectionHeader(L("Appearance")))
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
         accentColorWell = NSColorWell(frame: NSRect(x: 0, y: 0, width: 36, height: 24))
@@ -422,13 +447,13 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         iconColorWell.target = self
         iconColorWell.action = #selector(iconColorChanged(_:))
 
-        let resetColorsBtn = NSButton(title: "Reset", target: self, action: #selector(resetToolbarColors(_:)))
+        let resetColorsBtn = NSButton(title: L("Reset"), target: self, action: #selector(resetToolbarColors(_:)))
         resetColorsBtn.bezelStyle = .rounded
         resetColorsBtn.controlSize = .small
 
-        stack.addArrangedSubview(indented(labeledRow("Accent color:", controls: [accentColorWell])))
+        stack.addArrangedSubview(indented(labeledRow(L("Accent color:"), controls: [accentColorWell])))
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
-        stack.addArrangedSubview(indented(labeledRow("Icon color:", controls: [iconColorWell])))
+        stack.addArrangedSubview(indented(labeledRow(L("Icon color:"), controls: [iconColorWell])))
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
         stack.addArrangedSubview(indented(labeledRow("", controls: [resetColorsBtn])))
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
@@ -464,7 +489,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.translatesAutoresizingMaskIntoConstraints = false
         stack.edgeInsets = NSEdgeInsets(top: 0, left: 20, bottom: 16, right: 20)
 
-        stack.addArrangedSubview(sectionHeader("Keyboard Shortcuts"))
+        stack.addArrangedSubview(sectionHeader(L("Keyboard Shortcuts")))
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
         for slot in HotkeyManager.HotkeySlot.allCases {
@@ -476,18 +501,18 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
             field.widthAnchor.constraint(greaterThanOrEqualToConstant: 80).isActive = true
             field.stringValue = HotkeyManager.displayString(for: slot)
 
-            let btn = NSButton(title: "Record", target: self, action: #selector(recordShortcut(_:)))
+            let btn = NSButton(title: L("Record"), target: self, action: #selector(recordShortcut(_:)))
             btn.bezelStyle = .rounded
             btn.tag = slot.rawValue
 
             let clearBtn = NSButton(title: "", target: self, action: #selector(clearShortcut(_:)))
             clearBtn.bezelStyle = .inline
             clearBtn.isBordered = false
-            clearBtn.image = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: "Clear shortcut")
+            clearBtn.image = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: L("Clear shortcut"))
             clearBtn.contentTintColor = .secondaryLabelColor
             clearBtn.imagePosition = .imageOnly
             clearBtn.tag = slot.rawValue
-            clearBtn.toolTip = "Clear shortcut"
+            clearBtn.toolTip = L("Clear shortcut")
             clearBtn.widthAnchor.constraint(equalToConstant: 20).isActive = true
 
             hotkeyFields[slot] = field
@@ -499,7 +524,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
 
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
-        let note = NSTextField(wrappingLabelWithString: "Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut.")
+        let note = NSTextField(wrappingLabelWithString: L("Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut."))
         note.font = NSFont.systemFont(ofSize: 10)
         note.textColor = .secondaryLabelColor
         stack.addArrangedSubview(indented(note))
@@ -535,8 +560,8 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stopShortcutRecording()
 
         recordingSlot = slot
-        sender.title = "Press keys..."
-        hotkeyFields[slot]?.stringValue = "Waiting..."
+        sender.title = L("Press keys...")
+        hotkeyFields[slot]?.stringValue = L("Waiting...")
 
         localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self = self else { return event }
@@ -560,13 +585,13 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         guard let slot = HotkeyManager.HotkeySlot(rawValue: sender.tag) else { return }
         stopShortcutRecording()
         HotkeyManager.disableHotkey(for: slot)
-        hotkeyFields[slot]?.stringValue = "None"
+        hotkeyFields[slot]?.stringValue = L("None")
         onHotkeyChanged?()
     }
 
     private func stopShortcutRecording() {
         if let slot = recordingSlot {
-            hotkeyButtons[slot]?.title = "Record"
+            hotkeyButtons[slot]?.title = L("Record")
             hotkeyFields[slot]?.stringValue = HotkeyManager.displayString(for: slot)
         }
         recordingSlot = nil
@@ -591,21 +616,21 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.edgeInsets = NSEdgeInsets(top: 0, left: 20, bottom: 16, right: 20)
 
         // ── Annotation Tools ─────────────────────────────────
-        stack.addArrangedSubview(sectionHeader("Annotation Tools"))
+        stack.addArrangedSubview(sectionHeader(L("Annotation Tools")))
         stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
 
-        let noteA = NSTextField(labelWithString: "Hidden tools are removed from the bottom toolbar.")
+        let noteA = NSTextField(labelWithString: L("Hidden tools are removed from the bottom toolbar."))
         noteA.font = NSFont.systemFont(ofSize: 11)
         noteA.textColor = .secondaryLabelColor
         stack.addArrangedSubview(noteA)
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
         let annotationTools: [(AnnotationTool, String)] = [
-            (.pencil, "Pencil"), (.line, "Line"), (.arrow, "Arrow"),
-            (.rectangle, "Rectangle"),
-            (.ellipse, "Ellipse"), (.marker, "Marker"), (.text, "Text"),
-            (.number, "Number / Counter"), (.pixelate, "Censor"),
-            (.loupe, "Magnify (Loupe)"), (.stamp, "Stamp / Emoji"), (.colorSampler, "Color Picker"), (.measure, "Measure"),
+            (.pencil, L("Pencil")), (.line, L("Line")), (.arrow, L("Arrow")),
+            (.rectangle, L("Rectangle")),
+            (.ellipse, L("Ellipse")), (.marker, L("Marker")), (.text, L("Text")),
+            (.number, L("Number / Counter")), (.pixelate, L("Censor")),
+            (.loupe, L("Magnify (Loupe)")), (.stamp, L("Stamp / Emoji")), (.colorSampler, L("Color Picker")), (.measure, L("Measure")),
         ]
         let enabledTools = UserDefaults.standard.array(forKey: "enabledTools") as? [Int]
         let toolsGrid = makeToggleGrid(items: annotationTools.map { (tag: $0.rawValue, label: $1) },
@@ -614,20 +639,20 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // ── Bottom Toolbar Actions ───────────────────────────
-        stack.addArrangedSubview(sectionHeader("Bottom Toolbar Actions"))
+        stack.addArrangedSubview(sectionHeader(L("Bottom Toolbar Actions")))
         stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
 
-        let noteB = NSTextField(labelWithString: "Hidden actions are removed from the bottom toolbar.")
+        let noteB = NSTextField(labelWithString: L("Hidden actions are removed from the bottom toolbar."))
         noteB.font = NSFont.systemFont(ofSize: 11)
         noteB.textColor = .secondaryLabelColor
         stack.addArrangedSubview(noteB)
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
         let bottomActionItems: [(tag: Int, label: String)] = [
-            (1011, "Invert Colors"),
-            (1013, "Adjust (Image Effects)"),
-            (1004, "Beautify"),
-            (1005, "Remove Background"),
+            (1011, L("Invert Colors")),
+            (1013, L("Adjust (Image Effects)")),
+            (1004, L("Beautify")),
+            (1005, L("Remove Background")),
         ]
         let enabledActions = UserDefaults.standard.array(forKey: "enabledActions") as? [Int]
         let bottomActionsGrid = makeToggleGrid(items: bottomActionItems,
@@ -636,22 +661,22 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // ── Right Toolbar Actions ────────────────────────────
-        stack.addArrangedSubview(sectionHeader("Right Toolbar Actions"))
+        stack.addArrangedSubview(sectionHeader(L("Right Toolbar Actions")))
         stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
 
-        let noteC = NSTextField(labelWithString: "Hidden actions are removed from the right toolbar.")
+        let noteC = NSTextField(labelWithString: L("Hidden actions are removed from the right toolbar."))
         noteC.font = NSFont.systemFont(ofSize: 11)
         noteC.textColor = .secondaryLabelColor
         stack.addArrangedSubview(noteC)
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
         let rightActionItems: [(tag: Int, label: String)] = [
-            (1001, "Upload"), (1002, "Pin (floating window)"),
-            (1003, "OCR (extract text)"), (1006, "Auto-Redact sensitive data"),
-            (1008, "Translate"),
-            (1009, "Record screen"),
-            (1010, "Scroll Capture"),
-            (1012, "Share"),
+            (1001, L("Upload")), (1002, L("Pin (floating window)")),
+            (1003, L("OCR (extract text)")), (1006, L("Auto-Redact sensitive data")),
+            (1008, L("Translate")),
+            (1009, L("Record screen")),
+            (1010, L("Scroll Capture")),
+            (1012, L("Share")),
         ]
         let rightActionsGrid = makeToggleGrid(items: rightActionItems,
                                               defaultsKey: "enabledActions", enabledValues: enabledActions)
@@ -687,21 +712,21 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.edgeInsets = NSEdgeInsets(top: 0, left: 20, bottom: 16, right: 20)
 
         // ── Format ────────────────────────────────────────────
-        stack.addArrangedSubview(sectionHeader("Output"))
+        stack.addArrangedSubview(sectionHeader(L("Output")))
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
         recordingFormatPopup = NSPopUpButton()
-        recordingFormatPopup.addItems(withTitles: ["MP4 (H.264)", "GIF"])
+        recordingFormatPopup.addItems(withTitles: [L("MP4 (H.264)"), L("GIF")])
         recordingFormatPopup.target = self
         recordingFormatPopup.action = #selector(recordingFormatChanged(_:))
-        stack.addArrangedSubview(labeledRow("Format:", controls: [recordingFormatPopup]))
+        stack.addArrangedSubview(labeledRow(L("Format:"), controls: [recordingFormatPopup]))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         recordingFPSPopup = NSPopUpButton()
-        recordingFPSPopup.addItems(withTitles: ["15 fps", "24 fps", "30 fps", "60 fps", "120 fps"])
+        recordingFPSPopup.addItems(withTitles: [L("15 fps"), L("24 fps"), L("30 fps"), L("60 fps"), L("120 fps")])
         recordingFPSPopup.target = self
         recordingFPSPopup.action = #selector(recordingFPSChanged(_:))
-        stack.addArrangedSubview(labeledRow("Frame rate:", controls: [recordingFPSPopup]))
+        stack.addArrangedSubview(labeledRow(L("Frame rate:"), controls: [recordingFPSPopup]))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         recSavePathField = NSTextField()
@@ -709,39 +734,39 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         recSavePathField.isSelectable = false
         recSavePathField.lineBreakMode = .byTruncatingMiddle
 
-        let recBrowseBtn = NSButton(title: "Browse…", target: self, action: #selector(browseRecSavePath(_:)))
+        let recBrowseBtn = NSButton(title: L("Browse…"), target: self, action: #selector(browseRecSavePath(_:)))
         recBrowseBtn.bezelStyle = .rounded
-        let recClearBtn = NSButton(title: "Clear", target: self, action: #selector(clearRecSavePath(_:)))
+        let recClearBtn = NSButton(title: L("Clear"), target: self, action: #selector(clearRecSavePath(_:)))
         recClearBtn.bezelStyle = .rounded
 
-        stack.addArrangedSubview(labeledRow("Save folder:", controls: [recSavePathField, recBrowseBtn, recClearBtn]))
+        stack.addArrangedSubview(labeledRow(L("Save folder:"), controls: [recSavePathField, recBrowseBtn, recClearBtn]))
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // ── Behavior ──────────────────────────────────────────
-        stack.addArrangedSubview(sectionHeader("Behavior"))
+        stack.addArrangedSubview(sectionHeader(L("Behavior")))
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
         recordingOnStopPopup = NSPopUpButton()
-        recordingOnStopPopup.addItems(withTitles: ["Open editor", "Show in Finder", "Copy to clipboard"])
+        recordingOnStopPopup.addItems(withTitles: [L("Open editor"), L("Show in Finder"), L("Copy to clipboard")])
         recordingOnStopPopup.target = self
         recordingOnStopPopup.action = #selector(recordingOnStopChanged(_:))
-        stack.addArrangedSubview(labeledRow("When done:", controls: [recordingOnStopPopup]))
+        stack.addArrangedSubview(labeledRow(L("When done:"), controls: [recordingOnStopPopup]))
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // ── Scroll Capture ────────────────────────────────────
-        stack.addArrangedSubview(sectionHeader("Scroll Capture"))
+        stack.addArrangedSubview(sectionHeader(L("Scroll Capture")))
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
-        scrollAutoScrollCheckbox = NSButton(checkboxWithTitle: "Auto-scroll (sends synthetic scroll events)",
+        scrollAutoScrollCheckbox = NSButton(checkboxWithTitle: L("Auto-scroll (sends synthetic scroll events)"),
                                             target: self, action: #selector(scrollAutoScrollChanged(_:)))
         stack.addArrangedSubview(scrollAutoScrollCheckbox)
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         scrollSpeedPopup = NSPopUpButton()
-        scrollSpeedPopup.addItems(withTitles: ["Slow", "Medium", "Fast", "Very fast"])
+        scrollSpeedPopup.addItems(withTitles: [L("Slow"), L("Medium"), L("Fast"), L("Very fast")])
         scrollSpeedPopup.target = self
         scrollSpeedPopup.action = #selector(scrollSpeedChanged(_:))
-        stack.addArrangedSubview(labeledRow("Scroll speed:", controls: [scrollSpeedPopup]))
+        stack.addArrangedSubview(labeledRow(L("Scroll speed:"), controls: [scrollSpeedPopup]))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         scrollMaxHeightField = NSTextField()
@@ -759,13 +784,13 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         scrollMaxHeightStepper.target = self
         scrollMaxHeightStepper.action = #selector(scrollMaxHeightChanged(_:))
 
-        let maxHeightNote = NSTextField(labelWithString: "px (0 = unlimited)")
+        let maxHeightNote = NSTextField(labelWithString: L("px (0 = unlimited)"))
         maxHeightNote.font = .systemFont(ofSize: 11)
         maxHeightNote.textColor = .secondaryLabelColor
-        stack.addArrangedSubview(labeledRow("Max height:", controls: [scrollMaxHeightField, scrollMaxHeightStepper, maxHeightNote]))
+        stack.addArrangedSubview(labeledRow(L("Max height:"), controls: [scrollMaxHeightField, scrollMaxHeightStepper, maxHeightNote]))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
-        scrollFrozenDetectionCheckbox = NSButton(checkboxWithTitle: "Detect fixed/sticky headers",
+        scrollFrozenDetectionCheckbox = NSButton(checkboxWithTitle: L("Detect fixed/sticky headers"),
                                                  target: self, action: #selector(scrollFrozenDetectionChanged(_:)))
         stack.addArrangedSubview(scrollFrozenDetectionCheckbox)
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
@@ -807,11 +832,11 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.edgeInsets = NSEdgeInsets(top: 0, left: 20, bottom: 16, right: 20)
 
         // ── Upload Provider ──
-        stack.addArrangedSubview(sectionHeader("Upload Provider"))
+        stack.addArrangedSubview(sectionHeader(L("Upload Provider")))
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
         providerPopup = NSPopUpButton()
-        providerPopup.addItems(withTitles: ["imgbb (images only)", "Google Drive (images + videos)", "S3-Compatible (images + videos)"])
+        providerPopup.addItems(withTitles: [L("imgbb (images only)"), L("Google Drive (images + videos)"), L("S3-Compatible (images + videos)")])
         let currentProvider = UserDefaults.standard.string(forKey: "uploadProvider") ?? "imgbb"
         switch currentProvider {
         case "gdrive": providerPopup.selectItem(at: 1)
@@ -820,11 +845,11 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         }
         providerPopup.target = self
         providerPopup.action = #selector(uploadProviderChanged(_:))
-        stack.addArrangedSubview(labeledRow("Provider:", controls: [providerPopup]))
+        stack.addArrangedSubview(labeledRow(L("Provider:"), controls: [providerPopup]))
         stack.setCustomSpacing(16, after: stack.arrangedSubviews.last!)
 
         // ── Google Drive ──
-        stack.addArrangedSubview(sectionHeader("Google Drive"))
+        stack.addArrangedSubview(sectionHeader(L("Google Drive")))
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
         gdriveStatusLabel = NSTextField(labelWithString: "")
@@ -832,22 +857,22 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         gdriveStatusLabel.textColor = .secondaryLabelColor
         updateGDriveStatus()
 
-        gdriveSignInBtn = NSButton(title: "Sign In with Google", target: self, action: #selector(gdriveSignInTapped(_:)))
+        gdriveSignInBtn = NSButton(title: L("Sign In with Google"), target: self, action: #selector(gdriveSignInTapped(_:)))
         gdriveSignInBtn.bezelStyle = .rounded
         updateGDriveButton()
 
-        stack.addArrangedSubview(labeledRow("Account:", controls: [gdriveStatusLabel]))
+        stack.addArrangedSubview(labeledRow(L("Account:"), controls: [gdriveStatusLabel]))
         stack.addArrangedSubview(indented(gdriveSignInBtn))
         stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
 
-        let gdriveNote = NSTextField(wrappingLabelWithString: "Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly.")
+        let gdriveNote = NSTextField(wrappingLabelWithString: L("Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly."))
         gdriveNote.font = NSFont.systemFont(ofSize: 10)
         gdriveNote.textColor = .secondaryLabelColor
         stack.addArrangedSubview(indented(gdriveNote))
         stack.setCustomSpacing(16, after: stack.arrangedSubviews.last!)
 
         // ── S3-Compatible ──
-        stack.addArrangedSubview(sectionHeader("S3-Compatible Storage"))
+        stack.addArrangedSubview(sectionHeader(L("S3-Compatible Storage")))
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
         s3EndpointField = NSTextField()
@@ -856,7 +881,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         s3EndpointField.stringValue = UserDefaults.standard.string(forKey: "s3Endpoint") ?? ""
         s3EndpointField.target = self
         s3EndpointField.action = #selector(s3FieldChanged(_:))
-        stack.addArrangedSubview(labeledRow("Endpoint:", controls: [s3EndpointField]))
+        stack.addArrangedSubview(labeledRow(L("Endpoint:"), controls: [s3EndpointField]))
 
         s3RegionField = NSTextField()
         s3RegionField.placeholderString = "auto"
@@ -864,7 +889,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         s3RegionField.stringValue = UserDefaults.standard.string(forKey: "s3Region") ?? "auto"
         s3RegionField.target = self
         s3RegionField.action = #selector(s3FieldChanged(_:))
-        stack.addArrangedSubview(labeledRow("Region:", controls: [s3RegionField]))
+        stack.addArrangedSubview(labeledRow(L("Region:"), controls: [s3RegionField]))
 
         s3BucketField = NSTextField()
         s3BucketField.placeholderString = "my-bucket"
@@ -872,7 +897,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         s3BucketField.stringValue = UserDefaults.standard.string(forKey: "s3Bucket") ?? ""
         s3BucketField.target = self
         s3BucketField.action = #selector(s3FieldChanged(_:))
-        stack.addArrangedSubview(labeledRow("Bucket:", controls: [s3BucketField]))
+        stack.addArrangedSubview(labeledRow(L("Bucket:"), controls: [s3BucketField]))
 
         s3AccessKeyField = NSTextField()
         s3AccessKeyField.placeholderString = "AKIAIOSFODNN7EXAMPLE"
@@ -880,7 +905,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         s3AccessKeyField.stringValue = UserDefaults.standard.string(forKey: "s3AccessKeyID") ?? ""
         s3AccessKeyField.target = self
         s3AccessKeyField.action = #selector(s3FieldChanged(_:))
-        stack.addArrangedSubview(labeledRow("Access Key:", controls: [s3AccessKeyField]))
+        stack.addArrangedSubview(labeledRow(L("Access Key:"), controls: [s3AccessKeyField]))
 
         s3SecretKeyField = NSSecureTextField()
         s3SecretKeyField.placeholderString = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
@@ -888,7 +913,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         s3SecretKeyField.stringValue = UserDefaults.standard.string(forKey: "s3SecretAccessKey") ?? ""
         s3SecretKeyField.target = self
         s3SecretKeyField.action = #selector(s3FieldChanged(_:))
-        stack.addArrangedSubview(labeledRow("Secret Key:", controls: [s3SecretKeyField]))
+        stack.addArrangedSubview(labeledRow(L("Secret Key:"), controls: [s3SecretKeyField]))
 
         s3PublicURLField = NSTextField()
         s3PublicURLField.placeholderString = "https://cdn.example.com"
@@ -896,10 +921,10 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         s3PublicURLField.stringValue = UserDefaults.standard.string(forKey: "s3PublicURLBase") ?? ""
         s3PublicURLField.target = self
         s3PublicURLField.action = #selector(s3FieldChanged(_:))
-        stack.addArrangedSubview(labeledRow("Public URL:", controls: [s3PublicURLField]))
+        stack.addArrangedSubview(labeledRow(L("Public URL:"), controls: [s3PublicURLField]))
         stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
 
-        let publicURLNote = NSTextField(wrappingLabelWithString: "Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible).")
+        let publicURLNote = NSTextField(wrappingLabelWithString: L("Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)."))
         publicURLNote.font = NSFont.systemFont(ofSize: 10)
         publicURLNote.textColor = .secondaryLabelColor
         stack.addArrangedSubview(indented(publicURLNote))
@@ -910,10 +935,10 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         s3PathPrefixField.stringValue = UserDefaults.standard.string(forKey: "s3PathPrefix") ?? ""
         s3PathPrefixField.target = self
         s3PathPrefixField.action = #selector(s3FieldChanged(_:))
-        stack.addArrangedSubview(labeledRow("Path Prefix:", controls: [s3PathPrefixField]))
+        stack.addArrangedSubview(labeledRow(L("Path Prefix:"), controls: [s3PathPrefixField]))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
-        s3TestBtn = NSButton(title: "Test Connection", target: self, action: #selector(s3TestTapped(_:)))
+        s3TestBtn = NSButton(title: L("Test Connection"), target: self, action: #selector(s3TestTapped(_:)))
         s3TestBtn.bezelStyle = .rounded
 
         s3StatusLabel = NSTextField(labelWithString: "")
@@ -927,7 +952,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.addArrangedSubview(indented(testRow))
         stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
 
-        let s3Note = NSTextField(wrappingLabelWithString: "Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos.")
+        let s3Note = NSTextField(wrappingLabelWithString: L("Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos."))
         s3Note.font = NSFont.systemFont(ofSize: 10)
         s3Note.textColor = .secondaryLabelColor
         stack.addArrangedSubview(indented(s3Note))
@@ -938,7 +963,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
         imgbbKeyField = NSTextField()
-        imgbbKeyField.placeholderString = "Leave empty to use default"
+        imgbbKeyField.placeholderString = L("Leave empty to use default")
         imgbbKeyField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
         imgbbKeyField.target = self
         imgbbKeyField.action = #selector(imgbbKeyChanged(_:))
@@ -946,17 +971,17 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
             imgbbKeyField.stringValue = key
         }
 
-        stack.addArrangedSubview(labeledRow("API key:", controls: [imgbbKeyField]))
+        stack.addArrangedSubview(labeledRow(L("API key:"), controls: [imgbbKeyField]))
         stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
 
-        let imgbbNote = NSTextField(wrappingLabelWithString: "A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support).")
+        let imgbbNote = NSTextField(wrappingLabelWithString: L("A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)."))
         imgbbNote.font = NSFont.systemFont(ofSize: 10)
         imgbbNote.textColor = .secondaryLabelColor
         stack.addArrangedSubview(indented(imgbbNote))
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // ── Upload History ──
-        stack.addArrangedSubview(sectionHeader("Upload History"))
+        stack.addArrangedSubview(sectionHeader(L("Upload History")))
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
         // Placeholder for upload history rows
@@ -1017,14 +1042,14 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         // Version
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
-        let versionLabel = NSTextField(labelWithString: "Version \(version) (\(build))")
+        let versionLabel = NSTextField(labelWithString: String(format: L("Version %@ (%@)"), version, build))
         versionLabel.font = NSFont.systemFont(ofSize: 12)
         versionLabel.textColor = .secondaryLabelColor
         stack.addArrangedSubview(versionLabel)
         stack.setCustomSpacing(20, after: versionLabel)
 
         // Description
-        let desc = NSTextField(wrappingLabelWithString: "A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit.")
+        let desc = NSTextField(wrappingLabelWithString: L("A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit."))
         desc.font = NSFont.systemFont(ofSize: 13)
         desc.textColor = .labelColor
         desc.alignment = .center
@@ -1032,7 +1057,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.setCustomSpacing(20, after: desc)
 
         // Author
-        let author = NSTextField(labelWithString: "Made by sw33tLie")
+        let author = NSTextField(labelWithString: "\(L("Made by")) sw33tLie")
         author.font = NSFont.systemFont(ofSize: 12, weight: .medium)
         author.textColor = .secondaryLabelColor
         stack.addArrangedSubview(author)
@@ -1051,7 +1076,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.setCustomSpacing(20, after: ghBtn)
 
         // License
-        let license = NSTextField(labelWithString: "Licensed under the GPLv3")
+        let license = NSTextField(labelWithString: L("Licensed under the GPLv3"))
         license.font = NSFont.systemFont(ofSize: 11)
         license.textColor = .tertiaryLabelColor
         stack.addArrangedSubview(license)
@@ -1061,19 +1086,19 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
 
     private func updateGDriveStatus() {
         if GoogleDriveUploader.shared.isSignedIn {
-            gdriveStatusLabel?.stringValue = GoogleDriveUploader.shared.userEmail ?? "Signed in"
+            gdriveStatusLabel?.stringValue = GoogleDriveUploader.shared.userEmail ?? L("Signed in")
             gdriveStatusLabel?.textColor = .labelColor
         } else {
-            gdriveStatusLabel?.stringValue = "Not signed in"
+            gdriveStatusLabel?.stringValue = L("Not signed in")
             gdriveStatusLabel?.textColor = .secondaryLabelColor
         }
     }
 
     private func updateGDriveButton() {
         if GoogleDriveUploader.shared.isSignedIn {
-            gdriveSignInBtn?.title = "Sign Out"
+            gdriveSignInBtn?.title = L("Sign Out")
         } else {
-            gdriveSignInBtn?.title = "Sign In with Google"
+            gdriveSignInBtn?.title = L("Sign In with Google")
         }
     }
 
@@ -1124,13 +1149,13 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         s3FieldChanged(s3EndpointField)
 
         guard S3Uploader.shared.isConfigured else {
-            s3StatusLabel.stringValue = "Fill in endpoint, bucket, and credentials first"
+            s3StatusLabel.stringValue = L("Fill in endpoint, bucket, and credentials first")
             s3StatusLabel.textColor = .systemOrange
             return
         }
 
         s3TestBtn.isEnabled = false
-        s3StatusLabel.stringValue = "Testing..."
+        s3StatusLabel.stringValue = L("Testing...")
         s3StatusLabel.textColor = .secondaryLabelColor
 
         // Upload a tiny test file
@@ -1141,7 +1166,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
             self.s3TestBtn.isEnabled = true
             switch result {
             case .success:
-                self.s3StatusLabel.stringValue = "Connection successful!"
+                self.s3StatusLabel.stringValue = L("Connection successful!")
                 self.s3StatusLabel.textColor = .systemGreen
             case .failure(let error):
                 self.s3StatusLabel.stringValue = error.localizedDescription
@@ -1158,7 +1183,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
             .reversed() as [[String: String]]
 
         if uploads.isEmpty {
-            let lbl = NSTextField(labelWithString: "No uploads yet.")
+            let lbl = NSTextField(labelWithString: L("No uploads yet."))
             lbl.font = NSFont.systemFont(ofSize: 13)
             lbl.textColor = .secondaryLabelColor
             lbl.alignment = .center
@@ -1224,7 +1249,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         field.translatesAutoresizingMaskIntoConstraints = false
         field.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
-        let btn = NSButton(title: "Copy", target: self, action: #selector(copyUploadURL(_:)))
+        let btn = NSButton(title: L("Copy"), target: self, action: #selector(copyUploadURL(_:)))
         btn.bezelStyle = .rounded
         btn.font = NSFont.systemFont(ofSize: 11)
         btn.identifier = NSUserInterfaceItemIdentifier(copyKey)
@@ -1435,7 +1460,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
 
         let quality = Int(ImageEncoder.quality * 100)
         qualitySlider.integerValue = quality
-        qualityLabel.stringValue = "\(quality)%"
+        qualityLabel.stringValue = String(format: L("%d%%"), quality)
 
         downscaleRetinaCheckbox.state = ImageEncoder.downscaleRetina ? .on : .off
         embedColorProfileCheckbox.state = ImageEncoder.embedColorProfile ? .on : .off
@@ -1518,6 +1543,12 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
     @objc private func quickModeChanged(_ sender: NSPopUpButton) {
         UserDefaults.standard.set(sender.indexOfSelectedItem, forKey: "quickCaptureMode")
     }
+    @objc private func languageChanged(_ sender: NSPopUpButton) {
+        let languages = LanguageManager.availableLanguages
+        let idx = sender.indexOfSelectedItem
+        guard idx >= 0, idx < languages.count else { return }
+        LanguageManager.shared.currentLanguage = languages[idx].code
+    }
     @objc private func openGitHub() {
         if let url = URL(string: "https://github.com/sw33tLie/macshot") { NSWorkspace.shared.open(url) }
     }
@@ -1527,7 +1558,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         updateQualityVisibility()
     }
     @objc private func qualityChanged(_ sender: NSSlider) {
-        qualityLabel.stringValue = "\(sender.integerValue)%"
+        qualityLabel.stringValue = String(format: L("%d%%"), sender.integerValue)
         UserDefaults.standard.set(Double(sender.integerValue) / 100.0, forKey: "imageQuality")
     }
     @objc private func downscaleRetinaChanged(_ sender: NSButton) {
@@ -1562,14 +1593,14 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         let currentFPS = UserDefaults.standard.integer(forKey: "recordingFPS")
         recordingFPSPopup.removeAllItems()
         if isGIF {
-            recordingFPSPopup.addItems(withTitles: ["5 fps", "10 fps", "15 fps"])
+            recordingFPSPopup.addItems(withTitles: [L("5 fps"), L("10 fps"), L("15 fps")])
             let gifOptions = [5, 10, 15]
             let cappedFPS = min(currentFPS > 0 ? currentFPS : 15, 15)
             let idx = gifOptions.firstIndex(of: cappedFPS) ?? 2
             recordingFPSPopup.selectItem(at: idx)
             UserDefaults.standard.set(gifOptions[idx], forKey: "recordingFPS")
         } else {
-            recordingFPSPopup.addItems(withTitles: ["15 fps", "24 fps", "30 fps", "60 fps", "120 fps"])
+            recordingFPSPopup.addItems(withTitles: [L("15 fps"), L("24 fps"), L("30 fps"), L("60 fps"), L("120 fps")])
             let mp4Options = [15, 24, 30, 60, 120]
             let idx = mp4Options.firstIndex(of: currentFPS) ?? 2
             recordingFPSPopup.selectItem(at: idx)

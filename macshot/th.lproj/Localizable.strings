@@ -1,0 +1,400 @@
+/* ไทย — macshot localization
+ *
+ * To add a new language:
+ * 1. Create a new folder: macshot/<lang-code>.lproj/
+ * 2. Copy this file into that folder
+ * 3. Translate all values (right side of = sign)
+ * 4. Add the language to LanguageManager.availableLanguages in Services/LanguageManager.swift
+ * 5. Add the language code to knownRegions in macshot.xcodeproj/project.pbxproj
+ * 6. Submit a pull request!
+ *
+ * Keys use the English text. Values should be the translation.
+ * Format strings use %@ for strings, %d for integers.
+ * Keep keyboard shortcuts (like ⌘C) untranslated.
+ * Keep brand names (macshot, Google Drive, imgbb, S3) untranslated.
+ */
+
+/* Menu Bar */
+"Capture Area" = "จับภาพพื้นที่";
+"Capture Screen" = "จับภาพหน้าจอ";
+"Capture OCR" = "จับภาพ OCR";
+"Quick Capture" = "จับภาพด่วน";
+"Scroll Capture" = "จับภาพแบบเลื่อน";
+"Capture Delay" = "หน่วงเวลาจับภาพ";
+"None" = "ไม่มี";
+"%d seconds" = "%d วินาที";
+"Record Area" = "บันทึกพื้นที่";
+"Record Screen" = "บันทึกหน้าจอ";
+"Recent Captures" = "ภาพที่จับล่าสุด";
+"Show History Panel" = "แสดงแผงประวัติ";
+"Open Image..." = "เปิดรูปภาพ...";
+"Open from Clipboard" = "เปิดจากคลิปบอร์ด";
+"Preferences..." = "การตั้งค่า...";
+"Check for Updates..." = "ตรวจสอบอัปเดต...";
+"Quit macshot" = "ออกจาก macshot";
+"No recent captures" = "ไม่มีภาพที่จับล่าสุด";
+"Clear History" = "ล้างประวัติ";
+
+/* History Panel */
+"Copy" = "คัดลอก";
+"Save As..." = "บันทึกเป็น...";
+"Open in Editor" = "เปิดในตัวแก้ไข";
+"Pin to Screen" = "ปักหมุดบนหน้าจอ";
+"Quick Look" = "ดูตัวอย่าง";
+"Delete" = "ลบ";
+"All" = "ทั้งหมด";
+"Screenshots" = "ภาพหน้าจอ";
+"GIFs" = "GIFs";
+"Click to copy · Drag to app" = "คลิกเพื่อคัดลอก · ลากไปยังแอป";
+"No captures yet" = "ยังไม่มีภาพที่จับ";
+
+/* Floating Thumbnail */
+"Close All" = "ปิดทั้งหมด";
+"Save All to Folder…" = "บันทึกทั้งหมดไปยังโฟลเดอร์…";
+"Save" = "บันทึก";
+
+/* Editor Top Bar */
+"Zoom In" = "ขยาย";
+"Zoom Out" = "ย่อ";
+"Fit Canvas" = "พอดีกับผืนผ้าใบ";
+"Crop" = "ครอบตัด";
+"Flip Horizontal" = "พลิกแนวนอน";
+"Flip Vertical" = "พลิกแนวตั้ง";
+"Add Capture" = "เพิ่มภาพจับ";
+
+/* Toolbar - Tools */
+"Arrow" = "ลูกศร";
+"Line" = "เส้น";
+"Rectangle" = "สี่เหลี่ยม";
+"Ellipse" = "วงรี";
+"Pencil" = "ดินสอ";
+"Pencil (Draw)" = "ดินสอ (วาด)";
+"Marker" = "ปากกาไฮไลต์";
+"Text" = "ข้อความ";
+"Number" = "ตัวเลข";
+"Number / Counter" = "ตัวเลข / ตัวนับ";
+"Stamp / Emoji" = "แสตมป์ / อิโมจิ";
+"Censor" = "ปิดบัง";
+"Censor (Pixelate / Blur / Solid)" = "ปิดบัง (พิกเซล / เบลอ / ทึบ)";
+"Measure" = "วัด";
+"Measure (px)" = "วัด (px)";
+"Magnify (Loupe)" = "ขยาย (แว่นขยาย)";
+"Color Sampler" = "ตัวดูดสี";
+"Color Picker" = "ตัวเลือกสี";
+"Select & Edit" = "เลือกและแก้ไข";
+"Color" = "สี";
+
+/* Toolbar - Actions */
+"Copy to Clipboard" = "คัดลอกไปยังคลิปบอร์ด";
+"Save to File" = "บันทึกเป็นไฟล์";
+"Save to" = "บันทึกไปยัง";
+"Open in Editor Window" = "เปิดในหน้าต่างตัวแก้ไข";
+"Pin on Screen" = "ปักหมุดบนหน้าจอ";
+"Pin" = "ปักหมุด";
+"Pin (floating window)" = "ปักหมุด (หน้าต่างลอย)";
+"OCR" = "OCR";
+"OCR Text" = "OCR ข้อความ";
+"OCR (extract text)" = "OCR (ดึงข้อความ)";
+"Upload" = "อัปโหลด";
+"Share" = "แชร์";
+"Undo" = "เลิกทำ";
+"Redo" = "ทำซ้ำ";
+"Close" = "ปิด";
+"Remove Background" = "ลบพื้นหลัง";
+"Beautify" = "ตกแต่ง";
+"Adjust" = "ปรับแต่ง";
+"Adjust (Image Effects)" = "ปรับแต่ง (เอฟเฟกต์ภาพ)";
+"Invert Colors" = "กลับสี";
+"Record" = "บันทึก";
+"Record screen" = "บันทึกหน้าจอ";
+"Translate" = "แปลภาษา";
+"Auto-Redact sensitive data" = "ปกปิดข้อมูลอ่อนไหวอัตโนมัติ";
+"Move Selection" = "ย้ายส่วนที่เลือก";
+
+/* Toolbar - Recording */
+"Start Recording" = "เริ่มบันทึก";
+"Cancel Recording" = "ยกเลิกการบันทึก";
+"Highlight Mouse Clicks" = "ไฮไลต์การคลิกเมาส์";
+"Record System Audio" = "บันทึกเสียงระบบ";
+"Record Microphone" = "บันทึกไมโครโฟน";
+"Recording Settings" = "ตั้งค่าการบันทึก";
+
+/* Tool Options */
+"Size" = "ขนาด";
+"Stroke" = "เส้นขีด";
+"Radius" = "รัศมี";
+"Start:" = "เริ่ม:";
+"Draw:" = "วาด:";
+"Auto:" = "อัตโนมัติ:";
+"Fill" = "เติม";
+"Outline" = "เส้นกรอบ";
+"More Emojis" = "อิโมจิเพิ่มเติม";
+"Load Image" = "โหลดรูปภาพ";
+"Gradient Style" = "รูปแบบไล่สี";
+"On" = "เปิด";
+"Text Only" = "ข้อความเท่านั้น";
+"All Text" = "ข้อความทั้งหมด";
+"PII" = "ข้อมูลส่วนบุคคล";
+"Faces" = "ใบหน้า";
+"People" = "ผู้คน";
+"Confirm before upload" = "ยืนยันก่อนอัปโหลด";
+"Flip" = "พลิก";
+"Smooth" = "เรียบ";
+"Smart" = "อัจฉริยะ";
+"Padding" = "ระยะห่าง";
+"Shadow" = "เงา";
+"Right-click to add points" = "คลิกขวาเพื่อเพิ่มจุด";
+"Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "กด 1 แนวตั้งอัตโนมัติ  ·  กด 2 แนวนอนอัตโนมัติ";
+
+/* Overlay / Canvas */
+"Click a window  ·  Drag for custom area  ·  F for full screen" = "คลิกที่หน้าต่าง  ·  ลากเพื่อเลือกพื้นที่  ·  F เพื่อเต็มจอ";
+"Drag to select  ·  Click for full screen" = "ลากเพื่อเลือก  ·  คลิกเพื่อเต็มจอ";
+"Release to annotate and edit" = "ปล่อยเพื่อใส่คำอธิบายและแก้ไข";
+"Window snap: " = "จับหน้าต่าง: ";
+"ON" = "เปิด";
+"OFF" = "ปิด";
+"  (Tab to toggle)" = "  (Tab เพื่อสลับ)";
+"Right-click to copy" = "คลิกขวาเพื่อคัดลอก";
+"Copied %@" = "คัดลอก %@ แล้ว";
+"Set color %@" = "ตั้งสี %@";
+"Draw something first to use the move tool." = "วาดบางอย่างก่อนเพื่อใช้เครื่องมือย้าย";
+"Drag to reposition" = "ลากเพื่อจัดตำแหน่งใหม่";
+
+/* Overlay - Popovers */
+"Format:" = "รูปแบบ:";
+"FPS:" = "FPS:";
+"When done:" = "เมื่อเสร็จ:";
+"Open editor" = "เปิดตัวแก้ไข";
+"Show in Finder" = "แสดงใน Finder";
+"Copy to clipboard" = "คัดลอกไปยังคลิปบอร์ด";
+
+/* Preferences - General */
+"macshot Preferences" = "การตั้งค่า macshot";
+"General" = "ทั่วไป";
+"Tools" = "เครื่องมือ";
+"Recording" = "การบันทึก";
+"About" = "เกี่ยวกับ";
+"Shortcuts" = "ปุ่มลัด";
+"Uploads" = "อัปโหลด";
+"Language" = "ภาษา";
+"Language:" = "ภาษา:";
+"Restart the app to fully apply the new language." = "เริ่มแอปใหม่เพื่อใช้ภาษาใหม่อย่างสมบูรณ์";
+"Capture" = "การจับภาพ";
+"Play sound on copy" = "เล่นเสียงเมื่อคัดลอก";
+"Remember last selection area" = "จำพื้นที่เลือกล่าสุด";
+"Remember last selected tool" = "จำเครื่องมือที่เลือกล่าสุด";
+"Show floating thumbnail after capture" = "แสดงภาพขนาดย่อลอยหลังจับภาพ";
+"Launch at login" = "เปิดเมื่อเข้าสู่ระบบ";
+"Show snap alignment guides" = "แสดงเส้นจัดแนว";
+"Capture mouse cursor in screenshot" = "จับภาพเคอร์เซอร์เมาส์ในภาพหน้าจอ";
+"Use window title in saved filename" = "ใช้ชื่อหน้าต่างในชื่อไฟล์ที่บันทึก";
+"Hide menu bar icon" = "ซ่อนไอคอนแถบเมนู";
+"Hotkeys still work. To show the icon again, re-launch macshot." = "ปุ่มลัดยังใช้งานได้ เปิด macshot ใหม่เพื่อแสดงไอคอนอีกครั้ง";
+"Check for updates automatically" = "ตรวจสอบอัปเดตอัตโนมัติ";
+"Thumbnail" = "ภาพขนาดย่อ";
+"  Dismiss after:" = "  ปิดหลังจาก:";
+"seconds before auto-dismiss (0 = never)" = "วินาทีก่อนปิดอัตโนมัติ (0 = ไม่ปิด)";
+"  Multiple previews:" = "  ตัวอย่างหลายรายการ:";
+"Stack (keep all)" = "ซ้อน (เก็บทั้งหมด)";
+"Replace (show only latest)" = "แทนที่ (แสดงล่าสุดเท่านั้น)";
+"Output" = "ผลลัพธ์";
+"Image format:" = "รูปแบบภาพ:";
+"Quality:" = "คุณภาพ:";
+"%d%%" = "%d%%";
+"Save at standard resolution (1x)" = "บันทึกที่ความละเอียดมาตรฐาน (1x)";
+"Halves dimensions on Retina displays, ~4x smaller files" = "ลดขนาดครึ่งหนึ่งบนจอ Retina ไฟล์เล็กลง ~4 เท่า";
+"Embed sRGB color profile" = "ฝังโปรไฟล์สี sRGB";
+"Ensures consistent colors across different displays" = "ทำให้สีสม่ำเสมอบนจอแสดงผลต่าง ๆ";
+"Screenshot History" = "ประวัติภาพหน้าจอ";
+"History size:" = "ขนาดประวัติ:";
+"screenshots kept on disk (0 = off)" = "ภาพหน้าจอที่เก็บในดิสก์ (0 = ปิด)";
+"Save Directory" = "โฟลเดอร์บันทึก";
+"Save folder:" = "โฟลเดอร์บันทึก:";
+"Browse…" = "เรียกดู…";
+"Appearance" = "รูปลักษณ์";
+"Accent color:" = "สีเน้น:";
+"Icon color:" = "สีไอคอน:";
+"Reset" = "รีเซ็ต";
+"OCR Capture:" = "การจับภาพ OCR:";
+"Show window + copy to clipboard" = "แสดงหน้าต่าง + คัดลอกไปยังคลิปบอร์ด";
+"Show window only" = "แสดงหน้าต่างเท่านั้น";
+"Copy to clipboard only" = "คัดลอกไปยังคลิปบอร์ดเท่านั้น";
+"Enter / Quick Capture:" = "Enter / จับภาพด่วน:";
+"Save to file" = "บันทึกเป็นไฟล์";
+"Save + copy to clipboard" = "บันทึก + คัดลอกไปยังคลิปบอร์ด";
+"OCR Action" = "การดำเนินการ OCR";
+
+/* Preferences - Shortcuts */
+"Keyboard Shortcuts" = "ปุ่มลัดแป้นพิมพ์";
+"Hotkeys" = "ปุ่มลัด";
+"Clear shortcut" = "ล้างปุ่มลัด";
+"Press keys..." = "กดปุ่ม...";
+"Waiting..." = "กำลังรอ...";
+
+/* Preferences - Tools */
+"Annotation Tools" = "เครื่องมือคำอธิบาย";
+"Hidden tools are removed from the bottom toolbar." = "เครื่องมือที่ซ่อนจะถูกลบออกจากแถบเครื่องมือด้านล่าง";
+"Capture Actions" = "การดำเนินการจับภาพ";
+"Bottom Toolbar Actions" = "การดำเนินการแถบเครื่องมือด้านล่าง";
+"Hidden actions are removed from the bottom toolbar." = "การดำเนินการที่ซ่อนจะถูกลบออกจากแถบเครื่องมือด้านล่าง";
+"Editor Actions" = "การดำเนินการตัวแก้ไข";
+"Right Toolbar Actions" = "การดำเนินการแถบเครื่องมือด้านขวา";
+"Hidden actions are removed from the right toolbar." = "การดำเนินการที่ซ่อนจะถูกลบออกจากแถบเครื่องมือด้านขวา";
+
+/* Preferences - Recording */
+"Frame rate:" = "อัตราเฟรม:";
+"After recording:" = "หลังบันทึก:";
+"Save recording to:" = "บันทึกวิดีโอไปยัง:";
+"Clear" = "ล้าง";
+"Max height:" = "ความสูงสูงสุด:";
+"px (0 = unlimited)" = "px (0 = ไม่จำกัด)";
+"Behavior" = "พฤติกรรม";
+"Auto-scroll (sends synthetic scroll events)" = "เลื่อนอัตโนมัติ (ส่งเหตุการณ์เลื่อนสังเคราะห์)";
+"Detect fixed/sticky headers" = "ตรวจจับส่วนหัวที่ตรึงไว้";
+"Scroll speed:" = "ความเร็วเลื่อน:";
+"Slow" = "ช้า";
+"Medium" = "ปานกลาง";
+"Fast" = "เร็ว";
+"Very fast" = "เร็วมาก";
+"5 fps" = "5 fps";
+"10 fps" = "10 fps";
+"15 fps" = "15 fps";
+"24 fps" = "24 fps";
+"30 fps" = "30 fps";
+"60 fps" = "60 fps";
+"120 fps" = "120 fps";
+"MP4 (H.264)" = "MP4 (H.264)";
+"GIF" = "GIF";
+
+/* Preferences - Upload */
+"Upload Service" = "บริการอัปโหลด";
+"Upload Provider" = "ผู้ให้บริการอัปโหลด";
+"Provider:" = "ผู้ให้บริการ:";
+"Google Drive" = "Google Drive";
+"Google Drive (images + videos)" = "Google Drive (รูปภาพ + วิดีโอ)";
+"imgbb (images only)" = "imgbb (รูปภาพเท่านั้น)";
+"S3-Compatible (images + videos)" = "S3-Compatible (รูปภาพ + วิดีโอ)";
+"S3-Compatible Storage" = "พื้นที่จัดเก็บ S3-Compatible";
+"Sign In with Google" = "ลงชื่อเข้าใช้ด้วย Google";
+"Sign Out" = "ออกจากระบบ";
+"Signed in" = "เข้าสู่ระบบแล้ว";
+"Not signed in" = "ยังไม่ได้เข้าสู่ระบบ";
+"Account:" = "บัญชี:";
+"Test Connection" = "ทดสอบการเชื่อมต่อ";
+"Fill in endpoint, bucket, and credentials first" = "กรอก endpoint, bucket และข้อมูลรับรองก่อน";
+"Testing..." = "กำลังทดสอบ...";
+"Connection successful!" = "เชื่อมต่อสำเร็จ!";
+"Leave empty to use default" = "ปล่อยว่างเพื่อใช้ค่าเริ่มต้น";
+"Endpoint:" = "Endpoint:";
+"Region:" = "ภูมิภาค:";
+"Bucket:" = "Bucket:";
+"Access Key:" = "Access Key:";
+"Secret Key:" = "Secret Key:";
+"Public URL:" = "Public URL:";
+"Path Prefix:" = "Path Prefix:";
+"API key:" = "API key:";
+"Upload History" = "ประวัติการอัปโหลด";
+"No uploads yet." = "ยังไม่มีการอัปโหลด";
+"Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "URL พื้นฐานสำหรับการเข้าถึงสาธารณะ หากปล่อยว่าง จะใช้ URL ของ S3 endpoint (อาจไม่สามารถเข้าถึงแบบสาธารณะได้)";
+"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "มีคีย์สาธารณะให้ใช้ — รับคีย์ฟรีของคุณเองที่ imgbb.com/api หากถึงขีดจำกัดอัตรา รองรับเฉพาะรูปภาพ (ไม่รองรับวิดีโอ)";
+"Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "ใช้งานได้กับ AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 และบริการอื่นที่เข้ากันได้กับ S3 รองรับรูปภาพและวิดีโอ";
+"Configure S3 in Preferences" = "ตั้งค่า S3 ในการตั้งค่า";
+"Sign in to Google Drive in Preferences" = "ลงชื่อเข้าใช้ Google Drive ในการตั้งค่า";
+"Video upload requires Google Drive or S3" = "การอัปโหลดวิดีโอต้องใช้ Google Drive หรือ S3";
+
+/* Preferences - About */
+"macshot" = "macshot";
+"Version %@ (%@)" = "เวอร์ชัน %@ (%@)";
+"Made by" = "สร้างโดย";
+"Licensed under the GPLv3" = "อนุญาตภายใต้ GPLv3";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "เครื่องมือจับภาพหน้าจอและบันทึกหน้าจอฟรีแบบโอเพนซอร์สสำหรับ macOS\nเนทีฟเต็มรูปแบบ — สร้างด้วย Swift และ AppKit";
+
+/* Alerts */
+"No Image on Clipboard" = "ไม่มีรูปภาพในคลิปบอร์ด";
+"Copy an image to the clipboard first, then try again." = "คัดลอกรูปภาพไปยังคลิปบอร์ดก่อน แล้วลองอีกครั้ง";
+"OK" = "ตกลง";
+"Accessibility Access Required" = "ต้องการสิทธิ์การเข้าถึง";
+"macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot ต้องการสิทธิ์การเข้าถึงเพื่อเลื่อนแอปอื่นอัตโนมัติ กรุณาอนุญาตในการตั้งค่าระบบ แล้วลองอีกครั้ง";
+"Open Settings" = "เปิดการตั้งค่า";
+"Cancel" = "ยกเลิก";
+"Microphone Access Required" = "ต้องการสิทธิ์ไมโครโฟน";
+"macshot needs microphone permission to record voice audio. Open System Settings to grant access." = "macshot ต้องการสิทธิ์ไมโครโฟนเพื่อบันทึกเสียง เปิดการตั้งค่าระบบเพื่ออนุญาต";
+"Upload to Google Drive?" = "อัปโหลดไปยัง Google Drive?";
+"Upload to S3?" = "อัปโหลดไปยัง S3?";
+"Upload to imgbb.com?" = "อัปโหลดไปยัง imgbb.com?";
+"Your screenshot will be uploaded." = "ภาพหน้าจอของคุณจะถูกอัปโหลด";
+
+/* Permission Onboarding */
+"Welcome to macshot" = "ยินดีต้อนรับสู่ macshot";
+"macshot needs one permission" = "macshot ต้องการสิทธิ์หนึ่งอย่าง";
+"Screen Recording not yet granted" = "ยังไม่ได้อนุญาตการบันทึกหน้าจอ";
+"Screen Recording granted!" = "อนุญาตการบันทึกหน้าจอแล้ว!";
+"Enable macshot, then try taking a screenshot" = "เปิดใช้งาน macshot แล้วลองจับภาพหน้าจอ";
+"Open Screen Recording Settings" = "เปิดการตั้งค่าการบันทึกหน้าจอ";
+"Continue" = "ดำเนินการต่อ";
+
+/* OCR Window */
+"Text Recognition" = "การรู้จำข้อความ";
+"Translate to:" = "แปลเป็น:";
+"%d chars · %d words" = "%d ตัวอักษร · %d คำ";
+"Copy  ⌘↩" = "คัดลอก  ⌘↩";
+"AI Search" = "ค้นหา AI";
+"Show Original" = "แสดงต้นฉบับ";
+"Translation Failed" = "แปลภาษาล้มเหลว";
+"Translation" = "การแปลภาษา";
+"(No text detected in the selected area)" = "(ไม่พบข้อความในพื้นที่ที่เลือก)";
+
+/* Upload Toast */
+"URL copied to the clipboard" = "คัดลอก URL ไปยังคลิปบอร์ดแล้ว";
+"Uploading... %d%%" = "กำลังอัปโหลด... %d%%";
+"Upload failed: %@" = "อัปโหลดล้มเหลว: %@";
+"Uploaded! Link copied." = "อัปโหลดแล้ว! คัดลอกลิงก์แล้ว";
+"Uploading to %@... %d%%" = "กำลังอัปโหลดไปยัง %@... %d%%";
+"Open" = "เปิด";
+
+/* Recording Toast */
+"Recording saved" = "บันทึกการอัดแล้ว";
+"%@ • Recording saved" = "%@ • บันทึกการอัดแล้ว";
+"Copy Path" = "คัดลอกเส้นทาง";
+"Path copied!" = "คัดลอกเส้นทางแล้ว!";
+
+/* Video Editor */
+"macshot Video Editor" = "ตัวแก้ไขวิดีโอ macshot";
+"%@ selected" = "เลือก %@ แล้ว";
+"Exporting..." = "กำลังส่งออก...";
+"Export failed" = "ส่งออกล้มเหลว";
+"Saved to %@" = "บันทึกไปยัง %@";
+"Save failed" = "บันทึกล้มเหลว";
+
+/* Barcode Detector */
+/* "Open" and "Copy" are shared with other sections */
+
+/* Save Panel */
+"Save As..." = "บันทึกเป็น...";
+"Choose a folder" = "เลือกโฟลเดอร์";
+"Save All to Folder…" = "บันทึกทั้งหมดไปยังโฟลเดอร์…";
+
+/* Scroll Capture HUD */
+"Auto Scroll" = "เลื่อนอัตโนมัติ";
+"Stop" = "หยุด";
+"Scrolling..." = "กำลังเลื่อน...";
+
+/* Effects Picker (Adjust popover) */
+"Presets" = "ค่าที่ตั้งไว้";
+"Adjustments" = "การปรับแต่ง";
+"Brightness" = "ความสว่าง";
+"Contrast" = "ความคมชัด";
+"Saturation" = "ความอิ่มตัวของสี";
+"Sharpness" = "ความคม";
+
+/* Time Ago */
+"just now" = "เมื่อสักครู่";
+"%ds ago" = "%d วินาทีที่แล้ว";
+"%dm ago" = "%d นาทีที่แล้ว";
+"%dh ago" = "%d ชั่วโมงที่แล้ว";
+
+/* Hotkey Labels */
+"History" = "ประวัติ";
+
+/* Preferences - Shortcuts note */
+"Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "คลิก \"บันทึก\" แล้วกดปุ่มพร้อมตัวดัดแปลงอย่างน้อยหนึ่งตัว (⌘, ⌥, ⌃, ⇧) เพื่อตั้งปุ่มลัด";

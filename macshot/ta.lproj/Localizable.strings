@@ -1,0 +1,400 @@
+/* தமிழ் — macshot localization
+ *
+ * To add a new language:
+ * 1. Create a new folder: macshot/<lang-code>.lproj/
+ * 2. Copy this file into that folder
+ * 3. Translate all values (right side of = sign)
+ * 4. Add the language to LanguageManager.availableLanguages in Services/LanguageManager.swift
+ * 5. Add the language code to knownRegions in macshot.xcodeproj/project.pbxproj
+ * 6. Submit a pull request!
+ *
+ * Keys use the English text. Values should be the translation.
+ * Format strings use %@ for strings, %d for integers.
+ * Keep keyboard shortcuts (like ⌘C) untranslated.
+ * Keep brand names (macshot, Google Drive, imgbb, S3) untranslated.
+ */
+
+/* Menu Bar */
+"Capture Area" = "பகுதியைப் பிடி";
+"Capture Screen" = "திரையைப் பிடி";
+"Capture OCR" = "OCR பிடிப்பு";
+"Quick Capture" = "விரைவு பிடிப்பு";
+"Scroll Capture" = "உருள் பிடிப்பு";
+"Capture Delay" = "பிடிப்பு தாமதம்";
+"None" = "இல்லை";
+"%d seconds" = "%d வினாடிகள்";
+"Record Area" = "பகுதியைப் பதிவு செய்";
+"Record Screen" = "திரையைப் பதிவு செய்";
+"Recent Captures" = "சமீபத்திய பிடிப்புகள்";
+"Show History Panel" = "வரலாற்றுப் பலகத்தைக் காட்டு";
+"Open Image..." = "படத்தைத் திற...";
+"Open from Clipboard" = "ஒட்டுப்பலகையிலிருந்து திற";
+"Preferences..." = "விருப்பங்கள்...";
+"Check for Updates..." = "புதுப்பிப்புகளைச் சரிபார்...";
+"Quit macshot" = "macshot-ஐ நிறுத்து";
+"No recent captures" = "சமீபத்திய பிடிப்புகள் இல்லை";
+"Clear History" = "வரலாற்றை அழி";
+
+/* History Panel */
+"Copy" = "நகலெடு";
+"Save As..." = "இவ்வாறு சேமி...";
+"Open in Editor" = "திருத்தியில் திற";
+"Pin to Screen" = "திரையில் பொருத்து";
+"Quick Look" = "விரைவுப் பார்வை";
+"Delete" = "நீக்கு";
+"All" = "அனைத்தும்";
+"Screenshots" = "திரைப்பிடிப்புகள்";
+"GIFs" = "GIFs";
+"Click to copy · Drag to app" = "நகலெடுக்க கிளிக் செய் · பயன்பாட்டிற்கு இழு";
+"No captures yet" = "இதுவரை பிடிப்புகள் இல்லை";
+
+/* Floating Thumbnail */
+"Close All" = "அனைத்தையும் மூடு";
+"Save All to Folder…" = "அனைத்தையும் கோப்புறையில் சேமி…";
+"Save" = "சேமி";
+
+/* Editor Top Bar */
+"Zoom In" = "பெரிதாக்கு";
+"Zoom Out" = "சிறிதாக்கு";
+"Fit Canvas" = "கேன்வாஸுக்குப் பொருத்து";
+"Crop" = "செதுக்கு";
+"Flip Horizontal" = "கிடைமட்டமாகப் புரட்டு";
+"Flip Vertical" = "செங்குத்தாகப் புரட்டு";
+"Add Capture" = "பிடிப்பைச் சேர்";
+
+/* Toolbar - Tools */
+"Arrow" = "அம்பு";
+"Line" = "கோடு";
+"Rectangle" = "செவ்வகம்";
+"Ellipse" = "நீள்வட்டம்";
+"Pencil" = "பென்சில்";
+"Pencil (Draw)" = "பென்சில் (வரை)";
+"Marker" = "மார்க்கர்";
+"Text" = "உரை";
+"Number" = "எண்";
+"Number / Counter" = "எண் / எண்ணி";
+"Stamp / Emoji" = "முத்திரை / எமோஜி";
+"Censor" = "மறை";
+"Censor (Pixelate / Blur / Solid)" = "மறை (பிக்சலேட் / மங்கல் / திடம்)";
+"Measure" = "அளவிடு";
+"Measure (px)" = "அளவிடு (px)";
+"Magnify (Loupe)" = "பெரிதாக்கு (லூப்)";
+"Color Sampler" = "நிற மாதிரி";
+"Color Picker" = "நிறத் தேர்வி";
+"Select & Edit" = "தேர்வு & திருத்து";
+"Color" = "நிறம்";
+
+/* Toolbar - Actions */
+"Copy to Clipboard" = "ஒட்டுப்பலகையில் நகலெடு";
+"Save to File" = "கோப்பில் சேமி";
+"Save to" = "இங்கே சேமி";
+"Open in Editor Window" = "திருத்தி சாளரத்தில் திற";
+"Pin on Screen" = "திரையில் பொருத்து";
+"Pin" = "பொருத்து";
+"Pin (floating window)" = "பொருத்து (மிதக்கும் சாளரம்)";
+"OCR" = "OCR";
+"OCR Text" = "OCR உரை";
+"OCR (extract text)" = "OCR (உரையைப் பிரி)";
+"Upload" = "பதிவேற்று";
+"Share" = "பகிர்";
+"Undo" = "செயல்தவிர்";
+"Redo" = "மீண்டும் செய்";
+"Close" = "மூடு";
+"Remove Background" = "பின்னணியை நீக்கு";
+"Beautify" = "அழகுபடுத்து";
+"Adjust" = "சரிசெய்";
+"Adjust (Image Effects)" = "சரிசெய் (பட விளைவுகள்)";
+"Invert Colors" = "நிறங்களை எதிர்மாற்று";
+"Record" = "பதிவு";
+"Record screen" = "திரையைப் பதிவு செய்";
+"Translate" = "மொழிபெயர்";
+"Auto-Redact sensitive data" = "முக்கிய தரவை தானாக மறை";
+"Move Selection" = "தேர்வை நகர்த்து";
+
+/* Toolbar - Recording */
+"Start Recording" = "பதிவைத் தொடங்கு";
+"Cancel Recording" = "பதிவை ரத்துசெய்";
+"Highlight Mouse Clicks" = "சுட்டி கிளிக்குகளை முன்னிலைப்படுத்து";
+"Record System Audio" = "கணினி ஒலியைப் பதிவு செய்";
+"Record Microphone" = "ஒலிவாங்கியைப் பதிவு செய்";
+"Recording Settings" = "பதிவு அமைப்புகள்";
+
+/* Tool Options */
+"Size" = "அளவு";
+"Stroke" = "கோடு";
+"Radius" = "ஆரை";
+"Start:" = "தொடக்கம்:";
+"Draw:" = "வரை:";
+"Auto:" = "தானியங்கு:";
+"Fill" = "நிரப்பு";
+"Outline" = "வெளிக்கோடு";
+"More Emojis" = "மேலும் எமோஜிகள்";
+"Load Image" = "படத்தை ஏற்று";
+"Gradient Style" = "சாய்வு நிற பாணி";
+"On" = "இயக்கு";
+"Text Only" = "உரை மட்டும்";
+"All Text" = "அனைத்து உரை";
+"PII" = "PII";
+"Faces" = "முகங்கள்";
+"People" = "நபர்கள்";
+"Confirm before upload" = "பதிவேற்றத்திற்கு முன் உறுதிசெய்";
+"Flip" = "புரட்டு";
+"Smooth" = "மென்மை";
+"Smart" = "புத்திசாலி";
+"Padding" = "இடைவெளி";
+"Shadow" = "நிழல்";
+"Right-click to add points" = "புள்ளிகளைச் சேர்க்க வலது கிளிக் செய்";
+"Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "1 அழுத்தி தானியங்கு-செங்குத்து  ·  2 அழுத்தி தானியங்கு-கிடைமட்டம்";
+
+/* Overlay / Canvas */
+"Click a window  ·  Drag for custom area  ·  F for full screen" = "சாளரத்தைக் கிளிக் செய்  ·  தனிப்பயன் பகுதிக்கு இழு  ·  முழுத்திரைக்கு F";
+"Drag to select  ·  Click for full screen" = "தேர்வு செய்ய இழு  ·  முழுத்திரைக்கு கிளிக் செய்";
+"Release to annotate and edit" = "குறிப்பெழுத மற்றும் திருத்த விடுவி";
+"Window snap: " = "சாளர ஒட்டுதல்: ";
+"ON" = "இயக்கு";
+"OFF" = "நிறுத்து";
+"  (Tab to toggle)" = "  (மாற்ற Tab)";
+"Right-click to copy" = "நகலெடுக்க வலது கிளிக் செய்";
+"Copied %@" = "%@ நகலெடுக்கப்பட்டது";
+"Set color %@" = "நிறம் %@ அமைக்கப்பட்டது";
+"Draw something first to use the move tool." = "நகர்த்தும் கருவியைப் பயன்படுத்த முதலில் ஏதாவது வரையுங்கள்.";
+"Drag to reposition" = "இடமாற்ற இழுக்கவும்";
+
+/* Overlay - Popovers */
+"Format:" = "வடிவம்:";
+"FPS:" = "FPS:";
+"When done:" = "முடிந்ததும்:";
+"Open editor" = "திருத்தியைத் திற";
+"Show in Finder" = "Finder-இல் காட்டு";
+"Copy to clipboard" = "ஒட்டுப்பலகையில் நகலெடு";
+
+/* Preferences - General */
+"macshot Preferences" = "macshot விருப்பங்கள்";
+"General" = "பொது";
+"Tools" = "கருவிகள்";
+"Recording" = "பதிவு";
+"About" = "பற்றி";
+"Shortcuts" = "குறுக்குவழிகள்";
+"Uploads" = "பதிவேற்றங்கள்";
+"Language" = "மொழி";
+"Language:" = "மொழி:";
+"Restart the app to fully apply the new language." = "புதிய மொழியை முழுமையாகப் பயன்படுத்த பயன்பாட்டை மறுதொடக்கம் செய்யுங்கள்.";
+"Capture" = "பிடிப்பு";
+"Play sound on copy" = "நகலெடுக்கும்போது ஒலி எழுப்பு";
+"Remember last selection area" = "கடைசி தேர்வுப் பகுதியை நினைவில் கொள்";
+"Remember last selected tool" = "கடைசி தேர்ந்தெடுத்த கருவியை நினைவில் கொள்";
+"Show floating thumbnail after capture" = "பிடிப்புக்குப் பிறகு மிதக்கும் சிறுபடத்தைக் காட்டு";
+"Launch at login" = "உள்நுழையும்போது தொடங்கு";
+"Show snap alignment guides" = "ஒட்டு சீரமைப்பு வழிகாட்டிகளைக் காட்டு";
+"Capture mouse cursor in screenshot" = "திரைப்பிடிப்பில் சுட்டியைப் பிடி";
+"Use window title in saved filename" = "சேமிக்கும் கோப்புப் பெயரில் சாளரத் தலைப்பைப் பயன்படுத்து";
+"Hide menu bar icon" = "பட்டிப்பட்டை ஐகானை மறை";
+"Hotkeys still work. To show the icon again, re-launch macshot." = "விரைவு விசைகள் செயல்படும். ஐகானை மீண்டும் காட்ட, macshot-ஐ மறுதொடக்கம் செய்யுங்கள்.";
+"Check for updates automatically" = "புதுப்பிப்புகளைத் தானாகச் சரிபார்";
+"Thumbnail" = "சிறுபடம்";
+"  Dismiss after:" = "  பிறகு மறை:";
+"seconds before auto-dismiss (0 = never)" = "தானாக மறைவதற்கு முன் வினாடிகள் (0 = ஒருபோதும் இல்லை)";
+"  Multiple previews:" = "  பல முன்னோட்டங்கள்:";
+"Stack (keep all)" = "அடுக்கு (அனைத்தையும் வை)";
+"Replace (show only latest)" = "மாற்று (சமீபத்தியதை மட்டும் காட்டு)";
+"Output" = "வெளியீடு";
+"Image format:" = "பட வடிவம்:";
+"Quality:" = "தரம்:";
+"%d%%" = "%d%%";
+"Save at standard resolution (1x)" = "நிலையான தெளிவுத்திறனில் சேமி (1x)";
+"Halves dimensions on Retina displays, ~4x smaller files" = "Retina திரைகளில் பரிமாணங்களைப் பாதியாக்குகிறது, ~4x சிறிய கோப்புகள்";
+"Embed sRGB color profile" = "sRGB நிறச் சுயவிவரத்தைப் பொதி";
+"Ensures consistent colors across different displays" = "வெவ்வேறு திரைகளில் நிலையான நிறங்களை உறுதி செய்கிறது";
+"Screenshot History" = "திரைப்பிடிப்பு வரலாறு";
+"History size:" = "வரலாற்று அளவு:";
+"screenshots kept on disk (0 = off)" = "வட்டில் வைக்கப்படும் திரைப்பிடிப்புகள் (0 = நிறுத்து)";
+"Save Directory" = "சேமிப்பு அடைவு";
+"Save folder:" = "சேமிப்பு கோப்புறை:";
+"Browse…" = "உலாவு…";
+"Appearance" = "தோற்றம்";
+"Accent color:" = "முதன்மை நிறம்:";
+"Icon color:" = "ஐகான் நிறம்:";
+"Reset" = "மீட்டமை";
+"OCR Capture:" = "OCR பிடிப்பு:";
+"Show window + copy to clipboard" = "சாளரத்தைக் காட்டு + ஒட்டுப்பலகையில் நகலெடு";
+"Show window only" = "சாளரத்தை மட்டும் காட்டு";
+"Copy to clipboard only" = "ஒட்டுப்பலகையில் மட்டும் நகலெடு";
+"Enter / Quick Capture:" = "Enter / விரைவு பிடிப்பு:";
+"Save to file" = "கோப்பில் சேமி";
+"Save + copy to clipboard" = "சேமி + ஒட்டுப்பலகையில் நகலெடு";
+"OCR Action" = "OCR செயல்";
+
+/* Preferences - Shortcuts */
+"Keyboard Shortcuts" = "விசைப்பலகை குறுக்குவழிகள்";
+"Hotkeys" = "விரைவு விசைகள்";
+"Clear shortcut" = "குறுக்குவழியை அழி";
+"Press keys..." = "விசைகளை அழுத்து...";
+"Waiting..." = "காத்திருக்கிறது...";
+
+/* Preferences - Tools */
+"Annotation Tools" = "குறிப்புக் கருவிகள்";
+"Hidden tools are removed from the bottom toolbar." = "மறைக்கப்பட்ட கருவிகள் கீழ் கருவிப்பட்டியிலிருந்து நீக்கப்படும்.";
+"Capture Actions" = "பிடிப்புச் செயல்கள்";
+"Bottom Toolbar Actions" = "கீழ் கருவிப்பட்டிச் செயல்கள்";
+"Hidden actions are removed from the bottom toolbar." = "மறைக்கப்பட்ட செயல்கள் கீழ் கருவிப்பட்டியிலிருந்து நீக்கப்படும்.";
+"Editor Actions" = "திருத்தி செயல்கள்";
+"Right Toolbar Actions" = "வலது கருவிப்பட்டிச் செயல்கள்";
+"Hidden actions are removed from the right toolbar." = "மறைக்கப்பட்ட செயல்கள் வலது கருவிப்பட்டியிலிருந்து நீக்கப்படும்.";
+
+/* Preferences - Recording */
+"Frame rate:" = "பிரேம் வீதம்:";
+"After recording:" = "பதிவுக்குப் பிறகு:";
+"Save recording to:" = "பதிவை இங்கே சேமி:";
+"Clear" = "அழி";
+"Max height:" = "அதிகபட்ச உயரம்:";
+"px (0 = unlimited)" = "px (0 = வரம்பில்லை)";
+"Behavior" = "நடத்தை";
+"Auto-scroll (sends synthetic scroll events)" = "தானியங்கு உருள்தல் (செயற்கை உருள் நிகழ்வுகளை அனுப்புகிறது)";
+"Detect fixed/sticky headers" = "நிலையான/ஒட்டும் தலைப்புகளைக் கண்டறி";
+"Scroll speed:" = "உருள் வேகம்:";
+"Slow" = "மெதுவாக";
+"Medium" = "நடுத்தரம்";
+"Fast" = "வேகமாக";
+"Very fast" = "மிக வேகமாக";
+"5 fps" = "5 fps";
+"10 fps" = "10 fps";
+"15 fps" = "15 fps";
+"24 fps" = "24 fps";
+"30 fps" = "30 fps";
+"60 fps" = "60 fps";
+"120 fps" = "120 fps";
+"MP4 (H.264)" = "MP4 (H.264)";
+"GIF" = "GIF";
+
+/* Preferences - Upload */
+"Upload Service" = "பதிவேற்ற சேவை";
+"Upload Provider" = "பதிவேற்ற வழங்குநர்";
+"Provider:" = "வழங்குநர்:";
+"Google Drive" = "Google Drive";
+"Google Drive (images + videos)" = "Google Drive (படங்கள் + காணொளிகள்)";
+"imgbb (images only)" = "imgbb (படங்கள் மட்டும்)";
+"S3-Compatible (images + videos)" = "S3-இணக்கமான (படங்கள் + காணொளிகள்)";
+"S3-Compatible Storage" = "S3-இணக்கமான சேமிப்பகம்";
+"Sign In with Google" = "Google மூலம் உள்நுழை";
+"Sign Out" = "வெளியேறு";
+"Signed in" = "உள்நுழைந்துள்ளீர்கள்";
+"Not signed in" = "உள்நுழையவில்லை";
+"Account:" = "கணக்கு:";
+"Test Connection" = "இணைப்பைச் சோதி";
+"Fill in endpoint, bucket, and credentials first" = "முதலில் முனைப்புள்ளி, பக்கெட் மற்றும் சான்றுகளை நிரப்புங்கள்";
+"Testing..." = "சோதிக்கிறது...";
+"Connection successful!" = "இணைப்பு வெற்றிகரம்!";
+"Leave empty to use default" = "இயல்புநிலையைப் பயன்படுத்த காலியாக விடு";
+"Endpoint:" = "முனைப்புள்ளி:";
+"Region:" = "பிராந்தியம்:";
+"Bucket:" = "பக்கெட்:";
+"Access Key:" = "அணுகல் விசை:";
+"Secret Key:" = "ரகசிய விசை:";
+"Public URL:" = "பொது URL:";
+"Path Prefix:" = "பாதை முன்னொட்டு:";
+"API key:" = "API விசை:";
+"Upload History" = "பதிவேற்ற வரலாறு";
+"No uploads yet." = "இதுவரை பதிவேற்றங்கள் இல்லை.";
+"Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "பொது அணுகலுக்கான அடிப்படை URL. காலியாக இருந்தால், S3 முனைப்புள்ளி URL பயன்படுத்தப்படும் (பொதுவாக அணுகக்கூடியதாக இல்லாமல் போகலாம்).";
+"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "பகிரப்பட்ட விசை சேர்க்கப்பட்டுள்ளது — வீத வரம்புகளை அடைந்தால் imgbb.com/api இல் உங்கள் சொந்த இலவச விசையைப் பெறுங்கள். படங்கள் மட்டும் (காணொளி ஆதரவு இல்லை).";
+"Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 மற்றும் பிற S3-இணக்கமான சேவைகளுடன் செயல்படும். படங்கள் மற்றும் காணொளிகளை ஆதரிக்கிறது.";
+"Configure S3 in Preferences" = "விருப்பங்களில் S3 ஐ உள்ளமை";
+"Sign in to Google Drive in Preferences" = "விருப்பங்களில் Google Drive இல் உள்நுழை";
+"Video upload requires Google Drive or S3" = "காணொளி பதிவேற்றத்திற்கு Google Drive அல்லது S3 தேவை";
+
+/* Preferences - About */
+"macshot" = "macshot";
+"Version %@ (%@)" = "பதிப்பு %@ (%@)";
+"Made by" = "உருவாக்கியவர்";
+"Licensed under the GPLv3" = "GPLv3 உரிமத்தின் கீழ் வழங்கப்பட்டது";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "macOS க்கான இலவச, திறந்த மூல திரைப்பிடிப்பு & திரைப்பதிவு கருவி.\nமுழுமையாக நேட்டிவ் — Swift மற்றும் AppKit மூலம் உருவாக்கப்பட்டது.";
+
+/* Alerts */
+"No Image on Clipboard" = "ஒட்டுப்பலகையில் படம் இல்லை";
+"Copy an image to the clipboard first, then try again." = "முதலில் ஒட்டுப்பலகையில் ஒரு படத்தை நகலெடுத்து, பின்னர் மீண்டும் முயற்சிக்கவும்.";
+"OK" = "சரி";
+"Accessibility Access Required" = "அணுகல்தன்மை அனுமதி தேவை";
+"macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot பிற பயன்பாடுகளை தானாக உருட்ட அணுகல்தன்மை அனுமதி தேவை. கணினி அமைப்புகளில் அணுகலை வழங்கி, மீண்டும் முயற்சிக்கவும்.";
+"Open Settings" = "அமைப்புகளைத் திற";
+"Cancel" = "ரத்துசெய்";
+"Microphone Access Required" = "ஒலிவாங்கி அணுகல் தேவை";
+"macshot needs microphone permission to record voice audio. Open System Settings to grant access." = "macshot குரல் ஒலியைப் பதிவு செய்ய ஒலிவாங்கி அனுமதி தேவை. அணுகலை வழங்க கணினி அமைப்புகளைத் திறக்கவும்.";
+"Upload to Google Drive?" = "Google Drive இல் பதிவேற்றவா?";
+"Upload to S3?" = "S3 இல் பதிவேற்றவா?";
+"Upload to imgbb.com?" = "imgbb.com இல் பதிவேற்றவா?";
+"Your screenshot will be uploaded." = "உங்கள் திரைப்பிடிப்பு பதிவேற்றப்படும்.";
+
+/* Permission Onboarding */
+"Welcome to macshot" = "macshot க்கு வரவேற்கிறோம்";
+"macshot needs one permission" = "macshot க்கு ஒரு அனுமதி தேவை";
+"Screen Recording not yet granted" = "திரைப் பதிவு இன்னும் வழங்கப்படவில்லை";
+"Screen Recording granted!" = "திரைப் பதிவு வழங்கப்பட்டது!";
+"Enable macshot, then try taking a screenshot" = "macshot ஐ இயக்கி, திரைப்பிடிப்பு எடுக்க முயற்சிக்கவும்";
+"Open Screen Recording Settings" = "திரைப் பதிவு அமைப்புகளைத் திற";
+"Continue" = "தொடரவும்";
+
+/* OCR Window */
+"Text Recognition" = "உரை அடையாளம்";
+"Translate to:" = "இதற்கு மொழிபெயர்:";
+"%d chars · %d words" = "%d எழுத்துகள் · %d சொற்கள்";
+"Copy  ⌘↩" = "நகலெடு  ⌘↩";
+"AI Search" = "AI தேடல்";
+"Show Original" = "மூலத்தைக் காட்டு";
+"Translation Failed" = "மொழிபெயர்ப்பு தோல்வி";
+"Translation" = "மொழிபெயர்ப்பு";
+"(No text detected in the selected area)" = "(தேர்ந்தெடுக்கப்பட்ட பகுதியில் உரை கண்டறியப்படவில்லை)";
+
+/* Upload Toast */
+"URL copied to the clipboard" = "URL ஒட்டுப்பலகையில் நகலெடுக்கப்பட்டது";
+"Uploading... %d%%" = "பதிவேற்றுகிறது... %d%%";
+"Upload failed: %@" = "பதிவேற்றம் தோல்வி: %@";
+"Uploaded! Link copied." = "பதிவேற்றப்பட்டது! இணைப்பு நகலெடுக்கப்பட்டது.";
+"Uploading to %@... %d%%" = "%@ இல் பதிவேற்றுகிறது... %d%%";
+"Open" = "திற";
+
+/* Recording Toast */
+"Recording saved" = "பதிவு சேமிக்கப்பட்டது";
+"%@ • Recording saved" = "%@ • பதிவு சேமிக்கப்பட்டது";
+"Copy Path" = "பாதையை நகலெடு";
+"Path copied!" = "பாதை நகலெடுக்கப்பட்டது!";
+
+/* Video Editor */
+"macshot Video Editor" = "macshot காணொளி திருத்தி";
+"%@ selected" = "%@ தேர்ந்தெடுக்கப்பட்டது";
+"Exporting..." = "ஏற்றுமதி செய்கிறது...";
+"Export failed" = "ஏற்றுமதி தோல்வி";
+"Saved to %@" = "%@ இல் சேமிக்கப்பட்டது";
+"Save failed" = "சேமிப்பு தோல்வி";
+
+/* Barcode Detector */
+/* "Open" and "Copy" are shared with other sections */
+
+/* Save Panel */
+"Save As..." = "இவ்வாறு சேமி...";
+"Choose a folder" = "கோப்புறையைத் தேர்வுசெய்";
+"Save All to Folder…" = "அனைத்தையும் கோப்புறையில் சேமி…";
+
+/* Scroll Capture HUD */
+"Auto Scroll" = "தானியங்கு உருள்தல்";
+"Stop" = "நிறுத்து";
+"Scrolling..." = "உருள்கிறது...";
+
+/* Effects Picker (Adjust popover) */
+"Presets" = "முன்னமைவுகள்";
+"Adjustments" = "சரிசெய்தல்கள்";
+"Brightness" = "ஒளிர்வு";
+"Contrast" = "மாறுபாடு";
+"Saturation" = "செறிவு";
+"Sharpness" = "கூர்மை";
+
+/* Time Ago */
+"just now" = "இப்போதுதான்";
+"%ds ago" = "%d வி முன்";
+"%dm ago" = "%d நி முன்";
+"%dh ago" = "%d ம.நே முன்";
+
+/* Hotkey Labels */
+"History" = "வரலாறு";
+
+/* Preferences - Shortcuts note */
+"Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "குறுக்குவழியை அமைக்க \"பதிவு\" ஐ கிளிக் செய்து குறைந்தது ஒரு மாற்றி (⌘, ⌥, ⌃, ⇧) உடன் விசை கலவையை அழுத்தவும்.";

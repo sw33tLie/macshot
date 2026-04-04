@@ -1,0 +1,400 @@
+/* Ελληνικά — macshot localization
+ *
+ * To add a new language:
+ * 1. Create a new folder: macshot/<lang-code>.lproj/
+ * 2. Copy this file into that folder
+ * 3. Translate all values (right side of = sign)
+ * 4. Add the language to LanguageManager.availableLanguages in Services/LanguageManager.swift
+ * 5. Add the language code to knownRegions in macshot.xcodeproj/project.pbxproj
+ * 6. Submit a pull request!
+ *
+ * Keys use the English text. Values should be the translation.
+ * Format strings use %@ for strings, %d for integers.
+ * Keep keyboard shortcuts (like ⌘C) untranslated.
+ * Keep brand names (macshot, Google Drive, imgbb, S3) untranslated.
+ */
+
+/* Menu Bar */
+"Capture Area" = "Λήψη περιοχής";
+"Capture Screen" = "Λήψη οθόνης";
+"Capture OCR" = "Λήψη OCR";
+"Quick Capture" = "Γρήγορη λήψη";
+"Scroll Capture" = "Λήψη με κύλιση";
+"Capture Delay" = "Καθυστέρηση λήψης";
+"None" = "Καμία";
+"%d seconds" = "%d δευτερόλεπτα";
+"Record Area" = "Εγγραφή περιοχής";
+"Record Screen" = "Εγγραφή οθόνης";
+"Recent Captures" = "Πρόσφατες λήψεις";
+"Show History Panel" = "Εμφάνιση πίνακα ιστορικού";
+"Open Image..." = "Άνοιγμα εικόνας...";
+"Open from Clipboard" = "Άνοιγμα από πρόχειρο";
+"Preferences..." = "Προτιμήσεις...";
+"Check for Updates..." = "Έλεγχος για ενημερώσεις...";
+"Quit macshot" = "Τερματισμός macshot";
+"No recent captures" = "Δεν υπάρχουν πρόσφατες λήψεις";
+"Clear History" = "Εκκαθάριση ιστορικού";
+
+/* History Panel */
+"Copy" = "Αντιγραφή";
+"Save As..." = "Αποθήκευση ως...";
+"Open in Editor" = "Άνοιγμα σε επεξεργαστή";
+"Pin to Screen" = "Καρφίτσωμα στην οθόνη";
+"Quick Look" = "Γρήγορη προβολή";
+"Delete" = "Διαγραφή";
+"All" = "Όλα";
+"Screenshots" = "Στιγμιότυπα";
+"GIFs" = "GIFs";
+"Click to copy · Drag to app" = "Κλικ για αντιγραφή · Σύρσιμο σε εφαρμογή";
+"No captures yet" = "Δεν υπάρχουν λήψεις ακόμα";
+
+/* Floating Thumbnail */
+"Close All" = "Κλείσιμο όλων";
+"Save All to Folder…" = "Αποθήκευση όλων σε φάκελο…";
+"Save" = "Αποθήκευση";
+
+/* Editor Top Bar */
+"Zoom In" = "Μεγέθυνση";
+"Zoom Out" = "Σμίκρυνση";
+"Fit Canvas" = "Προσαρμογή καμβά";
+"Crop" = "Περικοπή";
+"Flip Horizontal" = "Αναστροφή οριζόντια";
+"Flip Vertical" = "Αναστροφή κατακόρυφα";
+"Add Capture" = "Προσθήκη λήψης";
+
+/* Toolbar - Tools */
+"Arrow" = "Βέλος";
+"Line" = "Γραμμή";
+"Rectangle" = "Ορθογώνιο";
+"Ellipse" = "Έλλειψη";
+"Pencil" = "Μολύβι";
+"Pencil (Draw)" = "Μολύβι (Σχεδίαση)";
+"Marker" = "Μαρκαδόρος";
+"Text" = "Κείμενο";
+"Number" = "Αριθμός";
+"Number / Counter" = "Αριθμός / Μετρητής";
+"Stamp / Emoji" = "Σφραγίδα / Emoji";
+"Censor" = "Λογοκρισία";
+"Censor (Pixelate / Blur / Solid)" = "Λογοκρισία (Εικονοστοιχεία / Θόλωμα / Συμπαγές)";
+"Measure" = "Μέτρηση";
+"Measure (px)" = "Μέτρηση (px)";
+"Magnify (Loupe)" = "Μεγέθυνση (Φακός)";
+"Color Sampler" = "Δειγματολήπτης χρώματος";
+"Color Picker" = "Επιλογέας χρώματος";
+"Select & Edit" = "Επιλογή & Επεξεργασία";
+"Color" = "Χρώμα";
+
+/* Toolbar - Actions */
+"Copy to Clipboard" = "Αντιγραφή στο πρόχειρο";
+"Save to File" = "Αποθήκευση σε αρχείο";
+"Save to" = "Αποθήκευση σε";
+"Open in Editor Window" = "Άνοιγμα σε παράθυρο επεξεργασίας";
+"Pin on Screen" = "Καρφίτσωμα στην οθόνη";
+"Pin" = "Καρφίτσωμα";
+"Pin (floating window)" = "Καρφίτσωμα (αιωρούμενο παράθυρο)";
+"OCR" = "OCR";
+"OCR Text" = "Κείμενο OCR";
+"OCR (extract text)" = "OCR (εξαγωγή κειμένου)";
+"Upload" = "Μεταφόρτωση";
+"Share" = "Κοινοποίηση";
+"Undo" = "Αναίρεση";
+"Redo" = "Επανάληψη";
+"Close" = "Κλείσιμο";
+"Remove Background" = "Αφαίρεση φόντου";
+"Beautify" = "Ομορφιά";
+"Adjust" = "Ρύθμιση";
+"Adjust (Image Effects)" = "Ρύθμιση (Εφέ εικόνας)";
+"Invert Colors" = "Αντιστροφή χρωμάτων";
+"Record" = "Εγγραφή";
+"Record screen" = "Εγγραφή οθόνης";
+"Translate" = "Μετάφραση";
+"Auto-Redact sensitive data" = "Αυτόματη απόκρυψη ευαίσθητων δεδομένων";
+"Move Selection" = "Μετακίνηση επιλογής";
+
+/* Toolbar - Recording */
+"Start Recording" = "Έναρξη εγγραφής";
+"Cancel Recording" = "Ακύρωση εγγραφής";
+"Highlight Mouse Clicks" = "Επισήμανση κλικ ποντικιού";
+"Record System Audio" = "Εγγραφή ήχου συστήματος";
+"Record Microphone" = "Εγγραφή μικροφώνου";
+"Recording Settings" = "Ρυθμίσεις εγγραφής";
+
+/* Tool Options */
+"Size" = "Μέγεθος";
+"Stroke" = "Πάχος γραμμής";
+"Radius" = "Ακτίνα";
+"Start:" = "Έναρξη:";
+"Draw:" = "Σχεδίαση:";
+"Auto:" = "Αυτόματα:";
+"Fill" = "Γέμισμα";
+"Outline" = "Περίγραμμα";
+"More Emojis" = "Περισσότερα Emoji";
+"Load Image" = "Φόρτωση εικόνας";
+"Gradient Style" = "Στυλ διαβάθμισης";
+"On" = "Ενεργό";
+"Text Only" = "Μόνο κείμενο";
+"All Text" = "Όλο το κείμενο";
+"PII" = "PII";
+"Faces" = "Πρόσωπα";
+"People" = "Άνθρωποι";
+"Confirm before upload" = "Επιβεβαίωση πριν τη μεταφόρτωση";
+"Flip" = "Αναστροφή";
+"Smooth" = "Εξομάλυνση";
+"Smart" = "Έξυπνο";
+"Padding" = "Περιθώριο";
+"Shadow" = "Σκιά";
+"Right-click to add points" = "Δεξί κλικ για προσθήκη σημείων";
+"Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "Κρατήστε 1 αυτόματα κατακόρυφα  ·  Κρατήστε 2 αυτόματα οριζόντια";
+
+/* Overlay / Canvas */
+"Click a window  ·  Drag for custom area  ·  F for full screen" = "Κλικ σε παράθυρο  ·  Σύρσιμο για προσαρμοσμένη περιοχή  ·  F για πλήρη οθόνη";
+"Drag to select  ·  Click for full screen" = "Σύρετε για επιλογή  ·  Κλικ για πλήρη οθόνη";
+"Release to annotate and edit" = "Αφήστε για σχολιασμό και επεξεργασία";
+"Window snap: " = "Κούμπωμα παραθύρου: ";
+"ON" = "ON";
+"OFF" = "OFF";
+"  (Tab to toggle)" = "  (Tab για εναλλαγή)";
+"Right-click to copy" = "Δεξί κλικ για αντιγραφή";
+"Copied %@" = "Αντιγράφηκε %@";
+"Set color %@" = "Ορισμός χρώματος %@";
+"Draw something first to use the move tool." = "Σχεδιάστε κάτι πρώτα για να χρησιμοποιήσετε το εργαλείο μετακίνησης.";
+"Drag to reposition" = "Σύρετε για επανατοποθέτηση";
+
+/* Overlay - Popovers */
+"Format:" = "Μορφή:";
+"FPS:" = "FPS:";
+"When done:" = "Μετά την ολοκλήρωση:";
+"Open editor" = "Άνοιγμα επεξεργαστή";
+"Show in Finder" = "Εμφάνιση στο Finder";
+"Copy to clipboard" = "Αντιγραφή στο πρόχειρο";
+
+/* Preferences - General */
+"macshot Preferences" = "Προτιμήσεις macshot";
+"General" = "Γενικά";
+"Tools" = "Εργαλεία";
+"Recording" = "Εγγραφή";
+"About" = "Σχετικά";
+"Shortcuts" = "Συντομεύσεις";
+"Uploads" = "Μεταφορτώσεις";
+"Language" = "Γλώσσα";
+"Language:" = "Γλώσσα:";
+"Restart the app to fully apply the new language." = "Επανεκκινήστε την εφαρμογή για πλήρη εφαρμογή της νέας γλώσσας.";
+"Capture" = "Λήψη";
+"Play sound on copy" = "Αναπαραγωγή ήχου κατά την αντιγραφή";
+"Remember last selection area" = "Απομνημόνευση τελευταίας περιοχής επιλογής";
+"Remember last selected tool" = "Απομνημόνευση τελευταίου επιλεγμένου εργαλείου";
+"Show floating thumbnail after capture" = "Εμφάνιση αιωρούμενης μικρογραφίας μετά τη λήψη";
+"Launch at login" = "Εκκίνηση κατά τη σύνδεση";
+"Show snap alignment guides" = "Εμφάνιση οδηγών ευθυγράμμισης κουμπώματος";
+"Capture mouse cursor in screenshot" = "Λήψη δρομέα ποντικιού στο στιγμιότυπο";
+"Use window title in saved filename" = "Χρήση τίτλου παραθύρου στο όνομα αρχείου";
+"Hide menu bar icon" = "Απόκρυψη εικονιδίου γραμμής μενού";
+"Hotkeys still work. To show the icon again, re-launch macshot." = "Τα πλήκτρα συντόμευσης λειτουργούν ακόμα. Για εμφάνιση του εικονιδίου, επανεκκινήστε το macshot.";
+"Check for updates automatically" = "Αυτόματος έλεγχος ενημερώσεων";
+"Thumbnail" = "Μικρογραφία";
+"  Dismiss after:" = "  Απόκρυψη μετά από:";
+"seconds before auto-dismiss (0 = never)" = "δευτερόλεπτα πριν την αυτόματη απόκρυψη (0 = ποτέ)";
+"  Multiple previews:" = "  Πολλαπλές προεπισκοπήσεις:";
+"Stack (keep all)" = "Στοίβαξη (διατήρηση όλων)";
+"Replace (show only latest)" = "Αντικατάσταση (εμφάνιση μόνο τελευταίου)";
+"Output" = "Έξοδος";
+"Image format:" = "Μορφή εικόνας:";
+"Quality:" = "Ποιότητα:";
+"%d%%" = "%d%%";
+"Save at standard resolution (1x)" = "Αποθήκευση σε τυπική ανάλυση (1x)";
+"Halves dimensions on Retina displays, ~4x smaller files" = "Υποδιπλασιάζει τις διαστάσεις σε οθόνες Retina, ~4x μικρότερα αρχεία";
+"Embed sRGB color profile" = "Ενσωμάτωση προφίλ χρώματος sRGB";
+"Ensures consistent colors across different displays" = "Εξασφαλίζει συνεπή χρώματα σε διαφορετικές οθόνες";
+"Screenshot History" = "Ιστορικό στιγμιοτύπων";
+"History size:" = "Μέγεθος ιστορικού:";
+"screenshots kept on disk (0 = off)" = "στιγμιότυπα αποθηκευμένα στον δίσκο (0 = απενεργοποίηση)";
+"Save Directory" = "Φάκελος αποθήκευσης";
+"Save folder:" = "Φάκελος αποθήκευσης:";
+"Browse…" = "Περιήγηση…";
+"Appearance" = "Εμφάνιση";
+"Accent color:" = "Χρώμα τονισμού:";
+"Icon color:" = "Χρώμα εικονιδίου:";
+"Reset" = "Επαναφορά";
+"OCR Capture:" = "Λήψη OCR:";
+"Show window + copy to clipboard" = "Εμφάνιση παραθύρου + αντιγραφή στο πρόχειρο";
+"Show window only" = "Μόνο εμφάνιση παραθύρου";
+"Copy to clipboard only" = "Μόνο αντιγραφή στο πρόχειρο";
+"Enter / Quick Capture:" = "Enter / Γρήγορη λήψη:";
+"Save to file" = "Αποθήκευση σε αρχείο";
+"Save + copy to clipboard" = "Αποθήκευση + αντιγραφή στο πρόχειρο";
+"OCR Action" = "Ενέργεια OCR";
+
+/* Preferences - Shortcuts */
+"Keyboard Shortcuts" = "Συντομεύσεις πληκτρολογίου";
+"Hotkeys" = "Πλήκτρα συντόμευσης";
+"Clear shortcut" = "Εκκαθάριση συντόμευσης";
+"Press keys..." = "Πατήστε πλήκτρα...";
+"Waiting..." = "Αναμονή...";
+
+/* Preferences - Tools */
+"Annotation Tools" = "Εργαλεία σχολιασμού";
+"Hidden tools are removed from the bottom toolbar." = "Τα κρυφά εργαλεία αφαιρούνται από την κάτω γραμμή εργαλείων.";
+"Capture Actions" = "Ενέργειες λήψης";
+"Bottom Toolbar Actions" = "Ενέργειες κάτω γραμμής εργαλείων";
+"Hidden actions are removed from the bottom toolbar." = "Οι κρυφές ενέργειες αφαιρούνται από την κάτω γραμμή εργαλείων.";
+"Editor Actions" = "Ενέργειες επεξεργαστή";
+"Right Toolbar Actions" = "Ενέργειες δεξιάς γραμμής εργαλείων";
+"Hidden actions are removed from the right toolbar." = "Οι κρυφές ενέργειες αφαιρούνται από τη δεξιά γραμμή εργαλείων.";
+
+/* Preferences - Recording */
+"Frame rate:" = "Ρυθμός καρέ:";
+"After recording:" = "Μετά την εγγραφή:";
+"Save recording to:" = "Αποθήκευση εγγραφής σε:";
+"Clear" = "Εκκαθάριση";
+"Max height:" = "Μέγιστο ύψος:";
+"px (0 = unlimited)" = "px (0 = απεριόριστο)";
+"Behavior" = "Συμπεριφορά";
+"Auto-scroll (sends synthetic scroll events)" = "Αυτόματη κύλιση (στέλνει συνθετικά συμβάντα κύλισης)";
+"Detect fixed/sticky headers" = "Ανίχνευση σταθερών/κολλημένων κεφαλίδων";
+"Scroll speed:" = "Ταχύτητα κύλισης:";
+"Slow" = "Αργή";
+"Medium" = "Μεσαία";
+"Fast" = "Γρήγορη";
+"Very fast" = "Πολύ γρήγορη";
+"5 fps" = "5 fps";
+"10 fps" = "10 fps";
+"15 fps" = "15 fps";
+"24 fps" = "24 fps";
+"30 fps" = "30 fps";
+"60 fps" = "60 fps";
+"120 fps" = "120 fps";
+"MP4 (H.264)" = "MP4 (H.264)";
+"GIF" = "GIF";
+
+/* Preferences - Upload */
+"Upload Service" = "Υπηρεσία μεταφόρτωσης";
+"Upload Provider" = "Πάροχος μεταφόρτωσης";
+"Provider:" = "Πάροχος:";
+"Google Drive" = "Google Drive";
+"Google Drive (images + videos)" = "Google Drive (εικόνες + βίντεο)";
+"imgbb (images only)" = "imgbb (μόνο εικόνες)";
+"S3-Compatible (images + videos)" = "S3-Compatible (εικόνες + βίντεο)";
+"S3-Compatible Storage" = "Αποθήκευση συμβατή με S3";
+"Sign In with Google" = "Σύνδεση με Google";
+"Sign Out" = "Αποσύνδεση";
+"Signed in" = "Συνδεδεμένος";
+"Not signed in" = "Μη συνδεδεμένος";
+"Account:" = "Λογαριασμός:";
+"Test Connection" = "Δοκιμή σύνδεσης";
+"Fill in endpoint, bucket, and credentials first" = "Συμπληρώστε πρώτα το endpoint, το bucket και τα διαπιστευτήρια";
+"Testing..." = "Δοκιμή...";
+"Connection successful!" = "Επιτυχής σύνδεση!";
+"Leave empty to use default" = "Αφήστε κενό για χρήση προεπιλογής";
+"Endpoint:" = "Endpoint:";
+"Region:" = "Περιοχή:";
+"Bucket:" = "Bucket:";
+"Access Key:" = "Κλειδί πρόσβασης:";
+"Secret Key:" = "Μυστικό κλειδί:";
+"Public URL:" = "Δημόσιο URL:";
+"Path Prefix:" = "Πρόθεμα διαδρομής:";
+"API key:" = "Κλειδί API:";
+"Upload History" = "Ιστορικό μεταφορτώσεων";
+"No uploads yet." = "Δεν υπάρχουν μεταφορτώσεις ακόμα.";
+"Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "Βασικό URL για δημόσια πρόσβαση. Αν είναι κενό, χρησιμοποιείται το URL του S3 endpoint (μπορεί να μην είναι δημόσια προσβάσιμο).";
+"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "Περιλαμβάνεται κοινόχρηστο κλειδί — αποκτήστε το δικό σας δωρεάν κλειδί στο imgbb.com/api αν φτάσετε τα όρια. Μόνο εικόνες (χωρίς υποστήριξη βίντεο).";
+"Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "Λειτουργεί με AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 και άλλες υπηρεσίες συμβατές με S3. Υποστηρίζει εικόνες και βίντεο.";
+"Configure S3 in Preferences" = "Ρύθμιση S3 στις Προτιμήσεις";
+"Sign in to Google Drive in Preferences" = "Σύνδεση στο Google Drive στις Προτιμήσεις";
+"Video upload requires Google Drive or S3" = "Η μεταφόρτωση βίντεο απαιτεί Google Drive ή S3";
+
+/* Preferences - About */
+"macshot" = "macshot";
+"Version %@ (%@)" = "Έκδοση %@ (%@)";
+"Made by" = "Δημιουργήθηκε από";
+"Licensed under the GPLv3" = "Με άδεια GPLv3";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "Ένα δωρεάν εργαλείο στιγμιοτύπων και εγγραφής οθόνης ανοιχτού κώδικα για macOS.\nΠλήρως εγγενές — κατασκευασμένο με Swift και AppKit.";
+
+/* Alerts */
+"No Image on Clipboard" = "Δεν υπάρχει εικόνα στο πρόχειρο";
+"Copy an image to the clipboard first, then try again." = "Αντιγράψτε πρώτα μια εικόνα στο πρόχειρο και δοκιμάστε ξανά.";
+"OK" = "OK";
+"Accessibility Access Required" = "Απαιτείται πρόσβαση προσβασιμότητας";
+"macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "Το macshot χρειάζεται άδεια προσβασιμότητας για αυτόματη κύλιση άλλων εφαρμογών. Παραχωρήστε πρόσβαση στις Ρυθμίσεις συστήματος και δοκιμάστε ξανά.";
+"Open Settings" = "Άνοιγμα ρυθμίσεων";
+"Cancel" = "Ακύρωση";
+"Microphone Access Required" = "Απαιτείται πρόσβαση μικροφώνου";
+"macshot needs microphone permission to record voice audio. Open System Settings to grant access." = "Το macshot χρειάζεται άδεια μικροφώνου για εγγραφή φωνητικού ήχου. Ανοίξτε τις Ρυθμίσεις συστήματος για παραχώρηση πρόσβασης.";
+"Upload to Google Drive?" = "Μεταφόρτωση στο Google Drive;";
+"Upload to S3?" = "Μεταφόρτωση στο S3;";
+"Upload to imgbb.com?" = "Μεταφόρτωση στο imgbb.com;";
+"Your screenshot will be uploaded." = "Το στιγμιότυπό σας θα μεταφορτωθεί.";
+
+/* Permission Onboarding */
+"Welcome to macshot" = "Καλώς ήρθατε στο macshot";
+"macshot needs one permission" = "Το macshot χρειάζεται μία άδεια";
+"Screen Recording not yet granted" = "Η εγγραφή οθόνης δεν έχει παραχωρηθεί ακόμα";
+"Screen Recording granted!" = "Η εγγραφή οθόνης παραχωρήθηκε!";
+"Enable macshot, then try taking a screenshot" = "Ενεργοποιήστε το macshot και δοκιμάστε να τραβήξετε στιγμιότυπο";
+"Open Screen Recording Settings" = "Άνοιγμα ρυθμίσεων εγγραφής οθόνης";
+"Continue" = "Συνέχεια";
+
+/* OCR Window */
+"Text Recognition" = "Αναγνώριση κειμένου";
+"Translate to:" = "Μετάφραση σε:";
+"%d chars · %d words" = "%d χαρακτήρες · %d λέξεις";
+"Copy  ⌘↩" = "Αντιγραφή  ⌘↩";
+"AI Search" = "Αναζήτηση AI";
+"Show Original" = "Εμφάνιση πρωτοτύπου";
+"Translation Failed" = "Η μετάφραση απέτυχε";
+"Translation" = "Μετάφραση";
+"(No text detected in the selected area)" = "(Δεν ανιχνεύθηκε κείμενο στην επιλεγμένη περιοχή)";
+
+/* Upload Toast */
+"URL copied to the clipboard" = "Το URL αντιγράφηκε στο πρόχειρο";
+"Uploading... %d%%" = "Μεταφόρτωση... %d%%";
+"Upload failed: %@" = "Αποτυχία μεταφόρτωσης: %@";
+"Uploaded! Link copied." = "Μεταφορτώθηκε! Ο σύνδεσμος αντιγράφηκε.";
+"Uploading to %@... %d%%" = "Μεταφόρτωση στο %@... %d%%";
+"Open" = "Άνοιγμα";
+
+/* Recording Toast */
+"Recording saved" = "Η εγγραφή αποθηκεύτηκε";
+"%@ • Recording saved" = "%@ • Η εγγραφή αποθηκεύτηκε";
+"Copy Path" = "Αντιγραφή διαδρομής";
+"Path copied!" = "Η διαδρομή αντιγράφηκε!";
+
+/* Video Editor */
+"macshot Video Editor" = "Επεξεργαστής βίντεο macshot";
+"%@ selected" = "%@ επιλεγμένο";
+"Exporting..." = "Εξαγωγή...";
+"Export failed" = "Αποτυχία εξαγωγής";
+"Saved to %@" = "Αποθηκεύτηκε στο %@";
+"Save failed" = "Αποτυχία αποθήκευσης";
+
+/* Barcode Detector */
+/* "Open" and "Copy" are shared with other sections */
+
+/* Save Panel */
+"Save As..." = "Αποθήκευση ως...";
+"Choose a folder" = "Επιλέξτε φάκελο";
+"Save All to Folder…" = "Αποθήκευση όλων σε φάκελο…";
+
+/* Scroll Capture HUD */
+"Auto Scroll" = "Αυτόματη κύλιση";
+"Stop" = "Διακοπή";
+"Scrolling..." = "Κύλιση...";
+
+/* Effects Picker (Adjust popover) */
+"Presets" = "Προεπιλογές";
+"Adjustments" = "Ρυθμίσεις";
+"Brightness" = "Φωτεινότητα";
+"Contrast" = "Αντίθεση";
+"Saturation" = "Κορεσμός";
+"Sharpness" = "Ευκρίνεια";
+
+/* Time Ago */
+"just now" = "μόλις τώρα";
+"%ds ago" = "%ds πριν";
+"%dm ago" = "%dm πριν";
+"%dh ago" = "%dh πριν";
+
+/* Hotkey Labels */
+"History" = "Ιστορικό";
+
+/* Preferences - Shortcuts note */
+"Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Κάντε κλικ στο \"Record\" και πατήστε έναν συνδυασμό πλήκτρων με τουλάχιστον ένα τροποποιητικό (⌘, ⌥, ⌃, ⇧) για να ορίσετε συντόμευση.";

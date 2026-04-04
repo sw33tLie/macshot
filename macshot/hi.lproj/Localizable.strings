@@ -1,0 +1,400 @@
+/* हिन्दी — macshot localization
+ *
+ * To add a new language:
+ * 1. Create a new folder: macshot/<lang-code>.lproj/
+ * 2. Copy this file into that folder
+ * 3. Translate all values (right side of = sign)
+ * 4. Add the language to LanguageManager.availableLanguages in Services/LanguageManager.swift
+ * 5. Add the language code to knownRegions in macshot.xcodeproj/project.pbxproj
+ * 6. Submit a pull request!
+ *
+ * Keys use the English text. Values should be the translation.
+ * Format strings use %@ for strings, %d for integers.
+ * Keep keyboard shortcuts (like ⌘C) untranslated.
+ * Keep brand names (macshot, Google Drive, imgbb, S3) untranslated.
+ */
+
+/* Menu Bar */
+"Capture Area" = "क्षेत्र कैप्चर करें";
+"Capture Screen" = "स्क्रीन कैप्चर करें";
+"Capture OCR" = "OCR कैप्चर करें";
+"Quick Capture" = "त्वरित कैप्चर";
+"Scroll Capture" = "स्क्रॉल कैप्चर";
+"Capture Delay" = "कैप्चर विलंब";
+"None" = "कोई नहीं";
+"%d seconds" = "%d सेकंड";
+"Record Area" = "क्षेत्र रिकॉर्ड करें";
+"Record Screen" = "स्क्रीन रिकॉर्ड करें";
+"Recent Captures" = "हाल के कैप्चर";
+"Show History Panel" = "इतिहास पैनल दिखाएँ";
+"Open Image..." = "चित्र खोलें...";
+"Open from Clipboard" = "क्लिपबोर्ड से खोलें";
+"Preferences..." = "प्राथमिकताएँ...";
+"Check for Updates..." = "अपडेट जाँचें...";
+"Quit macshot" = "macshot बंद करें";
+"No recent captures" = "कोई हालिया कैप्चर नहीं";
+"Clear History" = "इतिहास मिटाएँ";
+
+/* History Panel */
+"Copy" = "कॉपी करें";
+"Save As..." = "इस रूप में सहेजें...";
+"Open in Editor" = "संपादक में खोलें";
+"Pin to Screen" = "स्क्रीन पर पिन करें";
+"Quick Look" = "त्वरित झलक";
+"Delete" = "हटाएँ";
+"All" = "सभी";
+"Screenshots" = "स्क्रीनशॉट";
+"GIFs" = "GIFs";
+"Click to copy · Drag to app" = "कॉपी करने के लिए क्लिक करें · ऐप में खींचें";
+"No captures yet" = "अभी तक कोई कैप्चर नहीं";
+
+/* Floating Thumbnail */
+"Close All" = "सभी बंद करें";
+"Save All to Folder…" = "सभी को फ़ोल्डर में सहेजें…";
+"Save" = "सहेजें";
+
+/* Editor Top Bar */
+"Zoom In" = "ज़ूम इन";
+"Zoom Out" = "ज़ूम आउट";
+"Fit Canvas" = "कैनवास फ़िट करें";
+"Crop" = "क्रॉप";
+"Flip Horizontal" = "क्षैतिज पलटें";
+"Flip Vertical" = "लंबवत पलटें";
+"Add Capture" = "कैप्चर जोड़ें";
+
+/* Toolbar - Tools */
+"Arrow" = "तीर";
+"Line" = "रेखा";
+"Rectangle" = "आयत";
+"Ellipse" = "दीर्घवृत्त";
+"Pencil" = "पेंसिल";
+"Pencil (Draw)" = "पेंसिल (ड्रॉ)";
+"Marker" = "मार्कर";
+"Text" = "पाठ";
+"Number" = "संख्या";
+"Number / Counter" = "संख्या / काउंटर";
+"Stamp / Emoji" = "स्टैंप / इमोजी";
+"Censor" = "सेंसर";
+"Censor (Pixelate / Blur / Solid)" = "सेंसर (पिक्सलेट / ब्लर / ठोस)";
+"Measure" = "माप";
+"Measure (px)" = "माप (px)";
+"Magnify (Loupe)" = "आवर्धन (लूप)";
+"Color Sampler" = "रंग नमूना";
+"Color Picker" = "रंग चयनकर्ता";
+"Select & Edit" = "चुनें और संपादित करें";
+"Color" = "रंग";
+
+/* Toolbar - Actions */
+"Copy to Clipboard" = "क्लिपबोर्ड पर कॉपी करें";
+"Save to File" = "फ़ाइल में सहेजें";
+"Save to" = "इसमें सहेजें";
+"Open in Editor Window" = "संपादक विंडो में खोलें";
+"Pin on Screen" = "स्क्रीन पर पिन करें";
+"Pin" = "पिन";
+"Pin (floating window)" = "पिन (फ़्लोटिंग विंडो)";
+"OCR" = "OCR";
+"OCR Text" = "OCR पाठ";
+"OCR (extract text)" = "OCR (पाठ निकालें)";
+"Upload" = "अपलोड";
+"Share" = "साझा करें";
+"Undo" = "पूर्ववत करें";
+"Redo" = "फिर से करें";
+"Close" = "बंद करें";
+"Remove Background" = "पृष्ठभूमि हटाएँ";
+"Beautify" = "सुशोभित करें";
+"Adjust" = "समायोजित करें";
+"Adjust (Image Effects)" = "समायोजित करें (छवि प्रभाव)";
+"Invert Colors" = "रंग उलटें";
+"Record" = "रिकॉर्ड";
+"Record screen" = "स्क्रीन रिकॉर्ड करें";
+"Translate" = "अनुवाद करें";
+"Auto-Redact sensitive data" = "संवेदनशील डेटा स्वतः छुपाएँ";
+"Move Selection" = "चयन स्थानांतरित करें";
+
+/* Toolbar - Recording */
+"Start Recording" = "रिकॉर्डिंग शुरू करें";
+"Cancel Recording" = "रिकॉर्डिंग रद्द करें";
+"Highlight Mouse Clicks" = "माउस क्लिक हाइलाइट करें";
+"Record System Audio" = "सिस्टम ऑडियो रिकॉर्ड करें";
+"Record Microphone" = "माइक्रोफ़ोन रिकॉर्ड करें";
+"Recording Settings" = "रिकॉर्डिंग सेटिंग्स";
+
+/* Tool Options */
+"Size" = "आकार";
+"Stroke" = "स्ट्रोक";
+"Radius" = "त्रिज्या";
+"Start:" = "शुरू:";
+"Draw:" = "ड्रॉ:";
+"Auto:" = "स्वतः:";
+"Fill" = "भरण";
+"Outline" = "रूपरेखा";
+"More Emojis" = "और इमोजी";
+"Load Image" = "चित्र लोड करें";
+"Gradient Style" = "ग्रेडिएंट शैली";
+"On" = "चालू";
+"Text Only" = "केवल पाठ";
+"All Text" = "सभी पाठ";
+"PII" = "PII";
+"Faces" = "चेहरे";
+"People" = "लोग";
+"Confirm before upload" = "अपलोड से पहले पुष्टि करें";
+"Flip" = "पलटें";
+"Smooth" = "चिकना";
+"Smart" = "स्मार्ट";
+"Padding" = "पैडिंग";
+"Shadow" = "छाया";
+"Right-click to add points" = "बिंदु जोड़ने के लिए राइट-क्लिक करें";
+"Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "1 दबाएँ स्वतः-लंबवत  ·  2 दबाएँ स्वतः-क्षैतिज";
+
+/* Overlay / Canvas */
+"Click a window  ·  Drag for custom area  ·  F for full screen" = "विंडो पर क्लिक करें  ·  कस्टम क्षेत्र के लिए खींचें  ·  पूर्ण स्क्रीन के लिए F";
+"Drag to select  ·  Click for full screen" = "चुनने के लिए खींचें  ·  पूर्ण स्क्रीन के लिए क्लिक करें";
+"Release to annotate and edit" = "एनोटेट और संपादित करने के लिए छोड़ें";
+"Window snap: " = "विंडो स्नैप: ";
+"ON" = "चालू";
+"OFF" = "बंद";
+"  (Tab to toggle)" = "  (टॉगल के लिए Tab)";
+"Right-click to copy" = "कॉपी करने के लिए राइट-क्लिक करें";
+"Copied %@" = "%@ कॉपी किया";
+"Set color %@" = "रंग सेट किया %@";
+"Draw something first to use the move tool." = "मूव टूल का उपयोग करने के लिए पहले कुछ बनाएँ।";
+"Drag to reposition" = "स्थिति बदलने के लिए खींचें";
+
+/* Overlay - Popovers */
+"Format:" = "प्रारूप:";
+"FPS:" = "FPS:";
+"When done:" = "पूर्ण होने पर:";
+"Open editor" = "संपादक खोलें";
+"Show in Finder" = "Finder में दिखाएँ";
+"Copy to clipboard" = "क्लिपबोर्ड पर कॉपी करें";
+
+/* Preferences - General */
+"macshot Preferences" = "macshot प्राथमिकताएँ";
+"General" = "सामान्य";
+"Tools" = "उपकरण";
+"Recording" = "रिकॉर्डिंग";
+"About" = "बारे में";
+"Shortcuts" = "शॉर्टकट";
+"Uploads" = "अपलोड";
+"Language" = "भाषा";
+"Language:" = "भाषा:";
+"Restart the app to fully apply the new language." = "नई भाषा पूरी तरह लागू करने के लिए ऐप पुनः आरंभ करें।";
+"Capture" = "कैप्चर";
+"Play sound on copy" = "कॉपी पर ध्वनि बजाएँ";
+"Remember last selection area" = "अंतिम चयन क्षेत्र याद रखें";
+"Remember last selected tool" = "अंतिम चयनित उपकरण याद रखें";
+"Show floating thumbnail after capture" = "कैप्चर के बाद फ़्लोटिंग थंबनेल दिखाएँ";
+"Launch at login" = "लॉगिन पर लॉन्च करें";
+"Show snap alignment guides" = "स्नैप संरेखण गाइड दिखाएँ";
+"Capture mouse cursor in screenshot" = "स्क्रीनशॉट में माउस कर्सर कैप्चर करें";
+"Use window title in saved filename" = "सहेजे गए फ़ाइलनाम में विंडो शीर्षक उपयोग करें";
+"Hide menu bar icon" = "मेनू बार आइकन छिपाएँ";
+"Hotkeys still work. To show the icon again, re-launch macshot." = "हॉटकी अभी भी काम करेंगी। आइकन फिर से दिखाने के लिए macshot पुनः लॉन्च करें।";
+"Check for updates automatically" = "स्वचालित रूप से अपडेट जाँचें";
+"Thumbnail" = "थंबनेल";
+"  Dismiss after:" = "  इसके बाद खारिज करें:";
+"seconds before auto-dismiss (0 = never)" = "सेकंड में स्वतः खारिज (0 = कभी नहीं)";
+"  Multiple previews:" = "  एकाधिक पूर्वावलोकन:";
+"Stack (keep all)" = "स्टैक (सभी रखें)";
+"Replace (show only latest)" = "बदलें (केवल नवीनतम दिखाएँ)";
+"Output" = "आउटपुट";
+"Image format:" = "छवि प्रारूप:";
+"Quality:" = "गुणवत्ता:";
+"%d%%" = "%d%%";
+"Save at standard resolution (1x)" = "मानक रिज़ॉल्यूशन (1x) में सहेजें";
+"Halves dimensions on Retina displays, ~4x smaller files" = "रेटिना डिस्प्ले पर आयाम आधे करता है, ~4x छोटी फ़ाइलें";
+"Embed sRGB color profile" = "sRGB रंग प्रोफ़ाइल एम्बेड करें";
+"Ensures consistent colors across different displays" = "विभिन्न डिस्प्ले पर एकसमान रंग सुनिश्चित करता है";
+"Screenshot History" = "स्क्रीनशॉट इतिहास";
+"History size:" = "इतिहास आकार:";
+"screenshots kept on disk (0 = off)" = "डिस्क पर रखे गए स्क्रीनशॉट (0 = बंद)";
+"Save Directory" = "सहेजने की डायरेक्टरी";
+"Save folder:" = "सहेजने का फ़ोल्डर:";
+"Browse…" = "ब्राउज़ करें…";
+"Appearance" = "दिखावट";
+"Accent color:" = "एक्सेंट रंग:";
+"Icon color:" = "आइकन रंग:";
+"Reset" = "रीसेट";
+"OCR Capture:" = "OCR कैप्चर:";
+"Show window + copy to clipboard" = "विंडो दिखाएँ + क्लिपबोर्ड पर कॉपी करें";
+"Show window only" = "केवल विंडो दिखाएँ";
+"Copy to clipboard only" = "केवल क्लिपबोर्ड पर कॉपी करें";
+"Enter / Quick Capture:" = "Enter / त्वरित कैप्चर:";
+"Save to file" = "फ़ाइल में सहेजें";
+"Save + copy to clipboard" = "सहेजें + क्लिपबोर्ड पर कॉपी करें";
+"OCR Action" = "OCR क्रिया";
+
+/* Preferences - Shortcuts */
+"Keyboard Shortcuts" = "कीबोर्ड शॉर्टकट";
+"Hotkeys" = "हॉटकी";
+"Clear shortcut" = "शॉर्टकट मिटाएँ";
+"Press keys..." = "कुंजियाँ दबाएँ...";
+"Waiting..." = "प्रतीक्षा कर रहे हैं...";
+
+/* Preferences - Tools */
+"Annotation Tools" = "एनोटेशन उपकरण";
+"Hidden tools are removed from the bottom toolbar." = "छिपे उपकरण निचले टूलबार से हटा दिए जाते हैं।";
+"Capture Actions" = "कैप्चर क्रियाएँ";
+"Bottom Toolbar Actions" = "निचले टूलबार की क्रियाएँ";
+"Hidden actions are removed from the bottom toolbar." = "छिपी क्रियाएँ निचले टूलबार से हटा दी जाती हैं।";
+"Editor Actions" = "संपादक क्रियाएँ";
+"Right Toolbar Actions" = "दाएँ टूलबार की क्रियाएँ";
+"Hidden actions are removed from the right toolbar." = "छिपी क्रियाएँ दाएँ टूलबार से हटा दी जाती हैं।";
+
+/* Preferences - Recording */
+"Frame rate:" = "फ़्रेम दर:";
+"After recording:" = "रिकॉर्डिंग के बाद:";
+"Save recording to:" = "रिकॉर्डिंग यहाँ सहेजें:";
+"Clear" = "मिटाएँ";
+"Max height:" = "अधिकतम ऊँचाई:";
+"px (0 = unlimited)" = "px (0 = असीमित)";
+"Behavior" = "व्यवहार";
+"Auto-scroll (sends synthetic scroll events)" = "स्वतः-स्क्रॉल (सिंथेटिक स्क्रॉल इवेंट भेजता है)";
+"Detect fixed/sticky headers" = "स्थिर/स्टिकी हेडर पहचानें";
+"Scroll speed:" = "स्क्रॉल गति:";
+"Slow" = "धीमी";
+"Medium" = "मध्यम";
+"Fast" = "तेज़";
+"Very fast" = "बहुत तेज़";
+"5 fps" = "5 fps";
+"10 fps" = "10 fps";
+"15 fps" = "15 fps";
+"24 fps" = "24 fps";
+"30 fps" = "30 fps";
+"60 fps" = "60 fps";
+"120 fps" = "120 fps";
+"MP4 (H.264)" = "MP4 (H.264)";
+"GIF" = "GIF";
+
+/* Preferences - Upload */
+"Upload Service" = "अपलोड सेवा";
+"Upload Provider" = "अपलोड प्रदाता";
+"Provider:" = "प्रदाता:";
+"Google Drive" = "Google Drive";
+"Google Drive (images + videos)" = "Google Drive (चित्र + वीडियो)";
+"imgbb (images only)" = "imgbb (केवल चित्र)";
+"S3-Compatible (images + videos)" = "S3-संगत (चित्र + वीडियो)";
+"S3-Compatible Storage" = "S3-संगत भंडारण";
+"Sign In with Google" = "Google से साइन इन करें";
+"Sign Out" = "साइन आउट";
+"Signed in" = "साइन इन किया हुआ";
+"Not signed in" = "साइन इन नहीं किया";
+"Account:" = "खाता:";
+"Test Connection" = "कनेक्शन परीक्षण";
+"Fill in endpoint, bucket, and credentials first" = "पहले एंडपॉइंट, बकेट और क्रेडेंशियल भरें";
+"Testing..." = "परीक्षण हो रहा है...";
+"Connection successful!" = "कनेक्शन सफल!";
+"Leave empty to use default" = "डिफ़ॉल्ट उपयोग के लिए खाली छोड़ें";
+"Endpoint:" = "एंडपॉइंट:";
+"Region:" = "क्षेत्र:";
+"Bucket:" = "बकेट:";
+"Access Key:" = "एक्सेस कुंजी:";
+"Secret Key:" = "सीक्रेट कुंजी:";
+"Public URL:" = "सार्वजनिक URL:";
+"Path Prefix:" = "पथ उपसर्ग:";
+"API key:" = "API कुंजी:";
+"Upload History" = "अपलोड इतिहास";
+"No uploads yet." = "अभी तक कोई अपलोड नहीं।";
+"Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "सार्वजनिक पहुँच के लिए बेस URL। यदि खाली है, तो S3 एंडपॉइंट URL उपयोग होता है (सार्वजनिक रूप से सुलभ नहीं हो सकता)।";
+"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "एक साझा कुंजी शामिल है — यदि दर सीमा तक पहुँचें तो imgbb.com/api पर अपनी मुफ़्त कुंजी प्राप्त करें। केवल चित्र (वीडियो समर्थन नहीं)।";
+"Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, और अन्य S3-संगत सेवाओं के साथ काम करता है। चित्र और वीडियो समर्थित हैं।";
+"Configure S3 in Preferences" = "प्राथमिकताओं में S3 कॉन्फ़िगर करें";
+"Sign in to Google Drive in Preferences" = "प्राथमिकताओं में Google Drive से साइन इन करें";
+"Video upload requires Google Drive or S3" = "वीडियो अपलोड के लिए Google Drive या S3 आवश्यक है";
+
+/* Preferences - About */
+"macshot" = "macshot";
+"Version %@ (%@)" = "संस्करण %@ (%@)";
+"Made by" = "निर्माता";
+"Licensed under the GPLv3" = "GPLv3 के अंतर्गत लाइसेंसीकृत";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "macOS के लिए एक मुफ़्त, ओपन-सोर्स स्क्रीनशॉट और स्क्रीन रिकॉर्डिंग उपकरण।\nपूर्णतः नेटिव — Swift और AppKit से निर्मित।";
+
+/* Alerts */
+"No Image on Clipboard" = "क्लिपबोर्ड पर कोई छवि नहीं";
+"Copy an image to the clipboard first, then try again." = "पहले क्लिपबोर्ड पर एक छवि कॉपी करें, फिर पुनः प्रयास करें।";
+"OK" = "ठीक है";
+"Accessibility Access Required" = "सुलभता पहुँच आवश्यक";
+"macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot को अन्य ऐप्स को स्वतः-स्क्रॉल करने के लिए सुलभता अनुमति चाहिए। कृपया सिस्टम सेटिंग्स में पहुँच प्रदान करें, फिर पुनः प्रयास करें।";
+"Open Settings" = "सेटिंग्स खोलें";
+"Cancel" = "रद्द करें";
+"Microphone Access Required" = "माइक्रोफ़ोन पहुँच आवश्यक";
+"macshot needs microphone permission to record voice audio. Open System Settings to grant access." = "macshot को ध्वनि ऑडियो रिकॉर्ड करने के लिए माइक्रोफ़ोन अनुमति चाहिए। पहुँच प्रदान करने के लिए सिस्टम सेटिंग्स खोलें।";
+"Upload to Google Drive?" = "Google Drive पर अपलोड करें?";
+"Upload to S3?" = "S3 पर अपलोड करें?";
+"Upload to imgbb.com?" = "imgbb.com पर अपलोड करें?";
+"Your screenshot will be uploaded." = "आपका स्क्रीनशॉट अपलोड किया जाएगा।";
+
+/* Permission Onboarding */
+"Welcome to macshot" = "macshot में आपका स्वागत है";
+"macshot needs one permission" = "macshot को एक अनुमति चाहिए";
+"Screen Recording not yet granted" = "स्क्रीन रिकॉर्डिंग अभी तक प्रदान नहीं की गई";
+"Screen Recording granted!" = "स्क्रीन रिकॉर्डिंग प्रदान की गई!";
+"Enable macshot, then try taking a screenshot" = "macshot सक्षम करें, फिर स्क्रीनशॉट लेने का प्रयास करें";
+"Open Screen Recording Settings" = "स्क्रीन रिकॉर्डिंग सेटिंग्स खोलें";
+"Continue" = "जारी रखें";
+
+/* OCR Window */
+"Text Recognition" = "पाठ पहचान";
+"Translate to:" = "अनुवाद करें:";
+"%d chars · %d words" = "%d अक्षर · %d शब्द";
+"Copy  ⌘↩" = "कॉपी  ⌘↩";
+"AI Search" = "AI खोज";
+"Show Original" = "मूल दिखाएँ";
+"Translation Failed" = "अनुवाद विफल";
+"Translation" = "अनुवाद";
+"(No text detected in the selected area)" = "(चयनित क्षेत्र में कोई पाठ नहीं मिला)";
+
+/* Upload Toast */
+"URL copied to the clipboard" = "URL क्लिपबोर्ड पर कॉपी किया गया";
+"Uploading... %d%%" = "अपलोड हो रहा है... %d%%";
+"Upload failed: %@" = "अपलोड विफल: %@";
+"Uploaded! Link copied." = "अपलोड हो गया! लिंक कॉपी किया गया।";
+"Uploading to %@... %d%%" = "%@ पर अपलोड हो रहा है... %d%%";
+"Open" = "खोलें";
+
+/* Recording Toast */
+"Recording saved" = "रिकॉर्डिंग सहेजी गई";
+"%@ • Recording saved" = "%@ • रिकॉर्डिंग सहेजी गई";
+"Copy Path" = "पथ कॉपी करें";
+"Path copied!" = "पथ कॉपी किया गया!";
+
+/* Video Editor */
+"macshot Video Editor" = "macshot वीडियो संपादक";
+"%@ selected" = "%@ चयनित";
+"Exporting..." = "निर्यात हो रहा है...";
+"Export failed" = "निर्यात विफल";
+"Saved to %@" = "%@ में सहेजा गया";
+"Save failed" = "सहेजना विफल";
+
+/* Barcode Detector */
+/* "Open" and "Copy" are shared with other sections */
+
+/* Save Panel */
+"Save As..." = "इस रूप में सहेजें...";
+"Choose a folder" = "फ़ोल्डर चुनें";
+"Save All to Folder…" = "सभी को फ़ोल्डर में सहेजें…";
+
+/* Scroll Capture HUD */
+"Auto Scroll" = "स्वतः स्क्रॉल";
+"Stop" = "रोकें";
+"Scrolling..." = "स्क्रॉल हो रहा है...";
+
+/* Effects Picker (Adjust popover) */
+"Presets" = "प्रीसेट";
+"Adjustments" = "समायोजन";
+"Brightness" = "चमक";
+"Contrast" = "कंट्रास्ट";
+"Saturation" = "संतृप्ति";
+"Sharpness" = "तीक्ष्णता";
+
+/* Time Ago */
+"just now" = "अभी";
+"%ds ago" = "%d से. पहले";
+"%dm ago" = "%d मि. पहले";
+"%dh ago" = "%d घं. पहले";
+
+/* Hotkey Labels */
+"History" = "इतिहास";
+
+/* Preferences - Shortcuts note */
+"Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "\"Record\" पर क्लिक करें और शॉर्टकट सेट करने के लिए कम से कम एक मॉडिफ़ायर (⌘, ⌥, ⌃, ⇧) के साथ कुंजी संयोजन दबाएँ।";

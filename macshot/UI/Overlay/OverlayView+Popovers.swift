@@ -11,7 +11,7 @@ extension OverlayView {
         let current = UserDefaults.standard.bool(forKey: "uploadConfirmEnabled")
         let container = NSView(frame: NSRect(x: 0, y: 0, width: 180, height: 32))
 
-        let toggle = NSButton(checkboxWithTitle: "Confirm before upload", target: nil, action: nil)
+        let toggle = NSButton(checkboxWithTitle: L("Confirm before upload"), target: nil, action: nil)
         toggle.state = current ? .on : .off
         toggle.font = NSFont.systemFont(ofSize: 12, weight: .medium)
         toggle.sizeToFit()
@@ -305,7 +305,7 @@ extension OverlayView {
 
         // When done popup
         let whenDonePopup = NSPopUpButton()
-        whenDonePopup.addItems(withTitles: ["Open editor", "Show in Finder", "Copy to clipboard"])
+        whenDonePopup.addItems(withTitles: [L("Open editor"), L("Show in Finder"), L("Copy to clipboard")])
         whenDonePopup.controlSize = .small
         whenDonePopup.font = NSFont.systemFont(ofSize: 11)
         switch effectiveOnStop {
@@ -320,9 +320,9 @@ extension OverlayView {
         objc_setAssociatedObject(
             whenDonePopup, "handler", whenDoneHandler, .OBJC_ASSOCIATION_RETAIN)
 
-        addRow(label: "Format:", control: formatSeg)
-        addRow(label: "FPS:", control: fpsPopup)
-        addRow(label: "When done:", control: whenDonePopup)
+        addRow(label: L("Format:"), control: formatSeg)
+        addRow(label: L("FPS:"), control: fpsPopup)
+        addRow(label: L("When done:"), control: whenDonePopup)
 
         let size = NSSize(width: 240, height: y + 4)
         container.frame.size = size

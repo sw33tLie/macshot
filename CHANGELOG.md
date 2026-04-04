@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.7.0] - 2026-04-04
+
+### Added
+- **40 languages** - full UI localization with language switcher in Preferences. Supported: Arabic, Bengali, Bulgarian, Catalan, Chinese (Simplified & Traditional), Croatian, Czech, Danish, Dutch, English, Filipino, Finnish, French, German, Greek, Hebrew, Hindi, Hungarian, Indonesian, Italian, Japanese, Korean, Malay, Norwegian, Persian, Polish, Portuguese, Portuguese (Brazil), Romanian, Russian, Serbian, Slovak, Spanish, Swedish, Tamil, Thai, Turkish, Ukrainian, Vietnamese. Auto-detects system language, switchable at runtime.
+
+### Fixed
+- **History panel blocks all input** - the backdrop window could get stuck capturing all clicks when the app lost focus (e.g. using Cmd+Shift+4 or a Sparkle update dialog appearing). The backdrop now auto-dismisses when the app deactivates, supports Escape key directly, and is torn down immediately on dismiss instead of waiting for the animation to complete.
+
 ## [3.6.1] - 2026-04-04
 
 ### Fixed

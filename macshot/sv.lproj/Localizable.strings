@@ -1,0 +1,400 @@
+/* Svenska — macshot localization
+ *
+ * To add a new language:
+ * 1. Create a new folder: macshot/<lang-code>.lproj/
+ * 2. Copy this file into that folder
+ * 3. Translate all values (right side of = sign)
+ * 4. Add the language to LanguageManager.availableLanguages in Services/LanguageManager.swift
+ * 5. Add the language code to knownRegions in macshot.xcodeproj/project.pbxproj
+ * 6. Submit a pull request!
+ *
+ * Keys use the English text. Values should be the translation.
+ * Format strings use %@ for strings, %d for integers.
+ * Keep keyboard shortcuts (like ⌘C) untranslated.
+ * Keep brand names (macshot, Google Drive, imgbb, S3) untranslated.
+ */
+
+/* Menu Bar */
+"Capture Area" = "Ta bild av omr\U00E5de";
+"Capture Screen" = "Ta bild av sk\U00E4rm";
+"Capture OCR" = "OCR-f\U00E5ngst";
+"Quick Capture" = "Snabbf\U00E5ngst";
+"Scroll Capture" = "Rullf\U00E5ngst";
+"Capture Delay" = "F\U00F6rdr\U00F6jning";
+"None" = "Ingen";
+"%d seconds" = "%d sekunder";
+"Record Area" = "Spela in omr\U00E5de";
+"Record Screen" = "Spela in sk\U00E4rm";
+"Recent Captures" = "Senaste f\U00E5ngster";
+"Show History Panel" = "Visa historikpanel";
+"Open Image..." = "\U00D6ppna bild...";
+"Open from Clipboard" = "\U00D6ppna fr\U00E5n urklipp";
+"Preferences..." = "Inst\U00E4llningar...";
+"Check for Updates..." = "S\U00F6k efter uppdateringar...";
+"Quit macshot" = "Avsluta macshot";
+"No recent captures" = "Inga senaste f\U00E5ngster";
+"Clear History" = "Rensa historik";
+
+/* History Panel */
+"Copy" = "Kopiera";
+"Save As..." = "Spara som...";
+"Open in Editor" = "\U00D6ppna i redigeraren";
+"Pin to Screen" = "F\U00E4st p\U00E5 sk\U00E4rmen";
+"Quick Look" = "\U00D6verblick";
+"Delete" = "Radera";
+"All" = "Alla";
+"Screenshots" = "Sk\U00E4rmbilder";
+"GIFs" = "GIFs";
+"Click to copy \U00B7 Drag to app" = "Klicka f\U00F6r att kopiera \U00B7 Dra till app";
+"No captures yet" = "Inga f\U00E5ngster \U00E4nnu";
+
+/* Floating Thumbnail */
+"Close All" = "St\U00E4ng alla";
+"Save All to Folder\U2026" = "Spara alla till mapp\U2026";
+"Save" = "Spara";
+
+/* Editor Top Bar */
+"Zoom In" = "Zooma in";
+"Zoom Out" = "Zooma ut";
+"Fit Canvas" = "Anpassa arbetsyta";
+"Crop" = "Besk\U00E4r";
+"Flip Horizontal" = "V\U00E4nd horisontellt";
+"Flip Vertical" = "V\U00E4nd vertikalt";
+"Add Capture" = "L\U00E4gg till f\U00E5ngst";
+
+/* Toolbar - Tools */
+"Arrow" = "Pil";
+"Line" = "Linje";
+"Rectangle" = "Rektangel";
+"Ellipse" = "Ellips";
+"Pencil" = "Penna";
+"Pencil (Draw)" = "Penna (Rita)";
+"Marker" = "Markering";
+"Text" = "Text";
+"Number" = "Nummer";
+"Number / Counter" = "Nummer / R\U00E4knare";
+"Stamp / Emoji" = "St\U00E4mpel / Emoji";
+"Censor" = "Censur";
+"Censor (Pixelate / Blur / Solid)" = "Censur (Pixelera / Oskarp / Solid)";
+"Measure" = "M\U00E4t";
+"Measure (px)" = "M\U00E4t (px)";
+"Magnify (Loupe)" = "F\U00F6rstora (Lupp)";
+"Color Sampler" = "F\U00E4rgv\U00E4ljare";
+"Color Picker" = "F\U00E4rgv\U00E4ljare";
+"Select & Edit" = "Markera och redigera";
+"Color" = "F\U00E4rg";
+
+/* Toolbar - Actions */
+"Copy to Clipboard" = "Kopiera till urklipp";
+"Save to File" = "Spara till fil";
+"Save to" = "Spara till";
+"Open in Editor Window" = "\U00D6ppna i redigeringsf\U00F6nster";
+"Pin on Screen" = "F\U00E4st p\U00E5 sk\U00E4rmen";
+"Pin" = "F\U00E4st";
+"Pin (floating window)" = "F\U00E4st (flytande f\U00F6nster)";
+"OCR" = "OCR";
+"OCR Text" = "OCR-text";
+"OCR (extract text)" = "OCR (extrahera text)";
+"Upload" = "Ladda upp";
+"Share" = "Dela";
+"Undo" = "\U00C5ngra";
+"Redo" = "G\U00F6r om";
+"Close" = "St\U00E4ng";
+"Remove Background" = "Ta bort bakgrund";
+"Beautify" = "F\U00F6rsk\U00F6na";
+"Adjust" = "Justera";
+"Adjust (Image Effects)" = "Justera (Bildeffekter)";
+"Invert Colors" = "Invertera f\U00E4rger";
+"Record" = "Spela in";
+"Record screen" = "Spela in sk\U00E4rm";
+"Translate" = "\U00D6vers\U00E4tt";
+"Auto-Redact sensitive data" = "Maskera k\U00E4nslig data automatiskt";
+"Move Selection" = "Flytta markering";
+
+/* Toolbar - Recording */
+"Start Recording" = "Starta inspelning";
+"Cancel Recording" = "Avbryt inspelning";
+"Highlight Mouse Clicks" = "Markera musklick";
+"Record System Audio" = "Spela in systemljud";
+"Record Microphone" = "Spela in mikrofon";
+"Recording Settings" = "Inspelningsinst\U00E4llningar";
+
+/* Tool Options */
+"Size" = "Storlek";
+"Stroke" = "Linje";
+"Radius" = "Radie";
+"Start:" = "Start:";
+"Draw:" = "Rita:";
+"Auto:" = "Auto:";
+"Fill" = "Fyll";
+"Outline" = "Kontur";
+"More Emojis" = "Fler emojis";
+"Load Image" = "Ladda bild";
+"Gradient Style" = "Gradientstil";
+"On" = "P\U00E5";
+"Text Only" = "Endast text";
+"All Text" = "All text";
+"PII" = "PII";
+"Faces" = "Ansikten";
+"People" = "Personer";
+"Confirm before upload" = "Bekr\U00E4fta f\U00F6re uppladdning";
+"Flip" = "V\U00E4nd";
+"Smooth" = "Mjuk";
+"Smart" = "Smart";
+"Padding" = "Utfyllnad";
+"Shadow" = "Skugga";
+"Right-click to add points" = "H\U00F6gerklicka f\U00F6r att l\U00E4gga till punkter";
+"Hold 1 auto-vertical  \U00B7  Hold 2 auto-horizontal" = "H\U00E5ll 1 auto-vertikalt  \U00B7  H\U00E5ll 2 auto-horisontellt";
+
+/* Overlay / Canvas */
+"Click a window  \U00B7  Drag for custom area  \U00B7  F for full screen" = "Klicka p\U00E5 ett f\U00F6nster  \U00B7  Dra f\U00F6r eget omr\U00E5de  \U00B7  F f\U00F6r helsk\U00E4rm";
+"Drag to select  \U00B7  Click for full screen" = "Dra f\U00F6r att markera  \U00B7  Klicka f\U00F6r helsk\U00E4rm";
+"Release to annotate and edit" = "Sl\U00E4pp f\U00F6r att anteckna och redigera";
+"Window snap: " = "F\U00F6nsterf\U00E5ngst: ";
+"ON" = "P\U00C5";
+"OFF" = "AV";
+"  (Tab to toggle)" = "  (Tab f\U00F6r att v\U00E4xla)";
+"Right-click to copy" = "H\U00F6gerklicka f\U00F6r att kopiera";
+"Copied %@" = "Kopierade %@";
+"Set color %@" = "Valde f\U00E4rg %@";
+"Draw something first to use the move tool." = "Rita n\U00E5got f\U00F6rst f\U00F6r att anv\U00E4nda flytta-verktyget.";
+"Drag to reposition" = "Dra f\U00F6r att flytta";
+
+/* Overlay - Popovers */
+"Format:" = "Format:";
+"FPS:" = "FPS:";
+"When done:" = "N\U00E4r klar:";
+"Open editor" = "\U00D6ppna redigeraren";
+"Show in Finder" = "Visa i Finder";
+"Copy to clipboard" = "Kopiera till urklipp";
+
+/* Preferences - General */
+"macshot Preferences" = "macshot-inst\U00E4llningar";
+"General" = "Allm\U00E4nt";
+"Tools" = "Verktyg";
+"Recording" = "Inspelning";
+"About" = "Om";
+"Shortcuts" = "Genv\U00E4gar";
+"Uploads" = "Uppladdningar";
+"Language" = "Spr\U00E5k";
+"Language:" = "Spr\U00E5k:";
+"Restart the app to fully apply the new language." = "Starta om appen f\U00F6r att till\U00E4mpa det nya spr\U00E5ket.";
+"Capture" = "F\U00E5ngst";
+"Play sound on copy" = "Spela ljud vid kopiering";
+"Remember last selection area" = "Kom ih\U00E5g senaste markeringsomr\U00E5de";
+"Remember last selected tool" = "Kom ih\U00E5g senast valt verktyg";
+"Show floating thumbnail after capture" = "Visa flytande miniatyrbild efter f\U00E5ngst";
+"Launch at login" = "Starta vid inloggning";
+"Show snap alignment guides" = "Visa f\U00E4stlinjer";
+"Capture mouse cursor in screenshot" = "F\U00E5nga muspekaren i sk\U00E4rmbild";
+"Use window title in saved filename" = "Anv\U00E4nd f\U00F6nstertitel i filnamn";
+"Hide menu bar icon" = "D\U00F6lj menyradsikon";
+"Hotkeys still work. To show the icon again, re-launch macshot." = "Kortkommandon fungerar fortfarande. F\U00F6r att visa ikonen igen, starta om macshot.";
+"Check for updates automatically" = "S\U00F6k efter uppdateringar automatiskt";
+"Thumbnail" = "Miniatyrbild";
+"  Dismiss after:" = "  St\U00E4ng efter:";
+"seconds before auto-dismiss (0 = never)" = "sekunder f\U00F6re automatisk st\U00E4ngning (0 = aldrig)";
+"  Multiple previews:" = "  Flera f\U00F6rhandsvisningar:";
+"Stack (keep all)" = "Stapla (beh\U00E5ll alla)";
+"Replace (show only latest)" = "Ers\U00E4tt (visa bara senaste)";
+"Output" = "Utdata";
+"Image format:" = "Bildformat:";
+"Quality:" = "Kvalitet:";
+"%d%%" = "%d%%";
+"Save at standard resolution (1x)" = "Spara i standarduppl\U00F6sning (1x)";
+"Halves dimensions on Retina displays, ~4x smaller files" = "Halverar dimensionerna p\U00E5 Retina-sk\U00E4rmar, ~4x mindre filer";
+"Embed sRGB color profile" = "B\U00E4dda in sRGB-f\U00E4rgprofil";
+"Ensures consistent colors across different displays" = "S\U00E4kerst\U00E4ller konsekvent f\U00E4rg\U00E5tergivning mellan olika sk\U00E4rmar";
+"Screenshot History" = "Sk\U00E4rmbildshistorik";
+"History size:" = "Historikstorlek:";
+"screenshots kept on disk (0 = off)" = "sk\U00E4rmbilder sparade p\U00E5 disk (0 = av)";
+"Save Directory" = "Spara-mapp";
+"Save folder:" = "Spara-mapp:";
+"Browse\U2026" = "Bl\U00E4ddra\U2026";
+"Appearance" = "Utseende";
+"Accent color:" = "Accentf\U00E4rg:";
+"Icon color:" = "Ikonf\U00E4rg:";
+"Reset" = "\U00C5terst\U00E4ll";
+"OCR Capture:" = "OCR-f\U00E5ngst:";
+"Show window + copy to clipboard" = "Visa f\U00F6nster + kopiera till urklipp";
+"Show window only" = "Visa f\U00F6nster";
+"Copy to clipboard only" = "Kopiera till urklipp";
+"Enter / Quick Capture:" = "Enter / Snabbf\U00E5ngst:";
+"Save to file" = "Spara till fil";
+"Save + copy to clipboard" = "Spara + kopiera till urklipp";
+"OCR Action" = "OCR-\U00E5tg\U00E4rd";
+
+/* Preferences - Shortcuts */
+"Keyboard Shortcuts" = "Kortkommandon";
+"Hotkeys" = "Snabbknappar";
+"Clear shortcut" = "Rensa genv\U00E4g";
+"Press keys..." = "Tryck p\U00E5 tangenter...";
+"Waiting..." = "V\U00E4ntar...";
+
+/* Preferences - Tools */
+"Annotation Tools" = "Anteckningsverktyg";
+"Hidden tools are removed from the bottom toolbar." = "Dolda verktyg tas bort fr\U00E5n det nedre verktygsf\U00E4ltet.";
+"Capture Actions" = "F\U00E5ngst\U00E5tg\U00E4rder";
+"Bottom Toolbar Actions" = "\U00C5tg\U00E4rder i nedre verktygsf\U00E4ltet";
+"Hidden actions are removed from the bottom toolbar." = "Dolda \U00E5tg\U00E4rder tas bort fr\U00E5n det nedre verktygsf\U00E4ltet.";
+"Editor Actions" = "Redigerings\U00E5tg\U00E4rder";
+"Right Toolbar Actions" = "\U00C5tg\U00E4rder i h\U00F6gra verktygsf\U00E4ltet";
+"Hidden actions are removed from the right toolbar." = "Dolda \U00E5tg\U00E4rder tas bort fr\U00E5n det h\U00F6gra verktygsf\U00E4ltet.";
+
+/* Preferences - Recording */
+"Frame rate:" = "Bildfrekvens:";
+"After recording:" = "Efter inspelning:";
+"Save recording to:" = "Spara inspelning till:";
+"Clear" = "Rensa";
+"Max height:" = "Maxh\U00F6jd:";
+"px (0 = unlimited)" = "px (0 = obegr\U00E4nsat)";
+"Behavior" = "Beteende";
+"Auto-scroll (sends synthetic scroll events)" = "Auto-rullning (skickar syntetiska rullh\U00E4ndelser)";
+"Detect fixed/sticky headers" = "Identifiera fasta/klistrade rubriker";
+"Scroll speed:" = "Rullhastighet:";
+"Slow" = "L\U00E5ngsam";
+"Medium" = "Medel";
+"Fast" = "Snabb";
+"Very fast" = "V\U00E4ldigt snabb";
+"5 fps" = "5 fps";
+"10 fps" = "10 fps";
+"15 fps" = "15 fps";
+"24 fps" = "24 fps";
+"30 fps" = "30 fps";
+"60 fps" = "60 fps";
+"120 fps" = "120 fps";
+"MP4 (H.264)" = "MP4 (H.264)";
+"GIF" = "GIF";
+
+/* Preferences - Upload */
+"Upload Service" = "Uppladdningstj\U00E4nst";
+"Upload Provider" = "Uppladdningsleverant\U00F6r";
+"Provider:" = "Leverant\U00F6r:";
+"Google Drive" = "Google Drive";
+"Google Drive (images + videos)" = "Google Drive (bilder + videor)";
+"imgbb (images only)" = "imgbb (endast bilder)";
+"S3-Compatible (images + videos)" = "S3-kompatibel (bilder + videor)";
+"S3-Compatible Storage" = "S3-kompatibel lagring";
+"Sign In with Google" = "Logga in med Google";
+"Sign Out" = "Logga ut";
+"Signed in" = "Inloggad";
+"Not signed in" = "Inte inloggad";
+"Account:" = "Konto:";
+"Test Connection" = "Testa anslutning";
+"Fill in endpoint, bucket, and credentials first" = "Fyll i endpoint, bucket och inloggningsuppgifter f\U00F6rst";
+"Testing..." = "Testar...";
+"Connection successful!" = "Anslutningen lyckades!";
+"Leave empty to use default" = "L\U00E4mna tomt f\U00F6r att anv\U00E4nda standard";
+"Endpoint:" = "Endpoint:";
+"Region:" = "Region:";
+"Bucket:" = "Bucket:";
+"Access Key:" = "\U00C5tkomstnyckel:";
+"Secret Key:" = "Hemlig nyckel:";
+"Public URL:" = "Publik URL:";
+"Path Prefix:" = "S\U00F6kv\U00E4gsprefix:";
+"API key:" = "API-nyckel:";
+"Upload History" = "Uppladdningshistorik";
+"No uploads yet." = "Inga uppladdningar \U00E4nnu.";
+"Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "Bas-URL f\U00F6r publik \U00E5tkomst. Om tomt anv\U00E4nds S3-endpointens URL (kanske inte publikt tillg\U00E4nglig).";
+"A shared key is included \U2014 get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "En delad nyckel ing\U00E5r \U2014 skaffa din egen gratis nyckel p\U00E5 imgbb.com/api om du n\U00E5r hastighetsgr\U00E4nsen. Endast bilder (inget videost\U00F6d).";
+"Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "Fungerar med AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 och andra S3-kompatibla tj\U00E4nster. St\U00F6der bilder och videor.";
+"Configure S3 in Preferences" = "Konfigurera S3 i Inst\U00E4llningar";
+"Sign in to Google Drive in Preferences" = "Logga in p\U00E5 Google Drive i Inst\U00E4llningar";
+"Video upload requires Google Drive or S3" = "Videouppladdning kr\U00E4ver Google Drive eller S3";
+
+/* Preferences - About */
+"macshot" = "macshot";
+"Version %@ (%@)" = "Version %@ (%@)";
+"Made by" = "Skapad av";
+"Licensed under the GPLv3" = "Licensierad under GPLv3";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native \U2014 built with Swift and AppKit." = "Ett gratis sk\U00E4rmbilds- och sk\U00E4rminspelningsverktyg med \U00F6ppen k\U00E4llkod f\U00F6r macOS.\nHelt inbyggt \U2014 byggt med Swift och AppKit.";
+
+/* Alerts */
+"No Image on Clipboard" = "Ingen bild i urklipp";
+"Copy an image to the clipboard first, then try again." = "Kopiera en bild till urklipp f\U00F6rst och f\U00F6rs\U00F6k sedan igen.";
+"OK" = "OK";
+"Accessibility Access Required" = "Tillg\U00E4nglighets\U00E5tkomst kr\U00E4vs";
+"macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot beh\U00F6ver tillg\U00E4nglighetsbeh\U00F6righet f\U00F6r att auto-rulla andra appar. Ge \U00E5tkomst i Systeminst\U00E4llningar och f\U00F6rs\U00F6k sedan igen.";
+"Open Settings" = "\U00D6ppna Inst\U00E4llningar";
+"Cancel" = "Avbryt";
+"Microphone Access Required" = "Mikrofon\U00E5tkomst kr\U00E4vs";
+"macshot needs microphone permission to record voice audio. Open System Settings to grant access." = "macshot beh\U00F6ver mikrofonbeh\U00F6righet f\U00F6r att spela in r\U00F6stljud. \U00D6ppna Systeminst\U00E4llningar f\U00F6r att ge \U00E5tkomst.";
+"Upload to Google Drive?" = "Ladda upp till Google Drive?";
+"Upload to S3?" = "Ladda upp till S3?";
+"Upload to imgbb.com?" = "Ladda upp till imgbb.com?";
+"Your screenshot will be uploaded." = "Din sk\U00E4rmbild kommer att laddas upp.";
+
+/* Permission Onboarding */
+"Welcome to macshot" = "V\U00E4lkommen till macshot";
+"macshot needs one permission" = "macshot beh\U00F6ver en beh\U00F6righet";
+"Screen Recording not yet granted" = "Sk\U00E4rminspelning \U00E4nnu inte beviljad";
+"Screen Recording granted!" = "Sk\U00E4rminspelning beviljad!";
+"Enable macshot, then try taking a screenshot" = "Aktivera macshot och ta sedan en sk\U00E4rmbild";
+"Open Screen Recording Settings" = "\U00D6ppna inst\U00E4llningar f\U00F6r sk\U00E4rminspelning";
+"Continue" = "Forts\U00E4tt";
+
+/* OCR Window */
+"Text Recognition" = "Textigenk\U00E4nning";
+"Translate to:" = "\U00D6vers\U00E4tt till:";
+"%d chars \U00B7 %d words" = "%d tecken \U00B7 %d ord";
+"Copy  \u2318\u21A9" = "Kopiera  \u2318\u21A9";
+"AI Search" = "AI-s\U00F6kning";
+"Show Original" = "Visa original";
+"Translation Failed" = "\U00D6vers\U00E4ttning misslyckades";
+"Translation" = "\U00D6vers\U00E4ttning";
+"(No text detected in the selected area)" = "(Ingen text uppt\U00E4cktes i det markerade omr\U00E5det)";
+
+/* Upload Toast */
+"URL copied to the clipboard" = "URL kopierad till urklipp";
+"Uploading... %d%%" = "Laddar upp... %d%%";
+"Upload failed: %@" = "Uppladdning misslyckades: %@";
+"Uploaded! Link copied." = "Uppladdat! L\U00E4nk kopierad.";
+"Uploading to %@... %d%%" = "Laddar upp till %@... %d%%";
+"Open" = "\U00D6ppna";
+
+/* Recording Toast */
+"Recording saved" = "Inspelning sparad";
+"%@ \u2022 Recording saved" = "%@ \u2022 Inspelning sparad";
+"Copy Path" = "Kopiera s\U00F6kv\U00E4g";
+"Path copied!" = "S\U00F6kv\U00E4g kopierad!";
+
+/* Video Editor */
+"macshot Video Editor" = "macshot Videoredigerare";
+"%@ selected" = "%@ markerat";
+"Exporting..." = "Exporterar...";
+"Export failed" = "Export misslyckades";
+"Saved to %@" = "Sparad till %@";
+"Save failed" = "Kunde inte spara";
+
+/* Barcode Detector */
+/* "Open" and "Copy" are shared with other sections */
+
+/* Save Panel */
+"Save As..." = "Spara som...";
+"Choose a folder" = "V\U00E4lj en mapp";
+"Save All to Folder\U2026" = "Spara alla till mapp\U2026";
+
+/* Scroll Capture HUD */
+"Auto Scroll" = "Auto-rullning";
+"Stop" = "Stoppa";
+"Scrolling..." = "Rullar...";
+
+/* Effects Picker (Adjust popover) */
+"Presets" = "F\U00F6rinst\U00E4llningar";
+"Adjustments" = "Justeringar";
+"Brightness" = "Ljusstyrka";
+"Contrast" = "Kontrast";
+"Saturation" = "M\U00E4ttnad";
+"Sharpness" = "Sk\U00E4rpa";
+
+/* Time Ago */
+"just now" = "just nu";
+"%ds ago" = "%ds sedan";
+"%dm ago" = "%dm sedan";
+"%dh ago" = "%dh sedan";
+
+/* Hotkey Labels */
+"History" = "Historik";
+
+/* Preferences - Shortcuts note */
+"Click \"Record\" and press a key combination with at least one modifier (\u2318, \u2325, \u2303, \u21E7) to set a shortcut." = "Klicka p\U00E5 \"Record\" och tryck p\U00E5 en tangentkombination med minst en modifierare (\u2318, \u2325, \u2303, \u21E7) f\U00F6r att st\U00E4lla in en genv\U00E4g.";

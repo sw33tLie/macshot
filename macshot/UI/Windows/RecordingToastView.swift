@@ -32,8 +32,8 @@ final class RecordingToastView: NSView {
         label.translatesAutoresizingMaskIntoConstraints = false
         addSubview(label)
 
-        let openBtn = makeButton(title: "Show in Finder", action: #selector(openInFinder))
-        let copyBtn = makeButton(title: "Copy Path", action: #selector(copyPath))
+        let openBtn = makeButton(title: L("Show in Finder"), action: #selector(openInFinder))
+        let copyBtn = makeButton(title: L("Copy Path"), action: #selector(copyPath))
 
         NSLayoutConstraint.activate([
             icon.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 14),
@@ -54,7 +54,7 @@ final class RecordingToastView: NSView {
 
         // Subtitle with format info
         let ext = url.pathExtension.uppercased()
-        let sub = NSTextField(labelWithString: ext.isEmpty ? "Recording saved" : "\(ext) • Recording saved")
+        let sub = NSTextField(labelWithString: ext.isEmpty ? L("Recording saved") : String(format: L("%@ • Recording saved"), ext))
         sub.textColor = NSColor(white: 0.6, alpha: 1)
         sub.font = .systemFont(ofSize: 10)
         sub.translatesAutoresizingMaskIntoConstraints = false

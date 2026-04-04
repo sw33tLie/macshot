@@ -369,7 +369,7 @@ private class ThumbnailView: NSView {
         copyBtnRect = copyRect
         saveBtnRect = saveRect
 
-        for (rect, title) in [(copyRect, "Copy"), (saveRect, "Save")] {
+        for (rect, title) in [(copyRect, L("Copy")), (saveRect, L("Save"))] {
             let isHit = rect == hoveredRect
             let bg = NSBezierPath(roundedRect: rect, xRadius: centerBtnH/2, yRadius: centerBtnH/2)
             if isHit {
@@ -432,9 +432,9 @@ private class ThumbnailView: NSView {
 
     override func rightMouseDown(with event: NSEvent) {
         let menu = NSMenu()
-        let closeAll = NSMenuItem(title: "Close All", action: #selector(closeAllAction), keyEquivalent: "")
+        let closeAll = NSMenuItem(title: L("Close All"), action: #selector(closeAllAction), keyEquivalent: "")
         closeAll.target = self
-        let saveAll = NSMenuItem(title: "Save All to Folder…", action: #selector(saveAllAction), keyEquivalent: "")
+        let saveAll = NSMenuItem(title: L("Save All to Folder…"), action: #selector(saveAllAction), keyEquivalent: "")
         saveAll.target = self
         menu.addItem(closeAll)
         menu.addItem(saveAll)

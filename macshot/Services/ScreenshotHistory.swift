@@ -10,12 +10,12 @@ struct HistoryEntry {
 
     var timeAgoString: String {
         let seconds = Int(-timestamp.timeIntervalSinceNow)
-        if seconds < 5 { return "just now" }
-        if seconds < 60 { return "\(seconds)s ago" }
+        if seconds < 5 { return L("just now") }
+        if seconds < 60 { return String(format: L("%ds ago"), seconds) }
         let minutes = seconds / 60
-        if minutes < 60 { return "\(minutes)m ago" }
+        if minutes < 60 { return String(format: L("%dm ago"), minutes) }
         let hours = minutes / 60
-        if hours < 24 { return "\(hours)h ago" }
+        if hours < 24 { return String(format: L("%dh ago"), hours) }
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM d, HH:mm"
         return formatter.string(from: timestamp)

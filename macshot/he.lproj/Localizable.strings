@@ -1,0 +1,400 @@
+/* עברית — macshot localization
+ *
+ * To add a new language:
+ * 1. Create a new folder: macshot/<lang-code>.lproj/
+ * 2. Copy this file into that folder
+ * 3. Translate all values (right side of = sign)
+ * 4. Add the language to LanguageManager.availableLanguages in Services/LanguageManager.swift
+ * 5. Add the language code to knownRegions in macshot.xcodeproj/project.pbxproj
+ * 6. Submit a pull request!
+ *
+ * Keys use the English text. Values should be the translation.
+ * Format strings use %@ for strings, %d for integers.
+ * Keep keyboard shortcuts (like ⌘C) untranslated.
+ * Keep brand names (macshot, Google Drive, imgbb, S3) untranslated.
+ */
+
+/* Menu Bar */
+"Capture Area" = "לכידת אזור";
+"Capture Screen" = "לכידת מסך";
+"Capture OCR" = "לכידת OCR";
+"Quick Capture" = "לכידה מהירה";
+"Scroll Capture" = "לכידת גלילה";
+"Capture Delay" = "השהיית לכידה";
+"None" = "ללא";
+"%d seconds" = "%d שניות";
+"Record Area" = "הקלטת אזור";
+"Record Screen" = "הקלטת מסך";
+"Recent Captures" = "לכידות אחרונות";
+"Show History Panel" = "הצג חלונית היסטוריה";
+"Open Image..." = "פתח תמונה...";
+"Open from Clipboard" = "פתח מהלוח";
+"Preferences..." = "העדפות...";
+"Check for Updates..." = "בדוק עדכונים...";
+"Quit macshot" = "צא מ-macshot";
+"No recent captures" = "אין לכידות אחרונות";
+"Clear History" = "נקה היסטוריה";
+
+/* History Panel */
+"Copy" = "העתק";
+"Save As..." = "שמור בשם...";
+"Open in Editor" = "פתח בעורך";
+"Pin to Screen" = "הצמד למסך";
+"Quick Look" = "הצצה מהירה";
+"Delete" = "מחק";
+"All" = "הכל";
+"Screenshots" = "צילומי מסך";
+"GIFs" = "GIFs";
+"Click to copy · Drag to app" = "לחץ להעתקה · גרור לאפליקציה";
+"No captures yet" = "אין לכידות עדיין";
+
+/* Floating Thumbnail */
+"Close All" = "סגור הכל";
+"Save All to Folder…" = "שמור הכל לתיקייה…";
+"Save" = "שמור";
+
+/* Editor Top Bar */
+"Zoom In" = "הגדל";
+"Zoom Out" = "הקטן";
+"Fit Canvas" = "התאם לקנבס";
+"Crop" = "חתוך";
+"Flip Horizontal" = "הפוך אופקית";
+"Flip Vertical" = "הפוך אנכית";
+"Add Capture" = "הוסף לכידה";
+
+/* Toolbar - Tools */
+"Arrow" = "חץ";
+"Line" = "קו";
+"Rectangle" = "מלבן";
+"Ellipse" = "אליפסה";
+"Pencil" = "עיפרון";
+"Pencil (Draw)" = "עיפרון (ציור)";
+"Marker" = "מרקר";
+"Text" = "טקסט";
+"Number" = "מספר";
+"Number / Counter" = "מספר / מונה";
+"Stamp / Emoji" = "חותמת / אמוג'י";
+"Censor" = "צנזור";
+"Censor (Pixelate / Blur / Solid)" = "צנזור (פיקסול / טשטוש / מילוי)";
+"Measure" = "מדידה";
+"Measure (px)" = "מדידה (px)";
+"Magnify (Loupe)" = "הגדלה (זכוכית מגדלת)";
+"Color Sampler" = "דוגם צבע";
+"Color Picker" = "בורר צבעים";
+"Select & Edit" = "בחר וערוך";
+"Color" = "צבע";
+
+/* Toolbar - Actions */
+"Copy to Clipboard" = "העתק ללוח";
+"Save to File" = "שמור לקובץ";
+"Save to" = "שמור אל";
+"Open in Editor Window" = "פתח בחלון עריכה";
+"Pin on Screen" = "הצמד למסך";
+"Pin" = "הצמד";
+"Pin (floating window)" = "הצמד (חלון צף)";
+"OCR" = "OCR";
+"OCR Text" = "טקסט OCR";
+"OCR (extract text)" = "OCR (חילוץ טקסט)";
+"Upload" = "העלאה";
+"Share" = "שתף";
+"Undo" = "בטל";
+"Redo" = "בצע שוב";
+"Close" = "סגור";
+"Remove Background" = "הסר רקע";
+"Beautify" = "ייפוי";
+"Adjust" = "התאמה";
+"Adjust (Image Effects)" = "התאמה (אפקטי תמונה)";
+"Invert Colors" = "הפוך צבעים";
+"Record" = "הקלט";
+"Record screen" = "הקלט מסך";
+"Translate" = "תרגם";
+"Auto-Redact sensitive data" = "השחרה אוטומטית של מידע רגיש";
+"Move Selection" = "הזז בחירה";
+
+/* Toolbar - Recording */
+"Start Recording" = "התחל הקלטה";
+"Cancel Recording" = "בטל הקלטה";
+"Highlight Mouse Clicks" = "הדגש לחיצות עכבר";
+"Record System Audio" = "הקלט שמע מערכת";
+"Record Microphone" = "הקלט מיקרופון";
+"Recording Settings" = "הגדרות הקלטה";
+
+/* Tool Options */
+"Size" = "גודל";
+"Stroke" = "קו מתאר";
+"Radius" = "רדיוס";
+"Start:" = "התחלה:";
+"Draw:" = "ציור:";
+"Auto:" = "אוטומטי:";
+"Fill" = "מילוי";
+"Outline" = "קו מתאר";
+"More Emojis" = "עוד אמוג'ים";
+"Load Image" = "טען תמונה";
+"Gradient Style" = "סגנון מעבר צבע";
+"On" = "פעיל";
+"Text Only" = "טקסט בלבד";
+"All Text" = "כל הטקסט";
+"PII" = "PII";
+"Faces" = "פנים";
+"People" = "אנשים";
+"Confirm before upload" = "אשר לפני העלאה";
+"Flip" = "הפוך";
+"Smooth" = "החלקה";
+"Smart" = "חכם";
+"Padding" = "ריפוד";
+"Shadow" = "צל";
+"Right-click to add points" = "לחץ ימני להוספת נקודות";
+"Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "החזק 1 אנכי-אוטומטי  ·  החזק 2 אופקי-אוטומטי";
+
+/* Overlay / Canvas */
+"Click a window  ·  Drag for custom area  ·  F for full screen" = "לחץ על חלון  ·  גרור לאזור מותאם  ·  F למסך מלא";
+"Drag to select  ·  Click for full screen" = "גרור לבחירה  ·  לחץ למסך מלא";
+"Release to annotate and edit" = "שחרר להוספת הערות ועריכה";
+"Window snap: " = "הצמדה לחלון: ";
+"ON" = "פעיל";
+"OFF" = "כבוי";
+"  (Tab to toggle)" = "  (Tab להחלפה)";
+"Right-click to copy" = "לחץ ימני להעתקה";
+"Copied %@" = "הועתק %@";
+"Set color %@" = "הגדר צבע %@";
+"Draw something first to use the move tool." = "צייר משהו קודם כדי להשתמש בכלי ההזזה.";
+"Drag to reposition" = "גרור למיקום מחדש";
+
+/* Overlay - Popovers */
+"Format:" = "פורמט:";
+"FPS:" = "FPS:";
+"When done:" = "בסיום:";
+"Open editor" = "פתח עורך";
+"Show in Finder" = "הצג ב-Finder";
+"Copy to clipboard" = "העתק ללוח";
+
+/* Preferences - General */
+"macshot Preferences" = "העדפות macshot";
+"General" = "כללי";
+"Tools" = "כלים";
+"Recording" = "הקלטה";
+"About" = "אודות";
+"Shortcuts" = "קיצורי דרך";
+"Uploads" = "העלאות";
+"Language" = "שפה";
+"Language:" = "שפה:";
+"Restart the app to fully apply the new language." = "הפעל מחדש את האפליקציה להחלת השפה החדשה במלואה.";
+"Capture" = "לכידה";
+"Play sound on copy" = "נגן צליל בהעתקה";
+"Remember last selection area" = "זכור אזור בחירה אחרון";
+"Remember last selected tool" = "זכור כלי שנבחר אחרון";
+"Show floating thumbnail after capture" = "הצג תמונה ממוזערת צפה לאחר לכידה";
+"Launch at login" = "הפעל בהתחברות";
+"Show snap alignment guides" = "הצג קווי הצמדה";
+"Capture mouse cursor in screenshot" = "לכוד סמן עכבר בצילום מסך";
+"Use window title in saved filename" = "השתמש בכותרת חלון בשם הקובץ";
+"Hide menu bar icon" = "הסתר סמל שורת התפריטים";
+"Hotkeys still work. To show the icon again, re-launch macshot." = "מקשי קיצור עדיין פועלים. להצגת הסמל שוב, הפעל מחדש את macshot.";
+"Check for updates automatically" = "בדוק עדכונים באופן אוטומטי";
+"Thumbnail" = "תמונה ממוזערת";
+"  Dismiss after:" = "  סגור אחרי:";
+"seconds before auto-dismiss (0 = never)" = "שניות לסגירה אוטומטית (0 = אף פעם)";
+"  Multiple previews:" = "  תצוגות מקדימות מרובות:";
+"Stack (keep all)" = "ערום (שמור הכל)";
+"Replace (show only latest)" = "החלף (הצג רק אחרון)";
+"Output" = "פלט";
+"Image format:" = "פורמט תמונה:";
+"Quality:" = "איכות:";
+"%d%%" = "%d%%";
+"Save at standard resolution (1x)" = "שמור ברזולוציה רגילה (1x)";
+"Halves dimensions on Retina displays, ~4x smaller files" = "מחצית מידות בצגי Retina, קבצים קטנים פי ~4";
+"Embed sRGB color profile" = "הטמע פרופיל צבע sRGB";
+"Ensures consistent colors across different displays" = "מבטיח צבעים עקביים בין צגים שונים";
+"Screenshot History" = "היסטוריית צילומי מסך";
+"History size:" = "גודל היסטוריה:";
+"screenshots kept on disk (0 = off)" = "צילומי מסך נשמרים בדיסק (0 = כבוי)";
+"Save Directory" = "תיקיית שמירה";
+"Save folder:" = "תיקיית שמירה:";
+"Browse…" = "עיין…";
+"Appearance" = "מראה";
+"Accent color:" = "צבע הדגשה:";
+"Icon color:" = "צבע סמל:";
+"Reset" = "איפוס";
+"OCR Capture:" = "לכידת OCR:";
+"Show window + copy to clipboard" = "הצג חלון + העתק ללוח";
+"Show window only" = "הצג חלון בלבד";
+"Copy to clipboard only" = "העתק ללוח בלבד";
+"Enter / Quick Capture:" = "Enter / לכידה מהירה:";
+"Save to file" = "שמור לקובץ";
+"Save + copy to clipboard" = "שמור + העתק ללוח";
+"OCR Action" = "פעולת OCR";
+
+/* Preferences - Shortcuts */
+"Keyboard Shortcuts" = "קיצורי מקלדת";
+"Hotkeys" = "מקשי קיצור";
+"Clear shortcut" = "נקה קיצור";
+"Press keys..." = "לחץ על מקשים...";
+"Waiting..." = "ממתין...";
+
+/* Preferences - Tools */
+"Annotation Tools" = "כלי הערות";
+"Hidden tools are removed from the bottom toolbar." = "כלים מוסתרים מוסרים מסרגל הכלים התחתון.";
+"Capture Actions" = "פעולות לכידה";
+"Bottom Toolbar Actions" = "פעולות סרגל כלים תחתון";
+"Hidden actions are removed from the bottom toolbar." = "פעולות מוסתרות מוסרות מסרגל הכלים התחתון.";
+"Editor Actions" = "פעולות עורך";
+"Right Toolbar Actions" = "פעולות סרגל כלים ימני";
+"Hidden actions are removed from the right toolbar." = "פעולות מוסתרות מוסרות מסרגל הכלים הימני.";
+
+/* Preferences - Recording */
+"Frame rate:" = "קצב פריימים:";
+"After recording:" = "לאחר הקלטה:";
+"Save recording to:" = "שמור הקלטה אל:";
+"Clear" = "נקה";
+"Max height:" = "גובה מקסימלי:";
+"px (0 = unlimited)" = "px (0 = ללא הגבלה)";
+"Behavior" = "התנהגות";
+"Auto-scroll (sends synthetic scroll events)" = "גלילה אוטומטית (שולח אירועי גלילה סינתטיים)";
+"Detect fixed/sticky headers" = "זהה כותרות קבועות/דביקות";
+"Scroll speed:" = "מהירות גלילה:";
+"Slow" = "איטי";
+"Medium" = "בינוני";
+"Fast" = "מהיר";
+"Very fast" = "מהיר מאוד";
+"5 fps" = "5 fps";
+"10 fps" = "10 fps";
+"15 fps" = "15 fps";
+"24 fps" = "24 fps";
+"30 fps" = "30 fps";
+"60 fps" = "60 fps";
+"120 fps" = "120 fps";
+"MP4 (H.264)" = "MP4 (H.264)";
+"GIF" = "GIF";
+
+/* Preferences - Upload */
+"Upload Service" = "שירות העלאה";
+"Upload Provider" = "ספק העלאה";
+"Provider:" = "ספק:";
+"Google Drive" = "Google Drive";
+"Google Drive (images + videos)" = "Google Drive (תמונות + סרטונים)";
+"imgbb (images only)" = "imgbb (תמונות בלבד)";
+"S3-Compatible (images + videos)" = "S3-Compatible (תמונות + סרטונים)";
+"S3-Compatible Storage" = "אחסון תואם S3";
+"Sign In with Google" = "התחבר עם Google";
+"Sign Out" = "התנתק";
+"Signed in" = "מחובר";
+"Not signed in" = "לא מחובר";
+"Account:" = "חשבון:";
+"Test Connection" = "בדוק חיבור";
+"Fill in endpoint, bucket, and credentials first" = "מלא קודם כתובת שרת, bucket ופרטי גישה";
+"Testing..." = "בודק...";
+"Connection successful!" = "החיבור הצליח!";
+"Leave empty to use default" = "השאר ריק לשימוש בברירת מחדל";
+"Endpoint:" = "כתובת שרת:";
+"Region:" = "אזור:";
+"Bucket:" = "Bucket:";
+"Access Key:" = "מפתח גישה:";
+"Secret Key:" = "מפתח סודי:";
+"Public URL:" = "כתובת URL ציבורית:";
+"Path Prefix:" = "קידומת נתיב:";
+"API key:" = "מפתח API:";
+"Upload History" = "היסטוריית העלאות";
+"No uploads yet." = "אין העלאות עדיין.";
+"Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "כתובת URL בסיסית לגישה ציבורית. אם ריק, נעשה שימוש בכתובת שרת S3 (ייתכן שלא נגיש לציבור).";
+"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "מפתח משותף כלול — קבל מפתח חינמי משלך ב-imgbb.com/api אם הגעת למגבלת קצב. תמונות בלבד (ללא תמיכה בווידאו).";
+"Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "עובד עם AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 ושירותים תואמי S3 אחרים. תומך בתמונות וסרטונים.";
+"Configure S3 in Preferences" = "הגדר S3 בהעדפות";
+"Sign in to Google Drive in Preferences" = "התחבר ל-Google Drive בהעדפות";
+"Video upload requires Google Drive or S3" = "העלאת וידאו דורשת Google Drive או S3";
+
+/* Preferences - About */
+"macshot" = "macshot";
+"Version %@ (%@)" = "גרסה %@ (%@)";
+"Made by" = "נוצר על ידי";
+"Licensed under the GPLv3" = "מורשה תחת GPLv3";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "כלי חינמי וקוד פתוח לצילום מסך והקלטת מסך עבור macOS.\nנייטיב לחלוטין — בנוי עם Swift ו-AppKit.";
+
+/* Alerts */
+"No Image on Clipboard" = "אין תמונה בלוח";
+"Copy an image to the clipboard first, then try again." = "העתק תמונה ללוח קודם, ואז נסה שוב.";
+"OK" = "אישור";
+"Accessibility Access Required" = "נדרשת גישת נגישות";
+"macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot זקוק להרשאת נגישות לגלילה אוטומטית באפליקציות אחרות. אנא אשר גישה בהגדרות המערכת ונסה שוב.";
+"Open Settings" = "פתח הגדרות";
+"Cancel" = "ביטול";
+"Microphone Access Required" = "נדרשת גישה למיקרופון";
+"macshot needs microphone permission to record voice audio. Open System Settings to grant access." = "macshot זקוק להרשאת מיקרופון להקלטת שמע קולי. פתח את הגדרות המערכת לאישור גישה.";
+"Upload to Google Drive?" = "להעלות ל-Google Drive?";
+"Upload to S3?" = "להעלות ל-S3?";
+"Upload to imgbb.com?" = "להעלות ל-imgbb.com?";
+"Your screenshot will be uploaded." = "צילום המסך שלך יועלה.";
+
+/* Permission Onboarding */
+"Welcome to macshot" = "ברוכים הבאים ל-macshot";
+"macshot needs one permission" = "macshot זקוק להרשאה אחת";
+"Screen Recording not yet granted" = "הרשאת הקלטת מסך טרם ניתנה";
+"Screen Recording granted!" = "הרשאת הקלטת מסך אושרה!";
+"Enable macshot, then try taking a screenshot" = "הפעל את macshot ואז נסה לצלם מסך";
+"Open Screen Recording Settings" = "פתח הגדרות הקלטת מסך";
+"Continue" = "המשך";
+
+/* OCR Window */
+"Text Recognition" = "זיהוי טקסט";
+"Translate to:" = "תרגם ל:";
+"%d chars · %d words" = "%d תווים · %d מילים";
+"Copy  ⌘↩" = "העתק  ⌘↩";
+"AI Search" = "חיפוש AI";
+"Show Original" = "הצג מקור";
+"Translation Failed" = "התרגום נכשל";
+"Translation" = "תרגום";
+"(No text detected in the selected area)" = "(לא זוהה טקסט באזור הנבחר)";
+
+/* Upload Toast */
+"URL copied to the clipboard" = "הכתובת הועתקה ללוח";
+"Uploading... %d%%" = "מעלה... %d%%";
+"Upload failed: %@" = "ההעלאה נכשלה: %@";
+"Uploaded! Link copied." = "הועלה! הקישור הועתק.";
+"Uploading to %@... %d%%" = "מעלה ל-%@... %d%%";
+"Open" = "פתח";
+
+/* Recording Toast */
+"Recording saved" = "ההקלטה נשמרה";
+"%@ • Recording saved" = "%@ • ההקלטה נשמרה";
+"Copy Path" = "העתק נתיב";
+"Path copied!" = "הנתיב הועתק!";
+
+/* Video Editor */
+"macshot Video Editor" = "עורך הווידאו של macshot";
+"%@ selected" = "%@ נבחר";
+"Exporting..." = "מייצא...";
+"Export failed" = "הייצוא נכשל";
+"Saved to %@" = "נשמר ב-%@";
+"Save failed" = "השמירה נכשלה";
+
+/* Barcode Detector */
+/* "Open" and "Copy" are shared with other sections */
+
+/* Save Panel */
+"Save As..." = "שמור בשם...";
+"Choose a folder" = "בחר תיקייה";
+"Save All to Folder…" = "שמור הכל לתיקייה…";
+
+/* Scroll Capture HUD */
+"Auto Scroll" = "גלילה אוטומטית";
+"Stop" = "עצור";
+"Scrolling..." = "גולל...";
+
+/* Effects Picker (Adjust popover) */
+"Presets" = "הגדרות קבועות מראש";
+"Adjustments" = "התאמות";
+"Brightness" = "בהירות";
+"Contrast" = "ניגודיות";
+"Saturation" = "רוויה";
+"Sharpness" = "חדות";
+
+/* Time Ago */
+"just now" = "הרגע";
+"%ds ago" = "לפני %ds";
+"%dm ago" = "לפני %dm";
+"%dh ago" = "לפני %dh";
+
+/* Hotkey Labels */
+"History" = "היסטוריה";
+
+/* Preferences - Shortcuts note */
+"Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "לחץ על \"הקלט\" ולחץ על צירוף מקשים עם לפחות מקש שינוי אחד (⌘, ⌥, ⌃, ⇧) כדי להגדיר קיצור.";

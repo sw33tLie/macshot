@@ -1,0 +1,400 @@
+/* Български — macshot localization
+ *
+ * To add a new language:
+ * 1. Create a new folder: macshot/<lang-code>.lproj/
+ * 2. Copy this file into that folder
+ * 3. Translate all values (right side of = sign)
+ * 4. Add the language to LanguageManager.availableLanguages in Services/LanguageManager.swift
+ * 5. Add the language code to knownRegions in macshot.xcodeproj/project.pbxproj
+ * 6. Submit a pull request!
+ *
+ * Keys use the English text. Values should be the translation.
+ * Format strings use %@ for strings, %d for integers.
+ * Keep keyboard shortcuts (like ⌘C) untranslated.
+ * Keep brand names (macshot, Google Drive, imgbb, S3) untranslated.
+ */
+
+/* Menu Bar */
+"Capture Area" = "Заснемане на област";
+"Capture Screen" = "Заснемане на екран";
+"Capture OCR" = "Заснемане OCR";
+"Quick Capture" = "Бързо заснемане";
+"Scroll Capture" = "Заснемане с превъртане";
+"Capture Delay" = "Забавено заснемане";
+"None" = "Няма";
+"%d seconds" = "%d секунди";
+"Record Area" = "Запис на област";
+"Record Screen" = "Запис на екран";
+"Recent Captures" = "Скорошни заснемания";
+"Show History Panel" = "Показване на панела с история";
+"Open Image..." = "Отваряне на изображение...";
+"Open from Clipboard" = "Отваряне от клипборда";
+"Preferences..." = "Настройки...";
+"Check for Updates..." = "Проверка за обновления...";
+"Quit macshot" = "Изход от macshot";
+"No recent captures" = "Няма скорошни заснемания";
+"Clear History" = "Изчистване на историята";
+
+/* History Panel */
+"Copy" = "Копиране";
+"Save As..." = "Запазване като...";
+"Open in Editor" = "Отваряне в редактора";
+"Pin to Screen" = "Закачане на екрана";
+"Quick Look" = "Бърз преглед";
+"Delete" = "Изтриване";
+"All" = "Всички";
+"Screenshots" = "Екранни снимки";
+"GIFs" = "GIFs";
+"Click to copy · Drag to app" = "Щракнете за копиране · Плъзнете към приложение";
+"No captures yet" = "Все още няма заснемания";
+
+/* Floating Thumbnail */
+"Close All" = "Затваряне на всички";
+"Save All to Folder…" = "Запазване на всички в папка…";
+"Save" = "Запазване";
+
+/* Editor Top Bar */
+"Zoom In" = "Увеличаване";
+"Zoom Out" = "Намаляване";
+"Fit Canvas" = "Побиране в платното";
+"Crop" = "Изрязване";
+"Flip Horizontal" = "Обръщане хоризонтално";
+"Flip Vertical" = "Обръщане вертикално";
+"Add Capture" = "Добавяне на заснемане";
+
+/* Toolbar - Tools */
+"Arrow" = "Стрелка";
+"Line" = "Линия";
+"Rectangle" = "Правоъгълник";
+"Ellipse" = "Елипса";
+"Pencil" = "Молив";
+"Pencil (Draw)" = "Молив (Рисуване)";
+"Marker" = "Маркер";
+"Text" = "Текст";
+"Number" = "Номер";
+"Number / Counter" = "Номер / Брояч";
+"Stamp / Emoji" = "Печат / Емотикон";
+"Censor" = "Цензуриране";
+"Censor (Pixelate / Blur / Solid)" = "Цензуриране (Пикселизиране / Размазване / Плътно)";
+"Measure" = "Измерване";
+"Measure (px)" = "Измерване (px)";
+"Magnify (Loupe)" = "Увеличение (Лупа)";
+"Color Sampler" = "Пипета за цвят";
+"Color Picker" = "Избор на цвят";
+"Select & Edit" = "Избиране и редактиране";
+"Color" = "Цвят";
+
+/* Toolbar - Actions */
+"Copy to Clipboard" = "Копиране в клипборда";
+"Save to File" = "Запазване във файл";
+"Save to" = "Запазване в";
+"Open in Editor Window" = "Отваряне в прозорец на редактора";
+"Pin on Screen" = "Закачане на екрана";
+"Pin" = "Закачане";
+"Pin (floating window)" = "Закачане (плаващ прозорец)";
+"OCR" = "OCR";
+"OCR Text" = "OCR текст";
+"OCR (extract text)" = "OCR (извличане на текст)";
+"Upload" = "Качване";
+"Share" = "Споделяне";
+"Undo" = "Отмяна";
+"Redo" = "Повтаряне";
+"Close" = "Затваряне";
+"Remove Background" = "Премахване на фона";
+"Beautify" = "Разкрасяване";
+"Adjust" = "Корекция";
+"Adjust (Image Effects)" = "Корекция (Ефекти на изображение)";
+"Invert Colors" = "Обръщане на цветовете";
+"Record" = "Запис";
+"Record screen" = "Запис на екран";
+"Translate" = "Превод";
+"Auto-Redact sensitive data" = "Авто-заличаване на чувствителни данни";
+"Move Selection" = "Преместване на селекцията";
+
+/* Toolbar - Recording */
+"Start Recording" = "Начало на записа";
+"Cancel Recording" = "Отказ от записа";
+"Highlight Mouse Clicks" = "Подчертаване на щракванията";
+"Record System Audio" = "Запис на системен звук";
+"Record Microphone" = "Запис от микрофон";
+"Recording Settings" = "Настройки на записа";
+
+/* Tool Options */
+"Size" = "Размер";
+"Stroke" = "Контур";
+"Radius" = "Радиус";
+"Start:" = "Начало:";
+"Draw:" = "Рисуване:";
+"Auto:" = "Авто:";
+"Fill" = "Запълване";
+"Outline" = "Очертание";
+"More Emojis" = "Още емотикони";
+"Load Image" = "Зареждане на изображение";
+"Gradient Style" = "Стил на градиента";
+"On" = "Вкл.";
+"Text Only" = "Само текст";
+"All Text" = "Целия текст";
+"PII" = "PII";
+"Faces" = "Лица";
+"People" = "Хора";
+"Confirm before upload" = "Потвърждение преди качване";
+"Flip" = "Обръщане";
+"Smooth" = "Изглаждане";
+"Smart" = "Интелигентно";
+"Padding" = "Отстъп";
+"Shadow" = "Сянка";
+"Right-click to add points" = "Десен бутон за добавяне на точки";
+"Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "Задръжте 1 авто-вертикално  ·  Задръжте 2 авто-хоризонтално";
+
+/* Overlay / Canvas */
+"Click a window  ·  Drag for custom area  ·  F for full screen" = "Щракнете върху прозорец  ·  Плъзнете за произволна област  ·  F за цял екран";
+"Drag to select  ·  Click for full screen" = "Плъзнете за избиране  ·  Щракнете за цял екран";
+"Release to annotate and edit" = "Отпуснете за анотиране и редактиране";
+"Window snap: " = "Прилепване към прозорец: ";
+"ON" = "ВКЛ.";
+"OFF" = "ИЗКЛ.";
+"  (Tab to toggle)" = "  (Tab за превключване)";
+"Right-click to copy" = "Десен бутон за копиране";
+"Copied %@" = "Копирано %@";
+"Set color %@" = "Зададен цвят %@";
+"Draw something first to use the move tool." = "Първо нарисувайте нещо, за да използвате инструмента за преместване.";
+"Drag to reposition" = "Плъзнете за преместване";
+
+/* Overlay - Popovers */
+"Format:" = "Формат:";
+"FPS:" = "FPS:";
+"When done:" = "След приключване:";
+"Open editor" = "Отваряне на редактора";
+"Show in Finder" = "Показване във Finder";
+"Copy to clipboard" = "Копиране в клипборда";
+
+/* Preferences - General */
+"macshot Preferences" = "Настройки на macshot";
+"General" = "Общи";
+"Tools" = "Инструменти";
+"Recording" = "Запис";
+"About" = "Относно";
+"Shortcuts" = "Клавишни комбинации";
+"Uploads" = "Качвания";
+"Language" = "Език";
+"Language:" = "Език:";
+"Restart the app to fully apply the new language." = "Рестартирайте приложението, за да приложите изцяло новия език.";
+"Capture" = "Заснемане";
+"Play sound on copy" = "Звук при копиране";
+"Remember last selection area" = "Запомняне на последната избрана област";
+"Remember last selected tool" = "Запомняне на последния избран инструмент";
+"Show floating thumbnail after capture" = "Показване на плаващ миниатюр след заснемане";
+"Launch at login" = "Стартиране при вход";
+"Show snap alignment guides" = "Показване на водачи за подравняване";
+"Capture mouse cursor in screenshot" = "Заснемане на курсора в екранната снимка";
+"Use window title in saved filename" = "Използване на заглавието на прозореца в името на файла";
+"Hide menu bar icon" = "Скриване на иконата в лентата с менюта";
+"Hotkeys still work. To show the icon again, re-launch macshot." = "Бързите клавиши продължават да работят. За да покажете иконата отново, рестартирайте macshot.";
+"Check for updates automatically" = "Автоматична проверка за обновления";
+"Thumbnail" = "Миниатюр";
+"  Dismiss after:" = "  Скриване след:";
+"seconds before auto-dismiss (0 = never)" = "секунди преди автоматично скриване (0 = никога)";
+"  Multiple previews:" = "  Множество визуализации:";
+"Stack (keep all)" = "Подреждане (запазване на всички)";
+"Replace (show only latest)" = "Заместване (показване само на последния)";
+"Output" = "Изход";
+"Image format:" = "Формат на изображение:";
+"Quality:" = "Качество:";
+"%d%%" = "%d%%";
+"Save at standard resolution (1x)" = "Запазване в стандартна резолюция (1x)";
+"Halves dimensions on Retina displays, ~4x smaller files" = "Намалява размерите наполовина на Retina дисплеи, ~4 пъти по-малки файлове";
+"Embed sRGB color profile" = "Вграждане на sRGB цветен профил";
+"Ensures consistent colors across different displays" = "Осигурява еднакви цветове на различни дисплеи";
+"Screenshot History" = "История на екранните снимки";
+"History size:" = "Размер на историята:";
+"screenshots kept on disk (0 = off)" = "екранни снимки на диска (0 = изкл.)";
+"Save Directory" = "Папка за запазване";
+"Save folder:" = "Папка за запазване:";
+"Browse…" = "Преглед…";
+"Appearance" = "Външен вид";
+"Accent color:" = "Акцентен цвят:";
+"Icon color:" = "Цвят на иконата:";
+"Reset" = "Нулиране";
+"OCR Capture:" = "OCR заснемане:";
+"Show window + copy to clipboard" = "Показване на прозорец + копиране в клипборда";
+"Show window only" = "Само показване на прозорец";
+"Copy to clipboard only" = "Само копиране в клипборда";
+"Enter / Quick Capture:" = "Enter / Бързо заснемане:";
+"Save to file" = "Запазване във файл";
+"Save + copy to clipboard" = "Запазване + копиране в клипборда";
+"OCR Action" = "OCR действие";
+
+/* Preferences - Shortcuts */
+"Keyboard Shortcuts" = "Клавишни комбинации";
+"Hotkeys" = "Бързи клавиши";
+"Clear shortcut" = "Изчистване на комбинация";
+"Press keys..." = "Натиснете клавиши...";
+"Waiting..." = "Изчакване...";
+
+/* Preferences - Tools */
+"Annotation Tools" = "Инструменти за анотиране";
+"Hidden tools are removed from the bottom toolbar." = "Скритите инструменти са премахнати от долната лента.";
+"Capture Actions" = "Действия при заснемане";
+"Bottom Toolbar Actions" = "Действия в долната лента";
+"Hidden actions are removed from the bottom toolbar." = "Скритите действия са премахнати от долната лента.";
+"Editor Actions" = "Действия в редактора";
+"Right Toolbar Actions" = "Действия в дясната лента";
+"Hidden actions are removed from the right toolbar." = "Скритите действия са премахнати от дясната лента.";
+
+/* Preferences - Recording */
+"Frame rate:" = "Кадрова честота:";
+"After recording:" = "След записа:";
+"Save recording to:" = "Запазване на записа в:";
+"Clear" = "Изчистване";
+"Max height:" = "Макс. височина:";
+"px (0 = unlimited)" = "px (0 = неограничено)";
+"Behavior" = "Поведение";
+"Auto-scroll (sends synthetic scroll events)" = "Авто-превъртане (изпраща синтетични събития за превъртане)";
+"Detect fixed/sticky headers" = "Откриване на фиксирани/залепващи хедъри";
+"Scroll speed:" = "Скорост на превъртане:";
+"Slow" = "Бавно";
+"Medium" = "Средно";
+"Fast" = "Бързо";
+"Very fast" = "Много бързо";
+"5 fps" = "5 fps";
+"10 fps" = "10 fps";
+"15 fps" = "15 fps";
+"24 fps" = "24 fps";
+"30 fps" = "30 fps";
+"60 fps" = "60 fps";
+"120 fps" = "120 fps";
+"MP4 (H.264)" = "MP4 (H.264)";
+"GIF" = "GIF";
+
+/* Preferences - Upload */
+"Upload Service" = "Услуга за качване";
+"Upload Provider" = "Доставчик за качване";
+"Provider:" = "Доставчик:";
+"Google Drive" = "Google Drive";
+"Google Drive (images + videos)" = "Google Drive (изображения + видеа)";
+"imgbb (images only)" = "imgbb (само изображения)";
+"S3-Compatible (images + videos)" = "S3-съвместимо (изображения + видеа)";
+"S3-Compatible Storage" = "S3-съвместимо хранилище";
+"Sign In with Google" = "Вход с Google";
+"Sign Out" = "Изход";
+"Signed in" = "Влезли сте";
+"Not signed in" = "Не сте влезли";
+"Account:" = "Акаунт:";
+"Test Connection" = "Тестване на връзката";
+"Fill in endpoint, bucket, and credentials first" = "Първо попълнете адрес, контейнер и идентификационни данни";
+"Testing..." = "Тестване...";
+"Connection successful!" = "Връзката е успешна!";
+"Leave empty to use default" = "Оставете празно за стойност по подразбиране";
+"Endpoint:" = "Адрес:";
+"Region:" = "Регион:";
+"Bucket:" = "Контейнер:";
+"Access Key:" = "Ключ за достъп:";
+"Secret Key:" = "Таен ключ:";
+"Public URL:" = "Публичен URL:";
+"Path Prefix:" = "Префикс на пътя:";
+"API key:" = "API ключ:";
+"Upload History" = "История на качванията";
+"No uploads yet." = "Все още няма качвания.";
+"Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "Базов URL за публичен достъп. Ако е празно, се използва URL адресът на S3 (може да не е публично достъпен).";
+"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "Включен е споделен ключ — вземете собствен безплатен ключ от imgbb.com/api, ако достигнете лимита. Само изображения (без поддръжка на видео).";
+"Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "Работи с AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 и други S3-съвместими услуги. Поддържа изображения и видеа.";
+"Configure S3 in Preferences" = "Конфигурирайте S3 в Настройки";
+"Sign in to Google Drive in Preferences" = "Влезте в Google Drive от Настройки";
+"Video upload requires Google Drive or S3" = "Качването на видео изисква Google Drive или S3";
+
+/* Preferences - About */
+"macshot" = "macshot";
+"Version %@ (%@)" = "Версия %@ (%@)";
+"Made by" = "Създадено от";
+"Licensed under the GPLv3" = "Лицензирано под GPLv3";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "Безплатен инструмент с отворен код за екранни снимки и запис на екран за macOS.\nИзцяло нативен — създаден със Swift и AppKit.";
+
+/* Alerts */
+"No Image on Clipboard" = "Няма изображение в клипборда";
+"Copy an image to the clipboard first, then try again." = "Първо копирайте изображение в клипборда, след което опитайте отново.";
+"OK" = "ОК";
+"Accessibility Access Required" = "Необходим е достъп за достъпност";
+"macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot се нуждае от разрешение за достъпност, за да превърта автоматично други приложения. Моля, дайте достъп в Системни настройки, след което опитайте отново.";
+"Open Settings" = "Отваряне на настройките";
+"Cancel" = "Отказ";
+"Microphone Access Required" = "Необходим е достъп до микрофон";
+"macshot needs microphone permission to record voice audio. Open System Settings to grant access." = "macshot се нуждае от разрешение за микрофон, за да записва гласово аудио. Отворете Системни настройки, за да дадете достъп.";
+"Upload to Google Drive?" = "Качване в Google Drive?";
+"Upload to S3?" = "Качване в S3?";
+"Upload to imgbb.com?" = "Качване в imgbb.com?";
+"Your screenshot will be uploaded." = "Вашата екранна снимка ще бъде качена.";
+
+/* Permission Onboarding */
+"Welcome to macshot" = "Добре дошли в macshot";
+"macshot needs one permission" = "macshot се нуждае от едно разрешение";
+"Screen Recording not yet granted" = "Записът на екран все още не е разрешен";
+"Screen Recording granted!" = "Записът на екран е разрешен!";
+"Enable macshot, then try taking a screenshot" = "Включете macshot, след което опитайте да направите екранна снимка";
+"Open Screen Recording Settings" = "Отваряне на настройките за запис на екран";
+"Continue" = "Продължаване";
+
+/* OCR Window */
+"Text Recognition" = "Разпознаване на текст";
+"Translate to:" = "Превод на:";
+"%d chars · %d words" = "%d знака · %d думи";
+"Copy  ⌘↩" = "Копиране  ⌘↩";
+"AI Search" = "AI търсене";
+"Show Original" = "Показване на оригинала";
+"Translation Failed" = "Преводът е неуспешен";
+"Translation" = "Превод";
+"(No text detected in the selected area)" = "(Не е открит текст в избраната област)";
+
+/* Upload Toast */
+"URL copied to the clipboard" = "URL адресът е копиран в клипборда";
+"Uploading... %d%%" = "Качване... %d%%";
+"Upload failed: %@" = "Качването е неуспешно: %@";
+"Uploaded! Link copied." = "Качено! Линкът е копиран.";
+"Uploading to %@... %d%%" = "Качване в %@... %d%%";
+"Open" = "Отваряне";
+
+/* Recording Toast */
+"Recording saved" = "Записът е запазен";
+"%@ • Recording saved" = "%@ • Записът е запазен";
+"Copy Path" = "Копиране на пътя";
+"Path copied!" = "Пътят е копиран!";
+
+/* Video Editor */
+"macshot Video Editor" = "macshot Видео редактор";
+"%@ selected" = "%@ избрано";
+"Exporting..." = "Експортиране...";
+"Export failed" = "Експортирането е неуспешно";
+"Saved to %@" = "Запазено в %@";
+"Save failed" = "Запазването е неуспешно";
+
+/* Barcode Detector */
+/* "Open" and "Copy" are shared with other sections */
+
+/* Save Panel */
+"Save As..." = "Запазване като...";
+"Choose a folder" = "Изберете папка";
+"Save All to Folder…" = "Запазване на всички в папка…";
+
+/* Scroll Capture HUD */
+"Auto Scroll" = "Авто-превъртане";
+"Stop" = "Спиране";
+"Scrolling..." = "Превъртане...";
+
+/* Effects Picker (Adjust popover) */
+"Presets" = "Предварителни настройки";
+"Adjustments" = "Корекции";
+"Brightness" = "Яркост";
+"Contrast" = "Контраст";
+"Saturation" = "Наситеност";
+"Sharpness" = "Острота";
+
+/* Time Ago */
+"just now" = "току-що";
+"%ds ago" = "преди %dс";
+"%dm ago" = "преди %dм";
+"%dh ago" = "преди %dч";
+
+/* Hotkey Labels */
+"History" = "История";
+
+/* Preferences - Shortcuts note */
+"Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Щракнете \"Запис\" и натиснете клавишна комбинация с поне един модификатор (⌘, ⌥, ⌃, ⇧), за да зададете комбинация.";

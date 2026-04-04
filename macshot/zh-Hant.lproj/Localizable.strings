@@ -1,0 +1,400 @@
+/* 繁體中文 — macshot localization
+ *
+ * To add a new language:
+ * 1. Create a new folder: macshot/<lang-code>.lproj/
+ * 2. Copy this file into that folder
+ * 3. Translate all values (right side of = sign)
+ * 4. Add the language to LanguageManager.availableLanguages in Services/LanguageManager.swift
+ * 5. Add the language code to knownRegions in macshot.xcodeproj/project.pbxproj
+ * 6. Submit a pull request!
+ *
+ * Keys use the English text. Values should be the translation.
+ * Format strings use %@ for strings, %d for integers.
+ * Keep keyboard shortcuts (like ⌘C) untranslated.
+ * Keep brand names (macshot, Google Drive, imgbb, S3) untranslated.
+ */
+
+/* Menu Bar */
+"Capture Area" = "擷取區域";
+"Capture Screen" = "擷取螢幕";
+"Capture OCR" = "擷取 OCR";
+"Quick Capture" = "快速擷取";
+"Scroll Capture" = "捲動擷取";
+"Capture Delay" = "延遲擷取";
+"None" = "無";
+"%d seconds" = "%d 秒";
+"Record Area" = "錄製區域";
+"Record Screen" = "錄製螢幕";
+"Recent Captures" = "最近的擷取";
+"Show History Panel" = "顯示歷史記錄面板";
+"Open Image..." = "開啟影像⋯";
+"Open from Clipboard" = "從剪貼簿開啟";
+"Preferences..." = "偏好設定⋯";
+"Check for Updates..." = "檢查更新⋯";
+"Quit macshot" = "結束 macshot";
+"No recent captures" = "沒有最近的擷取";
+"Clear History" = "清除歷史記錄";
+
+/* History Panel */
+"Copy" = "拷貝";
+"Save As..." = "另存新檔⋯";
+"Open in Editor" = "在編輯器中開啟";
+"Pin to Screen" = "釘選至螢幕";
+"Quick Look" = "快速查看";
+"Delete" = "刪除";
+"All" = "全部";
+"Screenshots" = "螢幕截圖";
+"GIFs" = "GIFs";
+"Click to copy · Drag to app" = "點按以拷貝 · 拖移至 App";
+"No captures yet" = "尚無擷取";
+
+/* Floating Thumbnail */
+"Close All" = "全部關閉";
+"Save All to Folder…" = "全部儲存至檔案夾⋯";
+"Save" = "儲存";
+
+/* Editor Top Bar */
+"Zoom In" = "放大";
+"Zoom Out" = "縮小";
+"Fit Canvas" = "配合畫布大小";
+"Crop" = "裁切";
+"Flip Horizontal" = "水平翻轉";
+"Flip Vertical" = "垂直翻轉";
+"Add Capture" = "加入擷取";
+
+/* Toolbar - Tools */
+"Arrow" = "箭頭";
+"Line" = "線條";
+"Rectangle" = "矩形";
+"Ellipse" = "橢圓";
+"Pencil" = "鉛筆";
+"Pencil (Draw)" = "鉛筆（繪圖）";
+"Marker" = "螢光筆";
+"Text" = "文字";
+"Number" = "編號";
+"Number / Counter" = "編號 / 計數器";
+"Stamp / Emoji" = "圖章 / 表情符號";
+"Censor" = "遮蔽";
+"Censor (Pixelate / Blur / Solid)" = "遮蔽（馬賽克 / 模糊 / 填色）";
+"Measure" = "測量";
+"Measure (px)" = "測量 (px)";
+"Magnify (Loupe)" = "放大鏡";
+"Color Sampler" = "顏色取樣器";
+"Color Picker" = "顏色選取器";
+"Select & Edit" = "選取與編輯";
+"Color" = "顏色";
+
+/* Toolbar - Actions */
+"Copy to Clipboard" = "拷貝至剪貼簿";
+"Save to File" = "儲存至檔案";
+"Save to" = "儲存至";
+"Open in Editor Window" = "在編輯器視窗中開啟";
+"Pin on Screen" = "釘選在螢幕上";
+"Pin" = "釘選";
+"Pin (floating window)" = "釘選（浮動視窗）";
+"OCR" = "OCR";
+"OCR Text" = "OCR 文字辨識";
+"OCR (extract text)" = "OCR（擷取文字）";
+"Upload" = "上傳";
+"Share" = "分享";
+"Undo" = "還原";
+"Redo" = "重做";
+"Close" = "關閉";
+"Remove Background" = "移除背景";
+"Beautify" = "美化";
+"Adjust" = "調整";
+"Adjust (Image Effects)" = "調整（影像效果）";
+"Invert Colors" = "反轉顏色";
+"Record" = "錄製";
+"Record screen" = "錄製螢幕";
+"Translate" = "翻譯";
+"Auto-Redact sensitive data" = "自動遮蔽敏感資料";
+"Move Selection" = "移動選取範圍";
+
+/* Toolbar - Recording */
+"Start Recording" = "開始錄製";
+"Cancel Recording" = "取消錄製";
+"Highlight Mouse Clicks" = "標示滑鼠點按";
+"Record System Audio" = "錄製系統音訊";
+"Record Microphone" = "錄製麥克風";
+"Recording Settings" = "錄製設定";
+
+/* Tool Options */
+"Size" = "大小";
+"Stroke" = "筆畫";
+"Radius" = "半徑";
+"Start:" = "起始：";
+"Draw:" = "繪製：";
+"Auto:" = "自動：";
+"Fill" = "填充";
+"Outline" = "外框";
+"More Emojis" = "更多表情符號";
+"Load Image" = "載入影像";
+"Gradient Style" = "漸層樣式";
+"On" = "開啟";
+"Text Only" = "僅文字";
+"All Text" = "全部文字";
+"PII" = "個資";
+"Faces" = "臉孔";
+"People" = "人物";
+"Confirm before upload" = "上傳前確認";
+"Flip" = "翻轉";
+"Smooth" = "平滑";
+"Smart" = "智慧型";
+"Padding" = "間距";
+"Shadow" = "陰影";
+"Right-click to add points" = "右鍵點按以加入控制點";
+"Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "按住 1 自動垂直  ·  按住 2 自動水平";
+
+/* Overlay / Canvas */
+"Click a window  ·  Drag for custom area  ·  F for full screen" = "點按視窗  ·  拖移以自訂區域  ·  F 全螢幕";
+"Drag to select  ·  Click for full screen" = "拖移以選取  ·  點按以全螢幕";
+"Release to annotate and edit" = "放開以標註與編輯";
+"Window snap: " = "視窗吸附：";
+"ON" = "開";
+"OFF" = "關";
+"  (Tab to toggle)" = "  （Tab 切換）";
+"Right-click to copy" = "右鍵點按以拷貝";
+"Copied %@" = "已拷貝 %@";
+"Set color %@" = "設定顏色 %@";
+"Draw something first to use the move tool." = "請先繪製內容再使用移動工具。";
+"Drag to reposition" = "拖移以重新定位";
+
+/* Overlay - Popovers */
+"Format:" = "格式：";
+"FPS:" = "FPS：";
+"When done:" = "完成後：";
+"Open editor" = "開啟編輯器";
+"Show in Finder" = "在 Finder 中顯示";
+"Copy to clipboard" = "拷貝至剪貼簿";
+
+/* Preferences - General */
+"macshot Preferences" = "macshot 偏好設定";
+"General" = "一般";
+"Tools" = "工具";
+"Recording" = "錄製";
+"About" = "關於";
+"Shortcuts" = "快捷鍵";
+"Uploads" = "上傳";
+"Language" = "語言";
+"Language:" = "語言：";
+"Restart the app to fully apply the new language." = "重新啟動 App 以完整套用新語言。";
+"Capture" = "擷取";
+"Play sound on copy" = "拷貝時播放音效";
+"Remember last selection area" = "記住上次的選取區域";
+"Remember last selected tool" = "記住上次選取的工具";
+"Show floating thumbnail after capture" = "擷取後顯示浮動縮圖";
+"Launch at login" = "登入時啟動";
+"Show snap alignment guides" = "顯示對齊輔助線";
+"Capture mouse cursor in screenshot" = "在螢幕截圖中擷取滑鼠游標";
+"Use window title in saved filename" = "在儲存的檔案名稱中使用視窗標題";
+"Hide menu bar icon" = "隱藏選單列圖像";
+"Hotkeys still work. To show the icon again, re-launch macshot." = "快捷鍵仍可使用。若要再次顯示圖像，請重新啟動 macshot。";
+"Check for updates automatically" = "自動檢查更新";
+"Thumbnail" = "縮圖";
+"  Dismiss after:" = "  自動關閉：";
+"seconds before auto-dismiss (0 = never)" = "秒後自動關閉（0 = 永不）";
+"  Multiple previews:" = "  多個預覽：";
+"Stack (keep all)" = "堆疊（保留全部）";
+"Replace (show only latest)" = "取代（僅顯示最新）";
+"Output" = "輸出";
+"Image format:" = "影像格式：";
+"Quality:" = "品質：";
+"%d%%" = "%d%%";
+"Save at standard resolution (1x)" = "以標準解析度 (1x) 儲存";
+"Halves dimensions on Retina displays, ~4x smaller files" = "在 Retina 顯示器上尺寸減半，檔案約縮小 4 倍";
+"Embed sRGB color profile" = "嵌入 sRGB 色彩描述檔";
+"Ensures consistent colors across different displays" = "確保不同顯示器之間色彩一致";
+"Screenshot History" = "螢幕截圖歷史記錄";
+"History size:" = "歷史記錄大小：";
+"screenshots kept on disk (0 = off)" = "張螢幕截圖保留在磁碟上（0 = 關閉）";
+"Save Directory" = "儲存目錄";
+"Save folder:" = "儲存檔案夾：";
+"Browse…" = "瀏覽⋯";
+"Appearance" = "外觀";
+"Accent color:" = "強調色：";
+"Icon color:" = "圖像顏色：";
+"Reset" = "重置";
+"OCR Capture:" = "OCR 擷取：";
+"Show window + copy to clipboard" = "顯示視窗 + 拷貝至剪貼簿";
+"Show window only" = "僅顯示視窗";
+"Copy to clipboard only" = "僅拷貝至剪貼簿";
+"Enter / Quick Capture:" = "Enter / 快速擷取：";
+"Save to file" = "儲存至檔案";
+"Save + copy to clipboard" = "儲存 + 拷貝至剪貼簿";
+"OCR Action" = "OCR 動作";
+
+/* Preferences - Shortcuts */
+"Keyboard Shortcuts" = "鍵盤快捷鍵";
+"Hotkeys" = "快捷鍵";
+"Clear shortcut" = "清除快捷鍵";
+"Press keys..." = "請按下按鍵⋯";
+"Waiting..." = "等候中⋯";
+
+/* Preferences - Tools */
+"Annotation Tools" = "標註工具";
+"Hidden tools are removed from the bottom toolbar." = "隱藏的工具會從底部工具列中移除。";
+"Capture Actions" = "擷取動作";
+"Bottom Toolbar Actions" = "底部工具列動作";
+"Hidden actions are removed from the bottom toolbar." = "隱藏的動作會從底部工具列中移除。";
+"Editor Actions" = "編輯器動作";
+"Right Toolbar Actions" = "右側工具列動作";
+"Hidden actions are removed from the right toolbar." = "隱藏的動作會從右側工具列中移除。";
+
+/* Preferences - Recording */
+"Frame rate:" = "影格率：";
+"After recording:" = "錄製後：";
+"Save recording to:" = "將錄製儲存至：";
+"Clear" = "清除";
+"Max height:" = "最大高度：";
+"px (0 = unlimited)" = "px（0 = 不限）";
+"Behavior" = "行為";
+"Auto-scroll (sends synthetic scroll events)" = "自動捲動（傳送模擬捲動事件）";
+"Detect fixed/sticky headers" = "偵測固定/黏性標頭";
+"Scroll speed:" = "捲動速度：";
+"Slow" = "慢";
+"Medium" = "中";
+"Fast" = "快";
+"Very fast" = "極快";
+"5 fps" = "5 fps";
+"10 fps" = "10 fps";
+"15 fps" = "15 fps";
+"24 fps" = "24 fps";
+"30 fps" = "30 fps";
+"60 fps" = "60 fps";
+"120 fps" = "120 fps";
+"MP4 (H.264)" = "MP4 (H.264)";
+"GIF" = "GIF";
+
+/* Preferences - Upload */
+"Upload Service" = "上傳服務";
+"Upload Provider" = "上傳供應商";
+"Provider:" = "供應商：";
+"Google Drive" = "Google Drive";
+"Google Drive (images + videos)" = "Google Drive（影像 + 影片）";
+"imgbb (images only)" = "imgbb（僅影像）";
+"S3-Compatible (images + videos)" = "S3 相容（影像 + 影片）";
+"S3-Compatible Storage" = "S3 相容儲存空間";
+"Sign In with Google" = "使用 Google 登入";
+"Sign Out" = "登出";
+"Signed in" = "已登入";
+"Not signed in" = "未登入";
+"Account:" = "帳號：";
+"Test Connection" = "測試連線";
+"Fill in endpoint, bucket, and credentials first" = "請先填寫端點、儲存貯體及憑證";
+"Testing..." = "測試中⋯";
+"Connection successful!" = "連線成功！";
+"Leave empty to use default" = "留空以使用預設值";
+"Endpoint:" = "端點：";
+"Region:" = "區域：";
+"Bucket:" = "儲存貯體：";
+"Access Key:" = "存取金鑰：";
+"Secret Key:" = "秘密金鑰：";
+"Public URL:" = "公開 URL：";
+"Path Prefix:" = "路徑前綴：";
+"API key:" = "API 金鑰：";
+"Upload History" = "上傳歷史記錄";
+"No uploads yet." = "尚無上傳記錄。";
+"Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "用於公開存取的基礎 URL。若為空，將使用 S3 端點 URL（可能無法公開存取）。";
+"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "已包含共用金鑰 — 如遇到速率限制，請至 imgbb.com/api 取得您自己的免費金鑰。僅支援影像（不支援影片）。";
+"Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "支援 AWS S3、Cloudflare R2、MinIO、DigitalOcean Spaces、Backblaze B2 及其他 S3 相容服務。支援影像和影片。";
+"Configure S3 in Preferences" = "在偏好設定中設定 S3";
+"Sign in to Google Drive in Preferences" = "在偏好設定中登入 Google Drive";
+"Video upload requires Google Drive or S3" = "影片上傳需要 Google Drive 或 S3";
+
+/* Preferences - About */
+"macshot" = "macshot";
+"Version %@ (%@)" = "版本 %@（%@）";
+"Made by" = "開發者";
+"Licensed under the GPLv3" = "以 GPLv3 授權";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "免費、開放原始碼的 macOS 螢幕截圖與錄製工具。\n完全原生 — 以 Swift 和 AppKit 打造。";
+
+/* Alerts */
+"No Image on Clipboard" = "剪貼簿中沒有影像";
+"Copy an image to the clipboard first, then try again." = "請先將影像拷貝到剪貼簿，然後再試一次。";
+"OK" = "好";
+"Accessibility Access Required" = "需要輔助使用權限";
+"macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot 需要「輔助使用」權限才能自動捲動其他 App。請在系統設定中授予權限，然後再試一次。";
+"Open Settings" = "打開設定";
+"Cancel" = "取消";
+"Microphone Access Required" = "需要麥克風權限";
+"macshot needs microphone permission to record voice audio. Open System Settings to grant access." = "macshot 需要麥克風權限才能錄製語音。請打開系統設定以授予權限。";
+"Upload to Google Drive?" = "上傳至 Google Drive？";
+"Upload to S3?" = "上傳至 S3？";
+"Upload to imgbb.com?" = "上傳至 imgbb.com？";
+"Your screenshot will be uploaded." = "您的螢幕截圖將被上傳。";
+
+/* Permission Onboarding */
+"Welcome to macshot" = "歡迎使用 macshot";
+"macshot needs one permission" = "macshot 需要一項權限";
+"Screen Recording not yet granted" = "尚未授予螢幕錄製權限";
+"Screen Recording granted!" = "螢幕錄製權限已授予！";
+"Enable macshot, then try taking a screenshot" = "啟用 macshot，然後試試擷取螢幕截圖";
+"Open Screen Recording Settings" = "打開螢幕錄製設定";
+"Continue" = "繼續";
+
+/* OCR Window */
+"Text Recognition" = "文字辨識";
+"Translate to:" = "翻譯為：";
+"%d chars · %d words" = "%d 字元 · %d 詞";
+"Copy  ⌘↩" = "拷貝  ⌘↩";
+"AI Search" = "AI 搜尋";
+"Show Original" = "顯示原文";
+"Translation Failed" = "翻譯失敗";
+"Translation" = "翻譯";
+"(No text detected in the selected area)" = "（在選取區域中未偵測到文字）";
+
+/* Upload Toast */
+"URL copied to the clipboard" = "URL 已拷貝至剪貼簿";
+"Uploading... %d%%" = "上傳中⋯ %d%%";
+"Upload failed: %@" = "上傳失敗：%@";
+"Uploaded! Link copied." = "上傳完成！連結已拷貝。";
+"Uploading to %@... %d%%" = "上傳至 %@⋯ %d%%";
+"Open" = "開啟";
+
+/* Recording Toast */
+"Recording saved" = "錄製已儲存";
+"%@ • Recording saved" = "%@ · 錄製已儲存";
+"Copy Path" = "拷貝路徑";
+"Path copied!" = "路徑已拷貝！";
+
+/* Video Editor */
+"macshot Video Editor" = "macshot 影片編輯器";
+"%@ selected" = "已選取 %@";
+"Exporting..." = "輸出中⋯";
+"Export failed" = "輸出失敗";
+"Saved to %@" = "已儲存至 %@";
+"Save failed" = "儲存失敗";
+
+/* Barcode Detector */
+/* "Open" and "Copy" are shared with other sections */
+
+/* Save Panel */
+"Save As..." = "另存新檔⋯";
+"Choose a folder" = "選擇檔案夾";
+"Save All to Folder…" = "全部儲存至檔案夾⋯";
+
+/* Scroll Capture HUD */
+"Auto Scroll" = "自動捲動";
+"Stop" = "停止";
+"Scrolling..." = "捲動中⋯";
+
+/* Effects Picker (Adjust popover) */
+"Presets" = "預設";
+"Adjustments" = "調整";
+"Brightness" = "亮度";
+"Contrast" = "對比";
+"Saturation" = "飽和度";
+"Sharpness" = "銳利度";
+
+/* Time Ago */
+"just now" = "剛剛";
+"%ds ago" = "%d 秒前";
+"%dm ago" = "%d 分鐘前";
+"%dh ago" = "%d 小時前";
+
+/* Hotkey Labels */
+"History" = "歷史記錄";
+
+/* Preferences - Shortcuts note */
+"Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "點按 \"錄製\" 並按下包含至少一個修飾鍵（⌘、⌥、⌃、⇧）的組合鍵來設定快捷鍵。";

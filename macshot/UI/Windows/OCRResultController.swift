@@ -39,7 +39,7 @@ class OCRResultController: NSObject {
             backing: .buffered,
             defer: false
         )
-        panel.title = "Text Recognition"
+        panel.title = L("Text Recognition")
         panel.level = .floating
         panel.isReleasedWhenClosed = false
         panel.becomesKeyOnlyIfNeeded = false
@@ -91,7 +91,7 @@ class OCRResultController: NSObject {
         cv.addSubview(header)
 
         // Language popup
-        let langLabel = NSTextField(labelWithString: "Translate to:")
+        let langLabel = NSTextField(labelWithString: L("Translate to:"))
         langLabel.font = NSFont.systemFont(ofSize: 12)
         langLabel.textColor = .secondaryLabelColor
         langLabel.frame = NSRect(x: 12, y: (headerH - 16) / 2, width: 90, height: 16)
@@ -115,7 +115,7 @@ class OCRResultController: NSObject {
         // Char/word count label (right side of header)
         let charCount = text.count
         let wordCount = text.split(whereSeparator: { $0.isWhitespace || $0.isNewline }).count
-        let countLbl = NSTextField(labelWithString: "\(charCount) chars · \(wordCount) words")
+        let countLbl = NSTextField(labelWithString: String(format: L("%d chars · %d words"), charCount, wordCount))
         countLbl.font = NSFont.systemFont(ofSize: 11)
         countLbl.textColor = .tertiaryLabelColor
         countLbl.frame = NSRect(x: rightW - 180, y: (headerH - 14) / 2, width: 168, height: 14)
@@ -142,7 +142,7 @@ class OCRResultController: NSObject {
         cv.addSubview(footer)
 
         // Copy button (primary, right-aligned)
-        let copyBtn = NSButton(title: "Copy  ⌘↩", target: self, action: #selector(copyAll))
+        let copyBtn = NSButton(title: L("Copy") + "  ⌘↩", target: self, action: #selector(copyAll))
         copyBtn.bezelStyle = .rounded
         copyBtn.frame = NSRect(x: rightW - 110, y: (footerH - 28) / 2, width: 100, height: 28)
         copyBtn.autoresizingMask = [.minXMargin]
@@ -153,14 +153,14 @@ class OCRResultController: NSObject {
         self.copyButton = copyBtn
 
         // AI Search button
-        let aiSearchBtn = NSButton(title: "AI Search", target: self, action: #selector(openAISearch))
+        let aiSearchBtn = NSButton(title: L("AI Search"), target: self, action: #selector(openAISearch))
         aiSearchBtn.bezelStyle = .rounded
         aiSearchBtn.frame = NSRect(x: rightW - 220, y: (footerH - 28) / 2, width: 100, height: 28)
         aiSearchBtn.autoresizingMask = [.minXMargin]
         footer.addSubview(aiSearchBtn)
 
         // Translate button
-        let translateBtn = NSButton(title: "Translate", target: self, action: #selector(toggleTranslate))
+        let translateBtn = NSButton(title: L("Translate"), target: self, action: #selector(toggleTranslate))
         translateBtn.bezelStyle = .rounded
         translateBtn.frame = NSRect(x: rightW - 330, y: (footerH - 28) / 2, width: 100, height: 28)
         translateBtn.autoresizingMask = [.minXMargin]
@@ -200,7 +200,7 @@ class OCRResultController: NSObject {
         tv.autoresizingMask = [.width, .height]
         tv.drawsBackground = false
         tv.string = text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            ? "(No text detected in the selected area)"
+            ? L("(No text detected in the selected area)")
             : text
         if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             tv.textColor = .secondaryLabelColor
@@ -270,7 +270,7 @@ class OCRResultController: NSObject {
     @objc private func restoreOriginal() {
         isShowingTranslation = false
         setTextViewString(originalText)  // registers undo back to translated state
-        translateButton?.title = "Translate"
+        translateButton?.title = L("Translate")
         updateCharCount(for: originalText)
     }
 
@@ -288,10 +288,10 @@ class OCRResultController: NSObject {
             guard let self = self else { return }
             self.isShowingTranslation = wasShowingTranslation
             self.setTextViewString(previousText)
-            self.translateButton?.title = wasShowingTranslation ? "Show Original" : "Translate"
+            self.translateButton?.title = wasShowingTranslation ? L("Show Original") : L("Translate")
             self.updateCharCount(for: previousText)
         }
-        um.setActionName("Translation")
+        um.setActionName(L("Translation"))
     }
 
     private func performTranslation(targetLang: String) {
@@ -317,7 +317,7 @@ class OCRResultController: NSObject {
             switch result {
             case .failure(let error):
                 let alert = NSAlert()
-                alert.messageText = "Translation Failed"
+                alert.messageText = L("Translation Failed")
                 alert.informativeText = error.localizedDescription
                 alert.alertStyle = .warning
                 if let window = self.window { alert.beginSheetModal(for: window) }
@@ -335,7 +335,7 @@ class OCRResultController: NSObject {
                 let translatedText = result.joined(separator: "\n")
                 self.isShowingTranslation = true
                 self.setTextViewString(translatedText)
-                self.translateButton?.title = "Show Original"
+                self.translateButton?.title = L("Show Original")
                 self.updateCharCount(for: translatedText)
             }
         }
@@ -344,7 +344,7 @@ class OCRResultController: NSObject {
     private func updateCharCount(for text: String) {
         let chars = text.count
         let words = text.split(whereSeparator: { $0.isWhitespace || $0.isNewline }).count
-        charCountLabel?.stringValue = "\(chars) chars · \(words) words"
+        charCountLabel?.stringValue = String(format: L("%d chars · %d words"), chars, words)
     }
 }
 

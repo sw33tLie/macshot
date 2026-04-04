@@ -1,0 +1,400 @@
+/* Slovenčina — macshot localization
+ *
+ * To add a new language:
+ * 1. Create a new folder: macshot/<lang-code>.lproj/
+ * 2. Copy this file into that folder
+ * 3. Translate all values (right side of = sign)
+ * 4. Add the language to LanguageManager.availableLanguages in Services/LanguageManager.swift
+ * 5. Add the language code to knownRegions in macshot.xcodeproj/project.pbxproj
+ * 6. Submit a pull request!
+ *
+ * Keys use the English text. Values should be the translation.
+ * Format strings use %@ for strings, %d for integers.
+ * Keep keyboard shortcuts (like ⌘C) untranslated.
+ * Keep brand names (macshot, Google Drive, imgbb, S3) untranslated.
+ */
+
+/* Menu Bar */
+"Capture Area" = "Zachytit oblast";
+"Capture Screen" = "Zachytit obrazovku";
+"Capture OCR" = "Zachytit OCR";
+"Quick Capture" = "Rychle zachytit";
+"Scroll Capture" = "Zachytit posun";
+"Capture Delay" = "Oneskorenie zachytenia";
+"None" = "Ziadne";
+"%d seconds" = "%d sekund";
+"Record Area" = "Nahrat oblast";
+"Record Screen" = "Nahrat obrazovku";
+"Recent Captures" = "Posledne zachytenia";
+"Show History Panel" = "Zobrazit panel historie";
+"Open Image..." = "Otvorit obrazok...";
+"Open from Clipboard" = "Otvorit zo schranky";
+"Preferences..." = "Predvolby...";
+"Check for Updates..." = "Skontrolovat aktualizacie...";
+"Quit macshot" = "Ukoncit macshot";
+"No recent captures" = "Ziadne posledne zachytenia";
+"Clear History" = "Vymazat historiu";
+
+/* History Panel */
+"Copy" = "Kopirovat";
+"Save As..." = "Ulozit ako...";
+"Open in Editor" = "Otvorit v editore";
+"Pin to Screen" = "Pripnut na obrazovku";
+"Quick Look" = "Rychly nahlad";
+"Delete" = "Vymazat";
+"All" = "Vsetko";
+"Screenshots" = "Snimky obrazovky";
+"GIFs" = "GIFs";
+"Click to copy · Drag to app" = "Kliknutim kopirovat · Potiahnutim do aplikacie";
+"No captures yet" = "Zatial ziadne zachytenia";
+
+/* Floating Thumbnail */
+"Close All" = "Zavriet vsetko";
+"Save All to Folder…" = "Ulozit vsetko do priecinka…";
+"Save" = "Ulozit";
+
+/* Editor Top Bar */
+"Zoom In" = "Priblizit";
+"Zoom Out" = "Oddialit";
+"Fit Canvas" = "Prisposobit platno";
+"Crop" = "Orezat";
+"Flip Horizontal" = "Preklopit vodorovne";
+"Flip Vertical" = "Preklopit zvisle";
+"Add Capture" = "Pridat zachytenie";
+
+/* Toolbar - Tools */
+"Arrow" = "Sipka";
+"Line" = "Ciara";
+"Rectangle" = "Obdlznik";
+"Ellipse" = "Elipsa";
+"Pencil" = "Ceruzka";
+"Pencil (Draw)" = "Ceruzka (Kreslit)";
+"Marker" = "Zvyraznovac";
+"Text" = "Text";
+"Number" = "Cislo";
+"Number / Counter" = "Cislo / Pocitadlo";
+"Stamp / Emoji" = "Peciatka / Emoji";
+"Censor" = "Cenzura";
+"Censor (Pixelate / Blur / Solid)" = "Cenzura (Pixelovanie / Rozostrenie / Plna)";
+"Measure" = "Merat";
+"Measure (px)" = "Merat (px)";
+"Magnify (Loupe)" = "Zvacsit (Lupa)";
+"Color Sampler" = "Vzorkovac farieb";
+"Color Picker" = "Vyber farby";
+"Select & Edit" = "Vybrat a upravit";
+"Color" = "Farba";
+
+/* Toolbar - Actions */
+"Copy to Clipboard" = "Kopirovat do schranky";
+"Save to File" = "Ulozit do suboru";
+"Save to" = "Ulozit do";
+"Open in Editor Window" = "Otvorit v okne editora";
+"Pin on Screen" = "Pripnut na obrazovku";
+"Pin" = "Pripnut";
+"Pin (floating window)" = "Pripnut (plavajuce okno)";
+"OCR" = "OCR";
+"OCR Text" = "OCR text";
+"OCR (extract text)" = "OCR (extrahovat text)";
+"Upload" = "Nahrat";
+"Share" = "Zdielat";
+"Undo" = "Spat";
+"Redo" = "Znovu";
+"Close" = "Zavriet";
+"Remove Background" = "Odstranit pozadie";
+"Beautify" = "Skraslit";
+"Adjust" = "Upravit";
+"Adjust (Image Effects)" = "Upravit (Efekty obrazka)";
+"Invert Colors" = "Invertovat farby";
+"Record" = "Nahravat";
+"Record screen" = "Nahrat obrazovku";
+"Translate" = "Prelozit";
+"Auto-Redact sensitive data" = "Automaticky zakryt citlive udaje";
+"Move Selection" = "Presunnut vyber";
+
+/* Toolbar - Recording */
+"Start Recording" = "Spustit nahravanie";
+"Cancel Recording" = "Zrusit nahravanie";
+"Highlight Mouse Clicks" = "Zvyraznit kliknutia mysi";
+"Record System Audio" = "Nahravat systemovy zvuk";
+"Record Microphone" = "Nahravat mikrofon";
+"Recording Settings" = "Nastavenia nahravania";
+
+/* Tool Options */
+"Size" = "Velkost";
+"Stroke" = "Tah";
+"Radius" = "Polomer";
+"Start:" = "Start:";
+"Draw:" = "Kreslit:";
+"Auto:" = "Auto:";
+"Fill" = "Vyplna";
+"Outline" = "Obrys";
+"More Emojis" = "Viac Emoji";
+"Load Image" = "Nacitat obrazok";
+"Gradient Style" = "Styl gradientu";
+"On" = "Zapnute";
+"Text Only" = "Len text";
+"All Text" = "Vsetok text";
+"PII" = "Osobne udaje";
+"Faces" = "Tvare";
+"People" = "Ludia";
+"Confirm before upload" = "Potvrdit pred nahranim";
+"Flip" = "Preklopit";
+"Smooth" = "Vyhladenie";
+"Smart" = "Inteligentne";
+"Padding" = "Odsadenie";
+"Shadow" = "Tien";
+"Right-click to add points" = "Kliknutim pravym tlacidlom pridajte body";
+"Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "Drzte 1 auto-vertikalne  ·  Drzte 2 auto-horizontalne";
+
+/* Overlay / Canvas */
+"Click a window  ·  Drag for custom area  ·  F for full screen" = "Kliknite na okno  ·  Potiahnite pre vlastnu oblast  ·  F pre celu obrazovku";
+"Drag to select  ·  Click for full screen" = "Potiahnite pre vyber  ·  Kliknite pre celu obrazovku";
+"Release to annotate and edit" = "Pustite pre anotaciu a upravu";
+"Window snap: " = "Prichytenie okna: ";
+"ON" = "ZAP";
+"OFF" = "VYP";
+"  (Tab to toggle)" = "  (Tab pre prepnutie)";
+"Right-click to copy" = "Kliknite pravym tlacidlom pre kopirovanie";
+"Copied %@" = "Skopirovane %@";
+"Set color %@" = "Nastavit farbu %@";
+"Draw something first to use the move tool." = "Najprv nieco nakreslite, aby ste mohli pouzit nastroj presunu.";
+"Drag to reposition" = "Potiahnutim zmente polohu";
+
+/* Overlay - Popovers */
+"Format:" = "Format:";
+"FPS:" = "FPS:";
+"When done:" = "Po dokonceni:";
+"Open editor" = "Otvorit editor";
+"Show in Finder" = "Zobrazit vo Finder";
+"Copy to clipboard" = "Kopirovat do schranky";
+
+/* Preferences - General */
+"macshot Preferences" = "Predvolby macshot";
+"General" = "Vseobecne";
+"Tools" = "Nastroje";
+"Recording" = "Nahravanie";
+"About" = "O aplikacii";
+"Shortcuts" = "Skratky";
+"Uploads" = "Nahravania";
+"Language" = "Jazyk";
+"Language:" = "Jazyk:";
+"Restart the app to fully apply the new language." = "Restartujte aplikaciu pre uplne pouzitie noveho jazyka.";
+"Capture" = "Zachytenie";
+"Play sound on copy" = "Prehrat zvuk pri kopirovani";
+"Remember last selection area" = "Pamatat si poslednu vybranu oblast";
+"Remember last selected tool" = "Pamatat si posledny vybrany nastroj";
+"Show floating thumbnail after capture" = "Zobrazit plavajuci nahlad po zachyteni";
+"Launch at login" = "Spustit pri prihlaseni";
+"Show snap alignment guides" = "Zobrazit vodiace ciary zarovnania";
+"Capture mouse cursor in screenshot" = "Zachytit kurzor mysi na snimke obrazovky";
+"Use window title in saved filename" = "Pouzit nazov okna v nazve suboru";
+"Hide menu bar icon" = "Skryt ikonu v liste menu";
+"Hotkeys still work. To show the icon again, re-launch macshot." = "Klavesove skratky stale funguju. Pre opetovne zobrazenie ikony znovu spustte macshot.";
+"Check for updates automatically" = "Automaticky kontrolovat aktualizacie";
+"Thumbnail" = "Nahlad";
+"  Dismiss after:" = "  Skryt po:";
+"seconds before auto-dismiss (0 = never)" = "sekund pred automatickym skrytim (0 = nikdy)";
+"  Multiple previews:" = "  Viacero nahladov:";
+"Stack (keep all)" = "Vrstvit (ponechat vsetky)";
+"Replace (show only latest)" = "Nahradit (zobrazit len posledny)";
+"Output" = "Vystup";
+"Image format:" = "Format obrazka:";
+"Quality:" = "Kvalita:";
+"%d%%" = "%d%%";
+"Save at standard resolution (1x)" = "Ulozit v standardnom rozliseni (1x)";
+"Halves dimensions on Retina displays, ~4x smaller files" = "Polovicne rozmery na Retina displejoch, ~4x mensie subory";
+"Embed sRGB color profile" = "Vlozit sRGB farebny profil";
+"Ensures consistent colors across different displays" = "Zabezpecuje konzistentne farby na roznych displejoch";
+"Screenshot History" = "Historia snimok obrazovky";
+"History size:" = "Velkost historie:";
+"screenshots kept on disk (0 = off)" = "snimok obrazovky uchovananych na disku (0 = vyp)";
+"Save Directory" = "Priecinok ulozenia";
+"Save folder:" = "Priecinok ulozenia:";
+"Browse…" = "Prehladavat…";
+"Appearance" = "Vzhled";
+"Accent color:" = "Farba akcentu:";
+"Icon color:" = "Farba ikony:";
+"Reset" = "Resetovat";
+"OCR Capture:" = "OCR zachytenie:";
+"Show window + copy to clipboard" = "Zobrazit okno + kopirovat do schranky";
+"Show window only" = "Zobrazit len okno";
+"Copy to clipboard only" = "Kopirovat len do schranky";
+"Enter / Quick Capture:" = "Enter / Rychle zachytenie:";
+"Save to file" = "Ulozit do suboru";
+"Save + copy to clipboard" = "Ulozit + kopirovat do schranky";
+"OCR Action" = "OCR akcia";
+
+/* Preferences - Shortcuts */
+"Keyboard Shortcuts" = "Klavesove skratky";
+"Hotkeys" = "Klavesove skratky";
+"Clear shortcut" = "Vymazat skratku";
+"Press keys..." = "Stlacte klavesy...";
+"Waiting..." = "Cakanie...";
+
+/* Preferences - Tools */
+"Annotation Tools" = "Nastroje anotacie";
+"Hidden tools are removed from the bottom toolbar." = "Skryte nastroje su odstranene zo spodnej listy nastrojov.";
+"Capture Actions" = "Akcie zachytenia";
+"Bottom Toolbar Actions" = "Akcie spodnej listy nastrojov";
+"Hidden actions are removed from the bottom toolbar." = "Skryte akcie su odstranene zo spodnej listy nastrojov.";
+"Editor Actions" = "Akcie editora";
+"Right Toolbar Actions" = "Akcie pravej listy nastrojov";
+"Hidden actions are removed from the right toolbar." = "Skryte akcie su odstranene z pravej listy nastrojov.";
+
+/* Preferences - Recording */
+"Frame rate:" = "Snimkova frekvencia:";
+"After recording:" = "Po nahravani:";
+"Save recording to:" = "Ulozit nahravku do:";
+"Clear" = "Vymazat";
+"Max height:" = "Max. vyska:";
+"px (0 = unlimited)" = "px (0 = neobmedzene)";
+"Behavior" = "Spravanie";
+"Auto-scroll (sends synthetic scroll events)" = "Automaticke posuvanie (odosiela synteticke udalosti posunu)";
+"Detect fixed/sticky headers" = "Detekovat fixne/prilnave hlavicky";
+"Scroll speed:" = "Rychlost posunu:";
+"Slow" = "Pomaly";
+"Medium" = "Stredny";
+"Fast" = "Rychly";
+"Very fast" = "Velmi rychly";
+"5 fps" = "5 fps";
+"10 fps" = "10 fps";
+"15 fps" = "15 fps";
+"24 fps" = "24 fps";
+"30 fps" = "30 fps";
+"60 fps" = "60 fps";
+"120 fps" = "120 fps";
+"MP4 (H.264)" = "MP4 (H.264)";
+"GIF" = "GIF";
+
+/* Preferences - Upload */
+"Upload Service" = "Sluzba nahravania";
+"Upload Provider" = "Poskytovatel nahravania";
+"Provider:" = "Poskytovatel:";
+"Google Drive" = "Google Drive";
+"Google Drive (images + videos)" = "Google Drive (obrazky + videa)";
+"imgbb (images only)" = "imgbb (len obrazky)";
+"S3-Compatible (images + videos)" = "S3-Compatible (obrazky + videa)";
+"S3-Compatible Storage" = "S3-Compatible ulozisko";
+"Sign In with Google" = "Prihlasit sa cez Google";
+"Sign Out" = "Odhlasit sa";
+"Signed in" = "Prihlaseny";
+"Not signed in" = "Neprihlaseny";
+"Account:" = "Ucet:";
+"Test Connection" = "Otestovat pripojenie";
+"Fill in endpoint, bucket, and credentials first" = "Najprv vyplnte endpoint, bucket a prihlasovacie udaje";
+"Testing..." = "Testovanie...";
+"Connection successful!" = "Pripojenie uspesne!";
+"Leave empty to use default" = "Nechajte prazdne pre pouzitie predvolenej hodnoty";
+"Endpoint:" = "Endpoint:";
+"Region:" = "Region:";
+"Bucket:" = "Bucket:";
+"Access Key:" = "Pristupovy kluc:";
+"Secret Key:" = "Tajny kluc:";
+"Public URL:" = "Verejna URL:";
+"Path Prefix:" = "Prefix cesty:";
+"API key:" = "API kluc:";
+"Upload History" = "Historia nahravani";
+"No uploads yet." = "Zatial ziadne nahravania.";
+"Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "Zakladna URL pre verejny pristup. Ak je prazdna, pouzije sa S3 endpoint URL (nemusi byt verejne pristupna).";
+"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "Zdielany kluc je zahrnuty — ziskajte vlastny bezplatny kluc na imgbb.com/api, ak narazite na limity. Len obrazky (bez podpory videa).";
+"Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "Funguje s AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 a dalsimi S3-compatible sluzbami. Podporuje obrazky a videa.";
+"Configure S3 in Preferences" = "Nastavit S3 v Predvolbach";
+"Sign in to Google Drive in Preferences" = "Prihlaste sa do Google Drive v Predvolbach";
+"Video upload requires Google Drive or S3" = "Nahravanie videa vyzaduje Google Drive alebo S3";
+
+/* Preferences - About */
+"macshot" = "macshot";
+"Version %@ (%@)" = "Verzia %@ (%@)";
+"Made by" = "Vytvoril";
+"Licensed under the GPLv3" = "Licencovane pod GPLv3";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "Bezplatny, open-source nastroj na snimky obrazovky a nahravanie obrazovky pre macOS.\nPlne nativny — postaveny na Swift a AppKit.";
+
+/* Alerts */
+"No Image on Clipboard" = "Ziadny obrazok v schranke";
+"Copy an image to the clipboard first, then try again." = "Najprv skopiujte obrazok do schranky a skuste to znova.";
+"OK" = "OK";
+"Accessibility Access Required" = "Vyzaduje sa pristup k pristupnosti";
+"macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot potrebuje povolenie pristupnosti na automaticke posuvanie v inych aplikaciach. Udelite pristup v Nastaveniach systemu a skuste to znova.";
+"Open Settings" = "Otvorit nastavenia";
+"Cancel" = "Zrusit";
+"Microphone Access Required" = "Vyzaduje sa pristup k mikrofonu";
+"macshot needs microphone permission to record voice audio. Open System Settings to grant access." = "macshot potrebuje povolenie mikrofonu na nahravanie hlasoveho zvuku. Otvorte Nastavenia systemu pre udelenie pristupu.";
+"Upload to Google Drive?" = "Nahrat na Google Drive?";
+"Upload to S3?" = "Nahrat na S3?";
+"Upload to imgbb.com?" = "Nahrat na imgbb.com?";
+"Your screenshot will be uploaded." = "Vasa snimka obrazovky bude nahrana.";
+
+/* Permission Onboarding */
+"Welcome to macshot" = "Vitajte v macshot";
+"macshot needs one permission" = "macshot potrebuje jedno povolenie";
+"Screen Recording not yet granted" = "Nahravanie obrazovky este nie je povolene";
+"Screen Recording granted!" = "Nahravanie obrazovky povolene!";
+"Enable macshot, then try taking a screenshot" = "Povolte macshot a skuste urobit snimku obrazovky";
+"Open Screen Recording Settings" = "Otvorit nastavenia nahravania obrazovky";
+"Continue" = "Pokracovat";
+
+/* OCR Window */
+"Text Recognition" = "Rozpoznavanie textu";
+"Translate to:" = "Prelozit do:";
+"%d chars · %d words" = "%d znakov · %d slov";
+"Copy  ⌘↩" = "Kopirovat  ⌘↩";
+"AI Search" = "AI vyhladavanie";
+"Show Original" = "Zobrazit original";
+"Translation Failed" = "Preklad zlyhal";
+"Translation" = "Preklad";
+"(No text detected in the selected area)" = "(V oznacenej oblasti nebol detegovany ziadny text)";
+
+/* Upload Toast */
+"URL copied to the clipboard" = "URL skopirovana do schranky";
+"Uploading... %d%%" = "Nahravanie... %d%%";
+"Upload failed: %@" = "Nahravanie zlyhalo: %@";
+"Uploaded! Link copied." = "Nahrane! Odkaz skopirovany.";
+"Uploading to %@... %d%%" = "Nahravanie na %@... %d%%";
+"Open" = "Otvorit";
+
+/* Recording Toast */
+"Recording saved" = "Nahravka ulozena";
+"%@ • Recording saved" = "%@ • Nahravka ulozena";
+"Copy Path" = "Kopirovat cestu";
+"Path copied!" = "Cesta skopirovana!";
+
+/* Video Editor */
+"macshot Video Editor" = "macshot Video Editor";
+"%@ selected" = "%@ vybranych";
+"Exporting..." = "Exportovanie...";
+"Export failed" = "Export zlyhal";
+"Saved to %@" = "Ulozene do %@";
+"Save failed" = "Ulozenie zlyhalo";
+
+/* Barcode Detector */
+/* "Open" and "Copy" are shared with other sections */
+
+/* Save Panel */
+"Save As..." = "Ulozit ako...";
+"Choose a folder" = "Vyberte priecinok";
+"Save All to Folder…" = "Ulozit vsetko do priecinka…";
+
+/* Scroll Capture HUD */
+"Auto Scroll" = "Automaticke posuvanie";
+"Stop" = "Zastavit";
+"Scrolling..." = "Posuvanie...";
+
+/* Effects Picker (Adjust popover) */
+"Presets" = "Predvolby";
+"Adjustments" = "Upravy";
+"Brightness" = "Jas";
+"Contrast" = "Kontrast";
+"Saturation" = "Saturacia";
+"Sharpness" = "Ostrost";
+
+/* Time Ago */
+"just now" = "prave teraz";
+"%ds ago" = "pred %ds";
+"%dm ago" = "pred %dm";
+"%dh ago" = "pred %dh";
+
+/* Hotkey Labels */
+"History" = "Historia";
+
+/* Preferences - Shortcuts note */
+"Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Kliknite na \"Record\" a stlacte kombinaciu klaves s aspon jednym modifikatorom (⌘, ⌥, ⌃, ⇧) pre nastavenie skratky.";

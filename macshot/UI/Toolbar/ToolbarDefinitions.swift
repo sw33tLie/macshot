@@ -140,22 +140,22 @@ class ToolbarLayout {
         }
 
         let tools: [(AnnotationTool, String, String)] = [
-            (.pencil, "scribble", "Pencil (Draw)"),
-            (.line, "line.diagonal", "Line"),
-            (.arrow, "arrow.up.right", "Arrow"),
-            (.rectangle, "rectangle", "Rectangle"),
-            (.ellipse, "oval", "Ellipse"),
+            (.pencil, "scribble", L("Pencil (Draw)")),
+            (.line, "line.diagonal", L("Line")),
+            (.arrow, "arrow.up.right", L("Arrow")),
+            (.rectangle, "rectangle", L("Rectangle")),
+            (.ellipse, "oval", L("Ellipse")),
             (.marker, {
                 if #available(macOS 14.0, *) { return "highlighter" }
                 return "paintbrush.pointed.fill"
-            }(), "Marker"),
-            (.text, "textformat", "Text"),
-            (.number, "1.circle.fill", "Number"),
-            (.pixelate, "_custom.checkerboard", "Censor (Pixelate / Blur / Solid)"),
-            (.loupe, "magnifyingglass", "Magnify (Loupe)"),
-            (.stamp, "face.smiling", "Stamp / Emoji"),
-            (.colorSampler, "eyedropper", "Color Picker"),
-            (.measure, "ruler", "Measure (px)"),
+            }(), L("Marker")),
+            (.text, "textformat", L("Text")),
+            (.number, "1.circle.fill", L("Number")),
+            (.pixelate, "_custom.checkerboard", L("Censor (Pixelate / Blur / Solid)")),
+            (.loupe, "magnifyingglass", L("Magnify (Loupe)")),
+            (.stamp, "face.smiling", L("Stamp / Emoji")),
+            (.colorSampler, "eyedropper", L("Color Picker")),
+            (.measure, "ruler", L("Measure (px)")),
         ]
 
         for (tool, symbol, tip) in tools {
@@ -175,17 +175,17 @@ class ToolbarLayout {
         }
 
         // Color button
-        var colorBtn = ToolbarButton(action: .color, sfSymbol: nil, label: nil, tooltip: "Color")
+        var colorBtn = ToolbarButton(action: .color, sfSymbol: nil, label: nil, tooltip: L("Color"))
         colorBtn.bgColor = selectedColor
         buttons.append(colorBtn)
 
         // Undo / Redo
         buttons.append(
             ToolbarButton(
-                action: .undo, sfSymbol: "arrow.uturn.backward", label: nil, tooltip: "Undo"))
+                action: .undo, sfSymbol: "arrow.uturn.backward", label: nil, tooltip: L("Undo")))
         buttons.append(
             ToolbarButton(
-                action: .redo, sfSymbol: "arrow.uturn.forward", label: nil, tooltip: "Redo"))
+                action: .redo, sfSymbol: "arrow.uturn.forward", label: nil, tooltip: L("Redo")))
 
         // Processing actions (moved from right bar) — respect enabledActions toggles
         let enabledActions = UserDefaults.standard.array(forKey: "enabledActions") as? [Int]
@@ -200,13 +200,13 @@ class ToolbarLayout {
             buttons.append(
                 ToolbarButton(
                     action: .invertColors, sfSymbol: "circle.righthalf.filled.inverse", label: nil,
-                    tooltip: "Invert Colors"))
+                    tooltip: L("Invert Colors")))
         }
 
         if !isRecording && actionEnabled(1013) {
             var effectsBtn = ToolbarButton(
                 action: .effects, sfSymbol: "slider.horizontal.3", label: nil,
-                tooltip: "Adjust")
+                tooltip: L("Adjust"))
             if effectsActive {
                 effectsBtn.tintColor = NSColor(
                     calibratedRed: 1.0, green: 0.8, blue: 0.2, alpha: 1.0)
@@ -216,7 +216,7 @@ class ToolbarLayout {
 
         if !isRecording && actionEnabled(1004) {
             var beautifyBtn = ToolbarButton(
-                action: .beautify, sfSymbol: "sparkles", label: nil, tooltip: "Beautify")
+                action: .beautify, sfSymbol: "sparkles", label: nil, tooltip: L("Beautify"))
             if beautifyEnabled {
                 beautifyBtn.tintColor = NSColor(
                     calibratedRed: 1.0, green: 0.8, blue: 0.2, alpha: 1.0)
@@ -228,7 +228,7 @@ class ToolbarLayout {
             buttons.append(
                 ToolbarButton(
                     action: .removeBackground, sfSymbol: "person.crop.circle.dashed", label: nil,
-                    tooltip: "Remove Background"))
+                    tooltip: L("Remove Background")))
         }
 
         return buttons
@@ -246,32 +246,32 @@ class ToolbarLayout {
         if isRecording {
             var startBtn = ToolbarButton(
                 action: .startRecord, sfSymbol: "record.circle", label: nil,
-                tooltip: "Start Recording")
+                tooltip: L("Start Recording"))
             startBtn.tintColor = .systemRed
             buttons.append(startBtn)
 
             // Stop/cancel button to exit recording mode without starting
             buttons.append(
-                ToolbarButton(action: .stopRecord, sfSymbol: "xmark", label: nil, tooltip: "Cancel Recording"))
+                ToolbarButton(action: .stopRecord, sfSymbol: "xmark", label: nil, tooltip: L("Cancel Recording")))
 
             let mouseHighlightOn = UserDefaults.standard.bool(forKey: "recordMouseHighlight")
             var mouseBtn = ToolbarButton(
                 action: .mouseHighlight, sfSymbol: "cursorarrow.click.2", label: nil,
-                tooltip: "Highlight Mouse Clicks")
+                tooltip: L("Highlight Mouse Clicks"))
             mouseBtn.isSelected = mouseHighlightOn
             buttons.append(mouseBtn)
 
             let audioOn = UserDefaults.standard.bool(forKey: "recordSystemAudio")
             var audioBtn = ToolbarButton(
                 action: .systemAudio, sfSymbol: audioOn ? "speaker.wave.2.fill" : "speaker.slash",
-                label: nil, tooltip: "Record System Audio")
+                label: nil, tooltip: L("Record System Audio"))
             audioBtn.isSelected = audioOn
             buttons.append(audioBtn)
 
             let micOn = UserDefaults.standard.bool(forKey: "recordMicAudio")
             var micBtn = ToolbarButton(
                 action: .micAudio, sfSymbol: micOn ? "mic.fill" : "mic.slash", label: nil,
-                tooltip: "Record Microphone")
+                tooltip: L("Record Microphone"))
             micBtn.isSelected = micOn
             buttons.append(micBtn)
 
@@ -279,13 +279,13 @@ class ToolbarLayout {
             buttons.append(
                 ToolbarButton(
                     action: .recordSettings, sfSymbol: "gearshape", label: nil,
-                    tooltip: "Recording Settings"))
+                    tooltip: L("Recording Settings")))
 
             // Allow moving the selection before starting
             buttons.append(
                 ToolbarButton(
                     action: .moveSelection, sfSymbol: "arrow.up.and.down.and.arrow.left.and.right",
-                    label: nil, tooltip: "Move Selection"))
+                    label: nil, tooltip: L("Move Selection")))
 
             return buttons
         }
@@ -320,23 +320,23 @@ class ToolbarLayout {
         // Cancel, move-selection, editor — not shown in editor window
         if !isEditorMode {
             buttons.append(
-                ToolbarButton(action: .cancel, sfSymbol: "xmark", label: nil, tooltip: "Cancel"))
+                ToolbarButton(action: .cancel, sfSymbol: "xmark", label: nil, tooltip: L("Cancel")))
             buttons.append(
                 ToolbarButton(
                     action: .moveSelection, sfSymbol: "arrow.up.and.down.and.arrow.left.and.right",
-                    label: nil, tooltip: "Move Selection"))
+                    label: nil, tooltip: L("Move Selection")))
             buttons.append(
                 ToolbarButton(
                     action: .detach, sfSymbol: "arrow.up.forward.app", label: nil,
-                    tooltip: "Open in Editor Window"))
+                    tooltip: L("Open in Editor Window")))
         }
         // Copy and save are always present
         buttons.append(
-            ToolbarButton(action: .copy, sfSymbol: "doc.on.doc", label: nil, tooltip: "Copy"))
+            ToolbarButton(action: .copy, sfSymbol: "doc.on.doc", label: nil, tooltip: L("Copy")))
         var saveBtn = ToolbarButton(
             action: .save, sfSymbol: "square.and.arrow.down.fill", label: nil,
             tooltip:
-                "Save to \(URL(fileURLWithPath: SaveDirectoryAccess.displayPath).lastPathComponent)"
+                "\(L("Save to")) \(URL(fileURLWithPath: SaveDirectoryAccess.displayPath).lastPathComponent)"
         )
         saveBtn.hasContextMenu = true
         buttons.append(saveBtn)
@@ -345,13 +345,13 @@ class ToolbarLayout {
         if actionEnabled(1012) {
             buttons.append(
                 ToolbarButton(
-                    action: .share, sfSymbol: "square.and.arrow.up", label: nil, tooltip: "Share"))
+                    action: .share, sfSymbol: "square.and.arrow.up", label: nil, tooltip: L("Share")))
         }
 
         // Upload (tag 1001)
         if actionEnabled(1001) {
             var uploadBtn = ToolbarButton(
-                action: .upload, sfSymbol: "icloud.and.arrow.up", label: nil, tooltip: "Upload")
+                action: .upload, sfSymbol: "icloud.and.arrow.up", label: nil, tooltip: L("Upload"))
             uploadBtn.hasContextMenu = true
             buttons.append(uploadBtn)
         }
@@ -359,20 +359,20 @@ class ToolbarLayout {
         // Pin (tag 1002)
         if actionEnabled(1002) {
             buttons.append(
-                ToolbarButton(action: .pin, sfSymbol: "pin.fill", label: nil, tooltip: "Pin"))
+                ToolbarButton(action: .pin, sfSymbol: "pin.fill", label: nil, tooltip: L("Pin")))
         }
 
         // OCR (tag 1003)
         if actionEnabled(1003) {
             buttons.append(
                 ToolbarButton(
-                    action: .ocr, sfSymbol: "doc.text.viewfinder", label: nil, tooltip: "OCR Text"))
+                    action: .ocr, sfSymbol: "doc.text.viewfinder", label: nil, tooltip: L("OCR Text")))
         }
 
         // Translate (tag 1008)
         if actionEnabled(1008) {
             var translateBtn = ToolbarButton(
-                action: .translate, sfSymbol: "translate", label: nil, tooltip: "Translate")
+                action: .translate, sfSymbol: "translate", label: nil, tooltip: L("Translate"))
             translateBtn.isSelected = translateEnabled
             translateBtn.hasContextMenu = true
             buttons.append(translateBtn)
@@ -383,13 +383,13 @@ class ToolbarLayout {
             buttons.append(
                 ToolbarButton(
                     action: .scrollCapture, sfSymbol: "scroll", label: nil,
-                    tooltip: "Scroll Capture"))
+                    tooltip: L("Scroll Capture")))
         }
 
         // Record (tag 1009) — hidden in editor mode. Right-click for options.
         if !isEditorMode && actionEnabled(1009) {
             var recordBtn = ToolbarButton(
-                action: .record, sfSymbol: "video.fill", label: nil, tooltip: "Record")
+                action: .record, sfSymbol: "video.fill", label: nil, tooltip: L("Record"))
             recordBtn.tintColor = ToolbarLayout.iconColor
             buttons.append(recordBtn)
         }

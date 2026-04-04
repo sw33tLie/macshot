@@ -1,0 +1,400 @@
+/* English (Base) — macshot localization
+ *
+ * To add a new language:
+ * 1. Create a new folder: macshot/<lang-code>.lproj/
+ * 2. Copy this file into that folder
+ * 3. Translate all values (right side of = sign)
+ * 4. Add the language to LanguageManager.availableLanguages in Services/LanguageManager.swift
+ * 5. Add the language code to knownRegions in macshot.xcodeproj/project.pbxproj
+ * 6. Submit a pull request!
+ *
+ * Keys use the English text. Values should be the translation.
+ * Format strings use %@ for strings, %d for integers.
+ * Keep keyboard shortcuts (like ⌘C) untranslated.
+ * Keep brand names (macshot, Google Drive, imgbb, S3) untranslated.
+ */
+
+/* Menu Bar */
+"Capture Area" = "Capture Area";
+"Capture Screen" = "Capture Screen";
+"Capture OCR" = "Capture OCR";
+"Quick Capture" = "Quick Capture";
+"Scroll Capture" = "Scroll Capture";
+"Capture Delay" = "Capture Delay";
+"None" = "None";
+"%d seconds" = "%d seconds";
+"Record Area" = "Record Area";
+"Record Screen" = "Record Screen";
+"Recent Captures" = "Recent Captures";
+"Show History Panel" = "Show History Panel";
+"Open Image..." = "Open Image...";
+"Open from Clipboard" = "Open from Clipboard";
+"Preferences..." = "Preferences...";
+"Check for Updates..." = "Check for Updates...";
+"Quit macshot" = "Quit macshot";
+"No recent captures" = "No recent captures";
+"Clear History" = "Clear History";
+
+/* History Panel */
+"Copy" = "Copy";
+"Save As..." = "Save As...";
+"Open in Editor" = "Open in Editor";
+"Pin to Screen" = "Pin to Screen";
+"Quick Look" = "Quick Look";
+"Delete" = "Delete";
+"All" = "All";
+"Screenshots" = "Screenshots";
+"GIFs" = "GIFs";
+"Click to copy · Drag to app" = "Click to copy · Drag to app";
+"No captures yet" = "No captures yet";
+
+/* Floating Thumbnail */
+"Close All" = "Close All";
+"Save All to Folder…" = "Save All to Folder…";
+"Save" = "Save";
+
+/* Editor Top Bar */
+"Zoom In" = "Zoom In";
+"Zoom Out" = "Zoom Out";
+"Fit Canvas" = "Fit Canvas";
+"Crop" = "Crop";
+"Flip Horizontal" = "Flip Horizontal";
+"Flip Vertical" = "Flip Vertical";
+"Add Capture" = "Add Capture";
+
+/* Toolbar - Tools */
+"Arrow" = "Arrow";
+"Line" = "Line";
+"Rectangle" = "Rectangle";
+"Ellipse" = "Ellipse";
+"Pencil" = "Pencil";
+"Pencil (Draw)" = "Pencil (Draw)";
+"Marker" = "Marker";
+"Text" = "Text";
+"Number" = "Number";
+"Number / Counter" = "Number / Counter";
+"Stamp / Emoji" = "Stamp / Emoji";
+"Censor" = "Censor";
+"Censor (Pixelate / Blur / Solid)" = "Censor (Pixelate / Blur / Solid)";
+"Measure" = "Measure";
+"Measure (px)" = "Measure (px)";
+"Magnify (Loupe)" = "Magnify (Loupe)";
+"Color Sampler" = "Color Sampler";
+"Color Picker" = "Color Picker";
+"Select & Edit" = "Select & Edit";
+"Color" = "Color";
+
+/* Toolbar - Actions */
+"Copy to Clipboard" = "Copy to Clipboard";
+"Save to File" = "Save to File";
+"Save to" = "Save to";
+"Open in Editor Window" = "Open in Editor Window";
+"Pin on Screen" = "Pin on Screen";
+"Pin" = "Pin";
+"Pin (floating window)" = "Pin (floating window)";
+"OCR" = "OCR";
+"OCR Text" = "OCR Text";
+"OCR (extract text)" = "OCR (extract text)";
+"Upload" = "Upload";
+"Share" = "Share";
+"Undo" = "Undo";
+"Redo" = "Redo";
+"Close" = "Close";
+"Remove Background" = "Remove Background";
+"Beautify" = "Beautify";
+"Adjust" = "Adjust";
+"Adjust (Image Effects)" = "Adjust (Image Effects)";
+"Invert Colors" = "Invert Colors";
+"Record" = "Record";
+"Record screen" = "Record screen";
+"Translate" = "Translate";
+"Auto-Redact sensitive data" = "Auto-Redact sensitive data";
+"Move Selection" = "Move Selection";
+
+/* Toolbar - Recording */
+"Start Recording" = "Start Recording";
+"Cancel Recording" = "Cancel Recording";
+"Highlight Mouse Clicks" = "Highlight Mouse Clicks";
+"Record System Audio" = "Record System Audio";
+"Record Microphone" = "Record Microphone";
+"Recording Settings" = "Recording Settings";
+
+/* Tool Options */
+"Size" = "Size";
+"Stroke" = "Stroke";
+"Radius" = "Radius";
+"Start:" = "Start:";
+"Draw:" = "Draw:";
+"Auto:" = "Auto:";
+"Fill" = "Fill";
+"Outline" = "Outline";
+"More Emojis" = "More Emojis";
+"Load Image" = "Load Image";
+"Gradient Style" = "Gradient Style";
+"On" = "On";
+"Text Only" = "Text Only";
+"All Text" = "All Text";
+"PII" = "PII";
+"Faces" = "Faces";
+"People" = "People";
+"Confirm before upload" = "Confirm before upload";
+"Flip" = "Flip";
+"Smooth" = "Smooth";
+"Smart" = "Smart";
+"Padding" = "Padding";
+"Shadow" = "Shadow";
+"Right-click to add points" = "Right-click to add points";
+"Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "Hold 1 auto-vertical  ·  Hold 2 auto-horizontal";
+
+/* Overlay / Canvas */
+"Click a window  ·  Drag for custom area  ·  F for full screen" = "Click a window  ·  Drag for custom area  ·  F for full screen";
+"Drag to select  ·  Click for full screen" = "Drag to select  ·  Click for full screen";
+"Release to annotate and edit" = "Release to annotate and edit";
+"Window snap: " = "Window snap: ";
+"ON" = "ON";
+"OFF" = "OFF";
+"  (Tab to toggle)" = "  (Tab to toggle)";
+"Right-click to copy" = "Right-click to copy";
+"Copied %@" = "Copied %@";
+"Set color %@" = "Set color %@";
+"Draw something first to use the move tool." = "Draw something first to use the move tool.";
+"Drag to reposition" = "Drag to reposition";
+
+/* Overlay - Popovers */
+"Format:" = "Format:";
+"FPS:" = "FPS:";
+"When done:" = "When done:";
+"Open editor" = "Open editor";
+"Show in Finder" = "Show in Finder";
+"Copy to clipboard" = "Copy to clipboard";
+
+/* Preferences - General */
+"macshot Preferences" = "macshot Preferences";
+"General" = "General";
+"Tools" = "Tools";
+"Recording" = "Recording";
+"About" = "About";
+"Shortcuts" = "Shortcuts";
+"Uploads" = "Uploads";
+"Language" = "Language";
+"Language:" = "Language:";
+"Restart the app to fully apply the new language." = "Restart the app to fully apply the new language.";
+"Capture" = "Capture";
+"Play sound on copy" = "Play sound on copy";
+"Remember last selection area" = "Remember last selection area";
+"Remember last selected tool" = "Remember last selected tool";
+"Show floating thumbnail after capture" = "Show floating thumbnail after capture";
+"Launch at login" = "Launch at login";
+"Show snap alignment guides" = "Show snap alignment guides";
+"Capture mouse cursor in screenshot" = "Capture mouse cursor in screenshot";
+"Use window title in saved filename" = "Use window title in saved filename";
+"Hide menu bar icon" = "Hide menu bar icon";
+"Hotkeys still work. To show the icon again, re-launch macshot." = "Hotkeys still work. To show the icon again, re-launch macshot.";
+"Check for updates automatically" = "Check for updates automatically";
+"Thumbnail" = "Thumbnail";
+"  Dismiss after:" = "  Dismiss after:";
+"seconds before auto-dismiss (0 = never)" = "seconds before auto-dismiss (0 = never)";
+"  Multiple previews:" = "  Multiple previews:";
+"Stack (keep all)" = "Stack (keep all)";
+"Replace (show only latest)" = "Replace (show only latest)";
+"Output" = "Output";
+"Image format:" = "Image format:";
+"Quality:" = "Quality:";
+"%d%%" = "%d%%";
+"Save at standard resolution (1x)" = "Save at standard resolution (1x)";
+"Halves dimensions on Retina displays, ~4x smaller files" = "Halves dimensions on Retina displays, ~4x smaller files";
+"Embed sRGB color profile" = "Embed sRGB color profile";
+"Ensures consistent colors across different displays" = "Ensures consistent colors across different displays";
+"Screenshot History" = "Screenshot History";
+"History size:" = "History size:";
+"screenshots kept on disk (0 = off)" = "screenshots kept on disk (0 = off)";
+"Save Directory" = "Save Directory";
+"Save folder:" = "Save folder:";
+"Browse…" = "Browse…";
+"Appearance" = "Appearance";
+"Accent color:" = "Accent color:";
+"Icon color:" = "Icon color:";
+"Reset" = "Reset";
+"OCR Capture:" = "OCR Capture:";
+"Show window + copy to clipboard" = "Show window + copy to clipboard";
+"Show window only" = "Show window only";
+"Copy to clipboard only" = "Copy to clipboard only";
+"Enter / Quick Capture:" = "Enter / Quick Capture:";
+"Save to file" = "Save to file";
+"Save + copy to clipboard" = "Save + copy to clipboard";
+"OCR Action" = "OCR Action";
+
+/* Preferences - Shortcuts */
+"Keyboard Shortcuts" = "Keyboard Shortcuts";
+"Hotkeys" = "Hotkeys";
+"Clear shortcut" = "Clear shortcut";
+"Press keys..." = "Press keys...";
+"Waiting..." = "Waiting...";
+
+/* Preferences - Tools */
+"Annotation Tools" = "Annotation Tools";
+"Hidden tools are removed from the bottom toolbar." = "Hidden tools are removed from the bottom toolbar.";
+"Capture Actions" = "Capture Actions";
+"Bottom Toolbar Actions" = "Bottom Toolbar Actions";
+"Hidden actions are removed from the bottom toolbar." = "Hidden actions are removed from the bottom toolbar.";
+"Editor Actions" = "Editor Actions";
+"Right Toolbar Actions" = "Right Toolbar Actions";
+"Hidden actions are removed from the right toolbar." = "Hidden actions are removed from the right toolbar.";
+
+/* Preferences - Recording */
+"Frame rate:" = "Frame rate:";
+"After recording:" = "After recording:";
+"Save recording to:" = "Save recording to:";
+"Clear" = "Clear";
+"Max height:" = "Max height:";
+"px (0 = unlimited)" = "px (0 = unlimited)";
+"Behavior" = "Behavior";
+"Auto-scroll (sends synthetic scroll events)" = "Auto-scroll (sends synthetic scroll events)";
+"Detect fixed/sticky headers" = "Detect fixed/sticky headers";
+"Scroll speed:" = "Scroll speed:";
+"Slow" = "Slow";
+"Medium" = "Medium";
+"Fast" = "Fast";
+"Very fast" = "Very fast";
+"5 fps" = "5 fps";
+"10 fps" = "10 fps";
+"15 fps" = "15 fps";
+"24 fps" = "24 fps";
+"30 fps" = "30 fps";
+"60 fps" = "60 fps";
+"120 fps" = "120 fps";
+"MP4 (H.264)" = "MP4 (H.264)";
+"GIF" = "GIF";
+
+/* Preferences - Upload */
+"Upload Service" = "Upload Service";
+"Upload Provider" = "Upload Provider";
+"Provider:" = "Provider:";
+"Google Drive" = "Google Drive";
+"Google Drive (images + videos)" = "Google Drive (images + videos)";
+"imgbb (images only)" = "imgbb (images only)";
+"S3-Compatible (images + videos)" = "S3-Compatible (images + videos)";
+"S3-Compatible Storage" = "S3-Compatible Storage";
+"Sign In with Google" = "Sign In with Google";
+"Sign Out" = "Sign Out";
+"Signed in" = "Signed in";
+"Not signed in" = "Not signed in";
+"Account:" = "Account:";
+"Test Connection" = "Test Connection";
+"Fill in endpoint, bucket, and credentials first" = "Fill in endpoint, bucket, and credentials first";
+"Testing..." = "Testing...";
+"Connection successful!" = "Connection successful!";
+"Leave empty to use default" = "Leave empty to use default";
+"Endpoint:" = "Endpoint:";
+"Region:" = "Region:";
+"Bucket:" = "Bucket:";
+"Access Key:" = "Access Key:";
+"Secret Key:" = "Secret Key:";
+"Public URL:" = "Public URL:";
+"Path Prefix:" = "Path Prefix:";
+"API key:" = "API key:";
+"Upload History" = "Upload History";
+"No uploads yet." = "No uploads yet.";
+"Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible).";
+"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support).";
+"Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos.";
+"Configure S3 in Preferences" = "Configure S3 in Preferences";
+"Sign in to Google Drive in Preferences" = "Sign in to Google Drive in Preferences";
+"Video upload requires Google Drive or S3" = "Video upload requires Google Drive or S3";
+
+/* Preferences - About */
+"macshot" = "macshot";
+"Version %@ (%@)" = "Version %@ (%@)";
+"Made by" = "Made by";
+"Licensed under the GPLv3" = "Licensed under the GPLv3";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit.";
+
+/* Alerts */
+"No Image on Clipboard" = "No Image on Clipboard";
+"Copy an image to the clipboard first, then try again." = "Copy an image to the clipboard first, then try again.";
+"OK" = "OK";
+"Accessibility Access Required" = "Accessibility Access Required";
+"macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again.";
+"Open Settings" = "Open Settings";
+"Cancel" = "Cancel";
+"Microphone Access Required" = "Microphone Access Required";
+"macshot needs microphone permission to record voice audio. Open System Settings to grant access." = "macshot needs microphone permission to record voice audio. Open System Settings to grant access.";
+"Upload to Google Drive?" = "Upload to Google Drive?";
+"Upload to S3?" = "Upload to S3?";
+"Upload to imgbb.com?" = "Upload to imgbb.com?";
+"Your screenshot will be uploaded." = "Your screenshot will be uploaded.";
+
+/* Permission Onboarding */
+"Welcome to macshot" = "Welcome to macshot";
+"macshot needs one permission" = "macshot needs one permission";
+"Screen Recording not yet granted" = "Screen Recording not yet granted";
+"Screen Recording granted!" = "Screen Recording granted!";
+"Enable macshot, then try taking a screenshot" = "Enable macshot, then try taking a screenshot";
+"Open Screen Recording Settings" = "Open Screen Recording Settings";
+"Continue" = "Continue";
+
+/* OCR Window */
+"Text Recognition" = "Text Recognition";
+"Translate to:" = "Translate to:";
+"%d chars · %d words" = "%d chars · %d words";
+"Copy  ⌘↩" = "Copy  ⌘↩";
+"AI Search" = "AI Search";
+"Show Original" = "Show Original";
+"Translation Failed" = "Translation Failed";
+"Translation" = "Translation";
+"(No text detected in the selected area)" = "(No text detected in the selected area)";
+
+/* Upload Toast */
+"URL copied to the clipboard" = "URL copied to the clipboard";
+"Uploading... %d%%" = "Uploading... %d%%";
+"Upload failed: %@" = "Upload failed: %@";
+"Uploaded! Link copied." = "Uploaded! Link copied.";
+"Uploading to %@... %d%%" = "Uploading to %@... %d%%";
+"Open" = "Open";
+
+/* Recording Toast */
+"Recording saved" = "Recording saved";
+"%@ • Recording saved" = "%@ • Recording saved";
+"Copy Path" = "Copy Path";
+"Path copied!" = "Path copied!";
+
+/* Video Editor */
+"macshot Video Editor" = "macshot Video Editor";
+"%@ selected" = "%@ selected";
+"Exporting..." = "Exporting...";
+"Export failed" = "Export failed";
+"Saved to %@" = "Saved to %@";
+"Save failed" = "Save failed";
+
+/* Barcode Detector */
+/* "Open" and "Copy" are shared with other sections */
+
+/* Save Panel */
+"Save As..." = "Save As...";
+"Choose a folder" = "Choose a folder";
+"Save All to Folder…" = "Save All to Folder…";
+
+/* Scroll Capture HUD */
+"Auto Scroll" = "Auto Scroll";
+"Stop" = "Stop";
+"Scrolling..." = "Scrolling...";
+
+/* Effects Picker (Adjust popover) */
+"Presets" = "Presets";
+"Adjustments" = "Adjustments";
+"Brightness" = "Brightness";
+"Contrast" = "Contrast";
+"Saturation" = "Saturation";
+"Sharpness" = "Sharpness";
+
+/* Time Ago */
+"just now" = "just now";
+"%ds ago" = "%ds ago";
+"%dm ago" = "%dm ago";
+"%dh ago" = "%dh ago";
+
+/* Hotkey Labels */
+"History" = "History";
+
+/* Preferences - Shortcuts note */
+"Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut.";

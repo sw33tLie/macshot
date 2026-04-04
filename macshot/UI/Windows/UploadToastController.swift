@@ -86,7 +86,7 @@ class UploadToastController {
     }
 
     func updateProgress(_ fraction: Double) {
-        statusLabel?.stringValue = "Uploading... \(Int(fraction * 100))%"
+        statusLabel?.stringValue = String(format: L("Uploading... %d%%"), Int(fraction * 100))
     }
 
     func showSuccess(link: String, deleteURL: String) {
@@ -132,7 +132,7 @@ class UploadToastController {
         iconView?.frame = NSRect(x: 14, y: (toastHeight - 28) / 2, width: 28, height: 28)
 
         // Title
-        let titleLabel = NSTextField(labelWithString: "URL copied to the clipboard")
+        let titleLabel = NSTextField(labelWithString: L("URL copied to the clipboard"))
         titleLabel.frame = NSRect(x: 50, y: toastHeight - 28, width: toastWidth - 140, height: 18)
         titleLabel.font = NSFont.systemFont(ofSize: 13, weight: .semibold)
         titleLabel.textColor = .labelColor
@@ -151,7 +151,7 @@ class UploadToastController {
 
         // "Open" button (native-looking, right side)
         let btn = NSButton(frame: NSRect(x: toastWidth - 76, y: (toastHeight - 28) / 2, width: 62, height: 28))
-        btn.title = "Open"
+        btn.title = L("Open")
         btn.bezelStyle = .rounded
         btn.font = NSFont.systemFont(ofSize: 12, weight: .medium)
         btn.target = self
@@ -171,7 +171,7 @@ class UploadToastController {
 
         guard let panel = window, let contentView = panel.contentView else { return }
 
-        let fullMessage = "Upload failed: \(message)"
+        let fullMessage = String(format: L("Upload failed: %@"), message)
         let labelFont = NSFont.systemFont(ofSize: 13, weight: .medium)
         let maxLabelW = toastWidth - 66  // 50 left pad + 16 right pad
         let textSize = (fullMessage as NSString).boundingRect(

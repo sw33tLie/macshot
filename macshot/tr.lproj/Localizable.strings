@@ -1,0 +1,400 @@
+/* Türkçe — macshot localization
+ *
+ * To add a new language:
+ * 1. Create a new folder: macshot/<lang-code>.lproj/
+ * 2. Copy this file into that folder
+ * 3. Translate all values (right side of = sign)
+ * 4. Add the language to LanguageManager.availableLanguages in Services/LanguageManager.swift
+ * 5. Add the language code to knownRegions in macshot.xcodeproj/project.pbxproj
+ * 6. Submit a pull request!
+ *
+ * Keys use the English text. Values should be the translation.
+ * Format strings use %@ for strings, %d for integers.
+ * Keep keyboard shortcuts (like ⌘C) untranslated.
+ * Keep brand names (macshot, Google Drive, imgbb, S3) untranslated.
+ */
+
+/* Menu Bar */
+"Capture Area" = "Alan Yakala";
+"Capture Screen" = "Ekran Yakala";
+"Capture OCR" = "OCR Yakala";
+"Quick Capture" = "Hızlı Yakalama";
+"Scroll Capture" = "Kaydırmalı Yakalama";
+"Capture Delay" = "Gecikmeli Yakalama";
+"None" = "Yok";
+"%d seconds" = "%d saniye";
+"Record Area" = "Alan Kaydet";
+"Record Screen" = "Ekran Kaydet";
+"Recent Captures" = "Son Yakalamalar";
+"Show History Panel" = "Geçmiş Panelini Göster";
+"Open Image..." = "Görsel Aç...";
+"Open from Clipboard" = "Panodan Aç";
+"Preferences..." = "Tercihler...";
+"Check for Updates..." = "Güncellemeleri Denetle...";
+"Quit macshot" = "macshot'tan Çık";
+"No recent captures" = "Son yakalama yok";
+"Clear History" = "Geçmişi Temizle";
+
+/* History Panel */
+"Copy" = "Kopyala";
+"Save As..." = "Farklı Kaydet...";
+"Open in Editor" = "Düzenleyicide Aç";
+"Pin to Screen" = "Ekrana Sabitle";
+"Quick Look" = "Göz At";
+"Delete" = "Sil";
+"All" = "Tümü";
+"Screenshots" = "Ekran Görüntüleri";
+"GIFs" = "GIF'ler";
+"Click to copy · Drag to app" = "Kopyalamak için tıkla · Uygulamaya sürükle";
+"No captures yet" = "Henüz yakalama yok";
+
+/* Floating Thumbnail */
+"Close All" = "Tümünü Kapat";
+"Save All to Folder…" = "Tümünü Klasöre Kaydet…";
+"Save" = "Kaydet";
+
+/* Editor Top Bar */
+"Zoom In" = "Yakınlaştır";
+"Zoom Out" = "Uzaklaştır";
+"Fit Canvas" = "Tuvale Sığdır";
+"Crop" = "Kırp";
+"Flip Horizontal" = "Yatay Çevir";
+"Flip Vertical" = "Dikey Çevir";
+"Add Capture" = "Yakalama Ekle";
+
+/* Toolbar - Tools */
+"Arrow" = "Ok";
+"Line" = "Çizgi";
+"Rectangle" = "Dikdörtgen";
+"Ellipse" = "Elips";
+"Pencil" = "Kalem";
+"Pencil (Draw)" = "Kalem (Çizim)";
+"Marker" = "İşaretleyici";
+"Text" = "Metin";
+"Number" = "Numara";
+"Number / Counter" = "Numara / Sayaç";
+"Stamp / Emoji" = "Damga / Emoji";
+"Censor" = "Sansür";
+"Censor (Pixelate / Blur / Solid)" = "Sansür (Pikselleştir / Bulanıklaştır / Düz)";
+"Measure" = "Ölçüm";
+"Measure (px)" = "Ölçüm (px)";
+"Magnify (Loupe)" = "Büyüteç (Lup)";
+"Color Sampler" = "Renk Örnekleyici";
+"Color Picker" = "Renk Seçici";
+"Select & Edit" = "Seç ve Düzenle";
+"Color" = "Renk";
+
+/* Toolbar - Actions */
+"Copy to Clipboard" = "Panoya Kopyala";
+"Save to File" = "Dosyaya Kaydet";
+"Save to" = "Kaydet:";
+"Open in Editor Window" = "Düzenleyici Penceresinde Aç";
+"Pin on Screen" = "Ekrana Sabitle";
+"Pin" = "Sabitle";
+"Pin (floating window)" = "Sabitle (kayan pencere)";
+"OCR" = "OCR";
+"OCR Text" = "OCR Metin";
+"OCR (extract text)" = "OCR (metin çıkar)";
+"Upload" = "Yükle";
+"Share" = "Paylaş";
+"Undo" = "Geri Al";
+"Redo" = "Yinele";
+"Close" = "Kapat";
+"Remove Background" = "Arka Planı Kaldır";
+"Beautify" = "Güzelleştir";
+"Adjust" = "Ayarla";
+"Adjust (Image Effects)" = "Ayarla (Görsel Efektler)";
+"Invert Colors" = "Renkleri Ters Çevir";
+"Record" = "Kayıt";
+"Record screen" = "Ekran kaydet";
+"Translate" = "Çevir";
+"Auto-Redact sensitive data" = "Hassas verileri otomatik gizle";
+"Move Selection" = "Seçimi Taşı";
+
+/* Toolbar - Recording */
+"Start Recording" = "Kaydı Başlat";
+"Cancel Recording" = "Kaydı İptal Et";
+"Highlight Mouse Clicks" = "Fare Tıklamalarını Vurgula";
+"Record System Audio" = "Sistem Sesini Kaydet";
+"Record Microphone" = "Mikrofonu Kaydet";
+"Recording Settings" = "Kayıt Ayarları";
+
+/* Tool Options */
+"Size" = "Boyut";
+"Stroke" = "Çizgi";
+"Radius" = "Yarıçap";
+"Start:" = "Başlangıç:";
+"Draw:" = "Çizim:";
+"Auto:" = "Otomatik:";
+"Fill" = "Dolu";
+"Outline" = "Çerçeve";
+"More Emojis" = "Daha Fazla Emoji";
+"Load Image" = "Görsel Yükle";
+"Gradient Style" = "Gradyan Stili";
+"On" = "Açık";
+"Text Only" = "Yalnızca Metin";
+"All Text" = "Tüm Metin";
+"PII" = "Kişisel Veri";
+"Faces" = "Yüzler";
+"People" = "Kişiler";
+"Confirm before upload" = "Yüklemeden önce onayla";
+"Flip" = "Çevir";
+"Smooth" = "Yumuşat";
+"Smart" = "Akıllı";
+"Padding" = "Dolgu";
+"Shadow" = "Gölge";
+"Right-click to add points" = "Nokta eklemek için sağ tıklayın";
+"Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "1 basılı tut: otomatik dikey  ·  2 basılı tut: otomatik yatay";
+
+/* Overlay / Canvas */
+"Click a window  ·  Drag for custom area  ·  F for full screen" = "Pencereye tıklayın  ·  Özel alan için sürükleyin  ·  Tam ekran için F";
+"Drag to select  ·  Click for full screen" = "Seçmek için sürükleyin  ·  Tam ekran için tıklayın";
+"Release to annotate and edit" = "Açıklama eklemek ve düzenlemek için bırakın";
+"Window snap: " = "Pencere yakalama: ";
+"ON" = "AÇIK";
+"OFF" = "KAPALI";
+"  (Tab to toggle)" = "  (Değiştirmek için Tab)";
+"Right-click to copy" = "Kopyalamak için sağ tıklayın";
+"Copied %@" = "%@ kopyalandı";
+"Set color %@" = "Renk ayarlandı %@";
+"Draw something first to use the move tool." = "Taşıma aracını kullanmak için önce bir şey çizin.";
+"Drag to reposition" = "Yeniden konumlandırmak için sürükleyin";
+
+/* Overlay - Popovers */
+"Format:" = "Biçim:";
+"FPS:" = "FPS:";
+"When done:" = "Tamamlandığında:";
+"Open editor" = "Düzenleyiciyi aç";
+"Show in Finder" = "Finder'da Göster";
+"Copy to clipboard" = "Panoya kopyala";
+
+/* Preferences - General */
+"macshot Preferences" = "macshot Tercihleri";
+"General" = "Genel";
+"Tools" = "Araçlar";
+"Recording" = "Kayıt";
+"About" = "Hakkında";
+"Shortcuts" = "Kısayollar";
+"Uploads" = "Yüklemeler";
+"Language" = "Dil";
+"Language:" = "Dil:";
+"Restart the app to fully apply the new language." = "Yeni dili tamamen uygulamak için uygulamayı yeniden başlatın.";
+"Capture" = "Yakalama";
+"Play sound on copy" = "Kopyalamada ses çal";
+"Remember last selection area" = "Son seçim alanını hatırla";
+"Remember last selected tool" = "Son seçilen aracı hatırla";
+"Show floating thumbnail after capture" = "Yakalamadan sonra kayan küçük resim göster";
+"Launch at login" = "Oturum açılışında başlat";
+"Show snap alignment guides" = "Hizalama kılavuzlarını göster";
+"Capture mouse cursor in screenshot" = "Ekran görüntüsünde fare imlecini yakala";
+"Use window title in saved filename" = "Kaydedilen dosya adında pencere başlığını kullan";
+"Hide menu bar icon" = "Menü çubuğu simgesini gizle";
+"Hotkeys still work. To show the icon again, re-launch macshot." = "Kısayol tuşları çalışmaya devam eder. Simgeyi tekrar göstermek için macshot'u yeniden başlatın.";
+"Check for updates automatically" = "Güncellemeleri otomatik denetle";
+"Thumbnail" = "Küçük Resim";
+"  Dismiss after:" = "  Kapatma süresi:";
+"seconds before auto-dismiss (0 = never)" = "saniye sonra otomatik kapat (0 = asla)";
+"  Multiple previews:" = "  Birden fazla önizleme:";
+"Stack (keep all)" = "Yığınla (tümünü tut)";
+"Replace (show only latest)" = "Değiştir (yalnızca son)";
+"Output" = "Çıktı";
+"Image format:" = "Görsel biçimi:";
+"Quality:" = "Kalite:";
+"%d%%" = "%%%d";
+"Save at standard resolution (1x)" = "Standart çözünürlükte kaydet (1x)";
+"Halves dimensions on Retina displays, ~4x smaller files" = "Retina ekranlarda boyutları yarıya indirir, ~4 kat küçük dosyalar";
+"Embed sRGB color profile" = "sRGB renk profilini göm";
+"Ensures consistent colors across different displays" = "Farklı ekranlar arasında tutarlı renkler sağlar";
+"Screenshot History" = "Ekran Görüntüsü Geçmişi";
+"History size:" = "Geçmiş boyutu:";
+"screenshots kept on disk (0 = off)" = "diskte saklanan ekran görüntüsü (0 = kapalı)";
+"Save Directory" = "Kayıt Dizini";
+"Save folder:" = "Kayıt klasörü:";
+"Browse…" = "Gözat…";
+"Appearance" = "Görünüm";
+"Accent color:" = "Vurgu rengi:";
+"Icon color:" = "Simge rengi:";
+"Reset" = "Sıfırla";
+"OCR Capture:" = "OCR Yakalama:";
+"Show window + copy to clipboard" = "Pencere göster + panoya kopyala";
+"Show window only" = "Yalnızca pencere göster";
+"Copy to clipboard only" = "Yalnızca panoya kopyala";
+"Enter / Quick Capture:" = "Enter / Hızlı Yakalama:";
+"Save to file" = "Dosyaya kaydet";
+"Save + copy to clipboard" = "Kaydet + panoya kopyala";
+"OCR Action" = "OCR Eylemi";
+
+/* Preferences - Shortcuts */
+"Keyboard Shortcuts" = "Klavye Kısayolları";
+"Hotkeys" = "Kısayol Tuşları";
+"Clear shortcut" = "Kısayolu temizle";
+"Press keys..." = "Tuşlara basın...";
+"Waiting..." = "Bekleniyor...";
+
+/* Preferences - Tools */
+"Annotation Tools" = "Açıklama Araçları";
+"Hidden tools are removed from the bottom toolbar." = "Gizli araçlar alt araç çubuğundan kaldırılır.";
+"Capture Actions" = "Yakalama Eylemleri";
+"Bottom Toolbar Actions" = "Alt Araç Çubuğu Eylemleri";
+"Hidden actions are removed from the bottom toolbar." = "Gizli eylemler alt araç çubuğundan kaldırılır.";
+"Editor Actions" = "Düzenleyici Eylemleri";
+"Right Toolbar Actions" = "Sağ Araç Çubuğu Eylemleri";
+"Hidden actions are removed from the right toolbar." = "Gizli eylemler sağ araç çubuğundan kaldırılır.";
+
+/* Preferences - Recording */
+"Frame rate:" = "Kare hızı:";
+"After recording:" = "Kayıttan sonra:";
+"Save recording to:" = "Kaydı şuraya kaydet:";
+"Clear" = "Temizle";
+"Max height:" = "Maks. yükseklik:";
+"px (0 = unlimited)" = "px (0 = sınırsız)";
+"Behavior" = "Davranış";
+"Auto-scroll (sends synthetic scroll events)" = "Otomatik kaydır (yapay kaydırma olayları gönderir)";
+"Detect fixed/sticky headers" = "Sabit/yapışkan üst bilgileri algıla";
+"Scroll speed:" = "Kaydırma hızı:";
+"Slow" = "Yavaş";
+"Medium" = "Orta";
+"Fast" = "Hızlı";
+"Very fast" = "Çok hızlı";
+"5 fps" = "5 fps";
+"10 fps" = "10 fps";
+"15 fps" = "15 fps";
+"24 fps" = "24 fps";
+"30 fps" = "30 fps";
+"60 fps" = "60 fps";
+"120 fps" = "120 fps";
+"MP4 (H.264)" = "MP4 (H.264)";
+"GIF" = "GIF";
+
+/* Preferences - Upload */
+"Upload Service" = "Yükleme Servisi";
+"Upload Provider" = "Yükleme Sağlayıcısı";
+"Provider:" = "Sağlayıcı:";
+"Google Drive" = "Google Drive";
+"Google Drive (images + videos)" = "Google Drive (görseller + videolar)";
+"imgbb (images only)" = "imgbb (yalnızca görseller)";
+"S3-Compatible (images + videos)" = "S3 Uyumlu (görseller + videolar)";
+"S3-Compatible Storage" = "S3 Uyumlu Depolama";
+"Sign In with Google" = "Google ile Giriş Yap";
+"Sign Out" = "Çıkış Yap";
+"Signed in" = "Giriş yapıldı";
+"Not signed in" = "Giriş yapılmadı";
+"Account:" = "Hesap:";
+"Test Connection" = "Bağlantıyı Test Et";
+"Fill in endpoint, bucket, and credentials first" = "Önce uç nokta, kova ve kimlik bilgilerini doldurun";
+"Testing..." = "Test ediliyor...";
+"Connection successful!" = "Bağlantı başarılı!";
+"Leave empty to use default" = "Varsayılanı kullanmak için boş bırakın";
+"Endpoint:" = "Uç Nokta:";
+"Region:" = "Bölge:";
+"Bucket:" = "Kova:";
+"Access Key:" = "Erişim Anahtarı:";
+"Secret Key:" = "Gizli Anahtar:";
+"Public URL:" = "Genel URL:";
+"Path Prefix:" = "Yol Ön Eki:";
+"API key:" = "API anahtarı:";
+"Upload History" = "Yükleme Geçmişi";
+"No uploads yet." = "Henüz yükleme yok.";
+"Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "Genel erişim için temel URL. Boşsa S3 uç nokta URL'si kullanılır (herkese açık olmayabilir).";
+"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "Paylaşımlı bir anahtar dahildir — hız sınırına ulaşırsanız imgbb.com/api adresinden kendi ücretsiz anahtarınızı alın. Yalnızca görseller (video desteği yok).";
+"Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 ve diğer S3 uyumlu servislerle çalışır. Görselleri ve videoları destekler.";
+"Configure S3 in Preferences" = "Tercihlerde S3'ü yapılandırın";
+"Sign in to Google Drive in Preferences" = "Tercihlerde Google Drive'a giriş yapın";
+"Video upload requires Google Drive or S3" = "Video yüklemek için Google Drive veya S3 gereklidir";
+
+/* Preferences - About */
+"macshot" = "macshot";
+"Version %@ (%@)" = "Sürüm %@ (%@)";
+"Made by" = "Yapımcı";
+"Licensed under the GPLv3" = "GPLv3 lisansı altında";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "macOS için ücretsiz, açık kaynaklı ekran görüntüsü ve ekran kaydı aracı.\nTamamen yerel — Swift ve AppKit ile geliştirilmiştir.";
+
+/* Alerts */
+"No Image on Clipboard" = "Panoda Görsel Yok";
+"Copy an image to the clipboard first, then try again." = "Önce panoya bir görsel kopyalayın, ardından tekrar deneyin.";
+"OK" = "Tamam";
+"Accessibility Access Required" = "Erişilebilirlik İzni Gerekli";
+"macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot, diğer uygulamaları otomatik kaydırmak için Erişilebilirlik iznine ihtiyaç duyar. Lütfen Sistem Ayarları'ndan izin verin ve tekrar deneyin.";
+"Open Settings" = "Ayarları Aç";
+"Cancel" = "İptal";
+"Microphone Access Required" = "Mikrofon Erişimi Gerekli";
+"macshot needs microphone permission to record voice audio. Open System Settings to grant access." = "macshot, ses kaydetmek için mikrofon iznine ihtiyaç duyar. İzin vermek için Sistem Ayarları'nı açın.";
+"Upload to Google Drive?" = "Google Drive'a yüklensin mi?";
+"Upload to S3?" = "S3'e yüklensin mi?";
+"Upload to imgbb.com?" = "imgbb.com'a yüklensin mi?";
+"Your screenshot will be uploaded." = "Ekran görüntünüz yüklenecek.";
+
+/* Permission Onboarding */
+"Welcome to macshot" = "macshot'a Hoş Geldiniz";
+"macshot needs one permission" = "macshot bir izne ihtiyaç duyar";
+"Screen Recording not yet granted" = "Ekran Kaydı izni henüz verilmedi";
+"Screen Recording granted!" = "Ekran Kaydı izni verildi!";
+"Enable macshot, then try taking a screenshot" = "macshot'u etkinleştirin, ardından ekran görüntüsü almayı deneyin";
+"Open Screen Recording Settings" = "Ekran Kaydı Ayarlarını Aç";
+"Continue" = "Devam";
+
+/* OCR Window */
+"Text Recognition" = "Metin Tanıma";
+"Translate to:" = "Çeviri dili:";
+"%d chars · %d words" = "%d karakter · %d kelime";
+"Copy  ⌘↩" = "Kopyala  ⌘↩";
+"AI Search" = "Yapay Zeka Araması";
+"Show Original" = "Orijinali Göster";
+"Translation Failed" = "Çeviri Başarısız";
+"Translation" = "Çeviri";
+"(No text detected in the selected area)" = "(Seçili alanda metin algılanamadı)";
+
+/* Upload Toast */
+"URL copied to the clipboard" = "URL panoya kopyalandı";
+"Uploading... %d%%" = "Yükleniyor... %%%d";
+"Upload failed: %@" = "Yükleme başarısız: %@";
+"Uploaded! Link copied." = "Yüklendi! Bağlantı kopyalandı.";
+"Uploading to %@... %d%%" = "%@ hizmetine yükleniyor... %%%d";
+"Open" = "Aç";
+
+/* Recording Toast */
+"Recording saved" = "Kayıt kaydedildi";
+"%@ • Recording saved" = "%@ • Kayıt kaydedildi";
+"Copy Path" = "Yolu Kopyala";
+"Path copied!" = "Yol kopyalandı!";
+
+/* Video Editor */
+"macshot Video Editor" = "macshot Video Düzenleyici";
+"%@ selected" = "%@ seçili";
+"Exporting..." = "Dışa aktarılıyor...";
+"Export failed" = "Dışa aktarma başarısız";
+"Saved to %@" = "%@ konumuna kaydedildi";
+"Save failed" = "Kaydetme başarısız";
+
+/* Barcode Detector */
+/* "Open" and "Copy" are shared with other sections */
+
+/* Save Panel */
+"Save As..." = "Farklı Kaydet...";
+"Choose a folder" = "Bir klasör seçin";
+"Save All to Folder…" = "Tümünü Klasöre Kaydet…";
+
+/* Scroll Capture HUD */
+"Auto Scroll" = "Otomatik Kaydır";
+"Stop" = "Durdur";
+"Scrolling..." = "Kaydırılıyor...";
+
+/* Effects Picker (Adjust popover) */
+"Presets" = "Hazır Ayarlar";
+"Adjustments" = "Ayarlamalar";
+"Brightness" = "Parlaklık";
+"Contrast" = "Kontrast";
+"Saturation" = "Doygunluk";
+"Sharpness" = "Keskinlik";
+
+/* Time Ago */
+"just now" = "az önce";
+"%ds ago" = "%d sn önce";
+"%dm ago" = "%d dk önce";
+"%dh ago" = "%d sa önce";
+
+/* Hotkey Labels */
+"History" = "Geçmiş";
+
+/* Preferences - Shortcuts note */
+"Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Bir kısayol ayarlamak için \"Kayıt\" düğmesine tıklayın ve en az bir değiştirici tuş (⌘, ⌥, ⌃, ⇧) içeren bir tuş kombinasyonuna basın.";

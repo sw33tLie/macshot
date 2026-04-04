@@ -1619,12 +1619,12 @@ class OverlayView: NSView {
     private func drawIdleHelperText() {
         let line1 =
             windowSnapEnabled
-            ? "Click a window  ·  Drag for custom area  ·  F for full screen"
-            : "Drag to select  ·  Click for full screen"
+            ? L("Click a window  ·  Drag for custom area  ·  F for full screen")
+            : L("Drag to select  ·  Click for full screen")
         let snapOn = windowSnapEnabled
-        let line3prefix = "Window snap: "
-        let line3state = snapOn ? "ON" : "OFF"
-        let line3suffix = "  (Tab to toggle)"
+        let line3prefix = L("Window snap: ")
+        let line3state = snapOn ? L("ON") : L("OFF")
+        let line3suffix = L("  (Tab to toggle)")
 
         let snapColor = snapOn ? NSColor.systemGreen : NSColor.systemOrange
 
@@ -1678,19 +1678,17 @@ class OverlayView: NSView {
             withAttributes: attrs2suffix)
     }
 
-    private static let helperText = "Release to annotate and edit"
     private static let helperTextAttrs: [NSAttributedString.Key: Any] = [
         .font: NSFont.systemFont(ofSize: 12, weight: .medium),
         .foregroundColor: NSColor.white,
     ]
-    private static let helperTextSize: NSSize = (helperText as NSString).size(withAttributes: helperTextAttrs)
 
     private func drawSelectingHelperText() {
         guard selectionRect.width >= 1, selectionRect.height >= 1 else { return }
 
-        let text = Self.helperText
+        let text = L("Release to annotate and edit")
         let attrs = Self.helperTextAttrs
-        let size = Self.helperTextSize
+        let size = (text as NSString).size(withAttributes: attrs)
         let padding: CGFloat = 10
         let bgWidth = size.width + padding * 2
         let bgHeight = size.height + padding
@@ -2276,7 +2274,7 @@ class OverlayView: NSView {
         ]
 
         let hexSize = (hexStr as NSString).size(withAttributes: hexAttrs)
-        let copyText = "Right-click to copy"
+        let copyText = L("Right-click to copy")
         let copySize = (copyText as NSString).size(withAttributes: copyAttrs)
 
         let swatchSize: CGFloat = 16
@@ -4008,7 +4006,7 @@ class OverlayView: NSView {
             {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(result.hex, forType: .string)
-                showOverlayError("Copied \(result.hex)")
+                showOverlayError(String(format: L("Copied %@"), result.hex))
                 needsDisplay = true
             }
             return
@@ -4716,7 +4714,7 @@ class OverlayView: NSView {
             {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(result.hex, forType: .string)
-                showOverlayError("Copied \(result.hex)")
+                showOverlayError(String(format: L("Copied %@"), result.hex))
                 needsDisplay = true
             }
             return
@@ -5058,7 +5056,7 @@ class OverlayView: NSView {
         case .save:
             let menu = NSMenu()
             let saveAsItem = NSMenuItem(
-                title: "Save As...", action: #selector(saveAsMenuAction), keyEquivalent: "")
+                title: L("Save As..."), action: #selector(saveAsMenuAction), keyEquivalent: "")
             saveAsItem.target = self
             menu.addItem(saveAsItem)
             menu.popUp(
@@ -5078,7 +5076,7 @@ class OverlayView: NSView {
         switch action {
         case .tool(let tool):
             if tool == .select && !annotations.contains(where: { $0.isMovable }) {
-                showOverlayError("Draw something first to use the move tool.")
+                showOverlayError(L("Draw something first to use the move tool."))
                 return
             }
             commitTextFieldIfNeeded()
@@ -5109,7 +5107,7 @@ class OverlayView: NSView {
                 rebuildToolbarLayout()
             }
             // Show drag hint tooltip
-            hoveredTooltip = "Drag to reposition"
+            hoveredTooltip = L("Drag to reposition")
             needsDisplay = true
             displayIfNeeded()
             // Synchronous drag loop: tracks mouse from button press until release
@@ -5145,15 +5143,15 @@ class OverlayView: NSView {
                 let provider = UserDefaults.standard.string(forKey: "uploadProvider") ?? "imgbb"
                 let title: String
                 switch provider {
-                case "gdrive": title = "Upload to Google Drive?"
-                case "s3": title = "Upload to S3?"
-                default: title = "Upload to imgbb.com?"
+                case "gdrive": title = L("Upload to Google Drive?")
+                case "s3": title = L("Upload to S3?")
+                default: title = L("Upload to imgbb.com?")
                 }
                 let alert = NSAlert()
                 alert.messageText = title
-                alert.informativeText = "Your screenshot will be uploaded."
-                alert.addButton(withTitle: "Upload")
-                alert.addButton(withTitle: "Cancel")
+                alert.informativeText = L("Your screenshot will be uploaded.")
+                alert.addButton(withTitle: L("Upload"))
+                alert.addButton(withTitle: L("Cancel"))
                 alert.alertStyle = .informational
                 // Temporarily lower window level so the alert is visible
                 let originalLevel = window?.level ?? .statusBar
@@ -5346,7 +5344,7 @@ class OverlayView: NSView {
                     let nextSlot = selectedColorSlot + 1
                     if nextSlot < customColors.count { selectedColorSlot = nextSlot }
                 }
-                showOverlayError("Set color \(result.hex)")
+                showOverlayError(String(format: L("Set color %@"), result.hex))
                 needsDisplay = true
             }
             return
@@ -5547,12 +5545,12 @@ class OverlayView: NSView {
 
     private func showMicPermissionAlert() {
         let alert = NSAlert()
-        alert.messageText = "Microphone Access Required"
+        alert.messageText = L("Microphone Access Required")
         alert.informativeText =
-            "macshot needs microphone permission to record voice audio. Open System Settings to grant access."
+            L("macshot needs microphone permission to record voice audio. Open System Settings to grant access.")
         alert.alertStyle = .warning
-        alert.addButton(withTitle: "Open Settings")
-        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: L("Open Settings"))
+        alert.addButton(withTitle: L("Cancel"))
         let response = alert.runModal()
         if response == .alertFirstButtonReturn {
             if let url = URL(

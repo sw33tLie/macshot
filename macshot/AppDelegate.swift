@@ -204,43 +204,43 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let menu = NSMenu()
         menu.autoenablesItems = false
 
-        let captureAreaItem = NSMenuItem(title: "Capture Area", action: #selector(captureScreen), keyEquivalent: "")
+        let captureAreaItem = NSMenuItem(title: L("Capture Area"), action: #selector(captureScreen), keyEquivalent: "")
         captureAreaItem.target = self
         captureAreaItem.toolTip = HotkeyManager.displayString(for: .captureArea)
         captureAreaItem.image = NSImage(systemSymbolName: "crop", accessibilityDescription: nil)
         menu.addItem(captureAreaItem)
 
-        let captureFullItem = NSMenuItem(title: "Capture Screen", action: #selector(captureFullScreen), keyEquivalent: "")
+        let captureFullItem = NSMenuItem(title: L("Capture Screen"), action: #selector(captureFullScreen), keyEquivalent: "")
         captureFullItem.target = self
         captureFullItem.toolTip = HotkeyManager.displayString(for: .captureFullScreen)
         captureFullItem.image = NSImage(systemSymbolName: "desktopcomputer", accessibilityDescription: nil)
         menu.addItem(captureFullItem)
 
-        let captureOCRItem = NSMenuItem(title: "Capture OCR", action: #selector(captureOCR), keyEquivalent: "")
+        let captureOCRItem = NSMenuItem(title: L("Capture OCR"), action: #selector(captureOCR), keyEquivalent: "")
         captureOCRItem.target = self
         captureOCRItem.toolTip = HotkeyManager.displayString(for: .captureOCR)
         captureOCRItem.image = NSImage(systemSymbolName: "text.viewfinder", accessibilityDescription: nil)
         menu.addItem(captureOCRItem)
 
-        let quickCaptureItem = NSMenuItem(title: "Quick Capture", action: #selector(quickCapture), keyEquivalent: "")
+        let quickCaptureItem = NSMenuItem(title: L("Quick Capture"), action: #selector(quickCapture), keyEquivalent: "")
         quickCaptureItem.target = self
         quickCaptureItem.toolTip = HotkeyManager.displayString(for: .quickCapture)
         quickCaptureItem.image = NSImage(systemSymbolName: "square.and.arrow.down", accessibilityDescription: nil)
         menu.addItem(quickCaptureItem)
 
-        let scrollCaptureItem = NSMenuItem(title: "Scroll Capture", action: #selector(scrollCapture), keyEquivalent: "")
+        let scrollCaptureItem = NSMenuItem(title: L("Scroll Capture"), action: #selector(scrollCapture), keyEquivalent: "")
         scrollCaptureItem.target = self
         scrollCaptureItem.image = NSImage(systemSymbolName: "scroll", accessibilityDescription: nil)
         menu.addItem(scrollCaptureItem)
 
         // Capture Delay submenu
-        let delayItem = NSMenuItem(title: "Capture Delay", action: nil, keyEquivalent: "")
+        let delayItem = NSMenuItem(title: L("Capture Delay"), action: nil, keyEquivalent: "")
         delayItem.image = NSImage(systemSymbolName: "timer", accessibilityDescription: nil)
         let delaySubmenu = NSMenu()
         delaySubmenu.autoenablesItems = false
         let currentDelay = UserDefaults.standard.integer(forKey: "captureDelaySeconds")
         for seconds in [0, 3, 5, 10, 30] {
-            let title = seconds == 0 ? "None" : "\(seconds) seconds"
+            let title = seconds == 0 ? L("None") : String(format: L("%d seconds"), seconds)
             let item = NSMenuItem(title: title, action: #selector(setDelaySeconds(_:)), keyEquivalent: "")
             item.target = self
             item.tag = seconds
@@ -252,13 +252,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
-        let recordAreaItem = NSMenuItem(title: "Record Area", action: #selector(recordArea), keyEquivalent: "")
+        let recordAreaItem = NSMenuItem(title: L("Record Area"), action: #selector(recordArea), keyEquivalent: "")
         recordAreaItem.target = self
         recordAreaItem.toolTip = HotkeyManager.displayString(for: .recordArea)
         recordAreaItem.image = NSImage(systemSymbolName: "record.circle", accessibilityDescription: nil)
         menu.addItem(recordAreaItem)
 
-        let recordScreenItem = NSMenuItem(title: "Record Screen", action: #selector(recordFullScreen), keyEquivalent: "")
+        let recordScreenItem = NSMenuItem(title: L("Record Screen"), action: #selector(recordFullScreen), keyEquivalent: "")
         recordScreenItem.target = self
         recordScreenItem.toolTip = HotkeyManager.displayString(for: .recordScreen)
         recordScreenItem.image = NSImage(systemSymbolName: "menubar.dock.rectangle", accessibilityDescription: nil)
@@ -267,7 +267,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem.separator())
 
         // Recent Captures submenu
-        let historyItem = NSMenuItem(title: "Recent Captures", action: nil, keyEquivalent: "")
+        let historyItem = NSMenuItem(title: L("Recent Captures"), action: nil, keyEquivalent: "")
         historyItem.image = NSImage(systemSymbolName: "clock.arrow.circlepath", accessibilityDescription: nil)
         let historySubmenu = NSMenu()
         historySubmenu.delegate = self
@@ -275,7 +275,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         self.historyMenu = historySubmenu
         menu.addItem(historyItem)
 
-        let historyOverlayItem = NSMenuItem(title: "Show History Panel", action: #selector(showHistoryOverlay), keyEquivalent: "")
+        let historyOverlayItem = NSMenuItem(title: L("Show History Panel"), action: #selector(showHistoryOverlay), keyEquivalent: "")
         historyOverlayItem.target = self
         historyOverlayItem.toolTip = HotkeyManager.displayString(for: .historyOverlay)
         historyOverlayItem.image = NSImage(systemSymbolName: "square.grid.2x2", accessibilityDescription: nil)
@@ -283,31 +283,31 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
-        let openImageItem = NSMenuItem(title: "Open Image...", action: #selector(openImageFromMenu), keyEquivalent: "")
+        let openImageItem = NSMenuItem(title: L("Open Image..."), action: #selector(openImageFromMenu), keyEquivalent: "")
         openImageItem.target = self
         openImageItem.image = NSImage(systemSymbolName: "photo.on.rectangle.angled", accessibilityDescription: nil)
         menu.addItem(openImageItem)
 
-        let pasteImageItem = NSMenuItem(title: "Open from Clipboard", action: #selector(openImageFromClipboard), keyEquivalent: "")
+        let pasteImageItem = NSMenuItem(title: L("Open from Clipboard"), action: #selector(openImageFromClipboard), keyEquivalent: "")
         pasteImageItem.target = self
         pasteImageItem.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: nil)
         menu.addItem(pasteImageItem)
 
         menu.addItem(NSMenuItem.separator())
 
-        let prefsItem = NSMenuItem(title: "Preferences...", action: #selector(openPreferences), keyEquivalent: ",")
+        let prefsItem = NSMenuItem(title: L("Preferences..."), action: #selector(openPreferences), keyEquivalent: ",")
         prefsItem.target = self
         prefsItem.image = NSImage(systemSymbolName: "gear", accessibilityDescription: nil)
         menu.addItem(prefsItem)
 
-        let updateItem = NSMenuItem(title: "Check for Updates...", action: #selector(checkForUpdates), keyEquivalent: "")
+        let updateItem = NSMenuItem(title: L("Check for Updates..."), action: #selector(checkForUpdates), keyEquivalent: "")
         updateItem.target = self
         updateItem.image = NSImage(systemSymbolName: "arrow.triangle.2.circlepath", accessibilityDescription: nil)
         menu.addItem(updateItem)
 
         menu.addItem(NSMenuItem.separator())
 
-        let quitItem = NSMenuItem(title: "Quit macshot", action: #selector(quitApp), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: L("Quit macshot"), action: #selector(quitApp), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
 
@@ -873,10 +873,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let image = NSImage(pasteboard: pasteboard), image.isValid,
               image.size.width > 0, image.size.height > 0 else {
             let alert = NSAlert()
-            alert.messageText = "No Image on Clipboard"
-            alert.informativeText = "Copy an image to the clipboard first, then try again."
+            alert.messageText = L("No Image on Clipboard")
+            alert.informativeText = L("Copy an image to the clipboard first, then try again.")
             alert.alertStyle = .informational
-            alert.addButton(withTitle: "OK")
+            alert.addButton(withTitle: L("OK"))
             alert.runModal()
             return
         }
@@ -1292,11 +1292,11 @@ extension AppDelegate: OverlayWindowControllerDelegate {
                 let opts = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
                 AXIsProcessTrustedWithOptions(opts)
                 let alert = NSAlert()
-                alert.messageText = "Accessibility Access Required"
-                alert.informativeText = "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again."
+                alert.messageText = L("Accessibility Access Required")
+                alert.informativeText = L("macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again.")
                 alert.alertStyle = .warning
-                alert.addButton(withTitle: "Open Settings")
-                alert.addButton(withTitle: "Cancel")
+                alert.addButton(withTitle: L("Open Settings"))
+                alert.addButton(withTitle: L("Cancel"))
                 let response = alert.runModal()
                 if response == .alertFirstButtonReturn {
                     if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
@@ -1497,7 +1497,7 @@ extension AppDelegate: NSMenuDelegate {
 
         let entries = ScreenshotHistory.shared.entries
         if entries.isEmpty {
-            let emptyItem = NSMenuItem(title: "No recent captures", action: nil, keyEquivalent: "")
+            let emptyItem = NSMenuItem(title: L("No recent captures"), action: nil, keyEquivalent: "")
             emptyItem.isEnabled = false
             menu.addItem(emptyItem)
             return
@@ -1514,7 +1514,7 @@ extension AppDelegate: NSMenuDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
-        let clearItem = NSMenuItem(title: "Clear History", action: #selector(clearHistory), keyEquivalent: "")
+        let clearItem = NSMenuItem(title: L("Clear History"), action: #selector(clearHistory), keyEquivalent: "")
         clearItem.target = self
         clearItem.tag = 9000
         menu.addItem(clearItem)

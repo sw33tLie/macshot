@@ -1,0 +1,400 @@
+/* Romana — macshot localization
+ *
+ * To add a new language:
+ * 1. Create a new folder: macshot/<lang-code>.lproj/
+ * 2. Copy this file into that folder
+ * 3. Translate all values (right side of = sign)
+ * 4. Add the language to LanguageManager.availableLanguages in Services/LanguageManager.swift
+ * 5. Add the language code to knownRegions in macshot.xcodeproj/project.pbxproj
+ * 6. Submit a pull request!
+ *
+ * Keys use the English text. Values should be the translation.
+ * Format strings use %@ for strings, %d for integers.
+ * Keep keyboard shortcuts (like ⌘C) untranslated.
+ * Keep brand names (macshot, Google Drive, imgbb, S3) untranslated.
+ */
+
+/* Menu Bar */
+"Capture Area" = "Captura zona";
+"Capture Screen" = "Captura ecranul";
+"Capture OCR" = "Captura OCR";
+"Quick Capture" = "Captura rapida";
+"Scroll Capture" = "Captura cu derulare";
+"Capture Delay" = "Intarziere captura";
+"None" = "Fara";
+"%d seconds" = "%d secunde";
+"Record Area" = "Inregistreaza zona";
+"Record Screen" = "Inregistreaza ecranul";
+"Recent Captures" = "Capturi recente";
+"Show History Panel" = "Afiseaza panoul istoric";
+"Open Image..." = "Deschide imagine...";
+"Open from Clipboard" = "Deschide din clipboard";
+"Preferences..." = "Preferinte...";
+"Check for Updates..." = "Verifica actualizari...";
+"Quit macshot" = "Inchide macshot";
+"No recent captures" = "Nicio captura recenta";
+"Clear History" = "Sterge istoricul";
+
+/* History Panel */
+"Copy" = "Copiaza";
+"Save As..." = "Salveaza ca...";
+"Open in Editor" = "Deschide in editor";
+"Pin to Screen" = "Fixeaza pe ecran";
+"Quick Look" = "Previzualizare rapida";
+"Delete" = "Sterge";
+"All" = "Toate";
+"Screenshots" = "Capturi de ecran";
+"GIFs" = "GIFs";
+"Click to copy · Drag to app" = "Clic pentru copiere · Trage in aplicatie";
+"No captures yet" = "Nicio captura inca";
+
+/* Floating Thumbnail */
+"Close All" = "Inchide toate";
+"Save All to Folder…" = "Salveaza toate in dosar...";
+"Save" = "Salveaza";
+
+/* Editor Top Bar */
+"Zoom In" = "Mareste";
+"Zoom Out" = "Micsoreaza";
+"Fit Canvas" = "Potriveste la canvas";
+"Crop" = "Decupeaza";
+"Flip Horizontal" = "Oglindire orizontala";
+"Flip Vertical" = "Oglindire verticala";
+"Add Capture" = "Adauga captura";
+
+/* Toolbar - Tools */
+"Arrow" = "Sageata";
+"Line" = "Linie";
+"Rectangle" = "Dreptunghi";
+"Ellipse" = "Elipsa";
+"Pencil" = "Creion";
+"Pencil (Draw)" = "Creion (Deseneaza)";
+"Marker" = "Marker";
+"Text" = "Text";
+"Number" = "Numar";
+"Number / Counter" = "Numar / Contor";
+"Stamp / Emoji" = "Stampila / Emoji";
+"Censor" = "Cenzura";
+"Censor (Pixelate / Blur / Solid)" = "Cenzura (Pixelare / Estompare / Solid)";
+"Measure" = "Masoara";
+"Measure (px)" = "Masoara (px)";
+"Magnify (Loupe)" = "Lupa (Marire)";
+"Color Sampler" = "Selector culoare";
+"Color Picker" = "Alegator de culori";
+"Select & Edit" = "Selecteaza si editeaza";
+"Color" = "Culoare";
+
+/* Toolbar - Actions */
+"Copy to Clipboard" = "Copiaza in clipboard";
+"Save to File" = "Salveaza in fisier";
+"Save to" = "Salveaza in";
+"Open in Editor Window" = "Deschide in fereastra de editare";
+"Pin on Screen" = "Fixeaza pe ecran";
+"Pin" = "Fixeaza";
+"Pin (floating window)" = "Fixeaza (fereastra flotanta)";
+"OCR" = "OCR";
+"OCR Text" = "OCR Text";
+"OCR (extract text)" = "OCR (extrage text)";
+"Upload" = "Incarca";
+"Share" = "Partajeaza";
+"Undo" = "Anuleaza";
+"Redo" = "Refacere";
+"Close" = "Inchide";
+"Remove Background" = "Elimina fundalul";
+"Beautify" = "Infrumuseteaza";
+"Adjust" = "Ajusteaza";
+"Adjust (Image Effects)" = "Ajusteaza (Efecte imagine)";
+"Invert Colors" = "Inverseaza culorile";
+"Record" = "Inregistreaza";
+"Record screen" = "Inregistreaza ecranul";
+"Translate" = "Traducere";
+"Auto-Redact sensitive data" = "Auto-cenzurare date sensibile";
+"Move Selection" = "Muta selectia";
+
+/* Toolbar - Recording */
+"Start Recording" = "Incepe inregistrarea";
+"Cancel Recording" = "Anuleaza inregistrarea";
+"Highlight Mouse Clicks" = "Evidentiaza clicurile mouse-ului";
+"Record System Audio" = "Inregistreaza sunetul sistemului";
+"Record Microphone" = "Inregistreaza microfonul";
+"Recording Settings" = "Setari inregistrare";
+
+/* Tool Options */
+"Size" = "Dimensiune";
+"Stroke" = "Contur";
+"Radius" = "Raza";
+"Start:" = "Start:";
+"Draw:" = "Deseneaza:";
+"Auto:" = "Auto:";
+"Fill" = "Umplere";
+"Outline" = "Contur";
+"More Emojis" = "Mai multe Emoji-uri";
+"Load Image" = "Incarca imagine";
+"Gradient Style" = "Stil gradient";
+"On" = "Activat";
+"Text Only" = "Doar text";
+"All Text" = "Tot textul";
+"PII" = "PII";
+"Faces" = "Fete";
+"People" = "Persoane";
+"Confirm before upload" = "Confirma inainte de incarcare";
+"Flip" = "Oglindire";
+"Smooth" = "Neted";
+"Smart" = "Inteligent";
+"Padding" = "Spatiere";
+"Shadow" = "Umbra";
+"Right-click to add points" = "Clic dreapta pentru a adauga puncte";
+"Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "Tine 1 auto-vertical  ·  Tine 2 auto-orizontal";
+
+/* Overlay / Canvas */
+"Click a window  ·  Drag for custom area  ·  F for full screen" = "Clic pe o fereastra  ·  Trage pentru zona personalizata  ·  F pentru ecran complet";
+"Drag to select  ·  Click for full screen" = "Trage pentru selectare  ·  Clic pentru ecran complet";
+"Release to annotate and edit" = "Elibereaza pentru adnotare si editare";
+"Window snap: " = "Fixare fereastra: ";
+"ON" = "ACTIVAT";
+"OFF" = "DEZACTIVAT";
+"  (Tab to toggle)" = "  (Tab pentru comutare)";
+"Right-click to copy" = "Clic dreapta pentru copiere";
+"Copied %@" = "Copiat %@";
+"Set color %@" = "Seteaza culoarea %@";
+"Draw something first to use the move tool." = "Deseneaza ceva mai intai pentru a folosi instrumentul de mutare.";
+"Drag to reposition" = "Trage pentru a repozitiona";
+
+/* Overlay - Popovers */
+"Format:" = "Format:";
+"FPS:" = "FPS:";
+"When done:" = "La finalizare:";
+"Open editor" = "Deschide editorul";
+"Show in Finder" = "Afiseaza in Finder";
+"Copy to clipboard" = "Copiaza in clipboard";
+
+/* Preferences - General */
+"macshot Preferences" = "Preferinte macshot";
+"General" = "General";
+"Tools" = "Instrumente";
+"Recording" = "Inregistrare";
+"About" = "Despre";
+"Shortcuts" = "Scurtaturi";
+"Uploads" = "Incarcari";
+"Language" = "Limba";
+"Language:" = "Limba:";
+"Restart the app to fully apply the new language." = "Reporneste aplicatia pentru a aplica complet noua limba.";
+"Capture" = "Captura";
+"Play sound on copy" = "Reda sunet la copiere";
+"Remember last selection area" = "Retine ultima zona de selectie";
+"Remember last selected tool" = "Retine ultimul instrument selectat";
+"Show floating thumbnail after capture" = "Afiseaza miniatura flotanta dupa captura";
+"Launch at login" = "Porneste la autentificare";
+"Show snap alignment guides" = "Afiseaza ghidajele de aliniere";
+"Capture mouse cursor in screenshot" = "Captura cursorul mouse-ului in captura de ecran";
+"Use window title in saved filename" = "Foloseste titlul ferestrei in numele fisierului salvat";
+"Hide menu bar icon" = "Ascunde pictograma din bara de meniu";
+"Hotkeys still work. To show the icon again, re-launch macshot." = "Scurtaturile functioneaza in continuare. Pentru a afisa din nou pictograma, reporneste macshot.";
+"Check for updates automatically" = "Verifica actualizarile automat";
+"Thumbnail" = "Miniatura";
+"  Dismiss after:" = "  Inchide dupa:";
+"seconds before auto-dismiss (0 = never)" = "secunde inainte de inchidere automata (0 = niciodata)";
+"  Multiple previews:" = "  Previzualizari multiple:";
+"Stack (keep all)" = "Stiva (pastreaza toate)";
+"Replace (show only latest)" = "Inlocuieste (afiseaza doar ultima)";
+"Output" = "Iesire";
+"Image format:" = "Format imagine:";
+"Quality:" = "Calitate:";
+"%d%%" = "%d%%";
+"Save at standard resolution (1x)" = "Salveaza la rezolutie standard (1x)";
+"Halves dimensions on Retina displays, ~4x smaller files" = "Injumatateste dimensiunile pe ecranele Retina, fisiere de ~4x mai mici";
+"Embed sRGB color profile" = "Incorporeaza profilul de culoare sRGB";
+"Ensures consistent colors across different displays" = "Asigura culori consistente pe diferite ecrane";
+"Screenshot History" = "Istoric capturi de ecran";
+"History size:" = "Dimensiune istoric:";
+"screenshots kept on disk (0 = off)" = "capturi de ecran pastrate pe disc (0 = dezactivat)";
+"Save Directory" = "Director de salvare";
+"Save folder:" = "Dosar de salvare:";
+"Browse…" = "Rasfoieste...";
+"Appearance" = "Aspect";
+"Accent color:" = "Culoare accent:";
+"Icon color:" = "Culoare pictograma:";
+"Reset" = "Reseteaza";
+"OCR Capture:" = "Captura OCR:";
+"Show window + copy to clipboard" = "Afiseaza fereastra + copiaza in clipboard";
+"Show window only" = "Afiseaza doar fereastra";
+"Copy to clipboard only" = "Copiaza doar in clipboard";
+"Enter / Quick Capture:" = "Enter / Captura rapida:";
+"Save to file" = "Salveaza in fisier";
+"Save + copy to clipboard" = "Salveaza + copiaza in clipboard";
+"OCR Action" = "Actiune OCR";
+
+/* Preferences - Shortcuts */
+"Keyboard Shortcuts" = "Scurtaturi de tastatura";
+"Hotkeys" = "Taste rapide";
+"Clear shortcut" = "Sterge scurtatura";
+"Press keys..." = "Apasa tastele...";
+"Waiting..." = "Se asteapta...";
+
+/* Preferences - Tools */
+"Annotation Tools" = "Instrumente de adnotare";
+"Hidden tools are removed from the bottom toolbar." = "Instrumentele ascunse sunt eliminate din bara de instrumente de jos.";
+"Capture Actions" = "Actiuni de captura";
+"Bottom Toolbar Actions" = "Actiuni bara de instrumente de jos";
+"Hidden actions are removed from the bottom toolbar." = "Actiunile ascunse sunt eliminate din bara de instrumente de jos.";
+"Editor Actions" = "Actiuni editor";
+"Right Toolbar Actions" = "Actiuni bara de instrumente din dreapta";
+"Hidden actions are removed from the right toolbar." = "Actiunile ascunse sunt eliminate din bara de instrumente din dreapta.";
+
+/* Preferences - Recording */
+"Frame rate:" = "Rata de cadre:";
+"After recording:" = "Dupa inregistrare:";
+"Save recording to:" = "Salveaza inregistrarea in:";
+"Clear" = "Sterge";
+"Max height:" = "Inaltime maxima:";
+"px (0 = unlimited)" = "px (0 = nelimitat)";
+"Behavior" = "Comportament";
+"Auto-scroll (sends synthetic scroll events)" = "Derulare automata (trimite evenimente de derulare sintetice)";
+"Detect fixed/sticky headers" = "Detecteaza anteturile fixe/lipicioase";
+"Scroll speed:" = "Viteza de derulare:";
+"Slow" = "Lent";
+"Medium" = "Mediu";
+"Fast" = "Rapid";
+"Very fast" = "Foarte rapid";
+"5 fps" = "5 fps";
+"10 fps" = "10 fps";
+"15 fps" = "15 fps";
+"24 fps" = "24 fps";
+"30 fps" = "30 fps";
+"60 fps" = "60 fps";
+"120 fps" = "120 fps";
+"MP4 (H.264)" = "MP4 (H.264)";
+"GIF" = "GIF";
+
+/* Preferences - Upload */
+"Upload Service" = "Serviciu de incarcare";
+"Upload Provider" = "Furnizor de incarcare";
+"Provider:" = "Furnizor:";
+"Google Drive" = "Google Drive";
+"Google Drive (images + videos)" = "Google Drive (imagini + videoclipuri)";
+"imgbb (images only)" = "imgbb (doar imagini)";
+"S3-Compatible (images + videos)" = "S3-Compatible (imagini + videoclipuri)";
+"S3-Compatible Storage" = "S3-Compatible Storage";
+"Sign In with Google" = "Autentificare cu Google";
+"Sign Out" = "Deconectare";
+"Signed in" = "Conectat";
+"Not signed in" = "Neconectat";
+"Account:" = "Cont:";
+"Test Connection" = "Testeaza conexiunea";
+"Fill in endpoint, bucket, and credentials first" = "Completeaza mai intai endpoint-ul, bucket-ul si credentialele";
+"Testing..." = "Se testeaza...";
+"Connection successful!" = "Conexiune reusita!";
+"Leave empty to use default" = "Lasa gol pentru a folosi valoarea implicita";
+"Endpoint:" = "Endpoint:";
+"Region:" = "Regiune:";
+"Bucket:" = "Bucket:";
+"Access Key:" = "Cheie de acces:";
+"Secret Key:" = "Cheie secreta:";
+"Public URL:" = "URL public:";
+"Path Prefix:" = "Prefix cale:";
+"API key:" = "Cheie API:";
+"Upload History" = "Istoric incarcari";
+"No uploads yet." = "Nicio incarcare inca.";
+"Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "URL de baza pentru acces public. Daca este gol, se foloseste URL-ul endpoint-ului S3 (poate sa nu fie accesibil public).";
+"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "O cheie partajata este inclusa — obtine propria cheie gratuita la imgbb.com/api daca atingi limitele de rata. Doar imagini (fara suport video).";
+"Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "Functioneaza cu AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 si alte servicii S3-compatible. Suporta imagini si videoclipuri.";
+"Configure S3 in Preferences" = "Configureaza S3 in Preferinte";
+"Sign in to Google Drive in Preferences" = "Autentifica-te in Google Drive din Preferinte";
+"Video upload requires Google Drive or S3" = "Incarcarea video necesita Google Drive sau S3";
+
+/* Preferences - About */
+"macshot" = "macshot";
+"Version %@ (%@)" = "Versiunea %@ (%@)";
+"Made by" = "Creat de";
+"Licensed under the GPLv3" = "Licenta GPLv3";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "Un instrument gratuit si open-source de captura de ecran si inregistrare pentru macOS.\nComplet nativ — construit cu Swift si AppKit.";
+
+/* Alerts */
+"No Image on Clipboard" = "Nicio imagine in clipboard";
+"Copy an image to the clipboard first, then try again." = "Copiaza mai intai o imagine in clipboard, apoi incearca din nou.";
+"OK" = "OK";
+"Accessibility Access Required" = "Acces de accesibilitate necesar";
+"macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot are nevoie de permisiunea de accesibilitate pentru a derula automat alte aplicatii. Acorda acces din Setarile sistemului, apoi incearca din nou.";
+"Open Settings" = "Deschide setarile";
+"Cancel" = "Anuleaza";
+"Microphone Access Required" = "Acces la microfon necesar";
+"macshot needs microphone permission to record voice audio. Open System Settings to grant access." = "macshot are nevoie de permisiunea microfonului pentru a inregistra audio vocal. Deschide Setarile sistemului pentru a acorda acces.";
+"Upload to Google Drive?" = "Incarca pe Google Drive?";
+"Upload to S3?" = "Incarca pe S3?";
+"Upload to imgbb.com?" = "Incarca pe imgbb.com?";
+"Your screenshot will be uploaded." = "Captura ta de ecran va fi incarcata.";
+
+/* Permission Onboarding */
+"Welcome to macshot" = "Bun venit in macshot";
+"macshot needs one permission" = "macshot are nevoie de o permisiune";
+"Screen Recording not yet granted" = "Inregistrarea ecranului nu a fost inca acordata";
+"Screen Recording granted!" = "Inregistrarea ecranului a fost acordata!";
+"Enable macshot, then try taking a screenshot" = "Activeaza macshot, apoi incearca sa faci o captura de ecran";
+"Open Screen Recording Settings" = "Deschide setarile de inregistrare a ecranului";
+"Continue" = "Continua";
+
+/* OCR Window */
+"Text Recognition" = "Recunoastere text";
+"Translate to:" = "Traduce in:";
+"%d chars · %d words" = "%d caractere · %d cuvinte";
+"Copy  ⌘↩" = "Copiaza  ⌘↩";
+"AI Search" = "Cautare AI";
+"Show Original" = "Afiseaza originalul";
+"Translation Failed" = "Traducerea a esuat";
+"Translation" = "Traducere";
+"(No text detected in the selected area)" = "(Niciun text detectat in zona selectata)";
+
+/* Upload Toast */
+"URL copied to the clipboard" = "URL copiat in clipboard";
+"Uploading... %d%%" = "Se incarca... %d%%";
+"Upload failed: %@" = "Incarcarea a esuat: %@";
+"Uploaded! Link copied." = "Incarcat! Link copiat.";
+"Uploading to %@... %d%%" = "Se incarca pe %@... %d%%";
+"Open" = "Deschide";
+
+/* Recording Toast */
+"Recording saved" = "Inregistrare salvata";
+"%@ • Recording saved" = "%@ • Inregistrare salvata";
+"Copy Path" = "Copiaza calea";
+"Path copied!" = "Cale copiata!";
+
+/* Video Editor */
+"macshot Video Editor" = "macshot Editor Video";
+"%@ selected" = "%@ selectat";
+"Exporting..." = "Se exporta...";
+"Export failed" = "Exportul a esuat";
+"Saved to %@" = "Salvat in %@";
+"Save failed" = "Salvarea a esuat";
+
+/* Barcode Detector */
+/* "Open" and "Copy" are shared with other sections */
+
+/* Save Panel */
+"Save As..." = "Salveaza ca...";
+"Choose a folder" = "Alege un dosar";
+"Save All to Folder…" = "Salveaza toate in dosar...";
+
+/* Scroll Capture HUD */
+"Auto Scroll" = "Derulare automata";
+"Stop" = "Opreste";
+"Scrolling..." = "Se deruleaza...";
+
+/* Effects Picker (Adjust popover) */
+"Presets" = "Presetari";
+"Adjustments" = "Ajustari";
+"Brightness" = "Luminozitate";
+"Contrast" = "Contrast";
+"Saturation" = "Saturatie";
+"Sharpness" = "Claritate";
+
+/* Time Ago */
+"just now" = "chiar acum";
+"%ds ago" = "acum %ds";
+"%dm ago" = "acum %dm";
+"%dh ago" = "acum %dh";
+
+/* Hotkey Labels */
+"History" = "Istoric";
+
+/* Preferences - Shortcuts note */
+"Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Apasa \"Inregistreaza\" si apasa o combinatie de taste cu cel putin un modificator (⌘, ⌥, ⌃, ⇧) pentru a seta o scurtatura.";

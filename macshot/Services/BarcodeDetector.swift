@@ -92,7 +92,7 @@ class BarcodeDetector {
         labelStr.draw(at: NSPoint(x: barRect.minX + 10, y: barRect.midY - labelSize.height / 2), withAttributes: labelAttrs)
 
         // Action button
-        let btnTitle = isURL ? "Open" : "Copy"
+        let btnTitle = isURL ? L("Open") : L("Copy")
         let btnAttrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: 11, weight: .semibold),
             .foregroundColor: NSColor.white,

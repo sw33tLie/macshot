@@ -1,0 +1,400 @@
+/* العربية — macshot localization
+ *
+ * To add a new language:
+ * 1. Create a new folder: macshot/<lang-code>.lproj/
+ * 2. Copy this file into that folder
+ * 3. Translate all values (right side of = sign)
+ * 4. Add the language to LanguageManager.availableLanguages in Services/LanguageManager.swift
+ * 5. Add the language code to knownRegions in macshot.xcodeproj/project.pbxproj
+ * 6. Submit a pull request!
+ *
+ * Keys use the English text. Values should be the translation.
+ * Format strings use %@ for strings, %d for integers.
+ * Keep keyboard shortcuts (like ⌘C) untranslated.
+ * Keep brand names (macshot, Google Drive, imgbb, S3) untranslated.
+ */
+
+/* Menu Bar */
+"Capture Area" = "التقاط منطقة";
+"Capture Screen" = "التقاط الشاشة";
+"Capture OCR" = "التقاط OCR";
+"Quick Capture" = "التقاط سريع";
+"Scroll Capture" = "التقاط بالتمرير";
+"Capture Delay" = "تأخير الالتقاط";
+"None" = "بدون";
+"%d seconds" = "%d ثوانٍ";
+"Record Area" = "تسجيل منطقة";
+"Record Screen" = "تسجيل الشاشة";
+"Recent Captures" = "الالتقاطات الأخيرة";
+"Show History Panel" = "عرض لوحة السجل";
+"Open Image..." = "فتح صورة...";
+"Open from Clipboard" = "فتح من الحافظة";
+"Preferences..." = "التفضيلات...";
+"Check for Updates..." = "التحقق من التحديثات...";
+"Quit macshot" = "إنهاء macshot";
+"No recent captures" = "لا توجد التقاطات حديثة";
+"Clear History" = "مسح السجل";
+
+/* History Panel */
+"Copy" = "نسخ";
+"Save As..." = "حفظ باسم...";
+"Open in Editor" = "فتح في المحرر";
+"Pin to Screen" = "تثبيت على الشاشة";
+"Quick Look" = "نظرة سريعة";
+"Delete" = "حذف";
+"All" = "الكل";
+"Screenshots" = "لقطات الشاشة";
+"GIFs" = "GIFs";
+"Click to copy · Drag to app" = "انقر للنسخ · اسحب إلى التطبيق";
+"No captures yet" = "لا توجد التقاطات بعد";
+
+/* Floating Thumbnail */
+"Close All" = "إغلاق الكل";
+"Save All to Folder…" = "حفظ الكل في مجلد…";
+"Save" = "حفظ";
+
+/* Editor Top Bar */
+"Zoom In" = "تكبير";
+"Zoom Out" = "تصغير";
+"Fit Canvas" = "ملاءمة اللوحة";
+"Crop" = "اقتصاص";
+"Flip Horizontal" = "قلب أفقي";
+"Flip Vertical" = "قلب عمودي";
+"Add Capture" = "إضافة التقاط";
+
+/* Toolbar - Tools */
+"Arrow" = "سهم";
+"Line" = "خط";
+"Rectangle" = "مستطيل";
+"Ellipse" = "شكل بيضاوي";
+"Pencil" = "قلم رصاص";
+"Pencil (Draw)" = "قلم رصاص (رسم)";
+"Marker" = "قلم تحديد";
+"Text" = "نص";
+"Number" = "رقم";
+"Number / Counter" = "رقم / عداد";
+"Stamp / Emoji" = "ختم / إيموجي";
+"Censor" = "تمويه";
+"Censor (Pixelate / Blur / Solid)" = "تمويه (بكسلة / ضبابية / صلب)";
+"Measure" = "قياس";
+"Measure (px)" = "قياس (px)";
+"Magnify (Loupe)" = "تكبير (عدسة)";
+"Color Sampler" = "أداة اختيار اللون";
+"Color Picker" = "منتقي الألوان";
+"Select & Edit" = "تحديد وتعديل";
+"Color" = "اللون";
+
+/* Toolbar - Actions */
+"Copy to Clipboard" = "نسخ إلى الحافظة";
+"Save to File" = "حفظ في ملف";
+"Save to" = "حفظ في";
+"Open in Editor Window" = "فتح في نافذة المحرر";
+"Pin on Screen" = "تثبيت على الشاشة";
+"Pin" = "تثبيت";
+"Pin (floating window)" = "تثبيت (نافذة عائمة)";
+"OCR" = "OCR";
+"OCR Text" = "نص OCR";
+"OCR (extract text)" = "OCR (استخراج النص)";
+"Upload" = "رفع";
+"Share" = "مشاركة";
+"Undo" = "تراجع";
+"Redo" = "إعادة";
+"Close" = "إغلاق";
+"Remove Background" = "إزالة الخلفية";
+"Beautify" = "تجميل";
+"Adjust" = "ضبط";
+"Adjust (Image Effects)" = "ضبط (تأثيرات الصورة)";
+"Invert Colors" = "عكس الألوان";
+"Record" = "تسجيل";
+"Record screen" = "تسجيل الشاشة";
+"Translate" = "ترجمة";
+"Auto-Redact sensitive data" = "إخفاء البيانات الحساسة تلقائيًا";
+"Move Selection" = "نقل التحديد";
+
+/* Toolbar - Recording */
+"Start Recording" = "بدء التسجيل";
+"Cancel Recording" = "إلغاء التسجيل";
+"Highlight Mouse Clicks" = "تمييز نقرات الفأرة";
+"Record System Audio" = "تسجيل صوت النظام";
+"Record Microphone" = "تسجيل الميكروفون";
+"Recording Settings" = "إعدادات التسجيل";
+
+/* Tool Options */
+"Size" = "الحجم";
+"Stroke" = "الحد";
+"Radius" = "نصف القطر";
+"Start:" = "البداية:";
+"Draw:" = "الرسم:";
+"Auto:" = "تلقائي:";
+"Fill" = "تعبئة";
+"Outline" = "إطار";
+"More Emojis" = "المزيد من الإيموجي";
+"Load Image" = "تحميل صورة";
+"Gradient Style" = "نمط التدرج";
+"On" = "تشغيل";
+"Text Only" = "نص فقط";
+"All Text" = "كل النص";
+"PII" = "PII";
+"Faces" = "الوجوه";
+"People" = "الأشخاص";
+"Confirm before upload" = "تأكيد قبل الرفع";
+"Flip" = "قلب";
+"Smooth" = "تنعيم";
+"Smart" = "ذكي";
+"Padding" = "حشوة";
+"Shadow" = "ظل";
+"Right-click to add points" = "انقر بزر الفأرة الأيمن لإضافة نقاط";
+"Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "اضغط 1 عمودي تلقائي  ·  اضغط 2 أفقي تلقائي";
+
+/* Overlay / Canvas */
+"Click a window  ·  Drag for custom area  ·  F for full screen" = "انقر على نافذة  ·  اسحب لتحديد منطقة  ·  F لملء الشاشة";
+"Drag to select  ·  Click for full screen" = "اسحب للتحديد  ·  انقر لملء الشاشة";
+"Release to annotate and edit" = "أفلت للتعليق والتعديل";
+"Window snap: " = "التقاط النوافذ: ";
+"ON" = "تشغيل";
+"OFF" = "إيقاف";
+"  (Tab to toggle)" = "  (Tab للتبديل)";
+"Right-click to copy" = "انقر بزر الفأرة الأيمن للنسخ";
+"Copied %@" = "تم نسخ %@";
+"Set color %@" = "تعيين اللون %@";
+"Draw something first to use the move tool." = "ارسم شيئًا أولًا لاستخدام أداة النقل.";
+"Drag to reposition" = "اسحب لتغيير الموضع";
+
+/* Overlay - Popovers */
+"Format:" = "الصيغة:";
+"FPS:" = "FPS:";
+"When done:" = "عند الانتهاء:";
+"Open editor" = "فتح المحرر";
+"Show in Finder" = "إظهار في Finder";
+"Copy to clipboard" = "نسخ إلى الحافظة";
+
+/* Preferences - General */
+"macshot Preferences" = "تفضيلات macshot";
+"General" = "عام";
+"Tools" = "الأدوات";
+"Recording" = "التسجيل";
+"About" = "حول";
+"Shortcuts" = "الاختصارات";
+"Uploads" = "الرفع";
+"Language" = "اللغة";
+"Language:" = "اللغة:";
+"Restart the app to fully apply the new language." = "أعد تشغيل التطبيق لتطبيق اللغة الجديدة بالكامل.";
+"Capture" = "الالتقاط";
+"Play sound on copy" = "تشغيل صوت عند النسخ";
+"Remember last selection area" = "تذكّر آخر منطقة تحديد";
+"Remember last selected tool" = "تذكّر آخر أداة محددة";
+"Show floating thumbnail after capture" = "عرض الصورة المصغرة العائمة بعد الالتقاط";
+"Launch at login" = "التشغيل عند تسجيل الدخول";
+"Show snap alignment guides" = "عرض خطوط المحاذاة";
+"Capture mouse cursor in screenshot" = "التقاط مؤشر الفأرة في لقطة الشاشة";
+"Use window title in saved filename" = "استخدام عنوان النافذة في اسم الملف المحفوظ";
+"Hide menu bar icon" = "إخفاء أيقونة شريط القوائم";
+"Hotkeys still work. To show the icon again, re-launch macshot." = "الاختصارات لا تزال تعمل. لإظهار الأيقونة مجددًا، أعد تشغيل macshot.";
+"Check for updates automatically" = "التحقق من التحديثات تلقائيًا";
+"Thumbnail" = "صورة مصغرة";
+"  Dismiss after:" = "  إخفاء بعد:";
+"seconds before auto-dismiss (0 = never)" = "ثوانٍ قبل الإخفاء التلقائي (0 = أبدًا)";
+"  Multiple previews:" = "  معاينات متعددة:";
+"Stack (keep all)" = "تكديس (الاحتفاظ بالكل)";
+"Replace (show only latest)" = "استبدال (عرض الأحدث فقط)";
+"Output" = "الإخراج";
+"Image format:" = "صيغة الصورة:";
+"Quality:" = "الجودة:";
+"%d%%" = "%d%%";
+"Save at standard resolution (1x)" = "حفظ بالدقة القياسية (1x)";
+"Halves dimensions on Retina displays, ~4x smaller files" = "يقلّل الأبعاد إلى النصف على شاشات Retina، ملفات أصغر بـ 4 مرات تقريبًا";
+"Embed sRGB color profile" = "تضمين ملف تعريف ألوان sRGB";
+"Ensures consistent colors across different displays" = "يضمن ألوانًا متسقة عبر الشاشات المختلفة";
+"Screenshot History" = "سجل لقطات الشاشة";
+"History size:" = "حجم السجل:";
+"screenshots kept on disk (0 = off)" = "لقطات شاشة محفوظة على القرص (0 = إيقاف)";
+"Save Directory" = "مجلد الحفظ";
+"Save folder:" = "مجلد الحفظ:";
+"Browse…" = "استعراض…";
+"Appearance" = "المظهر";
+"Accent color:" = "لون التمييز:";
+"Icon color:" = "لون الأيقونة:";
+"Reset" = "إعادة تعيين";
+"OCR Capture:" = "التقاط OCR:";
+"Show window + copy to clipboard" = "عرض النافذة + نسخ إلى الحافظة";
+"Show window only" = "عرض النافذة فقط";
+"Copy to clipboard only" = "نسخ إلى الحافظة فقط";
+"Enter / Quick Capture:" = "Enter / التقاط سريع:";
+"Save to file" = "حفظ في ملف";
+"Save + copy to clipboard" = "حفظ + نسخ إلى الحافظة";
+"OCR Action" = "إجراء OCR";
+
+/* Preferences - Shortcuts */
+"Keyboard Shortcuts" = "اختصارات لوحة المفاتيح";
+"Hotkeys" = "مفاتيح الاختصار";
+"Clear shortcut" = "مسح الاختصار";
+"Press keys..." = "اضغط المفاتيح...";
+"Waiting..." = "بانتظار...";
+
+/* Preferences - Tools */
+"Annotation Tools" = "أدوات التعليق";
+"Hidden tools are removed from the bottom toolbar." = "الأدوات المخفية تُزال من شريط الأدوات السفلي.";
+"Capture Actions" = "إجراءات الالتقاط";
+"Bottom Toolbar Actions" = "إجراءات شريط الأدوات السفلي";
+"Hidden actions are removed from the bottom toolbar." = "الإجراءات المخفية تُزال من شريط الأدوات السفلي.";
+"Editor Actions" = "إجراءات المحرر";
+"Right Toolbar Actions" = "إجراءات شريط الأدوات الأيمن";
+"Hidden actions are removed from the right toolbar." = "الإجراءات المخفية تُزال من شريط الأدوات الأيمن.";
+
+/* Preferences - Recording */
+"Frame rate:" = "معدل الإطارات:";
+"After recording:" = "بعد التسجيل:";
+"Save recording to:" = "حفظ التسجيل في:";
+"Clear" = "مسح";
+"Max height:" = "الارتفاع الأقصى:";
+"px (0 = unlimited)" = "px (0 = بلا حدود)";
+"Behavior" = "السلوك";
+"Auto-scroll (sends synthetic scroll events)" = "تمرير تلقائي (يرسل أحداث تمرير اصطناعية)";
+"Detect fixed/sticky headers" = "اكتشاف الرؤوس الثابتة/اللاصقة";
+"Scroll speed:" = "سرعة التمرير:";
+"Slow" = "بطيء";
+"Medium" = "متوسط";
+"Fast" = "سريع";
+"Very fast" = "سريع جدًا";
+"5 fps" = "5 fps";
+"10 fps" = "10 fps";
+"15 fps" = "15 fps";
+"24 fps" = "24 fps";
+"30 fps" = "30 fps";
+"60 fps" = "60 fps";
+"120 fps" = "120 fps";
+"MP4 (H.264)" = "MP4 (H.264)";
+"GIF" = "GIF";
+
+/* Preferences - Upload */
+"Upload Service" = "خدمة الرفع";
+"Upload Provider" = "مزود الرفع";
+"Provider:" = "المزود:";
+"Google Drive" = "Google Drive";
+"Google Drive (images + videos)" = "Google Drive (صور + فيديوهات)";
+"imgbb (images only)" = "imgbb (صور فقط)";
+"S3-Compatible (images + videos)" = "S3-Compatible (صور + فيديوهات)";
+"S3-Compatible Storage" = "تخزين متوافق مع S3";
+"Sign In with Google" = "تسجيل الدخول بحساب Google";
+"Sign Out" = "تسجيل الخروج";
+"Signed in" = "تم تسجيل الدخول";
+"Not signed in" = "لم يتم تسجيل الدخول";
+"Account:" = "الحساب:";
+"Test Connection" = "اختبار الاتصال";
+"Fill in endpoint, bucket, and credentials first" = "أدخل نقطة النهاية والحاوية وبيانات الاعتماد أولًا";
+"Testing..." = "جارٍ الاختبار...";
+"Connection successful!" = "تم الاتصال بنجاح!";
+"Leave empty to use default" = "اتركه فارغًا لاستخدام الافتراضي";
+"Endpoint:" = "نقطة النهاية:";
+"Region:" = "المنطقة:";
+"Bucket:" = "الحاوية:";
+"Access Key:" = "مفتاح الوصول:";
+"Secret Key:" = "المفتاح السري:";
+"Public URL:" = "الرابط العام:";
+"Path Prefix:" = "بادئة المسار:";
+"API key:" = "مفتاح API:";
+"Upload History" = "سجل الرفع";
+"No uploads yet." = "لا توجد عمليات رفع بعد.";
+"Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "الرابط الأساسي للوصول العام. إذا كان فارغًا، يُستخدم رابط نقطة نهاية S3 (قد لا يكون متاحًا للعامة).";
+"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "مفتاح مشترك مُضمّن — احصل على مفتاحك المجاني من imgbb.com/api إذا واجهت حدود الاستخدام. صور فقط (بدون دعم للفيديو).";
+"Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "يعمل مع AWS S3 وCloudflare R2 وMinIO وDigitalOcean Spaces وBackblaze B2 وخدمات أخرى متوافقة مع S3. يدعم الصور والفيديوهات.";
+"Configure S3 in Preferences" = "إعداد S3 في التفضيلات";
+"Sign in to Google Drive in Preferences" = "تسجيل الدخول إلى Google Drive في التفضيلات";
+"Video upload requires Google Drive or S3" = "رفع الفيديو يتطلب Google Drive أو S3";
+
+/* Preferences - About */
+"macshot" = "macshot";
+"Version %@ (%@)" = "الإصدار %@ (%@)";
+"Made by" = "من تطوير";
+"Licensed under the GPLv3" = "مرخّص بموجب GPLv3";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "أداة مجانية ومفتوحة المصدر لالتقاط الشاشة وتسجيلها على macOS.\nأصلية بالكامل — مبنية بـ Swift وAppKit.";
+
+/* Alerts */
+"No Image on Clipboard" = "لا توجد صورة في الحافظة";
+"Copy an image to the clipboard first, then try again." = "انسخ صورة إلى الحافظة أولًا، ثم حاول مجددًا.";
+"OK" = "موافق";
+"Accessibility Access Required" = "مطلوب إذن الوصول";
+"macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "يحتاج macshot إلى إذن تسهيلات الاستخدام للتمرير التلقائي في التطبيقات الأخرى. يرجى منح الإذن في إعدادات النظام، ثم المحاولة مجددًا.";
+"Open Settings" = "فتح الإعدادات";
+"Cancel" = "إلغاء";
+"Microphone Access Required" = "مطلوب إذن الميكروفون";
+"macshot needs microphone permission to record voice audio. Open System Settings to grant access." = "يحتاج macshot إلى إذن الميكروفون لتسجيل الصوت. افتح إعدادات النظام لمنح الإذن.";
+"Upload to Google Drive?" = "الرفع إلى Google Drive؟";
+"Upload to S3?" = "الرفع إلى S3؟";
+"Upload to imgbb.com?" = "الرفع إلى imgbb.com؟";
+"Your screenshot will be uploaded." = "سيتم رفع لقطة الشاشة.";
+
+/* Permission Onboarding */
+"Welcome to macshot" = "مرحبًا بك في macshot";
+"macshot needs one permission" = "يحتاج macshot إلى إذن واحد";
+"Screen Recording not yet granted" = "لم يتم منح إذن تسجيل الشاشة بعد";
+"Screen Recording granted!" = "تم منح إذن تسجيل الشاشة!";
+"Enable macshot, then try taking a screenshot" = "فعّل macshot، ثم حاول التقاط الشاشة";
+"Open Screen Recording Settings" = "فتح إعدادات تسجيل الشاشة";
+"Continue" = "متابعة";
+
+/* OCR Window */
+"Text Recognition" = "التعرف على النص";
+"Translate to:" = "ترجمة إلى:";
+"%d chars · %d words" = "%d حرف · %d كلمة";
+"Copy  ⌘↩" = "نسخ  ⌘↩";
+"AI Search" = "بحث بالذكاء الاصطناعي";
+"Show Original" = "عرض الأصل";
+"Translation Failed" = "فشلت الترجمة";
+"Translation" = "الترجمة";
+"(No text detected in the selected area)" = "(لم يتم اكتشاف نص في المنطقة المحددة)";
+
+/* Upload Toast */
+"URL copied to the clipboard" = "تم نسخ الرابط إلى الحافظة";
+"Uploading... %d%%" = "جارٍ الرفع... %d%%";
+"Upload failed: %@" = "فشل الرفع: %@";
+"Uploaded! Link copied." = "تم الرفع! تم نسخ الرابط.";
+"Uploading to %@... %d%%" = "جارٍ الرفع إلى %@... %d%%";
+"Open" = "فتح";
+
+/* Recording Toast */
+"Recording saved" = "تم حفظ التسجيل";
+"%@ • Recording saved" = "%@ • تم حفظ التسجيل";
+"Copy Path" = "نسخ المسار";
+"Path copied!" = "تم نسخ المسار!";
+
+/* Video Editor */
+"macshot Video Editor" = "محرر فيديو macshot";
+"%@ selected" = "%@ محدد";
+"Exporting..." = "جارٍ التصدير...";
+"Export failed" = "فشل التصدير";
+"Saved to %@" = "تم الحفظ في %@";
+"Save failed" = "فشل الحفظ";
+
+/* Barcode Detector */
+/* "Open" and "Copy" are shared with other sections */
+
+/* Save Panel */
+"Save As..." = "حفظ باسم...";
+"Choose a folder" = "اختيار مجلد";
+"Save All to Folder…" = "حفظ الكل في مجلد…";
+
+/* Scroll Capture HUD */
+"Auto Scroll" = "تمرير تلقائي";
+"Stop" = "إيقاف";
+"Scrolling..." = "جارٍ التمرير...";
+
+/* Effects Picker (Adjust popover) */
+"Presets" = "إعدادات مسبقة";
+"Adjustments" = "التعديلات";
+"Brightness" = "السطوع";
+"Contrast" = "التباين";
+"Saturation" = "التشبع";
+"Sharpness" = "الحدة";
+
+/* Time Ago */
+"just now" = "الآن";
+"%ds ago" = "منذ %d ث";
+"%dm ago" = "منذ %d د";
+"%dh ago" = "منذ %d س";
+
+/* Hotkey Labels */
+"History" = "السجل";
+
+/* Preferences - Shortcuts note */
+"Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "انقر على \"تسجيل\" واضغط مجموعة مفاتيح تحتوي على معدّل واحد على الأقل (⌘، ⌥، ⌃، ⇧) لتعيين اختصار.";

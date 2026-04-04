@@ -1,0 +1,400 @@
+/* Bahasa Melayu — macshot localization
+ *
+ * To add a new language:
+ * 1. Create a new folder: macshot/<lang-code>.lproj/
+ * 2. Copy this file into that folder
+ * 3. Translate all values (right side of = sign)
+ * 4. Add the language to LanguageManager.availableLanguages in Services/LanguageManager.swift
+ * 5. Add the language code to knownRegions in macshot.xcodeproj/project.pbxproj
+ * 6. Submit a pull request!
+ *
+ * Keys use the English text. Values should be the translation.
+ * Format strings use %@ for strings, %d for integers.
+ * Keep keyboard shortcuts (like ⌘C) untranslated.
+ * Keep brand names (macshot, Google Drive, imgbb, S3) untranslated.
+ */
+
+/* Menu Bar */
+"Capture Area" = "Tangkap Kawasan";
+"Capture Screen" = "Tangkap Skrin";
+"Capture OCR" = "Tangkap OCR";
+"Quick Capture" = "Tangkapan Pantas";
+"Scroll Capture" = "Tangkapan Tatal";
+"Capture Delay" = "Lengah Tangkapan";
+"None" = "Tiada";
+"%d seconds" = "%d saat";
+"Record Area" = "Rakam Kawasan";
+"Record Screen" = "Rakam Skrin";
+"Recent Captures" = "Tangkapan Terkini";
+"Show History Panel" = "Tunjuk Panel Sejarah";
+"Open Image..." = "Buka Imej...";
+"Open from Clipboard" = "Buka dari Papan Keratan";
+"Preferences..." = "Keutamaan...";
+"Check for Updates..." = "Semak Kemas Kini...";
+"Quit macshot" = "Keluar macshot";
+"No recent captures" = "Tiada tangkapan terkini";
+"Clear History" = "Padam Sejarah";
+
+/* History Panel */
+"Copy" = "Salin";
+"Save As..." = "Simpan Sebagai...";
+"Open in Editor" = "Buka dalam Editor";
+"Pin to Screen" = "Semat ke Skrin";
+"Quick Look" = "Imbas Pantas";
+"Delete" = "Padam";
+"All" = "Semua";
+"Screenshots" = "Tangkapan Skrin";
+"GIFs" = "GIFs";
+"Click to copy · Drag to app" = "Klik untuk salin · Seret ke aplikasi";
+"No captures yet" = "Belum ada tangkapan";
+
+/* Floating Thumbnail */
+"Close All" = "Tutup Semua";
+"Save All to Folder…" = "Simpan Semua ke Folder…";
+"Save" = "Simpan";
+
+/* Editor Top Bar */
+"Zoom In" = "Zum Masuk";
+"Zoom Out" = "Zum Keluar";
+"Fit Canvas" = "Muat Kanvas";
+"Crop" = "Pangkas";
+"Flip Horizontal" = "Balik Mendatar";
+"Flip Vertical" = "Balik Menegak";
+"Add Capture" = "Tambah Tangkapan";
+
+/* Toolbar - Tools */
+"Arrow" = "Anak Panah";
+"Line" = "Garisan";
+"Rectangle" = "Segi Empat";
+"Ellipse" = "Elips";
+"Pencil" = "Pensel";
+"Pencil (Draw)" = "Pensel (Lukis)";
+"Marker" = "Penanda";
+"Text" = "Teks";
+"Number" = "Nombor";
+"Number / Counter" = "Nombor / Pembilang";
+"Stamp / Emoji" = "Setem / Emoji";
+"Censor" = "Sensor";
+"Censor (Pixelate / Blur / Solid)" = "Sensor (Piksel / Kabur / Padu)";
+"Measure" = "Ukur";
+"Measure (px)" = "Ukur (px)";
+"Magnify (Loupe)" = "Besarkan (Kanta)";
+"Color Sampler" = "Penyampel Warna";
+"Color Picker" = "Pemilih Warna";
+"Select & Edit" = "Pilih & Sunting";
+"Color" = "Warna";
+
+/* Toolbar - Actions */
+"Copy to Clipboard" = "Salin ke Papan Keratan";
+"Save to File" = "Simpan ke Fail";
+"Save to" = "Simpan ke";
+"Open in Editor Window" = "Buka dalam Tetingkap Editor";
+"Pin on Screen" = "Semat pada Skrin";
+"Pin" = "Semat";
+"Pin (floating window)" = "Semat (tetingkap terapung)";
+"OCR" = "OCR";
+"OCR Text" = "Teks OCR";
+"OCR (extract text)" = "OCR (ekstrak teks)";
+"Upload" = "Muat Naik";
+"Share" = "Kongsi";
+"Undo" = "Buat Asal";
+"Redo" = "Buat Semula";
+"Close" = "Tutup";
+"Remove Background" = "Buang Latar Belakang";
+"Beautify" = "Cantikkan";
+"Adjust" = "Laras";
+"Adjust (Image Effects)" = "Laras (Kesan Imej)";
+"Invert Colors" = "Songsang Warna";
+"Record" = "Rakam";
+"Record screen" = "Rakam skrin";
+"Translate" = "Terjemah";
+"Auto-Redact sensitive data" = "Redak Auto data sensitif";
+"Move Selection" = "Alih Pilihan";
+
+/* Toolbar - Recording */
+"Start Recording" = "Mula Rakaman";
+"Cancel Recording" = "Batal Rakaman";
+"Highlight Mouse Clicks" = "Serlahkan Klik Tetikus";
+"Record System Audio" = "Rakam Audio Sistem";
+"Record Microphone" = "Rakam Mikrofon";
+"Recording Settings" = "Tetapan Rakaman";
+
+/* Tool Options */
+"Size" = "Saiz";
+"Stroke" = "Garisan";
+"Radius" = "Jejari";
+"Start:" = "Mula:";
+"Draw:" = "Lukis:";
+"Auto:" = "Auto:";
+"Fill" = "Isi";
+"Outline" = "Rangka";
+"More Emojis" = "Lagi Emoji";
+"Load Image" = "Muat Imej";
+"Gradient Style" = "Gaya Kecerunan";
+"On" = "Hidup";
+"Text Only" = "Teks Sahaja";
+"All Text" = "Semua Teks";
+"PII" = "PII";
+"Faces" = "Muka";
+"People" = "Orang";
+"Confirm before upload" = "Sahkan sebelum muat naik";
+"Flip" = "Balik";
+"Smooth" = "Lembut";
+"Smart" = "Pintar";
+"Padding" = "Pelapik";
+"Shadow" = "Bayang";
+"Right-click to add points" = "Klik kanan untuk tambah titik";
+"Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "Tahan 1 auto-menegak  ·  Tahan 2 auto-mendatar";
+
+/* Overlay / Canvas */
+"Click a window  ·  Drag for custom area  ·  F for full screen" = "Klik tetingkap  ·  Seret untuk kawasan tersuai  ·  F untuk skrin penuh";
+"Drag to select  ·  Click for full screen" = "Seret untuk memilih  ·  Klik untuk skrin penuh";
+"Release to annotate and edit" = "Lepaskan untuk anotasi dan sunting";
+"Window snap: " = "Lekat tetingkap: ";
+"ON" = "HIDUP";
+"OFF" = "MATI";
+"  (Tab to toggle)" = "  (Tab untuk togol)";
+"Right-click to copy" = "Klik kanan untuk salin";
+"Copied %@" = "Disalin %@";
+"Set color %@" = "Tetapkan warna %@";
+"Draw something first to use the move tool." = "Lukis sesuatu dahulu untuk menggunakan alat alih.";
+"Drag to reposition" = "Seret untuk letak semula";
+
+/* Overlay - Popovers */
+"Format:" = "Format:";
+"FPS:" = "FPS:";
+"When done:" = "Apabila selesai:";
+"Open editor" = "Buka editor";
+"Show in Finder" = "Tunjuk dalam Finder";
+"Copy to clipboard" = "Salin ke papan keratan";
+
+/* Preferences - General */
+"macshot Preferences" = "Keutamaan macshot";
+"General" = "Umum";
+"Tools" = "Alatan";
+"Recording" = "Rakaman";
+"About" = "Perihal";
+"Shortcuts" = "Pintasan";
+"Uploads" = "Muat Naik";
+"Language" = "Bahasa";
+"Language:" = "Bahasa:";
+"Restart the app to fully apply the new language." = "Mulakan semula aplikasi untuk menerapkan bahasa baharu sepenuhnya.";
+"Capture" = "Tangkapan";
+"Play sound on copy" = "Main bunyi semasa salin";
+"Remember last selection area" = "Ingat kawasan pilihan terakhir";
+"Remember last selected tool" = "Ingat alat pilihan terakhir";
+"Show floating thumbnail after capture" = "Tunjuk lakaran kecil terapung selepas tangkapan";
+"Launch at login" = "Lancar semasa log masuk";
+"Show snap alignment guides" = "Tunjuk panduan penjajaran lekat";
+"Capture mouse cursor in screenshot" = "Tangkap kursor tetikus dalam tangkapan skrin";
+"Use window title in saved filename" = "Guna tajuk tetingkap dalam nama fail yang disimpan";
+"Hide menu bar icon" = "Sembunyikan ikon bar menu";
+"Hotkeys still work. To show the icon again, re-launch macshot." = "Kekunci panas masih berfungsi. Untuk menunjukkan ikon semula, lancar semula macshot.";
+"Check for updates automatically" = "Semak kemas kini secara automatik";
+"Thumbnail" = "Lakaran Kecil";
+"  Dismiss after:" = "  Ketepikan selepas:";
+"seconds before auto-dismiss (0 = never)" = "saat sebelum ketepikan auto (0 = tidak pernah)";
+"  Multiple previews:" = "  Berbilang pratonton:";
+"Stack (keep all)" = "Tindanan (simpan semua)";
+"Replace (show only latest)" = "Ganti (tunjuk terkini sahaja)";
+"Output" = "Output";
+"Image format:" = "Format imej:";
+"Quality:" = "Kualiti:";
+"%d%%" = "%d%%";
+"Save at standard resolution (1x)" = "Simpan pada resolusi standard (1x)";
+"Halves dimensions on Retina displays, ~4x smaller files" = "Separuh dimensi pada paparan Retina, ~4x fail lebih kecil";
+"Embed sRGB color profile" = "Benamkan profil warna sRGB";
+"Ensures consistent colors across different displays" = "Memastikan warna konsisten merentas paparan berbeza";
+"Screenshot History" = "Sejarah Tangkapan Skrin";
+"History size:" = "Saiz sejarah:";
+"screenshots kept on disk (0 = off)" = "tangkapan skrin disimpan pada cakera (0 = mati)";
+"Save Directory" = "Direktori Simpan";
+"Save folder:" = "Folder simpan:";
+"Browse…" = "Layari…";
+"Appearance" = "Penampilan";
+"Accent color:" = "Warna aksen:";
+"Icon color:" = "Warna ikon:";
+"Reset" = "Set Semula";
+"OCR Capture:" = "Tangkapan OCR:";
+"Show window + copy to clipboard" = "Tunjuk tetingkap + salin ke papan keratan";
+"Show window only" = "Tunjuk tetingkap sahaja";
+"Copy to clipboard only" = "Salin ke papan keratan sahaja";
+"Enter / Quick Capture:" = "Enter / Tangkapan Pantas:";
+"Save to file" = "Simpan ke fail";
+"Save + copy to clipboard" = "Simpan + salin ke papan keratan";
+"OCR Action" = "Tindakan OCR";
+
+/* Preferences - Shortcuts */
+"Keyboard Shortcuts" = "Pintasan Papan Kekunci";
+"Hotkeys" = "Kekunci Panas";
+"Clear shortcut" = "Padam pintasan";
+"Press keys..." = "Tekan kekunci...";
+"Waiting..." = "Menunggu...";
+
+/* Preferences - Tools */
+"Annotation Tools" = "Alatan Anotasi";
+"Hidden tools are removed from the bottom toolbar." = "Alatan tersembunyi dibuang dari bar alatan bawah.";
+"Capture Actions" = "Tindakan Tangkapan";
+"Bottom Toolbar Actions" = "Tindakan Bar Alatan Bawah";
+"Hidden actions are removed from the bottom toolbar." = "Tindakan tersembunyi dibuang dari bar alatan bawah.";
+"Editor Actions" = "Tindakan Editor";
+"Right Toolbar Actions" = "Tindakan Bar Alatan Kanan";
+"Hidden actions are removed from the right toolbar." = "Tindakan tersembunyi dibuang dari bar alatan kanan.";
+
+/* Preferences - Recording */
+"Frame rate:" = "Kadar bingkai:";
+"After recording:" = "Selepas rakaman:";
+"Save recording to:" = "Simpan rakaman ke:";
+"Clear" = "Kosongkan";
+"Max height:" = "Tinggi maks:";
+"px (0 = unlimited)" = "px (0 = tiada had)";
+"Behavior" = "Tingkah Laku";
+"Auto-scroll (sends synthetic scroll events)" = "Auto-tatal (menghantar peristiwa tatal sintetik)";
+"Detect fixed/sticky headers" = "Kesan pengepala tetap/lekat";
+"Scroll speed:" = "Kelajuan tatal:";
+"Slow" = "Perlahan";
+"Medium" = "Sederhana";
+"Fast" = "Laju";
+"Very fast" = "Sangat laju";
+"5 fps" = "5 fps";
+"10 fps" = "10 fps";
+"15 fps" = "15 fps";
+"24 fps" = "24 fps";
+"30 fps" = "30 fps";
+"60 fps" = "60 fps";
+"120 fps" = "120 fps";
+"MP4 (H.264)" = "MP4 (H.264)";
+"GIF" = "GIF";
+
+/* Preferences - Upload */
+"Upload Service" = "Perkhidmatan Muat Naik";
+"Upload Provider" = "Pembekal Muat Naik";
+"Provider:" = "Pembekal:";
+"Google Drive" = "Google Drive";
+"Google Drive (images + videos)" = "Google Drive (imej + video)";
+"imgbb (images only)" = "imgbb (imej sahaja)";
+"S3-Compatible (images + videos)" = "S3-Compatible (imej + video)";
+"S3-Compatible Storage" = "Storan S3-Compatible";
+"Sign In with Google" = "Log Masuk dengan Google";
+"Sign Out" = "Log Keluar";
+"Signed in" = "Sudah log masuk";
+"Not signed in" = "Belum log masuk";
+"Account:" = "Akaun:";
+"Test Connection" = "Uji Sambungan";
+"Fill in endpoint, bucket, and credentials first" = "Isi endpoint, bucket, dan kelayakan dahulu";
+"Testing..." = "Menguji...";
+"Connection successful!" = "Sambungan berjaya!";
+"Leave empty to use default" = "Biarkan kosong untuk gunakan lalai";
+"Endpoint:" = "Endpoint:";
+"Region:" = "Rantau:";
+"Bucket:" = "Bucket:";
+"Access Key:" = "Kunci Akses:";
+"Secret Key:" = "Kunci Rahsia:";
+"Public URL:" = "URL Awam:";
+"Path Prefix:" = "Awalan Laluan:";
+"API key:" = "Kunci API:";
+"Upload History" = "Sejarah Muat Naik";
+"No uploads yet." = "Belum ada muat naik.";
+"Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "URL asas untuk akses awam. Jika kosong, URL endpoint S3 digunakan (mungkin tidak boleh diakses secara awam).";
+"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "Kunci dikongsi disertakan — dapatkan kunci percuma anda sendiri di imgbb.com/api jika anda terkena had kadar. Imej sahaja (tiada sokongan video).";
+"Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "Berfungsi dengan AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, dan perkhidmatan serasi S3 yang lain. Menyokong imej dan video.";
+"Configure S3 in Preferences" = "Konfigurasi S3 dalam Keutamaan";
+"Sign in to Google Drive in Preferences" = "Log masuk ke Google Drive dalam Keutamaan";
+"Video upload requires Google Drive or S3" = "Muat naik video memerlukan Google Drive atau S3";
+
+/* Preferences - About */
+"macshot" = "macshot";
+"Version %@ (%@)" = "Versi %@ (%@)";
+"Made by" = "Dibuat oleh";
+"Licensed under the GPLv3" = "Dilesenkan di bawah GPLv3";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "Alat tangkapan skrin & rakaman skrin sumber terbuka percuma untuk macOS.\nSepenuhnya natif — dibina dengan Swift dan AppKit.";
+
+/* Alerts */
+"No Image on Clipboard" = "Tiada Imej pada Papan Keratan";
+"Copy an image to the clipboard first, then try again." = "Salin imej ke papan keratan dahulu, kemudian cuba lagi.";
+"OK" = "OK";
+"Accessibility Access Required" = "Akses Kebolehcapaian Diperlukan";
+"macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot memerlukan kebenaran Kebolehcapaian untuk auto-tatal aplikasi lain. Sila berikan akses dalam Tetapan Sistem, kemudian cuba lagi.";
+"Open Settings" = "Buka Tetapan";
+"Cancel" = "Batal";
+"Microphone Access Required" = "Akses Mikrofon Diperlukan";
+"macshot needs microphone permission to record voice audio. Open System Settings to grant access." = "macshot memerlukan kebenaran mikrofon untuk merakam audio suara. Buka Tetapan Sistem untuk memberikan akses.";
+"Upload to Google Drive?" = "Muat naik ke Google Drive?";
+"Upload to S3?" = "Muat naik ke S3?";
+"Upload to imgbb.com?" = "Muat naik ke imgbb.com?";
+"Your screenshot will be uploaded." = "Tangkapan skrin anda akan dimuat naik.";
+
+/* Permission Onboarding */
+"Welcome to macshot" = "Selamat datang ke macshot";
+"macshot needs one permission" = "macshot memerlukan satu kebenaran";
+"Screen Recording not yet granted" = "Rakaman Skrin belum diberikan";
+"Screen Recording granted!" = "Rakaman Skrin diberikan!";
+"Enable macshot, then try taking a screenshot" = "Dayakan macshot, kemudian cuba ambil tangkapan skrin";
+"Open Screen Recording Settings" = "Buka Tetapan Rakaman Skrin";
+"Continue" = "Teruskan";
+
+/* OCR Window */
+"Text Recognition" = "Pengecaman Teks";
+"Translate to:" = "Terjemah ke:";
+"%d chars · %d words" = "%d aksara · %d perkataan";
+"Copy  ⌘↩" = "Salin  ⌘↩";
+"AI Search" = "Carian AI";
+"Show Original" = "Tunjuk Asal";
+"Translation Failed" = "Terjemahan Gagal";
+"Translation" = "Terjemahan";
+"(No text detected in the selected area)" = "(Tiada teks dikesan dalam kawasan yang dipilih)";
+
+/* Upload Toast */
+"URL copied to the clipboard" = "URL disalin ke papan keratan";
+"Uploading... %d%%" = "Memuat naik... %d%%";
+"Upload failed: %@" = "Muat naik gagal: %@";
+"Uploaded! Link copied." = "Dimuat naik! Pautan disalin.";
+"Uploading to %@... %d%%" = "Memuat naik ke %@... %d%%";
+"Open" = "Buka";
+
+/* Recording Toast */
+"Recording saved" = "Rakaman disimpan";
+"%@ • Recording saved" = "%@ • Rakaman disimpan";
+"Copy Path" = "Salin Laluan";
+"Path copied!" = "Laluan disalin!";
+
+/* Video Editor */
+"macshot Video Editor" = "Editor Video macshot";
+"%@ selected" = "%@ dipilih";
+"Exporting..." = "Mengeksport...";
+"Export failed" = "Eksport gagal";
+"Saved to %@" = "Disimpan ke %@";
+"Save failed" = "Simpan gagal";
+
+/* Barcode Detector */
+/* "Open" and "Copy" are shared with other sections */
+
+/* Save Panel */
+"Save As..." = "Simpan Sebagai...";
+"Choose a folder" = "Pilih folder";
+"Save All to Folder…" = "Simpan Semua ke Folder…";
+
+/* Scroll Capture HUD */
+"Auto Scroll" = "Auto Tatal";
+"Stop" = "Berhenti";
+"Scrolling..." = "Menatal...";
+
+/* Effects Picker (Adjust popover) */
+"Presets" = "Pratetap";
+"Adjustments" = "Pelarasan";
+"Brightness" = "Kecerahan";
+"Contrast" = "Kontras";
+"Saturation" = "Ketepuan";
+"Sharpness" = "Ketajaman";
+
+/* Time Ago */
+"just now" = "baru sahaja";
+"%ds ago" = "%ds lalu";
+"%dm ago" = "%dm lalu";
+"%dh ago" = "%dj lalu";
+
+/* Hotkey Labels */
+"History" = "Sejarah";
+
+/* Preferences - Shortcuts note */
+"Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Klik \"Record\" dan tekan kombinasi kekunci dengan sekurang-kurangnya satu pengubah suai (⌘, ⌥, ⌃, ⇧) untuk menetapkan pintasan.";

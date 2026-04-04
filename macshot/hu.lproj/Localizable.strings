@@ -1,0 +1,400 @@
+/* Magyar — macshot lokalizáció
+ *
+ * To add a new language:
+ * 1. Create a new folder: macshot/<lang-code>.lproj/
+ * 2. Copy this file into that folder
+ * 3. Translate all values (right side of = sign)
+ * 4. Add the language to LanguageManager.availableLanguages in Services/LanguageManager.swift
+ * 5. Add the language code to knownRegions in macshot.xcodeproj/project.pbxproj
+ * 6. Submit a pull request!
+ *
+ * Keys use the English text. Values should be the translation.
+ * Format strings use %@ for strings, %d for integers.
+ * Keep keyboard shortcuts (like ⌘C) untranslated.
+ * Keep brand names (macshot, Google Drive, imgbb, S3) untranslated.
+ */
+
+/* Menu Bar */
+"Capture Area" = "Terület rögzítése";
+"Capture Screen" = "Képernyő rögzítése";
+"Capture OCR" = "OCR rögzítés";
+"Quick Capture" = "Gyors rögzítés";
+"Scroll Capture" = "Görgetett rögzítés";
+"Capture Delay" = "Rögzítés késleltetéssel";
+"None" = "Nincs";
+"%d seconds" = "%d másodperc";
+"Record Area" = "Terület felvétele";
+"Record Screen" = "Képernyő felvétele";
+"Recent Captures" = "Legutóbbi rögzítések";
+"Show History Panel" = "Előzmények panel megjelenítése";
+"Open Image..." = "Kép megnyitása...";
+"Open from Clipboard" = "Megnyitás vágólapról";
+"Preferences..." = "Beállítások...";
+"Check for Updates..." = "Frissítések keresése...";
+"Quit macshot" = "Kilépés a macshot-ból";
+"No recent captures" = "Nincsenek legutóbbi rögzítések";
+"Clear History" = "Előzmények törlése";
+
+/* History Panel */
+"Copy" = "Másolás";
+"Save As..." = "Mentés másként...";
+"Open in Editor" = "Megnyitás a szerkesztőben";
+"Pin to Screen" = "Rögzítés a képernyőre";
+"Quick Look" = "Gyorsnézet";
+"Delete" = "Törlés";
+"All" = "Mind";
+"Screenshots" = "Képernyőképek";
+"GIFs" = "GIF-ek";
+"Click to copy · Drag to app" = "Kattints a másoláshoz · Húzd az alkalmazásba";
+"No captures yet" = "Még nincsenek rögzítések";
+
+/* Floating Thumbnail */
+"Close All" = "Összes bezárása";
+"Save All to Folder…" = "Összes mentése mappába…";
+"Save" = "Mentés";
+
+/* Editor Top Bar */
+"Zoom In" = "Nagyítás";
+"Zoom Out" = "Kicsinyítés";
+"Fit Canvas" = "Vászon illesztése";
+"Crop" = "Vágás";
+"Flip Horizontal" = "Vízszintes tükrözés";
+"Flip Vertical" = "Függőleges tükrözés";
+"Add Capture" = "Rögzítés hozzáadása";
+
+/* Toolbar - Tools */
+"Arrow" = "Nyíl";
+"Line" = "Vonal";
+"Rectangle" = "Téglalap";
+"Ellipse" = "Ellipszis";
+"Pencil" = "Ceruza";
+"Pencil (Draw)" = "Ceruza (Rajzolás)";
+"Marker" = "Kiemelő";
+"Text" = "Szöveg";
+"Number" = "Szám";
+"Number / Counter" = "Szám / Számláló";
+"Stamp / Emoji" = "Pecsét / Emoji";
+"Censor" = "Cenzúra";
+"Censor (Pixelate / Blur / Solid)" = "Cenzúra (Pixelezés / Elmosás / Színátfedés)";
+"Measure" = "Mérés";
+"Measure (px)" = "Mérés (px)";
+"Magnify (Loupe)" = "Nagyítás (Nagyító)";
+"Color Sampler" = "Színminta";
+"Color Picker" = "Színválasztó";
+"Select & Edit" = "Kiválasztás és szerkesztés";
+"Color" = "Szín";
+
+/* Toolbar - Actions */
+"Copy to Clipboard" = "Másolás a vágólapra";
+"Save to File" = "Mentés fájlba";
+"Save to" = "Mentés ide";
+"Open in Editor Window" = "Megnyitás szerkesztő ablakban";
+"Pin on Screen" = "Rögzítés a képernyőre";
+"Pin" = "Rögzítés";
+"Pin (floating window)" = "Rögzítés (lebegő ablak)";
+"OCR" = "OCR";
+"OCR Text" = "OCR szöveg";
+"OCR (extract text)" = "OCR (szöveg kinyerése)";
+"Upload" = "Feltöltés";
+"Share" = "Megosztás";
+"Undo" = "Visszavonás";
+"Redo" = "Újra";
+"Close" = "Bezárás";
+"Remove Background" = "Háttér eltávolítása";
+"Beautify" = "Szépítés";
+"Adjust" = "Módosítás";
+"Adjust (Image Effects)" = "Módosítás (Képeffektusok)";
+"Invert Colors" = "Színek invertálása";
+"Record" = "Felvétel";
+"Record screen" = "Képernyő felvétele";
+"Translate" = "Fordítás";
+"Auto-Redact sensitive data" = "Érzékeny adatok automatikus kitakarása";
+"Move Selection" = "Kiválasztás mozgatása";
+
+/* Toolbar - Recording */
+"Start Recording" = "Felvétel indítása";
+"Cancel Recording" = "Felvétel megszakítása";
+"Highlight Mouse Clicks" = "Egérkattintások kiemelése";
+"Record System Audio" = "Rendszerhang felvétele";
+"Record Microphone" = "Mikrofon felvétele";
+"Recording Settings" = "Felvételi beállítások";
+
+/* Tool Options */
+"Size" = "Méret";
+"Stroke" = "Vonalvastagság";
+"Radius" = "Sugár";
+"Start:" = "Kezdés:";
+"Draw:" = "Rajzolás:";
+"Auto:" = "Auto:";
+"Fill" = "Kitöltés";
+"Outline" = "Körvonal";
+"More Emojis" = "Több emoji";
+"Load Image" = "Kép betöltése";
+"Gradient Style" = "Színátmenet stílus";
+"On" = "Be";
+"Text Only" = "Csak szöveg";
+"All Text" = "Összes szöveg";
+"PII" = "PII";
+"Faces" = "Arcok";
+"People" = "Emberek";
+"Confirm before upload" = "Megerősítés feltöltés előtt";
+"Flip" = "Tükrözés";
+"Smooth" = "Simítás";
+"Smart" = "Okos";
+"Padding" = "Margó";
+"Shadow" = "Árnyék";
+"Right-click to add points" = "Jobb kattintás pontok hozzáadásához";
+"Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "Tartsd az 1-et automatikus függőlegeshez  ·  Tartsd a 2-t automatikus vízszinteshez";
+
+/* Overlay / Canvas */
+"Click a window  ·  Drag for custom area  ·  F for full screen" = "Kattints egy ablakra  ·  Húzd az egyéni területhez  ·  F a teljes képernyőhöz";
+"Drag to select  ·  Click for full screen" = "Húzd a kiválasztáshoz  ·  Kattints a teljes képernyőhöz";
+"Release to annotate and edit" = "Engedd el a jegyzetelés és szerkesztés megkezdéséhez";
+"Window snap: " = "Ablak illesztés: ";
+"ON" = "BE";
+"OFF" = "KI";
+"  (Tab to toggle)" = "  (Tab a váltáshoz)";
+"Right-click to copy" = "Jobb kattintás a másoláshoz";
+"Copied %@" = "%@ másolva";
+"Set color %@" = "Szín beállítva: %@";
+"Draw something first to use the move tool." = "Rajzolj valamit előbb az áthelyező eszköz használatához.";
+"Drag to reposition" = "Húzd az áthelyezéshez";
+
+/* Overlay - Popovers */
+"Format:" = "Formátum:";
+"FPS:" = "FPS:";
+"When done:" = "Befejezéskor:";
+"Open editor" = "Szerkesztő megnyitása";
+"Show in Finder" = "Megjelenítés a Finder-ben";
+"Copy to clipboard" = "Másolás a vágólapra";
+
+/* Preferences - General */
+"macshot Preferences" = "macshot beállítások";
+"General" = "Általános";
+"Tools" = "Eszközök";
+"Recording" = "Felvétel";
+"About" = "Névjegy";
+"Shortcuts" = "Gyorsbillentyűk";
+"Uploads" = "Feltöltések";
+"Language" = "Nyelv";
+"Language:" = "Nyelv:";
+"Restart the app to fully apply the new language." = "Indítsd újra az alkalmazást az új nyelv teljes alkalmazásához.";
+"Capture" = "Rögzítés";
+"Play sound on copy" = "Hang lejátszása másoláskor";
+"Remember last selection area" = "Utolsó kiválasztási terület megjegyzése";
+"Remember last selected tool" = "Utolsó kiválasztott eszköz megjegyzése";
+"Show floating thumbnail after capture" = "Lebegő bélyegkép megjelenítése rögzítés után";
+"Launch at login" = "Indítás bejelentkezéskor";
+"Show snap alignment guides" = "Illesztési segédvonalak megjelenítése";
+"Capture mouse cursor in screenshot" = "Egérmutató rögzítése a képernyőképen";
+"Use window title in saved filename" = "Ablakcím használata a mentett fájlnévben";
+"Hide menu bar icon" = "Menüsor ikon elrejtése";
+"Hotkeys still work. To show the icon again, re-launch macshot." = "A gyorsbillentyűk továbbra is működnek. Az ikon újbóli megjelenítéséhez indítsd újra a macshot-ot.";
+"Check for updates automatically" = "Frissítések automatikus keresése";
+"Thumbnail" = "Bélyegkép";
+"  Dismiss after:" = "  Eltüntetés ennyi idő után:";
+"seconds before auto-dismiss (0 = never)" = "másodperc az automatikus eltüntetés előtt (0 = soha)";
+"  Multiple previews:" = "  Több előnézet:";
+"Stack (keep all)" = "Halmozás (összes megtartása)";
+"Replace (show only latest)" = "Csere (csak a legutolsó megjelenítése)";
+"Output" = "Kimenet";
+"Image format:" = "Képformátum:";
+"Quality:" = "Minőség:";
+"%d%%" = "%d%%";
+"Save at standard resolution (1x)" = "Mentés szabványos felbontásban (1x)";
+"Halves dimensions on Retina displays, ~4x smaller files" = "Felezi a méreteket Retina kijelzőkön, ~4x kisebb fájlok";
+"Embed sRGB color profile" = "sRGB színprofil beágyazása";
+"Ensures consistent colors across different displays" = "Egységes színeket biztosít különböző kijelzőkön";
+"Screenshot History" = "Képernyőkép előzmény";
+"History size:" = "Előzmények mérete:";
+"screenshots kept on disk (0 = off)" = "lemezen tárolt képernyőkép (0 = ki)";
+"Save Directory" = "Mentési könyvtár";
+"Save folder:" = "Mentési mappa:";
+"Browse…" = "Tallózás…";
+"Appearance" = "Megjelenés";
+"Accent color:" = "Kiemelőszín:";
+"Icon color:" = "Ikon szín:";
+"Reset" = "Visszaállítás";
+"OCR Capture:" = "OCR rögzítés:";
+"Show window + copy to clipboard" = "Ablak megjelenítése + másolás a vágólapra";
+"Show window only" = "Csak ablak megjelenítése";
+"Copy to clipboard only" = "Csak másolás a vágólapra";
+"Enter / Quick Capture:" = "Enter / Gyors rögzítés:";
+"Save to file" = "Mentés fájlba";
+"Save + copy to clipboard" = "Mentés + másolás a vágólapra";
+"OCR Action" = "OCR művelet";
+
+/* Preferences - Shortcuts */
+"Keyboard Shortcuts" = "Gyorsbillentyűk";
+"Hotkeys" = "Gyorsbillentyűk";
+"Clear shortcut" = "Gyorsbillentyű törlése";
+"Press keys..." = "Nyomj billentyűket...";
+"Waiting..." = "Várakozás...";
+
+/* Preferences - Tools */
+"Annotation Tools" = "Jegyzetelési eszközök";
+"Hidden tools are removed from the bottom toolbar." = "A rejtett eszközök eltávolításra kerülnek az alsó eszközsorból.";
+"Capture Actions" = "Rögzítési műveletek";
+"Bottom Toolbar Actions" = "Alsó eszközsor műveletei";
+"Hidden actions are removed from the bottom toolbar." = "A rejtett műveletek eltávolításra kerülnek az alsó eszközsorból.";
+"Editor Actions" = "Szerkesztői műveletek";
+"Right Toolbar Actions" = "Jobb eszközsor műveletei";
+"Hidden actions are removed from the right toolbar." = "A rejtett műveletek eltávolításra kerülnek a jobb eszközsorból.";
+
+/* Preferences - Recording */
+"Frame rate:" = "Képkockaszám:";
+"After recording:" = "Felvétel után:";
+"Save recording to:" = "Felvétel mentése ide:";
+"Clear" = "Törlés";
+"Max height:" = "Max magasság:";
+"px (0 = unlimited)" = "px (0 = korlátlan)";
+"Behavior" = "Viselkedés";
+"Auto-scroll (sends synthetic scroll events)" = "Automatikus görgetés (szintetikus görgetési események küldése)";
+"Detect fixed/sticky headers" = "Rögzített/ragadós fejlécek észlelése";
+"Scroll speed:" = "Görgetési sebesség:";
+"Slow" = "Lassú";
+"Medium" = "Közepes";
+"Fast" = "Gyors";
+"Very fast" = "Nagyon gyors";
+"5 fps" = "5 fps";
+"10 fps" = "10 fps";
+"15 fps" = "15 fps";
+"24 fps" = "24 fps";
+"30 fps" = "30 fps";
+"60 fps" = "60 fps";
+"120 fps" = "120 fps";
+"MP4 (H.264)" = "MP4 (H.264)";
+"GIF" = "GIF";
+
+/* Preferences - Upload */
+"Upload Service" = "Feltöltési szolgáltatás";
+"Upload Provider" = "Feltöltési szolgáltató";
+"Provider:" = "Szolgáltató:";
+"Google Drive" = "Google Drive";
+"Google Drive (images + videos)" = "Google Drive (képek + videók)";
+"imgbb (images only)" = "imgbb (csak képek)";
+"S3-Compatible (images + videos)" = "S3-kompatibilis (képek + videók)";
+"S3-Compatible Storage" = "S3-kompatibilis tároló";
+"Sign In with Google" = "Bejelentkezés Google-lel";
+"Sign Out" = "Kijelentkezés";
+"Signed in" = "Bejelentkezve";
+"Not signed in" = "Nincs bejelentkezve";
+"Account:" = "Fiók:";
+"Test Connection" = "Kapcsolat tesztelése";
+"Fill in endpoint, bucket, and credentials first" = "Előbb add meg a végpontot, a tárolót és a hitelesítési adatokat";
+"Testing..." = "Tesztelés...";
+"Connection successful!" = "Sikeres kapcsolódás!";
+"Leave empty to use default" = "Hagyd üresen az alapértelmezett használatához";
+"Endpoint:" = "Végpont:";
+"Region:" = "Régió:";
+"Bucket:" = "Tároló:";
+"Access Key:" = "Hozzáférési kulcs:";
+"Secret Key:" = "Titkos kulcs:";
+"Public URL:" = "Nyilvános URL:";
+"Path Prefix:" = "Útvonal előtag:";
+"API key:" = "API kulcs:";
+"Upload History" = "Feltöltési előzmények";
+"No uploads yet." = "Még nincsenek feltöltések.";
+"Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "Alap URL a nyilvános hozzáféréshez. Ha üres, az S3 végpont URL kerül használatra (lehet, hogy nem nyilvánosan elérhető).";
+"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "Egy megosztott kulcs már benne van — szerezd be a saját ingyenes kulcsodat az imgbb.com/api oldalon, ha eléred a sebességkorlátot. Csak képek (nincs videó támogatás).";
+"Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "Működik AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 és más S3-kompatibilis szolgáltatásokkal. Képeket és videókat támogat.";
+"Configure S3 in Preferences" = "S3 beállítása a Beállításokban";
+"Sign in to Google Drive in Preferences" = "Jelentkezz be a Google Drive-ba a Beállításokban";
+"Video upload requires Google Drive or S3" = "A videó feltöltéshez Google Drive vagy S3 szükséges";
+
+/* Preferences - About */
+"macshot" = "macshot";
+"Version %@ (%@)" = "Verzió %@ (%@)";
+"Made by" = "Készítette";
+"Licensed under the GPLv3" = "GPLv3 licenc alatt";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "Egy ingyenes, nyílt forráskódú képernyőkép- és képernyőfelvétel-eszköz macOS-re.\nTeljesen natív — Swift-tel és AppKit-tel építve.";
+
+/* Alerts */
+"No Image on Clipboard" = "Nincs kép a vágólapon";
+"Copy an image to the clipboard first, then try again." = "Előbb másolj egy képet a vágólapra, majd próbáld újra.";
+"OK" = "OK";
+"Accessibility Access Required" = "Akadálymentesítési hozzáférés szükséges";
+"macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "A macshot-nak Akadálymentesítési engedélyre van szüksége más alkalmazások automatikus görgetéséhez. Kérlek, adj hozzáférést a Rendszerbeállításokban, majd próbáld újra.";
+"Open Settings" = "Beállítások megnyitása";
+"Cancel" = "Mégse";
+"Microphone Access Required" = "Mikrofon hozzáférés szükséges";
+"macshot needs microphone permission to record voice audio. Open System Settings to grant access." = "A macshot-nak mikrofon engedélyre van szüksége a hangfelvételhez. Nyisd meg a Rendszerbeállításokat a hozzáférés megadásához.";
+"Upload to Google Drive?" = "Feltöltés a Google Drive-ra?";
+"Upload to S3?" = "Feltöltés az S3-ra?";
+"Upload to imgbb.com?" = "Feltöltés az imgbb.com-ra?";
+"Your screenshot will be uploaded." = "A képernyőkép feltöltésre kerül.";
+
+/* Permission Onboarding */
+"Welcome to macshot" = "Üdvözöl a macshot";
+"macshot needs one permission" = "A macshot-nak egy engedélyre van szüksége";
+"Screen Recording not yet granted" = "Képernyőfelvétel engedélye még nem adott";
+"Screen Recording granted!" = "Képernyőfelvétel engedélyezve!";
+"Enable macshot, then try taking a screenshot" = "Engedélyezd a macshot-ot, majd próbálj képernyőképet készíteni";
+"Open Screen Recording Settings" = "Képernyőfelvétel beállításainak megnyitása";
+"Continue" = "Tovább";
+
+/* OCR Window */
+"Text Recognition" = "Szövegfelismerés";
+"Translate to:" = "Fordítás erre:";
+"%d chars · %d words" = "%d karakter · %d szó";
+"Copy  ⌘↩" = "Másolás  ⌘↩";
+"AI Search" = "MI keresés";
+"Show Original" = "Eredeti megjelenítése";
+"Translation Failed" = "Fordítás sikertelen";
+"Translation" = "Fordítás";
+"(No text detected in the selected area)" = "(Nem található szöveg a kiválasztott területen)";
+
+/* Upload Toast */
+"URL copied to the clipboard" = "URL másolva a vágólapra";
+"Uploading... %d%%" = "Feltöltés... %d%%";
+"Upload failed: %@" = "Feltöltés sikertelen: %@";
+"Uploaded! Link copied." = "Feltöltve! Link másolva.";
+"Uploading to %@... %d%%" = "Feltöltés ide: %@... %d%%";
+"Open" = "Megnyitás";
+
+/* Recording Toast */
+"Recording saved" = "Felvétel mentve";
+"%@ • Recording saved" = "%@ • Felvétel mentve";
+"Copy Path" = "Útvonal másolása";
+"Path copied!" = "Útvonal másolva!";
+
+/* Video Editor */
+"macshot Video Editor" = "macshot videószerkesztő";
+"%@ selected" = "%@ kiválasztva";
+"Exporting..." = "Exportálás...";
+"Export failed" = "Exportálás sikertelen";
+"Saved to %@" = "Mentve ide: %@";
+"Save failed" = "Mentés sikertelen";
+
+/* Barcode Detector */
+/* "Open" and "Copy" are shared with other sections */
+
+/* Save Panel */
+"Save As..." = "Mentés másként...";
+"Choose a folder" = "Válassz mappát";
+"Save All to Folder…" = "Összes mentése mappába…";
+
+/* Scroll Capture HUD */
+"Auto Scroll" = "Automatikus görgetés";
+"Stop" = "Megállítás";
+"Scrolling..." = "Görgetés...";
+
+/* Effects Picker (Adjust popover) */
+"Presets" = "Előre beállítottak";
+"Adjustments" = "Módosítások";
+"Brightness" = "Fényerő";
+"Contrast" = "Kontraszt";
+"Saturation" = "Telítettség";
+"Sharpness" = "Élesség";
+
+/* Time Ago */
+"just now" = "éppen most";
+"%ds ago" = "%d mp-vel ezelőtt";
+"%dm ago" = "%d perccel ezelőtt";
+"%dh ago" = "%d órával ezelőtt";
+
+/* Hotkey Labels */
+"History" = "Előzmények";
+
+/* Preferences - Shortcuts note */
+"Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Kattints a \"Felvétel\" gombra, és nyomj meg egy billentyűkombinációt legalább egy módosítóval (⌘, ⌥, ⌃, ⇧) a gyorsbillentyű beállításához.";

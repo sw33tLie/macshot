@@ -53,7 +53,7 @@ final class VideoEditorWindowController: NSObject, NSWindowDelegate {
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered, defer: false
         )
-        win.title = "macshot Video Editor"
+        win.title = L("macshot Video Editor")
         win.minSize = NSSize(width: 600, height: 400)
         win.isReleasedWhenClosed = false
         win.delegate = self
@@ -405,7 +405,7 @@ private final class VideoEditorView: NSView {
         if compact {
             drawIconButton(rect: copyBtnRect, symbol: "doc.on.doc", accent: false)
         } else {
-            drawLabelButton(rect: copyBtnRect, symbol: "doc.on.doc", label: "Copy Path")
+            drawLabelButton(rect: copyBtnRect, symbol: "doc.on.doc", label: L("Copy Path"))
         }
         x -= gap + iconBtnW
         finderBtnRect = NSRect(x: x, y: btnY, width: iconBtnW, height: btnH)
@@ -417,7 +417,7 @@ private final class VideoEditorView: NSView {
         if compact {
             drawIconButton(rect: uploadBtnRect, symbol: "icloud.and.arrow.up", accent: false)
         } else {
-            drawLabelButton(rect: uploadBtnRect, symbol: "icloud.and.arrow.up", label: "Upload", dimmed: !canUpload)
+            drawLabelButton(rect: uploadBtnRect, symbol: "icloud.and.arrow.up", label: L("Upload"), dimmed: !canUpload)
         }
         let arrowW: CGFloat = 20
         x -= gap + labelBtnW + arrowW
@@ -450,7 +450,8 @@ private final class VideoEditorView: NSView {
                 .font: NSFont.systemFont(ofSize: 11, weight: .medium),
                 .foregroundColor: NSColor.white.withAlphaComponent(0.85),
             ]
-            let labelSize = ("Save" as NSString).size(withAttributes: attrs)
+            let saveLabel = L("Save") as NSString
+            let labelSize = saveLabel.size(withAttributes: attrs)
             let totalW = iconSize + 4 + labelSize.width
             let startX = saveBtnRect.midX - totalW / 2
             if let img = NSImage(systemSymbolName: "square.and.arrow.down", accessibilityDescription: nil)?
@@ -463,7 +464,7 @@ private final class VideoEditorView: NSView {
                 }
                 tinted.draw(in: NSRect(x: startX, y: saveBtnRect.midY - img.size.height / 2, width: img.size.width, height: img.size.height))
             }
-            ("Save" as NSString).draw(at: NSPoint(x: startX + iconSize + 4, y: saveBtnRect.midY - labelSize.height / 2), withAttributes: attrs)
+            saveLabel.draw(at: NSPoint(x: startX + iconSize + 4, y: saveBtnRect.midY - labelSize.height / 2), withAttributes: attrs)
         }
 
         // Draw separator line
@@ -543,7 +544,7 @@ private final class VideoEditorView: NSView {
         let trimDuration = trimEnd - trimStart
 
         let leftStr = formatTime(currentTime) as NSString
-        let rightStr = "\(formatTime(trimDuration)) selected" as NSString
+        let rightStr = String(format: L("%@ selected"), formatTime(trimDuration)) as NSString
         let attrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium),
             .foregroundColor: NSColor.white.withAlphaComponent(0.6),
@@ -688,7 +689,7 @@ private final class VideoEditorView: NSView {
         let url = savedURL ?? videoURL
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(url.path, forType: .string)
-        showStatus("Path copied!")
+        showStatus(L("Path copied!"))
     }
 
     private func exportSession(asset: AVAsset, timeRange: CMTimeRange, outputURL: URL) -> AVAssetExportSession? {
@@ -746,21 +747,21 @@ private final class VideoEditorView: NSView {
                 try FileManager.default.copyItem(at: videoURL, to: destURL)
                 savedURL = destURL
                 if let dirURL = dirURL { SaveDirectoryAccess.stopAccessing(url: dirURL) }
-                showStatus("Saved to \(destURL.lastPathComponent)")
+                showStatus(String(format: L("Saved to %@"), destURL.lastPathComponent))
                 needsDisplay = true
             } catch {
                 if dirURL != nil {
                     // Bookmarked directory failed — fall back to Save As
                     saveVideoAs()
                 } else {
-                    showStatus("Save failed", isError: true)
+                    showStatus(L("Save failed"), isError: true)
                 }
             }
             return
         }
 
         guard let asset = asset else { return }
-        showStatus("Exporting...")
+        showStatus(L("Exporting..."))
 
         // Export to a temp file first, then move to destination
         let tmpURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".\(videoURL.pathExtension)")
@@ -769,7 +770,7 @@ private final class VideoEditorView: NSView {
         let timeRange = CMTimeRange(start: startTime, end: endTime)
 
         guard let session = exportSession(asset: asset, timeRange: timeRange, outputURL: tmpURL) else {
-            showStatus("Export failed", isError: true)
+            showStatus(L("Export failed"), isError: true)
             return
         }
 
@@ -782,13 +783,13 @@ private final class VideoEditorView: NSView {
                         try FileManager.default.moveItem(at: tmpURL, to: destURL)
                         self.savedURL = destURL
                         if let dirURL = dirURL { SaveDirectoryAccess.stopAccessing(url: dirURL) }
-                        self.showStatus("Saved to \(destURL.lastPathComponent)")
+                        self.showStatus(String(format: L("Saved to %@"), destURL.lastPathComponent))
                         self.needsDisplay = true
                     } catch {
-                        self.showStatus("Save failed", isError: true)
+                        self.showStatus(L("Save failed"), isError: true)
                     }
                 } else {
-                    self.showStatus("Export failed", isError: true)
+                    self.showStatus(L("Export failed"), isError: true)
                     try? FileManager.default.removeItem(at: tmpURL)
                 }
             }
@@ -799,23 +800,23 @@ private final class VideoEditorView: NSView {
         let provider = UserDefaults.standard.string(forKey: "uploadProvider") ?? "imgbb"
 
         if provider == "gdrive" && !GoogleDriveUploader.shared.isSignedIn {
-            showStatus("Sign in to Google Drive in Preferences", isError: true)
+            showStatus(L("Sign in to Google Drive in Preferences"), isError: true)
             return
         }
         if provider == "s3" && !S3Uploader.shared.isConfigured {
-            showStatus("Configure S3 in Preferences", isError: true)
+            showStatus(L("Configure S3 in Preferences"), isError: true)
             return
         }
         if provider != "gdrive" && provider != "s3" {
-            showStatus("Video upload requires Google Drive or S3", isError: true)
+            showStatus(L("Video upload requires Google Drive or S3"), isError: true)
             return
         }
 
         let providerLabel = provider == "s3" ? "S3" : "Drive"
-        showStatus("Uploading to \(providerLabel)... 0%")
+        showStatus(String(format: L("Uploading to %@... %d%%"), providerLabel, 0))
 
         let progressHandler: (Double) -> Void = { [weak self] fraction in
-            self?.showStatus("Uploading to \(providerLabel)... \(Int(fraction * 100))%")
+            self?.showStatus(String(format: L("Uploading to %@... %d%%"), providerLabel, Int(fraction * 100)))
         }
 
         let completionHandler: (Result<String, Error>) -> Void = { [weak self] result in
@@ -823,9 +824,9 @@ private final class VideoEditorView: NSView {
             case .success(let link):
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(link, forType: .string)
-                self?.showStatus("Uploaded! Link copied.")
+                self?.showStatus(L("Uploaded! Link copied."))
             case .failure(let error):
-                self?.showStatus("Upload failed: \(error.localizedDescription)", isError: true)
+                self?.showStatus(String(format: L("Upload failed: %@"), error.localizedDescription), isError: true)
             }
         }
 
@@ -855,7 +856,7 @@ private final class VideoEditorView: NSView {
             let timeRange = CMTimeRange(start: CMTime(seconds: trimStart, preferredTimescale: 600),
                                         end: CMTime(seconds: trimEnd, preferredTimescale: 600))
             guard let session = exportSession(asset: asset, timeRange: timeRange, outputURL: tmpURL) else {
-                showStatus("Export failed", isError: true)
+                showStatus(L("Export failed"), isError: true)
                 return
             }
 
@@ -863,7 +864,7 @@ private final class VideoEditorView: NSView {
                 await session.export()
                 await MainActor.run {
                     guard session.status == .completed else {
-                        self.showStatus("Export failed", isError: true)
+                        self.showStatus(L("Export failed"), isError: true)
                         return
                     }
                     uploadFileURL(tmpURL, true)

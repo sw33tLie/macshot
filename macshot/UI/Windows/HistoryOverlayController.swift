@@ -206,38 +206,38 @@ final class HistoryOverlayController: NSObject, QLPreviewPanelDataSource, QLPrev
     func showContextMenu(for globalIndex: Int, at point: NSPoint, in view: NSView) {
         let menu = NSMenu()
 
-        let copyItem = NSMenuItem(title: "Copy", action: #selector(contextCopy(_:)), keyEquivalent: "c")
+        let copyItem = NSMenuItem(title: L("Copy"), action: #selector(contextCopy(_:)), keyEquivalent: "c")
         copyItem.keyEquivalentModifierMask = [.command]
         copyItem.target = self
         copyItem.tag = globalIndex
         menu.addItem(copyItem)
 
-        let saveItem = NSMenuItem(title: "Save As...", action: #selector(contextSave(_:)), keyEquivalent: "")
+        let saveItem = NSMenuItem(title: L("Save As..."), action: #selector(contextSave(_:)), keyEquivalent: "")
         saveItem.target = self
         saveItem.tag = globalIndex
         menu.addItem(saveItem)
 
         menu.addItem(NSMenuItem.separator())
 
-        let editorItem = NSMenuItem(title: "Open in Editor", action: #selector(contextOpenEditor(_:)), keyEquivalent: "e")
+        let editorItem = NSMenuItem(title: L("Open in Editor"), action: #selector(contextOpenEditor(_:)), keyEquivalent: "e")
         editorItem.keyEquivalentModifierMask = [.command]
         editorItem.target = self
         editorItem.tag = globalIndex
         menu.addItem(editorItem)
 
-        let pinItem = NSMenuItem(title: "Pin to Screen", action: #selector(contextPin(_:)), keyEquivalent: "")
+        let pinItem = NSMenuItem(title: L("Pin to Screen"), action: #selector(contextPin(_:)), keyEquivalent: "")
         pinItem.target = self
         pinItem.tag = globalIndex
         menu.addItem(pinItem)
 
-        let qlItem = NSMenuItem(title: "Quick Look", action: #selector(contextQuickLook(_:)), keyEquivalent: " ")
+        let qlItem = NSMenuItem(title: L("Quick Look"), action: #selector(contextQuickLook(_:)), keyEquivalent: " ")
         qlItem.target = self
         qlItem.tag = globalIndex
         menu.addItem(qlItem)
 
         menu.addItem(NSMenuItem.separator())
 
-        let deleteItem = NSMenuItem(title: "Delete", action: #selector(contextDelete(_:)), keyEquivalent: "\u{8}")
+        let deleteItem = NSMenuItem(title: L("Delete"), action: #selector(contextDelete(_:)), keyEquivalent: "\u{8}")
         deleteItem.target = self
         deleteItem.tag = globalIndex
         menu.addItem(deleteItem)
@@ -436,6 +436,14 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
         context.restoreGraphicsState()
     }
 
+    private func localizedFilterLabel(_ filter: HistoryFilter) -> String {
+        switch filter {
+        case .all: return L("All")
+        case .screenshots: return L("Screenshots")
+        case .gifs: return L("GIFs")
+        }
+    }
+
     private func drawFilterTabs() {
         let filters = HistoryFilter.allCases
         let tabFont = NSFont.systemFont(ofSize: 13, weight: .medium)
@@ -446,7 +454,7 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
 
         var tabWidths: [CGFloat] = []
         for filter in filters {
-            let str = filter.rawValue as NSString
+            let str = localizedFilterLabel(filter) as NSString
             let w = str.size(withAttributes: [.font: tabFont]).width + tabPadH * 2
             tabWidths.append(w)
         }
@@ -467,7 +475,7 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
             NSBezierPath(roundedRect: tabRect, xRadius: tabH / 2, yRadius: tabH / 2).fill()
 
             let textColor = isActive ? NSColor.white : NSColor.white.withAlphaComponent(0.55)
-            let str = filter.rawValue as NSString
+            let str = localizedFilterLabel(filter) as NSString
             let attrs: [NSAttributedString.Key: Any] = [
                 .font: tabFont,
                 .foregroundColor: textColor,
@@ -533,7 +541,7 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
                 clipPath.fill()
 
                 // Hint text
-                let hint = "Click to copy · Drag to app" as NSString
+                let hint = L("Click to copy · Drag to app") as NSString
                 let hintAttrs: [NSAttributedString.Key: Any] = [
                     .font: NSFont.systemFont(ofSize: 10, weight: .semibold),
                     .foregroundColor: NSColor.white.withAlphaComponent(0.9),
@@ -586,7 +594,7 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
     }
 
     private func drawEmptyState() {
-        let str = "No captures yet" as NSString
+        let str = L("No captures yet") as NSString
         let attrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: 14, weight: .medium),
             .foregroundColor: NSColor.white.withAlphaComponent(0.3),

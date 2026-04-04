@@ -1,0 +1,400 @@
+/* فارسی — macshot localization
+ *
+ * To add a new language:
+ * 1. Create a new folder: macshot/<lang-code>.lproj/
+ * 2. Copy this file into that folder
+ * 3. Translate all values (right side of = sign)
+ * 4. Add the language to LanguageManager.availableLanguages in Services/LanguageManager.swift
+ * 5. Add the language code to knownRegions in macshot.xcodeproj/project.pbxproj
+ * 6. Submit a pull request!
+ *
+ * Keys use the English text. Values should be the translation.
+ * Format strings use %@ for strings, %d for integers.
+ * Keep keyboard shortcuts (like ⌘C) untranslated.
+ * Keep brand names (macshot, Google Drive, imgbb, S3) untranslated.
+ */
+
+/* Menu Bar */
+"Capture Area" = "ضبط ناحیه";
+"Capture Screen" = "ضبط صفحه";
+"Capture OCR" = "ضبط OCR";
+"Quick Capture" = "ضبط سریع";
+"Scroll Capture" = "ضبط پیمایشی";
+"Capture Delay" = "تاخیر ضبط";
+"None" = "هیچ";
+"%d seconds" = "%d ثانیه";
+"Record Area" = "ضبط ویدیوی ناحیه";
+"Record Screen" = "ضبط ویدیوی صفحه";
+"Recent Captures" = "ضبط‌های اخیر";
+"Show History Panel" = "نمایش پنل تاریخچه";
+"Open Image..." = "باز کردن تصویر...";
+"Open from Clipboard" = "باز کردن از کلیپ‌بورد";
+"Preferences..." = "تنظیمات...";
+"Check for Updates..." = "بررسی به‌روزرسانی‌ها...";
+"Quit macshot" = "خروج از macshot";
+"No recent captures" = "ضبط اخیری وجود ندارد";
+"Clear History" = "پاک کردن تاریخچه";
+
+/* History Panel */
+"Copy" = "کپی";
+"Save As..." = "ذخیره به عنوان...";
+"Open in Editor" = "باز کردن در ویرایشگر";
+"Pin to Screen" = "سنجاق به صفحه";
+"Quick Look" = "نمای سریع";
+"Delete" = "حذف";
+"All" = "همه";
+"Screenshots" = "تصاویر صفحه";
+"GIFs" = "GIFs";
+"Click to copy · Drag to app" = "کلیک برای کپی · کشیدن به برنامه";
+"No captures yet" = "هنوز ضبطی انجام نشده";
+
+/* Floating Thumbnail */
+"Close All" = "بستن همه";
+"Save All to Folder…" = "ذخیره همه در پوشه…";
+"Save" = "ذخیره";
+
+/* Editor Top Bar */
+"Zoom In" = "بزرگ‌نمایی";
+"Zoom Out" = "کوچک‌نمایی";
+"Fit Canvas" = "تناسب بوم";
+"Crop" = "برش";
+"Flip Horizontal" = "وارونه افقی";
+"Flip Vertical" = "وارونه عمودی";
+"Add Capture" = "افزودن ضبط";
+
+/* Toolbar - Tools */
+"Arrow" = "فلش";
+"Line" = "خط";
+"Rectangle" = "مستطیل";
+"Ellipse" = "بیضی";
+"Pencil" = "مداد";
+"Pencil (Draw)" = "مداد (رسم)";
+"Marker" = "ماژیک";
+"Text" = "متن";
+"Number" = "شماره";
+"Number / Counter" = "شماره / شمارنده";
+"Stamp / Emoji" = "مهر / ایموجی";
+"Censor" = "سانسور";
+"Censor (Pixelate / Blur / Solid)" = "سانسور (پیکسلی / تار / توپر)";
+"Measure" = "اندازه‌گیری";
+"Measure (px)" = "اندازه‌گیری (px)";
+"Magnify (Loupe)" = "بزرگ‌نمایی (ذره‌بین)";
+"Color Sampler" = "نمونه‌بردار رنگ";
+"Color Picker" = "انتخابگر رنگ";
+"Select & Edit" = "انتخاب و ویرایش";
+"Color" = "رنگ";
+
+/* Toolbar - Actions */
+"Copy to Clipboard" = "کپی به کلیپ‌بورد";
+"Save to File" = "ذخیره در فایل";
+"Save to" = "ذخیره در";
+"Open in Editor Window" = "باز کردن در پنجره ویرایشگر";
+"Pin on Screen" = "سنجاق روی صفحه";
+"Pin" = "سنجاق";
+"Pin (floating window)" = "سنجاق (پنجره شناور)";
+"OCR" = "OCR";
+"OCR Text" = "متن OCR";
+"OCR (extract text)" = "OCR (استخراج متن)";
+"Upload" = "بارگذاری";
+"Share" = "اشتراک‌گذاری";
+"Undo" = "برگردان";
+"Redo" = "بازانجام";
+"Close" = "بستن";
+"Remove Background" = "حذف پس‌زمینه";
+"Beautify" = "زیباسازی";
+"Adjust" = "تنظیم";
+"Adjust (Image Effects)" = "تنظیم (افکت‌های تصویر)";
+"Invert Colors" = "معکوس کردن رنگ‌ها";
+"Record" = "ضبط ویدیو";
+"Record screen" = "ضبط ویدیوی صفحه";
+"Translate" = "ترجمه";
+"Auto-Redact sensitive data" = "سانسور خودکار داده‌های حساس";
+"Move Selection" = "جابجایی انتخاب";
+
+/* Toolbar - Recording */
+"Start Recording" = "شروع ضبط ویدیو";
+"Cancel Recording" = "لغو ضبط ویدیو";
+"Highlight Mouse Clicks" = "برجسته‌سازی کلیک‌های موس";
+"Record System Audio" = "ضبط صدای سیستم";
+"Record Microphone" = "ضبط میکروفون";
+"Recording Settings" = "تنظیمات ضبط ویدیو";
+
+/* Tool Options */
+"Size" = "اندازه";
+"Stroke" = "ضخامت خط";
+"Radius" = "شعاع";
+"Start:" = "شروع:";
+"Draw:" = "رسم:";
+"Auto:" = "خودکار:";
+"Fill" = "پر";
+"Outline" = "حاشیه";
+"More Emojis" = "ایموجی‌های بیشتر";
+"Load Image" = "بارگذاری تصویر";
+"Gradient Style" = "سبک گرادیان";
+"On" = "روشن";
+"Text Only" = "فقط متن";
+"All Text" = "تمام متن";
+"PII" = "PII";
+"Faces" = "چهره‌ها";
+"People" = "افراد";
+"Confirm before upload" = "تایید قبل از بارگذاری";
+"Flip" = "وارونه";
+"Smooth" = "هموار";
+"Smart" = "هوشمند";
+"Padding" = "فاصله داخلی";
+"Shadow" = "سایه";
+"Right-click to add points" = "کلیک راست برای افزودن نقطه";
+"Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "نگه‌داشتن 1 عمودی خودکار  ·  نگه‌داشتن 2 افقی خودکار";
+
+/* Overlay / Canvas */
+"Click a window  ·  Drag for custom area  ·  F for full screen" = "کلیک روی پنجره  ·  کشیدن برای ناحیه دلخواه  ·  F برای تمام صفحه";
+"Drag to select  ·  Click for full screen" = "بکشید برای انتخاب  ·  کلیک برای تمام صفحه";
+"Release to annotate and edit" = "رها کنید برای حاشیه‌نویسی و ویرایش";
+"Window snap: " = "چسبش پنجره: ";
+"ON" = "روشن";
+"OFF" = "خاموش";
+"  (Tab to toggle)" = "  (Tab برای تغییر)";
+"Right-click to copy" = "کلیک راست برای کپی";
+"Copied %@" = "کپی شد %@";
+"Set color %@" = "تنظیم رنگ %@";
+"Draw something first to use the move tool." = "ابتدا چیزی بکشید تا بتوانید از ابزار جابجایی استفاده کنید.";
+"Drag to reposition" = "بکشید برای جابجایی";
+
+/* Overlay - Popovers */
+"Format:" = "فرمت:";
+"FPS:" = "FPS:";
+"When done:" = "پس از اتمام:";
+"Open editor" = "باز کردن ویرایشگر";
+"Show in Finder" = "نمایش در Finder";
+"Copy to clipboard" = "کپی به کلیپ‌بورد";
+
+/* Preferences - General */
+"macshot Preferences" = "تنظیمات macshot";
+"General" = "عمومی";
+"Tools" = "ابزارها";
+"Recording" = "ضبط ویدیو";
+"About" = "درباره";
+"Shortcuts" = "میانبرها";
+"Uploads" = "بارگذاری‌ها";
+"Language" = "زبان";
+"Language:" = "زبان:";
+"Restart the app to fully apply the new language." = "برنامه را مجددا راه‌اندازی کنید تا زبان جدید به طور کامل اعمال شود.";
+"Capture" = "ضبط";
+"Play sound on copy" = "پخش صدا هنگام کپی";
+"Remember last selection area" = "به خاطر سپردن آخرین ناحیه انتخابی";
+"Remember last selected tool" = "به خاطر سپردن آخرین ابزار انتخابی";
+"Show floating thumbnail after capture" = "نمایش تصویر بندانگشتی شناور پس از ضبط";
+"Launch at login" = "اجرا هنگام ورود";
+"Show snap alignment guides" = "نمایش خطوط راهنمای تراز";
+"Capture mouse cursor in screenshot" = "ضبط نشانگر موس در تصویر صفحه";
+"Use window title in saved filename" = "استفاده از عنوان پنجره در نام فایل ذخیره‌شده";
+"Hide menu bar icon" = "پنهان کردن آیکون نوار منو";
+"Hotkeys still work. To show the icon again, re-launch macshot." = "کلیدهای میانبر همچنان کار می‌کنند. برای نمایش مجدد آیکون، macshot را دوباره اجرا کنید.";
+"Check for updates automatically" = "بررسی خودکار به‌روزرسانی‌ها";
+"Thumbnail" = "تصویر بندانگشتی";
+"  Dismiss after:" = "  بستن بعد از:";
+"seconds before auto-dismiss (0 = never)" = "ثانیه قبل از بستن خودکار (0 = هرگز)";
+"  Multiple previews:" = "  پیش‌نمایش‌های متعدد:";
+"Stack (keep all)" = "روی هم (نگه‌داشتن همه)";
+"Replace (show only latest)" = "جایگزینی (فقط نمایش آخرین)";
+"Output" = "خروجی";
+"Image format:" = "فرمت تصویر:";
+"Quality:" = "کیفیت:";
+"%d%%" = "%d%%";
+"Save at standard resolution (1x)" = "ذخیره با وضوح استاندارد (1x)";
+"Halves dimensions on Retina displays, ~4x smaller files" = "ابعاد را در نمایشگرهای Retina نصف می‌کند، فایل‌ها حدود ۴ برابر کوچکتر";
+"Embed sRGB color profile" = "جاسازی پروفایل رنگ sRGB";
+"Ensures consistent colors across different displays" = "رنگ‌های یکسان در نمایشگرهای مختلف را تضمین می‌کند";
+"Screenshot History" = "تاریخچه تصاویر صفحه";
+"History size:" = "اندازه تاریخچه:";
+"screenshots kept on disk (0 = off)" = "تصویر صفحه نگهداری‌شده روی دیسک (0 = خاموش)";
+"Save Directory" = "پوشه ذخیره‌سازی";
+"Save folder:" = "پوشه ذخیره:";
+"Browse…" = "مرور…";
+"Appearance" = "ظاهر";
+"Accent color:" = "رنگ تاکیدی:";
+"Icon color:" = "رنگ آیکون:";
+"Reset" = "بازنشانی";
+"OCR Capture:" = "ضبط OCR:";
+"Show window + copy to clipboard" = "نمایش پنجره + کپی به کلیپ‌بورد";
+"Show window only" = "فقط نمایش پنجره";
+"Copy to clipboard only" = "فقط کپی به کلیپ‌بورد";
+"Enter / Quick Capture:" = "Enter / ضبط سریع:";
+"Save to file" = "ذخیره در فایل";
+"Save + copy to clipboard" = "ذخیره + کپی به کلیپ‌بورد";
+"OCR Action" = "عملکرد OCR";
+
+/* Preferences - Shortcuts */
+"Keyboard Shortcuts" = "میانبرهای صفحه‌کلید";
+"Hotkeys" = "کلیدهای میانبر";
+"Clear shortcut" = "پاک کردن میانبر";
+"Press keys..." = "کلیدها را فشار دهید...";
+"Waiting..." = "در انتظار...";
+
+/* Preferences - Tools */
+"Annotation Tools" = "ابزارهای حاشیه‌نویسی";
+"Hidden tools are removed from the bottom toolbar." = "ابزارهای پنهان از نوار ابزار پایین حذف می‌شوند.";
+"Capture Actions" = "عملکردهای ضبط";
+"Bottom Toolbar Actions" = "عملکردهای نوار ابزار پایین";
+"Hidden actions are removed from the bottom toolbar." = "عملکردهای پنهان از نوار ابزار پایین حذف می‌شوند.";
+"Editor Actions" = "عملکردهای ویرایشگر";
+"Right Toolbar Actions" = "عملکردهای نوار ابزار راست";
+"Hidden actions are removed from the right toolbar." = "عملکردهای پنهان از نوار ابزار راست حذف می‌شوند.";
+
+/* Preferences - Recording */
+"Frame rate:" = "نرخ فریم:";
+"After recording:" = "پس از ضبط ویدیو:";
+"Save recording to:" = "ذخیره ضبط ویدیو در:";
+"Clear" = "پاک کردن";
+"Max height:" = "حداکثر ارتفاع:";
+"px (0 = unlimited)" = "px (0 = نامحدود)";
+"Behavior" = "رفتار";
+"Auto-scroll (sends synthetic scroll events)" = "پیمایش خودکار (ارسال رویدادهای پیمایش مصنوعی)";
+"Detect fixed/sticky headers" = "تشخیص سربرگ‌های ثابت/چسبنده";
+"Scroll speed:" = "سرعت پیمایش:";
+"Slow" = "آهسته";
+"Medium" = "متوسط";
+"Fast" = "سریع";
+"Very fast" = "خیلی سریع";
+"5 fps" = "5 fps";
+"10 fps" = "10 fps";
+"15 fps" = "15 fps";
+"24 fps" = "24 fps";
+"30 fps" = "30 fps";
+"60 fps" = "60 fps";
+"120 fps" = "120 fps";
+"MP4 (H.264)" = "MP4 (H.264)";
+"GIF" = "GIF";
+
+/* Preferences - Upload */
+"Upload Service" = "سرویس بارگذاری";
+"Upload Provider" = "ارائه‌دهنده بارگذاری";
+"Provider:" = "ارائه‌دهنده:";
+"Google Drive" = "Google Drive";
+"Google Drive (images + videos)" = "Google Drive (تصاویر + ویدیوها)";
+"imgbb (images only)" = "imgbb (فقط تصاویر)";
+"S3-Compatible (images + videos)" = "S3-Compatible (تصاویر + ویدیوها)";
+"S3-Compatible Storage" = "فضای ذخیره‌سازی S3-Compatible";
+"Sign In with Google" = "ورود با Google";
+"Sign Out" = "خروج از حساب";
+"Signed in" = "وارد شده";
+"Not signed in" = "وارد نشده";
+"Account:" = "حساب کاربری:";
+"Test Connection" = "تست اتصال";
+"Fill in endpoint, bucket, and credentials first" = "ابتدا آدرس، باکت و اطلاعات ورود را پر کنید";
+"Testing..." = "در حال تست...";
+"Connection successful!" = "اتصال موفقیت‌آمیز بود!";
+"Leave empty to use default" = "برای استفاده از پیش‌فرض خالی بگذارید";
+"Endpoint:" = "آدرس:";
+"Region:" = "منطقه:";
+"Bucket:" = "باکت:";
+"Access Key:" = "کلید دسترسی:";
+"Secret Key:" = "کلید محرمانه:";
+"Public URL:" = "آدرس عمومی:";
+"Path Prefix:" = "پیشوند مسیر:";
+"API key:" = "کلید API:";
+"Upload History" = "تاریخچه بارگذاری";
+"No uploads yet." = "هنوز بارگذاری‌ای انجام نشده.";
+"Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "آدرس پایه برای دسترسی عمومی. اگر خالی باشد، آدرس S3 استفاده می‌شود (ممکن است به صورت عمومی قابل دسترسی نباشد).";
+"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "یک کلید مشترک موجود است — اگر به محدودیت نرخ رسیدید، کلید رایگان خود را از imgbb.com/api دریافت کنید. فقط تصاویر (بدون پشتیبانی ویدیو).";
+"Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "با AWS S3، Cloudflare R2، MinIO، DigitalOcean Spaces، Backblaze B2 و سایر سرویس‌های سازگار با S3 کار می‌کند. از تصاویر و ویدیوها پشتیبانی می‌کند.";
+"Configure S3 in Preferences" = "پیکربندی S3 در تنظیمات";
+"Sign in to Google Drive in Preferences" = "ورود به Google Drive در تنظیمات";
+"Video upload requires Google Drive or S3" = "بارگذاری ویدیو نیاز به Google Drive یا S3 دارد";
+
+/* Preferences - About */
+"macshot" = "macshot";
+"Version %@ (%@)" = "نسخه %@ (%@)";
+"Made by" = "ساخته شده توسط";
+"Licensed under the GPLv3" = "تحت مجوز GPLv3";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "ابزار رایگان و متن‌باز تصویربرداری و ضبط ویدیو از صفحه برای macOS.\nکاملا بومی — ساخته شده با Swift و AppKit.";
+
+/* Alerts */
+"No Image on Clipboard" = "تصویری در کلیپ‌بورد نیست";
+"Copy an image to the clipboard first, then try again." = "ابتدا یک تصویر را به کلیپ‌بورد کپی کنید، سپس دوباره تلاش کنید.";
+"OK" = "تایید";
+"Accessibility Access Required" = "دسترسی به قابلیت‌های دسترسی‌پذیری لازم است";
+"macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot برای پیمایش خودکار سایر برنامه‌ها به مجوز دسترسی‌پذیری نیاز دارد. لطفا دسترسی را در تنظیمات سیستم اعطا کنید و دوباره تلاش کنید.";
+"Open Settings" = "باز کردن تنظیمات";
+"Cancel" = "لغو";
+"Microphone Access Required" = "دسترسی به میکروفون لازم است";
+"macshot needs microphone permission to record voice audio. Open System Settings to grant access." = "macshot برای ضبط صدای میکروفون به مجوز میکروفون نیاز دارد. تنظیمات سیستم را باز کنید تا دسترسی اعطا شود.";
+"Upload to Google Drive?" = "بارگذاری به Google Drive؟";
+"Upload to S3?" = "بارگذاری به S3؟";
+"Upload to imgbb.com?" = "بارگذاری به imgbb.com؟";
+"Your screenshot will be uploaded." = "تصویر صفحه شما بارگذاری خواهد شد.";
+
+/* Permission Onboarding */
+"Welcome to macshot" = "به macshot خوش آمدید";
+"macshot needs one permission" = "macshot به یک مجوز نیاز دارد";
+"Screen Recording not yet granted" = "مجوز ضبط صفحه هنوز اعطا نشده";
+"Screen Recording granted!" = "مجوز ضبط صفحه اعطا شد!";
+"Enable macshot, then try taking a screenshot" = "macshot را فعال کنید، سپس تصویربرداری از صفحه را امتحان کنید";
+"Open Screen Recording Settings" = "باز کردن تنظیمات ضبط صفحه";
+"Continue" = "ادامه";
+
+/* OCR Window */
+"Text Recognition" = "تشخیص متن";
+"Translate to:" = "ترجمه به:";
+"%d chars · %d words" = "%d نویسه · %d کلمه";
+"Copy  ⌘↩" = "کپی  ⌘↩";
+"AI Search" = "جستجوی هوش مصنوعی";
+"Show Original" = "نمایش اصلی";
+"Translation Failed" = "ترجمه ناموفق بود";
+"Translation" = "ترجمه";
+"(No text detected in the selected area)" = "(متنی در ناحیه انتخابی شناسایی نشد)";
+
+/* Upload Toast */
+"URL copied to the clipboard" = "آدرس به کلیپ‌بورد کپی شد";
+"Uploading... %d%%" = "در حال بارگذاری... %d%%";
+"Upload failed: %@" = "بارگذاری ناموفق: %@";
+"Uploaded! Link copied." = "بارگذاری شد! لینک کپی شد.";
+"Uploading to %@... %d%%" = "در حال بارگذاری به %@... %d%%";
+"Open" = "باز کردن";
+
+/* Recording Toast */
+"Recording saved" = "ضبط ویدیو ذخیره شد";
+"%@ • Recording saved" = "%@ • ضبط ویدیو ذخیره شد";
+"Copy Path" = "کپی مسیر";
+"Path copied!" = "مسیر کپی شد!";
+
+/* Video Editor */
+"macshot Video Editor" = "ویرایشگر ویدیوی macshot";
+"%@ selected" = "%@ انتخاب شده";
+"Exporting..." = "در حال خروجی گرفتن...";
+"Export failed" = "خروجی گرفتن ناموفق بود";
+"Saved to %@" = "ذخیره شد در %@";
+"Save failed" = "ذخیره ناموفق بود";
+
+/* Barcode Detector */
+/* "Open" and "Copy" are shared with other sections */
+
+/* Save Panel */
+"Save As..." = "ذخیره به عنوان...";
+"Choose a folder" = "یک پوشه انتخاب کنید";
+"Save All to Folder…" = "ذخیره همه در پوشه…";
+
+/* Scroll Capture HUD */
+"Auto Scroll" = "پیمایش خودکار";
+"Stop" = "توقف";
+"Scrolling..." = "در حال پیمایش...";
+
+/* Effects Picker (Adjust popover) */
+"Presets" = "پیش‌تنظیمات";
+"Adjustments" = "تنظیمات";
+"Brightness" = "روشنایی";
+"Contrast" = "کنتراست";
+"Saturation" = "اشباع";
+"Sharpness" = "وضوح";
+
+/* Time Ago */
+"just now" = "همین الان";
+"%ds ago" = "%d ثانیه پیش";
+"%dm ago" = "%d دقیقه پیش";
+"%dh ago" = "%d ساعت پیش";
+
+/* Hotkey Labels */
+"History" = "تاریخچه";
+
+/* Preferences - Shortcuts note */
+"Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "روی \"ضبط ویدیو\" کلیک کنید و ترکیب کلیدی با حداقل یک کلید تغییردهنده (⌘، ⌥، ⌃، ⇧) فشار دهید تا میانبر تنظیم شود.";

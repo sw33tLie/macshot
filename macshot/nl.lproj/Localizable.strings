@@ -1,0 +1,400 @@
+/* Nederlands — macshot localization
+ *
+ * To add a new language:
+ * 1. Create a new folder: macshot/<lang-code>.lproj/
+ * 2. Copy this file into that folder
+ * 3. Translate all values (right side of = sign)
+ * 4. Add the language to LanguageManager.availableLanguages in Services/LanguageManager.swift
+ * 5. Add the language code to knownRegions in macshot.xcodeproj/project.pbxproj
+ * 6. Submit a pull request!
+ *
+ * Keys use the English text. Values should be the translation.
+ * Format strings use %@ for strings, %d for integers.
+ * Keep keyboard shortcuts (like ⌘C) untranslated.
+ * Keep brand names (macshot, Google Drive, imgbb, S3) untranslated.
+ */
+
+/* Menu Bar */
+"Capture Area" = "Gebied vastleggen";
+"Capture Screen" = "Scherm vastleggen";
+"Capture OCR" = "OCR vastleggen";
+"Quick Capture" = "Snelle opname";
+"Scroll Capture" = "Scrollopname";
+"Capture Delay" = "Opnamevertraging";
+"None" = "Geen";
+"%d seconds" = "%d seconden";
+"Record Area" = "Gebied opnemen";
+"Record Screen" = "Scherm opnemen";
+"Recent Captures" = "Recente opnames";
+"Show History Panel" = "Geschiedenispaneel tonen";
+"Open Image..." = "Afbeelding openen...";
+"Open from Clipboard" = "Openen vanuit klembord";
+"Preferences..." = "Instellingen...";
+"Check for Updates..." = "Controleer op updates...";
+"Quit macshot" = "Stop macshot";
+"No recent captures" = "Geen recente opnames";
+"Clear History" = "Geschiedenis wissen";
+
+/* History Panel */
+"Copy" = "Kopieer";
+"Save As..." = "Bewaar als...";
+"Open in Editor" = "Open in editor";
+"Pin to Screen" = "Vastpinnen op scherm";
+"Quick Look" = "Snelle weergave";
+"Delete" = "Verwijder";
+"All" = "Alles";
+"Screenshots" = "Schermafbeeldingen";
+"GIFs" = "GIFs";
+"Click to copy · Drag to app" = "Klik om te kopieren · Sleep naar app";
+"No captures yet" = "Nog geen opnames";
+
+/* Floating Thumbnail */
+"Close All" = "Sluit alles";
+"Save All to Folder…" = "Bewaar alles in map…";
+"Save" = "Bewaar";
+
+/* Editor Top Bar */
+"Zoom In" = "Inzoomen";
+"Zoom Out" = "Uitzoomen";
+"Fit Canvas" = "Pas canvas in";
+"Crop" = "Bijsnijden";
+"Flip Horizontal" = "Horizontaal spiegelen";
+"Flip Vertical" = "Verticaal spiegelen";
+"Add Capture" = "Opname toevoegen";
+
+/* Toolbar - Tools */
+"Arrow" = "Pijl";
+"Line" = "Lijn";
+"Rectangle" = "Rechthoek";
+"Ellipse" = "Ellips";
+"Pencil" = "Potlood";
+"Pencil (Draw)" = "Potlood (Tekenen)";
+"Marker" = "Markeerstift";
+"Text" = "Tekst";
+"Number" = "Nummer";
+"Number / Counter" = "Nummer / Teller";
+"Stamp / Emoji" = "Stempel / Emoji";
+"Censor" = "Censureren";
+"Censor (Pixelate / Blur / Solid)" = "Censureren (Pixelen / Vervagen / Effen)";
+"Measure" = "Meten";
+"Measure (px)" = "Meten (px)";
+"Magnify (Loupe)" = "Vergroten (Loep)";
+"Color Sampler" = "Kleurpipet";
+"Color Picker" = "Kleurkiezer";
+"Select & Edit" = "Selecteren en bewerken";
+"Color" = "Kleur";
+
+/* Toolbar - Actions */
+"Copy to Clipboard" = "Kopieer naar klembord";
+"Save to File" = "Bewaar als bestand";
+"Save to" = "Bewaar in";
+"Open in Editor Window" = "Open in editorvenster";
+"Pin on Screen" = "Vastpinnen op scherm";
+"Pin" = "Vastpinnen";
+"Pin (floating window)" = "Vastpinnen (zwevend venster)";
+"OCR" = "OCR";
+"OCR Text" = "OCR-tekst";
+"OCR (extract text)" = "OCR (tekst extraheren)";
+"Upload" = "Uploaden";
+"Share" = "Deel";
+"Undo" = "Ongedaan maken";
+"Redo" = "Opnieuw";
+"Close" = "Sluit";
+"Remove Background" = "Achtergrond verwijderen";
+"Beautify" = "Verfraai";
+"Adjust" = "Aanpassen";
+"Adjust (Image Effects)" = "Aanpassen (Afbeeldingseffecten)";
+"Invert Colors" = "Kleuren omkeren";
+"Record" = "Opnemen";
+"Record screen" = "Scherm opnemen";
+"Translate" = "Vertalen";
+"Auto-Redact sensitive data" = "Gevoelige gegevens automatisch censureren";
+"Move Selection" = "Selectie verplaatsen";
+
+/* Toolbar - Recording */
+"Start Recording" = "Opname starten";
+"Cancel Recording" = "Opname annuleren";
+"Highlight Mouse Clicks" = "Muisklikken markeren";
+"Record System Audio" = "Systeemaudio opnemen";
+"Record Microphone" = "Microfoon opnemen";
+"Recording Settings" = "Opname-instellingen";
+
+/* Tool Options */
+"Size" = "Grootte";
+"Stroke" = "Lijn";
+"Radius" = "Radius";
+"Start:" = "Start:";
+"Draw:" = "Teken:";
+"Auto:" = "Auto:";
+"Fill" = "Vulling";
+"Outline" = "Omtrek";
+"More Emojis" = "Meer emoji's";
+"Load Image" = "Afbeelding laden";
+"Gradient Style" = "Verloopstijl";
+"On" = "Aan";
+"Text Only" = "Alleen tekst";
+"All Text" = "Alle tekst";
+"PII" = "PII";
+"Faces" = "Gezichten";
+"People" = "Personen";
+"Confirm before upload" = "Bevestig voor uploaden";
+"Flip" = "Spiegelen";
+"Smooth" = "Vloeiend";
+"Smart" = "Slim";
+"Padding" = "Opvulling";
+"Shadow" = "Schaduw";
+"Right-click to add points" = "Rechtsklik om punten toe te voegen";
+"Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "Houd 1 ingedrukt auto-verticaal  ·  Houd 2 ingedrukt auto-horizontaal";
+
+/* Overlay / Canvas */
+"Click a window  ·  Drag for custom area  ·  F for full screen" = "Klik op een venster  ·  Sleep voor aangepast gebied  ·  F voor volledig scherm";
+"Drag to select  ·  Click for full screen" = "Sleep om te selecteren  ·  Klik voor volledig scherm";
+"Release to annotate and edit" = "Laat los om te annoteren en bewerken";
+"Window snap: " = "Venster-snap: ";
+"ON" = "AAN";
+"OFF" = "UIT";
+"  (Tab to toggle)" = "  (Tab om te wisselen)";
+"Right-click to copy" = "Rechtsklik om te kopieren";
+"Copied %@" = "%@ gekopieerd";
+"Set color %@" = "Kleur %@ ingesteld";
+"Draw something first to use the move tool." = "Teken eerst iets om het verplaatsgereedschap te gebruiken.";
+"Drag to reposition" = "Sleep om te herpositioneren";
+
+/* Overlay - Popovers */
+"Format:" = "Formaat:";
+"FPS:" = "FPS:";
+"When done:" = "Na afloop:";
+"Open editor" = "Open editor";
+"Show in Finder" = "Toon in Finder";
+"Copy to clipboard" = "Kopieer naar klembord";
+
+/* Preferences - General */
+"macshot Preferences" = "macshot-instellingen";
+"General" = "Algemeen";
+"Tools" = "Gereedschap";
+"Recording" = "Opname";
+"About" = "Over";
+"Shortcuts" = "Sneltoetsen";
+"Uploads" = "Uploads";
+"Language" = "Taal";
+"Language:" = "Taal:";
+"Restart the app to fully apply the new language." = "Herstart de app om de nieuwe taal volledig toe te passen.";
+"Capture" = "Opname";
+"Play sound on copy" = "Geluid afspelen bij kopieren";
+"Remember last selection area" = "Laatste selectiegebied onthouden";
+"Remember last selected tool" = "Laatst geselecteerd gereedschap onthouden";
+"Show floating thumbnail after capture" = "Zwevende miniatuur tonen na opname";
+"Launch at login" = "Open bij inloggen";
+"Show snap alignment guides" = "Uitlijnhulplijnen tonen";
+"Capture mouse cursor in screenshot" = "Muiscursor vastleggen in schermafbeelding";
+"Use window title in saved filename" = "Venstertitel gebruiken in bestandsnaam";
+"Hide menu bar icon" = "Menubalkpictogram verbergen";
+"Hotkeys still work. To show the icon again, re-launch macshot." = "Sneltoetsen werken nog steeds. Start macshot opnieuw op om het pictogram weer te tonen.";
+"Check for updates automatically" = "Automatisch op updates controleren";
+"Thumbnail" = "Miniatuur";
+"  Dismiss after:" = "  Verberg na:";
+"seconds before auto-dismiss (0 = never)" = "seconden voor automatisch verbergen (0 = nooit)";
+"  Multiple previews:" = "  Meerdere voorbeelden:";
+"Stack (keep all)" = "Stapelen (alles bewaren)";
+"Replace (show only latest)" = "Vervangen (alleen laatste tonen)";
+"Output" = "Uitvoer";
+"Image format:" = "Afbeeldingsformaat:";
+"Quality:" = "Kwaliteit:";
+"%d%%" = "%d%%";
+"Save at standard resolution (1x)" = "Opslaan op standaardresolutie (1x)";
+"Halves dimensions on Retina displays, ~4x smaller files" = "Halveert afmetingen op Retina-schermen, ~4x kleinere bestanden";
+"Embed sRGB color profile" = "sRGB-kleurprofiel insluiten";
+"Ensures consistent colors across different displays" = "Zorgt voor consistente kleuren op verschillende schermen";
+"Screenshot History" = "Schermafbeeldingsgeschiedenis";
+"History size:" = "Geschiedenisgrootte:";
+"screenshots kept on disk (0 = off)" = "schermafbeeldingen bewaard op schijf (0 = uit)";
+"Save Directory" = "Opslagmap";
+"Save folder:" = "Opslagmap:";
+"Browse…" = "Bladeren…";
+"Appearance" = "Weergave";
+"Accent color:" = "Accentkleur:";
+"Icon color:" = "Pictogramkleur:";
+"Reset" = "Herstel";
+"OCR Capture:" = "OCR-opname:";
+"Show window + copy to clipboard" = "Venster tonen + kopieren naar klembord";
+"Show window only" = "Alleen venster tonen";
+"Copy to clipboard only" = "Alleen kopieren naar klembord";
+"Enter / Quick Capture:" = "Enter / Snelle opname:";
+"Save to file" = "Bewaar als bestand";
+"Save + copy to clipboard" = "Bewaar + kopieer naar klembord";
+"OCR Action" = "OCR-actie";
+
+/* Preferences - Shortcuts */
+"Keyboard Shortcuts" = "Sneltoetsen";
+"Hotkeys" = "Sneltoetsen";
+"Clear shortcut" = "Sneltoets wissen";
+"Press keys..." = "Druk op toetsen...";
+"Waiting..." = "Wachten...";
+
+/* Preferences - Tools */
+"Annotation Tools" = "Annotatiegereedschap";
+"Hidden tools are removed from the bottom toolbar." = "Verborgen gereedschappen worden verwijderd uit de onderste werkbalk.";
+"Capture Actions" = "Opnameacties";
+"Bottom Toolbar Actions" = "Acties in onderste werkbalk";
+"Hidden actions are removed from the bottom toolbar." = "Verborgen acties worden verwijderd uit de onderste werkbalk.";
+"Editor Actions" = "Editoracties";
+"Right Toolbar Actions" = "Acties in rechter werkbalk";
+"Hidden actions are removed from the right toolbar." = "Verborgen acties worden verwijderd uit de rechter werkbalk.";
+
+/* Preferences - Recording */
+"Frame rate:" = "Framesnelheid:";
+"After recording:" = "Na opname:";
+"Save recording to:" = "Opname opslaan in:";
+"Clear" = "Wis";
+"Max height:" = "Max hoogte:";
+"px (0 = unlimited)" = "px (0 = onbeperkt)";
+"Behavior" = "Gedrag";
+"Auto-scroll (sends synthetic scroll events)" = "Automatisch scrollen (stuurt synthetische scroll-events)";
+"Detect fixed/sticky headers" = "Vaste/plakkende headers detecteren";
+"Scroll speed:" = "Scrollsnelheid:";
+"Slow" = "Langzaam";
+"Medium" = "Gemiddeld";
+"Fast" = "Snel";
+"Very fast" = "Zeer snel";
+"5 fps" = "5 fps";
+"10 fps" = "10 fps";
+"15 fps" = "15 fps";
+"24 fps" = "24 fps";
+"30 fps" = "30 fps";
+"60 fps" = "60 fps";
+"120 fps" = "120 fps";
+"MP4 (H.264)" = "MP4 (H.264)";
+"GIF" = "GIF";
+
+/* Preferences - Upload */
+"Upload Service" = "Uploaddienst";
+"Upload Provider" = "Uploadprovider";
+"Provider:" = "Provider:";
+"Google Drive" = "Google Drive";
+"Google Drive (images + videos)" = "Google Drive (afbeeldingen + video's)";
+"imgbb (images only)" = "imgbb (alleen afbeeldingen)";
+"S3-Compatible (images + videos)" = "S3-compatibel (afbeeldingen + video's)";
+"S3-Compatible Storage" = "S3-compatibele opslag";
+"Sign In with Google" = "Inloggen met Google";
+"Sign Out" = "Uitloggen";
+"Signed in" = "Ingelogd";
+"Not signed in" = "Niet ingelogd";
+"Account:" = "Account:";
+"Test Connection" = "Verbinding testen";
+"Fill in endpoint, bucket, and credentials first" = "Vul eerst endpoint, bucket en inloggegevens in";
+"Testing..." = "Testen...";
+"Connection successful!" = "Verbinding geslaagd!";
+"Leave empty to use default" = "Laat leeg voor standaardwaarde";
+"Endpoint:" = "Endpoint:";
+"Region:" = "Regio:";
+"Bucket:" = "Bucket:";
+"Access Key:" = "Toegangssleutel:";
+"Secret Key:" = "Geheime sleutel:";
+"Public URL:" = "Publieke URL:";
+"Path Prefix:" = "Padprefix:";
+"API key:" = "API-sleutel:";
+"Upload History" = "Uploadgeschiedenis";
+"No uploads yet." = "Nog geen uploads.";
+"Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "Basis-URL voor publieke toegang. Indien leeg wordt de S3-endpoint-URL gebruikt (mogelijk niet publiek toegankelijk).";
+"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "Een gedeelde sleutel is inbegrepen — haal je eigen gratis sleutel op imgbb.com/api als je limieten bereikt. Alleen afbeeldingen (geen video-ondersteuning).";
+"Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "Werkt met AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 en andere S3-compatibele diensten. Ondersteunt afbeeldingen en video's.";
+"Configure S3 in Preferences" = "Configureer S3 in Instellingen";
+"Sign in to Google Drive in Preferences" = "Log in bij Google Drive in Instellingen";
+"Video upload requires Google Drive or S3" = "Video-upload vereist Google Drive of S3";
+
+/* Preferences - About */
+"macshot" = "macshot";
+"Version %@ (%@)" = "Versie %@ (%@)";
+"Made by" = "Gemaakt door";
+"Licensed under the GPLv3" = "Gelicenseerd onder de GPLv3";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "Een gratis, open-source schermafbeelding- en schermopnametool voor macOS.\nVolledig natief — gebouwd met Swift en AppKit.";
+
+/* Alerts */
+"No Image on Clipboard" = "Geen afbeelding op klembord";
+"Copy an image to the clipboard first, then try again." = "Kopieer eerst een afbeelding naar het klembord en probeer het opnieuw.";
+"OK" = "OK";
+"Accessibility Access Required" = "Toegankelijkheidstoegang vereist";
+"macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot heeft toegankelijkheidstoegang nodig om automatisch in andere apps te scrollen. Verleen toegang in Systeeminstellingen en probeer het opnieuw.";
+"Open Settings" = "Open Instellingen";
+"Cancel" = "Annuleer";
+"Microphone Access Required" = "Microfoontoegang vereist";
+"macshot needs microphone permission to record voice audio. Open System Settings to grant access." = "macshot heeft microfoontoestemming nodig om spraak op te nemen. Open Systeeminstellingen om toegang te verlenen.";
+"Upload to Google Drive?" = "Uploaden naar Google Drive?";
+"Upload to S3?" = "Uploaden naar S3?";
+"Upload to imgbb.com?" = "Uploaden naar imgbb.com?";
+"Your screenshot will be uploaded." = "Je schermafbeelding wordt geupload.";
+
+/* Permission Onboarding */
+"Welcome to macshot" = "Welkom bij macshot";
+"macshot needs one permission" = "macshot heeft een toestemming nodig";
+"Screen Recording not yet granted" = "Schermopname nog niet toegestaan";
+"Screen Recording granted!" = "Schermopname toegestaan!";
+"Enable macshot, then try taking a screenshot" = "Schakel macshot in en probeer een schermafbeelding te maken";
+"Open Screen Recording Settings" = "Open schermopname-instellingen";
+"Continue" = "Ga door";
+
+/* OCR Window */
+"Text Recognition" = "Tekstherkenning";
+"Translate to:" = "Vertalen naar:";
+"%d chars · %d words" = "%d tekens · %d woorden";
+"Copy  ⌘↩" = "Kopieer  ⌘↩";
+"AI Search" = "AI-zoeken";
+"Show Original" = "Toon origineel";
+"Translation Failed" = "Vertaling mislukt";
+"Translation" = "Vertaling";
+"(No text detected in the selected area)" = "(Geen tekst gedetecteerd in het geselecteerde gebied)";
+
+/* Upload Toast */
+"URL copied to the clipboard" = "URL gekopieerd naar het klembord";
+"Uploading... %d%%" = "Uploaden... %d%%";
+"Upload failed: %@" = "Upload mislukt: %@";
+"Uploaded! Link copied." = "Geupload! Link gekopieerd.";
+"Uploading to %@... %d%%" = "Uploaden naar %@... %d%%";
+"Open" = "Open";
+
+/* Recording Toast */
+"Recording saved" = "Opname opgeslagen";
+"%@ • Recording saved" = "%@ • Opname opgeslagen";
+"Copy Path" = "Kopieer pad";
+"Path copied!" = "Pad gekopieerd!";
+
+/* Video Editor */
+"macshot Video Editor" = "macshot Video-editor";
+"%@ selected" = "%@ geselecteerd";
+"Exporting..." = "Exporteren...";
+"Export failed" = "Export mislukt";
+"Saved to %@" = "Opgeslagen in %@";
+"Save failed" = "Opslaan mislukt";
+
+/* Barcode Detector */
+/* "Open" and "Copy" are shared with other sections */
+
+/* Save Panel */
+"Save As..." = "Bewaar als...";
+"Choose a folder" = "Kies een map";
+"Save All to Folder…" = "Bewaar alles in map…";
+
+/* Scroll Capture HUD */
+"Auto Scroll" = "Automatisch scrollen";
+"Stop" = "Stop";
+"Scrolling..." = "Scrollen...";
+
+/* Effects Picker (Adjust popover) */
+"Presets" = "Voorinstellingen";
+"Adjustments" = "Aanpassingen";
+"Brightness" = "Helderheid";
+"Contrast" = "Contrast";
+"Saturation" = "Verzadiging";
+"Sharpness" = "Scherpte";
+
+/* Time Ago */
+"just now" = "zojuist";
+"%ds ago" = "%ds geleden";
+"%dm ago" = "%dm geleden";
+"%dh ago" = "%du geleden";
+
+/* Hotkey Labels */
+"History" = "Geschiedenis";
+
+/* Preferences - Shortcuts note */
+"Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Klik op \"Opnemen\" en druk op een toetsencombinatie met ten minste een modifier (⌘, ⌥, ⌃, ⇧) om een sneltoets in te stellen.";

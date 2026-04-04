@@ -1,0 +1,400 @@
+/* Čeština — macshot localization
+ *
+ * To add a new language:
+ * 1. Create a new folder: macshot/<lang-code>.lproj/
+ * 2. Copy this file into that folder
+ * 3. Translate all values (right side of = sign)
+ * 4. Add the language to LanguageManager.availableLanguages in Services/LanguageManager.swift
+ * 5. Add the language code to knownRegions in macshot.xcodeproj/project.pbxproj
+ * 6. Submit a pull request!
+ *
+ * Keys use the English text. Values should be the translation.
+ * Format strings use %@ for strings, %d for integers.
+ * Keep keyboard shortcuts (like ⌘C) untranslated.
+ * Keep brand names (macshot, Google Drive, imgbb, S3) untranslated.
+ */
+
+/* Menu Bar */
+"Capture Area" = "Zachytit oblast";
+"Capture Screen" = "Zachytit obrazovku";
+"Capture OCR" = "Zachytit OCR";
+"Quick Capture" = "Rychle zachytit";
+"Scroll Capture" = "Zachytit posunem";
+"Capture Delay" = "Zachytit se zpozděním";
+"None" = "Žádné";
+"%d seconds" = "%d sekund";
+"Record Area" = "Nahrát oblast";
+"Record Screen" = "Nahrát obrazovku";
+"Recent Captures" = "Nedávné snímky";
+"Show History Panel" = "Zobrazit panel historie";
+"Open Image..." = "Otevřít obrázek...";
+"Open from Clipboard" = "Otevřít ze schránky";
+"Preferences..." = "Předvolby...";
+"Check for Updates..." = "Zkontrolovat aktualizace...";
+"Quit macshot" = "Ukončit macshot";
+"No recent captures" = "Žádné nedávné snímky";
+"Clear History" = "Vymazat historii";
+
+/* History Panel */
+"Copy" = "Kopírovat";
+"Save As..." = "Uložit jako...";
+"Open in Editor" = "Otevřít v editoru";
+"Pin to Screen" = "Připnout na obrazovku";
+"Quick Look" = "Rychlý náhled";
+"Delete" = "Smazat";
+"All" = "Vše";
+"Screenshots" = "Snímky obrazovky";
+"GIFs" = "GIFs";
+"Click to copy · Drag to app" = "Kliknutím kopírovat · Přetáhnout do aplikace";
+"No captures yet" = "Zatím žádné snímky";
+
+/* Floating Thumbnail */
+"Close All" = "Zavřít vše";
+"Save All to Folder…" = "Uložit vše do složky…";
+"Save" = "Uložit";
+
+/* Editor Top Bar */
+"Zoom In" = "Přiblížit";
+"Zoom Out" = "Oddálit";
+"Fit Canvas" = "Přizpůsobit plátnu";
+"Crop" = "Oříznout";
+"Flip Horizontal" = "Převrátit vodorovně";
+"Flip Vertical" = "Převrátit svisle";
+"Add Capture" = "Přidat snímek";
+
+/* Toolbar - Tools */
+"Arrow" = "Šipka";
+"Line" = "Čára";
+"Rectangle" = "Obdélník";
+"Ellipse" = "Elipsa";
+"Pencil" = "Tužka";
+"Pencil (Draw)" = "Tužka (Kreslit)";
+"Marker" = "Zvýrazňovač";
+"Text" = "Text";
+"Number" = "Číslo";
+"Number / Counter" = "Číslo / Počítadlo";
+"Stamp / Emoji" = "Razítko / Emoji";
+"Censor" = "Cenzura";
+"Censor (Pixelate / Blur / Solid)" = "Cenzura (Pixelizace / Rozostření / Plná)";
+"Measure" = "Měření";
+"Measure (px)" = "Měření (px)";
+"Magnify (Loupe)" = "Lupa";
+"Color Sampler" = "Kapátko";
+"Color Picker" = "Výběr barvy";
+"Select & Edit" = "Vybrat a upravit";
+"Color" = "Barva";
+
+/* Toolbar - Actions */
+"Copy to Clipboard" = "Kopírovat do schránky";
+"Save to File" = "Uložit do souboru";
+"Save to" = "Uložit do";
+"Open in Editor Window" = "Otevřít v okně editoru";
+"Pin on Screen" = "Připnout na obrazovku";
+"Pin" = "Připnout";
+"Pin (floating window)" = "Připnout (plovoucí okno)";
+"OCR" = "OCR";
+"OCR Text" = "OCR text";
+"OCR (extract text)" = "OCR (extrahovat text)";
+"Upload" = "Nahrát";
+"Share" = "Sdílet";
+"Undo" = "Zpět";
+"Redo" = "Znovu";
+"Close" = "Zavřít";
+"Remove Background" = "Odstranit pozadí";
+"Beautify" = "Zkrášlit";
+"Adjust" = "Upravit";
+"Adjust (Image Effects)" = "Upravit (Efekty obrázku)";
+"Invert Colors" = "Invertovat barvy";
+"Record" = "Nahrávat";
+"Record screen" = "Nahrávat obrazovku";
+"Translate" = "Přeložit";
+"Auto-Redact sensitive data" = "Automaticky začernit citlivá data";
+"Move Selection" = "Přesunout výběr";
+
+/* Toolbar - Recording */
+"Start Recording" = "Spustit nahrávání";
+"Cancel Recording" = "Zrušit nahrávání";
+"Highlight Mouse Clicks" = "Zvýraznit kliknutí myší";
+"Record System Audio" = "Nahrávat systémový zvuk";
+"Record Microphone" = "Nahrávat mikrofon";
+"Recording Settings" = "Nastavení nahrávání";
+
+/* Tool Options */
+"Size" = "Velikost";
+"Stroke" = "Tah";
+"Radius" = "Poloměr";
+"Start:" = "Začátek:";
+"Draw:" = "Kreslit:";
+"Auto:" = "Auto:";
+"Fill" = "Výplň";
+"Outline" = "Obrys";
+"More Emojis" = "Více emoji";
+"Load Image" = "Načíst obrázek";
+"Gradient Style" = "Styl přechodu";
+"On" = "Zap";
+"Text Only" = "Pouze text";
+"All Text" = "Veškerý text";
+"PII" = "PII";
+"Faces" = "Obličeje";
+"People" = "Osoby";
+"Confirm before upload" = "Potvrdit před nahráním";
+"Flip" = "Převrátit";
+"Smooth" = "Vyhlazení";
+"Smart" = "Chytrý";
+"Padding" = "Odsazení";
+"Shadow" = "Stín";
+"Right-click to add points" = "Pravým tlačítkem přidat body";
+"Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "Držte 1 auto-vertikálně  ·  Držte 2 auto-horizontálně";
+
+/* Overlay / Canvas */
+"Click a window  ·  Drag for custom area  ·  F for full screen" = "Klikněte na okno  ·  Tažením vyberte oblast  ·  F pro celou obrazovku";
+"Drag to select  ·  Click for full screen" = "Tažením vyberte  ·  Kliknutím celá obrazovka";
+"Release to annotate and edit" = "Uvolněte pro anotaci a úpravy";
+"Window snap: " = "Přichycení k oknu: ";
+"ON" = "ZAP";
+"OFF" = "VYP";
+"  (Tab to toggle)" = "  (Tab pro přepnutí)";
+"Right-click to copy" = "Pravým tlačítkem kopírovat";
+"Copied %@" = "Zkopírováno %@";
+"Set color %@" = "Nastavit barvu %@";
+"Draw something first to use the move tool." = "Nejprve něco nakreslete pro použití nástroje přesunu.";
+"Drag to reposition" = "Tažením přemístit";
+
+/* Overlay - Popovers */
+"Format:" = "Formát:";
+"FPS:" = "FPS:";
+"When done:" = "Po dokončení:";
+"Open editor" = "Otevřít editor";
+"Show in Finder" = "Zobrazit ve Finder";
+"Copy to clipboard" = "Kopírovat do schránky";
+
+/* Preferences - General */
+"macshot Preferences" = "Předvolby macshot";
+"General" = "Obecné";
+"Tools" = "Nástroje";
+"Recording" = "Nahrávání";
+"About" = "O aplikaci";
+"Shortcuts" = "Zkratky";
+"Uploads" = "Nahrávání souborů";
+"Language" = "Jazyk";
+"Language:" = "Jazyk:";
+"Restart the app to fully apply the new language." = "Restartujte aplikaci pro úplné použití nového jazyka.";
+"Capture" = "Snímání";
+"Play sound on copy" = "Přehrát zvuk při kopírování";
+"Remember last selection area" = "Zapamatovat poslední vybranou oblast";
+"Remember last selected tool" = "Zapamatovat poslední vybraný nástroj";
+"Show floating thumbnail after capture" = "Zobrazit plovoucí náhled po zachycení";
+"Launch at login" = "Spustit při přihlášení";
+"Show snap alignment guides" = "Zobrazit vodítka zarovnání";
+"Capture mouse cursor in screenshot" = "Zachytit kurzor myši na snímku";
+"Use window title in saved filename" = "Použít název okna v uloženém souboru";
+"Hide menu bar icon" = "Skrýt ikonu v liště";
+"Hotkeys still work. To show the icon again, re-launch macshot." = "Klávesové zkratky stále fungují. Pro opětovné zobrazení ikony znovu spusťte macshot.";
+"Check for updates automatically" = "Automaticky kontrolovat aktualizace";
+"Thumbnail" = "Náhled";
+"  Dismiss after:" = "  Zavřít po:";
+"seconds before auto-dismiss (0 = never)" = "sekund před automatickým zavřením (0 = nikdy)";
+"  Multiple previews:" = "  Více náhledů:";
+"Stack (keep all)" = "Skládat (ponechat vše)";
+"Replace (show only latest)" = "Nahradit (zobrazit pouze poslední)";
+"Output" = "Výstup";
+"Image format:" = "Formát obrázku:";
+"Quality:" = "Kvalita:";
+"%d%%" = "%d%%";
+"Save at standard resolution (1x)" = "Uložit ve standardním rozlišení (1x)";
+"Halves dimensions on Retina displays, ~4x smaller files" = "Poloviční rozměry na Retina displejích, ~4x menší soubory";
+"Embed sRGB color profile" = "Vložit barevný profil sRGB";
+"Ensures consistent colors across different displays" = "Zajistí konzistentní barvy na různých displejích";
+"Screenshot History" = "Historie snímků";
+"History size:" = "Velikost historie:";
+"screenshots kept on disk (0 = off)" = "snímků uchovávaných na disku (0 = vypnuto)";
+"Save Directory" = "Složka pro ukládání";
+"Save folder:" = "Složka pro uložení:";
+"Browse…" = "Procházet…";
+"Appearance" = "Vzhled";
+"Accent color:" = "Barva zvýraznění:";
+"Icon color:" = "Barva ikony:";
+"Reset" = "Obnovit";
+"OCR Capture:" = "OCR snímek:";
+"Show window + copy to clipboard" = "Zobrazit okno + kopírovat do schránky";
+"Show window only" = "Pouze zobrazit okno";
+"Copy to clipboard only" = "Pouze kopírovat do schránky";
+"Enter / Quick Capture:" = "Enter / Rychlé zachycení:";
+"Save to file" = "Uložit do souboru";
+"Save + copy to clipboard" = "Uložit + kopírovat do schránky";
+"OCR Action" = "Akce OCR";
+
+/* Preferences - Shortcuts */
+"Keyboard Shortcuts" = "Klávesové zkratky";
+"Hotkeys" = "Klávesové zkratky";
+"Clear shortcut" = "Vymazat zkratku";
+"Press keys..." = "Stiskněte klávesy...";
+"Waiting..." = "Čekání...";
+
+/* Preferences - Tools */
+"Annotation Tools" = "Nástroje anotace";
+"Hidden tools are removed from the bottom toolbar." = "Skryté nástroje jsou odstraněny ze spodní lišty.";
+"Capture Actions" = "Akce snímání";
+"Bottom Toolbar Actions" = "Akce spodní lišty";
+"Hidden actions are removed from the bottom toolbar." = "Skryté akce jsou odstraněny ze spodní lišty.";
+"Editor Actions" = "Akce editoru";
+"Right Toolbar Actions" = "Akce pravé lišty";
+"Hidden actions are removed from the right toolbar." = "Skryté akce jsou odstraněny z pravé lišty.";
+
+/* Preferences - Recording */
+"Frame rate:" = "Snímková frekvence:";
+"After recording:" = "Po nahrávání:";
+"Save recording to:" = "Uložit nahrávku do:";
+"Clear" = "Vymazat";
+"Max height:" = "Maximální výška:";
+"px (0 = unlimited)" = "px (0 = bez omezení)";
+"Behavior" = "Chování";
+"Auto-scroll (sends synthetic scroll events)" = "Automatické posouvání (odesílá syntetické události posouvání)";
+"Detect fixed/sticky headers" = "Detekovat fixní/přilepené záhlaví";
+"Scroll speed:" = "Rychlost posouvání:";
+"Slow" = "Pomalá";
+"Medium" = "Střední";
+"Fast" = "Rychlá";
+"Very fast" = "Velmi rychlá";
+"5 fps" = "5 fps";
+"10 fps" = "10 fps";
+"15 fps" = "15 fps";
+"24 fps" = "24 fps";
+"30 fps" = "30 fps";
+"60 fps" = "60 fps";
+"120 fps" = "120 fps";
+"MP4 (H.264)" = "MP4 (H.264)";
+"GIF" = "GIF";
+
+/* Preferences - Upload */
+"Upload Service" = "Služba nahrávání";
+"Upload Provider" = "Poskytovatel nahrávání";
+"Provider:" = "Poskytovatel:";
+"Google Drive" = "Google Drive";
+"Google Drive (images + videos)" = "Google Drive (obrázky + videa)";
+"imgbb (images only)" = "imgbb (pouze obrázky)";
+"S3-Compatible (images + videos)" = "S3-kompatibilní (obrázky + videa)";
+"S3-Compatible Storage" = "S3-kompatibilní úložiště";
+"Sign In with Google" = "Přihlásit se přes Google";
+"Sign Out" = "Odhlásit se";
+"Signed in" = "Přihlášen";
+"Not signed in" = "Nepřihlášen";
+"Account:" = "Účet:";
+"Test Connection" = "Test připojení";
+"Fill in endpoint, bucket, and credentials first" = "Nejprve vyplňte endpoint, bucket a přihlašovací údaje";
+"Testing..." = "Testování...";
+"Connection successful!" = "Připojení úspěšné!";
+"Leave empty to use default" = "Ponechte prázdné pro výchozí hodnotu";
+"Endpoint:" = "Endpoint:";
+"Region:" = "Region:";
+"Bucket:" = "Bucket:";
+"Access Key:" = "Přístupový klíč:";
+"Secret Key:" = "Tajný klíč:";
+"Public URL:" = "Veřejná URL:";
+"Path Prefix:" = "Předpona cesty:";
+"API key:" = "API klíč:";
+"Upload History" = "Historie nahrávání";
+"No uploads yet." = "Zatím žádná nahrávání.";
+"Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "Základní URL pro veřejný přístup. Pokud je prázdná, použije se URL S3 endpointu (nemusí být veřejně přístupná).";
+"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "Sdílený klíč je součástí — získejte vlastní bezplatný klíč na imgbb.com/api, pokud narazíte na limity. Pouze obrázky (bez podpory videa).";
+"Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "Funguje s AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 a dalšími S3-kompatibilními službami. Podporuje obrázky a videa.";
+"Configure S3 in Preferences" = "Nastavit S3 v Předvolbách";
+"Sign in to Google Drive in Preferences" = "Přihlásit se ke Google Drive v Předvolbách";
+"Video upload requires Google Drive or S3" = "Nahrávání videa vyžaduje Google Drive nebo S3";
+
+/* Preferences - About */
+"macshot" = "macshot";
+"Version %@ (%@)" = "Verze %@ (%@)";
+"Made by" = "Vytvořil";
+"Licensed under the GPLv3" = "Licencováno pod GPLv3";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "Bezplatný open-source nástroj pro snímky obrazovky a nahrávání pro macOS.\nPlně nativní — vytvořený ve Swift a AppKit.";
+
+/* Alerts */
+"No Image on Clipboard" = "Žádný obrázek ve schránce";
+"Copy an image to the clipboard first, then try again." = "Nejprve zkopírujte obrázek do schránky a zkuste to znovu.";
+"OK" = "OK";
+"Accessibility Access Required" = "Vyžadován přístup k usnadnění";
+"macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot potřebuje oprávnění Usnadnění pro automatické posouvání jiných aplikací. Udělte přístup v Nastavení systému a zkuste to znovu.";
+"Open Settings" = "Otevřít nastavení";
+"Cancel" = "Zrušit";
+"Microphone Access Required" = "Vyžadován přístup k mikrofonu";
+"macshot needs microphone permission to record voice audio. Open System Settings to grant access." = "macshot potřebuje oprávnění k mikrofonu pro nahrávání hlasu. Otevřete Nastavení systému pro udělení přístupu.";
+"Upload to Google Drive?" = "Nahrát na Google Drive?";
+"Upload to S3?" = "Nahrát na S3?";
+"Upload to imgbb.com?" = "Nahrát na imgbb.com?";
+"Your screenshot will be uploaded." = "Váš snímek bude nahrán.";
+
+/* Permission Onboarding */
+"Welcome to macshot" = "Vítejte v macshot";
+"macshot needs one permission" = "macshot potřebuje jedno oprávnění";
+"Screen Recording not yet granted" = "Nahrávání obrazovky zatím nebylo povoleno";
+"Screen Recording granted!" = "Nahrávání obrazovky povoleno!";
+"Enable macshot, then try taking a screenshot" = "Povolte macshot a zkuste pořídit snímek";
+"Open Screen Recording Settings" = "Otevřít nastavení nahrávání obrazovky";
+"Continue" = "Pokračovat";
+
+/* OCR Window */
+"Text Recognition" = "Rozpoznávání textu";
+"Translate to:" = "Přeložit do:";
+"%d chars · %d words" = "%d znaků · %d slov";
+"Copy  ⌘↩" = "Kopírovat  ⌘↩";
+"AI Search" = "AI vyhledávání";
+"Show Original" = "Zobrazit originál";
+"Translation Failed" = "Překlad selhal";
+"Translation" = "Překlad";
+"(No text detected in the selected area)" = "(V vybrané oblasti nebyl rozpoznán žádný text)";
+
+/* Upload Toast */
+"URL copied to the clipboard" = "URL zkopírována do schránky";
+"Uploading... %d%%" = "Nahrávání... %d%%";
+"Upload failed: %@" = "Nahrávání selhalo: %@";
+"Uploaded! Link copied." = "Nahráno! Odkaz zkopírován.";
+"Uploading to %@... %d%%" = "Nahrávání na %@... %d%%";
+"Open" = "Otevřít";
+
+/* Recording Toast */
+"Recording saved" = "Nahrávka uložena";
+"%@ • Recording saved" = "%@ • Nahrávka uložena";
+"Copy Path" = "Kopírovat cestu";
+"Path copied!" = "Cesta zkopírována!";
+
+/* Video Editor */
+"macshot Video Editor" = "macshot Video Editor";
+"%@ selected" = "%@ vybráno";
+"Exporting..." = "Exportování...";
+"Export failed" = "Export selhal";
+"Saved to %@" = "Uloženo do %@";
+"Save failed" = "Uložení selhalo";
+
+/* Barcode Detector */
+/* "Open" and "Copy" are shared with other sections */
+
+/* Save Panel */
+"Save As..." = "Uložit jako...";
+"Choose a folder" = "Vyberte složku";
+"Save All to Folder…" = "Uložit vše do složky…";
+
+/* Scroll Capture HUD */
+"Auto Scroll" = "Automatické posouvání";
+"Stop" = "Zastavit";
+"Scrolling..." = "Posouvání...";
+
+/* Effects Picker (Adjust popover) */
+"Presets" = "Předvolby";
+"Adjustments" = "Úpravy";
+"Brightness" = "Jas";
+"Contrast" = "Kontrast";
+"Saturation" = "Sytost";
+"Sharpness" = "Ostrost";
+
+/* Time Ago */
+"just now" = "právě teď";
+"%ds ago" = "před %ds";
+"%dm ago" = "před %dm";
+"%dh ago" = "před %dh";
+
+/* Hotkey Labels */
+"History" = "Historie";
+
+/* Preferences - Shortcuts note */
+"Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Klikněte na \"Nahrávat\" a stiskněte kombinaci kláves s alespoň jedním modifikátorem (⌘, ⌥, ⌃, ⇧) pro nastavení zkratky.";

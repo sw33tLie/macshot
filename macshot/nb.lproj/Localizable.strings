@@ -1,0 +1,400 @@
+/* Norsk bokmål — macshot localization
+ *
+ * To add a new language:
+ * 1. Create a new folder: macshot/<lang-code>.lproj/
+ * 2. Copy this file into that folder
+ * 3. Translate all values (right side of = sign)
+ * 4. Add the language to LanguageManager.availableLanguages in Services/LanguageManager.swift
+ * 5. Add the language code to knownRegions in macshot.xcodeproj/project.pbxproj
+ * 6. Submit a pull request!
+ *
+ * Keys use the English text. Values should be the translation.
+ * Format strings use %@ for strings, %d for integers.
+ * Keep keyboard shortcuts (like ⌘C) untranslated.
+ * Keep brand names (macshot, Google Drive, imgbb, S3) untranslated.
+ */
+
+/* Menu Bar */
+"Capture Area" = "Ta bilde av omr\U00E5de";
+"Capture Screen" = "Ta bilde av skjerm";
+"Capture OCR" = "Ta bilde for OCR";
+"Quick Capture" = "Hurtigopptak";
+"Scroll Capture" = "Rulleopptak";
+"Capture Delay" = "Forsinket opptak";
+"None" = "Ingen";
+"%d seconds" = "%d sekunder";
+"Record Area" = "Ta opp omr\U00E5de";
+"Record Screen" = "Ta opp skjerm";
+"Recent Captures" = "Nylige opptak";
+"Show History Panel" = "Vis historikkpanel";
+"Open Image..." = "\U00C5pne bilde\U2026";
+"Open from Clipboard" = "\U00C5pne fra utklippstavlen";
+"Preferences..." = "Innstillinger\U2026";
+"Check for Updates..." = "Se etter oppdateringer\U2026";
+"Quit macshot" = "Avslutt macshot";
+"No recent captures" = "Ingen nylige opptak";
+"Clear History" = "T\U00F8m historikk";
+
+/* History Panel */
+"Copy" = "Kopier";
+"Save As..." = "Lagre som\U2026";
+"Open in Editor" = "\U00C5pne i redigering";
+"Pin to Screen" = "Fest til skjerm";
+"Quick Look" = "Hurtigvisning";
+"Delete" = "Slett";
+"All" = "Alle";
+"Screenshots" = "Skjermbilder";
+"GIFs" = "GIF-er";
+"Click to copy \U00B7 Drag to app" = "Klikk for \U00E5 kopiere \U00B7 Dra til app";
+"No captures yet" = "Ingen opptak enn\U00E5";
+
+/* Floating Thumbnail */
+"Close All" = "Lukk alle";
+"Save All to Folder\U2026" = "Lagre alle i mappe\U2026";
+"Save" = "Lagre";
+
+/* Editor Top Bar */
+"Zoom In" = "Zoom inn";
+"Zoom Out" = "Zoom ut";
+"Fit Canvas" = "Tilpass lerret";
+"Crop" = "Besk\U00E6r";
+"Flip Horizontal" = "Speilvend horisontalt";
+"Flip Vertical" = "Speilvend vertikalt";
+"Add Capture" = "Legg til opptak";
+
+/* Toolbar - Tools */
+"Arrow" = "Pil";
+"Line" = "Linje";
+"Rectangle" = "Rektangel";
+"Ellipse" = "Ellipse";
+"Pencil" = "Blyant";
+"Pencil (Draw)" = "Blyant (Tegn)";
+"Marker" = "Markering";
+"Text" = "Tekst";
+"Number" = "Nummer";
+"Number / Counter" = "Nummer / Teller";
+"Stamp / Emoji" = "Stempel / Emoji";
+"Censor" = "Sensur";
+"Censor (Pixelate / Blur / Solid)" = "Sensur (Pikselering / Uskarphet / Heldekkende)";
+"Measure" = "M\U00E5l";
+"Measure (px)" = "M\U00E5l (px)";
+"Magnify (Loupe)" = "Forst\U00F8rr (Lupe)";
+"Color Sampler" = "Fargevelger";
+"Color Picker" = "Fargevelger";
+"Select & Edit" = "Velg og rediger";
+"Color" = "Farge";
+
+/* Toolbar - Actions */
+"Copy to Clipboard" = "Kopier til utklippstavlen";
+"Save to File" = "Lagre til fil";
+"Save to" = "Lagre til";
+"Open in Editor Window" = "\U00C5pne i redigeringsvindu";
+"Pin on Screen" = "Fest p\U00E5 skjerm";
+"Pin" = "Fest";
+"Pin (floating window)" = "Fest (flytende vindu)";
+"OCR" = "OCR";
+"OCR Text" = "OCR-tekst";
+"OCR (extract text)" = "OCR (trekk ut tekst)";
+"Upload" = "Last opp";
+"Share" = "Del";
+"Undo" = "Angre";
+"Redo" = "Gj\U00F8r om";
+"Close" = "Lukk";
+"Remove Background" = "Fjern bakgrunn";
+"Beautify" = "Forskj\U00F8nn";
+"Adjust" = "Juster";
+"Adjust (Image Effects)" = "Juster (Bildeeffekter)";
+"Invert Colors" = "Inverter farger";
+"Record" = "Ta opp";
+"Record screen" = "Ta opp skjerm";
+"Translate" = "Oversett";
+"Auto-Redact sensitive data" = "Skjul sensitiv informasjon automatisk";
+"Move Selection" = "Flytt utvalg";
+
+/* Toolbar - Recording */
+"Start Recording" = "Start opptak";
+"Cancel Recording" = "Avbryt opptak";
+"Highlight Mouse Clicks" = "Fremhev museklikk";
+"Record System Audio" = "Ta opp systemlyd";
+"Record Microphone" = "Ta opp mikrofon";
+"Recording Settings" = "Opptaksinnstillinger";
+
+/* Tool Options */
+"Size" = "St\U00F8rrelse";
+"Stroke" = "Strek";
+"Radius" = "Radius";
+"Start:" = "Start:";
+"Draw:" = "Tegn:";
+"Auto:" = "Auto:";
+"Fill" = "Fyll";
+"Outline" = "Omriss";
+"More Emojis" = "Flere emojier";
+"Load Image" = "Last inn bilde";
+"Gradient Style" = "Gradientstil";
+"On" = "P\U00E5";
+"Text Only" = "Kun tekst";
+"All Text" = "All tekst";
+"PII" = "PII";
+"Faces" = "Ansikter";
+"People" = "Personer";
+"Confirm before upload" = "Bekreft f\U00F8r opplasting";
+"Flip" = "Speilvend";
+"Smooth" = "Jevn";
+"Smart" = "Smart";
+"Padding" = "Utfylling";
+"Shadow" = "Skygge";
+"Right-click to add points" = "H\U00F8yreklikk for \U00E5 legge til punkter";
+"Hold 1 auto-vertical  \U00B7  Hold 2 auto-horizontal" = "Hold 1 auto-vertikal  \U00B7  Hold 2 auto-horisontal";
+
+/* Overlay / Canvas */
+"Click a window  \U00B7  Drag for custom area  \U00B7  F for full screen" = "Klikk et vindu  \U00B7  Dra for egendefinert omr\U00E5de  \U00B7  F for fullskjerm";
+"Drag to select  \U00B7  Click for full screen" = "Dra for \U00E5 velge  \U00B7  Klikk for fullskjerm";
+"Release to annotate and edit" = "Slipp for \U00E5 kommentere og redigere";
+"Window snap: " = "Vindussnapping: ";
+"ON" = "P\U00C5";
+"OFF" = "AV";
+"  (Tab to toggle)" = "  (Tab for \U00E5 veksle)";
+"Right-click to copy" = "H\U00F8yreklikk for \U00E5 kopiere";
+"Copied %@" = "Kopierte %@";
+"Set color %@" = "Sett farge %@";
+"Draw something first to use the move tool." = "Tegn noe f\U00F8rst for \U00E5 bruke flytteverkt\U00F8yet.";
+"Drag to reposition" = "Dra for \U00E5 flytte";
+
+/* Overlay - Popovers */
+"Format:" = "Format:";
+"FPS:" = "FPS:";
+"When done:" = "N\U00E5r ferdig:";
+"Open editor" = "\U00C5pne redigering";
+"Show in Finder" = "Vis i Finder";
+"Copy to clipboard" = "Kopier til utklippstavlen";
+
+/* Preferences - General */
+"macshot Preferences" = "macshot-innstillinger";
+"General" = "Generelt";
+"Tools" = "Verkt\U00F8y";
+"Recording" = "Opptak";
+"About" = "Om";
+"Shortcuts" = "Snarveier";
+"Uploads" = "Opplastinger";
+"Language" = "Spr\U00E5k";
+"Language:" = "Spr\U00E5k:";
+"Restart the app to fully apply the new language." = "Start appen p\U00E5 nytt for \U00E5 bruke det nye spr\U00E5ket.";
+"Capture" = "Opptak";
+"Play sound on copy" = "Spill lyd ved kopiering";
+"Remember last selection area" = "Husk siste utvalgsomr\U00E5de";
+"Remember last selected tool" = "Husk siste valgte verkt\U00F8y";
+"Show floating thumbnail after capture" = "Vis flytende miniatyrbilde etter opptak";
+"Launch at login" = "Start ved innlogging";
+"Show snap alignment guides" = "Vis hjelpelinje for justering";
+"Capture mouse cursor in screenshot" = "Ta med musepeker i skjermbilde";
+"Use window title in saved filename" = "Bruk vindustittel i lagret filnavn";
+"Hide menu bar icon" = "Skjul menylinje-ikon";
+"Hotkeys still work. To show the icon again, re-launch macshot." = "Hurtigtastene fungerer fortsatt. For \U00E5 vise ikonet igjen, start macshot p\U00E5 nytt.";
+"Check for updates automatically" = "Se etter oppdateringer automatisk";
+"Thumbnail" = "Miniatyrbilde";
+"  Dismiss after:" = "  Lukk etter:";
+"seconds before auto-dismiss (0 = never)" = "sekunder f\U00F8r automatisk lukking (0 = aldri)";
+"  Multiple previews:" = "  Flere forh\U00E5ndsvisninger:";
+"Stack (keep all)" = "Stable (behold alle)";
+"Replace (show only latest)" = "Erstatt (vis kun siste)";
+"Output" = "Utdata";
+"Image format:" = "Bildeformat:";
+"Quality:" = "Kvalitet:";
+"%d%%" = "%d%%";
+"Save at standard resolution (1x)" = "Lagre med standard oppl\U00F8sning (1x)";
+"Halves dimensions on Retina displays, ~4x smaller files" = "Halverer dimensjonene p\U00E5 Retina-skjermer, ~4x mindre filer";
+"Embed sRGB color profile" = "Bygg inn sRGB-fargeprofil";
+"Ensures consistent colors across different displays" = "Sikrer konsistente farger p\U00E5 tvers av ulike skjermer";
+"Screenshot History" = "Skjermbildehistorikk";
+"History size:" = "Historikkst\U00F8rrelse:";
+"screenshots kept on disk (0 = off)" = "skjermbilder lagret p\U00E5 disk (0 = av)";
+"Save Directory" = "Lagringsmappe";
+"Save folder:" = "Lagringsmappe:";
+"Browse\U2026" = "Bla gjennom\U2026";
+"Appearance" = "Utseende";
+"Accent color:" = "Aksentfarge:";
+"Icon color:" = "Ikonfarge:";
+"Reset" = "Tilbakestill";
+"OCR Capture:" = "OCR-opptak:";
+"Show window + copy to clipboard" = "Vis vindu + kopier til utklippstavlen";
+"Show window only" = "Vis kun vindu";
+"Copy to clipboard only" = "Kopier kun til utklippstavlen";
+"Enter / Quick Capture:" = "Enter / Hurtigopptak:";
+"Save to file" = "Lagre til fil";
+"Save + copy to clipboard" = "Lagre + kopier til utklippstavlen";
+"OCR Action" = "OCR-handling";
+
+/* Preferences - Shortcuts */
+"Keyboard Shortcuts" = "Tastatursnarveier";
+"Hotkeys" = "Hurtigtaster";
+"Clear shortcut" = "Fjern snarvei";
+"Press keys..." = "Trykk taster\U2026";
+"Waiting..." = "Venter\U2026";
+
+/* Preferences - Tools */
+"Annotation Tools" = "Kommentarverkt\U00F8y";
+"Hidden tools are removed from the bottom toolbar." = "Skjulte verkt\U00F8y fjernes fra den nederste verkt\U00F8ylinjen.";
+"Capture Actions" = "Opptakshandlinger";
+"Bottom Toolbar Actions" = "Handlinger i den nederste verkt\U00F8ylinjen";
+"Hidden actions are removed from the bottom toolbar." = "Skjulte handlinger fjernes fra den nederste verkt\U00F8ylinjen.";
+"Editor Actions" = "Redigeringshandlinger";
+"Right Toolbar Actions" = "Handlinger i h\U00F8yre verkt\U00F8ylinje";
+"Hidden actions are removed from the right toolbar." = "Skjulte handlinger fjernes fra h\U00F8yre verkt\U00F8ylinje.";
+
+/* Preferences - Recording */
+"Frame rate:" = "Bildefrekvens:";
+"After recording:" = "Etter opptak:";
+"Save recording to:" = "Lagre opptak til:";
+"Clear" = "T\U00F8m";
+"Max height:" = "Maks h\U00F8yde:";
+"px (0 = unlimited)" = "px (0 = ubegrenset)";
+"Behavior" = "Atferd";
+"Auto-scroll (sends synthetic scroll events)" = "Autorulling (sender syntetiske rullehendelser)";
+"Detect fixed/sticky headers" = "Oppdag faste/klebrige topptekster";
+"Scroll speed:" = "Rullehastighet:";
+"Slow" = "Sakte";
+"Medium" = "Middels";
+"Fast" = "Raskt";
+"Very fast" = "Veldig raskt";
+"5 fps" = "5 fps";
+"10 fps" = "10 fps";
+"15 fps" = "15 fps";
+"24 fps" = "24 fps";
+"30 fps" = "30 fps";
+"60 fps" = "60 fps";
+"120 fps" = "120 fps";
+"MP4 (H.264)" = "MP4 (H.264)";
+"GIF" = "GIF";
+
+/* Preferences - Upload */
+"Upload Service" = "Opplastingstjeneste";
+"Upload Provider" = "Opplastingsleverand\U00F8r";
+"Provider:" = "Leverand\U00F8r:";
+"Google Drive" = "Google Drive";
+"Google Drive (images + videos)" = "Google Drive (bilder + videoer)";
+"imgbb (images only)" = "imgbb (kun bilder)";
+"S3-Compatible (images + videos)" = "S3-kompatibel (bilder + videoer)";
+"S3-Compatible Storage" = "S3-kompatibel lagring";
+"Sign In with Google" = "Logg inn med Google";
+"Sign Out" = "Logg ut";
+"Signed in" = "Innlogget";
+"Not signed in" = "Ikke innlogget";
+"Account:" = "Konto:";
+"Test Connection" = "Test tilkobling";
+"Fill in endpoint, bucket, and credentials first" = "Fyll inn endepunkt, beholder og legitimasjon f\U00F8rst";
+"Testing..." = "Tester\U2026";
+"Connection successful!" = "Tilkobling vellykket!";
+"Leave empty to use default" = "La st\U00E5 tom for \U00E5 bruke standard";
+"Endpoint:" = "Endepunkt:";
+"Region:" = "Region:";
+"Bucket:" = "Beholder:";
+"Access Key:" = "Tilgangsn\U00F8kkel:";
+"Secret Key:" = "Hemmelig n\U00F8kkel:";
+"Public URL:" = "Offentlig URL:";
+"Path Prefix:" = "Sti-prefiks:";
+"API key:" = "API-n\U00F8kkel:";
+"Upload History" = "Opplastingshistorikk";
+"No uploads yet." = "Ingen opplastinger enn\U00E5.";
+"Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "Basis-URL for offentlig tilgang. Hvis tom, brukes S3-endepunktets URL (som kanskje ikke er offentlig tilgjengelig).";
+"A shared key is included \U2014 get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "En delt n\U00F8kkel er inkludert \U2014 f\U00E5 din egen gratis n\U00F8kkel p\U00E5 imgbb.com/api hvis du n\U00E5r hastighetsgrenser. Kun bilder (ingen st\U00F8tte for video).";
+"Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "Fungerer med AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 og andre S3-kompatible tjenester. St\U00F8tter bilder og videoer.";
+"Configure S3 in Preferences" = "Konfigurer S3 i innstillingene";
+"Sign in to Google Drive in Preferences" = "Logg inn p\U00E5 Google Drive i innstillingene";
+"Video upload requires Google Drive or S3" = "Videoopplasting krever Google Drive eller S3";
+
+/* Preferences - About */
+"macshot" = "macshot";
+"Version %@ (%@)" = "Versjon %@ (%@)";
+"Made by" = "Laget av";
+"Licensed under the GPLv3" = "Lisensiert under GPLv3";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native \U2014 built with Swift and AppKit." = "Et gratis skjermbilde- og skjermopptaksverkt\U00F8y med \U00E5pen kildekode for macOS.\nHelt innebygd \U2014 bygget med Swift og AppKit.";
+
+/* Alerts */
+"No Image on Clipboard" = "Ingen bilde p\U00E5 utklippstavlen";
+"Copy an image to the clipboard first, then try again." = "Kopier et bilde til utklippstavlen f\U00F8rst, og pr\U00F8v igjen.";
+"OK" = "OK";
+"Accessibility Access Required" = "Tilgjengelighetstilgang p\U00E5krevd";
+"macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot trenger tilgjengelighetstillatelse for \U00E5 autorulling i andre apper. Gi tilgang i Systeminnstillinger, og pr\U00F8v igjen.";
+"Open Settings" = "\U00C5pne innstillinger";
+"Cancel" = "Avbryt";
+"Microphone Access Required" = "Mikrofontilgang p\U00E5krevd";
+"macshot needs microphone permission to record voice audio. Open System Settings to grant access." = "macshot trenger mikrofontillatelse for \U00E5 ta opp lyd. \U00C5pne Systeminnstillinger for \U00E5 gi tilgang.";
+"Upload to Google Drive?" = "Laste opp til Google Drive?";
+"Upload to S3?" = "Laste opp til S3?";
+"Upload to imgbb.com?" = "Laste opp til imgbb.com?";
+"Your screenshot will be uploaded." = "Skjermbildet ditt vil bli lastet opp.";
+
+/* Permission Onboarding */
+"Welcome to macshot" = "Velkommen til macshot";
+"macshot needs one permission" = "macshot trenger \U00E9n tillatelse";
+"Screen Recording not yet granted" = "Skjermopptak er ikke gitt enn\U00E5";
+"Screen Recording granted!" = "Skjermopptak er gitt!";
+"Enable macshot, then try taking a screenshot" = "Aktiver macshot, og pr\U00F8v \U00E5 ta et skjermbilde";
+"Open Screen Recording Settings" = "\U00C5pne innstillinger for skjermopptak";
+"Continue" = "Fortsett";
+
+/* OCR Window */
+"Text Recognition" = "Tekstgjenkjenning";
+"Translate to:" = "Oversett til:";
+"%d chars \U00B7 %d words" = "%d tegn \U00B7 %d ord";
+"Copy  \U2318\U21A9" = "Kopier  \U2318\U21A9";
+"AI Search" = "AI-s\U00F8k";
+"Show Original" = "Vis original";
+"Translation Failed" = "Oversettelse mislyktes";
+"Translation" = "Oversettelse";
+"(No text detected in the selected area)" = "(Ingen tekst oppdaget i det valgte omr\U00E5det)";
+
+/* Upload Toast */
+"URL copied to the clipboard" = "URL kopiert til utklippstavlen";
+"Uploading... %d%%" = "Laster opp\U2026 %d%%";
+"Upload failed: %@" = "Opplasting mislyktes: %@";
+"Uploaded! Link copied." = "Lastet opp! Lenke kopiert.";
+"Uploading to %@... %d%%" = "Laster opp til %@\U2026 %d%%";
+"Open" = "\U00C5pne";
+
+/* Recording Toast */
+"Recording saved" = "Opptak lagret";
+"%@ \U2022 Recording saved" = "%@ \U2022 Opptak lagret";
+"Copy Path" = "Kopier sti";
+"Path copied!" = "Sti kopiert!";
+
+/* Video Editor */
+"macshot Video Editor" = "macshot Videoredigering";
+"%@ selected" = "%@ valgt";
+"Exporting..." = "Eksporterer\U2026";
+"Export failed" = "Eksport mislyktes";
+"Saved to %@" = "Lagret til %@";
+"Save failed" = "Lagring mislyktes";
+
+/* Barcode Detector */
+/* "Open" and "Copy" are shared with other sections */
+
+/* Save Panel */
+"Save As..." = "Lagre som\U2026";
+"Choose a folder" = "Velg en mappe";
+"Save All to Folder\U2026" = "Lagre alle i mappe\U2026";
+
+/* Scroll Capture HUD */
+"Auto Scroll" = "Autorulling";
+"Stop" = "Stopp";
+"Scrolling..." = "Ruller\U2026";
+
+/* Effects Picker (Adjust popover) */
+"Presets" = "Forh\U00E5ndsinnstillinger";
+"Adjustments" = "Justeringer";
+"Brightness" = "Lysstyrke";
+"Contrast" = "Kontrast";
+"Saturation" = "Metning";
+"Sharpness" = "Skarphet";
+
+/* Time Ago */
+"just now" = "akkurat n\U00E5";
+"%ds ago" = "%ds siden";
+"%dm ago" = "%dm siden";
+"%dh ago" = "%dt siden";
+
+/* Hotkey Labels */
+"History" = "Historikk";
+
+/* Preferences - Shortcuts note */
+"Click \"Record\" and press a key combination with at least one modifier (\U2318, \U2325, \U2303, \U21E7) to set a shortcut." = "Klikk \"Ta opp\" og trykk en tastekombinasjon med minst \U00E9n modifikator (\U2318, \U2325, \U2303, \U21E7) for \U00E5 angi en snarvei.";

@@ -1,0 +1,400 @@
+/* 한국어 — macshot localization
+ *
+ * To add a new language:
+ * 1. Create a new folder: macshot/<lang-code>.lproj/
+ * 2. Copy this file into that folder
+ * 3. Translate all values (right side of = sign)
+ * 4. Add the language to LanguageManager.availableLanguages in Services/LanguageManager.swift
+ * 5. Add the language code to knownRegions in macshot.xcodeproj/project.pbxproj
+ * 6. Submit a pull request!
+ *
+ * Keys use the English text. Values should be the translation.
+ * Format strings use %@ for strings, %d for integers.
+ * Keep keyboard shortcuts (like ⌘C) untranslated.
+ * Keep brand names (macshot, Google Drive, imgbb, S3) untranslated.
+ */
+
+/* Menu Bar */
+"Capture Area" = "영역 캡처";
+"Capture Screen" = "화면 캡처";
+"Capture OCR" = "OCR 캡처";
+"Quick Capture" = "빠른 캡처";
+"Scroll Capture" = "스크롤 캡처";
+"Capture Delay" = "지연 캡처";
+"None" = "없음";
+"%d seconds" = "%d초";
+"Record Area" = "영역 녹화";
+"Record Screen" = "화면 녹화";
+"Recent Captures" = "최근 캡처";
+"Show History Panel" = "기록 패널 보기";
+"Open Image..." = "이미지 열기...";
+"Open from Clipboard" = "클립보드에서 열기";
+"Preferences..." = "환경설정...";
+"Check for Updates..." = "업데이트 확인...";
+"Quit macshot" = "macshot 종료";
+"No recent captures" = "최근 캡처 없음";
+"Clear History" = "기록 지우기";
+
+/* History Panel */
+"Copy" = "복사";
+"Save As..." = "다른 이름으로 저장...";
+"Open in Editor" = "편집기에서 열기";
+"Pin to Screen" = "화면에 고정";
+"Quick Look" = "훑어보기";
+"Delete" = "삭제";
+"All" = "전체";
+"Screenshots" = "스크린샷";
+"GIFs" = "GIFs";
+"Click to copy · Drag to app" = "클릭하여 복사 · 앱으로 드래그";
+"No captures yet" = "아직 캡처가 없습니다";
+
+/* Floating Thumbnail */
+"Close All" = "모두 닫기";
+"Save All to Folder…" = "모두 폴더에 저장…";
+"Save" = "저장";
+
+/* Editor Top Bar */
+"Zoom In" = "확대";
+"Zoom Out" = "축소";
+"Fit Canvas" = "캔버스에 맞추기";
+"Crop" = "자르기";
+"Flip Horizontal" = "좌우 뒤집기";
+"Flip Vertical" = "상하 뒤집기";
+"Add Capture" = "캡처 추가";
+
+/* Toolbar - Tools */
+"Arrow" = "화살표";
+"Line" = "직선";
+"Rectangle" = "사각형";
+"Ellipse" = "타원";
+"Pencil" = "연필";
+"Pencil (Draw)" = "연필 (그리기)";
+"Marker" = "형광펜";
+"Text" = "텍스트";
+"Number" = "번호";
+"Number / Counter" = "번호 / 카운터";
+"Stamp / Emoji" = "스탬프 / 이모지";
+"Censor" = "검열";
+"Censor (Pixelate / Blur / Solid)" = "검열 (모자이크 / 흐리게 / 단색)";
+"Measure" = "측정";
+"Measure (px)" = "측정 (px)";
+"Magnify (Loupe)" = "확대경 (돋보기)";
+"Color Sampler" = "색상 추출";
+"Color Picker" = "색상 선택기";
+"Select & Edit" = "선택 및 편집";
+"Color" = "색상";
+
+/* Toolbar - Actions */
+"Copy to Clipboard" = "클립보드에 복사";
+"Save to File" = "파일로 저장";
+"Save to" = "저장 위치";
+"Open in Editor Window" = "편집기 윈도우에서 열기";
+"Pin on Screen" = "화면에 고정";
+"Pin" = "고정";
+"Pin (floating window)" = "고정 (플로팅 윈도우)";
+"OCR" = "OCR";
+"OCR Text" = "OCR 텍스트";
+"OCR (extract text)" = "OCR (텍스트 추출)";
+"Upload" = "업로드";
+"Share" = "공유";
+"Undo" = "실행 취소";
+"Redo" = "다시 실행";
+"Close" = "닫기";
+"Remove Background" = "배경 제거";
+"Beautify" = "꾸미기";
+"Adjust" = "조정";
+"Adjust (Image Effects)" = "조정 (이미지 효과)";
+"Invert Colors" = "색상 반전";
+"Record" = "녹화";
+"Record screen" = "화면 녹화";
+"Translate" = "번역";
+"Auto-Redact sensitive data" = "민감 정보 자동 가리기";
+"Move Selection" = "선택 영역 이동";
+
+/* Toolbar - Recording */
+"Start Recording" = "녹화 시작";
+"Cancel Recording" = "녹화 취소";
+"Highlight Mouse Clicks" = "마우스 클릭 강조";
+"Record System Audio" = "시스템 오디오 녹음";
+"Record Microphone" = "마이크 녹음";
+"Recording Settings" = "녹화 설정";
+
+/* Tool Options */
+"Size" = "크기";
+"Stroke" = "선";
+"Radius" = "반경";
+"Start:" = "시작:";
+"Draw:" = "그리기:";
+"Auto:" = "자동:";
+"Fill" = "채우기";
+"Outline" = "외곽선";
+"More Emojis" = "더 많은 이모지";
+"Load Image" = "이미지 불러오기";
+"Gradient Style" = "그라데이션 스타일";
+"On" = "켜기";
+"Text Only" = "텍스트만";
+"All Text" = "전체 텍스트";
+"PII" = "개인정보";
+"Faces" = "얼굴";
+"People" = "사람";
+"Confirm before upload" = "업로드 전 확인";
+"Flip" = "뒤집기";
+"Smooth" = "부드럽게";
+"Smart" = "스마트";
+"Padding" = "여백";
+"Shadow" = "그림자";
+"Right-click to add points" = "우클릭으로 포인트 추가";
+"Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "1 유지 자동 세로  ·  2 유지 자동 가로";
+
+/* Overlay / Canvas */
+"Click a window  ·  Drag for custom area  ·  F for full screen" = "윈도우 클릭  ·  드래그하여 영역 선택  ·  F 전체 화면";
+"Drag to select  ·  Click for full screen" = "드래그하여 선택  ·  클릭하여 전체 화면";
+"Release to annotate and edit" = "놓으면 주석 및 편집";
+"Window snap: " = "윈도우 스냅: ";
+"ON" = "켜짐";
+"OFF" = "꺼짐";
+"  (Tab to toggle)" = "  (Tab으로 전환)";
+"Right-click to copy" = "우클릭하여 복사";
+"Copied %@" = "%@ 복사됨";
+"Set color %@" = "색상 %@ 설정됨";
+"Draw something first to use the move tool." = "이동 도구를 사용하려면 먼저 무언가를 그리세요.";
+"Drag to reposition" = "드래그하여 위치 이동";
+
+/* Overlay - Popovers */
+"Format:" = "포맷:";
+"FPS:" = "FPS:";
+"When done:" = "완료 시:";
+"Open editor" = "편집기 열기";
+"Show in Finder" = "Finder에서 보기";
+"Copy to clipboard" = "클립보드에 복사";
+
+/* Preferences - General */
+"macshot Preferences" = "macshot 환경설정";
+"General" = "일반";
+"Tools" = "도구";
+"Recording" = "녹화";
+"About" = "정보";
+"Shortcuts" = "단축키";
+"Uploads" = "업로드";
+"Language" = "언어";
+"Language:" = "언어:";
+"Restart the app to fully apply the new language." = "새 언어를 완전히 적용하려면 앱을 재시작하세요.";
+"Capture" = "캡처";
+"Play sound on copy" = "복사 시 소리 재생";
+"Remember last selection area" = "마지막 선택 영역 기억";
+"Remember last selected tool" = "마지막 선택 도구 기억";
+"Show floating thumbnail after capture" = "캡처 후 플로팅 썸네일 표시";
+"Launch at login" = "로그인 시 실행";
+"Show snap alignment guides" = "스냅 정렬 가이드 표시";
+"Capture mouse cursor in screenshot" = "스크린샷에 마우스 커서 포함";
+"Use window title in saved filename" = "저장 파일명에 윈도우 제목 사용";
+"Hide menu bar icon" = "메뉴 막대 아이콘 숨기기";
+"Hotkeys still work. To show the icon again, re-launch macshot." = "단축키는 계속 작동합니다. 아이콘을 다시 표시하려면 macshot을 재실행하세요.";
+"Check for updates automatically" = "자동으로 업데이트 확인";
+"Thumbnail" = "썸네일";
+"  Dismiss after:" = "  자동 닫기:";
+"seconds before auto-dismiss (0 = never)" = "초 후 자동 닫기 (0 = 사용 안 함)";
+"  Multiple previews:" = "  여러 미리보기:";
+"Stack (keep all)" = "쌓기 (모두 유지)";
+"Replace (show only latest)" = "교체 (최신만 표시)";
+"Output" = "출력";
+"Image format:" = "이미지 포맷:";
+"Quality:" = "품질:";
+"%d%%" = "%d%%";
+"Save at standard resolution (1x)" = "표준 해상도(1x)로 저장";
+"Halves dimensions on Retina displays, ~4x smaller files" = "Retina 디스플레이에서 크기를 절반으로 줄여 파일 약 4배 축소";
+"Embed sRGB color profile" = "sRGB 색상 프로파일 포함";
+"Ensures consistent colors across different displays" = "다른 디스플레이에서도 일관된 색상 보장";
+"Screenshot History" = "스크린샷 기록";
+"History size:" = "기록 크기:";
+"screenshots kept on disk (0 = off)" = "디스크에 보관할 스크린샷 수 (0 = 사용 안 함)";
+"Save Directory" = "저장 폴더";
+"Save folder:" = "저장 폴더:";
+"Browse…" = "찾아보기…";
+"Appearance" = "모양새";
+"Accent color:" = "강조 색상:";
+"Icon color:" = "아이콘 색상:";
+"Reset" = "재설정";
+"OCR Capture:" = "OCR 캡처:";
+"Show window + copy to clipboard" = "윈도우 표시 + 클립보드에 복사";
+"Show window only" = "윈도우만 표시";
+"Copy to clipboard only" = "클립보드에만 복사";
+"Enter / Quick Capture:" = "Enter / 빠른 캡처:";
+"Save to file" = "파일로 저장";
+"Save + copy to clipboard" = "저장 + 클립보드에 복사";
+"OCR Action" = "OCR 동작";
+
+/* Preferences - Shortcuts */
+"Keyboard Shortcuts" = "키보드 단축키";
+"Hotkeys" = "단축키";
+"Clear shortcut" = "단축키 지우기";
+"Press keys..." = "키를 누르세요...";
+"Waiting..." = "대기 중...";
+
+/* Preferences - Tools */
+"Annotation Tools" = "주석 도구";
+"Hidden tools are removed from the bottom toolbar." = "숨긴 도구는 하단 도구 막대에서 제거됩니다.";
+"Capture Actions" = "캡처 동작";
+"Bottom Toolbar Actions" = "하단 도구 막대 동작";
+"Hidden actions are removed from the bottom toolbar." = "숨긴 동작은 하단 도구 막대에서 제거됩니다.";
+"Editor Actions" = "편집기 동작";
+"Right Toolbar Actions" = "우측 도구 막대 동작";
+"Hidden actions are removed from the right toolbar." = "숨긴 동작은 우측 도구 막대에서 제거됩니다.";
+
+/* Preferences - Recording */
+"Frame rate:" = "프레임 레이트:";
+"After recording:" = "녹화 후:";
+"Save recording to:" = "녹화 저장 위치:";
+"Clear" = "지우기";
+"Max height:" = "최대 높이:";
+"px (0 = unlimited)" = "px (0 = 무제한)";
+"Behavior" = "동작";
+"Auto-scroll (sends synthetic scroll events)" = "자동 스크롤 (가상 스크롤 이벤트 전송)";
+"Detect fixed/sticky headers" = "고정/스티키 헤더 감지";
+"Scroll speed:" = "스크롤 속도:";
+"Slow" = "느리게";
+"Medium" = "보통";
+"Fast" = "빠르게";
+"Very fast" = "매우 빠르게";
+"5 fps" = "5 fps";
+"10 fps" = "10 fps";
+"15 fps" = "15 fps";
+"24 fps" = "24 fps";
+"30 fps" = "30 fps";
+"60 fps" = "60 fps";
+"120 fps" = "120 fps";
+"MP4 (H.264)" = "MP4 (H.264)";
+"GIF" = "GIF";
+
+/* Preferences - Upload */
+"Upload Service" = "업로드 서비스";
+"Upload Provider" = "업로드 제공자";
+"Provider:" = "제공자:";
+"Google Drive" = "Google Drive";
+"Google Drive (images + videos)" = "Google Drive (이미지 + 동영상)";
+"imgbb (images only)" = "imgbb (이미지만)";
+"S3-Compatible (images + videos)" = "S3 호환 (이미지 + 동영상)";
+"S3-Compatible Storage" = "S3 호환 저장소";
+"Sign In with Google" = "Google로 로그인";
+"Sign Out" = "로그아웃";
+"Signed in" = "로그인됨";
+"Not signed in" = "로그인되지 않음";
+"Account:" = "계정:";
+"Test Connection" = "연결 테스트";
+"Fill in endpoint, bucket, and credentials first" = "먼저 엔드포인트, 버킷, 자격 증명을 입력하세요";
+"Testing..." = "테스트 중...";
+"Connection successful!" = "연결 성공!";
+"Leave empty to use default" = "기본값을 사용하려면 비워두세요";
+"Endpoint:" = "엔드포인트:";
+"Region:" = "리전:";
+"Bucket:" = "버킷:";
+"Access Key:" = "액세스 키:";
+"Secret Key:" = "시크릿 키:";
+"Public URL:" = "공개 URL:";
+"Path Prefix:" = "경로 접두사:";
+"API key:" = "API 키:";
+"Upload History" = "업로드 기록";
+"No uploads yet." = "아직 업로드가 없습니다.";
+"Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "공개 접근용 기본 URL입니다. 비어 있으면 S3 엔드포인트 URL이 사용됩니다 (공개 접근이 불가능할 수 있음).";
+"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "공유 키가 포함되어 있습니다. 요청 제한에 도달하면 imgbb.com/api에서 무료 키를 받으세요. 이미지만 지원됩니다 (동영상 미지원).";
+"Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 및 기타 S3 호환 서비스와 사용할 수 있습니다. 이미지와 동영상을 지원합니다.";
+"Configure S3 in Preferences" = "환경설정에서 S3 구성";
+"Sign in to Google Drive in Preferences" = "환경설정에서 Google Drive에 로그인";
+"Video upload requires Google Drive or S3" = "동영상 업로드에는 Google Drive 또는 S3가 필요합니다";
+
+/* Preferences - About */
+"macshot" = "macshot";
+"Version %@ (%@)" = "버전 %@ (%@)";
+"Made by" = "제작자";
+"Licensed under the GPLv3" = "GPLv3 라이선스";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "macOS용 무료 오픈소스 스크린샷 및 화면 녹화 도구입니다.\nSwift와 AppKit으로 제작된 완전한 네이티브 앱입니다.";
+
+/* Alerts */
+"No Image on Clipboard" = "클립보드에 이미지 없음";
+"Copy an image to the clipboard first, then try again." = "먼저 이미지를 클립보드에 복사한 후 다시 시도하세요.";
+"OK" = "확인";
+"Accessibility Access Required" = "손쉬운 사용 권한 필요";
+"macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot이 다른 앱을 자동 스크롤하려면 손쉬운 사용 권한이 필요합니다. 시스템 설정에서 권한을 허용한 후 다시 시도하세요.";
+"Open Settings" = "설정 열기";
+"Cancel" = "취소";
+"Microphone Access Required" = "마이크 접근 권한 필요";
+"macshot needs microphone permission to record voice audio. Open System Settings to grant access." = "macshot이 음성을 녹음하려면 마이크 권한이 필요합니다. 시스템 설정을 열어 권한을 허용하세요.";
+"Upload to Google Drive?" = "Google Drive에 업로드하시겠습니까?";
+"Upload to S3?" = "S3에 업로드하시겠습니까?";
+"Upload to imgbb.com?" = "imgbb.com에 업로드하시겠습니까?";
+"Your screenshot will be uploaded." = "스크린샷이 업로드됩니다.";
+
+/* Permission Onboarding */
+"Welcome to macshot" = "macshot에 오신 것을 환영합니다";
+"macshot needs one permission" = "macshot에 권한 하나가 필요합니다";
+"Screen Recording not yet granted" = "화면 기록 권한이 아직 허용되지 않았습니다";
+"Screen Recording granted!" = "화면 기록 권한이 허용되었습니다!";
+"Enable macshot, then try taking a screenshot" = "macshot을 활성화한 후 스크린샷을 찍어보세요";
+"Open Screen Recording Settings" = "화면 기록 설정 열기";
+"Continue" = "계속";
+
+/* OCR Window */
+"Text Recognition" = "텍스트 인식";
+"Translate to:" = "번역 대상:";
+"%d chars · %d words" = "%d자 · %d단어";
+"Copy  ⌘↩" = "복사  ⌘↩";
+"AI Search" = "AI 검색";
+"Show Original" = "원본 보기";
+"Translation Failed" = "번역 실패";
+"Translation" = "번역";
+"(No text detected in the selected area)" = "(선택한 영역에서 텍스트가 감지되지 않았습니다)";
+
+/* Upload Toast */
+"URL copied to the clipboard" = "URL이 클립보드에 복사되었습니다";
+"Uploading... %d%%" = "업로드 중... %d%%";
+"Upload failed: %@" = "업로드 실패: %@";
+"Uploaded! Link copied." = "업로드 완료! 링크가 복사되었습니다.";
+"Uploading to %@... %d%%" = "%@에 업로드 중... %d%%";
+"Open" = "열기";
+
+/* Recording Toast */
+"Recording saved" = "녹화 저장됨";
+"%@ • Recording saved" = "%@ · 녹화 저장됨";
+"Copy Path" = "경로 복사";
+"Path copied!" = "경로가 복사되었습니다!";
+
+/* Video Editor */
+"macshot Video Editor" = "macshot 비디오 편집기";
+"%@ selected" = "%@ 선택됨";
+"Exporting..." = "내보내는 중...";
+"Export failed" = "내보내기 실패";
+"Saved to %@" = "%@에 저장됨";
+"Save failed" = "저장 실패";
+
+/* Barcode Detector */
+/* "Open" and "Copy" are shared with other sections */
+
+/* Save Panel */
+"Save As..." = "다른 이름으로 저장...";
+"Choose a folder" = "폴더 선택";
+"Save All to Folder…" = "모두 폴더에 저장…";
+
+/* Scroll Capture HUD */
+"Auto Scroll" = "자동 스크롤";
+"Stop" = "중지";
+"Scrolling..." = "스크롤 중...";
+
+/* Effects Picker (Adjust popover) */
+"Presets" = "프리셋";
+"Adjustments" = "조정";
+"Brightness" = "밝기";
+"Contrast" = "대비";
+"Saturation" = "채도";
+"Sharpness" = "선명도";
+
+/* Time Ago */
+"just now" = "방금 전";
+"%ds ago" = "%d초 전";
+"%dm ago" = "%d분 전";
+"%dh ago" = "%d시간 전";
+
+/* Hotkey Labels */
+"History" = "기록";
+
+/* Preferences - Shortcuts note */
+"Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "\"녹화\"를 클릭하고 하나 이상의 보조 키(⌘, ⌥, ⌃, ⇧)가 포함된 키 조합을 눌러 단축키를 설정하세요.";
