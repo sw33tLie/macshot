@@ -272,15 +272,16 @@ jobs:
             --notes-file release_notes.md
 
       # ── 12. Commit appcast.xml to main ─────────────────────────────────────
-      - name: Commit appcast
+      - name: Commit appcast + update website version
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git fetch origin main
           git checkout main
-          git add appcast.xml
-          git diff --cached --quiet && echo "No appcast changes" || {
-            git commit -m "ci: update appcast.xml for v${VERSION}"
+          sed -i '' "s/v[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*/v${VERSION}/" website/index.html
+          git add appcast.xml website/index.html
+          git diff --cached --quiet && echo "No changes" || {
+            git commit -m "ci: update appcast.xml + website version for v${VERSION}"
             git push origin main
           }
 
