@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>macshot — Free Screenshot & Recording Tool for macOS</title>
+<meta name="description" content="Free, open-source screenshot and screen recording tool for macOS. Native Swift + AppKit. Annotate, blur, beautify, upload. No Electron.">
+<meta name="theme-color" content="#211BEF">
+<meta property="og:title" content="macshot — Free Screenshot & Recording Tool for macOS">
+<meta property="og:description" content="Capture, annotate, record. Native, fast, free. The screenshot tool Apple should have made.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://macshot.io">
+<meta property="og:image" content="https://macshot.io/preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--accent:#3D7CFB;--accent2:#211BEF;--bg:#0a0a0f;--card:#12121a;--border:#1e1e2e;--text:#e4e4ed;--muted:#8888a0;--radius:12px}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* Glow background */
+.glow{position:fixed;top:-40%;left:50%;transform:translateX(-50%);width:800px;height:800px;background:radial-gradient(circle,rgba(61,124,251,.08) 0%,transparent 70%);pointer-events:none;z-index:0}
+
+/* Layout */
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+section{padding:80px 0}
+
+/* Nav */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);background:rgba(10,10,15,.75);border-bottom:1px solid var(--border)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:56px}
+nav .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;color:#fff}
+nav .logo img{width:28px;height:28px}
+nav .links{display:flex;gap:24px;align-items:center;font-size:14px}
+nav .links a{color:var(--muted);transition:color .2s}
+nav .links a:hover{color:#fff;text-decoration:none}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:8px;font-weight:600;font-size:14px;transition:all .2s;border:none;cursor:pointer}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#5090ff;text-decoration:none;transform:translateY(-1px)}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn-outline:hover{border-color:var(--muted);text-decoration:none}
+.btn-big{padding:14px 32px;font-size:16px;border-radius:10px}
+
+/* Hero */
+.hero{padding-top:140px;text-align:center}
+.hero h1{font-size:clamp(36px,6vw,64px);font-weight:800;letter-spacing:-1.5px;line-height:1.1;background:linear-gradient(135deg,#fff 30%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero .sub{font-size:clamp(16px,2.5vw,20px);color:var(--muted);max-width:600px;margin:20px auto 0}
+.hero .actions{display:flex;gap:12px;justify-content:center;margin-top:32px;flex-wrap:wrap}
+.hero .meta{margin-top:16px;font-size:13px;color:var(--muted)}
+.hero .meta span{margin:0 8px}
+
+/* Preview */
+.preview{margin-top:48px;text-align:center}
+.preview img{max-width:100%;border-radius:16px;box-shadow:0 32px 80px rgba(0,0,0,.5),0 0 0 1px var(--border);animation:float 6s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+/* Features grid */
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.feature{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;transition:border-color .3s,transform .3s}
+.feature:hover{border-color:rgba(61,124,251,.3);transform:translateY(-2px)}
+.feature .icon{font-size:28px;margin-bottom:12px}
+.feature h3{font-size:17px;font-weight:700;margin-bottom:6px}
+.feature p{font-size:14px;color:var(--muted);line-height:1.5}
+
+/* Section headers */
+.section-label{text-align:center;margin-bottom:48px}
+.section-label h2{font-size:clamp(28px,4vw,40px);font-weight:800;letter-spacing:-1px}
+.section-label p{color:var(--muted);margin-top:8px;font-size:16px}
+
+/* Tools strip */
+.tools-strip{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:48px}
+.tool-tag{background:var(--card);border:1px solid var(--border);padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;white-space:nowrap}
+
+/* Install */
+.install-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:700px;margin:0 auto}
+@media(max-width:600px){.install-grid{grid-template-columns:1fr}}
+.install-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;text-align:center}
+.install-card h3{font-size:16px;font-weight:700;margin-bottom:12px}
+.install-card code{display:block;background:var(--bg);padding:12px 16px;border-radius:8px;font-family:"SF Mono",Menlo,monospace;font-size:13px;color:var(--accent);margin-bottom:12px;user-select:all;cursor:pointer;border:1px solid var(--border)}
+.install-card .note{font-size:12px;color:var(--muted)}
+
+/* Stats */
+.stats{display:flex;justify-content:center;gap:48px;flex-wrap:wrap;margin-top:48px}
+.stat{text-align:center}
+.stat .num{font-size:32px;font-weight:800;background:linear-gradient(135deg,var(--accent),#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat .label{font-size:13px;color:var(--muted);margin-top:4px}
+
+/* Shortcuts */
+.shortcuts{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;max-width:800px;margin:0 auto}
+.shortcut{display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 16px;font-size:14px}
+.shortcut kbd{background:var(--bg);border:1px solid var(--border);padding:3px 8px;border-radius:5px;font-family:"SF Mono",Menlo,monospace;font-size:12px;color:var(--accent)}
+
+/* CTA */
+.cta{text-align:center;background:linear-gradient(135deg,rgba(33,27,239,.1),rgba(61,124,251,.1));border:1px solid var(--border);border-radius:20px;padding:64px 32px;margin:0 auto;max-width:800px}
+.cta h2{font-size:28px;font-weight:800;margin-bottom:8px}
+.cta p{color:var(--muted);margin-bottom:24px}
+
+/* Footer */
+footer{text-align:center;padding:40px 0;font-size:13px;color:var(--muted);border-top:1px solid var(--border)}
+footer a{color:var(--muted)}
+footer a:hover{color:var(--text)}
+footer .links{display:flex;gap:20px;justify-content:center;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="glow"></div>
+
+<nav>
+<div class="wrap">
+<a href="/" class="logo"><img src="logo.svg" alt="macshot" width="28" height="28">macshot</a>
+<div class="links">
+<a href="#features">Features</a>
+<a href="#install">Install</a>
+<a href="#shortcuts">Shortcuts</a>
+<a href="https://github.com/sw33tLie/macshot" target="_blank">GitHub</a>
+<a href="https://github.com/sw33tLie/macshot/releases/latest" class="btn btn-primary" target="_blank">Download</a>
+</div>
+</div>
+</nav>
+
+<section class="hero">
+<div class="wrap">
+<h1>The screenshot tool<br>Apple forgot to make.</h1>
+<p class="sub">Capture, annotate, record, and share. Native Swift + AppKit, ~8 MB memory. Free and open source.</p>
+<div class="actions">
+<a href="https://github.com/sw33tLie/macshot/releases/latest" class="btn btn-primary btn-big" target="_blank">
+<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+Download for macOS
+</a>
+<a href="https://github.com/sw33tLie/macshot" class="btn btn-outline btn-big" target="_blank">
+<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+View on GitHub
+</a>
+</div>
+<p class="meta">macOS 12.3+ <span>|</span> Apple Silicon & Intel <span>|</span> v3.6.0</p>
+</div>
+</section>
+
+<section class="preview">
+<div class="wrap">
+<img src="preview.png" alt="macshot in action" width="700" loading="lazy">
+</div>
+</section>
+
+<section id="features">
+<div class="wrap">
+<div class="section-label">
+<h2>Everything you need. Nothing you don't.</h2>
+<p>One hotkey. Select, annotate, copy. Zero friction.</p>
+</div>
+
+<div class="tools-strip">
+<span class="tool-tag">Arrow (5 styles)</span>
+<span class="tool-tag">Rectangle</span>
+<span class="tool-tag">Ellipse</span>
+<span class="tool-tag">Text (rich formatting)</span>
+<span class="tool-tag">Pencil</span>
+<span class="tool-tag">Highlighter</span>
+<span class="tool-tag">Numbered Markers</span>
+<span class="tool-tag">Pixelate / Blur / Erase</span>
+<span class="tool-tag">Stamp / Emoji</span>
+<span class="tool-tag">Measure</span>
+<span class="tool-tag">Loupe</span>
+<span class="tool-tag">Color Picker</span>
+</div>
+
+<div class="features">
+<div class="feature">
+<div class="icon">&#9889;</div>
+<h3>Instant Capture</h3>
+<p>Global hotkey freezes your screen. Select any region, snap to windows, or capture full screen. Multi-monitor support with cross-screen stitching.</p>
+</div>
+<div class="feature">
+<div class="icon">&#9999;&#65039;</div>
+<h3>Click-to-Edit Annotations</h3>
+<p>Click any annotation to select it, then edit stroke, style, color, and fill in real time. Full undo/redo. Rotate, resize, and reposition without switching tools.</p>
+</div>
+<div class="feature">
+<div class="icon">&#128248;</div>
+<h3>Scroll Capture</h3>
+<p>Select a region and scroll. macshot stitches it into one tall image with Apple Vision. Live preview updates as you scroll.</p>
+</div>
+<div class="feature">
+<div class="icon">&#127916;</div>
+<h3>Screen Recording</h3>
+<p>Record any area as MP4 (up to 120fps) or GIF. System audio, microphone, mouse highlights. Built-in trim editor.</p>
+</div>
+<div class="feature">
+<div class="icon">&#128065;&#8205;&#128488;&#65039;</div>
+<h3>Smart Censor</h3>
+<p>Pixelate, blur, solid fill, or erase. Auto-redact PII (emails, phones, API keys), detect faces and people. Erase mode intelligently matches surrounding colors.</p>
+</div>
+<div class="feature">
+<div class="icon">&#10024;</div>
+<h3>Beautify</h3>
+<p>30 gradient backgrounds including mesh gradients. macOS window frame with traffic lights, shadow, adjustable padding and corner radius.</p>
+</div>
+<div class="feature">
+<div class="icon">&#128269;</div>
+<h3>OCR & Translate</h3>
+<p>Extract text with Apple Vision. Auto-detects all languages. Copy to clipboard, translate to 30+ languages, or search with Google AI.</p>
+</div>
+<div class="feature">
+<div class="icon">&#9729;&#65039;</div>
+<h3>Upload Anywhere</h3>
+<p>One-click upload to Google Drive, imgbb, or any S3-compatible service (Cloudflare R2, AWS, MinIO). Link copied instantly.</p>
+</div>
+<div class="feature">
+<div class="icon">&#9889;</div>
+<h3>Lightweight & Native</h3>
+<p>~8 MB memory at idle. Pure Swift + AppKit. No Electron, no web views, no bloat. Lives quietly in your menu bar.</p>
+</div>
+</div>
+
+<div class="stats">
+<div class="stat"><div class="num">~8 MB</div><div class="label">Memory at idle</div></div>
+<div class="stat"><div class="num">18</div><div class="label">Annotation tools</div></div>
+<div class="stat"><div class="num">30+</div><div class="label">Beautify gradients</div></div>
+<div class="stat"><div class="num">120fps</div><div class="label">Max recording</div></div>
+</div>
+</div>
+</section>
+
+<section id="install">
+<div class="wrap">
+<div class="section-label">
+<h2>Install in seconds.</h2>
+</div>
+<div class="install-grid">
+<div class="install-card">
+<h3>Homebrew</h3>
+<code onclick="navigator.clipboard.writeText('brew install sw33tlie/macshot/macshot')">brew install sw33tlie/macshot/macshot</code>
+<p class="note">Click to copy</p>
+</div>
+<div class="install-card">
+<h3>Direct Download</h3>
+<a href="https://github.com/sw33tLie/macshot/releases/latest" class="btn btn-primary" style="width:100%;justify-content:center" target="_blank">Download .dmg</a>
+<p class="note" style="margin-top:12px">Open DMG, drag to Applications</p>
+</div>
+</div>
+</div>
+</section>
+
+<section id="shortcuts">
+<div class="wrap">
+<div class="section-label">
+<h2>Keyboard-first design.</h2>
+<p>Every action has a shortcut. All hotkeys are configurable.</p>
+</div>
+<div class="shortcuts">
+<div class="shortcut"><span>Capture Area</span><kbd>Cmd+Shift+X</kbd></div>
+<div class="shortcut"><span>Quick Save</span><kbd>Cmd+Shift+S</kbd></div>
+<div class="shortcut"><span>Quick OCR</span><kbd>Cmd+Shift+T</kbd></div>
+<div class="shortcut"><span>Record Area</span><kbd>Cmd+Shift+R</kbd></div>
+<div class="shortcut"><span>History Panel</span><kbd>Cmd+Shift+H</kbd></div>
+<div class="shortcut"><span>Copy Selection</span><kbd>Cmd+C</kbd></div>
+<div class="shortcut"><span>Undo / Redo</span><kbd>Cmd+Z / Cmd+Shift+Z</kbd></div>
+<div class="shortcut"><span>Constrain Shape</span><kbd>Shift (while drawing)</kbd></div>
+<div class="shortcut"><span>Reposition Shape</span><kbd>Space (while drawing)</kbd></div>
+<div class="shortcut"><span>Window Snap</span><kbd>Tab</kbd></div>
+</div>
+</div>
+</section>
+
+<section>
+<div class="wrap">
+<div class="cta">
+<h2>Ready to capture?</h2>
+<p>Free, open source, and always will be.</p>
+<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+<a href="https://github.com/sw33tLie/macshot/releases/latest" class="btn btn-primary btn-big" target="_blank">Download for macOS</a>
+<a href="https://github.com/sw33tLie/macshot" class="btn btn-outline btn-big" target="_blank">Star on GitHub</a>
+</div>
+</div>
+</div>
+</section>
+
+<footer>
+<div class="wrap">
+<p>macshot is free, open-source software licensed under GPLv3.</p>
+<div class="links">
+<a href="https://github.com/sw33tLie/macshot">GitHub</a>
+<a href="https://github.com/sw33tLie/macshot/blob/main/CHANGELOG.md">Changelog</a>
+<a href="https://github.com/sw33tLie/macshot/blob/main/PRIVACY.md">Privacy</a>
+<a href="https://github.com/sw33tLie/macshot/issues">Report a Bug</a>
+</div>
+</div>
+</footer>
+</body>
+</html>
