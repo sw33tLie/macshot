@@ -68,13 +68,13 @@ brew install sw33tlie/macshot/macshot
 - **Pencil & Marker** — freeform drawing with optional smoothing; smart marker mode snaps to text lines via OCR
 - **Numbered markers** — auto-incrementing (1/I/A/a formats), with optional pointer cone
 - **Stamp / Emoji** — 21 quick emojis, 100+ in categorized picker, or load any image
-- **Pixelate & Blur** — irreversible redaction; auto-redact PII (emails, phones, credit cards, SSNs, API keys), auto-detect faces and people, or draw in "Text Only" mode to blur just the text in a region
+- **Censor (Pixelate / Blur / Solid / Erase)** — unified redaction tool with 4 modes: pixelate, Gaussian blur, solid color fill, or smart erase that samples surrounding colors for invisible content removal. Auto-redact PII (emails, phones, credit cards, SSNs, API keys), auto-detect faces and people, or draw in "Text Only" mode to censor just the text in a region
 - **Measure** — pixel ruler with px/pt toggle; hold `1` or `2` for auto-measure
 - **Loupe** — 2x magnifier
 - **Color sampler** — eyedropper to pick any color; right-click to copy hex; auto-saves to custom palette slots
 - **Space to reposition** — hold Space while drawing to move the shape without changing its size
 - **Rotation** — rotate shapes via handle, Shift for 90° snaps
-- **Hover-to-move** — drag, resize, rotate, or delete any annotation without switching tools
+- **Click-to-select** — click any annotation to select it, then edit properties (stroke, style, fill), drag to move, resize via handles, rotate, or delete — all without switching tools
 
 ### Screen Recording
 - **MP4 (H.264)** up to 120fps or **GIF** (5/10/15fps)
@@ -116,7 +116,7 @@ brew install sw33tlie/macshot/macshot
 - **Background removal** — Apple Vision foreground mask (macOS 14+)
 - **Pin to screen** — floating always-on-top window
 - **Floating thumbnail** — auto-dismiss preview with Copy/Save/Pin/Edit/Upload
-- **Screenshot history** — menu bar submenu + full-screen visual history panel (`Cmd+Shift+H`)
+- **Screenshot history** — menu bar submenu + drop-down history panel (`Cmd+Shift+H`) with drag-and-drop, Quick Look, and right-click actions
 - **QR & barcode detection** — inline Open/Copy actions
 - **Snap alignment guides** — annotations snap to midlines and edges
 - **Auto-updates** via Sparkle

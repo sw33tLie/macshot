@@ -1,5 +1,40 @@
 # Changelog
 
+## [3.6.0] - 2026-04-04
+
+### Added
+- **Unified Censor tool** — Pixelate, Blur, Solid, and Erase modes merged into a single toolbar button with mode selector. Erase mode intelligently samples surrounding border colors and fills with seamless edge-interpolated gradients, making erased content invisible on solid and gradient backgrounds.
+- **Click-to-select annotations** — click any annotation with any tool to select it, view its properties, and edit stroke width, line style, arrow style, fill style, and corner radius in real time. Full undo/redo support. No more dedicated "Select & Edit" button needed.
+- **Recent Captures panel** — new drop-down panel slides from the top of the screen. Horizontal scrolling thumbnails with filter tabs (All / Screenshots / GIFs), right-click context menu (Copy, Save As, Open in Editor, Pin to Screen, Quick Look, Delete), drag-and-drop images to other apps.
+- **OCR Capture action** — new dropdown in Preferences: "Show window + copy to clipboard", "Show window only", or "Copy to clipboard only".
+- **Automatic update toggle** — "Check for updates automatically" checkbox in Preferences for Homebrew users who manage updates externally.
+- **Custom censor toolbar icon** — checkerboard icon replaces the generic grid, clearly communicating pixelate/censor functionality.
+- **Annotation resize cursors** — directional resize cursors on shape handles (diagonal for corners, horizontal/vertical for edges), open/closed hand for drag.
+- **Highlighter icon** — uses the native `highlighter` SF Symbol on macOS 14+ (falls back to paintbrush on older versions).
+
+### Changed
+- **Annotation selection model** — replaced automatic hover-to-move with explicit click-to-select. Click an annotation to select it, Escape or click empty space to deselect. Selected annotations stay selected after drag, resize, and rotation.
+- **Pencil/marker selection highlight** — traces the actual stroke path with a smooth glow instead of a bounding rectangle. Uses transparency layer to prevent alpha compounding at self-intersections.
+- **Dashed/dotted patterns** — symmetrical distribution on rectangles and ellipses via fitted dash patterns with phase offset. Sharp-cornered dashed rectangles drawn per-side with corner inset to avoid overlap artifacts.
+- **PII auto-detect button** — split button with dropdown arrow for type selection, replacing the separate "Types" button.
+- **Max stroke width** — increased from 20px to 30px for all tools.
+- **History panel animation** — slide-down/up speed doubled (0.25s → 0.12s).
+- **Beautify label** — "Pad" renamed to "Padding" in options row.
+- **Censor options layout** — all buttons use uniform height and font size for visual consistency.
+- **Beautify gradient swatch** — updates live when selecting a new gradient from the picker popover.
+
+### Fixed
+- **Pre-macOS 14 capture corruption** — replaced the SCStream single-frame capture (which used a raw memcpy assuming BGRA 8-bit pixel format) with `CGWindowListCreateImage` on macOS 12–13. Fixes garbled/corrupted screenshots on Intel Macs and non-standard pixel formats. (#48, #53)
+- **Capture delay on macOS Tahoe** — pre-warm `SCShareableContent` cache on hotkey press and menu bar click, switch to `onScreenWindowsOnly: true` to skip hidden window enumeration. Reduces 2-second capture delay to near-instant on systems with many background processes. (#31)
+- **Editor click dead zones** — toolbar strips in the editor used container-space coordinates for hit testing against editor-space points, creating horizontal dead zones where drawing tools wouldn't respond. Fixed by skipping cross-coordinate-space checks in editor mode.
+- **Editor toolbar pass-through** — toolbar strip and options row gaps now pass through mouse events in editor mode so drawing works even when the image is behind the toolbar area.
+- **Thick arrow hit detection** — hit zone was ~2x wider than the drawn shape (27.5px vs 7.5px shaft). Now matches the actual shaft width plus 4px tolerance.
+- **Blur + text-only mode** — was producing pixelated output instead of blur. AutoRedactor now reads censorMode from UserDefaults before baking annotations.
+- **Measure tool behind beautify** — in-progress annotations (measure lines, etc.) are now re-drawn on top of the beautify preview.
+- **Annotation deselect on resize** — resizing/rotating an annotation's handles no longer deselects it when using non-select tools.
+- **History panel drag-and-drop** — panel and backdrop windows now hide when drag starts so target apps (Telegram, Slack, etc.) can receive the drop. Uses NSURL pasteboard writer for proper file type support.
+- **ListPickerView width** — popover width computed from content instead of hardcoded 160px.
+
 ## [3.5.3] - 2026-04-03
 
 ### Added
