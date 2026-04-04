@@ -202,7 +202,14 @@ jobs:
           echo "SHA256=$SHA256" >> $GITHUB_ENV
           echo "SHA256: $SHA256"
 
-      # ── 9. Sign DMG for Sparkle and update appcast ────────────────────────
+      # ── 9. Extract changelog entry for this version ───────────────────────
+      - name: Extract release notes
+        run: |
+          awk "/^## \[$VERSION\]/{found=1; next} found && /^## \[/{exit} found{print}" \
+            CHANGELOG.md > release_notes.md
+          cat release_notes.md
+
+      # ── 10. Sign DMG for Sparkle and update appcast ───────────────────────
       - name: Update Sparkle appcast
         env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
@@ -226,6 +233,17 @@ jobs:
           DOWNLOAD_URL="https://github.com/sw33tLie/macshot/releases/download/v${VERSION}/MacShot.dmg"
           DATE=$(date -R)
 
+          # Convert release notes markdown to HTML for Sparkle update dialog
+          RELEASE_HTML=""
+          if [ -s release_notes.md ]; then
+            RELEASE_HTML=$(sed -E \
+              -e 's/^### (.+)/<h3>\1<\/h3>/' \
+              -e 's/^- \*\*([^*]+)\*\* [-–] (.+)/<li><b>\1<\/b> — \2<\/li>/' \
+              -e 's/^- \*\*([^*]+)\*\*(.*)/<li><b>\1<\/b>\2<\/li>/' \
+              -e 's/^- (.+)/<li>\1<\/li>/' \
+              release_notes.md | tr '\n' ' ')
+          fi
+
           # Build appcast.xml — keep only the latest version (simple and clean)
           cat > appcast.xml <<XMLEOF
           <?xml version="1.0" encoding="utf-8"?>
@@ -240,6 +258,17 @@ jobs:
                       <sparkle:version>${VERSION}</sparkle:version>
                       <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
                       <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
+                      <description><![CDATA[
+                        <style>
+                          body { font-family: -apple-system, sans-serif; font-size: 13px; color: #e4e4ed; background: #1a1a2e; padding: 12px; }
+                          h3 { font-size: 14px; margin: 12px 0 6px 0; color: #fff; }
+                          h3:first-child { margin-top: 0; }
+                          ul { padding-left: 18px; margin: 4px 0; }
+                          li { margin: 4px 0; line-height: 1.5; }
+                          b { color: #fff; }
+                        </style>
+                        ${RELEASE_HTML}
+                      ]]></description>
                       <enclosure
                           url="${DOWNLOAD_URL}"
                           length="${FILESIZE}"
@@ -253,13 +282,6 @@ jobs:
 
           echo "✅ Appcast generated"
           cat appcast.xml
-
-      # ── 10. Extract changelog entry for this version ───────────────────────
-      - name: Extract release notes
-        run: |
-          awk "/^## \[$VERSION\]/{found=1; next} found && /^## \[/{exit} found{print}" \
-            CHANGELOG.md > release_notes.md
-          cat release_notes.md
 
       # ── 11. Create GitHub Release ──────────────────────────────────────────
       - name: Create GitHub Release
