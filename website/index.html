@@ -36,14 +36,19 @@ nav .links{display:flex;gap:24px;align-items:center;font-size:14px}
 nav .links a{color:var(--muted);transition:color .2s}
 nav .links a:hover{color:#fff;text-decoration:none}
 .btn{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:8px;font-weight:600;font-size:14px;transition:all .2s;border:none;cursor:pointer}
-.btn-primary{background:var(--accent);color:#fff}
-.btn-primary:hover{background:#5090ff;text-decoration:none;transform:translateY(-1px)}
+.btn-primary{background:#fff;color:#0a0a0f}
+.btn-primary:hover{background:#e0e0e0;text-decoration:none;transform:translateY(-1px)}
+.btn-accent{background:var(--accent);color:#fff}
+.btn-accent:hover{background:#5090ff;text-decoration:none;transform:translateY(-1px)}
 .btn-outline{background:transparent;color:var(--text);border:1px solid var(--border)}
 .btn-outline:hover{border-color:var(--muted);text-decoration:none}
 .btn-big{padding:14px 32px;font-size:16px;border-radius:10px}
 
 /* Hero */
 .hero{padding-top:140px;text-align:center}
+/* Blue buttons for hero/cta/install (override white nav button) */
+.hero .btn-primary,.cta .btn-primary,.install-card .btn-primary{background:var(--accent);color:#fff}
+.hero .btn-primary:hover,.cta .btn-primary:hover,.install-card .btn-primary:hover{background:#5090ff}
 .hero h1{font-size:clamp(36px,6vw,64px);font-weight:800;letter-spacing:-1.5px;line-height:1.1;background:linear-gradient(135deg,#fff 30%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .hero .sub{font-size:clamp(16px,2.5vw,20px);color:var(--muted);max-width:600px;margin:20px auto 0}
 .hero .actions{display:flex;gap:12px;justify-content:center;margin-top:32px;flex-wrap:wrap}
@@ -51,7 +56,7 @@ nav .links a:hover{color:#fff;text-decoration:none}
 .hero .meta span{margin:0 8px}
 
 /* Preview */
-.preview{margin-top:48px;text-align:center}
+.preview{margin-top:24px;text-align:center}
 .preview img{max-width:100%;border-radius:16px;box-shadow:0 32px 80px rgba(0,0,0,.5),0 0 0 1px var(--border);animation:float 6s ease-in-out infinite}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 
