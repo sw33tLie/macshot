@@ -237,11 +237,15 @@ jobs:
           RELEASE_HTML=""
           if [ -s release_notes.md ]; then
             RELEASE_HTML=$(sed -E \
-              -e 's/^### (.+)/<h3>\1<\/h3>/' \
+              -e 's/^### (.+)/<\/ul><h3>\1<\/h3><ul>/' \
               -e 's/^- \*\*([^*]+)\*\* [-–] (.+)/<li><b>\1<\/b> — \2<\/li>/' \
               -e 's/^- \*\*([^*]+)\*\*(.*)/<li><b>\1<\/b>\2<\/li>/' \
               -e 's/^- (.+)/<li>\1<\/li>/' \
               release_notes.md | tr '\n' ' ')
+            # Clean up: remove leading </ul>, add trailing </ul>
+            RELEASE_HTML=$(echo "$RELEASE_HTML" | sed -E \
+              -e 's|^ *</ul> *||' \
+              -e 's| *$|</ul>|')
           fi
 
           # Build appcast.xml — keep only the latest version (simple and clean)
@@ -260,12 +264,11 @@ jobs:
                       <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
                       <description><![CDATA[
                         <style>
-                          body { font-family: -apple-system, sans-serif; font-size: 13px; color: #e4e4ed; background: #1a1a2e; padding: 12px; }
-                          h3 { font-size: 14px; margin: 12px 0 6px 0; color: #fff; }
+                          body { font-family: -apple-system, sans-serif; font-size: 13px; padding: 12px; }
+                          h3 { font-size: 14px; margin: 12px 0 6px 0; }
                           h3:first-child { margin-top: 0; }
                           ul { padding-left: 18px; margin: 4px 0; }
                           li { margin: 4px 0; line-height: 1.5; }
-                          b { color: #fff; }
                         </style>
                         ${RELEASE_HTML}
                       ]]></description>
