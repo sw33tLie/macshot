@@ -292,5 +292,6 @@ When pushing a new version tag (e.g. `v2.6.0`):
 1. **Add a CHANGELOG.md entry** for the new version — CI extracts it for GitHub Release notes.
 2. **Tag and push:** `git tag v2.6.0 && git push origin main --tags`
 3. CI handles the rest: build (with `MARKETING_VERSION` injected from the tag), sign, notarize, DMG, GitHub Release, Sparkle appcast, Homebrew cask update.
+4. Make sure tool version in the website page is updated too.
 
 Note: `MARKETING_VERSION` in `project.pbxproj` is only used for local dev builds. CI always overrides it from the git tag.

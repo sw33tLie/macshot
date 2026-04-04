@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.6.1] - 2026-04-04
+
+### Fixed
+- **History panel blocks all input** - the backdrop window could get stuck capturing all clicks when the app lost focus (e.g. using Cmd+Shift+4 or a Sparkle update dialog appearing). The backdrop now auto-dismisses when the app deactivates, supports Escape key directly, and is torn down immediately on dismiss instead of waiting for the animation to complete.
+- **Share button not working** - share picker panel was hidden behind the overlay window.
+
 ## [3.6.0] - 2026-04-04
 
 ### Added

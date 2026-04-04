@@ -86,6 +86,14 @@ final class HistoryOverlayController: NSObject, QLPreviewPanelDataSource, QLPrev
         })
 
         view.loadEntries()
+
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(appDidResignActive),
+            name: NSApplication.didResignActiveNotification, object: nil)
+    }
+
+    @objc private func appDidResignActive() {
+        dismiss()
     }
 
     /// Hide windows immediately so drag-and-drop can reach target apps.
@@ -95,7 +103,22 @@ final class HistoryOverlayController: NSObject, QLPreviewPanelDataSource, QLPrev
     }
 
     func dismiss() {
-        guard let win = panel else { return }
+        NotificationCenter.default.removeObserver(self,
+            name: NSApplication.didResignActiveNotification, object: nil)
+
+        // Always tear down the backdrop immediately so it never blocks input
+        if let bd = backdropWindow {
+            bd.orderOut(nil)
+            bd.close()
+            backdropWindow = nil
+        }
+
+        guard let win = panel else {
+            contentView = nil
+            onDismiss?()
+            return
+        }
+        panel = nil
 
         let hiddenFrame = NSRect(
             x: win.frame.origin.x, y: win.frame.origin.y + Self.panelHeight,
@@ -107,12 +130,8 @@ final class HistoryOverlayController: NSObject, QLPreviewPanelDataSource, QLPrev
             win.animator().setFrame(hiddenFrame, display: true)
             win.animator().alphaValue = 0.0
         }, completionHandler: { [weak self] in
-            self?.backdropWindow?.orderOut(nil)
-            self?.backdropWindow?.close()
-            self?.backdropWindow = nil
             win.orderOut(nil)
             win.close()
-            self?.panel = nil
             self?.contentView = nil
             self?.onDismiss?()
         })
@@ -250,8 +269,16 @@ final class HistoryOverlayController: NSObject, QLPreviewPanelDataSource, QLPrev
 private final class BackdropView: NSView {
     weak var controller: HistoryOverlayController?
 
+    override var acceptsFirstResponder: Bool { true }
+
     override func mouseDown(with event: NSEvent) {
         controller?.dismiss()
+    }
+
+    override func keyDown(with event: NSEvent) {
+        if event.keyCode == 53 { // ESC
+            controller?.dismiss()
+        }
     }
 }
 
