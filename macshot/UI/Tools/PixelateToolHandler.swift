@@ -19,7 +19,7 @@ final class PixelateToolHandler: AnnotationToolHandler {
         annotation.censorMode = mode
         // Solid mode doesn't need a source image; all others do
         if mode != .solid {
-            annotation.sourceImage = canvas.compositedImage()
+            annotation.sourceImage = canvas.screenshotImage
             annotation.sourceImageBounds = canvas.captureDrawRect
         }
         return annotation

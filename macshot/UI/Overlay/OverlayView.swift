@@ -1270,9 +1270,14 @@ class OverlayView: NSView {
                 context.restoreGraphicsState()
 
                 // Draw user annotations unclipped — strokes can continue past the selection border.
+                // Censor annotations (pixelate/blur) render first so other annotations
+                // always appear on top of blurred regions.
                 context.saveGraphicsState()
                 applyCanvasTransform(to: context)
-                for annotation in annotations where annotation.tool != .translateOverlay {
+                for annotation in annotations where annotation.tool != .translateOverlay && annotation.tool == .pixelate {
+                    annotation.draw(in: context)
+                }
+                for annotation in annotations where annotation.tool != .translateOverlay && annotation.tool != .pixelate {
                     annotation.draw(in: context)
                 }
             } else {
@@ -1427,8 +1432,9 @@ class OverlayView: NSView {
                 NSBezierPath(rect: selectionRect).setClip()
                 let effectsImage = effectsProcessedScreenshot(screenshot)
                 effectsImage.draw(in: captureDrawRect, from: .zero, operation: .copy, fraction: 1.0)
-                // Re-draw annotations on top
-                for annotation in annotations { annotation.draw(in: context) }
+                // Re-draw annotations on top (censor first, then everything else)
+                for annotation in annotations where annotation.tool == .pixelate { annotation.draw(in: context) }
+                for annotation in annotations where annotation.tool != .pixelate { annotation.draw(in: context) }
                 currentAnnotation?.draw(in: context)
                 context.restoreGraphicsState()
 
@@ -4548,6 +4554,7 @@ class OverlayView: NSView {
                     annotation.startPoint = NSPoint(x: newMinX, y: newMinY)
                     annotation.endPoint = NSPoint(x: newMaxX, y: newMaxY)
                 }
+                if annotation.tool == .pixelate { annotation.bakedBlurNSImage = nil }
                 cachedCompositedImage = nil
                 needsDisplay = true
             } else if isDraggingAnnotation, let annotation = selectedAnnotation {
@@ -4640,8 +4647,9 @@ class OverlayView: NSView {
         if isResizingAnnotation {
             isResizingAnnotation = false
             annotationResizeHandle = .none
-            if let ann = selectedAnnotation, ann.tool == .loupe {
-                ann.bakeLoupe()
+            if let ann = selectedAnnotation {
+                if ann.tool == .loupe { ann.bakeLoupe() }
+                if ann.tool == .pixelate { ann.bakedBlurNSImage = nil; ann.bakePixelate() }
             }
             NSCursor.openHand.set()
             needsDisplay = true
@@ -4722,8 +4730,9 @@ class OverlayView: NSView {
                 snapGuideX = nil
                 snapGuideY = nil
                 NSCursor.openHand.set()
-                if let ann = selectedAnnotation, ann.tool == .loupe {
-                    ann.bakeLoupe()
+                if let ann = selectedAnnotation {
+                    if ann.tool == .loupe { ann.bakeLoupe() }
+                    if ann.tool == .pixelate { ann.bakedBlurNSImage = nil; ann.bakePixelate() }
                 }
                 // Auto-expand canvas if annotation was dragged outside bounds (editor mode)
                 expandCanvasToFitAnnotations()
@@ -4756,18 +4765,30 @@ class OverlayView: NSView {
 
         // Toolbar right-clicks handled by ToolbarButtonView.onRightClick → handleToolbarButtonRightClick
 
-        // Right-click on a selected/hovered line/arrow: add anchor point
+        // Right-click on a line/arrow/measure: add anchor point.
+        // Auto-selects the annotation if it isn't selected yet.
         if state == .selected {
+            let canvasPoint = viewToCanvas(point)
+            // Check already-selected annotation first
             if let ann = selectedAnnotation,
-                ann.tool == .arrow || ann.tool == .line || ann.tool == .measure
+                (ann.tool == .arrow || ann.tool == .line || ann.tool == .measure),
+                ann.hitTest(point: canvasPoint)
             {
-                let canvasPoint = viewToCanvas(point)
-                if ann.hitTest(point: canvasPoint) {
-                    addAnchorPoint(to: ann, at: canvasPoint)
-                    cachedCompositedImage = nil
-                    needsDisplay = true
-                    return
-                }
+                addAnchorPoint(to: ann, at: canvasPoint)
+                cachedCompositedImage = nil
+                needsDisplay = true
+                return
+            }
+            // Check any unselected line/arrow/measure under the cursor
+            if let ann = annotations.reversed().first(where: {
+                ($0.tool == .arrow || $0.tool == .line || $0.tool == .measure)
+                && $0.hitTest(point: canvasPoint)
+            }) {
+                selectedAnnotation = ann
+                addAnchorPoint(to: ann, at: canvasPoint)
+                cachedCompositedImage = nil
+                needsDisplay = true
+                return
             }
         }
 
@@ -6144,7 +6165,11 @@ class OverlayView: NSView {
                 fraction: 1.0)
             // Translate so annotations at selectionRect coords render correctly
             context.cgContext.translateBy(x: -drawRect.origin.x, y: -drawRect.origin.y)
-            for annotation in annotationsCopy {
+            // Censor annotations render first so other annotations appear on top
+            for annotation in annotationsCopy where annotation.tool == .pixelate {
+                annotation.draw(in: context)
+            }
+            for annotation in annotationsCopy where annotation.tool != .pixelate {
                 annotation.draw(in: context)
             }
             success = true

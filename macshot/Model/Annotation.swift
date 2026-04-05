@@ -178,7 +178,7 @@ class Annotation {
 
     var supportsRotation: Bool {
         switch tool {
-        case .rectangle, .filledRectangle, .ellipse, .stamp, .text, .number, .pixelate, .blur:
+        case .rectangle, .filledRectangle, .ellipse, .stamp, .text, .number:
             return true
         default:
             return false
@@ -302,7 +302,7 @@ class Annotation {
     /// Whether this annotation type can be moved
     var isMovable: Bool {
         switch tool {
-        case .pixelate, .blur, .select, .translateOverlay:
+        case .select, .translateOverlay:
             return false
         default:
             return true
@@ -396,7 +396,7 @@ class Annotation {
         case .number:
             let radius = 8 + strokeWidth * 3 + threshold
             return hypot(point.x - startPoint.x, point.y - startPoint.y) < radius
-        case .stamp:
+        case .stamp, .pixelate, .blur:
             return boundingRect.insetBy(dx: -threshold, dy: -threshold).contains(point)
         default:
             return false
@@ -432,8 +432,8 @@ class Annotation {
             }
             anchorPoints = anchors
         }
-        // If it's a loupe, we need to clear the baked image so it re-renders the new magnified area
-        if tool == .loupe {
+        // Clear baked image so it re-renders at the new position
+        if tool == .loupe || tool == .pixelate {
             bakedBlurNSImage = nil
         }
     }
@@ -1496,7 +1496,6 @@ class Annotation {
                 return true
             }
             bakedBlurNSImage = img
-            self.sourceImage = nil
             return
         }
 
@@ -1504,7 +1503,6 @@ class Annotation {
         if mode == .erase {
             guard let _ = sourceImage else { return }
             bakedBlurNSImage = bakeErase()
-            self.sourceImage = nil
             return
         }
 
@@ -1548,7 +1546,6 @@ class Annotation {
             guard let pixelatedCG = ctx3.makeImage() else { return }
             bakedBlurNSImage = NSImage(cgImage: pixelatedCG, size: rect.size)
         }
-        self.sourceImage = nil
     }
 
     /// Unified censor drawing — dispatches based on censorMode.

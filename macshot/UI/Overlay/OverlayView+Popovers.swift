@@ -343,7 +343,7 @@ extension OverlayView {
     func performAutoRedact() {
         guard state == .selected, let screenshot = screenshotImage else { return }
         let tool: AnnotationTool = currentTool == .pixelate ? .pixelate : .rectangle
-        let sourceImg = tool == .pixelate ? compositedImage() : nil
+        let sourceImg = tool == .pixelate ? screenshotImage : nil
         AutoRedactor.redactPII(
             screenshot: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect,
             redactTool: tool, color: currentColor, sourceImage: sourceImg,
@@ -361,7 +361,7 @@ extension OverlayView {
     func performRedactAllText() {
         guard state == .selected, let screenshot = screenshotImage else { return }
         let tool: AnnotationTool = currentTool == .pixelate ? .pixelate : .rectangle
-        let sourceImg = tool == .pixelate ? compositedImage() : nil
+        let sourceImg = tool == .pixelate ? screenshotImage : nil
         AutoRedactor.redactAllText(
             screenshot: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect,
             redactTool: tool, color: currentColor, sourceImage: sourceImg,
@@ -383,7 +383,7 @@ extension OverlayView {
     func performRedactFaces() {
         guard state == .selected, let screenshot = screenshotImage else { return }
         let tool: AnnotationTool = currentTool == .pixelate ? .pixelate : .rectangle
-        let sourceImg = tool == .pixelate ? compositedImage() : nil
+        let sourceImg = tool == .pixelate ? screenshotImage : nil
         AutoRedactor.redactFaces(
             screenshot: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect,
             redactTool: tool, color: currentColor, sourceImage: sourceImg,
@@ -401,7 +401,7 @@ extension OverlayView {
     func performRedactPeople() {
         guard state == .selected, let screenshot = screenshotImage else { return }
         let tool: AnnotationTool = currentTool == .pixelate ? .pixelate : .rectangle
-        let sourceImg = tool == .pixelate ? compositedImage() : nil
+        let sourceImg = tool == .pixelate ? screenshotImage : nil
         AutoRedactor.redactPeople(
             screenshot: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect,
             redactTool: tool, color: currentColor, sourceImage: sourceImg,

@@ -20,9 +20,9 @@ final class PencilToolHandler: AnnotationToolHandler {
 
     /// Shift-constrain direction for freeform drawing. 0 = undecided, 1 = horizontal, 2 = vertical.
     private var freeformShiftDirection: Int = 0
-    /// Exponential moving average state for live smoothing (Extra mode).
-    private var emaPoint: NSPoint = .zero
-    private var emaInitialized: Bool = false
+    /// Moving average window for live smoothing (Refined mode).
+    private var rawPointBuffer: [NSPoint] = []
+    private let smoothWindowSize: Int = 8
 
     var cursor: NSCursor? {
         Self.penCursor
@@ -59,8 +59,7 @@ final class PencilToolHandler: AnnotationToolHandler {
 
     func start(at point: NSPoint, canvas: AnnotationCanvas) -> Annotation? {
         freeformShiftDirection = 0
-        emaPoint = point
-        emaInitialized = true
+        rawPointBuffer = [point]
         let annotation = Annotation(
             tool: .pencil,
             startPoint: point,
@@ -94,14 +93,18 @@ final class PencilToolHandler: AnnotationToolHandler {
             }
         }
 
-        // Extra smooth: apply exponential moving average for live smoothing.
-        // The drawn point lags behind the cursor, producing naturally smooth curves.
-        if canvas.pencilSmoothMode == 2 && emaInitialized {
-            let alpha: CGFloat = 0.25  // lower = smoother/laggier
-            emaPoint = NSPoint(
-                x: emaPoint.x + alpha * (clampedPoint.x - emaPoint.x),
-                y: emaPoint.y + alpha * (clampedPoint.y - emaPoint.y))
-            clampedPoint = emaPoint
+        // Refined mode: moving average of the last N raw points. Smooths jitter
+        // while preserving the shape of curves and circles (unlike EMA which
+        // pulls inward on circular paths).
+        if canvas.pencilSmoothMode == 2 {
+            rawPointBuffer.append(clampedPoint)
+            if rawPointBuffer.count > smoothWindowSize {
+                rawPointBuffer.removeFirst()
+            }
+            var avgX: CGFloat = 0, avgY: CGFloat = 0
+            for p in rawPointBuffer { avgX += p.x; avgY += p.y }
+            let n = CGFloat(rawPointBuffer.count)
+            clampedPoint = NSPoint(x: avgX / n, y: avgY / n)
         }
 
         // No snap guides for freeform tools
@@ -114,6 +117,14 @@ final class PencilToolHandler: AnnotationToolHandler {
 
     func finish(canvas: AnnotationCanvas) {
         guard let annotation = canvas.activeAnnotation else { return }
+
+        // In Refined mode, append the last raw cursor position so the stroke
+        // endpoint lands where the user actually stopped.
+        if canvas.pencilSmoothMode == 2, let lastRaw = rawPointBuffer.last {
+            annotation.points?.append(lastRaw)
+            annotation.endPoint = lastRaw
+        }
+
         guard let points = annotation.points, !points.isEmpty else {
             canvas.activeAnnotation = nil
             return
@@ -130,7 +141,7 @@ final class PencilToolHandler: AnnotationToolHandler {
 
         commitAnnotation(annotation, canvas: canvas)
         freeformShiftDirection = 0
-        emaInitialized = false
+        rawPointBuffer.removeAll()
     }
 
     // MARK: - Smoothing
