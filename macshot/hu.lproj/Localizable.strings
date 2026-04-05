@@ -315,6 +315,7 @@
 "OK" = "OK";
 "Accessibility Access Required" = "Akadálymentesítési hozzáférés szükséges";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "A macshot-nak Akadálymentesítési engedélyre van szüksége más alkalmazások automatikus görgetéséhez. Kérlek, adj hozzáférést a Rendszerbeállításokban, majd próbáld újra.";
+"macshot needs Accessibility permission for scroll capture. Please grant access in System Settings, then try again." = "A macshot Kisegítő lehetőségek engedélyre van szüksége a görgetéses rögzítéshez. Kérjük, engedélyezze a hozzáférést a Rendszerbeállításokban, majd próbálja újra.";
 "Open Settings" = "Beállítások megnyitása";
 "Cancel" = "Mégse";
 "Microphone Access Required" = "Mikrofon hozzáférés szükséges";

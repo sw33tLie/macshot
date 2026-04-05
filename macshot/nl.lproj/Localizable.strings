@@ -315,6 +315,7 @@
 "OK" = "OK";
 "Accessibility Access Required" = "Toegankelijkheidstoegang vereist";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot heeft toegankelijkheidstoegang nodig om automatisch in andere apps te scrollen. Verleen toegang in Systeeminstellingen en probeer het opnieuw.";
+"macshot needs Accessibility permission for scroll capture. Please grant access in System Settings, then try again." = "macshot heeft toegankelijkheids­toestemming nodig voor scrollopname. Verleen toegang in Systeeminstellingen en probeer het opnieuw.";
 "Open Settings" = "Open Instellingen";
 "Cancel" = "Annuleer";
 "Microphone Access Required" = "Microfoontoegang vereist";

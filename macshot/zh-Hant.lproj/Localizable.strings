@@ -315,6 +315,7 @@
 "OK" = "好";
 "Accessibility Access Required" = "需要輔助使用權限";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot 需要「輔助使用」權限才能自動捲動其他 App。請在系統設定中授予權限，然後再試一次。";
+"macshot needs Accessibility permission for scroll capture. Please grant access in System Settings, then try again." = "macshot 需要輔助使用權限才能進行捲動擷取。請在系統設定中授予存取權限，然後重試。";
 "Open Settings" = "打開設定";
 "Cancel" = "取消";
 "Microphone Access Required" = "需要麥克風權限";

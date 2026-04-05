@@ -315,6 +315,7 @@
 "OK" = "OK";
 "Accessibility Access Required" = "Yêu cầu quyền Trợ năng";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot cần quyền Trợ năng để tự động cuộn các ứng dụng khác. Vui lòng cấp quyền trong Cài đặt hệ thống, rồi thử lại.";
+"macshot needs Accessibility permission for scroll capture. Please grant access in System Settings, then try again." = "macshot cần quyền Trợ năng để chụp cuộn. Vui lòng cấp quyền trong Cài đặt Hệ thống, rồi thử lại.";
 "Open Settings" = "Mở Cài đặt";
 "Cancel" = "Hủy";
 "Microphone Access Required" = "Yêu cầu quyền Micro";

@@ -301,6 +301,7 @@
 "OK" = "OK";
 "Accessibility Access Required" = "Accesso accessibilità richiesto";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot ha bisogno del permesso Accessibilità per scorrere automaticamente le altre app. Concedi l'accesso nelle Impostazioni di Sistema, poi riprova.";
+"macshot needs Accessibility permission for scroll capture. Please grant access in System Settings, then try again." = "macshot ha bisogno del permesso Accessibilità per la cattura a scorrimento. Concedi l'accesso nelle Impostazioni di Sistema, poi riprova.";
 "Open Settings" = "Apri Impostazioni";
 "Cancel" = "Annulla";
 "Microphone Access Required" = "Accesso al microfono richiesto";

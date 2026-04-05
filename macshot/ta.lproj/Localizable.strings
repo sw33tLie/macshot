@@ -315,6 +315,7 @@
 "OK" = "சரி";
 "Accessibility Access Required" = "அணுகல்தன்மை அனுமதி தேவை";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot பிற பயன்பாடுகளை தானாக உருட்ட அணுகல்தன்மை அனுமதி தேவை. கணினி அமைப்புகளில் அணுகலை வழங்கி, மீண்டும் முயற்சிக்கவும்.";
+"macshot needs Accessibility permission for scroll capture. Please grant access in System Settings, then try again." = "ஸ்க்ரோல் கேப்சருக்கு macshot-க்கு அணுகல்தன்மை அனுமதி தேவை. கணினி அமைப்புகளில் அணுகலை வழங்கி, மீண்டும் முயற்சிக்கவும்.";
 "Open Settings" = "அமைப்புகளைத் திற";
 "Cancel" = "ரத்துசெய்";
 "Microphone Access Required" = "ஒலிவாங்கி அணுகல் தேவை";

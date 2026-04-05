@@ -315,6 +315,7 @@
 "OK" = "OK";
 "Accessibility Access Required" = "Akses Kebolehcapaian Diperlukan";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot memerlukan kebenaran Kebolehcapaian untuk auto-tatal aplikasi lain. Sila berikan akses dalam Tetapan Sistem, kemudian cuba lagi.";
+"macshot needs Accessibility permission for scroll capture. Please grant access in System Settings, then try again." = "macshot memerlukan kebenaran Kebolehcapaian untuk tangkapan tatal. Sila berikan akses dalam Tetapan Sistem, kemudian cuba lagi.";
 "Open Settings" = "Buka Tetapan";
 "Cancel" = "Batal";
 "Microphone Access Required" = "Akses Mikrofon Diperlukan";

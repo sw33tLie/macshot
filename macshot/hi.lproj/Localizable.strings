@@ -315,6 +315,7 @@
 "OK" = "ठीक है";
 "Accessibility Access Required" = "सुलभता पहुँच आवश्यक";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot को अन्य ऐप्स को स्वतः-स्क्रॉल करने के लिए सुलभता अनुमति चाहिए। कृपया सिस्टम सेटिंग्स में पहुँच प्रदान करें, फिर पुनः प्रयास करें।";
+"macshot needs Accessibility permission for scroll capture. Please grant access in System Settings, then try again." = "स्क्रॉल कैप्चर के लिए macshot को एक्सेसिबिलिटी अनुमति चाहिए। कृपया सिस्टम सेटिंग्स में एक्सेस दें, फिर पुनः प्रयास करें।";
 "Open Settings" = "सेटिंग्स खोलें";
 "Cancel" = "रद्द करें";
 "Microphone Access Required" = "माइक्रोफ़ोन पहुँच आवश्यक";

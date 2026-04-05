@@ -315,6 +315,7 @@
 "OK" = "تایید";
 "Accessibility Access Required" = "دسترسی به قابلیت‌های دسترسی‌پذیری لازم است";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot برای پیمایش خودکار سایر برنامه‌ها به مجوز دسترسی‌پذیری نیاز دارد. لطفا دسترسی را در تنظیمات سیستم اعطا کنید و دوباره تلاش کنید.";
+"macshot needs Accessibility permission for scroll capture. Please grant access in System Settings, then try again." = "macshot برای ثبت پیمایشی به مجوز دسترس‌پذیری نیاز دارد. لطفاً در تنظیمات سیستم دسترسی بدهید و دوباره امتحان کنید.";
 "Open Settings" = "باز کردن تنظیمات";
 "Cancel" = "لغو";
 "Microphone Access Required" = "دسترسی به میکروفون لازم است";

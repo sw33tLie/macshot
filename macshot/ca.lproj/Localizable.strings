@@ -315,6 +315,7 @@
 "OK" = "D'acord";
 "Accessibility Access Required" = "Es requereix acces d'accessibilitat";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot necessita permis d'accessibilitat per desplacar automaticament altres aplicacions. Concediu l'acces a la Configuracio del sistema i torneu-ho a provar.";
+"macshot needs Accessibility permission for scroll capture. Please grant access in System Settings, then try again." = "macshot necessita permís d'accessibilitat per a la captura de desplaçament. Concediu l'accés a Configuració del sistema i torneu-ho a provar.";
 "Open Settings" = "Obrir configuracio";
 "Cancel" = "Cancel·lar";
 "Microphone Access Required" = "Es requereix acces al microfon";

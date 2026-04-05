@@ -315,6 +315,7 @@
 "OK" = "Tamam";
 "Accessibility Access Required" = "Erişilebilirlik İzni Gerekli";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot, diğer uygulamaları otomatik kaydırmak için Erişilebilirlik iznine ihtiyaç duyar. Lütfen Sistem Ayarları'ndan izin verin ve tekrar deneyin.";
+"macshot needs Accessibility permission for scroll capture. Please grant access in System Settings, then try again." = "macshot, kaydırmalı yakalama için Erişilebilirlik iznine ihtiyaç duyuyor. Lütfen Sistem Ayarları'ndan erişim verin ve tekrar deneyin.";
 "Open Settings" = "Ayarları Aç";
 "Cancel" = "İptal";
 "Microphone Access Required" = "Mikrofon Erişimi Gerekli";

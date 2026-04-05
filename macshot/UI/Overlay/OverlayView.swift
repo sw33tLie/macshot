@@ -468,6 +468,8 @@ class OverlayView: NSView {
     var scrollCaptureMaxHeight: Int = 0
     var scrollCaptureAutoScrolling: Bool = false
     private var scrollCaptureHUDPanel: ScrollCaptureHUDPanel?
+    private var scrollCaptureMouseTap: CFMachPort?
+    private var scrollCaptureMouseTapSource: CFRunLoopSource?
     private var scrollCaptureKeyMonitor: Any?
     private var scrollCaptureLocalKeyMonitor: Any?
     /// Activate the app visible under the selection rect so the user doesn't need a warmup click.
@@ -516,6 +518,26 @@ class OverlayView: NSView {
         activateAppUnderSelection()
         window?.ignoresMouseEvents = true
 
+        // Suppress mouse-moved events via CGEvent tap so hover effects in the
+        // target app don't break stitch detection. Requires Accessibility permission
+        // (checked before entering scroll capture mode).
+        if AXIsProcessTrusted() {
+            let tap = CGEvent.tapCreate(
+                tap: .cgSessionEventTap,
+                place: .headInsertEventTap,
+                options: .defaultTap,
+                eventsOfInterest: CGEventMask(1 << CGEventType.mouseMoved.rawValue),
+                callback: { _, _, _, _ in nil },
+                userInfo: nil)
+            if let tap = tap {
+                let source = CFMachPortCreateRunLoopSource(nil, tap, 0)
+                CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
+                CGEvent.tapEnable(tap: tap, enable: true)
+                scrollCaptureMouseTap = tap
+                scrollCaptureMouseTapSource = source
+            }
+        }
+
         // Escape key monitor — global catches when another app has focus; local when macshot has focus.
         let handleScrollKey: (NSEvent) -> Void = { [weak self] event in
             guard let self = self, self.isScrollCapturing else { return }
@@ -562,6 +584,14 @@ class OverlayView: NSView {
 
         if let m = scrollCaptureKeyMonitor { NSEvent.removeMonitor(m); scrollCaptureKeyMonitor = nil }
         if let m = scrollCaptureLocalKeyMonitor { NSEvent.removeMonitor(m); scrollCaptureLocalKeyMonitor = nil }
+        if let tap = scrollCaptureMouseTap {
+            CGEvent.tapEnable(tap: tap, enable: false)
+            if let source = scrollCaptureMouseTapSource {
+                CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .commonModes)
+            }
+            scrollCaptureMouseTap = nil
+            scrollCaptureMouseTapSource = nil
+        }
         scrollCaptureHUDPanel?.close()
         scrollCaptureHUDPanel = nil
         window?.ignoresMouseEvents = false

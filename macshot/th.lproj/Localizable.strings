@@ -315,6 +315,7 @@
 "OK" = "ตกลง";
 "Accessibility Access Required" = "ต้องการสิทธิ์การเข้าถึง";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot ต้องการสิทธิ์การเข้าถึงเพื่อเลื่อนแอปอื่นอัตโนมัติ กรุณาอนุญาตในการตั้งค่าระบบ แล้วลองอีกครั้ง";
+"macshot needs Accessibility permission for scroll capture. Please grant access in System Settings, then try again." = "macshot ต้องการสิทธิ์การช่วยการเข้าถึงสำหรับการจับภาพแบบเลื่อน กรุณาให้สิทธิ์ในการตั้งค่าระบบ แล้วลองอีกครั้ง";
 "Open Settings" = "เปิดการตั้งค่า";
 "Cancel" = "ยกเลิก";
 "Microphone Access Required" = "ต้องการสิทธิ์ไมโครโฟน";

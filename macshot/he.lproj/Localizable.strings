@@ -315,6 +315,7 @@
 "OK" = "אישור";
 "Accessibility Access Required" = "נדרשת גישת נגישות";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot זקוק להרשאת נגישות לגלילה אוטומטית באפליקציות אחרות. אנא אשר גישה בהגדרות המערכת ונסה שוב.";
+"macshot needs Accessibility permission for scroll capture. Please grant access in System Settings, then try again." = "macshot זקוק להרשאת נגישות ללכידת גלילה. אנא הענק גישה בהגדרות המערכת ונסה שוב.";
 "Open Settings" = "פתח הגדרות";
 "Cancel" = "ביטול";
 "Microphone Access Required" = "נדרשת גישה למיקרופון";

@@ -315,6 +315,7 @@
 "OK" = "확인";
 "Accessibility Access Required" = "손쉬운 사용 권한 필요";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot이 다른 앱을 자동 스크롤하려면 손쉬운 사용 권한이 필요합니다. 시스템 설정에서 권한을 허용한 후 다시 시도하세요.";
+"macshot needs Accessibility permission for scroll capture. Please grant access in System Settings, then try again." = "스크롤 캡처를 위해 macshot에 손쉬운 사용 권한이 필요합니다. 시스템 설정에서 접근 권한을 부여한 후 다시 시도해 주세요.";
 "Open Settings" = "설정 열기";
 "Cancel" = "취소";
 "Microphone Access Required" = "마이크 접근 권한 필요";

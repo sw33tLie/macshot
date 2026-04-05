@@ -315,6 +315,7 @@
 "OK" = "ОК";
 "Accessibility Access Required" = "Необходим е достъп за достъпност";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot се нуждае от разрешение за достъпност, за да превърта автоматично други приложения. Моля, дайте достъп в Системни настройки, след което опитайте отново.";
+"macshot needs Accessibility permission for scroll capture. Please grant access in System Settings, then try again." = "macshot се нуждае от разрешение за достъпност за заснемане с превъртане. Моля, разрешете достъпа в Системни настройки и опитайте отново.";
 "Open Settings" = "Отваряне на настройките";
 "Cancel" = "Отказ";
 "Microphone Access Required" = "Необходим е достъп до микрофон";

@@ -315,6 +315,7 @@
 "OK" = "OK";
 "Accessibility Access Required" = "Esteettomyysoikeus vaaditaan";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot tarvitsee esteettomyysoikeuden vierittaakseen muita sovelluksia automaattisesti. Myonna oikeus jarjestelman asetuksissa ja yrita uudelleen.";
+"macshot needs Accessibility permission for scroll capture. Please grant access in System Settings, then try again." = "macshot tarvitsee Esteettömyys-luvan vierityskaappausta varten. Myönnä käyttöoikeus Järjestelmäasetuksista ja yritä uudelleen.";
 "Open Settings" = "Avaa asetukset";
 "Cancel" = "Peruuta";
 "Microphone Access Required" = "Mikrofonin kayttoikeus vaaditaan";

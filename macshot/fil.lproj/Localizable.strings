@@ -315,6 +315,7 @@
 "OK" = "OK";
 "Accessibility Access Required" = "Kinakailangan ang Accessibility Access";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "Kailangan ng macshot ang Accessibility permission upang mag-auto-scroll sa ibang app. Pakibigyan ng access sa System Settings, pagkatapos ay subukang muli.";
+"macshot needs Accessibility permission for scroll capture. Please grant access in System Settings, then try again." = "Kailangan ng macshot ang Accessibility permission para sa scroll capture. Mangyaring bigyan ng access sa System Settings, pagkatapos subukan muli.";
 "Open Settings" = "Buksan ang Settings";
 "Cancel" = "Kanselahin";
 "Microphone Access Required" = "Kinakailangan ang Access sa Mikropono";
