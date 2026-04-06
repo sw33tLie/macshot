@@ -250,10 +250,17 @@ final class RecordingEngine: NSObject {
 
     // MARK: - Frame handling
 
+    /// Adjust a presentation timestamp by subtracting accumulated pause duration
+    /// so the output file has no gaps from pauses.
+    private func adjustedTime(_ time: CMTime) -> CMTime {
+        guard totalPausedDuration > 0 else { return time }
+        return CMTimeSubtract(time, CMTimeMakeWithSeconds(totalPausedDuration, preferredTimescale: time.timescale))
+    }
+
     private func handleFrame(pixelBuffer: CVPixelBuffer, presentationTime: CMTime) {
         guard state == .recording else { return }
         if format == .mp4 {
-            writeMP4Frame(buffer: pixelBuffer, presentationTime: presentationTime)
+            writeMP4Frame(buffer: pixelBuffer, presentationTime: adjustedTime(presentationTime))
         } else {
             gifEncoder?.addFrame(pixelBuffer)
         }
@@ -261,12 +268,16 @@ final class RecordingEngine: NSObject {
 
     private func handleAudioSample(_ sampleBuffer: CMSampleBuffer) {
         guard state == .recording, format == .mp4, sessionStarted, let audioInput = audioInput, audioInput.isReadyForMoreMediaData else { return }
-        audioInput.append(sampleBuffer)
+        if let adjusted = sampleBuffer.adjustingTime(by: totalPausedDuration) {
+            audioInput.append(adjusted)
+        }
     }
 
     private func handleMicSample(_ sampleBuffer: CMSampleBuffer) {
         guard state == .recording, format == .mp4, sessionStarted, let micInput = micAudioInput, micInput.isReadyForMoreMediaData else { return }
-        micInput.append(sampleBuffer)
+        if let adjusted = sampleBuffer.adjustingTime(by: totalPausedDuration) {
+            micInput.append(adjusted)
+        }
     }
 
     // MARK: - Mic capture
@@ -491,5 +502,23 @@ private class MicCaptureDelegate: NSObject, AVCaptureAudioDataOutputSampleBuffer
 
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         onSample?(sampleBuffer)
+    }
+}
+
+// MARK: - CMSampleBuffer time adjustment
+
+private extension CMSampleBuffer {
+    /// Create a copy of this audio sample buffer with timestamps shifted back
+    /// by the given pause duration, so the output has no time gaps.
+    func adjustingTime(by pauseDuration: TimeInterval) -> CMSampleBuffer? {
+        guard pauseDuration > 0 else { return self }
+        let offset = CMTimeMakeWithSeconds(pauseDuration, preferredTimescale: 44100)
+        let pts = CMTimeSubtract(CMSampleBufferGetPresentationTimeStamp(self), offset)
+        let dur = CMSampleBufferGetDuration(self)
+
+        var timing = CMSampleTimingInfo(duration: dur, presentationTimeStamp: pts, decodeTimeStamp: .invalid)
+        var adjusted: CMSampleBuffer?
+        CMSampleBufferCreateCopyWithNewTiming(allocator: nil, sampleBuffer: self, sampleTimingEntryCount: 1, sampleTimingArray: &timing, sampleBufferOut: &adjusted)
+        return adjusted
     }
 }
