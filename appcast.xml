@@ -13,10 +13,10 @@
             <enclosure url="https://github.com/sw33tLie/macshot/releases/download/v3.7.0/MacShot.dmg" length="5358295" type="application/octet-stream" sparkle:edSignature="/X2jDgHWwMIWeiPylwxluhu/ccaLceyaBqz4I+8L5utyGt2kNfhxNtn9AGZwVxhmQ5AoY/2IEKzGpzfbRttlAw==" />
         </item>
 <item>
-    <title>v3.8.0-beta.3</title>
-    <pubDate>Mon, 06 Apr 2026 13:52:41 +0000</pubDate>
-    <sparkle:version>4</sparkle:version>
-    <sparkle:shortVersionString>3.8.0-beta.3</sparkle:shortVersionString>
+    <title>v3.8.0-beta.4</title>
+    <pubDate>Mon, 06 Apr 2026 15:41:33 +0000</pubDate>
+    <sparkle:version>5</sparkle:version>
+    <sparkle:shortVersionString>3.8.0-beta.4</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
     <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
@@ -27,13 +27,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Added</h3><ul> <li><b>WYSIWYG drawing cursor</b> — pencil and marker tools now show a live dot preview matching the exact stroke size and color instead of a pen icon cursor. System cursor is hidden; the dot IS the cursor.</li> <li><b>Smart marker live text preview</b> — in smart marker mode, the cursor pill dynamically scales to match the detected text line height as you hover. OCR runs eagerly on first hover for instant feedback.</li> <li><b>Recording pause/resume</b> — new pause button in the recording control bar. Paused frames and audio are dropped; timer pauses. Red dot turns orange when paused.</li> <li><b>Recording control bar redesign</b> — floating HUD replaced with a full control bar: stop button, pause/resume toggle, timer with recording indicator, and a draggable handle. Dark themed with rounded corners.</li> <li><b>Scroll Capture keyboard shortcut</b> — new configurable hotkey slot in Preferences > Shortcuts (no default assigned).</li>  </ul><h3>Changed</h3><ul> <li><b>Smart marker vertical alignment</b> — highlight now centers on the text body (x-height) instead of the geometric center of the bounding box, compensating for descender space.</li> <li><b>Smart marker drag size</b> — stroke uses detected text line height from the start of the drag, not just on release. No more size jump when finishing the stroke.</li> <li><b>Recording mode cancel</b> — pressing Escape or the X button in recording setup now dismisses the overlay entirely instead of falling back to screenshot mode.</li>  </ul><h3>Fixed</h3><ul> <li><b>Cursor preview ghosting at zoom</b> — dirty rect invalidation now scales by zoom level, preventing ghost artifacts from previous cursor positions when zoomed in.</li> <li><b>Drawing cursor visible during annotation drag</b> — dot preview now hides when dragging, resizing, or rotating an annotation.</li> <li><b>Pan while drawing with Apple Pencil</b> — trackpad scroll events suppressed during active drawing to prevent simultaneous pan and draw on Sidecar.</li> <li><b>Recording HUD drag drift</b> — switched from delta-based to absolute positioning using screen coordinates. HUD stays exactly under cursor during drag with zero drift.</li> <li><b>Recording HUD flicker</b> — fixed width prevents frame resize on timer tick; auto-repositioning stops once user drags the HUD.</li> <li><b>Hotkey display for non-standard keys</b> — unknown keyCodes now use UCKeyTranslate to show the actual character instead of "?". Helps with non-Apple keyboards and BTT remapped keys.</li> <li><b>Sparkle beta update detection</b> — switched from version-string comparison to monotonic build numbers (CI run number) for `sparkle:version`, ensuring beta-to-beta updates are always detected.</li></ul>
+      <h3>Added</h3><ul> <li><b>Annotation outlines</b> — new outline toggle + color picker for arrows (all styles including thick), lines, rectangles, ellipses, and number tools. Outline draws as a contrasting border around the shape, visible on any background. Persisted per-annotation and in global settings.</li> <li><b>Shift+Click multi-selection</b> — hold Shift and click annotations to add them to the selection. Drag moves all selected, Delete removes all selected, color changes apply to all. Full controls (resize, rotate) shown for single selection; glow highlight for multi-select.</li> <li><b>Scroll Capture keyboard shortcut</b> — new configurable hotkey slot in Preferences > Shortcuts.</li>  </ul><h3>Changed</h3><ul> <li><b>Color wheel selection</b> — now purely angle-based. Moving the mouse far from the wheel still selects the color at that angle instead of deselecting.</li> <li><b>sRGB color profile</b> — fixed color space conversion. Screenshots with "Embed sRGB profile" enabled now have accurate colors matching the native macOS screenshot tool (proper pixel value conversion instead of re-tagging).</li>  </ul><h3>Fixed</h3><ul> <li><b>Hotkey display for non-standard keys</b> — unknown keyCodes now use UCKeyTranslate to show the actual character instead of "?". Helps with non-Apple keyboards and BTT remapped keys.</li></ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v3.8.0-beta.3/MacShot.dmg"
-        length="5550304"
+        url="https://github.com/sw33tLie/macshot/releases/download/v3.8.0-beta.4/MacShot.dmg"
+        length="5574961"
         type="application/octet-stream"
-        sparkle:edSignature="yrm9EidZccFDvbHvsYpRxLBk1WlIBglSLi5LqcQ6f1nLzuzBkl5QedttwoH8MPdAUORJ1KKmEs8mA+sOJ10JDQ=="
+        sparkle:edSignature="3b9fk55vn3Jg08CPm2+Aj2GNR60uCpAHvzoA2rTRith43cCq5one5069VU0eYULyTAIcY8nAU+4qryypRQmkAg=="
     />
 </item>
     </channel>
