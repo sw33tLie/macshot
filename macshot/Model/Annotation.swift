@@ -214,6 +214,7 @@ class Annotation {
     var textOutlineColor: NSColor?    // text outline/stroke color (nil = no outline)
     var textAlignment: NSTextAlignment = .left // text alignment within the box
     var fontFamilyName: String?       // font family for text (nil = system default)
+    var outlineColor: NSColor?        // shape/arrow/line outline color (nil = no outline)
 
     init(tool: AnnotationTool, startPoint: NSPoint, endPoint: NSPoint, color: NSColor, strokeWidth: CGFloat) {
         self.tool = tool
@@ -255,6 +256,7 @@ class Annotation {
         c.textOutlineColor = textOutlineColor
         c.textAlignment = textAlignment
         c.fontFamilyName = fontFamilyName
+        c.outlineColor = outlineColor
         return c
     }
 
@@ -776,8 +778,13 @@ class Annotation {
             if lineStyle != .solid {
                 lineStyle.applyFitted(to: path, pathLength: Self.smoothPathLength(pts))
             }
-            color.setStroke()
-            path.stroke()
+            // Outline: same path stroked wider first, then normal on top
+            if let oc = outlineColor {
+                path.lineWidth = strokeWidth + 6
+                oc.setStroke(); path.stroke()
+                path.lineWidth = strokeWidth
+            }
+            color.setStroke(); path.stroke()
             return
         }
 
@@ -794,14 +801,19 @@ class Annotation {
             }
             lineStyle.applyFitted(to: path, pathLength: length)
         }
-        color.setStroke()
         path.move(to: startPoint)
         if let cp = controlPoint {
             path.curve(to: endPoint, controlPoint1: cp, controlPoint2: cp)
         } else {
             path.line(to: endPoint)
         }
-        path.stroke()
+        // Outline: same path stroked wider first, then normal on top
+        if let oc = outlineColor {
+            path.lineWidth = strokeWidth + 6
+            oc.setStroke(); path.stroke()
+            path.lineWidth = strokeWidth
+        }
+        color.setStroke(); path.stroke()
     }
 
     private func drawArrow() {
@@ -888,6 +900,38 @@ class Annotation {
                  hypot(endBase.x - lineStart.x, endBase.y - lineStart.y))
             lineStyle.applyFitted(to: path, pathLength: length)
         }
+        // Outline: draw wider stroke behind everything
+        let outlineW: CGFloat = 3
+        if let oc = outlineColor {
+            oc.setStroke()
+            oc.setFill()
+            let outlinePath = path.copy() as! NSBezierPath
+            outlinePath.lineWidth = strokeWidth + outlineW * 2
+            outlinePath.lineCapStyle = .round
+            outlinePath.stroke()
+            // Outline arrowheads
+            switch arrowStyle {
+            case .single, .tail:
+                let h = NSBezierPath(); h.move(to: lastPt); h.line(to: ep1); h.line(to: ep2); h.close()
+                h.lineWidth = outlineW * 2; h.lineJoinStyle = .round; h.stroke(); h.fill()
+            case .double:
+                let eh = NSBezierPath(); eh.move(to: lastPt); eh.line(to: ep1); eh.line(to: ep2); eh.close()
+                eh.lineWidth = outlineW * 2; eh.lineJoinStyle = .round; eh.stroke(); eh.fill()
+                let sh = NSBezierPath(); sh.move(to: firstPt); sh.line(to: sp1); sh.line(to: sp2); sh.close()
+                sh.lineWidth = outlineW * 2; sh.lineJoinStyle = .round; sh.stroke(); sh.fill()
+            case .open:
+                let h = NSBezierPath(); h.lineWidth = strokeWidth + outlineW * 2
+                h.lineCapStyle = .round; h.lineJoinStyle = .round
+                h.move(to: ep1); h.line(to: lastPt); h.line(to: ep2); h.stroke()
+            case .thick: break
+            }
+            if arrowStyle == .tail {
+                let cr = NSRect(x: firstPt.x - tailRadius - outlineW, y: firstPt.y - tailRadius - outlineW,
+                                width: (tailRadius + outlineW) * 2, height: (tailRadius + outlineW) * 2)
+                NSBezierPath(ovalIn: cr).fill()
+            }
+        }
+
         color.setStroke()
         path.stroke()
 
@@ -1118,6 +1162,14 @@ class Annotation {
 
         path.close()
 
+        // Outline: stroke the unified shape behind the fill
+        if let oc = outlineColor {
+            oc.setStroke()
+            path.lineWidth = 6
+            path.lineJoinStyle = .round
+            path.stroke()
+        }
+
         color.setFill()
         path.fill()
     }
@@ -1128,30 +1180,47 @@ class Annotation {
         let cornerRadius: CGFloat = rectCornerRadius > 0 ? rectCornerRadius : (isRounded ? min(rect.width, rect.height) * 0.2 : 0)
         let style = forceFilled ? RectFillStyle.fill : rectFillStyle
 
+        // When outline is active, force solid style (dashed/dotted disabled in UI)
+        let effectiveLineStyle = outlineColor != nil ? .solid : lineStyle
+
+        let rectPerimeter: CGFloat = {
+            let r = min(cornerRadius, min(rect.width, rect.height) / 2)
+            return 2 * (rect.width - 2 * r) + 2 * (rect.height - 2 * r) + 2 * .pi * r
+        }()
+
         switch style {
         case .fill:
+            if let oc = outlineColor {
+                let outlinePath = NSBezierPath(roundedRect: rect, xRadius: cornerRadius, yRadius: cornerRadius)
+                outlinePath.lineWidth = strokeWidth + 6
+                outlinePath.lineJoinStyle = cornerRadius > 0 ? .round : .miter
+                oc.setStroke()
+                outlinePath.stroke()
+            }
             color.setFill()
             NSBezierPath(roundedRect: rect, xRadius: cornerRadius, yRadius: cornerRadius).fill()
 
         case .strokeAndFill:
-            // Fill at half the color's current alpha
             let fillAlpha = color.alphaComponent * 0.5
             color.withAlphaComponent(fillAlpha).setFill()
             NSBezierPath(roundedRect: rect, xRadius: cornerRadius, yRadius: cornerRadius).fill()
-            // Stroke on top
             let path = NSBezierPath(roundedRect: rect, xRadius: cornerRadius, yRadius: cornerRadius)
             path.lineWidth = strokeWidth
-            if lineStyle != .solid {
-                let r = min(cornerRadius, min(rect.width, rect.height) / 2)
-                let perimeter = 2 * (rect.width - 2 * r) + 2 * (rect.height - 2 * r) + 2 * .pi * r
-                lineStyle.applyFitted(to: path, pathLength: perimeter)
+            path.lineJoinStyle = cornerRadius > 0 ? .round : .miter
+            if effectiveLineStyle != .solid {
+                effectiveLineStyle.applyFitted(to: path, pathLength: rectPerimeter)
+            }
+            if let oc = outlineColor {
+                path.lineWidth = strokeWidth + 6
+                oc.setStroke(); path.stroke()
+                path.lineWidth = strokeWidth
             }
             color.setStroke()
             path.stroke()
 
         case .stroke:
-            if cornerRadius < 1 && (lineStyle == .dotted || lineStyle == .dashed) {
-                if lineStyle == .dotted {
+            if cornerRadius < 1 && (effectiveLineStyle == .dotted || effectiveLineStyle == .dashed) {
+                if effectiveLineStyle == .dotted {
                     drawDottedRectPerSide(rect: rect)
                 } else {
                     drawDashedRectPerSide(rect: rect)
@@ -1159,10 +1228,14 @@ class Annotation {
             } else {
                 let path = NSBezierPath(roundedRect: rect, xRadius: cornerRadius, yRadius: cornerRadius)
                 path.lineWidth = strokeWidth
-                if lineStyle != .solid {
-                    let r = min(cornerRadius, min(rect.width, rect.height) / 2)
-                    let perimeter = 2 * (rect.width - 2 * r) + 2 * (rect.height - 2 * r) + 2 * .pi * r
-                    lineStyle.applyFitted(to: path, pathLength: perimeter)
+                path.lineJoinStyle = cornerRadius > 0 ? .round : .miter
+                if effectiveLineStyle != .solid {
+                    effectiveLineStyle.applyFitted(to: path, pathLength: rectPerimeter)
+                }
+                if let oc = outlineColor {
+                    path.lineWidth = strokeWidth + 6
+                    oc.setStroke(); path.stroke()
+                    path.lineWidth = strokeWidth
                 }
                 color.setStroke()
                 path.stroke()
@@ -1254,8 +1327,22 @@ class Annotation {
         let rect = boundingRect
         guard rect.width > 0, rect.height > 0 else { return }
 
+        // When outline is active, force solid style (dashed/dotted disabled in UI)
+        let effectiveLineStyle = outlineColor != nil ? .solid : lineStyle
+
+        let ellipsePerimeter: CGFloat = {
+            let a = rect.width / 2, b = rect.height / 2
+            return CGFloat.pi * (3 * (a + b) - sqrt((3 * a + b) * (a + 3 * b)))
+        }()
+
         switch rectFillStyle {
         case .fill:
+            if let oc = outlineColor {
+                let outlinePath = NSBezierPath(ovalIn: rect)
+                outlinePath.lineWidth = strokeWidth + 6
+                oc.setStroke()
+                outlinePath.stroke()
+            }
             color.setFill()
             NSBezierPath(ovalIn: rect).fill()
 
@@ -1265,11 +1352,13 @@ class Annotation {
             NSBezierPath(ovalIn: rect).fill()
             let path = NSBezierPath(ovalIn: rect)
             path.lineWidth = strokeWidth
-            if lineStyle != .solid {
-                let a = rect.width / 2
-                let b = rect.height / 2
-                let perimeter = CGFloat.pi * (3 * (a + b) - sqrt((3 * a + b) * (a + 3 * b)))
-                lineStyle.applyFitted(to: path, pathLength: perimeter)
+            if effectiveLineStyle != .solid {
+                effectiveLineStyle.applyFitted(to: path, pathLength: ellipsePerimeter)
+            }
+            if let oc = outlineColor {
+                path.lineWidth = strokeWidth + 6
+                oc.setStroke(); path.stroke()
+                path.lineWidth = strokeWidth
             }
             color.setStroke()
             path.stroke()
@@ -1277,13 +1366,13 @@ class Annotation {
         case .stroke:
             let path = NSBezierPath(ovalIn: rect)
             path.lineWidth = strokeWidth
-            if lineStyle != .solid {
-                let a = rect.width / 2
-                let b = rect.height / 2
-                let perimeter = CGFloat.pi * (3 * (a + b) - sqrt((3 * a + b) * (a + 3 * b)))
-                lineStyle.applyFitted(to: path, pathLength: perimeter)
-            } else {
-                lineStyle.apply(to: path)
+            if effectiveLineStyle != .solid {
+                effectiveLineStyle.applyFitted(to: path, pathLength: ellipsePerimeter)
+            }
+            if let oc = outlineColor {
+                path.lineWidth = strokeWidth + 6
+                oc.setStroke(); path.stroke()
+                path.lineWidth = strokeWidth
             }
             color.setStroke()
             path.stroke()
@@ -1345,6 +1434,13 @@ class Annotation {
 
         // Draw the circle on top of the cone
         let circleRect = NSRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)
+        // Outline behind circle
+        if let oc = outlineColor {
+            let outlineCircle = NSBezierPath(ovalIn: circleRect.insetBy(dx: -2, dy: -2))
+            outlineCircle.lineWidth = 3
+            oc.setStroke()
+            outlineCircle.stroke()
+        }
         color.setFill()
         NSBezierPath(ovalIn: circleRect).fill()
 

@@ -201,23 +201,48 @@ class OverlayView: NSView {
     }()
 
     // Select/move mode
-    private var selectedAnnotation: Annotation? {
+    /// All currently selected annotations (supports multi-select via Shift+Click).
+    private var selectedAnnotations: [Annotation] = [] {
         didSet {
-            if selectedAnnotation !== oldValue {
-                // Commit any pending property edit undo from the previous selection
+            let oldSingle = oldValue.first
+            let newSingle = selectedAnnotations.first
+            if newSingle !== oldSingle || oldValue.count != selectedAnnotations.count {
                 toolOptionsRowView?.clearEditingAnnotation()
 
-                if let ann = selectedAnnotation {
-                    // Show selected annotation's properties in the options row
+                if selectedAnnotations.count == 1, let ann = newSingle {
                     toolOptionsRowView?.rebuild(forAnnotation: ann)
                     repositionToolbars()
-                } else if let tool = currentTool as AnnotationTool? {
-                    // Revert to global tool options
-                    toolOptionsRowView?.rebuild(for: tool)
-                    repositionToolbars()
+                } else if selectedAnnotations.isEmpty {
+                    if let tool = currentTool as AnnotationTool? {
+                        toolOptionsRowView?.rebuild(for: tool)
+                        repositionToolbars()
+                    }
+                } else {
+                    // Multi-select: revert to tool options (no per-annotation editing)
+                    if let tool = currentTool as AnnotationTool? {
+                        toolOptionsRowView?.rebuild(for: tool)
+                        repositionToolbars()
+                    }
                 }
             }
         }
+    }
+
+    /// Convenience: the single selected annotation (nil if 0 or 2+ selected).
+    private var selectedAnnotation: Annotation? {
+        get { selectedAnnotations.count == 1 ? selectedAnnotations.first : nil }
+        set {
+            if let ann = newValue {
+                selectedAnnotations = [ann]
+            } else {
+                selectedAnnotations = []
+            }
+        }
+    }
+
+    /// Whether an annotation is in the current selection.
+    private func isSelected(_ annotation: Annotation) -> Bool {
+        selectedAnnotations.contains(where: { $0 === annotation })
     }
     private var isDraggingAnnotation: Bool = false
     private var didMoveAnnotation: Bool = false
@@ -341,7 +366,7 @@ class OverlayView: NSView {
     var cachedEffectsScreenshot: NSImage?
 
     // Color picker target
-    enum ColorPickerTarget { case drawColor, textBg, textOutline }
+    enum ColorPickerTarget { case drawColor, textBg, textOutline, annotationOutline }
     private var colorPickerTarget: ColorPickerTarget = .drawColor
 
     // Beautify toolbar animation
@@ -1387,10 +1412,13 @@ class OverlayView: NSView {
                 drawColorSamplerPreview(at: colorSamplerPoint)
             }
 
-            // Draw selection highlight for selected annotation (or hovered annotation in drawing mode)
+            // Draw selection highlight for selected annotations
             // Suppressed during recording so annotations are purely visual overlays.
-            if !isRecording, let selected = selectedAnnotation {
-                drawAnnotationControls(for: selected)
+            if !isRecording {
+                for selected in selectedAnnotations {
+                    // Only draw full controls (handles, buttons) for single selection
+                    drawAnnotationControls(for: selected, fullControls: selectedAnnotations.count == 1)
+                }
             }
 
             // Pencil/marker cursor dot preview inside zoom transform so it scales with zoom
@@ -1423,10 +1451,12 @@ class OverlayView: NSView {
                 }
 
                 // Re-draw annotation controls on top of the beautify preview so they stay visible.
-                if !isRecording, let selected = selectedAnnotation {
+                if !isRecording && !selectedAnnotations.isEmpty {
                     context.saveGraphicsState()
                     applyCanvasTransform(to: context)
-                    drawAnnotationControls(for: selected)
+                    for selected in selectedAnnotations {
+                        drawAnnotationControls(for: selected, fullControls: selectedAnnotations.count == 1)
+                    }
                     context.restoreGraphicsState()
                 }
 
@@ -1492,10 +1522,12 @@ class OverlayView: NSView {
                 context.restoreGraphicsState()
 
                 // Re-draw overlays on top of effects preview
-                if let selected = selectedAnnotation {
+                if !selectedAnnotations.isEmpty {
                     context.saveGraphicsState()
                     applyCanvasTransform(to: context)
-                    drawAnnotationControls(for: selected)
+                    for selected in selectedAnnotations {
+                        drawAnnotationControls(for: selected, fullControls: selectedAnnotations.count == 1)
+                    }
                     context.restoreGraphicsState()
                 }
                 if currentTool == .loupe && selectionRect.contains(loupeCursorPoint) && loupeCursorPoint != .zero {
@@ -3361,7 +3393,7 @@ class OverlayView: NSView {
 
     // MARK: - Annotation Controls
 
-    private func drawAnnotationControls(for annotation: Annotation) {
+    private func drawAnnotationControls(for annotation: Annotation, fullControls: Bool = true) {
         // Arrow, line, and measure: show only 2 endpoint handles, no bounding box
         if annotation.tool == .arrow || annotation.tool == .line || annotation.tool == .measure {
             let pts = annotation.waypoints
@@ -3571,6 +3603,14 @@ class OverlayView: NSView {
             shapePath.lineCapStyle = .round
             shapePath.lineJoinStyle = .round
             shapePath.stroke()
+        }
+
+        // Skip handles, rotate, and delete buttons for multi-select (just show the glow)
+        guard fullControls else {
+            if annotation.rotation != 0 && annotation.supportsRotation {
+                NSGraphicsContext.current?.cgContext.restoreGState()
+            }
+            return
         }
 
         // Draw resize handles (8 positions) — loupe/pencil/marker don't support resize
@@ -4653,17 +4693,27 @@ class OverlayView: NSView {
                 if annotation.tool == .pixelate { annotation.bakedBlurNSImage = nil }
                 cachedCompositedImage = nil
                 needsDisplay = true
-            } else if isDraggingAnnotation, let annotation = selectedAnnotation {
+            } else if isDraggingAnnotation, !selectedAnnotations.isEmpty {
                 let rawDx = canvasPoint.x - annotationDragStart.x
                 let rawDy = canvasPoint.y - annotationDragStart.y
-                // Apply snap to the annotation's bounding rect after tentative move
-                var movedRect = annotation.boundingRect.offsetBy(dx: rawDx, dy: rawDy)
-                let snap = snapRectDelta(rect: movedRect, excluding: annotation)
-                let finalDx = rawDx + snap.dx
-                let finalDy = rawDy + snap.dy
-                annotation.move(dx: finalDx, dy: finalDy)
-                annotationDragStart = NSPoint(
-                    x: canvasPoint.x + snap.dx, y: canvasPoint.y + snap.dy)
+                // For single selection, apply snap; for multi, just move raw
+                let finalDx: CGFloat
+                let finalDy: CGFloat
+                if selectedAnnotations.count == 1, let annotation = selectedAnnotations.first {
+                    let movedRect = annotation.boundingRect.offsetBy(dx: rawDx, dy: rawDy)
+                    let snap = snapRectDelta(rect: movedRect, excluding: annotation)
+                    finalDx = rawDx + snap.dx
+                    finalDy = rawDy + snap.dy
+                    annotationDragStart = NSPoint(
+                        x: canvasPoint.x + snap.dx, y: canvasPoint.y + snap.dy)
+                } else {
+                    finalDx = rawDx
+                    finalDy = rawDy
+                    annotationDragStart = canvasPoint
+                }
+                for annotation in selectedAnnotations {
+                    annotation.move(dx: finalDx, dy: finalDy)
+                }
                 didMoveAnnotation = true
                 cachedCompositedImage = nil
                 needsDisplay = true
@@ -4826,7 +4876,7 @@ class OverlayView: NSView {
                 snapGuideX = nil
                 snapGuideY = nil
                 NSCursor.openHand.set()
-                if let ann = selectedAnnotation {
+                for ann in selectedAnnotations {
                     if ann.tool == .loupe { ann.bakeLoupe() }
                     if ann.tool == .pixelate { ann.bakedBlurNSImage = nil; ann.bakePixelate() }
                 }
@@ -5729,8 +5779,10 @@ class OverlayView: NSView {
     }
 
     private func applyColorToSelectedAnnotation() {
-        guard let ann = selectedAnnotation else { return }
-        ann.color = opacityAppliedColor(for: ann.tool)
+        guard !selectedAnnotations.isEmpty else { return }
+        for ann in selectedAnnotations {
+            ann.color = opacityAppliedColor(for: ann.tool)
+        }
         cachedCompositedImage = nil
         needsDisplay = true
     }
@@ -5767,7 +5819,19 @@ class OverlayView: NSView {
         // Click-to-select body: skip for pencil/marker (they use long-press instead)
         if currentTool != .colorSampler && currentTool != .text && !isPencilOrMarker {
             if let clicked = annotations.reversed().first(where: { $0.isMovable && $0.hitTest(point: point) }) {
-                selectedAnnotation = clicked
+                let shiftHeld = NSEvent.modifierFlags.contains(.shift)
+                if shiftHeld {
+                    // Shift+Click: toggle annotation in/out of selection
+                    if let idx = selectedAnnotations.firstIndex(where: { $0 === clicked }) {
+                        selectedAnnotations.remove(at: idx)
+                    } else {
+                        selectedAnnotations.append(clicked)
+                    }
+                } else if !isSelected(clicked) {
+                    // Not Shift, not already selected: replace selection
+                    selectedAnnotation = clicked
+                }
+                // If already selected without Shift: keep current selection (allows multi-drag)
                 isDraggingAnnotation = true
                 didMoveAnnotation = false
                 annotationDragStart = point
@@ -5792,7 +5856,16 @@ class OverlayView: NSView {
                     self.longPressTimer = nil
                     // Select the annotation under the long-press point
                     if let clicked = self.annotations.reversed().first(where: { $0.isMovable && $0.hitTest(point: point) }) {
-                        self.selectedAnnotation = clicked
+                        let shiftHeld = NSEvent.modifierFlags.contains(.shift)
+                        if shiftHeld {
+                            if let idx = self.selectedAnnotations.firstIndex(where: { $0 === clicked }) {
+                                self.selectedAnnotations.remove(at: idx)
+                            } else {
+                                self.selectedAnnotations.append(clicked)
+                            }
+                        } else if !self.isSelected(clicked) {
+                            self.selectedAnnotation = clicked
+                        }
                         self.isDraggingAnnotation = true
                         self.didMoveAnnotation = false
                         self.annotationDragStart = point
@@ -5806,11 +5879,16 @@ class OverlayView: NSView {
         }
 
         // Clicking empty space — clear selection and start new annotation
-        if selectedAnnotation != nil { selectedAnnotation = nil }
+        if !selectedAnnotations.isEmpty { selectedAnnotations = [] }
 
         // Dispatch to extracted tool handler if available
         if let handler = toolHandlers[currentTool] {
             if let annotation = handler.start(at: point, canvas: self) {
+                // Apply outline color from settings for supported tools
+                let outlineTools: [AnnotationTool] = [.arrow, .line, .rectangle, .ellipse, .number]
+                if outlineTools.contains(currentTool) && UserDefaults.standard.bool(forKey: "annotationOutlineEnabled") {
+                    annotation.outlineColor = ToolOptionsRowView.savedOutlineColor
+                }
                 currentAnnotation = annotation
                 needsDisplay = true
             }
@@ -6296,8 +6374,8 @@ class OverlayView: NSView {
                 cancelTextEditing()
             } else if PopoverHelper.isVisible {
                 PopoverHelper.dismiss()
-            } else if selectedAnnotation != nil {
-                selectedAnnotation = nil
+            } else if !selectedAnnotations.isEmpty {
+                selectedAnnotations = []
                 needsDisplay = true
             } else {
                 overlayDelegate?.overlayViewDidCancel()
@@ -6328,18 +6406,18 @@ class OverlayView: NSView {
             if textEditView == nil, state == .selected {
                 overlayDelegate?.overlayViewDidRequestQuickSave()
             }
-        case 51:  // Backspace/Delete — remove selected or hovered annotation
-            guard textEditView == nil, state == .selected else { break }
-            if let ann = selectedAnnotation {
+        case 51:  // Backspace/Delete — remove selected annotation(s)
+            guard textEditView == nil, state == .selected, !selectedAnnotations.isEmpty else { break }
+            for ann in selectedAnnotations {
                 if let idx = annotations.firstIndex(where: { $0 === ann }) {
                     annotations.remove(at: idx)
                     undoStack.append(.deleted(ann, idx))
-                    redoStack.removeAll()
                 }
-                selectedAnnotation = nil
-                cachedCompositedImage = nil
-                needsDisplay = true
             }
+            redoStack.removeAll()
+            selectedAnnotations = []
+            cachedCompositedImage = nil
+            needsDisplay = true
         default:
             // Auto-measure: hold "1" = vertical preview, hold "2" = horizontal preview
             if state == .selected && currentTool == .measure && textEditView == nil
@@ -6565,8 +6643,9 @@ class OverlayView: NSView {
             hoveredAnnotation = nil
             changed = true
         }
-        if let s = selectedAnnotation, removed.contains(where: { $0 === s }) {
-            selectedAnnotation = nil
+        let beforeCount = selectedAnnotations.count
+        selectedAnnotations.removeAll { ann in removed.contains(where: { $0 === ann }) }
+        if selectedAnnotations.count != beforeCount {
             changed = true
         }
     }
@@ -6827,6 +6906,13 @@ class OverlayView: NSView {
         case .drawColor: initialColor = currentColor
         case .textBg: initialColor = textEditor.bgColor
         case .textOutline: initialColor = textEditor.outlineColor
+        case .annotationOutline:
+            if let data = UserDefaults.standard.data(forKey: "annotationOutlineColor"),
+               let c = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data) {
+                initialColor = c
+            } else {
+                initialColor = .white
+            }
         }
         picker.setColor(initialColor, opacity: currentColorOpacity)
         picker.customColors = customColors
@@ -6835,9 +6921,10 @@ class OverlayView: NSView {
         picker.onColorChanged = { [weak self] color in
             guard let self = self else { return }
             self.applyPickedColor(color)
-            // Save to selected custom slot
             picker.saveToSelectedSlot(color)
-            self.rebuildToolbarLayout()
+            // Update toolbar color swatches without rebuilding (which destroys the popover anchor)
+            self.toolOptionsRowView?.updateSwatchColors()
+            self.needsDisplay = true
         }
         picker.onOpacityChanged = { [weak self] opacity in
             guard let self = self else { return }
@@ -6880,6 +6967,15 @@ class OverlayView: NSView {
             if let data = try? NSKeyedArchiver.archivedData(withRootObject: color, requiringSecureCoding: false) {
                 UserDefaults.standard.set(data, forKey: "textOutlineColor")
             }
+        case .annotationOutline:
+            if let data = try? NSKeyedArchiver.archivedData(withRootObject: color, requiringSecureCoding: false) {
+                UserDefaults.standard.set(data, forKey: "annotationOutlineColor")
+            }
+            // Apply to selected annotations
+            for ann in selectedAnnotations {
+                ann.outlineColor = color
+            }
+            cachedCompositedImage = nil
         }
         needsDisplay = true
     }

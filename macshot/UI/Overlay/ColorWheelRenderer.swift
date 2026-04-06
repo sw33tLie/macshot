@@ -107,7 +107,8 @@ class ColorWheelRenderer {
         let dy = point.y - center.y
         let dist = hypot(dx, dy)
 
-        if dist < radius * 0.3 || dist > radius + swatchRadius + 15 { return -1 }
+        // Only dead zone is the center — outside that, select purely by angle
+        if dist < radius * 0.3 { return -1 }
 
         let count = colors.count
         let angleStep = (2 * CGFloat.pi) / CGFloat(count)
