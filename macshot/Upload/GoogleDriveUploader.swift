@@ -104,12 +104,13 @@ final class GoogleDriveUploader: NSObject, ASWebAuthenticationPresentationContex
                 completion(.failure(Self.error("Not signed in")))
                 return
             }
-            self.ensureMacShotFolder { folderID in
-                guard let folderID = folderID else {
-                    completion(.failure(Self.error("Failed to create macshot folder")))
-                    return
+            self.ensureMacShotFolder { result in
+                switch result {
+                case .success(let folderID):
+                    self.uploadFile(data: data, filename: filename, mimeType: mimeType, folderID: folderID, completion: completion)
+                case .failure(let error):
+                    completion(.failure(error))
                 }
-                self.uploadFile(data: data, filename: filename, mimeType: mimeType, folderID: folderID, completion: completion)
             }
         }
     }
@@ -258,10 +259,13 @@ final class GoogleDriveUploader: NSObject, ASWebAuthenticationPresentationContex
 
     // MARK: - Drive Operations
 
-    private func ensureMacShotFolder(completion: @escaping (String?) -> Void) {
-        if let id = macShotFolderID { completion(id); return }
+    private func ensureMacShotFolder(completion: @escaping (Result<String, Error>) -> Void) {
+        if let id = macShotFolderID { completion(.success(id)); return }
 
-        guard let token = loadAccessToken() else { completion(nil); return }
+        guard let token = loadAccessToken() else {
+            completion(.failure(Self.error("No access token")))
+            return
+        }
 
         // Search for existing macshot folder
         let query = "name='macshot' and mimeType='application/vnd.google-apps.folder' and trashed=false"
@@ -271,24 +275,44 @@ final class GoogleDriveUploader: NSObject, ASWebAuthenticationPresentationContex
         var request = URLRequest(url: searchURL.url!)
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
-        URLSession.shared.dataTask(with: request) { [weak self] data, _, error in
-            guard let self = self, let data = data, error == nil,
-                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let files = json["files"] as? [[String: Any]] else {
-                DispatchQueue.main.async { completion(nil) }
+        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+            guard let self = self else { return }
+            if let error = error {
+                DispatchQueue.main.async { completion(.failure(Self.error("Folder search failed: \(error.localizedDescription)"))) }
+                return
+            }
+            guard let data = data else {
+                DispatchQueue.main.async { completion(.failure(Self.error("Folder search returned no data"))) }
+                return
+            }
+
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                DispatchQueue.main.async { completion(.failure(Self.error("Folder search: invalid response (HTTP \(statusCode))"))) }
+                return
+            }
+
+            if let apiError = json["error"] as? [String: Any],
+               let message = apiError["message"] as? String {
+                DispatchQueue.main.async { completion(.failure(Self.error("Folder search: \(message) (HTTP \(statusCode))"))) }
+                return
+            }
+
+            guard let files = json["files"] as? [[String: Any]] else {
+                DispatchQueue.main.async { completion(.failure(Self.error("Folder search: unexpected response format (HTTP \(statusCode))"))) }
                 return
             }
 
             if let existing = files.first, let id = existing["id"] as? String {
                 self.macShotFolderID = id
-                DispatchQueue.main.async { completion(id) }
+                DispatchQueue.main.async { completion(.success(id)) }
             } else {
                 self.createMacShotFolder(token: token, completion: completion)
             }
         }.resume()
     }
 
-    private func createMacShotFolder(token: String, completion: @escaping (String?) -> Void) {
+    private func createMacShotFolder(token: String, completion: @escaping (Result<String, Error>) -> Void) {
         var request = URLRequest(url: URL(string: filesURL)!)
         request.httpMethod = "POST"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -300,15 +324,34 @@ final class GoogleDriveUploader: NSObject, ASWebAuthenticationPresentationContex
         ]
         request.httpBody = try? JSONSerialization.data(withJSONObject: metadata)
 
-        URLSession.shared.dataTask(with: request) { [weak self] data, _, error in
-            guard let data = data, error == nil,
-                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let id = json["id"] as? String else {
-                DispatchQueue.main.async { completion(nil) }
+        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+            if let error = error {
+                DispatchQueue.main.async { completion(.failure(Self.error("Create folder failed: \(error.localizedDescription)"))) }
+                return
+            }
+            guard let data = data else {
+                DispatchQueue.main.async { completion(.failure(Self.error("Create folder returned no data"))) }
+                return
+            }
+
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                DispatchQueue.main.async { completion(.failure(Self.error("Create folder: invalid response (HTTP \(statusCode))"))) }
+                return
+            }
+
+            if let apiError = json["error"] as? [String: Any],
+               let message = apiError["message"] as? String {
+                DispatchQueue.main.async { completion(.failure(Self.error("Create folder: \(message) (HTTP \(statusCode))"))) }
+                return
+            }
+
+            guard let id = json["id"] as? String else {
+                DispatchQueue.main.async { completion(.failure(Self.error("Create folder: missing folder ID in response (HTTP \(statusCode))"))) }
                 return
             }
             self?.macShotFolderID = id
-            DispatchQueue.main.async { completion(id) }
+            DispatchQueue.main.async { completion(.success(id)) }
         }.resume()
     }
 
@@ -380,10 +423,19 @@ final class GoogleDriveUploader: NSObject, ASWebAuthenticationPresentationContex
                 }
                 return
             }
-            guard let data = data,
-                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let fileID = json["id"] as? String else {
-                DispatchQueue.main.async { completion(.failure(Self.error("Upload failed"))) }
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+            guard let data = data else {
+                DispatchQueue.main.async { completion(.failure(Self.error("Upload returned no data (HTTP \(statusCode))"))) }
+                return
+            }
+            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            if let apiError = json?["error"] as? [String: Any],
+               let message = apiError["message"] as? String {
+                DispatchQueue.main.async { completion(.failure(Self.error("Upload: \(message) (HTTP \(statusCode))"))) }
+                return
+            }
+            guard let fileID = json?["id"] as? String else {
+                DispatchQueue.main.async { completion(.failure(Self.error("Upload failed (HTTP \(statusCode))"))) }
                 return
             }
             let viewLink = "https://drive.google.com/file/d/\(fileID)/view"

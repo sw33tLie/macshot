@@ -4879,6 +4879,7 @@ class OverlayView: NSView {
                 currentColor = colorWheel.hoveredColor!
                 applyColorToTextIfEditing()
                 applyColorToSelectedAnnotation()
+                rebuildToolbarLayout()
             }
             colorWheel.dismiss()
             colorWheel.hoveredIndex = -1
