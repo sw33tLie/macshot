@@ -35,6 +35,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
     private var captureCursorCheckbox: NSButton!
     private var windowTitleCheckbox: NSButton!
     private var autoUpdateCheckbox: NSButton!
+    private var betaUpdateCheckbox: NSButton!
     private var accentColorWell: NSColorWell!
     private var iconColorWell: NSColorWell!
     private var quickModePopup: NSPopUpButton!
@@ -334,6 +335,10 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
 
         autoUpdateCheckbox = NSButton(checkboxWithTitle: L("Check for updates automatically"), target: self, action: #selector(autoUpdateChanged(_:)))
         stack.addArrangedSubview(indented(autoUpdateCheckbox))
+        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+
+        betaUpdateCheckbox = NSButton(checkboxWithTitle: L("Check for beta updates"), target: self, action: #selector(betaUpdateChanged(_:)))
+        stack.addArrangedSubview(indented(betaUpdateCheckbox))
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
@@ -1430,6 +1435,8 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         let autoUpdate = UserDefaults.standard.object(forKey: "SUEnableAutomaticChecks") as? Bool ?? true
         autoUpdateCheckbox.state = autoUpdate ? .on : .off
 
+        betaUpdateCheckbox.state = UserDefaults.standard.bool(forKey: "betaUpdatesEnabled") ? .on : .off
+
         accentColorWell.color = ToolbarLayout.accentColor
         iconColorWell.color = ToolbarLayout.iconColor
 
@@ -1712,6 +1719,10 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
 
     @objc private func autoUpdateChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "SUEnableAutomaticChecks")
+    }
+
+    @objc private func betaUpdateChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: "betaUpdatesEnabled")
     }
 
     // MARK: - NSTabViewDelegate

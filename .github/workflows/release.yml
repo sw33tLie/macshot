@@ -5,6 +5,7 @@ on:
   push:
     tags:
       - "v*.*.*"
+      - "v*.*.*-beta.*"
 
 jobs:
   release:
@@ -23,6 +24,11 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME#v}"   # strip leading 'v'
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+          if [[ "$VERSION" == *"-beta"* ]]; then
+            echo "IS_BETA=true" >> $GITHUB_ENV
+          else
+            echo "IS_BETA=false" >> $GITHUB_ENV
+          fi
 
       # ── 3. Import Developer ID certificate into a temporary keychain ───────
       - name: Import signing certificate
@@ -248,20 +254,20 @@ jobs:
               -e 's| *$|</ul>|')
           fi
 
-          # Build appcast.xml — keep only the latest version (simple and clean)
-          cat > appcast.xml <<XMLEOF
-          <?xml version="1.0" encoding="utf-8"?>
-          <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
-              <channel>
-                  <title>macshot</title>
-                  <link>https://github.com/sw33tLie/macshot</link>
-                  <description>macshot updates</description>
+          # Build the new <item> block
+          CHANNEL_LINE=""
+          if [ "$IS_BETA" = "true" ]; then
+            CHANNEL_LINE="<sparkle:channel>beta</sparkle:channel>"
+          fi
+
+          NEW_ITEM=$(cat <<ITEMEOF
                   <item>
                       <title>v${VERSION}</title>
                       <pubDate>${DATE}</pubDate>
                       <sparkle:version>${VERSION}</sparkle:version>
                       <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
                       <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
+                      ${CHANNEL_LINE}
                       <description><![CDATA[
                         <style>
                           body { font-family: -apple-system, sans-serif; font-size: 13px; padding: 12px; }
@@ -279,6 +285,36 @@ jobs:
                           sparkle:edSignature="${ED_SIG}"
                       />
                   </item>
+          ITEMEOF
+          )
+
+          # Merge into appcast.xml:
+          # - Beta release: keep existing stable item, replace any previous beta item
+          # - Stable release: replace everything (stable is now the latest, drop old beta)
+          if [ "$IS_BETA" = "true" ] && [ -f appcast.xml ]; then
+            # Extract existing stable item(s) — items WITHOUT sparkle:channel
+            # Use awk to extract <item>...</item> blocks that don't contain sparkle:channel
+            STABLE_ITEMS=$(awk '
+              /<item>/ { buf=""; capture=1 }
+              capture { buf = buf $0 "\n" }
+              /<\/item>/ && capture {
+                capture=0
+                if (buf !~ /sparkle:channel/) print buf
+              }
+            ' appcast.xml)
+          else
+            STABLE_ITEMS=""
+          fi
+
+          # Assemble final appcast
+          cat > appcast.xml <<XMLEOF
+          <?xml version="1.0" encoding="utf-8"?>
+          <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+              <channel>
+                  <title>macshot</title>
+                  <link>https://github.com/sw33tLie/macshot</link>
+                  <description>macshot updates</description>
+          ${STABLE_ITEMS}${NEW_ITEM}
               </channel>
           </rss>
           XMLEOF
@@ -292,9 +328,14 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release delete "v$VERSION" --yes 2>/dev/null || true
+          PRERELEASE_FLAG=""
+          if [ "$IS_BETA" = "true" ]; then
+            PRERELEASE_FLAG="--prerelease"
+          fi
           gh release create "v$VERSION" MacShot.dmg \
             --title "v$VERSION" \
-            --notes-file release_notes.md
+            --notes-file release_notes.md \
+            $PRERELEASE_FLAG
 
       # ── 12. Commit appcast.xml to main ─────────────────────────────────────
       - name: Commit appcast + update website version
@@ -303,15 +344,19 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git fetch origin main
           git checkout main
-          sed -i '' "s/v[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*/v${VERSION}/" website/index.html
-          git add appcast.xml website/index.html
+          if [ "$IS_BETA" = "false" ]; then
+            sed -i '' "s/v[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*/v${VERSION}/" website/index.html
+            git add website/index.html
+          fi
+          git add appcast.xml
           git diff --cached --quiet && echo "No changes" || {
-            git commit -m "ci: update appcast.xml + website version for v${VERSION}"
+            git commit -m "ci: update appcast.xml for v${VERSION}"
             git push origin main
           }
 
       # ── 13. Update Homebrew formula (personal tap) ─────────────────────────
       - name: Update Homebrew formula
+        if: env.IS_BETA == 'false'
         env:
           GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
@@ -331,6 +376,7 @@ jobs:
 
       # ── 14. Bump homebrew-cask (official) ──────────────────────────────────
       - name: Bump homebrew-cask
+        if: env.IS_BETA == 'false'
         env:
           HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |

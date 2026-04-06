@@ -1,5 +1,28 @@
 # Changelog
 
+## [3.8.0-beta.1] - 2026-04-06
+
+### Added
+- **Beta update channel** — new "Check for beta updates" toggle in Preferences. When enabled, Sparkle will offer pre-release builds alongside stable releases. Beta builds are signed and notarized identically to stable releases.
+- **GIF processing toast** — "Processing GIF..." toast during encoding, encoding moved off main thread to prevent beach ball.
+- **Mic device picker** — right-click the mic button during recording setup to select input device. Shows live volume level inside the button. Filters out virtual aggregate devices. Pre-checks microphone permission on recording mode entry.
+- **Keystroke overlay** — toggle in recording toolbar to show pressed keys on-screen during recording. Right-click for "Shortcuts Only" vs "All Keystrokes" mode. Pill-shaped HUD at bottom center with fade animation.
+- **Recording countdown** — delay timer fires after pressing record, with countdown centered on the recording area. Per-session delay override in recording settings popover.
+- **Video editor improvements** — timeline thumbnail strip from video frames, arrow key frame stepping, Copy button (copies video/GIF to clipboard) with dropdown for Copy Path.
+- **Pencil smoothing modes** — 3-mode selector: None (raw points), Smooth (Chaikin on finish), Refined (moving-average window while drawing + Chaikin on finish). Replaces the previous on/off toggle.
+- **Pencil/marker single-click dot** — single click now produces a visible filled circle at stroke width instead of nothing.
+- **Anchor points on unselected lines** — right-click to add bend anchor points to lines and arrows without selecting them first.
+
+### Changed
+- **Pencil/marker selection** — replaced click-to-select with long-press (300ms) to select annotations, so taps and drags always draw. Fixes Apple Pencil/Sidecar issue where taps were intercepted as selection.
+- **Pixelate annotations** — now movable, resizable, and reorderable. Re-bakes from the original screenshot instead of composited image. Censor annotations render first so other annotations always appear on top.
+- **Recording mode input** — all keyboard shortcuts blocked during recording setup except Escape. Arrow cursor shown instead of crosshair. Focus returns to previously active app when recording starts.
+
+### Fixed
+- **Scroll capture hover corruption** — mouse hover events suppressed via CGEvent tap during scroll capture to prevent hover effects from corrupting stitch detection.
+- **Scroll capture sticky headers** — strip-only merge appends only new rows per frame, preventing sticky headers from duplicating. Single-sample header detection for immediate activation. Vision crop capped at 20% to prevent over-cropping on dark backgrounds.
+- **MP4 recording cleanup** — recording UI (HUD, border, menu bar) now properly cleaned up on MP4 recording completion.
+
 ## [3.7.0] - 2026-04-04
 
 ### Added

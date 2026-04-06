@@ -4,7 +4,7 @@ import Sparkle
 import UniformTypeIdentifiers
 
 @MainActor
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
     private var statusItem: NSStatusItem!
     private var updaterController: SPUStandardUpdaterController!
@@ -58,7 +58,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+        updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: self, userDriverDelegate: nil)
         setupMainMenu()
         setupStatusBar()
         if UserDefaults.standard.bool(forKey: "hideMenuBarIcon") {
@@ -940,6 +940,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func quitApp() {
         NSApp.terminate(nil)
+    }
+
+    // MARK: - SPUUpdaterDelegate
+
+    func allowedChannels(for updater: SPUUpdater) -> Set<String> {
+        UserDefaults.standard.bool(forKey: "betaUpdatesEnabled") ? ["beta"] : []
     }
 }
 
