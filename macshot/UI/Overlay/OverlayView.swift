@@ -5530,6 +5530,7 @@ class OverlayView: NSView {
                 switch provider {
                 case "gdrive": title = L("Upload to Google Drive?")
                 case "s3": title = L("Upload to S3?")
+                case "zgis": title = L("Upload to zg.is?")
                 default: title = L("Upload to imgbb.com?")
                 }
                 let alert = NSAlert()

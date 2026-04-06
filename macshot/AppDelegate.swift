@@ -843,6 +843,26 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                     toast.showError(message: error.localizedDescription)
                 }
             }
+        } else if provider == "zgis" {
+            ImageUploader.upload(image: image, endpoint: "https://zg.is/1/upload") { result in
+                switch result {
+                case .success(let uploadResult):
+                    let pasteboard = NSPasteboard.general
+                    pasteboard.clearContents()
+                    pasteboard.setString(uploadResult.link, forType: .string)
+
+                    var uploads = UserDefaults.standard.array(forKey: "imgbbUploads") as? [[String: String]] ?? []
+                    uploads.append([
+                        "deleteURL": uploadResult.deleteURL,
+                        "link": uploadResult.link,
+                    ])
+                    UserDefaults.standard.set(uploads, forKey: "imgbbUploads")
+
+                    toast.showSuccess(link: uploadResult.link, deleteURL: uploadResult.deleteURL)
+                case .failure(let error):
+                    toast.showError(message: error.localizedDescription)
+                }
+            }
         } else {
             ImageUploader.upload(image: image) { result in
                 switch result {

@@ -870,11 +870,12 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
         providerPopup = NSPopUpButton()
-        providerPopup.addItems(withTitles: [L("imgbb (images only)"), L("Google Drive (images + videos)"), L("S3-Compatible (images + videos)")])
+        providerPopup.addItems(withTitles: [L("imgbb (images only)"), L("Google Drive (images + videos)"), L("S3-Compatible (images + videos)"), L("zg.is (images only, 30d auto-delete)")])
         let currentProvider = UserDefaults.standard.string(forKey: "uploadProvider") ?? "imgbb"
         switch currentProvider {
         case "gdrive": providerPopup.selectItem(at: 1)
         case "s3": providerPopup.selectItem(at: 2)
+        case "zgis": providerPopup.selectItem(at: 3)
         default: providerPopup.selectItem(at: 0)
         }
         providerPopup.target = self
@@ -1012,6 +1013,16 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         imgbbNote.font = NSFont.systemFont(ofSize: 10)
         imgbbNote.textColor = .secondaryLabelColor
         stack.addArrangedSubview(indented(imgbbNote))
+        stack.setCustomSpacing(16, after: stack.arrangedSubviews.last!)
+
+        // ── zg.is ──
+        stack.addArrangedSubview(sectionHeader("zg.is"))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        let zgisNote = NSTextField(wrappingLabelWithString: L("Uses the same API key as imgbb. Images only (no video support). Uploaded images are automatically deleted after 30 days."))
+        zgisNote.font = NSFont.systemFont(ofSize: 10)
+        zgisNote.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(indented(zgisNote))
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // ── Upload History ──
@@ -1141,6 +1152,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         switch sender.indexOfSelectedItem {
         case 1: provider = "gdrive"
         case 2: provider = "s3"
+        case 3: provider = "zgis"
         default: provider = "imgbb"
         }
         UserDefaults.standard.set(provider, forKey: "uploadProvider")
