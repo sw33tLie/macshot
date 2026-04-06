@@ -4,23 +4,11 @@
         <title>macshot</title>
         <link>https://github.com/sw33tLie/macshot</link>
         <description>macshot updates</description>
-        <item>
-            <title>v3.7.0</title>
-            <pubDate>Sat, 04 Apr 2026 21:19:03 +0000</pubDate>
-            <sparkle:version>3.7.0</sparkle:version>
-            <sparkle:shortVersionString>3.7.0</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
-            <enclosure
-                url="https://github.com/sw33tLie/macshot/releases/download/v3.7.0/MacShot.dmg"
-                length="5358295"
-                type="application/octet-stream"
-                sparkle:edSignature="/X2jDgHWwMIWeiPylwxluhu/ccaLceyaBqz4I+8L5utyGt2kNfhxNtn9AGZwVxhmQ5AoY/2IEKzGpzfbRttlAw=="
-            />
-        </item>        <item>
-            <title>v3.8.0-beta.1</title>
-            <pubDate>Mon, 06 Apr 2026 00:06:37 +0000</pubDate>
-            <sparkle:version>3.8.0-beta.1</sparkle:version>
-            <sparkle:shortVersionString>3.8.0-beta.1</sparkle:shortVersionString>
+        </item>        <item>        <item>
+            <title>v3.8.0-beta.2</title>
+            <pubDate>Mon, 06 Apr 2026 01:41:24 +0000</pubDate>
+            <sparkle:version>3.8.0-beta.2</sparkle:version>
+            <sparkle:shortVersionString>3.8.0-beta.2</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
             <sparkle:channel>beta</sparkle:channel>
             <description><![CDATA[
@@ -31,13 +19,13 @@
                 ul { padding-left: 18px; margin: 4px 0; }
                 li { margin: 4px 0; line-height: 1.5; }
               </style>
-              <h3>Added</h3><ul> <li><b>Beta update channel</b> — new "Check for beta updates" toggle in Preferences. When enabled, Sparkle will offer pre-release builds alongside stable releases. Beta builds are signed and notarized identically to stable releases.</li> <li><b>GIF processing toast</b> — "Processing GIF..." toast during encoding, encoding moved off main thread to prevent beach ball.</li> <li><b>Mic device picker</b> — right-click the mic button during recording setup to select input device. Shows live volume level inside the button. Filters out virtual aggregate devices. Pre-checks microphone permission on recording mode entry.</li> <li><b>Keystroke overlay</b> — toggle in recording toolbar to show pressed keys on-screen during recording. Right-click for "Shortcuts Only" vs "All Keystrokes" mode. Pill-shaped HUD at bottom center with fade animation.</li> <li><b>Recording countdown</b> — delay timer fires after pressing record, with countdown centered on the recording area. Per-session delay override in recording settings popover.</li> <li><b>Video editor improvements</b> — timeline thumbnail strip from video frames, arrow key frame stepping, Copy button (copies video/GIF to clipboard) with dropdown for Copy Path.</li> <li><b>Pencil smoothing modes</b> — 3-mode selector: None (raw points), Smooth (Chaikin on finish), Refined (moving-average window while drawing + Chaikin on finish). Replaces the previous on/off toggle.</li> <li><b>Pencil/marker single-click dot</b> — single click now produces a visible filled circle at stroke width instead of nothing.</li> <li><b>Anchor points on unselected lines</b> — right-click to add bend anchor points to lines and arrows without selecting them first.</li>  </ul><h3>Changed</h3><ul> <li><b>Pencil/marker selection</b> — replaced click-to-select with long-press (300ms) to select annotations, so taps and drags always draw. Fixes Apple Pencil/Sidecar issue where taps were intercepted as selection.</li> <li><b>Pixelate annotations</b> — now movable, resizable, and reorderable. Re-bakes from the original screenshot instead of composited image. Censor annotations render first so other annotations always appear on top.</li> <li><b>Recording mode input</b> — all keyboard shortcuts blocked during recording setup except Escape. Arrow cursor shown instead of crosshair. Focus returns to previously active app when recording starts.</li>  </ul><h3>Fixed</h3><ul> <li><b>Scroll capture hover corruption</b> — mouse hover events suppressed via CGEvent tap during scroll capture to prevent hover effects from corrupting stitch detection.</li> <li><b>Scroll capture sticky headers</b> — strip-only merge appends only new rows per frame, preventing sticky headers from duplicating. Single-sample header detection for immediate activation. Vision crop capped at 20% to prevent over-cropping on dark backgrounds.</li> <li><b>MP4 recording cleanup</b> — recording UI (HUD, border, menu bar) now properly cleaned up on MP4 recording completion.</li></ul>
+              <h3>Added</h3><ul> <li><b>Webcam overlay</b> — toggle in recording toolbar to show a live camera feed bubble during screen recordings. Supports circle and rounded rectangle shapes, four corner positions, three sizes (small/medium/large). Right-click the webcam button to select a camera device. Settings available in both the recording settings popover and Preferences Recording tab. Camera session is reused when starting recording to avoid startup flash.</li> <li><b>Webcam localization</b> — webcam overlay strings translated in all 40 languages.</li> <li><b>Beta updates localization</b> — "Check for beta updates" translated in all 40 languages.</li>  </ul><h3>Fixed</h3><ul> <li><b>Recording "Stop Sharing" button</b> — clicking macOS's "Stop Sharing" in the screen recording indicator now gracefully stops the recording instead of leaving a zombie state. Implemented `SCStreamDelegate.stream(_:didStopWithError:)`.</li> <li><b>Color wheel toolbar sync</b> — selecting a color via right-click color wheel now updates the toolbar color swatch immediately.</li> <li><b>Google Drive error messages</b> — folder search, folder creation, and file upload now surface Google's actual API error message and HTTP status code instead of generic "failed" strings.</li> <li><b>Recording permission dialog overlap</b> — when multiple permissions (mic + camera) need prompting on first use, dialogs now appear sequentially instead of overlapping behind the overlay.</li> <li><b>Mouse highlight performance</b> — replaced runaway draw loop (9% CPU in profiler) with a 30fps timer that auto-stops when idle. Reusable NSBezierPath eliminates per-frame allocations.</li> <li><b>Webcam preview follows selection move</b> — moving the recording area via the move tool now repositions the webcam preview to match.</li></ul>
             ]]></description>
             <enclosure
-                url="https://github.com/sw33tLie/macshot/releases/download/v3.8.0-beta.1/MacShot.dmg"
-                length="5458570"
+                url="https://github.com/sw33tLie/macshot/releases/download/v3.8.0-beta.2/MacShot.dmg"
+                length="5536749"
                 type="application/octet-stream"
-                sparkle:edSignature="DB9R/mYwLlsvoJT2FH+sEpVVc06P47I+2MyNPsnPzbWsWgt5Chn0vrRKJtIkGE8+K4wk2vBncVRQkzpwjDJPDw=="
+                sparkle:edSignature="iPqWFi7jdra9bPesmfastAax+Vs4erULRgDtAPWmVKFukE9ZGjvF45kXuRUp7jrJjsAFdGxWmPrVcGZ8U9eODA=="
             />
         </item>
     </channel>
