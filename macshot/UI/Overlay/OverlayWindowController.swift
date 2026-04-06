@@ -588,7 +588,7 @@ extension OverlayWindowController: OverlayViewDelegate {
                     if mode == 1 || mode == 2 {
                         self.copyImageToClipboard(finalNSImage)
                     }
-                    if mode != 3 { self.playCopySound() }
+                    self.playCopySound()
                     self.dismiss()
                     self.overlayDelegate?.overlayDidConfirm(self, capturedImage: finalNSImage)
                 }
@@ -634,7 +634,7 @@ extension OverlayWindowController: OverlayViewDelegate {
         if mode == 1 || mode == 2 {
             ImageEncoder.copyToClipboard(image)
         }
-        if mode != 3 { playCopySound() }
+        playCopySound()
 
         overlayDelegate?.overlayDidConfirm(self, capturedImage: image)
 

@@ -247,6 +247,9 @@ class OverlayView: NSView {
     private var isDraggingAnnotation: Bool = false
     private var didMoveAnnotation: Bool = false
     private var annotationDragStart: NSPoint = .zero
+    /// When shift+clicking an already-selected annotation, defer the deselect
+    /// to mouseUp so the user can still drag the full multi-selection.
+    private weak var shiftClickPendingDeselect: Annotation?
     // Long-press-to-select for pencil/marker tools
     private var longPressTimer: Timer?
     private var longPressPoint: NSPoint = .zero
@@ -4895,6 +4898,16 @@ class OverlayView: NSView {
 
         case .selected:
             if isDraggingAnnotation {
+                // Deferred shift+click deselect: only remove the annotation if
+                // the user didn't drag (i.e. it was a click, not a move).
+                if let pending = shiftClickPendingDeselect {
+                    shiftClickPendingDeselect = nil
+                    if !didMoveAnnotation {
+                        if let idx = selectedAnnotations.firstIndex(where: { $0 === pending }) {
+                            selectedAnnotations.remove(at: idx)
+                        }
+                    }
+                }
                 isDraggingAnnotation = false
                 didMoveAnnotation = false
                 snapGuideX = nil
@@ -5840,14 +5853,19 @@ class OverlayView: NSView {
             }
         }
 
-        // Click-to-select body: skip for pencil/marker (they use long-press instead)
-        if currentTool != .colorSampler && currentTool != .text && !isPencilOrMarker {
+        // Click-to-select body: for pencil/marker, only instant-select when Shift is held
+        // (otherwise they use long-press below to avoid accidental selection while drawing).
+        let shiftHeld = NSEvent.modifierFlags.contains(.shift)
+        let useInstantSelect = currentTool != .colorSampler && currentTool != .text
+            && (!isPencilOrMarker || shiftHeld)
+        if useInstantSelect {
             if let clicked = annotations.reversed().first(where: { $0.isMovable && $0.hitTest(point: point) }) {
-                let shiftHeld = NSEvent.modifierFlags.contains(.shift)
+                shiftClickPendingDeselect = nil
                 if shiftHeld {
-                    // Shift+Click: toggle annotation in/out of selection
-                    if let idx = selectedAnnotations.firstIndex(where: { $0 === clicked }) {
-                        selectedAnnotations.remove(at: idx)
+                    if isSelected(clicked) {
+                        // Defer deselect to mouseUp — allows dragging the full
+                        // multi-selection even when shift+clicking a selected item.
+                        shiftClickPendingDeselect = clicked
                     } else {
                         selectedAnnotations.append(clicked)
                     }
@@ -5865,10 +5883,10 @@ class OverlayView: NSView {
             }
         }
 
-        // Pencil/marker: start a long-press timer. If the user holds still for 300ms
-        // on an annotation, select it. Otherwise drawing starts normally (the timer
-        // is cancelled in mouseDragged when movement exceeds 3px).
-        if isPencilOrMarker {
+        // Pencil/marker without Shift: start a long-press timer. If the user holds
+        // still for 300ms on an annotation, select it. Otherwise drawing starts
+        // normally (the timer is cancelled in mouseDragged when movement exceeds 3px).
+        if isPencilOrMarker && !shiftHeld {
             let hasAnnotationUnder = annotations.reversed().contains(where: { $0.isMovable && $0.hitTest(point: point) })
             if hasAnnotationUnder {
                 longPressPoint = point
@@ -5880,10 +5898,10 @@ class OverlayView: NSView {
                     self.longPressTimer = nil
                     // Select the annotation under the long-press point
                     if let clicked = self.annotations.reversed().first(where: { $0.isMovable && $0.hitTest(point: point) }) {
-                        let shiftHeld = NSEvent.modifierFlags.contains(.shift)
-                        if shiftHeld {
-                            if let idx = self.selectedAnnotations.firstIndex(where: { $0 === clicked }) {
-                                self.selectedAnnotations.remove(at: idx)
+                        self.shiftClickPendingDeselect = nil
+                        if NSEvent.modifierFlags.contains(.shift) {
+                            if self.isSelected(clicked) {
+                                self.shiftClickPendingDeselect = clicked
                             } else {
                                 self.selectedAnnotations.append(clicked)
                             }
