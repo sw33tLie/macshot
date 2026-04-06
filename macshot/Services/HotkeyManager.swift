@@ -297,4 +297,58 @@ class HotkeyManager {
         }
         return "Key \(keyCode)"
     }
+
+    /// NSMenuItem-compatible Unicode character for special keys that can't
+    /// simply be lowercased from keyString(). Letters and digits are handled
+    /// by lowercasing keyString() directly.
+    private static let menuKeyCharMap: [UInt32: String] = [
+        UInt32(kVK_F1): "\u{F704}", UInt32(kVK_F2): "\u{F705}", UInt32(kVK_F3): "\u{F706}",
+        UInt32(kVK_F4): "\u{F707}", UInt32(kVK_F5): "\u{F708}", UInt32(kVK_F6): "\u{F709}",
+        UInt32(kVK_F7): "\u{F70A}", UInt32(kVK_F8): "\u{F70B}", UInt32(kVK_F9): "\u{F70C}",
+        UInt32(kVK_F10): "\u{F70D}", UInt32(kVK_F11): "\u{F70E}", UInt32(kVK_F12): "\u{F70F}",
+        UInt32(kVK_F13): "\u{F710}", UInt32(kVK_F14): "\u{F711}", UInt32(kVK_F15): "\u{F712}",
+        UInt32(kVK_F16): "\u{F713}", UInt32(kVK_F17): "\u{F714}", UInt32(kVK_F18): "\u{F715}",
+        UInt32(kVK_F19): "\u{F716}", UInt32(kVK_F20): "\u{F717}",
+        UInt32(kVK_Space): " ", UInt32(kVK_Return): "\r", UInt32(kVK_Tab): "\t",
+        UInt32(kVK_Delete): "\u{7F}", UInt32(kVK_ForwardDelete): "\u{F728}",
+        UInt32(kVK_Escape): "\u{1B}",
+        UInt32(kVK_LeftArrow): "\u{F702}", UInt32(kVK_RightArrow): "\u{F703}",
+        UInt32(kVK_UpArrow): "\u{F700}", UInt32(kVK_DownArrow): "\u{F701}",
+        UInt32(kVK_Home): "\u{F729}", UInt32(kVK_End): "\u{F72B}",
+        UInt32(kVK_PageUp): "\u{F72C}", UInt32(kVK_PageDown): "\u{F72D}",
+    ]
+
+    /// Returns the NSMenuItem keyEquivalent string and modifier mask for a slot,
+    /// or nil if the slot is disabled / has no hotkey.
+    static func menuKeyEquivalent(for slot: HotkeySlot) -> (key: String, modifiers: NSEvent.ModifierFlags)? {
+        let (keyCode, carbonMods) = readHotkey(for: slot)
+        if keyCode == 0 && carbonMods == 0 { return nil }
+
+        // Special keys need Unicode function characters; letters/digits just lowercase
+        let key: String
+        if let special = menuKeyCharMap[keyCode] {
+            key = special
+        } else {
+            let display = keyString(from: keyCode)
+            if display.hasPrefix("Key ") { return nil }
+            key = display.lowercased()
+        }
+
+        // Convert Carbon modifiers to NSEvent.ModifierFlags
+        var flags: NSEvent.ModifierFlags = []
+        if carbonMods & UInt32(cmdKey) != 0 { flags.insert(.command) }
+        if carbonMods & UInt32(shiftKey) != 0 { flags.insert(.shift) }
+        if carbonMods & UInt32(optionKey) != 0 { flags.insert(.option) }
+        if carbonMods & UInt32(controlKey) != 0 { flags.insert(.control) }
+
+        return (key, flags)
+    }
+
+    /// Apply the configured hotkey for a slot to an NSMenuItem (if one is set).
+    static func applyMenuShortcut(for slot: HotkeySlot, to item: NSMenuItem) {
+        if let equiv = menuKeyEquivalent(for: slot) {
+            item.keyEquivalent = equiv.key
+            item.keyEquivalentModifierMask = equiv.modifiers
+        }
+    }
 }
