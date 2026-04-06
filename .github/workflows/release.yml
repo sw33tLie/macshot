@@ -261,63 +261,72 @@ jobs:
           fi
 
           NEW_ITEM=$(cat <<ITEMEOF
-                  <item>
-                      <title>v${VERSION}</title>
-                      <pubDate>${DATE}</pubDate>
-                      <sparkle:version>${VERSION}</sparkle:version>
-                      <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
-                      <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
-                      ${CHANNEL_LINE}
-                      <description><![CDATA[
-                        <style>
-                          body { font-family: -apple-system, sans-serif; font-size: 13px; padding: 12px; }
-                          h3 { font-size: 14px; margin: 12px 0 6px 0; }
-                          h3:first-child { margin-top: 0; }
-                          ul { padding-left: 18px; margin: 4px 0; }
-                          li { margin: 4px 0; line-height: 1.5; }
-                        </style>
-                        ${RELEASE_HTML}
-                      ]]></description>
-                      <enclosure
-                          url="${DOWNLOAD_URL}"
-                          length="${FILESIZE}"
-                          type="application/octet-stream"
-                          sparkle:edSignature="${ED_SIG}"
-                      />
-                  </item>
-          ITEMEOF
+        <item>
+            <title>v${VERSION}</title>
+            <pubDate>${DATE}</pubDate>
+            <sparkle:version>${VERSION}</sparkle:version>
+            <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
+            ${CHANNEL_LINE}
+            <description><![CDATA[
+              <style>
+                body { font-family: -apple-system, sans-serif; font-size: 13px; padding: 12px; }
+                h3 { font-size: 14px; margin: 12px 0 6px 0; }
+                h3:first-child { margin-top: 0; }
+                ul { padding-left: 18px; margin: 4px 0; }
+                li { margin: 4px 0; line-height: 1.5; }
+              </style>
+              ${RELEASE_HTML}
+            ]]></description>
+            <enclosure
+                url="${DOWNLOAD_URL}"
+                length="${FILESIZE}"
+                type="application/octet-stream"
+                sparkle:edSignature="${ED_SIG}"
+            />
+        </item>
+ITEMEOF
           )
 
           # Merge into appcast.xml:
           # - Beta release: keep existing stable item, replace any previous beta item
           # - Stable release: replace everything (stable is now the latest, drop old beta)
+
+          # Write new item to a temp file for clean assembly
+          echo "$NEW_ITEM" > /tmp/new_item.xml
+
           if [ "$IS_BETA" = "true" ] && [ -f appcast.xml ]; then
-            # Extract existing stable item(s) — items WITHOUT sparkle:channel
-            # Use awk to extract <item>...</item> blocks that don't contain sparkle:channel
-            STABLE_ITEMS=$(awk '
-              /<item>/ { buf=""; capture=1 }
-              capture { buf = buf $0 "\n" }
-              /<\/item>/ && capture {
-                capture=0
-                if (buf !~ /sparkle:channel/) print buf
-              }
-            ' appcast.xml)
+            # Extract stable items (those WITHOUT sparkle:channel) from existing appcast
+            python3 -c "
+import xml.etree.ElementTree as ET, sys
+ns = {'sparkle': 'http://www.andymatuschak.org/xml-namespaces/sparkle'}
+tree = ET.parse('appcast.xml')
+items = tree.findall('.//item')
+stable = []
+for item in items:
+    if item.find('sparkle:channel', ns) is None:
+        stable.append(ET.tostring(item, encoding='unicode'))
+with open('/tmp/stable_items.xml', 'w') as f:
+    f.write('\n'.join(stable))
+" 2>/dev/null || echo "" > /tmp/stable_items.xml
+            STABLE_ITEMS=$(cat /tmp/stable_items.xml)
           else
             STABLE_ITEMS=""
           fi
 
           # Assemble final appcast
           cat > appcast.xml <<XMLEOF
-          <?xml version="1.0" encoding="utf-8"?>
-          <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
-              <channel>
-                  <title>macshot</title>
-                  <link>https://github.com/sw33tLie/macshot</link>
-                  <description>macshot updates</description>
-          ${STABLE_ITEMS}${NEW_ITEM}
-              </channel>
-          </rss>
-          XMLEOF
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+    <channel>
+        <title>macshot</title>
+        <link>https://github.com/sw33tLie/macshot</link>
+        <description>macshot updates</description>
+${STABLE_ITEMS}
+${NEW_ITEM}
+    </channel>
+</rss>
+XMLEOF
 
           echo "✅ Appcast generated"
           cat appcast.xml
