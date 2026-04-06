@@ -224,6 +224,74 @@ jobs:
           cat release_notes.md
 
       # ── 10. Sign DMG for Sparkle and update appcast ───────────────────────
+      - name: Write appcast helper scripts
+        run: |
+          python3 << 'PYEOF'
+          import textwrap, pathlib
+          pathlib.Path("/tmp/extract_stable.py").write_text(textwrap.dedent("""\
+              import xml.etree.ElementTree as ET
+              ns = {'sparkle': 'http://www.andymatuschak.org/xml-namespaces/sparkle'}
+              tree = ET.parse('appcast.xml')
+              stable = []
+              for item in tree.findall('.//item'):
+                  if item.find('sparkle:channel', ns) is None:
+                      stable.append(ET.tostring(item, encoding='unicode'))
+              with open('/tmp/stable_items.xml', 'w') as f:
+                  f.write('\\n'.join(stable))
+          """))
+          pathlib.Path("/tmp/build_item.py").write_text(textwrap.dedent("""\
+              import sys
+              version, date, channel, html, url, size, sig = sys.argv[1:8]
+              channel_line = f'    <sparkle:channel>{channel}</sparkle:channel>' if channel else ''
+              with open('/tmp/new_item.xml', 'w') as f:
+                  f.write(f'''<item>
+                  <title>v{version}</title>
+                  <pubDate>{date}</pubDate>
+                  <sparkle:version>{version}</sparkle:version>
+                  <sparkle:shortVersionString>{version}</sparkle:shortVersionString>
+                  <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
+              {channel_line}
+                  <description><![CDATA[
+                    <style>
+                      body {{ font-family: -apple-system, sans-serif; font-size: 13px; padding: 12px; }}
+                      h3 {{ font-size: 14px; margin: 12px 0 6px 0; }}
+                      h3:first-child {{ margin-top: 0; }}
+                      ul {{ padding-left: 18px; margin: 4px 0; }}
+                      li {{ margin: 4px 0; line-height: 1.5; }}
+                    </style>
+                    {html}
+                  ]]></description>
+                  <enclosure
+                      url="{url}"
+                      length="{size}"
+                      type="application/octet-stream"
+                      sparkle:edSignature="{sig}"
+                  />
+              </item>''')
+          """))
+          pathlib.Path("/tmp/assemble_appcast.py").write_text(textwrap.dedent("""\
+              import sys, os
+              is_beta = sys.argv[1] == 'true'
+              stable = ''
+              if is_beta and os.path.exists('/tmp/stable_items.xml'):
+                  stable = open('/tmp/stable_items.xml').read().strip()
+              new_item = open('/tmp/new_item.xml').read().strip()
+              parts = [p for p in [stable, new_item] if p]
+              items = '\\n'.join(parts)
+              with open('appcast.xml', 'w') as f:
+                  f.write(f'''<?xml version="1.0" encoding="utf-8"?>
+              <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+                  <channel>
+                      <title>macshot</title>
+                      <link>https://github.com/sw33tLie/macshot</link>
+                      <description>macshot updates</description>
+              {items}
+                  </channel>
+              </rss>
+              ''')
+          """))
+          PYEOF
+
       - name: Update Sparkle appcast
         env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
@@ -263,38 +331,13 @@ jobs:
           fi
 
           # Build the new <item> block
-          CHANNEL_LINE=""
+          CHANNEL=""
           if [ "$IS_BETA" = "true" ]; then
-            CHANNEL_LINE="<sparkle:channel>beta</sparkle:channel>"
+            CHANNEL="beta"
           fi
 
-          NEW_ITEM=$(cat <<ITEMEOF
-        <item>
-            <title>v${VERSION}</title>
-            <pubDate>${DATE}</pubDate>
-            <sparkle:version>${VERSION}</sparkle:version>
-            <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
-            ${CHANNEL_LINE}
-            <description><![CDATA[
-              <style>
-                body { font-family: -apple-system, sans-serif; font-size: 13px; padding: 12px; }
-                h3 { font-size: 14px; margin: 12px 0 6px 0; }
-                h3:first-child { margin-top: 0; }
-                ul { padding-left: 18px; margin: 4px 0; }
-                li { margin: 4px 0; line-height: 1.5; }
-              </style>
-              ${RELEASE_HTML}
-            ]]></description>
-            <enclosure
-                url="${DOWNLOAD_URL}"
-                length="${FILESIZE}"
-                type="application/octet-stream"
-                sparkle:edSignature="${ED_SIG}"
-            />
-        </item>
-ITEMEOF
-          )
+          python3 /tmp/build_item.py "$VERSION" "$DATE" "$CHANNEL" "$RELEASE_HTML" "$DOWNLOAD_URL" "$FILESIZE" "$ED_SIG"
+          NEW_ITEM=$(cat /tmp/new_item.xml)
 
           # Merge into appcast.xml:
           # - Beta release: keep existing stable item, replace any previous beta item
@@ -304,37 +347,12 @@ ITEMEOF
           echo "$NEW_ITEM" > /tmp/new_item.xml
 
           if [ "$IS_BETA" = "true" ] && [ -f appcast.xml ]; then
-            # Extract stable items (those WITHOUT sparkle:channel) from existing appcast
-            python3 -c "
-import xml.etree.ElementTree as ET, sys
-ns = {'sparkle': 'http://www.andymatuschak.org/xml-namespaces/sparkle'}
-tree = ET.parse('appcast.xml')
-items = tree.findall('.//item')
-stable = []
-for item in items:
-    if item.find('sparkle:channel', ns) is None:
-        stable.append(ET.tostring(item, encoding='unicode'))
-with open('/tmp/stable_items.xml', 'w') as f:
-    f.write('\n'.join(stable))
-" 2>/dev/null || echo "" > /tmp/stable_items.xml
-            STABLE_ITEMS=$(cat /tmp/stable_items.xml)
+            python3 /tmp/extract_stable.py 2>/dev/null || echo "" > /tmp/stable_items.xml
           else
-            STABLE_ITEMS=""
+            echo "" > /tmp/stable_items.xml
           fi
 
-          # Assemble final appcast
-          cat > appcast.xml <<XMLEOF
-<?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
-    <channel>
-        <title>macshot</title>
-        <link>https://github.com/sw33tLie/macshot</link>
-        <description>macshot updates</description>
-${STABLE_ITEMS}
-${NEW_ITEM}
-    </channel>
-</rss>
-XMLEOF
+          python3 /tmp/assemble_appcast.py "$IS_BETA"
 
           # Validate appcast XML before proceeding — abort if malformed
           python3 -c "import xml.etree.ElementTree as ET; ET.parse('appcast.xml')" || {
