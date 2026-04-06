@@ -230,6 +230,7 @@ jobs:
           import textwrap, pathlib
           pathlib.Path("/tmp/extract_stable.py").write_text(textwrap.dedent("""\
               import xml.etree.ElementTree as ET
+              ET.register_namespace('sparkle', 'http://www.andymatuschak.org/xml-namespaces/sparkle')
               ns = {'sparkle': 'http://www.andymatuschak.org/xml-namespaces/sparkle'}
               tree = ET.parse('appcast.xml')
               stable = []
