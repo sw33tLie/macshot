@@ -1,6 +1,6 @@
 # Changelog
 
-## [3.8.0-beta.3] - 2026-04-06
+## [3.8.0-beta.4] - 2026-04-06
 
 ### Added
 - **Webcam overlay** — toggle in recording toolbar to show a live camera feed bubble during screen recordings. Supports circle and rounded rectangle shapes, four corner positions, three sizes (small/medium/large). Right-click the webcam button to select a camera device. Settings available in both the recording settings popover and Preferences Recording tab. Camera session is reused when starting recording to avoid startup flash.
