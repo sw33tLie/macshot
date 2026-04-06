@@ -656,7 +656,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         for tc in thumbnailControllers { tc.showWindow() }
     }
 
-    func showFloatingThumbnail(image: NSImage) {
+    func showFloatingThumbnail(image: NSImage, annotationData: CaptureAnnotationData? = nil, historyEntryID: String? = nil) {
         let enabled = UserDefaults.standard.object(forKey: "showFloatingThumbnail") as? Bool ?? true
         guard enabled else { return }
 
@@ -700,7 +700,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             self.playCopySound()
         }
         controller.onEdit = {
-            DetachedEditorWindowController.open(image: image)
+            if let data = annotationData {
+                DetachedEditorWindowController.open(image: data.rawImage, annotations: data.annotations, historyEntryID: historyEntryID)
+            } else {
+                DetachedEditorWindowController.open(image: image, historyEntryID: historyEntryID)
+            }
         }
         controller.onUpload = { [weak self] in
             guard let self = self else { return }
@@ -987,14 +991,20 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         }
     }
 
-    func overlayDidConfirm(_ controller: OverlayWindowController, capturedImage: NSImage?) {
+    func overlayDidConfirm(_ controller: OverlayWindowController, capturedImage: NSImage?, annotationData: CaptureAnnotationData?) {
         dismissOverlays()
         if let image = capturedImage {
-            ScreenshotHistory.shared.add(image: image)
+            ScreenshotHistory.shared.add(
+                image: image,
+                rawImage: annotationData?.rawImage,
+                annotations: annotationData?.annotations)
+            // The entry just added is at index 0
+            let entryID = ScreenshotHistory.shared.entries.first?.id
             // Defer thumbnail to next runloop cycle so overlay teardown completes first
             // and the main thread is free for the next capture trigger
+            let annData = annotationData
             DispatchQueue.main.async { [weak self] in
-                self?.showFloatingThumbnail(image: image)
+                self?.showFloatingThumbnail(image: image, annotationData: annData, historyEntryID: entryID)
             }
         }
     }

@@ -6778,6 +6778,16 @@ class OverlayView: NSView {
         return image
     }
     func captureSelectedRegion() -> NSImage? {
+        return renderSelectedRegion(includeAnnotations: true)
+    }
+
+    /// Capture the selected region WITHOUT annotations — just the raw screenshot.
+    /// Used for editable history: the raw image is stored alongside annotation data.
+    func captureSelectedRegionRaw() -> NSImage? {
+        return renderSelectedRegion(includeAnnotations: false)
+    }
+
+    private func renderSelectedRegion(includeAnnotations: Bool) -> NSImage? {
         guard selectionRect.width > 0, selectionRect.height > 0 else { return nil }
 
         // Determine the source image's actual pixel scale so we render at
@@ -6833,15 +6843,16 @@ class OverlayView: NSView {
             screenshot.draw(in: drawRect, from: .zero, operation: .copy, fraction: 1.0)
         }
 
-        for annotation in annotations {
-            annotation.draw(in: nsContext)
+        if includeAnnotations {
+            for annotation in annotations {
+                annotation.draw(in: nsContext)
+            }
         }
 
         NSGraphicsContext.restoreGraphicsState()
 
         guard let cgImage = cgCtx.makeImage() else { return nil }
-        let image = NSImage(cgImage: cgImage, size: selectionRect.size)
-        return image
+        return NSImage(cgImage: cgImage, size: selectionRect.size)
     }
 
     func copyToClipboard() {
@@ -6878,6 +6889,19 @@ class OverlayView: NSView {
     /// Restore editor state.
     /// Translates annotation coordinates by `offset` (the selection origin in the original view).
     func setAnnotations(_ anns: [Annotation]) {
+        // Set sourceImage on loupe annotations so they can re-bake from the editor's image.
+        // Also set it on pixelate/blur without a baked result (shouldn't happen, but defensive).
+        if let img = screenshotImage {
+            let bounds = captureDrawRect
+            for ann in anns {
+                if ann.tool == .loupe || ((ann.tool == .pixelate || ann.tool == .blur) && ann.bakedBlurNSImage == nil) {
+                    ann.sourceImage = img
+                    ann.sourceImageBounds = bounds
+                    if ann.tool == .loupe { ann.bakeLoupe() }
+                    if ann.tool == .pixelate { ann.bakePixelate() }
+                }
+            }
+        }
         annotations = anns
         undoStack = anns.map { .added($0) }
         redoStack = []

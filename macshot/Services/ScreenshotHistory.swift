@@ -6,6 +6,7 @@ struct HistoryEntry {
     let timestamp: Date
     let pixelWidth: Int
     let pixelHeight: Int
+    var hasAnnotations: Bool = false  // true if editable annotations are saved alongside
     var thumbnail: NSImage?  // lazily cached, tiny
 
     var timeAgoString: String {
@@ -56,7 +57,12 @@ class ScreenshotHistory {
 
     // MARK: - Public API
 
-    func add(image: NSImage) {
+    /// Add a screenshot to history.
+    /// - Parameters:
+    ///   - image: The composited image (annotations baked in) used for display, clipboard, and sharing.
+    ///   - rawImage: The raw screenshot without annotations (optional — for editable history).
+    ///   - annotations: Live annotation objects (optional — serialized to JSON for editable history).
+    func add(image: NSImage, rawImage: NSImage? = nil, annotations: [Annotation]? = nil) {
         let max = maxEntries
         guard max > 0 else { return }
 
@@ -67,6 +73,8 @@ class ScreenshotHistory {
         let size = image.size
         let scale: CGFloat = ImageEncoder.downscaleRetina ? 1.0 : (NSScreen.main?.backingScaleFactor ?? 2.0)
 
+        let hasAnns = annotations != nil && !(annotations!.isEmpty) && rawImage != nil
+
         // Create entry with a placeholder thumbnail (tiny, fast)
         let entry = HistoryEntry(
             id: id,
@@ -74,6 +82,7 @@ class ScreenshotHistory {
             timestamp: Date(),
             pixelWidth: Int(size.width * scale),
             pixelHeight: Int(size.height * scale),
+            hasAnnotations: hasAnns,
             thumbnail: NSImage(size: NSSize(width: 1, height: 1))
         )
         entries.insert(entry, at: 0)
@@ -84,10 +93,16 @@ class ScreenshotHistory {
             deleteFiles(for: removed.id, ext: removed.fileExtension)
         }
 
+        // Serialize annotations on main thread (fast — just JSON encoding)
+        let annotationData: Data? = hasAnns ? AnnotationSerializer.encode(annotations!) : nil
+
         // Move all expensive work off main thread: thumbnail, preview, PNG encoding, index save
         let fileURL = historyDir.appendingPathComponent("\(id).\(ext)")
         let thumbURL = historyDir.appendingPathComponent("\(id)_thumb.png")
         let previewURL = historyDir.appendingPathComponent("\(id)_preview.png")
+        let rawURL = historyDir.appendingPathComponent("\(id)_raw.png")
+        let annURL = historyDir.appendingPathComponent("\(id)_annotations.json")
+        let histDir = historyDir
         DispatchQueue.global(qos: .utility).async { [weak self] in
             guard let self = self else { return }
             let thumb = self.makeThumbnail(image: image, maxWidth: 36)
@@ -101,7 +116,7 @@ class ScreenshotHistory {
                 self.saveIndex()
             }
 
-            // Write files to disk
+            // Write composited image
             if let tiff = image.tiffRepresentation,
                let bitmap = NSBitmapImageRep(data: tiff),
                let imageData = bitmap.representation(using: .png, properties: [:]) {
@@ -116,6 +131,17 @@ class ScreenshotHistory {
                let prevBitmap = NSBitmapImageRep(data: prevTiff),
                let prevPng = prevBitmap.representation(using: .png, properties: [:]) {
                 try? prevPng.write(to: previewURL, options: .atomic)
+            }
+
+            // Write raw image + annotations if available
+            if let raw = rawImage,
+               let rawTiff = raw.tiffRepresentation,
+               let rawBitmap = NSBitmapImageRep(data: rawTiff),
+               let rawData = rawBitmap.representation(using: .png, properties: [:]) {
+                try? rawData.write(to: rawURL, options: .atomic)
+            }
+            if let annData = annotationData {
+                try? annData.write(to: annURL, options: .atomic)
             }
         }
     }
@@ -172,6 +198,65 @@ class ScreenshotHistory {
         }
     }
 
+    /// Update an existing history entry in-place (for "Done" in editor).
+    /// Rewrites the composited image, raw image, annotations, thumbnail, and preview.
+    func updateEntry(id: String, compositedImage: NSImage, rawImage: NSImage?, annotations: [Annotation]?) {
+        guard let idx = entries.firstIndex(where: { $0.id == id }) else { return }
+
+        let hasAnns = annotations != nil && !(annotations!.isEmpty) && rawImage != nil
+        entries[idx].hasAnnotations = hasAnns
+
+        let annotationData: Data? = hasAnns ? AnnotationSerializer.encode(annotations!) : nil
+
+        let ext = entries[idx].fileExtension
+        let fileURL = historyDir.appendingPathComponent("\(id).\(ext)")
+        let thumbURL = historyDir.appendingPathComponent("\(id)_thumb.png")
+        let previewURL = historyDir.appendingPathComponent("\(id)_preview.png")
+        let rawURL = historyDir.appendingPathComponent("\(id)_raw.png")
+        let annURL = historyDir.appendingPathComponent("\(id)_annotations.json")
+
+        // Update thumbnail in memory immediately
+        let thumb = makeThumbnail(image: compositedImage, maxWidth: 36)
+        entries[idx].thumbnail = thumb
+        saveIndex()
+
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            guard let self = self else { return }
+            // Composited image
+            if let tiff = compositedImage.tiffRepresentation,
+               let bitmap = NSBitmapImageRep(data: tiff),
+               let data = bitmap.representation(using: .png, properties: [:]) {
+                try? data.write(to: fileURL, options: .atomic)
+            }
+            // Thumbnail + preview
+            if let thumbTiff = thumb.tiffRepresentation,
+               let thumbBitmap = NSBitmapImageRep(data: thumbTiff),
+               let thumbPng = thumbBitmap.representation(using: .png, properties: [:]) {
+                try? thumbPng.write(to: thumbURL, options: .atomic)
+            }
+            let preview = self.makePreview(image: compositedImage)
+            if let prevTiff = preview.tiffRepresentation,
+               let prevBitmap = NSBitmapImageRep(data: prevTiff),
+               let prevPng = prevBitmap.representation(using: .png, properties: [:]) {
+                try? prevPng.write(to: previewURL, options: .atomic)
+            }
+            // Raw image + annotations
+            if let raw = rawImage,
+               let rawTiff = raw.tiffRepresentation,
+               let rawBitmap = NSBitmapImageRep(data: rawTiff),
+               let rawData = rawBitmap.representation(using: .png, properties: [:]) {
+                try? rawData.write(to: rawURL, options: .atomic)
+            } else {
+                try? FileManager.default.removeItem(at: rawURL)
+            }
+            if let annData = annotationData {
+                try? annData.write(to: annURL, options: .atomic)
+            } else {
+                try? FileManager.default.removeItem(at: annURL)
+            }
+        }
+    }
+
     func pruneToMax() {
         let max = maxEntries
         if max <= 0 {
@@ -217,6 +302,22 @@ class ScreenshotHistory {
 
     func fileURL(for entry: HistoryEntry) -> URL {
         historyDir.appendingPathComponent("\(entry.id).\(entry.fileExtension)")
+    }
+
+    /// Load the raw (un-annotated) screenshot for editable history entries.
+    func loadRawImage(for entry: HistoryEntry) -> NSImage? {
+        guard entry.hasAnnotations else { return nil }
+        let rawURL = historyDir.appendingPathComponent("\(entry.id)_raw.png")
+        guard let data = try? Data(contentsOf: rawURL) else { return nil }
+        return NSImage(data: data)
+    }
+
+    /// Load saved annotations for editable history entries.
+    func loadAnnotations(for entry: HistoryEntry) -> [Annotation]? {
+        guard entry.hasAnnotations else { return nil }
+        let annURL = historyDir.appendingPathComponent("\(entry.id)_annotations.json")
+        guard let data = try? Data(contentsOf: annURL) else { return nil }
+        return AnnotationSerializer.decode(data)
     }
 
     func loadThumbnail(for entry: HistoryEntry) -> NSImage? {
@@ -268,10 +369,15 @@ class ScreenshotHistory {
         let timestamp: Date
         let pixelWidth: Int
         let pixelHeight: Int
+        var hasAnnotations: Bool?  // optional for backward compat with old index files
     }
 
     private func saveIndex() {
-        let indexEntries = entries.map { IndexEntry(id: $0.id, fileExtension: $0.fileExtension, timestamp: $0.timestamp, pixelWidth: $0.pixelWidth, pixelHeight: $0.pixelHeight) }
+        let indexEntries = entries.map {
+            IndexEntry(id: $0.id, fileExtension: $0.fileExtension, timestamp: $0.timestamp,
+                       pixelWidth: $0.pixelWidth, pixelHeight: $0.pixelHeight,
+                       hasAnnotations: $0.hasAnnotations ? true : nil)
+        }
         if let data = try? JSONEncoder().encode(indexEntries) {
             try? data.write(to: indexFile, options: .atomic)
         }
@@ -286,7 +392,7 @@ class ScreenshotHistory {
             let ext = ie.fileExtension
             let fileURL = historyDir.appendingPathComponent("\(ie.id).\(ext)")
             guard FileManager.default.fileExists(atPath: fileURL.path) else { return nil }
-            return HistoryEntry(id: ie.id, fileExtension: ext, timestamp: ie.timestamp, pixelWidth: ie.pixelWidth, pixelHeight: ie.pixelHeight, thumbnail: nil)
+            return HistoryEntry(id: ie.id, fileExtension: ext, timestamp: ie.timestamp, pixelWidth: ie.pixelWidth, pixelHeight: ie.pixelHeight, hasAnnotations: ie.hasAnnotations ?? false, thumbnail: nil)
         }
 
         // Prune if maxEntries was lowered since last run
@@ -310,9 +416,13 @@ class ScreenshotHistory {
         let fileURL = historyDir.appendingPathComponent("\(id).\(ext)")
         let thumbURL = historyDir.appendingPathComponent("\(id)_thumb.png")
         let previewURL = historyDir.appendingPathComponent("\(id)_preview.png")
+        let rawURL = historyDir.appendingPathComponent("\(id)_raw.png")
+        let annURL = historyDir.appendingPathComponent("\(id)_annotations.json")
         try? FileManager.default.removeItem(at: fileURL)
         try? FileManager.default.removeItem(at: thumbURL)
         try? FileManager.default.removeItem(at: previewURL)
+        try? FileManager.default.removeItem(at: rawURL)
+        try? FileManager.default.removeItem(at: annURL)
     }
 
     private func makeThumbnail(image: NSImage, maxWidth: CGFloat) -> NSImage {

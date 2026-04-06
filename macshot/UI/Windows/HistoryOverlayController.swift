@@ -160,10 +160,26 @@ final class HistoryOverlayController: NSObject, QLPreviewPanelDataSource, QLPrev
     func openInEditor(index: Int) {
         let entries = ScreenshotHistory.shared.entries
         guard index >= 0, index < entries.count else { return }
-        guard let image = ScreenshotHistory.shared.loadImage(for: entries[index]) else { return }
+        let entry = entries[index]
+
+        // Try loading editable annotations + raw image first
+        if entry.hasAnnotations,
+           let rawImage = ScreenshotHistory.shared.loadRawImage(for: entry),
+           let annotations = ScreenshotHistory.shared.loadAnnotations(for: entry) {
+            dismiss()
+            let entryID = entry.id
+            DispatchQueue.main.async {
+                DetachedEditorWindowController.open(image: rawImage, annotations: annotations, historyEntryID: entryID)
+            }
+            return
+        }
+
+        // Fall back to flattened image (old entries or missing files)
+        guard let image = ScreenshotHistory.shared.loadImage(for: entry) else { return }
         dismiss()
+        let entryID = entry.id
         DispatchQueue.main.async {
-            DetachedEditorWindowController.open(image: image)
+            DetachedEditorWindowController.open(image: image, historyEntryID: entryID)
         }
     }
 

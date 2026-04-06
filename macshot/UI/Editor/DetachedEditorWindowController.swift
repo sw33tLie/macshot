@@ -22,12 +22,17 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
 
     private var window: NSWindow?
     private var overlayView: OverlayView?
+    private var topBar: EditorTopBarView?
     private var addCaptureHandler: AddCaptureOverlayHandler?
     private static var activeControllers: [DetachedEditorWindowController] = []
 
+    /// History entry ID — when set, "Done" button appears and commits edits back to history.
+    private var historyEntryID: String?
+
     /// Open an editor window with the given image (typically from captureSelectedRegion).
-    static func open(image: NSImage, tool: AnnotationTool = .arrow, color: NSColor = .systemRed, strokeWidth: CGFloat = 3, annotations: [Annotation] = []) {
+    static func open(image: NSImage, tool: AnnotationTool = .arrow, color: NSColor = .systemRed, strokeWidth: CGFloat = 3, annotations: [Annotation] = [], historyEntryID: String? = nil) {
         let controller = DetachedEditorWindowController()
+        controller.historyEntryID = historyEntryID
         controller.show(image: image, tool: tool, color: color, strokeWidth: strokeWidth, annotations: annotations)
         activeControllers.append(controller)
         if activeControllers.count == 1 {
@@ -110,6 +115,13 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         let topBar = EditorTopBarView(frame: NSRect(x: 0, y: winH - 32, width: winW, height: 32))
         topBar.overlayView = view
         container.addSubview(topBar)
+        self.topBar = topBar
+
+        // Show "Done" button when editing a history entry
+        if historyEntryID != nil {
+            topBar.showDoneButton()
+            topBar.onDone = { [weak self] in self?.commitToHistory() }
+        }
         if let scale = NSScreen.main?.backingScaleFactor,
            let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) {
             topBar.updateSizeLabel(width: cg.width, height: cg.height)
@@ -158,6 +170,27 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
                 NSApp.setActivationPolicy(.accessory)
             }
         }
+    }
+
+    /// Commit current editor state back to the history entry, then close.
+    private func commitToHistory() {
+        guard let entryID = historyEntryID, let view = overlayView else { return }
+
+        // Get composited image (annotations baked in) + post-processing
+        guard let composited = view.captureSelectedRegion() else { return }
+        let finalImage = applyPostProcessing(composited)
+
+        // Get raw image + annotations for future editing
+        let annotations = view.annotations.filter { $0.isMovable }
+        let rawImage: NSImage? = annotations.isEmpty ? nil : view.captureSelectedRegionRaw()
+
+        ScreenshotHistory.shared.updateEntry(
+            id: entryID,
+            compositedImage: finalImage,
+            rawImage: rawImage,
+            annotations: annotations.isEmpty ? nil : annotations)
+
+        window?.close()
     }
 
     /// Apply image effects and beautify to the captured image.
@@ -402,7 +435,7 @@ private class AddCaptureOverlayHandler: NSObject, OverlayWindowControllerDelegat
         onCancel?()
     }
 
-    func overlayDidConfirm(_ controller: OverlayWindowController, capturedImage: NSImage?) {
+    func overlayDidConfirm(_ controller: OverlayWindowController, capturedImage: NSImage?, annotationData: CaptureAnnotationData?) {
         let image = capturedImage ?? overlayCrossScreenImage(controller)
         dismissOverlays()
         if let image = image {

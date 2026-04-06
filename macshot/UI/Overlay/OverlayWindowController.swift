@@ -3,10 +3,16 @@ import CoreImage
 import UniformTypeIdentifiers
 import Vision
 
+/// Editable annotation data bundled with a confirmed capture.
+struct CaptureAnnotationData {
+    let rawImage: NSImage       // screenshot without annotations
+    let annotations: [Annotation]
+}
+
 @MainActor
 protocol OverlayWindowControllerDelegate: AnyObject {
     func overlayDidCancel(_ controller: OverlayWindowController)
-    func overlayDidConfirm(_ controller: OverlayWindowController, capturedImage: NSImage?)
+    func overlayDidConfirm(_ controller: OverlayWindowController, capturedImage: NSImage?, annotationData: CaptureAnnotationData?)
     func overlayDidRequestPin(_ controller: OverlayWindowController, image: NSImage)
     func overlayDidRequestOCR(_ controller: OverlayWindowController, text: String, image: NSImage?)
     func overlayDidRequestUpload(_ controller: OverlayWindowController, image: NSImage)
@@ -221,6 +227,22 @@ class OverlayWindowController {
             ?? overlayView?.captureSelectedRegion()
     }
 
+    /// Snapshot annotations for editable history, using a pre-captured raw image.
+    /// Returns nil if there are no movable annotations.
+    private func snapshotAnnotationData(rawImage: NSImage) -> CaptureAnnotationData? {
+        guard let view = overlayView else { return nil }
+        let annotations = view.annotations.filter { $0.isMovable }
+        guard !annotations.isEmpty else { return nil }
+
+        let sel = view.selectionRect
+        let shifted = annotations.map { ann -> Annotation in
+            let c = ann.clone()
+            c.move(dx: -sel.origin.x, dy: -sel.origin.y)
+            return c
+        }
+        return CaptureAnnotationData(rawImage: rawImage, annotations: shifted)
+    }
+
     private func applyBeautifyIfNeeded(_ image: NSImage?) -> NSImage? {
         guard let image = image, let view = overlayView else { return image }
         var result = image
@@ -274,11 +296,22 @@ extension OverlayWindowController: OverlayViewDelegate {
         let beautifyCfg = overlayView?.beautifyConfig ?? BeautifyConfig()
         let snapWindowImg = overlayView?.snappedWindowImage
 
-        // Capture the raw composited image
-        guard let rawImage = captureRegion() else {
+        // Capture the composited image (screenshot + annotations baked in).
+        // This is a single render — no double capture.
+        guard let compositedImage = captureRegion() else {
             dismiss()
             overlayDelegate?.overlayDidCancel(self)
             return
+        }
+
+        // Snapshot annotation data using the raw screenshot (without annotations).
+        // Only capture the raw image if there are annotations worth saving.
+        let hasAnnotations = overlayView?.annotations.contains(where: { $0.isMovable }) ?? false
+        let annotationData: CaptureAnnotationData?
+        if hasAnnotations, let rawImage = overlayView?.captureSelectedRegionRaw() {
+            annotationData = snapshotAnnotationData(rawImage: rawImage)
+        } else {
+            annotationData = nil
         }
 
         // Dismiss immediately — user is free to continue working
@@ -286,7 +319,7 @@ extension OverlayWindowController: OverlayViewDelegate {
         dismiss()
 
         // Apply post-processing if needed
-        var finalImage = rawImage
+        var finalImage = compositedImage
         if hasEffects {
             finalImage = ImageEffects.apply(to: finalImage, config: effectsCfg)
         }
@@ -299,7 +332,10 @@ extension OverlayWindowController: OverlayViewDelegate {
         // Copy button / Cmd+C always copies to clipboard
         ImageEncoder.copyToClipboard(finalImage)
 
-        overlayDelegate?.overlayDidConfirm(self, capturedImage: finalImage)
+        // Don't save annotation data if effects/beautify were applied — the raw image
+        // wouldn't match what the user sees, making annotation re-editing confusing.
+        let effectiveAnnotationData = (hasEffects || hasBeautify) ? nil : annotationData
+        overlayDelegate?.overlayDidConfirm(self, capturedImage: finalImage, annotationData: effectiveAnnotationData)
     }
 
     func overlayViewDidRequestPin() {
@@ -388,7 +424,7 @@ extension OverlayWindowController: OverlayViewDelegate {
                 self.playCopySound()
                 let img = image
                 self.dismiss()
-                self.overlayDelegate?.overlayDidConfirm(self, capturedImage: img)
+                self.overlayDelegate?.overlayDidConfirm(self, capturedImage: img, annotationData: nil)
             },
             onDismiss: { [weak self] in
                 self?.overlayWindow?.level = savedLevel
@@ -590,7 +626,7 @@ extension OverlayWindowController: OverlayViewDelegate {
                     }
                     self.playCopySound()
                     self.dismiss()
-                    self.overlayDelegate?.overlayDidConfirm(self, capturedImage: finalNSImage)
+                    self.overlayDelegate?.overlayDidConfirm(self, capturedImage: finalNSImage, annotationData: nil)
                 }
             } catch {
                 #if DEBUG
@@ -612,16 +648,25 @@ extension OverlayWindowController: OverlayViewDelegate {
         let beautifyCfg = overlayView?.beautifyConfig ?? BeautifyConfig()
         let snapWindowImg = overlayView?.snappedWindowImage
 
-        guard let rawImage = captureRegion() else {
+        guard let compositedImage = captureRegion() else {
             dismiss()
             overlayDelegate?.overlayDidCancel(self)
             return
         }
 
+        // Snapshot annotation data using the raw screenshot (single extra render only if needed)
+        let hasAnnotations = overlayView?.annotations.contains(where: { $0.isMovable }) ?? false
+        let annotationData: CaptureAnnotationData?
+        if hasAnnotations, let rawImage = overlayView?.captureSelectedRegionRaw() {
+            annotationData = snapshotAnnotationData(rawImage: rawImage)
+        } else {
+            annotationData = nil
+        }
+
         dismiss()
 
         // Apply post-processing
-        var image = rawImage
+        var image = compositedImage
         if hasEffects { image = ImageEffects.apply(to: image, config: effectsCfg) }
         if hasBeautify {
             let beautifyInput = (beautifyCfg.isWindowSnap && snapWindowImg != nil) ? snapWindowImg! : image
@@ -636,7 +681,8 @@ extension OverlayWindowController: OverlayViewDelegate {
         }
         playCopySound()
 
-        overlayDelegate?.overlayDidConfirm(self, capturedImage: image)
+        let effectiveAnnotationData = (hasEffects || hasBeautify) ? nil : annotationData
+        overlayDelegate?.overlayDidConfirm(self, capturedImage: image, annotationData: effectiveAnnotationData)
 
         if mode == 0 || mode == 2 {
             saveImageToDirectory(image)
@@ -669,7 +715,7 @@ extension OverlayWindowController: OverlayViewDelegate {
             image = BeautifyRenderer.render(image: beautifyInput, config: beautifyCfg)
         }
 
-        overlayDelegate?.overlayDidConfirm(self, capturedImage: image)
+        overlayDelegate?.overlayDidConfirm(self, capturedImage: image, annotationData: nil)
         saveImageToDirectory(image)
     }
 
@@ -717,7 +763,7 @@ extension OverlayWindowController: OverlayViewDelegate {
                 SaveDirectoryAccess.save(url: url.deletingLastPathComponent())
                 self.playCopySound()
                 self.dismiss()
-                self.overlayDelegate?.overlayDidConfirm(self, capturedImage: nil)
+                self.overlayDelegate?.overlayDidConfirm(self, capturedImage: nil, annotationData: nil)
             } else {
                 self.overlayWindow?.makeKeyAndOrderFront(nil)
                 if let view = self.overlayView {

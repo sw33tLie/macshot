@@ -7,6 +7,8 @@ class EditorTopBarView: NSView {
     weak var overlayView: OverlayView?
     private var sizeLabel: NSTextField!
     private var zoomButton: NSButton!
+    private var doneButton: NSButton?
+    var onDone: (() -> Void)?
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -190,6 +192,27 @@ class EditorTopBarView: NSView {
     }
 
     // MARK: - Top bar actions
+
+    /// Show a "Done" button for committing edits back to history.
+    func showDoneButton() {
+        let btn = NSButton()
+        btn.bezelStyle = .recessed
+        btn.isBordered = true
+        btn.title = L("Done")
+        btn.font = NSFont.systemFont(ofSize: 12, weight: .semibold)
+        btn.contentTintColor = ToolbarLayout.accentColor
+        btn.target = self
+        btn.action = #selector(doneClicked)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(btn)
+        NSLayoutConstraint.activate([
+            btn.trailingAnchor.constraint(equalTo: zoomButton.leadingAnchor, constant: -12),
+            btn.centerYAnchor.constraint(equalTo: centerYAnchor),
+        ])
+        doneButton = btn
+    }
+
+    @objc private func doneClicked() { onDone?() }
 
     @objc private func cropClicked() {
         guard let ov = overlayView else { return }
