@@ -210,32 +210,32 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
         let captureAreaItem = NSMenuItem(title: L("Capture Area"), action: #selector(captureScreen), keyEquivalent: "")
         captureAreaItem.target = self
-        captureAreaItem.toolTip = HotkeyManager.displayString(for: .captureArea)
         captureAreaItem.image = NSImage(systemSymbolName: "crop", accessibilityDescription: nil)
+        HotkeyManager.applyMenuShortcut(for: .captureArea, to: captureAreaItem)
         menu.addItem(captureAreaItem)
 
         let captureFullItem = NSMenuItem(title: L("Capture Screen"), action: #selector(captureFullScreen), keyEquivalent: "")
         captureFullItem.target = self
-        captureFullItem.toolTip = HotkeyManager.displayString(for: .captureFullScreen)
         captureFullItem.image = NSImage(systemSymbolName: "desktopcomputer", accessibilityDescription: nil)
+        HotkeyManager.applyMenuShortcut(for: .captureFullScreen, to: captureFullItem)
         menu.addItem(captureFullItem)
 
         let captureOCRItem = NSMenuItem(title: L("Capture OCR"), action: #selector(captureOCR), keyEquivalent: "")
         captureOCRItem.target = self
-        captureOCRItem.toolTip = HotkeyManager.displayString(for: .captureOCR)
         captureOCRItem.image = NSImage(systemSymbolName: "text.viewfinder", accessibilityDescription: nil)
+        HotkeyManager.applyMenuShortcut(for: .captureOCR, to: captureOCRItem)
         menu.addItem(captureOCRItem)
 
         let quickCaptureItem = NSMenuItem(title: L("Quick Capture"), action: #selector(quickCapture), keyEquivalent: "")
         quickCaptureItem.target = self
-        quickCaptureItem.toolTip = HotkeyManager.displayString(for: .quickCapture)
         quickCaptureItem.image = NSImage(systemSymbolName: "square.and.arrow.down", accessibilityDescription: nil)
+        HotkeyManager.applyMenuShortcut(for: .quickCapture, to: quickCaptureItem)
         menu.addItem(quickCaptureItem)
 
         let scrollCaptureItem = NSMenuItem(title: L("Scroll Capture"), action: #selector(scrollCapture), keyEquivalent: "")
         scrollCaptureItem.target = self
-        scrollCaptureItem.toolTip = HotkeyManager.displayString(for: .scrollCapture)
         scrollCaptureItem.image = NSImage(systemSymbolName: "scroll", accessibilityDescription: nil)
+        HotkeyManager.applyMenuShortcut(for: .scrollCapture, to: scrollCaptureItem)
         menu.addItem(scrollCaptureItem)
 
         // Capture Delay submenu
@@ -259,14 +259,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
         let recordAreaItem = NSMenuItem(title: L("Record Area"), action: #selector(recordArea), keyEquivalent: "")
         recordAreaItem.target = self
-        recordAreaItem.toolTip = HotkeyManager.displayString(for: .recordArea)
         recordAreaItem.image = NSImage(systemSymbolName: "record.circle", accessibilityDescription: nil)
+        HotkeyManager.applyMenuShortcut(for: .recordArea, to: recordAreaItem)
         menu.addItem(recordAreaItem)
 
         let recordScreenItem = NSMenuItem(title: L("Record Screen"), action: #selector(recordFullScreen), keyEquivalent: "")
         recordScreenItem.target = self
-        recordScreenItem.toolTip = HotkeyManager.displayString(for: .recordScreen)
         recordScreenItem.image = NSImage(systemSymbolName: "menubar.dock.rectangle", accessibilityDescription: nil)
+        HotkeyManager.applyMenuShortcut(for: .recordScreen, to: recordScreenItem)
         menu.addItem(recordScreenItem)
 
         menu.addItem(NSMenuItem.separator())
@@ -282,8 +282,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
         let historyOverlayItem = NSMenuItem(title: L("Show History Panel"), action: #selector(showHistoryOverlay), keyEquivalent: "")
         historyOverlayItem.target = self
-        historyOverlayItem.toolTip = HotkeyManager.displayString(for: .historyOverlay)
         historyOverlayItem.image = NSImage(systemSymbolName: "square.grid.2x2", accessibilityDescription: nil)
+        HotkeyManager.applyMenuShortcut(for: .historyOverlay, to: historyOverlayItem)
         menu.addItem(historyOverlayItem)
 
         menu.addItem(NSMenuItem.separator())
@@ -317,11 +317,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         menu.addItem(quitItem)
 
         statusBarMenu = menu
-    }
-
-    private func refreshMenu() {
-        guard let menu = statusBarMenu, let captureItem = menu.items.first else { return }
-        captureItem.toolTip = HotkeyManager.shortcutDisplayString()
     }
 
     // MARK: - Hotkey
@@ -943,7 +938,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             preferencesController = PreferencesWindowController()
             preferencesController?.onHotkeyChanged = { [weak self] in
                 self?.registerHotkey()
-                self?.refreshMenu()
+                self?.rebuildStatusBarMenu()
             }
         }
         preferencesController?.showWindow()
