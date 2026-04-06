@@ -16,6 +16,29 @@
                 type="application/octet-stream"
                 sparkle:edSignature="/X2jDgHWwMIWeiPylwxluhu/ccaLceyaBqz4I+8L5utyGt2kNfhxNtn9AGZwVxhmQ5AoY/2IEKzGpzfbRttlAw=="
             />
+        </item>        <item>
+            <title>v3.8.0-beta.1</title>
+            <pubDate>Mon, 06 Apr 2026 00:06:37 +0000</pubDate>
+            <sparkle:version>3.8.0-beta.1</sparkle:version>
+            <sparkle:shortVersionString>3.8.0-beta.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
+            <sparkle:channel>beta</sparkle:channel>
+            <description><![CDATA[
+              <style>
+                body { font-family: -apple-system, sans-serif; font-size: 13px; padding: 12px; }
+                h3 { font-size: 14px; margin: 12px 0 6px 0; }
+                h3:first-child { margin-top: 0; }
+                ul { padding-left: 18px; margin: 4px 0; }
+                li { margin: 4px 0; line-height: 1.5; }
+              </style>
+              <h3>Added</h3><ul> <li><b>Beta update channel</b> — new "Check for beta updates" toggle in Preferences. When enabled, Sparkle will offer pre-release builds alongside stable releases. Beta builds are signed and notarized identically to stable releases.</li> <li><b>GIF processing toast</b> — "Processing GIF..." toast during encoding, encoding moved off main thread to prevent beach ball.</li> <li><b>Mic device picker</b> — right-click the mic button during recording setup to select input device. Shows live volume level inside the button. Filters out virtual aggregate devices. Pre-checks microphone permission on recording mode entry.</li> <li><b>Keystroke overlay</b> — toggle in recording toolbar to show pressed keys on-screen during recording. Right-click for "Shortcuts Only" vs "All Keystrokes" mode. Pill-shaped HUD at bottom center with fade animation.</li> <li><b>Recording countdown</b> — delay timer fires after pressing record, with countdown centered on the recording area. Per-session delay override in recording settings popover.</li> <li><b>Video editor improvements</b> — timeline thumbnail strip from video frames, arrow key frame stepping, Copy button (copies video/GIF to clipboard) with dropdown for Copy Path.</li> <li><b>Pencil smoothing modes</b> — 3-mode selector: None (raw points), Smooth (Chaikin on finish), Refined (moving-average window while drawing + Chaikin on finish). Replaces the previous on/off toggle.</li> <li><b>Pencil/marker single-click dot</b> — single click now produces a visible filled circle at stroke width instead of nothing.</li> <li><b>Anchor points on unselected lines</b> — right-click to add bend anchor points to lines and arrows without selecting them first.</li>  </ul><h3>Changed</h3><ul> <li><b>Pencil/marker selection</b> — replaced click-to-select with long-press (300ms) to select annotations, so taps and drags always draw. Fixes Apple Pencil/Sidecar issue where taps were intercepted as selection.</li> <li><b>Pixelate annotations</b> — now movable, resizable, and reorderable. Re-bakes from the original screenshot instead of composited image. Censor annotations render first so other annotations always appear on top.</li> <li><b>Recording mode input</b> — all keyboard shortcuts blocked during recording setup except Escape. Arrow cursor shown instead of crosshair. Focus returns to previously active app when recording starts.</li>  </ul><h3>Fixed</h3><ul> <li><b>Scroll capture hover corruption</b> — mouse hover events suppressed via CGEvent tap during scroll capture to prevent hover effects from corrupting stitch detection.</li> <li><b>Scroll capture sticky headers</b> — strip-only merge appends only new rows per frame, preventing sticky headers from duplicating. Single-sample header detection for immediate activation. Vision crop capped at 20% to prevent over-cropping on dark backgrounds.</li> <li><b>MP4 recording cleanup</b> — recording UI (HUD, border, menu bar) now properly cleaned up on MP4 recording completion.</li></ul>
+            ]]></description>
+            <enclosure
+                url="https://github.com/sw33tLie/macshot/releases/download/v3.8.0-beta.1/MacShot.dmg"
+                length="5458570"
+                type="application/octet-stream"
+                sparkle:edSignature="DB9R/mYwLlsvoJT2FH+sEpVVc06P47I+2MyNPsnPzbWsWgt5Chn0vrRKJtIkGE8+K4wk2vBncVRQkzpwjDJPDw=="
+            />
         </item>
     </channel>
 </rss>
