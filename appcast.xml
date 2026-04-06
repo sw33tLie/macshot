@@ -13,10 +13,10 @@
             <enclosure url="https://github.com/sw33tLie/macshot/releases/download/v3.7.0/MacShot.dmg" length="5358295" type="application/octet-stream" sparkle:edSignature="/X2jDgHWwMIWeiPylwxluhu/ccaLceyaBqz4I+8L5utyGt2kNfhxNtn9AGZwVxhmQ5AoY/2IEKzGpzfbRttlAw==" />
         </item>
 <item>
-    <title>v3.8.0-beta.4</title>
-    <pubDate>Mon, 06 Apr 2026 15:41:33 +0000</pubDate>
-    <sparkle:version>5</sparkle:version>
-    <sparkle:shortVersionString>3.8.0-beta.4</sparkle:shortVersionString>
+    <title>v3.8.0-beta.5</title>
+    <pubDate>Mon, 06 Apr 2026 17:25:06 +0000</pubDate>
+    <sparkle:version>6</sparkle:version>
+    <sparkle:shortVersionString>3.8.0-beta.5</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
     <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
@@ -27,13 +27,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Added</h3><ul> <li><b>Annotation outlines</b> — new outline toggle + color picker for arrows (all styles including thick), lines, rectangles, ellipses, and number tools. Outline draws as a contrasting border around the shape, visible on any background. Persisted per-annotation and in global settings.</li> <li><b>Shift+Click multi-selection</b> — hold Shift and click annotations to add them to the selection. Drag moves all selected, Delete removes all selected, color changes apply to all. Full controls (resize, rotate) shown for single selection; glow highlight for multi-select.</li> <li><b>Scroll Capture keyboard shortcut</b> — new configurable hotkey slot in Preferences > Shortcuts.</li>  </ul><h3>Changed</h3><ul> <li><b>Color wheel selection</b> — now purely angle-based. Moving the mouse far from the wheel still selects the color at that angle instead of deselecting.</li> <li><b>sRGB color profile</b> — fixed color space conversion. Screenshots with "Embed sRGB profile" enabled now have accurate colors matching the native macOS screenshot tool (proper pixel value conversion instead of re-tagging).</li>  </ul><h3>Fixed</h3><ul> <li><b>Hotkey display for non-standard keys</b> — unknown keyCodes now use UCKeyTranslate to show the actual character instead of "?". Helps with non-Apple keyboards and BTT remapped keys.</li></ul>
+      <h3>Added</h3><ul> <li><b>Apple Translation (on-device)</b> — new translation engine option in Preferences for macOS 15.0+. Translates on-device using Apple's Translation framework — faster, offline, and private. Auto-detects source language via NLLanguageRecognizer. Falls back to a clear error (never silently sends text to Google) if language detection fails or language pack is missing.</li> <li><b>Translation provider picker</b> — dropdown in Preferences General tab to choose between Apple (on-device) and Google Translate. Includes a link to download language packs in System Settings.</li> <li><b>Language availability in translate popover</b> — when Apple Translation is selected, the language picker shows which language packs are installed. Non-installed languages are dimmed with "not installed" label and can't be selected.</li></ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v3.8.0-beta.4/MacShot.dmg"
-        length="5574961"
+        url="https://github.com/sw33tLie/macshot/releases/download/v3.8.0-beta.5/MacShot.dmg"
+        length="5612876"
         type="application/octet-stream"
-        sparkle:edSignature="3b9fk55vn3Jg08CPm2+Aj2GNR60uCpAHvzoA2rTRith43cCq5one5069VU0eYULyTAIcY8nAU+4qryypRQmkAg=="
+        sparkle:edSignature="Q0K/Sgm9+Vd4y89cWG7yqVTtAHovjTRw1n8D3+UTXJCjSGTGp2TMOK73NKYzkxur4SjJnts137vN9m+JTotMDg=="
     />
 </item>
     </channel>
