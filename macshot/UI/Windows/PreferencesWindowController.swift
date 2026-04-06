@@ -252,7 +252,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
 
         // Enter key action
         quickModePopup = NSPopUpButton()
-        quickModePopup.addItems(withTitles: [L("Save to file"), L("Copy to clipboard"), L("Save + copy to clipboard")])
+        quickModePopup.addItems(withTitles: [L("Save to file"), L("Copy to clipboard"), L("Save + copy to clipboard"), L("Do nothing")])
         quickModePopup.target = self
         quickModePopup.action = #selector(quickModeChanged(_:))
 

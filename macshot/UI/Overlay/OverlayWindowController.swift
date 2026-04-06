@@ -583,11 +583,12 @@ extension OverlayWindowController: OverlayViewDelegate {
                 let finalNSImage = NSImage(cgImage: finalCGImage, size: image.size)
 
                 DispatchQueue.main.async {
+                    // quickCaptureMode: 0=save, 1=copy, 2=both, 3=do nothing
                     let mode = UserDefaults.standard.object(forKey: "quickCaptureMode") as? Int ?? 1
-                    if mode >= 1 {
+                    if mode == 1 || mode == 2 {
                         self.copyImageToClipboard(finalNSImage)
                     }
-                    self.playCopySound()
+                    if mode != 3 { self.playCopySound() }
                     self.dismiss()
                     self.overlayDelegate?.overlayDidConfirm(self, capturedImage: finalNSImage)
                 }
@@ -617,7 +618,6 @@ extension OverlayWindowController: OverlayViewDelegate {
             return
         }
 
-        playCopySound()
         dismiss()
 
         // Apply post-processing
@@ -628,18 +628,20 @@ extension OverlayWindowController: OverlayViewDelegate {
             image = BeautifyRenderer.render(image: beautifyInput, config: beautifyCfg)
         }
 
-        // quickCaptureMode: 0=save, 1=copy, 2=both
+        // quickCaptureMode: 0=save, 1=copy, 2=both, 3=do nothing (thumbnail only)
         let mode = UserDefaults.standard.object(forKey: "quickCaptureMode") as? Int ?? 1
 
         if mode == 1 || mode == 2 {
             ImageEncoder.copyToClipboard(image)
         }
+        if mode != 3 { playCopySound() }
 
         overlayDelegate?.overlayDidConfirm(self, capturedImage: image)
 
         if mode == 0 || mode == 2 {
             saveImageToDirectory(image)
         }
+        // mode 3: do nothing — image is passed to delegate which shows the thumbnail
     }
 
     func overlayViewDidRequestFileSave() {

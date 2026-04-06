@@ -1634,7 +1634,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         guard let image = finalImage else { return }
 
         ScreenshotHistory.shared.add(image: image)
-        // quickCaptureMode: 0=save, 1=copy, 2=both
+        // quickCaptureMode: 0=save, 1=copy, 2=both, 3=do nothing (thumbnail only)
         let mode = UserDefaults.standard.object(forKey: "quickCaptureMode") as? Int ?? 1
         if mode == 1 || mode == 2 {
             ImageEncoder.copyToClipboard(image)
@@ -1642,7 +1642,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         if mode == 0 || mode == 2 {
             saveImageToFile(image)
         }
-        playCopySound()
+        if mode != 3 { playCopySound() }
         showFloatingThumbnail(image: image)
     }
 
