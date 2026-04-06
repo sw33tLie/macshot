@@ -328,7 +328,12 @@ ${NEW_ITEM}
 </rss>
 XMLEOF
 
-          echo "✅ Appcast generated"
+          # Validate appcast XML before proceeding — abort if malformed
+          python3 -c "import xml.etree.ElementTree as ET; ET.parse('appcast.xml')" || {
+            echo "❌ ERROR: appcast.xml is not valid XML — aborting to protect user updates"
+            exit 1
+          }
+          echo "✅ Appcast generated and validated"
           cat appcast.xml
 
       # ── 11. Create GitHub Release ──────────────────────────────────────────
