@@ -13,10 +13,10 @@
             <enclosure url="https://github.com/sw33tLie/macshot/releases/download/v3.7.0/MacShot.dmg" length="5358295" type="application/octet-stream" sparkle:edSignature="/X2jDgHWwMIWeiPylwxluhu/ccaLceyaBqz4I+8L5utyGt2kNfhxNtn9AGZwVxhmQ5AoY/2IEKzGpzfbRttlAw==" />
         </item>
 <item>
-    <title>v3.8.0-beta.5</title>
-    <pubDate>Mon, 06 Apr 2026 17:25:06 +0000</pubDate>
-    <sparkle:version>6</sparkle:version>
-    <sparkle:shortVersionString>3.8.0-beta.5</sparkle:shortVersionString>
+    <title>v3.8.0-beta.6</title>
+    <pubDate>Mon, 06 Apr 2026 21:26:03 +0000</pubDate>
+    <sparkle:version>7</sparkle:version>
+    <sparkle:shortVersionString>3.8.0-beta.6</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
     <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
@@ -27,13 +27,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Added</h3><ul> <li><b>Apple Translation (on-device)</b> — new translation engine option in Preferences for macOS 15.0+. Translates on-device using Apple's Translation framework — faster, offline, and private. Auto-detects source language via NLLanguageRecognizer. Falls back to a clear error (never silently sends text to Google) if language detection fails or language pack is missing.</li> <li><b>Translation provider picker</b> — dropdown in Preferences General tab to choose between Apple (on-device) and Google Translate. Includes a link to download language packs in System Settings.</li> <li><b>Language availability in translate popover</b> — when Apple Translation is selected, the language picker shows which language packs are installed. Non-installed languages are dimmed with "not installed" label and can't be selected.</li></ul>
+      <h3>Added</h3><ul> <li><b>"Do nothing" Quick Capture mode</b> — new option in the Enter/Quick Capture dropdown. Capture is taken and the floating thumbnail appears, but nothing is copied or saved. Decide later via thumbnail buttons (copy, save, edit, pin, upload).</li> <li><b>Keyboard shortcuts in menu bar</b> — menu items now display their configured hotkey (e.g. ⇧⌘X) inline, matching standard macOS behavior. Updates live when changed in Preferences.</li> <li><b>Shift+Click instant selection in pencil/marker tools</b> — hold Shift to immediately select annotations without the 300ms long-press delay. Supports multi-selection toggle, same as shape tools. Without Shift, the long-press behavior is preserved.</li> <li><b>Async clipboard & history</b> — PNG encoding for clipboard moved to background thread. Screenshot history thumbnails and index saving run off main thread.</li> <li><b>SF Symbol icon cache</b> — toolbar icons are cached across rebuilds, eliminating re-rasterization on every capture cycle.</li> <li><b>Unlimited history option</b> — new checkbox in Preferences to disable history size limit.</li> <li><b>Thumbnail scale slider</b> — configurable floating thumbnail size in Preferences (default 240×160).</li>  </ul><h3>Changed</h3><ul> <li><b>Translate language picker</b> — non-installed languages are now filtered out entirely instead of shown dimmed. Cleaner list when using Apple Translation.</li> <li><b>Narrow selection layout</b> — right toolbar moves below the selection instead of overlapping when the selection is too narrow.</li>  </ul><h3>Fixed</h3><ul> <li><b>Thumbnail captured in screenshots</b> — floating thumbnails are now excluded via ScreenCaptureKit's `excludingWindows` filter, eliminating race conditions during rapid captures.</li> <li><b>Recording pause/resume gap</b> — paused time is now subtracted from frame and audio timestamps, producing gap-free video with synced audio instead of black frames.</li> <li><b>Light mode toolbar readability</b> — toolbar options row and all popovers now force dark appearance, fixing unreadable text (segment controls, labels, buttons, list pickers) when the system is in light mode.</li> <li><b>Apple Translation "not installed" for English</b> — language availability check no longer fails on same-language pairs (e.g. en→en). Each language is checked against all others; results are cached for instant popover reopening.</li> <li><b>Shift+Click deselect while dragging</b> — shift-clicking an already-selected annotation now defers deselect to mouseUp, so multi-selection drag works correctly across all tools.</li></ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v3.8.0-beta.5/MacShot.dmg"
-        length="5612876"
+        url="https://github.com/sw33tLie/macshot/releases/download/v3.8.0-beta.6/MacShot.dmg"
+        length="5658264"
         type="application/octet-stream"
-        sparkle:edSignature="Q0K/Sgm9+Vd4y89cWG7yqVTtAHovjTRw1n8D3+UTXJCjSGTGp2TMOK73NKYzkxur4SjJnts137vN9m+JTotMDg=="
+        sparkle:edSignature="cIq8Azu5lPKWbL2vl5WMkttH2lRLvOeHXrec2GZAvfK8P4w78farCrAWHmK2GoKEjv+7JUjHoZaEf7IUsCkcCw=="
     />
 </item>
     </channel>
