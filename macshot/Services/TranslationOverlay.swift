@@ -87,7 +87,11 @@ enum TranslateOverlay {
         }
 
         DispatchQueue.global(qos: .userInitiated).async {
-            try? VNImageRequestHandler(cgImage: cgImage, options: [:]).perform([request])
+            do {
+                try VNImageRequestHandler(cgImage: cgImage, options: [:]).perform([request])
+            } catch {
+                DispatchQueue.main.async { onError("OCR failed: \(error.localizedDescription)") }
+            }
         }
     }
 

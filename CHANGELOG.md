@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.8.0-beta.5] - 2026-04-06
+
+### Added
+- **Apple Translation (on-device)** — new translation engine option in Preferences for macOS 15.0+. Translates on-device using Apple's Translation framework — faster, offline, and private. Auto-detects source language via NLLanguageRecognizer. Falls back to a clear error (never silently sends text to Google) if language detection fails or language pack is missing.
+- **Translation provider picker** — dropdown in Preferences General tab to choose between Apple (on-device) and Google Translate. Includes a link to download language packs in System Settings.
+- **Language availability in translate popover** — when Apple Translation is selected, the language picker shows which language packs are installed. Non-installed languages are dimmed with "not installed" label and can't be selected.
+
 ## [3.8.0-beta.4] - 2026-04-06
 
 ### Added

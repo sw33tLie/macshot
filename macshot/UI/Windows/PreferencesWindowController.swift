@@ -442,6 +442,37 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.addArrangedSubview(labeledRow(L("History size:"), controls: [historySizeField, historySizeStepper, histNote]))
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
+        // ── Translation ──────────────────────────────────────
+        if TranslationService.appleTranslationAvailable {
+            stack.addArrangedSubview(sectionHeader(L("Translation")))
+            stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+            let translationProviderPopup = NSPopUpButton()
+            translationProviderPopup.addItems(withTitles: [
+                L("Apple (on-device)"),
+                L("Google Translate"),
+            ])
+            translationProviderPopup.selectItem(at: TranslationService.provider == .apple ? 0 : 1)
+            translationProviderPopup.target = self
+            translationProviderPopup.action = #selector(translationProviderChanged(_:))
+            stack.addArrangedSubview(labeledRow(L("Engine:"), controls: [translationProviderPopup]))
+            stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+
+            let providerNote = NSTextField(wrappingLabelWithString: L("Apple translation is faster and works offline. Google Translate supports more languages."))
+            providerNote.font = NSFont.systemFont(ofSize: 10)
+            providerNote.textColor = .secondaryLabelColor
+            stack.addArrangedSubview(indented(providerNote))
+            stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+
+            let downloadLink = NSButton(title: L("Download language packs in System Settings…"), target: self, action: #selector(openTranslationSettings))
+            downloadLink.bezelStyle = .inline
+            downloadLink.isBordered = false
+            downloadLink.contentTintColor = .linkColor
+            downloadLink.font = NSFont.systemFont(ofSize: 10)
+            stack.addArrangedSubview(indented(downloadLink))
+            stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
+        }
+
         // ── Appearance ───────────────────────────────────────
         stack.addArrangedSubview(sectionHeader(L("Appearance")))
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
@@ -1788,6 +1819,16 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
 
     @objc private func betaUpdateChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "betaUpdatesEnabled")
+    }
+
+    @objc private func translationProviderChanged(_ sender: NSPopUpButton) {
+        TranslationService.provider = sender.indexOfSelectedItem == 0 ? .apple : .google
+    }
+
+    @objc private func openTranslationSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.Localization.Settings.extension?Translation") {
+            NSWorkspace.shared.open(url)
+        }
     }
 
     // MARK: - NSTabViewDelegate

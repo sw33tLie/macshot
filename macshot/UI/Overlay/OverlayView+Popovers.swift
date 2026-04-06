@@ -83,50 +83,72 @@ extension OverlayView {
         }
         let languages = TranslationService.availableLanguages
         let currentCode = TranslationService.targetLanguage
-        let picker = ListPickerView()
-        let pickerW: CGFloat = 180
-        picker.frame.size.width = pickerW
-        picker.items = languages.map { lang in
-            .init(title: lang.name, isSelected: lang.code == currentCode)
-        }
-        picker.onSelect = { [weak self] idx in
-            let newCode = languages[idx].code
-            TranslationService.targetLanguage = newCode
-            PopoverHelper.dismiss()
-            // Retrigger translation if currently active
-            if let self = self, self.translateEnabled {
-                self.performTranslate(targetLang: newCode)
+
+        let showPopover: ([String: Bool]?) -> Void = { [weak self] appleAvailability in
+            guard let self = self else { return }
+            let picker = ListPickerView()
+            let pickerW: CGFloat = 220
+            picker.frame.size.width = pickerW
+            picker.items = languages.map { lang in
+                var enabled = true
+                var subtitle: String? = nil
+                if let avail = appleAvailability {
+                    if avail[lang.code] == true {
+                        // installed — no subtitle needed
+                    } else {
+                        enabled = false
+                        subtitle = L("not installed")
+                    }
+                }
+                return .init(title: lang.name, isSelected: lang.code == currentCode,
+                             isEnabled: enabled, subtitle: subtitle)
             }
-            self?.needsDisplay = true
+            picker.onSelect = { [weak self] idx in
+                let newCode = languages[idx].code
+                TranslationService.targetLanguage = newCode
+                PopoverHelper.dismiss()
+                if let self = self, self.translateEnabled {
+                    self.performTranslate(targetLang: newCode)
+                }
+                self?.needsDisplay = true
+            }
+
+            let contentH = picker.frame.height
+            let maxH: CGFloat = 350
+            let popoverSize = NSSize(width: pickerW, height: min(maxH, contentH))
+
+            let scrollView = NSScrollView(frame: NSRect(origin: .zero, size: popoverSize))
+            scrollView.hasVerticalScroller = true
+            scrollView.hasHorizontalScroller = false
+            scrollView.autohidesScrollers = false
+            scrollView.scrollerStyle = .overlay
+            scrollView.drawsBackground = false
+            scrollView.borderType = .noBorder
+            scrollView.documentView = picker
+
+            if let anchor = anchorView {
+                PopoverHelper.show(
+                    scrollView, size: popoverSize, relativeTo: anchor.bounds, of: anchor,
+                    preferredEdge: .maxY)
+            } else {
+                PopoverHelper.showAtPoint(
+                    scrollView, size: popoverSize,
+                    at: NSPoint(x: anchorRect.maxX + 4, y: anchorRect.midY),
+                    in: self, preferredEdge: .maxX)
+            }
+
+            DispatchQueue.main.async {
+                picker.scrollToSelected()
+            }
         }
 
-        let contentH = picker.frame.height
-        let maxH: CGFloat = 350
-        let popoverSize = NSSize(width: pickerW, height: min(maxH, contentH))
-
-        let scrollView = NSScrollView(frame: NSRect(origin: .zero, size: popoverSize))
-        scrollView.hasVerticalScroller = true
-        scrollView.hasHorizontalScroller = false
-        scrollView.autohidesScrollers = false
-        scrollView.scrollerStyle = .overlay
-        scrollView.drawsBackground = false
-        scrollView.borderType = .noBorder
-        scrollView.documentView = picker
-
-        if let anchor = anchorView {
-            PopoverHelper.show(
-                scrollView, size: popoverSize, relativeTo: anchor.bounds, of: anchor,
-                preferredEdge: .maxY)
+        // If Apple Translation is selected, check which languages are installed
+        if #available(macOS 15.0, *), TranslationService.provider == .apple {
+            TranslationService.checkAppleLanguageAvailability { availability in
+                showPopover(availability)
+            }
         } else {
-            PopoverHelper.showAtPoint(
-                scrollView, size: popoverSize,
-                at: NSPoint(x: anchorRect.maxX + 4, y: anchorRect.midY),
-                in: self, preferredEdge: .maxX)
-        }
-
-        // Scroll to selected after popover is shown
-        DispatchQueue.main.async {
-            picker.scrollToSelected()
+            showPopover(nil)
         }
     }
 

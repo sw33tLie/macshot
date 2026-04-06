@@ -8,6 +8,8 @@ class ListPickerView: NSView {
         let title: String
         let isSelected: Bool
         var icon: NSImage? = nil
+        var isEnabled: Bool = true
+        var subtitle: String? = nil
     }
 
     var items: [Item] = [] { didSet { rebuildRows() } }
@@ -36,6 +38,8 @@ class ListPickerView: NSView {
             rv.title = item.title
             rv.isItemSelected = item.isSelected
             rv.icon = item.icon
+            rv.isEnabled = item.isEnabled
+            rv.subtitle = item.subtitle
             rv.index = i
             rv.onSelect = { [weak self] idx in self?.onSelect?(idx) }
             addSubview(rv)
@@ -109,6 +113,8 @@ private class ListPickerRowView: NSView {
     var title: String = ""
     var isItemSelected: Bool = false
     var icon: NSImage?
+    var isEnabled: Bool = true
+    var subtitle: String?
     var index: Int = 0
     var onSelect: ((Int) -> Void)?
 
@@ -116,7 +122,9 @@ private class ListPickerRowView: NSView {
     private var trackingArea: NSTrackingArea?
 
     override func draw(_ dirtyRect: NSRect) {
-        if isHovered {
+        let alpha: CGFloat = isEnabled ? 1.0 : 0.35
+
+        if isHovered && isEnabled {
             NSColor.white.withAlphaComponent(0.1).setFill()
             NSBezierPath(roundedRect: bounds.insetBy(dx: 3, dy: 1), xRadius: 4, yRadius: 4).fill()
         }
@@ -126,21 +134,35 @@ private class ListPickerRowView: NSView {
         if isItemSelected {
             let checkAttrs: [NSAttributedString.Key: Any] = [
                 .font: NSFont.systemFont(ofSize: 12, weight: .semibold),
-                .foregroundColor: ToolbarLayout.accentColor,
+                .foregroundColor: ToolbarLayout.accentColor.withAlphaComponent(alpha),
             ]
             ("✓" as NSString).draw(at: NSPoint(x: checkX, y: bounds.midY - 7), withAttributes: checkAttrs)
         }
 
+        let titleAlpha: CGFloat = (isItemSelected ? 1.0 : 0.7) * alpha
         let attrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: 11, weight: .medium),
-            .foregroundColor: NSColor.white.withAlphaComponent(isItemSelected ? 1.0 : 0.7),
+            .foregroundColor: NSColor.white.withAlphaComponent(titleAlpha),
         ]
         let str = title as NSString
         let strSize = str.size(withAttributes: attrs)
-        str.draw(at: NSPoint(x: 24, y: bounds.midY - strSize.height / 2), withAttributes: attrs)
+
+        if let subtitle = subtitle {
+            // Title + subtitle side by side
+            str.draw(at: NSPoint(x: 24, y: bounds.midY - strSize.height / 2), withAttributes: attrs)
+            let subAttrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 9),
+                .foregroundColor: NSColor.white.withAlphaComponent(0.35 * alpha),
+            ]
+            let subStr = subtitle as NSString
+            subStr.draw(at: NSPoint(x: 24 + strSize.width + 4, y: bounds.midY - strSize.height / 2 + 1), withAttributes: subAttrs)
+        } else {
+            str.draw(at: NSPoint(x: 24, y: bounds.midY - strSize.height / 2), withAttributes: attrs)
+        }
     }
 
     override func mouseDown(with event: NSEvent) {
+        guard isEnabled else { return }
         onSelect?(index)
     }
 
