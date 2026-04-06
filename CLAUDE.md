@@ -276,6 +276,7 @@ Copy to clipboard, Save to file (PNG/JPEG/HEIC/WebP), Pin (floating always-on-to
 - Annotation is a class (reference type) for mutation during drag/resize — use `clone()` for safe copies
 - `autoreleasepool` for overlay teardown to prevent memory spikes
 - Extension files (`OverlayView+Feature.swift`) for self-contained feature code that accesses OverlayView state but is logically separate (recording overlays, scroll capture HUD, window snapping, popovers)
+- **Light/dark mode:** The toolbar and popovers always use a dark background regardless of system appearance. `ToolOptionsRowView` and `PopoverHelper` force `NSAppearance(named: .darkAqua)` so system controls render with light text. Never use system-adaptive colors (`.labelColor`, `.secondaryLabelColor`) for text in toolbar/popover contexts without verifying contrast against the dark background. Always test new toolbar UI elements in both light and dark system appearance.
 
 ## Build & Run
 

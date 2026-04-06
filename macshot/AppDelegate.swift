@@ -1642,7 +1642,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         if mode == 0 || mode == 2 {
             saveImageToFile(image)
         }
-        if mode != 3 { playCopySound() }
+        playCopySound()
         showFloatingThumbnail(image: image)
     }
 
