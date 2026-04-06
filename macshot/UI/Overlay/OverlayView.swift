@@ -674,6 +674,7 @@ class OverlayView: NSView {
     }
     var hoveredWindowRect: NSRect? = nil
     var hoveredWindowID: CGWindowID? = nil
+    private var windowSnapCooldown: Bool = true  // true until overlay has rendered
     /// True when the current selection was made via window snap (click without drag).
     /// Cleared when the user manually resizes the selection.
     var selectionIsWindowSnap: Bool = false
@@ -721,6 +722,12 @@ class OverlayView: NSView {
             rect: .zero, options: [.mouseMoved, .activeAlways, .inVisibleRect],
             owner: self, userInfo: nil)
         addTrackingArea(area)
+
+        // Let the overlay render before starting expensive window snap queries
+        windowSnapCooldown = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
+            self?.windowSnapCooldown = false
+        }
 
         NotificationCenter.default.addObserver(
             self, selector: #selector(handleToolbarColorsChanged),
@@ -784,6 +791,9 @@ class OverlayView: NSView {
         // Window snap: highlight hovered window in idle state.
         // CGWindowListCopyWindowInfo is expensive — run it on a background thread,
         // skipping new queries while one is already in flight.
+        // Delay window snap queries briefly after overlay appears so the overlay
+        // renders without competing with CGWindowListCopyWindowInfo for the window server
+        if windowSnapCooldown { return }
         if state == .idle && windowSnapEnabled && !windowSnapQueryInFlight
             && !(remoteSelectionRect.width >= 1 && remoteSelectionRect.height >= 1)
         {

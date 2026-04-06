@@ -36,12 +36,25 @@ class ScreenCaptureManager {
         }
     }
 
-    static func captureAllScreens(completion: @escaping ([ScreenCapture]) -> Void) {
+    static func captureAllScreens(excludingWindowNumbers: [CGWindowID] = [], completion: @escaping ([ScreenCapture]) -> Void) {
         Task {
             do {
-                let content = try await shareableContent()
+                // When excluding windows, fetch fresh content so newly-created
+                // windows (e.g. thumbnails spawned after the cache was built) are
+                // present in the window list and can actually be excluded.
+                let content: SCShareableContent
+                if !excludingWindowNumbers.isEmpty {
+                    content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: true)
+                } else {
+                    content = try await shareableContent()
+                }
                 let displays = content.displays
                 let screens = NSScreen.screens
+
+                // Resolve window numbers to SCWindow objects for exclusion
+                let excludedSCWindows: [SCWindow] = excludingWindowNumbers.compactMap { wid in
+                    content.windows.first(where: { CGWindowID($0.windowID) == wid })
+                }
 
                 // Build display-screen pairs
                 var pairs: [(SCDisplay, NSScreen)] = []
@@ -60,7 +73,7 @@ class ScreenCaptureManager {
                         group.addTask {
                             if #available(macOS 14.0, *) {
                                 // SCScreenshotManager: single-shot API, no stream overhead
-                                let filter = SCContentFilter(display: display, excludingWindows: [])
+                                let filter = SCContentFilter(display: display, excludingWindows: excludedSCWindows)
                                 let config = SCStreamConfiguration()
                                 let scale = Int(screen.backingScaleFactor)
                                 config.width = display.width * scale

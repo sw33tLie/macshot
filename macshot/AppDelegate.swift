@@ -454,11 +454,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
         dismissOverlays()
 
+        // Hide floating thumbnails so they don't visually flash on the overlay.
+        // They're also excluded via ScreenCaptureKit's excludingWindows filter
+        // in performCapture() so they never appear in the captured image.
+        for tc in thumbnailControllers { tc.hideWindow() }
+
         let delay = UserDefaults.standard.integer(forKey: "captureDelaySeconds")
         if delay > 0 {
             showPreCaptureCountdown(seconds: delay)
         } else {
-            performCapture()
+            DispatchQueue.main.async { [weak self] in
+                self?.performCapture()
+            }
         }
     }
 
@@ -538,7 +545,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func performCapture() {
-        ScreenCaptureManager.captureAllScreens { [weak self] captures in
+        // Exclude floating thumbnail windows so they never appear in captures,
+        // even if the window server hasn't fully recomposited after orderOut.
+        let excludeIDs = thumbnailControllers.compactMap { $0.windowNumber }
+        ScreenCaptureManager.captureAllScreens(excludingWindowNumbers: excludeIDs) { [weak self] captures in
             guard let self = self else { return }
 
             if captures.isEmpty {
@@ -647,6 +657,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             overlayControllers.removeAll()
         }
         isCapturing = false
+        // Restore hidden thumbnails
+        for tc in thumbnailControllers { tc.showWindow() }
     }
 
     func showFloatingThumbnail(image: NSImage) {
@@ -984,7 +996,11 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         dismissOverlays()
         if let image = capturedImage {
             ScreenshotHistory.shared.add(image: image)
-            showFloatingThumbnail(image: image)
+            // Defer thumbnail to next runloop cycle so overlay teardown completes first
+            // and the main thread is free for the next capture trigger
+            DispatchQueue.main.async { [weak self] in
+                self?.showFloatingThumbnail(image: image)
+            }
         }
     }
 

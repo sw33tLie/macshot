@@ -124,6 +124,15 @@ class FloatingThumbnailController: NSObject, NSDraggingSource {
 
     var windowFrame: NSRect { targetFrame }
 
+    /// The CGWindowID of the thumbnail panel, used for ScreenCaptureKit exclusion.
+    var windowNumber: CGWindowID? {
+        guard let w = window else { return nil }
+        return CGWindowID(w.windowNumber)
+    }
+
+    func hideWindow() { window?.orderOut(nil) }
+    func showWindow() { window?.orderFront(nil) }
+
     /// Animate this thumbnail to a new Y position (used when a lower thumbnail is dismissed).
     func moveTo(y: CGFloat) {
         guard let window = window else { return }
