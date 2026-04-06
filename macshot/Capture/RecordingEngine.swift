@@ -170,9 +170,12 @@ final class RecordingEngine: NSObject {
             output.onAudioSample = { [weak self] sampleBuffer in
                 self?.handleAudioSample(sampleBuffer)
             }
+            output.onStopped = { [weak self] in
+                self?.stopRecording()
+            }
             self.streamOutput = output
 
-            let stream = SCStream(filter: filter, configuration: config, delegate: nil)
+            let stream = SCStream(filter: filter, configuration: config, delegate: output)
             try stream.addStreamOutput(output, type: .screen, sampleHandlerQueue: DispatchQueue(label: "macshot.recording"))
             if #available(macOS 13.0, *) {
                 let recordAudio = UserDefaults.standard.bool(forKey: "recordSystemAudio") && format == .mp4
@@ -428,9 +431,10 @@ final class RecordingEngine: NSObject {
 
 // MARK: - SCStreamOutput
 
-private class RecordingStreamOutput: NSObject, SCStreamOutput {
+private class RecordingStreamOutput: NSObject, SCStreamOutput, SCStreamDelegate {
     var onFrame: ((CVPixelBuffer, CMTime) -> Void)?
     var onAudioSample: ((CMSampleBuffer) -> Void)?
+    var onStopped: (() -> Void)?
 
     func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, of type: SCStreamOutputType) {
         switch type {
@@ -442,6 +446,12 @@ private class RecordingStreamOutput: NSObject, SCStreamOutput {
             onAudioSample?(sampleBuffer)
         @unknown default:
             break
+        }
+    }
+
+    func stream(_ stream: SCStream, didStopWithError error: Error) {
+        DispatchQueue.main.async { [weak self] in
+            self?.onStopped?()
         }
     }
 }
