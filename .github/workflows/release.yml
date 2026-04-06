@@ -6,6 +6,11 @@ on:
     tags:
       - "v*.*.*"
       - "v*.*.*-beta.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build (e.g. v3.8.0-beta.2)'
+        required: true
 
 jobs:
   release:
@@ -17,12 +22,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
         with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
 
       # ── 2. Parse version from tag ──────────────────────────────────────────
       - name: Set version
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"   # strip leading 'v'
+          # Use manual input tag if workflow_dispatch, otherwise use the pushed tag
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          VERSION="${TAG#v}"   # strip leading 'v'
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           if [[ "$VERSION" == *"-beta"* ]]; then
             echo "IS_BETA=true" >> $GITHUB_ENV
