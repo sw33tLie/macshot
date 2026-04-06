@@ -60,6 +60,24 @@ class ToolOptionsRowView: NSView {
     }
 
     /// Clear editing state so future rebuilds use global tool defaults.
+    /// Update color swatches in-place without rebuilding the entire row.
+    func updateSwatchColors() {
+        guard let ov = overlayView else { return }
+        // Text background swatch (tag 975)
+        if let swatch = viewWithTag(975) {
+            swatch.layer?.backgroundColor = ov.textEditor.bgColor.cgColor
+        }
+        // Text outline swatch (tag 976)
+        if let swatch = viewWithTag(976) {
+            swatch.layer?.backgroundColor = ov.textEditor.outlineColor.cgColor
+        }
+        // Annotation outline swatch (tag 978)
+        if let swatch = viewWithTag(978) {
+            let col = editingAnnotation?.outlineColor ?? Self.savedOutlineColor
+            swatch.layer?.backgroundColor = col.cgColor
+        }
+    }
+
     func clearEditingAnnotation() {
         commitEditingSnapshot()
         editingAnnotation = nil
@@ -110,10 +128,12 @@ class ToolOptionsRowView: NSView {
             curX = addLineStyleSegment(at: curX, ov: ov)
         }
 
-        // ── Arrow style + reverse toggle ──
+        // ── Arrow style + outline + reverse toggle ──
         if tool == .arrow {
             curX = addSeparator(at: curX)
             curX = addArrowStyleSegment(at: curX, ov: ov)
+            curX = addSeparator(at: curX)
+            curX = addOutlineControls(at: curX, ov: ov)
             curX = addSeparator(at: curX)
             let flipIsOn = editingAnnotation?.arrowReversed ?? ov.arrowReversed
             curX = addToggle(at: curX, title: L("Flip"), isOn: flipIsOn) { [weak self, weak ov] isOn in
@@ -141,11 +161,7 @@ class ToolOptionsRowView: NSView {
             curX = addCornerRadiusSlider(at: curX, ov: ov)
         }
 
-        // ── Right-click hint for line/arrow ──
-        if tool == .line || tool == .arrow {
-            curX += 8
-            curX = addHintLabel(at: curX, text: L("Right-click to add points"))
-        }
+
 
         // ── Pencil smooth mode selector ──
         if tool == .pencil {
@@ -221,6 +237,13 @@ class ToolOptionsRowView: NSView {
             curX = addRedactOptions(at: curX, ov: ov)
         }
 
+        // ── Outline toggle + color swatch (line, rectangle, ellipse, number — arrow handled above) ──
+        let hasOutlineGeneric: [AnnotationTool] = [.line, .rectangle, .ellipse, .number]
+        if hasOutlineGeneric.contains(tool) {
+            curX = addSeparator(at: curX)
+            curX = addOutlineControls(at: curX, ov: ov)
+        }
+
         // Size the row
         let totalW = max(curX + padding, 200)
         contentWidth = totalW
@@ -289,14 +312,38 @@ class ToolOptionsRowView: NSView {
         seg.trackingMode = .selectOne
         seg.target = self
         seg.action = #selector(lineStyleChanged(_:))
+        seg.tag = 979  // tag for finding this segment to disable dashed/dotted when outline is on
         for (i, style) in LineStyle.allCases.enumerated() {
             seg.setImage(Self.lineStyleImage(style), forSegment: i)
             seg.setWidth(36, forSegment: i)
         }
-        seg.selectedSegment = (editingAnnotation?.lineStyle ?? ov.currentLineStyle).rawValue
+        let currentStyle = editingAnnotation?.lineStyle ?? ov.currentLineStyle
+        seg.selectedSegment = currentStyle.rawValue
         let segW = CGFloat(LineStyle.allCases.count) * 36
         seg.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: segW, height: 22)
         (seg.cell as? NSSegmentedCell)?.segmentStyle = .roundRect
+
+        // Disable dashed/dotted for rect/ellipse when outline is enabled
+        let isShapeTool = [AnnotationTool.rectangle, .ellipse].contains(editingAnnotation?.tool ?? ov.currentTool)
+        let hasOutline = editingAnnotation?.outlineColor != nil || (isShapeTool && UserDefaults.standard.bool(forKey: "annotationOutlineEnabled"))
+        if isShapeTool && hasOutline {
+            for (i, style) in LineStyle.allCases.enumerated() {
+                if style != .solid {
+                    seg.setEnabled(false, forSegment: i)
+                }
+            }
+            // Force solid if currently dashed/dotted
+            if currentStyle != .solid {
+                seg.selectedSegment = LineStyle.solid.rawValue
+                if let ann = editingAnnotation {
+                    ann.lineStyle = .solid
+                    ov.cachedCompositedImage = nil
+                } else {
+                    ov.currentLineStyle = .solid
+                }
+            }
+        }
+
         addSubview(seg)
         curX += segW
         return curX
@@ -1395,6 +1442,82 @@ class ToolOptionsRowView: NSView {
         if PopoverHelper.isVisible { PopoverHelper.dismiss(); return }
         guard let ov = overlayView else { return }
         ov.showColorPickerPopover(target: .textOutline, anchorView: sender)
+    }
+
+    // MARK: - Annotation outline
+
+    private func addOutlineControls(at x: CGFloat, ov: OverlayView) -> CGFloat {
+        var curX = x
+        let outlineEnabled: Bool
+        let outlineCol: NSColor
+        if let ann = editingAnnotation {
+            outlineEnabled = ann.outlineColor != nil
+            outlineCol = ann.outlineColor ?? Self.savedOutlineColor
+        } else {
+            outlineEnabled = UserDefaults.standard.bool(forKey: "annotationOutlineEnabled")
+            outlineCol = Self.savedOutlineColor
+        }
+        let outlineBtn = NSButton(title: L("Outline"), target: self, action: #selector(annotationOutlineToggled(_:)))
+        outlineBtn.bezelStyle = .recessed
+        outlineBtn.setButtonType(.toggle)
+        outlineBtn.state = outlineEnabled ? .on : .off
+        outlineBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
+        outlineBtn.sizeToFit()
+        let rowHeight: CGFloat = frame.height > 0 ? frame.height : 30
+        outlineBtn.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: max(50, outlineBtn.frame.width), height: 22)
+        addSubview(outlineBtn)
+        curX += outlineBtn.frame.width + 2
+
+        let swatchSize: CGFloat = 18
+        let swatch = NSButton(frame: NSRect(x: curX, y: (rowHeight - swatchSize) / 2, width: swatchSize, height: swatchSize))
+        swatch.title = ""
+        swatch.isBordered = false
+        swatch.wantsLayer = true
+        swatch.layer?.backgroundColor = outlineCol.cgColor
+        swatch.layer?.cornerRadius = 3
+        swatch.layer?.borderWidth = 1.5
+        swatch.layer?.borderColor = ToolbarLayout.iconColor.withAlphaComponent(0.4).cgColor
+        swatch.layer?.opacity = outlineEnabled ? 1.0 : 0.3
+        swatch.tag = 978
+        swatch.target = self
+        swatch.action = #selector(annotationOutlineColorClicked(_:))
+        addSubview(swatch)
+        curX += swatchSize
+        return curX
+    }
+
+    static var savedOutlineColor: NSColor {
+        if let data = UserDefaults.standard.data(forKey: "annotationOutlineColor"),
+           let c = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data) { return c }
+        return .white
+    }
+
+    @objc private func annotationOutlineToggled(_ sender: NSButton) {
+        guard let ov = overlayView else { return }
+        let isOn = sender.state == .on
+        UserDefaults.standard.set(isOn, forKey: "annotationOutlineEnabled")
+        if let swatch = viewWithTag(978) { swatch.layer?.opacity = isOn ? 1.0 : 0.3 }
+        if let ann = editingAnnotation {
+            ensureSnapshot()
+            ann.outlineColor = isOn ? Self.savedOutlineColor : nil
+            ov.cachedCompositedImage = nil
+        }
+        // Rebuild to update line style segment enabled state (rect/ellipse disable dashed/dotted with outline)
+        let tool = editingAnnotation?.tool ?? ov.currentTool
+        if tool == .rectangle || tool == .ellipse {
+            if let ann = editingAnnotation {
+                rebuild(forAnnotation: ann)
+            } else {
+                rebuild(for: tool)
+            }
+        }
+        ov.needsDisplay = true
+    }
+
+    @objc private func annotationOutlineColorClicked(_ sender: NSButton) {
+        if PopoverHelper.isVisible { PopoverHelper.dismiss(); return }
+        guard let ov = overlayView else { return }
+        ov.showColorPickerPopover(target: .annotationOutline, anchorView: sender)
     }
 
     @objc private func textCancelClicked() {

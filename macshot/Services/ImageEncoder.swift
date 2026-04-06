@@ -166,11 +166,17 @@ enum ImageEncoder {
             properties[kCGImageDestinationLossyCompressionQuality as String] = q
         }
 
-        // Embed sRGB color profile by converting the image's color space
+        // Convert to sRGB color space (proper pixel value conversion, not just re-tagging)
         var imageToEncode = cgImage
         if embedColorProfile, let sRGB = CGColorSpace(name: CGColorSpace.sRGB) {
-            if let profiled = cgImage.copy(colorSpace: sRGB) {
-                imageToEncode = profiled
+            let w = cgImage.width, h = cgImage.height
+            if let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8,
+                                   bytesPerRow: w * 4, space: sRGB,
+                                   bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) {
+                ctx.draw(cgImage, in: CGRect(x: 0, y: 0, width: w, height: h))
+                if let converted = ctx.makeImage() {
+                    imageToEncode = converted
+                }
             }
         }
 

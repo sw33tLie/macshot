@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.8.0-beta.4] - 2026-04-06
+
+### Added
+- **Annotation outlines** — new outline toggle + color picker for arrows (all styles including thick), lines, rectangles, ellipses, and number tools. Outline draws as a contrasting border around the shape, visible on any background. Persisted per-annotation and in global settings.
+- **Shift+Click multi-selection** — hold Shift and click annotations to add them to the selection. Drag moves all selected, Delete removes all selected, color changes apply to all. Full controls (resize, rotate) shown for single selection; glow highlight for multi-select.
+- **Scroll Capture keyboard shortcut** — new configurable hotkey slot in Preferences > Shortcuts.
+
+### Changed
+- **Color wheel selection** — now purely angle-based. Moving the mouse far from the wheel still selects the color at that angle instead of deselecting.
+- **sRGB color profile** — fixed color space conversion. Screenshots with "Embed sRGB profile" enabled now have accurate colors matching the native macOS screenshot tool (proper pixel value conversion instead of re-tagging).
+
+### Fixed
+- **Hotkey display for non-standard keys** — unknown keyCodes now use UCKeyTranslate to show the actual character instead of "?". Helps with non-Apple keyboards and BTT remapped keys.
+
 ## [3.8.0-beta.3] - 2026-04-06
 
 ### Added
