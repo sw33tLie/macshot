@@ -1,6 +1,6 @@
 name: Build, Sign & Release
 
-# Triggers on any tag push matching v*.*.*  (e.g. v2.3.0)
+# Triggers on tag push or manual dispatch
 on:
   push:
     tags:
