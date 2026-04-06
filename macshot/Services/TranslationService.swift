@@ -28,6 +28,10 @@ enum TranslationService {
         return false
     }
 
+    /// Cached Apple language availability — populated on first check,
+    /// reused instantly for subsequent popover opens.
+    private static var cachedAppleAvailability: [String: Bool]?
+
     // MARK: - Target language
 
     static var targetLanguage: String {
@@ -72,16 +76,64 @@ enum TranslationService {
     /// Returns a dict of language code → installed status.
     @available(macOS 15.0, *)
     static func checkAppleLanguageAvailability(completion: @escaping ([String: Bool]) -> Void) {
+        // Return cache immediately if available
+        if let cached = cachedAppleAvailability {
+            completion(cached)
+            return
+        }
+
         Task {
             let availability = LanguageAvailability()
-            var result: [String: Bool] = [:]
-            for lang in availableLanguages {
-                let locale = appleLocale(from: lang.code)
-                let status = await availability.status(from: Locale.Language(identifier: "en"), to: locale)
-                result[lang.code] = (status == .installed)
+            let allLocales = availableLanguages.map { (code: $0.code, locale: appleLocale(from: $0.code)) }
+
+            // Find the first installed pair to get a known-installed "probe" language.
+            // Then check all remaining languages against that probe — O(n) instead of O(n²).
+            var installed: [String: Bool] = [:]
+            var probeLocale: Locale.Language?
+            var probeCode: String?
+
+            // Quick scan: find any installed pair
+            outerLoop: for (i, lang) in allLocales.enumerated() {
+                for other in allLocales[(i+1)...] {
+                    let status = await availability.status(from: lang.locale, to: other.locale)
+                    if status == .installed {
+                        installed[lang.code] = true
+                        installed[other.code] = true
+                        probeLocale = lang.locale
+                        probeCode = lang.code
+                        break outerLoop
+                    }
+                }
             }
-            await MainActor.run { completion(result) }
+
+            // Check remaining languages against the probe
+            if let probe = probeLocale, let pc = probeCode {
+                for lang in allLocales where installed[lang.code] != true {
+                    // Check both directions since the probe→lang direction
+                    // might not be valid but lang→probe could be
+                    let toStatus = await availability.status(from: probe, to: lang.locale)
+                    let fromStatus = await availability.status(from: lang.locale, to: probe)
+                    installed[lang.code] = (toStatus == .installed || fromStatus == .installed)
+                }
+                // Ensure the probe itself is marked
+                installed[pc] = true
+            }
+
+            // Any language not checked stays false
+            for lang in allLocales where installed[lang.code] == nil {
+                installed[lang.code] = false
+            }
+
+            await MainActor.run {
+                cachedAppleAvailability = installed
+                completion(installed)
+            }
         }
+    }
+
+    /// Invalidate the cached availability (e.g. when returning from System Settings).
+    static func invalidateAppleLanguageCache() {
+        cachedAppleAvailability = nil
     }
 
     // MARK: - Translate a batch of strings (auto-detect source)

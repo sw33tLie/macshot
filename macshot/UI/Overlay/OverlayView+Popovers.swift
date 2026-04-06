@@ -86,25 +86,22 @@ extension OverlayView {
 
         let showPopover: ([String: Bool]?) -> Void = { [weak self] appleAvailability in
             guard let self = self else { return }
+            // When Apple Translation is active, only show installed languages
+            let filteredLanguages: [(code: String, name: String)]
+            if let avail = appleAvailability {
+                filteredLanguages = languages.filter { avail[$0.code] == true }
+            } else {
+                filteredLanguages = languages
+            }
             let picker = ListPickerView()
             let pickerW: CGFloat = 220
             picker.frame.size.width = pickerW
-            picker.items = languages.map { lang in
-                var enabled = true
-                var subtitle: String? = nil
-                if let avail = appleAvailability {
-                    if avail[lang.code] == true {
-                        // installed — no subtitle needed
-                    } else {
-                        enabled = false
-                        subtitle = L("not installed")
-                    }
-                }
+            picker.items = filteredLanguages.map { lang in
                 return .init(title: lang.name, isSelected: lang.code == currentCode,
-                             isEnabled: enabled, subtitle: subtitle)
+                             isEnabled: true, subtitle: nil)
             }
             picker.onSelect = { [weak self] idx in
-                let newCode = languages[idx].code
+                let newCode = filteredLanguages[idx].code
                 TranslationService.targetLanguage = newCode
                 PopoverHelper.dismiss()
                 if let self = self, self.translateEnabled {
