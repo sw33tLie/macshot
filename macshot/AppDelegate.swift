@@ -234,6 +234,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
         let scrollCaptureItem = NSMenuItem(title: L("Scroll Capture"), action: #selector(scrollCapture), keyEquivalent: "")
         scrollCaptureItem.target = self
+        scrollCaptureItem.toolTip = HotkeyManager.displayString(for: .scrollCapture)
         scrollCaptureItem.image = NSImage(systemSymbolName: "scroll", accessibilityDescription: nil)
         menu.addItem(scrollCaptureItem)
 
@@ -347,6 +348,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             },
             quickCapture: { [weak self] in
                 DispatchQueue.main.async { self?.quickCapture() }
+            },
+            scrollCapture: { [weak self] in
+                DispatchQueue.main.async { self?.scrollCapture() }
             }
         )
     }
@@ -1245,8 +1249,18 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         hud.onStopRecording = { [weak self] in
             self?.stopRecording()
         }
+        hud.onPauseRecording = { [weak self] in
+            self?.recordingEngine?.pauseRecording()
+        }
+        hud.onResumeRecording = { [weak self] in
+            self?.recordingEngine?.resumeRecording()
+        }
         hud.orderFront(nil)
         recordingHUDPanel = hud
+
+        engine.onPauseChanged = { [weak self] paused in
+            self?.recordingHUDPanel?.setPaused(paused)
+        }
 
         // Start mouse highlight overlay if enabled
         if UserDefaults.standard.bool(forKey: "recordMouseHighlight") {
@@ -1315,7 +1329,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
 
     private func updateRecordingHUD(seconds: Int) {
         recordingHUDPanel?.update(elapsedSeconds: seconds)
-        if let screen = recordingScreen {
+        if let screen = recordingScreen, !(recordingHUDPanel?.userHasDragged ?? false) {
             recordingHUDPanel?.positionOnScreen(relativeTo: recordingScreenRect, screen: screen)
         }
     }

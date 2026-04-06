@@ -391,6 +391,7 @@ class OverlayView: NSView {
     }()
     private var loupeCursorPoint: NSPoint = .zero
     var drawingCursorPoint: NSPoint = .zero
+    private var smartMarkerLineHeight: CGFloat?  // detected text line height at cursor (smart marker)
     private var colorSamplerPoint: NSPoint = .zero  // canvas space, for color picker tool
     private var colorSamplerBitmap: NSBitmapImageRep?  // cached bitmap for fast pixel sampling
     // Auto-measure preview (live while holding 1 or 2 key)
@@ -714,7 +715,8 @@ class OverlayView: NSView {
     /// Invalidate only the rect around a cursor preview (old + new position) instead of the whole view.
     private func invalidateCursorPreview(oldCanvas: NSPoint, newCanvas: NSPoint, radius: CGFloat) {
         let margin: CGFloat = 4
-        let r = radius + margin
+        // Scale canvas-space radius to view-space pixels (zoom factor)
+        let r = (radius + margin) * zoomLevel
         if oldCanvas != .zero {
             let oldView = canvasToView(oldCanvas)
             setNeedsDisplay(NSRect(x: oldView.x - r, y: oldView.y - r, width: r * 2, height: r * 2))
@@ -804,21 +806,32 @@ class OverlayView: NSView {
         }
 
         // Track cursor for pencil/marker dot preview (canvas space so it scales with zoom)
-        // Skip in smart marker mode — stroke size is auto-determined by text detection
         let showDrawingCursor = state == .selected && !isRecording
-            && ((currentTool == .pencil) || (currentTool == .marker && !smartMarkerEnabled))
+            && (currentTool == .pencil || currentTool == .marker)
         if showDrawingCursor {
             let canvasPoint = viewToCanvas(point)
             if canvasPoint != drawingCursorPoint {
                 let oldPt = drawingCursorPoint
+                let oldR = drawingCursorRadius
                 drawingCursorPoint = canvasPoint
-                let r = drawingCursorRadius + 4
+                // Smart marker: query line height at cursor and update preview size
+                if currentTool == .marker && smartMarkerEnabled {
+                    if let handler = toolHandlers[.marker] as? MarkerToolHandler {
+                        handler.ensureOCRCache(canvas: self)
+                        smartMarkerLineHeight = handler.textLineHeight(at: canvasPoint, canvas: self)
+                    }
+                }
+                // Invalidate both old and new positions with the larger radius
+                let newR = drawingCursorRadius
+                let r = max(oldR, newR) + 4
                 invalidateCursorPreview(oldCanvas: oldPt, newCanvas: canvasPoint, radius: r)
             }
         } else if drawingCursorPoint != .zero {
             let oldPt = drawingCursorPoint
+            let r = drawingCursorRadius + 4
             drawingCursorPoint = .zero
-            invalidateCursorPreview(oldCanvas: oldPt, newCanvas: oldPt, radius: drawingCursorRadius + 4)
+            smartMarkerLineHeight = nil
+            invalidateCursorPreview(oldCanvas: oldPt, newCanvas: oldPt, radius: r)
         }
 
         // Track cursor for color sampler tool (canvas space)
@@ -1047,7 +1060,7 @@ class OverlayView: NSView {
 
         // Tool cursor — use handler's state-aware cursor if available, else legacy switch
         // Pencil/marker: hide system cursor when dot preview is active (the dot IS the cursor)
-        if (currentTool == .pencil || (currentTool == .marker && !smartMarkerEnabled))
+        if (currentTool == .pencil || currentTool == .marker)
             && state == .selected && drawingCursorPoint != .zero {
             Self.invisibleCursor.set()
         } else if let handler = toolHandlers[currentTool], let cursor = handler.cursorForCanvas(self) {
@@ -1381,7 +1394,7 @@ class OverlayView: NSView {
             }
 
             // Pencil/marker cursor dot preview inside zoom transform so it scales with zoom
-            if (currentTool == .pencil || currentTool == .marker) && drawingCursorPoint != .zero && currentAnnotation == nil {
+            if (currentTool == .pencil || currentTool == .marker) && drawingCursorPoint != .zero && currentAnnotation == nil && !isDraggingAnnotation && !isResizingAnnotation && !isRotatingAnnotation {
                 drawDrawingCursorPreview(at: drawingCursorPoint)
             }
 
@@ -1444,7 +1457,7 @@ class OverlayView: NSView {
                 }
 
                 // Re-draw drawing cursor dot preview on top of beautify
-                if (currentTool == .pencil || currentTool == .marker) && drawingCursorPoint != .zero && currentAnnotation == nil
+                if (currentTool == .pencil || currentTool == .marker) && drawingCursorPoint != .zero && currentAnnotation == nil && !isDraggingAnnotation && !isResizingAnnotation && !isRotatingAnnotation
                 {
                     context.saveGraphicsState()
                     applyCanvasTransform(to: context)
@@ -1497,7 +1510,7 @@ class OverlayView: NSView {
                     drawColorSamplerPreview(at: colorSamplerPoint)
                     context.restoreGraphicsState()
                 }
-                if (currentTool == .pencil || currentTool == .marker) && drawingCursorPoint != .zero && currentAnnotation == nil {
+                if (currentTool == .pencil || currentTool == .marker) && drawingCursorPoint != .zero && currentAnnotation == nil && !isDraggingAnnotation && !isResizingAnnotation && !isRotatingAnnotation {
                     context.saveGraphicsState()
                     applyCanvasTransform(to: context)
                     drawDrawingCursorPreview(at: drawingCursorPoint)
@@ -3039,35 +3052,51 @@ class OverlayView: NSView {
         ).fill()
     }
 
-    /// Radius of the drawing cursor dot for the current tool.
+    /// Half-extent of the drawing cursor preview (used for dirty rect invalidation).
     private var drawingCursorRadius: CGFloat {
         if currentTool == .marker {
+            if smartMarkerEnabled {
+                // Smart marker pill: height is the dominant dimension
+                let h = smartMarkerLineHeight ?? (currentMarkerSize * 6)
+                return h / 2
+            }
             return (currentMarkerSize * 6) / 2
         } else {
-            // Pencil — stroke width is the line width; show a dot at that size
-            // with a minimum radius so it's always visible
             return max(currentStrokeWidth / 2, 2)
         }
     }
 
     private func drawDrawingCursorPreview(at center: NSPoint) {
-        let radius = drawingCursorRadius
-        let circleRect = NSRect(
-            x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)
-        let path = NSBezierPath(ovalIn: circleRect)
-
-        if currentTool == .marker {
-            // Semi-transparent fill for marker (highlighter preview)
+        if currentTool == .marker && smartMarkerEnabled {
+            // Smart marker: vertical pill that scales to text line height
+            let h = smartMarkerLineHeight ?? (currentMarkerSize * 6)
+            let w: CGFloat = min(h * 0.55, 14)
+            let pillRect = NSRect(x: center.x - w / 2, y: center.y - h / 2, width: w, height: h)
+            let pill = NSBezierPath(roundedRect: pillRect, xRadius: w / 2, yRadius: w / 2)
+            currentColor.withAlphaComponent(0.45).setFill()
+            pill.fill()
+            currentColor.withAlphaComponent(0.8).setStroke()
+            pill.lineWidth = 1.0
+            pill.stroke()
+        } else if currentTool == .marker {
+            // Normal marker: circle at marker stroke size
+            let radius = drawingCursorRadius
+            let circleRect = NSRect(
+                x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)
+            let path = NSBezierPath(ovalIn: circleRect)
             currentColor.withAlphaComponent(0.35).setFill()
             path.fill()
             currentColor.withAlphaComponent(0.7).setStroke()
             path.lineWidth = 1.0
             path.stroke()
         } else {
-            // Solid fill for pencil (matches what a click produces)
+            // Pencil: solid dot at stroke width
+            let radius = drawingCursorRadius
+            let circleRect = NSRect(
+                x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)
+            let path = NSBezierPath(ovalIn: circleRect)
             annotationColor.setFill()
             path.fill()
-            // Contrasting border so dot is visible on any background
             let border = NSBezierPath(ovalIn: circleRect.insetBy(dx: -0.5, dy: -0.5))
             border.lineWidth = 1.0
             NSColor.white.withAlphaComponent(0.6).setStroke()
@@ -4991,6 +5020,8 @@ class OverlayView: NSView {
         let isCommandScroll = event.modifierFlags.contains(.command)
 
         // Phase-based (trackpad) scroll without Cmd → pan only, never zoom
+        // Suppress panning while actively drawing to prevent pan+draw conflict (Apple Pencil / Sidecar)
+        if isTrackpadPhased && !isCommandScroll && currentAnnotation != nil { return }
         if isTrackpadPhased && !isCommandScroll {
             // Allow panning when zoomed OR when the image exceeds the view (tall/wide images in editor)
             let imageExceedsView =
@@ -5642,10 +5673,9 @@ class OverlayView: NSView {
             // Start recording — overlay will be dismissed by AppDelegate
             overlayDelegate?.overlayViewDidRequestStartRecording(rect: selectionRect)
         case .stopRecord:
-            // Exit recording mode without starting (user changed mind)
+            // Exit recording mode — dismiss overlay entirely (user changed mind)
             isRecording = false
-            rebuildToolbarLayout()
-            needsDisplay = true
+            overlayDelegate?.overlayViewDidCancel()
         case .mouseHighlight:
             let current = UserDefaults.standard.bool(forKey: "recordMouseHighlight")
             UserDefaults.standard.set(!current, forKey: "recordMouseHighlight")

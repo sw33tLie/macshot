@@ -1,5 +1,28 @@
 # Changelog
 
+## [3.8.0-beta.3] - 2026-04-06
+
+### Added
+- **WYSIWYG drawing cursor** — pencil and marker tools now show a live dot preview matching the exact stroke size and color instead of a pen icon cursor. System cursor is hidden; the dot IS the cursor.
+- **Smart marker live text preview** — in smart marker mode, the cursor pill dynamically scales to match the detected text line height as you hover. OCR runs eagerly on first hover for instant feedback.
+- **Recording pause/resume** — new pause button in the recording control bar. Paused frames and audio are dropped; timer pauses. Red dot turns orange when paused.
+- **Recording control bar redesign** — floating HUD replaced with a full control bar: stop button, pause/resume toggle, timer with recording indicator, and a draggable handle. Dark themed with rounded corners.
+- **Scroll Capture keyboard shortcut** — new configurable hotkey slot in Preferences > Shortcuts (no default assigned).
+
+### Changed
+- **Smart marker vertical alignment** — highlight now centers on the text body (x-height) instead of the geometric center of the bounding box, compensating for descender space.
+- **Smart marker drag size** — stroke uses detected text line height from the start of the drag, not just on release. No more size jump when finishing the stroke.
+- **Recording mode cancel** — pressing Escape or the X button in recording setup now dismisses the overlay entirely instead of falling back to screenshot mode.
+
+### Fixed
+- **Cursor preview ghosting at zoom** — dirty rect invalidation now scales by zoom level, preventing ghost artifacts from previous cursor positions when zoomed in.
+- **Drawing cursor visible during annotation drag** — dot preview now hides when dragging, resizing, or rotating an annotation.
+- **Pan while drawing with Apple Pencil** — trackpad scroll events suppressed during active drawing to prevent simultaneous pan and draw on Sidecar.
+- **Recording HUD drag drift** — switched from delta-based to absolute positioning using screen coordinates. HUD stays exactly under cursor during drag with zero drift.
+- **Recording HUD flicker** — fixed width prevents frame resize on timer tick; auto-repositioning stops once user drags the HUD.
+- **Hotkey display for non-standard keys** — unknown keyCodes now use UCKeyTranslate to show the actual character instead of "?". Helps with non-Apple keyboards and BTT remapped keys.
+- **Sparkle beta update detection** — switched from version-string comparison to monotonic build numbers (CI run number) for `sparkle:version`, ensuring beta-to-beta updates are always detected.
+
 ## [3.8.0-beta.2] - 2026-04-06
 
 ### Added

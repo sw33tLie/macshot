@@ -31,7 +31,9 @@ jobs:
           # Use manual input tag if workflow_dispatch, otherwise use the pushed tag
           TAG="${{ github.event.inputs.tag || github.ref_name }}"
           VERSION="${TAG#v}"   # strip leading 'v'
+          BUILD_NUMBER="${{ github.run_number }}"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_ENV
           if [[ "$VERSION" == *"-beta"* ]]; then
             echo "IS_BETA=true" >> $GITHUB_ENV
           else
@@ -97,7 +99,7 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             MARKETING_VERSION="$VERSION" \
-            CURRENT_PROJECT_VERSION="$VERSION" \
+            CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
             build
 
       # ── 5. Sign the .app with Developer ID ────────────────────────────────
@@ -242,13 +244,13 @@ jobs:
           """))
           pathlib.Path("/tmp/build_item.py").write_text(textwrap.dedent("""\
               import sys
-              version, date, channel, html, url, size, sig = sys.argv[1:8]
+              version, build_number, date, channel, html, url, size, sig = sys.argv[1:9]
               channel_line = f'    <sparkle:channel>{channel}</sparkle:channel>' if channel else ''
               with open('/tmp/new_item.xml', 'w') as f:
                   f.write(f'''<item>
                   <title>v{version}</title>
                   <pubDate>{date}</pubDate>
-                  <sparkle:version>{version}</sparkle:version>
+                  <sparkle:version>{build_number}</sparkle:version>
                   <sparkle:shortVersionString>{version}</sparkle:shortVersionString>
                   <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
               {channel_line}
@@ -337,7 +339,7 @@ jobs:
             CHANNEL="beta"
           fi
 
-          python3 /tmp/build_item.py "$VERSION" "$DATE" "$CHANNEL" "$RELEASE_HTML" "$DOWNLOAD_URL" "$FILESIZE" "$ED_SIG"
+          python3 /tmp/build_item.py "$VERSION" "$BUILD_NUMBER" "$DATE" "$CHANNEL" "$RELEASE_HTML" "$DOWNLOAD_URL" "$FILESIZE" "$ED_SIG"
           NEW_ITEM=$(cat /tmp/new_item.xml)
 
           # Merge into appcast.xml:

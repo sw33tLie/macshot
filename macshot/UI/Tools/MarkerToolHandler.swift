@@ -42,12 +42,19 @@ final class MarkerToolHandler: AnnotationToolHandler {
 
     func start(at point: NSPoint, canvas: AnnotationCanvas) -> Annotation? {
         freeformShiftDirection = 0
+        var strokeWidth = canvas.currentMarkerSize
+        if canvas.smartMarkerEnabled {
+            // Use detected text line height if available so the stroke matches during drag
+            if let lineH = textLineHeight(at: point, canvas: canvas) {
+                strokeWidth = (lineH + 4) / 6  // drawFreeform multiplies strokeWidth by 6
+            }
+        }
         let annotation = Annotation(
             tool: .marker,
             startPoint: point,
             endPoint: point,
             color: canvas.opacityAppliedColor(for: .marker),
-            strokeWidth: canvas.currentMarkerSize
+            strokeWidth: strokeWidth
         )
         annotation.points = [point]
         return annotation
@@ -210,7 +217,9 @@ final class MarkerToolHandler: AnnotationToolHandler {
             let box = obs.boundingBox
             let lineMinY = selectionRect.origin.y + box.origin.y * selectionRect.height
             let lineH = box.height * selectionRect.height
-            let lineMidY = lineMinY + lineH / 2
+            // Offset upward by ~12% of line height to compensate for descender space
+            // (Vision bbox includes descenders which pull the geometric center down)
+            let lineMidY = lineMinY + lineH * 0.55
 
             // Size the marker stroke to cover the text line height (with small padding)
             let smartStrokeWidth = (lineH + 4) / 6  // drawFreeform multiplies strokeWidth by 6
@@ -233,5 +242,77 @@ final class MarkerToolHandler: AnnotationToolHandler {
     func invalidateCache() {
         cachedObservations = nil
         cachedSelectionRect = .zero
+    }
+
+    // MARK: - Live text line height detection
+
+    private var ocrInFlight = false
+
+    /// Eagerly start OCR if not already cached. Called on mouseMoved in smart marker mode.
+    func ensureOCRCache(canvas: AnnotationCanvas) {
+        let selectionRect = canvas.selectionRect
+        if cachedObservations != nil && cachedSelectionRect == selectionRect { return }
+        guard !ocrInFlight else { return }
+        guard let screenshot = canvas.screenshotImage else { return }
+
+        ocrInFlight = true
+        let captureDrawRect = canvas.captureDrawRect
+
+        let regionImage = NSImage(size: selectionRect.size, flipped: false) { _ in
+            screenshot.draw(in: NSRect(x: -selectionRect.origin.x, y: -selectionRect.origin.y,
+                                        width: captureDrawRect.width, height: captureDrawRect.height),
+                            from: .zero, operation: .copy, fraction: 1.0)
+            return true
+        }
+        guard let tiffData = regionImage.tiffRepresentation,
+              let bitmap = NSBitmapImageRep(data: tiffData),
+              let cgImage = bitmap.cgImage else {
+            ocrInFlight = false
+            return
+        }
+
+        let request = VisionOCR.makeTextRecognitionRequest { [weak self] request, _ in
+            let observations = request.results as? [VNRecognizedTextObservation] ?? []
+            DispatchQueue.main.async { [weak self] in
+                self?.cachedObservations = observations
+                self?.cachedSelectionRect = selectionRect
+                self?.ocrInFlight = false
+            }
+        }
+        DispatchQueue.global(qos: .userInitiated).async {
+            try? VNImageRequestHandler(cgImage: cgImage, options: [:]).perform([request])
+        }
+    }
+
+    /// Returns the text line height at the given canvas point, or nil if no text detected there.
+    func textLineHeight(at point: NSPoint, canvas: AnnotationCanvas) -> CGFloat? {
+        guard let observations = cachedObservations else { return nil }
+        let selectionRect = canvas.selectionRect
+
+        var bestHeight: CGFloat?
+        var bestDist: CGFloat = .greatestFiniteMagnitude
+
+        for obs in observations {
+            let box = obs.boundingBox
+            let lineMinX = selectionRect.origin.x + box.origin.x * selectionRect.width
+            let lineMaxX = lineMinX + box.width * selectionRect.width
+            let lineMinY = selectionRect.origin.y + box.origin.y * selectionRect.height
+            let lineH = box.height * selectionRect.height
+            let lineMaxY = lineMinY + lineH
+
+            // Check if cursor is within horizontal bounds and near vertical bounds
+            guard point.x >= lineMinX - 10 && point.x <= lineMaxX + 10 else { continue }
+            let padding: CGFloat = lineH * 0.5
+            guard point.y >= lineMinY - padding && point.y <= lineMaxY + padding else { continue }
+
+            // Pick the closest line by vertical distance to center
+            let lineMidY = lineMinY + lineH / 2
+            let dist = abs(point.y - lineMidY)
+            if dist < bestDist {
+                bestDist = dist
+                bestHeight = lineH
+            }
+        }
+        return bestHeight
     }
 }
