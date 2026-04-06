@@ -14,6 +14,7 @@ class HotkeyManager {
         case historyOverlay = 5
         case captureOCR = 6
         case quickCapture = 7
+        case scrollCapture = 8
 
         var keyCodeKey: String {
             switch self {
@@ -24,6 +25,7 @@ class HotkeyManager {
             case .historyOverlay: return "hotkeyHistoryKeyCode"
             case .captureOCR: return "hotkeyOCRKeyCode"
             case .quickCapture: return "hotkeyQuickCaptureKeyCode"
+            case .scrollCapture: return "hotkeyScrollCaptureKeyCode"
             }
         }
 
@@ -36,6 +38,7 @@ class HotkeyManager {
             case .historyOverlay: return "hotkeyHistoryModifiers"
             case .captureOCR: return "hotkeyOCRModifiers"
             case .quickCapture: return "hotkeyQuickCaptureModifiers"
+            case .scrollCapture: return "hotkeyScrollCaptureModifiers"
             }
         }
 
@@ -52,6 +55,7 @@ class HotkeyManager {
             case .historyOverlay: return L("History")
             case .captureOCR: return L("Capture OCR")
             case .quickCapture: return L("Quick Capture")
+            case .scrollCapture: return L("Scroll Capture")
             }
         }
 
@@ -64,12 +68,13 @@ class HotkeyManager {
             case .historyOverlay: return UInt32(kVK_ANSI_H)
             case .captureOCR: return UInt32(kVK_ANSI_T)
             case .quickCapture: return UInt32(kVK_ANSI_S)
+            case .scrollCapture: return 0  // no default hotkey
             }
         }
 
         var defaultModifiers: UInt32 {
             switch self {
-            case .recordScreen: return 0  // no default hotkey
+            case .recordScreen, .scrollCapture: return 0  // no default hotkey
             default: return UInt32(cmdKey | shiftKey)
             }
         }
@@ -108,7 +113,7 @@ class HotkeyManager {
     }
 
     /// Register all hotkeys with their callbacks.
-    func registerAll(captureArea: @escaping () -> Void, captureFullScreen: @escaping () -> Void, recordArea: @escaping () -> Void, recordScreen: @escaping () -> Void, historyOverlay: @escaping () -> Void, captureOCR: @escaping () -> Void, quickCapture: @escaping () -> Void) {
+    func registerAll(captureArea: @escaping () -> Void, captureFullScreen: @escaping () -> Void, recordArea: @escaping () -> Void, recordScreen: @escaping () -> Void, historyOverlay: @escaping () -> Void, captureOCR: @escaping () -> Void, quickCapture: @escaping () -> Void, scrollCapture: @escaping () -> Void) {
         unregisterAll()
         register(slot: .captureArea, callback: captureArea)
         register(slot: .captureFullScreen, callback: captureFullScreen)
@@ -117,6 +122,7 @@ class HotkeyManager {
         register(slot: .historyOverlay, callback: historyOverlay)
         register(slot: .captureOCR, callback: captureOCR)
         register(slot: .quickCapture, callback: quickCapture)
+        register(slot: .scrollCapture, callback: scrollCapture)
     }
 
     /// Re-register all hotkeys (e.g., after preferences change).
@@ -269,6 +275,26 @@ class HotkeyManager {
             UInt32(kVK_Home): "Home", UInt32(kVK_End): "End",
             UInt32(kVK_PageUp): "PgUp", UInt32(kVK_PageDown): "PgDn",
         ]
-        return keyMap[keyCode] ?? "?"
+        if let name = keyMap[keyCode] { return name }
+
+        // Fallback: use UCKeyTranslate to get the character for unknown keyCodes
+        // (handles non-Apple keyboards, international layouts, BTT remapped keys)
+        if let inputSource = TISCopyCurrentKeyboardInputSource()?.takeRetainedValue(),
+           let layoutPtr = TISGetInputSourceProperty(inputSource, kTISPropertyUnicodeKeyLayoutData) {
+            let layoutData = Unmanaged<CFData>.fromOpaque(layoutPtr).takeUnretainedValue() as Data
+            var deadKeyState: UInt32 = 0
+            var chars = [UniChar](repeating: 0, count: 4)
+            var length: Int = 0
+            layoutData.withUnsafeBytes { rawBuf in
+                guard let ptr = rawBuf.baseAddress?.assumingMemoryBound(to: UCKeyboardLayout.self) else { return }
+                UCKeyTranslate(ptr, UInt16(keyCode), UInt16(kUCKeyActionDown), 0, UInt32(LMGetKbdType()),
+                               UInt32(kUCKeyTranslateNoDeadKeysBit), &deadKeyState, 4, &length, &chars)
+            }
+            if length > 0 {
+                let str = String(utf16CodeUnits: chars, count: length).uppercased()
+                if !str.isEmpty && str != "\0" { return str }
+            }
+        }
+        return "Key \(keyCode)"
     }
 }

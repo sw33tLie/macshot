@@ -17,7 +17,7 @@ final class RecordingEngine: NSObject {
 
     // MARK: - State
 
-    enum State { case idle, countdown, recording, stopping }
+    enum State { case idle, countdown, recording, paused, stopping }
     private(set) var state: State = .idle
 
     // MARK: - Config (read from UserDefaults at start)
@@ -62,6 +62,9 @@ final class RecordingEngine: NSObject {
 
     private var progressTimer: Timer?
     private var elapsedSeconds: Int = 0
+    private var pauseStartTime: Date?
+    private var totalPausedDuration: TimeInterval = 0
+    var onPauseChanged: ((Bool) -> Void)?
 
     // MARK: - Cursor highlight
 
@@ -108,8 +111,32 @@ final class RecordingEngine: NSObject {
         }
     }
 
-    func stopRecording() {
+    func pauseRecording() {
         guard state == .recording else { return }
+        state = .paused
+        pauseStartTime = Date()
+        progressTimer?.invalidate()
+        progressTimer = nil
+        onPauseChanged?(true)
+    }
+
+    func resumeRecording() {
+        guard state == .paused else { return }
+        if let start = pauseStartTime {
+            totalPausedDuration += Date().timeIntervalSince(start)
+            pauseStartTime = nil
+        }
+        state = .recording
+        progressTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            self.elapsedSeconds += 1
+            self.onProgress?(self.elapsedSeconds)
+        }
+        onPauseChanged?(false)
+    }
+
+    func stopRecording() {
+        guard state == .recording || state == .paused else { return }
         state = .stopping
         progressTimer?.invalidate()
         progressTimer = nil
@@ -224,6 +251,7 @@ final class RecordingEngine: NSObject {
     // MARK: - Frame handling
 
     private func handleFrame(pixelBuffer: CVPixelBuffer, presentationTime: CMTime) {
+        guard state == .recording else { return }
         if format == .mp4 {
             writeMP4Frame(buffer: pixelBuffer, presentationTime: presentationTime)
         } else {
@@ -232,12 +260,12 @@ final class RecordingEngine: NSObject {
     }
 
     private func handleAudioSample(_ sampleBuffer: CMSampleBuffer) {
-        guard format == .mp4, sessionStarted, let audioInput = audioInput, audioInput.isReadyForMoreMediaData else { return }
+        guard state == .recording, format == .mp4, sessionStarted, let audioInput = audioInput, audioInput.isReadyForMoreMediaData else { return }
         audioInput.append(sampleBuffer)
     }
 
     private func handleMicSample(_ sampleBuffer: CMSampleBuffer) {
-        guard format == .mp4, sessionStarted, let micInput = micAudioInput, micInput.isReadyForMoreMediaData else { return }
+        guard state == .recording, format == .mp4, sessionStarted, let micInput = micAudioInput, micInput.isReadyForMoreMediaData else { return }
         micInput.append(sampleBuffer)
     }
 
