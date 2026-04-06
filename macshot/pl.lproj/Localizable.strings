@@ -15,12 +15,12 @@
  */
 
 /* Menu Bar */
-"Capture Area" = "Przechwyc obszar";
-"Capture Screen" = "Przechwyc ekran";
-"Capture OCR" = "Przechwyc OCR";
-"Quick Capture" = "Szybki zrzut";
-"Scroll Capture" = "Zrzut z przewijaniem";
-"Capture Delay" = "Opóźniony zrzut";
+"Capture Area" = "Przechwyć obszar";
+"Capture Screen" = "Przechwyć ekran";
+"Capture OCR" = "Wykonaj OCR";
+"Quick Capture" = "Szybkie przechwycenie";
+"Scroll Capture" = "Przechwyć z przewijaniem";
+"Capture Delay" = "Przechwycenie z opóźnieniem";
 "None" = "Brak";
 "%d seconds" = "%d s";
 "Record Area" = "Nagrywaj obszar";
@@ -28,7 +28,7 @@
 "Recent Captures" = "Ostatnie zrzuty";
 "Show History Panel" = "Pokaż panel historii";
 "Open Image..." = "Otwórz obraz...";
-"Open from Clipboard" = "Otwórz ze schowka";
+"Open from Clipboard" = "Otwórz ze Schowka";
 "Preferences..." = "Ustawienia...";
 "Check for Updates..." = "Sprawdź aktualizacje...";
 "Quit macshot" = "Zakończ macshot";
@@ -56,7 +56,7 @@
 /* Editor Top Bar */
 "Zoom In" = "Powiększ";
 "Zoom Out" = "Pomniejsz";
-"Fit Canvas" = "Dopasuj do płótna";
+"Fit Canvas" = "Dopasuj do obszaru";
 "Crop" = "Kadruj";
 "Flip Horizontal" = "Odbij w poziomie";
 "Flip Vertical" = "Odbij w pionie";
@@ -85,7 +85,7 @@
 "Color" = "Kolor";
 
 /* Toolbar - Actions */
-"Copy to Clipboard" = "Kopiuj do schowka";
+"Copy to Clipboard" = "Kopiuj do Schowka";
 "Save to File" = "Zachowaj do pliku";
 "Save to" = "Zachowaj do";
 "Open in Editor Window" = "Otwórz w oknie edytora";
@@ -166,8 +166,8 @@
 "FPS:" = "FPS:";
 "When done:" = "Po zakończeniu:";
 "Open editor" = "Otwórz edytor";
-"Show in Finder" = "Pokaż w Finder";
-"Copy to clipboard" = "Kopiuj do schowka";
+"Show in Finder" = "Pokaż w Finderze";
+"Copy to clipboard" = "Kopiuj do Schowka";
 
 /* Preferences - General */
 "macshot Preferences" = "Ustawienia macshot";
@@ -218,12 +218,12 @@
 "Icon color:" = "Kolor ikony:";
 "Reset" = "Resetuj";
 "OCR Capture:" = "Zrzut OCR:";
-"Show window + copy to clipboard" = "Pokaż okno + kopiuj do schowka";
+"Show window + copy to clipboard" = "Pokaż okno + kopiuj do Schowka";
 "Show window only" = "Tylko pokaż okno";
-"Copy to clipboard only" = "Tylko kopiuj do schowka";
+"Copy to clipboard only" = "Tylko kopiuj do Schowka";
 "Enter / Quick Capture:" = "Enter / Szybki zrzut:";
 "Save to file" = "Zachowaj do pliku";
-"Save + copy to clipboard" = "Zachowaj + kopiuj do schowka";
+"Save + copy to clipboard" = "Zachowaj + kopiuj do Schowka";
 "OCR Action" = "Akcja OCR";
 
 /* Preferences - Shortcuts */
@@ -312,7 +312,7 @@
 "A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "Darmowe, otwartoźródłowe narzędzie do zrzutów ekranu i nagrywania dla macOS.\nW pełni natywne — zbudowane w Swift i AppKit.";
 
 /* Alerts */
-"No Image on Clipboard" = "Brak obrazu w schowku";
+"No Image on Clipboard" = "Brak obrazu w Schowku";
 "Copy an image to the clipboard first, then try again." = "Najpierw skopiuj obraz do schowka, a następnie spróbuj ponownie.";
 "OK" = "OK";
 "Accessibility Access Required" = "Wymagany dostęp do ułatwień dostępu";
@@ -406,9 +406,9 @@
 "Processing GIF\U2026" = "Przetwarzanie GIF\U2026";
 
 /* Recording — Input Monitoring Permission */
-"Input Monitoring Required" = "Wymagane monitorowanie wprowadzania";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot potrzebuje uprawnienia Monitorowanie wprowadzania, aby wyświetlać naciśnięcia klawiszy podczas nagrywania. Przyznaj dostęp w System Settings i spróbuj ponownie.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot potrzebuje uprawnienia Dostępność, aby wyświetlać naciśnięcia klawiszy podczas nagrywania. Przyznaj dostęp w System Settings i spróbuj ponownie.";
+"Input Monitoring Required" = "Wymagane monitorowanie danych wejściowych";
+"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot potrzebuje uprawnienia Monitorowanie danych wejściowych, aby wyświetlać naciśnięcia klawiszy podczas nagrywania. Przyznaj dostęp w Ustawieniach systemowych i spróbuj ponownie.";
+"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot potrzebuje uprawnienia Dostępność, aby wyświetlać naciśnięcia klawiszy podczas nagrywania. Przyznaj dostęp w Ustawieniach systemowych i spróbuj ponownie.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Pokazuj naciśnięcia klawiszy";
@@ -422,9 +422,9 @@
 "Copied to clipboard!" = "Skopiowano do schowka!";
 
 /* Webcam Overlay */
-"Webcam Overlay" = "Nakładka kamery internetowej";
+"Webcam Overlay" = "Obraz z kamery internetowej";
 "Camera Access Required" = "Wymagany dostęp do kamery";
-"macshot needs camera permission for the webcam overlay. Open System Settings to grant access." = "macshot potrzebuje uprawnień do kamery dla nakładki kamery internetowej. Otwórz Ustawienia systemowe, aby przyznać dostęp.";
+"macshot needs camera permission for the webcam overlay. Open System Settings to grant access." = "macshot potrzebuje uprawnień do kamery, żeby wyświetlać z niej obraz. Otwórz Ustawienia systemowe, aby przyznać dostęp.";
 "Webcam" = "Kamera";
 "Bottom Right" = "Prawy dolny";
 "Bottom Left" = "Lewy dolny";
