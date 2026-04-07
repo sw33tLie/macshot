@@ -52,18 +52,10 @@ final class PencilToolHandler: AnnotationToolHandler {
             }
         }
 
-        // Refined mode: moving average of the last N raw points. Smooths jitter
-        // while preserving the shape of curves and circles (unlike EMA which
-        // pulls inward on circular paths).
+        // Refined mode: collect raw points for retroactive smoothing on finish.
+        // Draw the raw point immediately (zero lag) — smoothing is applied in finish().
         if canvas.pencilSmoothMode == 2 {
             rawPointBuffer.append(clampedPoint)
-            if rawPointBuffer.count > smoothWindowSize {
-                rawPointBuffer.removeFirst()
-            }
-            var avgX: CGFloat = 0, avgY: CGFloat = 0
-            for p in rawPointBuffer { avgX += p.x; avgY += p.y }
-            let n = CGFloat(rawPointBuffer.count)
-            clampedPoint = NSPoint(x: avgX / n, y: avgY / n)
         }
 
         // No snap guides for freeform tools
@@ -77,13 +69,6 @@ final class PencilToolHandler: AnnotationToolHandler {
     func finish(canvas: AnnotationCanvas) {
         guard let annotation = canvas.activeAnnotation else { return }
 
-        // In Refined mode, append the last raw cursor position so the stroke
-        // endpoint lands where the user actually stopped.
-        if canvas.pencilSmoothMode == 2, let lastRaw = rawPointBuffer.last {
-            annotation.points?.append(lastRaw)
-            annotation.endPoint = lastRaw
-        }
-
         guard let points = annotation.points, !points.isEmpty else {
             canvas.activeAnnotation = nil
             return
@@ -92,9 +77,14 @@ final class PencilToolHandler: AnnotationToolHandler {
         // Single click: offset points slightly so the round line cap renders a visible dot
         if points.count < 3, let p = points.first {
             annotation.points = [p, NSPoint(x: p.x + 0.5, y: p.y), NSPoint(x: p.x + 0.5, y: p.y)]
+        } else if canvas.pencilSmoothMode == 2 {
+            // Refined: retroactively apply moving average to the full raw buffer,
+            // then Chaikin polish. Same result as live-smoothing but with zero
+            // lag during drawing.
+            let smoothed = Self.movingAverageSmooth(rawPointBuffer, windowSize: smoothWindowSize)
+            annotation.points = Self.chaikinSmooth(smoothed, iterations: 2)
         } else if canvas.pencilSmoothMode >= 1 {
-            // Mode 1 (Smooth): Chaikin on finish
-            // Mode 2 (Extra): already live-smoothed via EMA, apply Chaikin as final polish
+            // Mode 1 (Smooth): Chaikin on finish only
             annotation.points = Self.chaikinSmooth(points, iterations: 2)
         }
 
@@ -108,6 +98,23 @@ final class PencilToolHandler: AnnotationToolHandler {
     }
 
     // MARK: - Smoothing
+
+    /// Retroactive trailing moving average: replicates the same smoothing that the
+    /// old live-smoothing did incrementally (trailing window of N points), but applied
+    /// to the full buffer at once. Produces identical output with zero drawing lag.
+    static func movingAverageSmooth(_ pts: [NSPoint], windowSize: Int) -> [NSPoint] {
+        guard pts.count > 2 else { return pts }
+        var result: [NSPoint] = []
+        result.reserveCapacity(pts.count)
+        for i in 0..<pts.count {
+            let lo = max(0, i - windowSize + 1)
+            var avgX: CGFloat = 0, avgY: CGFloat = 0
+            for j in lo...i { avgX += pts[j].x; avgY += pts[j].y }
+            let n = CGFloat(i - lo + 1)
+            result.append(NSPoint(x: avgX / n, y: avgY / n))
+        }
+        return result
+    }
 
     /// Chaikin corner-cutting: each iteration replaces every segment with two points
     /// at 25% and 75% along it, keeping endpoints fixed. 2 passes gives gentle smoothing.
