@@ -569,7 +569,7 @@ extension OverlayWindowController: OverlayViewDelegate {
         overlayDelegate?.overlayDidCancel(self)
         DetachedEditorWindowController.open(
             image: image, tool: tool, color: color, strokeWidth: stroke,
-            annotations: shiftedAnnotations)
+            annotations: shiftedAnnotations, fromCapture: true)
     }
 
     @available(macOS 14.0, *)

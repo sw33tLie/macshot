@@ -80,9 +80,15 @@ final class PencilToolHandler: AnnotationToolHandler {
         } else if canvas.pencilSmoothMode == 2 {
             // Refined: retroactively apply moving average to the full raw buffer,
             // then Chaikin polish. Same result as live-smoothing but with zero
-            // lag during drawing.
+            // lag during drawing. Preserve exact endpoint so stroke ends where
+            // the user released the mouse.
+            let lastRaw = rawPointBuffer.last
             let smoothed = Self.movingAverageSmooth(rawPointBuffer, windowSize: smoothWindowSize)
-            annotation.points = Self.chaikinSmooth(smoothed, iterations: 2)
+            var final = Self.chaikinSmooth(smoothed, iterations: 2)
+            if let last = lastRaw, let finalLast = final.last, finalLast != last {
+                final.append(last)
+            }
+            annotation.points = final
         } else if canvas.pencilSmoothMode >= 1 {
             // Mode 1 (Smooth): Chaikin on finish only
             annotation.points = Self.chaikinSmooth(points, iterations: 2)
