@@ -13,10 +13,10 @@
             <enclosure url="https://github.com/sw33tLie/macshot/releases/download/v3.7.0/MacShot.dmg" length="5358295" type="application/octet-stream" sparkle:edSignature="/X2jDgHWwMIWeiPylwxluhu/ccaLceyaBqz4I+8L5utyGt2kNfhxNtn9AGZwVxhmQ5AoY/2IEKzGpzfbRttlAw==" />
         </item>
 <item>
-    <title>v3.8.0-beta.9</title>
-    <pubDate>Tue, 07 Apr 2026 01:27:58 +0000</pubDate>
-    <sparkle:version>10</sparkle:version>
-    <sparkle:shortVersionString>3.8.0-beta.9</sparkle:shortVersionString>
+    <title>v3.8.0-beta.10</title>
+    <pubDate>Tue, 07 Apr 2026 01:40:31 +0000</pubDate>
+    <sparkle:version>11</sparkle:version>
+    <sparkle:shortVersionString>3.8.0-beta.10</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
     <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
@@ -27,13 +27,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Added</h3><ul> <li><b>Customizable overlay/editor tool shortcuts</b> — tool shortcuts (P=Pencil, R=Rectangle, etc.) are now configurable in Preferences > Shortcuts. Each tool can be assigned a single key or set to None. Added Ellipse shortcut (O) by default.</li> <li><b>Audio merge dialog</b> — when recording with both system audio and microphone, a dialog appears after recording with volume sliders for each source. "Merge Audio" combines both into a single track for universal player compatibility; "Keep Separate" preserves the original two-track file.</li> <li><b>"Also open in Editor" option</b> — new checkbox in Preferences > General > Capture. When enabled, quick capture (Enter, hotkey, scroll capture) performs the save/copy action AND opens the editor with the image and annotations.</li>  </ul><h3>Changed</h3><ul> <li><b>Recording audio quality</b> — audio bitrate increased to 256kbps AAC with explicit stereo channel layout for better quality and broader player compatibility.</li> <li><b>Recording video metadata</b> — BT.709 color primaries, transfer function, and YCbCr matrix are now embedded in the video track for correct color rendering across all players.</li> <li><b>Recording audio sync</b> — audio samples arriving before the first video frame are buffered and flushed when the session starts, preventing gaps at the beginning of recordings. Single serial queue for all recording I/O eliminates data races.</li> <li><b>Mic audio track priority</b> — when both system audio and mic are recorded, the mic track is written first so players that only decode the first audio track get the mic content.</li>  </ul><h3>Fixed</h3><ul> <li><b>Recording HUD disappearing</b> — the recording control bar and selection border sometimes vanished when starting a recording. Caused by `NSApp.hide()` racing with panel creation; replaced with `NSApp.deactivate()`.</li></ul>
+      <h3>Fixed</h3><ul> <li><b>"Also open in Editor" now shows Done button</b> — editor opened via quick capture receives the history entry ID, so the Done button appears and edits commit back to history.</li> <li><b>Enter in editor adds to history</b> — pressing Enter in an editor that wasn't opened from history (e.g. "Open in Editor", "Open Image...") now creates a history entry and shows the Done button for future edits.</li></ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v3.8.0-beta.9/MacShot.dmg"
-        length="5785588"
+        url="https://github.com/sw33tLie/macshot/releases/download/v3.8.0-beta.10/MacShot.dmg"
+        length="5787784"
         type="application/octet-stream"
-        sparkle:edSignature="mh36W0f/lvTtGIzM55y4uw4xfpFRWz6bLDXq5ZADrT09eyui7lBCy/yHQcus9j2u1AMi++oXSZY/IFPU/0kVDQ=="
+        sparkle:edSignature="l7bFBXk7FysOFLfksfcWskPopT87COrnWDc8UXwLB7EiGQicHLcn9ddL1nxZ/r+BlYh+ZRQ4ADuMppPDVWvmBg=="
     />
 </item>
     </channel>
