@@ -272,9 +272,7 @@ class OverlayView: NSView {
     private var textBoxResizeHandle: ResizeHandle = .none
     private var textBoxResizeStart: NSPoint = .zero
     private var textBoxOrigFrame: NSRect = .zero
-    // Text box move handle
-    private var isDraggingTextBox: Bool = false
-    private var textBoxDragOffset: NSPoint = .zero
+    // (Text box move handle removed — standard annotation chrome handles movement)
 
     // Toolbars (drawn inline)
     var bottomButtons: [ToolbarButton] = []
@@ -1464,38 +1462,7 @@ class OverlayView: NSView {
 
             context.restoreGraphicsState()
 
-            // Text box move handle (drawn in view space, above the NSScrollView)
-            if textEditView != nil, let sv = textEditor.scrollView, showToolbars {
-                let s: CGFloat = 20
-                let handleRect = NSRect(
-                    x: sv.frame.midX - s / 2,
-                    y: sv.frame.maxY + 8,
-                    width: s, height: s)
-                // Background circle
-                NSColor(white: 0.15, alpha: 0.85).setFill()
-                NSBezierPath(ovalIn: handleRect).fill()
-                NSColor.white.withAlphaComponent(0.3).setStroke()
-                let borderPath = NSBezierPath(ovalIn: handleRect.insetBy(dx: 0.5, dy: 0.5))
-                borderPath.lineWidth = 0.5
-                borderPath.stroke()
-                // SF Symbol move icon (tinted white for dark background)
-                if let moveIcon = NSImage(systemSymbolName: "arrow.up.and.down.and.arrow.left.and.right",
-                                          accessibilityDescription: nil)?
-                    .withSymbolConfiguration(.init(pointSize: 10, weight: .semibold)) {
-                    let tinted = moveIcon.copy() as! NSImage
-                    tinted.isTemplate = true
-                    tinted.lockFocus()
-                    NSColor.white.set()
-                    NSRect(origin: .zero, size: tinted.size).fill(using: .sourceAtop)
-                    tinted.unlockFocus()
-                    let iconSize = tinted.size
-                    let iconRect = NSRect(
-                        x: handleRect.midX - iconSize.width / 2,
-                        y: handleRect.midY - iconSize.height / 2,
-                        width: iconSize.width, height: iconSize.height)
-                    tinted.draw(in: iconRect, from: .zero, operation: .sourceOver, fraction: 0.9)
-                }
-            }
+            // (Text move handle removed — standard annotation chrome handles movement)
 
             // Live beautify preview — draw gradient background, shadow, and rounded image around selection
             let showBeautifyPreview = beautifyEnabled && state == .selected && !isScrollCapturing && !isRecording
@@ -4322,22 +4289,8 @@ class OverlayView: NSView {
 
         let isTextEditing = textEditView != nil
 
-        // Check text box move handle and resize handles when editing
+        // Check text box resize handles when editing
         if isTextEditing && showToolbars {
-            // Move handle: circle with move icon above the text box
-            if let sv = textEditor.scrollView {
-                let s: CGFloat = 20
-                let moveRect = NSRect(
-                    x: sv.frame.midX - s / 2,
-                    y: sv.frame.maxY + 8,
-                    width: s, height: s)
-                if moveRect.contains(point) {
-                    isDraggingTextBox = true
-                    textBoxDragOffset = NSPoint(x: point.x - sv.frame.origin.x,
-                                                y: point.y - sv.frame.origin.y)
-                    return
-                }
-            }
             // Check text box resize handles
             if let sv = textEditor.scrollView {
                 let hs: CGFloat = 10  // hit area
@@ -4558,19 +4511,6 @@ class OverlayView: NSView {
             return
         }
 
-        // Handle text box move
-        if isDraggingTextBox, let sv = textEditor.scrollView, let tv = textEditView {
-            let newX = point.x - textBoxDragOffset.x
-            let newY = point.y - textBoxDragOffset.y
-            sv.frame.origin = NSPoint(x: newX, y: newY)
-            tv.frame.size = sv.frame.size
-            tv.textContainer?.containerSize = NSSize(
-                width: sv.frame.width - tv.textContainerInset.width * 2,
-                height: CGFloat.greatestFiniteMagnitude)
-            needsDisplay = true
-            return
-        }
-
         // Handle text box resize
         if isResizingTextBox, let sv = textEditor.scrollView, let tv = textEditView {
             let dx = point.x - textBoxResizeStart.x
@@ -4664,13 +4604,60 @@ class OverlayView: NSView {
                 let origStart = annotationResizeOrigStart
                 let origEnd = annotationResizeOrigEnd
 
-                // Text annotations: dragging any handle just moves the text
+                // Text annotations: resize the text box and re-render textImage
                 if annotation.tool == .text {
-                    annotation.startPoint = NSPoint(x: origStart.x + dx, y: origStart.y + dy)
-                    annotation.endPoint = NSPoint(x: origEnd.x + dx, y: origEnd.y + dy)
-                    annotation.textDrawRect.origin = NSPoint(
-                        x: annotationResizeOrigTextOrigin.x + dx,
-                        y: annotationResizeOrigTextOrigin.y + dy)
+                    let origRect = NSRect(origin: origStart,
+                        size: NSSize(width: origEnd.x - origStart.x, height: origEnd.y - origStart.y))
+                    var newRect = origRect
+                    let minW: CGFloat = 40
+                    let minH: CGFloat = max(20, annotation.fontSize + 8)
+
+                    switch annotationResizeHandle {
+                    case .right: newRect.size.width = max(minW, origRect.width + dx)
+                    case .left:
+                        newRect.origin.x = min(origRect.maxX - minW, origRect.minX + dx)
+                        newRect.size.width = origRect.maxX - newRect.minX
+                    case .top:
+                        newRect.size.height = max(minH, origRect.height + dy)
+                    case .bottom:
+                        let newMinY = min(origRect.maxY - minH, origRect.minY + dy)
+                        newRect.origin.y = newMinY
+                        newRect.size.height = origRect.maxY - newMinY
+                    case .topRight:
+                        newRect.size.width = max(minW, origRect.width + dx)
+                        newRect.size.height = max(minH, origRect.height + dy)
+                    case .topLeft:
+                        newRect.origin.x = min(origRect.maxX - minW, origRect.minX + dx)
+                        newRect.size.width = origRect.maxX - newRect.minX
+                        newRect.size.height = max(minH, origRect.height + dy)
+                    case .bottomRight:
+                        newRect.size.width = max(minW, origRect.width + dx)
+                        let newMinY = min(origRect.maxY - minH, origRect.minY + dy)
+                        newRect.origin.y = newMinY
+                        newRect.size.height = origRect.maxY - newMinY
+                    case .bottomLeft:
+                        newRect.origin.x = min(origRect.maxX - minW, origRect.minX + dx)
+                        newRect.size.width = origRect.maxX - newRect.minX
+                        let newMinY = min(origRect.maxY - minH, origRect.minY + dy)
+                        newRect.origin.y = newMinY
+                        newRect.size.height = origRect.maxY - newMinY
+                    default: break
+                    }
+
+                    annotation.startPoint = newRect.origin
+                    annotation.endPoint = NSPoint(x: newRect.maxX, y: newRect.maxY)
+                    annotation.textDrawRect = newRect
+                    // Re-render textImage at new size
+                    if let attrStr = annotation.attributedText {
+                        let inset: CGFloat = 4
+                        let img = NSImage(size: newRect.size, flipped: true) { _ in
+                            attrStr.draw(in: NSRect(x: inset, y: inset,
+                                width: newRect.width - inset * 2, height: newRect.height - inset * 2))
+                            return true
+                        }
+                        annotation.textImage = img
+                    }
+                    cachedCompositedImage = nil
                     needsDisplay = true
                     break
                 }
@@ -4895,10 +4882,6 @@ class OverlayView: NSView {
             return
         }
 
-        if isDraggingTextBox {
-            isDraggingTextBox = false
-            return
-        }
         if isResizingTextBox {
             isResizingTextBox = false
             return
@@ -5946,7 +5929,7 @@ class OverlayView: NSView {
         let isPencilOrMarker = currentTool == .pencil || currentTool == .marker
 
         // Always check selected annotation controls (delete, resize, etc.) for all tools
-        if currentTool != .colorSampler && currentTool != .text {
+        if currentTool != .colorSampler {
             if let selected = selectedAnnotation {
                 if handleSelectedAnnotationClick(selected, at: point) { return }
             }
@@ -6069,22 +6052,28 @@ class OverlayView: NSView {
         }
 
         if currentTool == .text {
-            // Check if clicking on an existing text annotation → re-edit it
-            // Note: point is already in canvas space (converted by caller).
+            // Click on existing text annotation → select it (double-click enters edit via handleSelectedAnnotationClick)
             if let existingAnn = annotations.reversed().first(where: {
                 $0.tool == .text && $0.hitTest(point: point)
             }) {
-                // Remove from annotations (will be re-added on commit)
-                if let idx = annotations.firstIndex(where: { $0 === existingAnn }) {
-                    annotations.remove(at: idx)
+                selectedAnnotation = existingAnn
+                needsDisplay = true
+                // If double-click, immediately enter edit mode
+                if let event = NSApp.currentEvent, event.clickCount >= 2 {
+                    textEditor.editingAnnotation = existingAnn
+                    textEditor.restoreState(from: existingAnn)
+                    if let idx = annotations.firstIndex(where: { $0 === existingAnn }) {
+                        annotations.remove(at: idx)
+                        selectedAnnotation = nil
+                    }
+                    showTextField(
+                        at: existingAnn.textDrawRect.origin,
+                        existingText: existingAnn.attributedText,
+                        existingFrame: existingAnn.textDrawRect)
+                    cachedCompositedImage = nil
                 }
-                textEditor.editingAnnotation = existingAnn
-                textEditor.restoreState(from: existingAnn)
-                showTextField(
-                    at: existingAnn.textDrawRect.origin,
-                    existingText: existingAnn.attributedText,
-                    existingFrame: existingAnn.textDrawRect)
             } else {
+                // Click on empty space → new text annotation, immediately enter edit
                 showTextField(at: point)
             }
         }
@@ -6188,6 +6177,22 @@ class OverlayView: NSView {
             selectedAnnotation = nil
             needsDisplay = true
             return true
+        }
+        // Double-click on text annotation — enter edit mode
+        if selected.tool == .text && selected.hitTest(point: point) {
+            if let event = NSApp.currentEvent, event.clickCount >= 2 {
+                textEditor.editingAnnotation = selected
+                textEditor.restoreState(from: selected)
+                if let idx = annotations.firstIndex(where: { $0 === selected }) {
+                    annotations.remove(at: idx)
+                    selectedAnnotation = nil
+                }
+                showTextField(
+                    at: selected.textDrawRect.origin, existingText: selected.attributedText,
+                    existingFrame: selected.textDrawRect)
+                cachedCompositedImage = nil
+                return true
+            }
         }
         // Click on the annotation body — start drag (annotation already selected)
         if selected.hitTest(point: point) {
