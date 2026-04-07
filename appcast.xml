@@ -13,10 +13,10 @@
             <enclosure url="https://github.com/sw33tLie/macshot/releases/download/v3.7.0/MacShot.dmg" length="5358295" type="application/octet-stream" sparkle:edSignature="/X2jDgHWwMIWeiPylwxluhu/ccaLceyaBqz4I+8L5utyGt2kNfhxNtn9AGZwVxhmQ5AoY/2IEKzGpzfbRttlAw==" />
         </item>
 <item>
-    <title>v3.8.0-beta.8</title>
-    <pubDate>Tue, 07 Apr 2026 00:15:59 +0000</pubDate>
-    <sparkle:version>9</sparkle:version>
-    <sparkle:shortVersionString>3.8.0-beta.8</sparkle:shortVersionString>
+    <title>v3.8.0-beta.9</title>
+    <pubDate>Tue, 07 Apr 2026 01:27:58 +0000</pubDate>
+    <sparkle:version>10</sparkle:version>
+    <sparkle:shortVersionString>3.8.0-beta.9</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
     <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
@@ -27,13 +27,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Added</h3><ul> <li><b>Editable annotation history</b> — screenshots with annotations now save the raw image and annotation data alongside the composited image. Editing from the thumbnail or history panel reopens with live, editable annotations instead of a flattened image.</li> <li><b>"Done" button in editor</b> — when editing a history entry, a Done button appears in the top bar. Clicking it commits the current annotations back to the same history entry in-place. Closing without Done discards changes.</li>  </ul><h3>Changed</h3><ul> <li><b>Editor scroll view layout</b> — scroll view is now properly inset from the top bar, fixing the scrollbar hiding behind it. Window sizing accounts for all toolbar chrome so images open without overlap.</li> <li><b>Editor centering with insets</b> — the CenteringClipView now accounts for content insets when centering the document, fixing the inability to scroll past the bottom toolbar at 100% zoom.</li>  </ul><h3>Fixed</h3><ul> <li><b>Enter key in editor ignoring Quick Capture mode</b> — pressing Enter in the editor always saved to file regardless of the "Enter / Quick Capture" preference. Now correctly respects Save / Copy / Save+Copy / Do nothing modes, matching overlay behavior.</li></ul>
+      <h3>Added</h3><ul> <li><b>Customizable overlay/editor tool shortcuts</b> — tool shortcuts (P=Pencil, R=Rectangle, etc.) are now configurable in Preferences > Shortcuts. Each tool can be assigned a single key or set to None. Added Ellipse shortcut (O) by default.</li> <li><b>Audio merge dialog</b> — when recording with both system audio and microphone, a dialog appears after recording with volume sliders for each source. "Merge Audio" combines both into a single track for universal player compatibility; "Keep Separate" preserves the original two-track file.</li> <li><b>"Also open in Editor" option</b> — new checkbox in Preferences > General > Capture. When enabled, quick capture (Enter, hotkey, scroll capture) performs the save/copy action AND opens the editor with the image and annotations.</li>  </ul><h3>Changed</h3><ul> <li><b>Recording audio quality</b> — audio bitrate increased to 256kbps AAC with explicit stereo channel layout for better quality and broader player compatibility.</li> <li><b>Recording video metadata</b> — BT.709 color primaries, transfer function, and YCbCr matrix are now embedded in the video track for correct color rendering across all players.</li> <li><b>Recording audio sync</b> — audio samples arriving before the first video frame are buffered and flushed when the session starts, preventing gaps at the beginning of recordings. Single serial queue for all recording I/O eliminates data races.</li> <li><b>Mic audio track priority</b> — when both system audio and mic are recorded, the mic track is written first so players that only decode the first audio track get the mic content.</li>  </ul><h3>Fixed</h3><ul> <li><b>Recording HUD disappearing</b> — the recording control bar and selection border sometimes vanished when starting a recording. Caused by `NSApp.hide()` racing with panel creation; replaced with `NSApp.deactivate()`.</li></ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v3.8.0-beta.8/MacShot.dmg"
-        length="5718331"
+        url="https://github.com/sw33tLie/macshot/releases/download/v3.8.0-beta.9/MacShot.dmg"
+        length="5785588"
         type="application/octet-stream"
-        sparkle:edSignature="YqjDrrfUdcojOq90DLJLuZddP52MBR71h/qqYx3HwgziotcSplzKgtFVqmWH4sXBXn3N+DL6MS4vQcSqFqKKCg=="
+        sparkle:edSignature="mh36W0f/lvTtGIzM55y4uw4xfpFRWz6bLDXq5ZADrT09eyui7lBCy/yHQcus9j2u1AMi++oXSZY/IFPU/0kVDQ=="
     />
 </item>
     </channel>
