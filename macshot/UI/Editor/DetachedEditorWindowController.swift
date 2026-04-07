@@ -272,7 +272,8 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
     }
 
     func overlayViewDidRequestQuickSave() {
-        guard let raw = overlayView?.captureSelectedRegion() else { return }
+        guard let view = overlayView,
+              let raw = view.captureSelectedRegion() else { return }
         let image = applyPostProcessing(raw)
 
         // quickCaptureMode: 0=save, 1=copy, 2=both, 3=do nothing (thumbnail only)
@@ -286,6 +287,21 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
         }
         playCopySound()
         (NSApp.delegate as? AppDelegate)?.showFloatingThumbnail(image: image)
+
+        // If not yet linked to a history entry, create one and show Done button
+        if historyEntryID == nil {
+            let annotations = view.annotations.filter { $0.isMovable }
+            let rawImage: NSImage? = annotations.isEmpty ? nil : view.captureSelectedRegionRaw()
+            ScreenshotHistory.shared.add(
+                image: image,
+                rawImage: rawImage,
+                annotations: annotations.isEmpty ? nil : annotations)
+            historyEntryID = ScreenshotHistory.shared.entries.first?.id
+            if historyEntryID != nil {
+                topBar?.showDoneButton()
+                topBar?.onDone = { [weak self] in self?.commitToHistory() }
+            }
+        }
     }
 
     func overlayViewDidRequestFileSave() {
