@@ -250,6 +250,10 @@ class OverlayView: NSView {
     /// When shift+clicking an already-selected annotation, defer the deselect
     /// to mouseUp so the user can still drag the full multi-selection.
     private weak var shiftClickPendingDeselect: Annotation?
+    /// Lasso selection: Shift+drag on empty space draws a marquee rectangle.
+    private var isLassoSelecting: Bool = false
+    private var lassoStart: NSPoint = .zero
+    private var lassoRect: NSRect = .zero
     // Long-press-to-select for pencil/marker tools
     private var longPressTimer: Timer?
     private var longPressPoint: NSPoint = .zero
@@ -1442,6 +1446,18 @@ class OverlayView: NSView {
 
             // Snap alignment guides
             drawSnapGuides()
+
+            // Lasso selection marquee (drawn in canvas space — same as annotations)
+            if isLassoSelecting && lassoRect.width > 0 && lassoRect.height > 0 {
+                NSColor.systemBlue.withAlphaComponent(0.1).setFill()
+                NSBezierPath(rect: lassoRect).fill()
+                NSColor.systemBlue.withAlphaComponent(0.6).setStroke()
+                let border = NSBezierPath(rect: lassoRect)
+                border.lineWidth = 1.0
+                let pattern: [CGFloat] = [4, 3]
+                border.setLineDash(pattern, count: 2, phase: 0)
+                border.stroke()
+            }
 
             context.restoreGraphicsState()
 
@@ -4721,6 +4737,14 @@ class OverlayView: NSView {
                 if annotation.tool == .pixelate { annotation.bakedBlurNSImage = nil }
                 cachedCompositedImage = nil
                 needsDisplay = true
+            } else if isLassoSelecting {
+                // Update lasso marquee rectangle
+                let x = min(lassoStart.x, canvasPoint.x)
+                let y = min(lassoStart.y, canvasPoint.y)
+                let w = abs(canvasPoint.x - lassoStart.x)
+                let h = abs(canvasPoint.y - lassoStart.y)
+                lassoRect = NSRect(x: x, y: y, width: w, height: h)
+                needsDisplay = true
             } else if isDraggingAnnotation, !selectedAnnotations.isEmpty {
                 let rawDx = canvasPoint.x - annotationDragStart.x
                 let rawDy = canvasPoint.y - annotationDragStart.y
@@ -4898,7 +4922,18 @@ class OverlayView: NSView {
             needsDisplay = true
 
         case .selected:
-            if isDraggingAnnotation {
+            if isLassoSelecting {
+                isLassoSelecting = false
+                // Select all annotations whose bounding rect intersects the lasso
+                if lassoRect.width > 2 && lassoRect.height > 2 {
+                    let selected = annotations.filter { $0.isMovable && $0.boundingRect.intersects(lassoRect) }
+                    if !selected.isEmpty {
+                        selectedAnnotations = selected
+                    }
+                }
+                lassoRect = .zero
+                needsDisplay = true
+            } else if isDraggingAnnotation {
                 // Deferred shift+click deselect: only remove the annotation if
                 // the user didn't drag (i.e. it was a click, not a move).
                 if let pending = shiftClickPendingDeselect {
@@ -5616,10 +5651,6 @@ class OverlayView: NSView {
     func handleToolbarAction(_ action: ToolbarButtonAction, mousePoint: NSPoint = .zero) {
         switch action {
         case .tool(let tool):
-            if tool == .select && !annotations.contains(where: { $0.isMovable }) {
-                showOverlayError(L("Draw something first to use the move tool."))
-                return
-            }
             commitTextFieldIfNeeded()
             showBeautifyInOptionsRow = false  // switch back to tool options
             currentTool = tool
@@ -5919,6 +5950,15 @@ class OverlayView: NSView {
                     }
                 }
             }
+        }
+
+        // Shift+click on empty space — start lasso marquee selection
+        if shiftHeld {
+            isLassoSelecting = true
+            lassoStart = point
+            lassoRect = .zero
+            needsDisplay = true
+            return
         }
 
         // Clicking empty space — clear selection and start new annotation
