@@ -465,3 +465,22 @@
 "Loupe" = "عدسة مكبرة";
 "Stamp" = "ختم";
 "Unlimited" = "غير محدود";
+
+/* Save Confirmation / Recording / Translation / Upload / Inspector */
+"Save changes?" = "حفظ التغييرات؟";
+"Your annotations will be lost if you close without saving." = "ستفقد التعليقات التوضيحية إذا أغلقت بدون حفظ.";
+"Save & Close" = "حفظ وإغلاق";
+"Discard" = "تجاهل";
+"Stop Recording" = "إيقاف التسجيل";
+"Pause" = "إيقاف مؤقت";
+"Resume" = "استئناف";
+"Engine:" = "المحرك:";
+"Google Translate" = "Google Translate";
+"Apple (on-device)" = "Apple (على الجهاز)";
+"Apple translation is faster and works offline. Google Translate supports more languages." = "ترجمة Apple أسرع وتعمل بدون اتصال. Google Translate يدعم لغات أكثر.";
+"Download language packs in System Settings…" = "قم بتنزيل حزم اللغات في إعدادات النظام…";
+"Configure S3 in Settings" = "إعداد S3 في الإعدادات";
+"Sign in to Google Drive in Settings" = "تسجيل الدخول إلى Google Drive في الإعدادات";
+"Position:" = "الموضع:";
+"Size:" = "الحجم:";
+"Shape:" = "الشكل:";

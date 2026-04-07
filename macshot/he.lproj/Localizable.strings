@@ -465,3 +465,22 @@
 "Loupe" = "זכוכית מגדלת";
 "Stamp" = "חותמת";
 "Unlimited" = "ללא הגבלה";
+
+/* Save/Discard, Recording, Translation Engine, Upload, Inspector */
+"Save changes?" = "לשמור שינויים?";
+"Your annotations will be lost if you close without saving." = "ההערות שלך יאבדו אם תסגור בלי לשמור.";
+"Save & Close" = "שמור וסגור";
+"Discard" = "בטל";
+"Stop Recording" = "הפסק הקלטה";
+"Pause" = "השהה";
+"Resume" = "המשך";
+"Engine:" = "מנוע:";
+"Google Translate" = "Google Translate";
+"Apple (on-device)" = "Apple (על המכשיר)";
+"Apple translation is faster and works offline. Google Translate supports more languages." = "התרגום של Apple מהיר יותר ועובד ללא חיבור. Google Translate תומך ביותר שפות.";
+"Download language packs in System Settings…" = "הורד חבילות שפה בהגדרות המערכת…";
+"Configure S3 in Settings" = "הגדר S3 בהגדרות";
+"Sign in to Google Drive in Settings" = "התחבר ל-Google Drive בהגדרות";
+"Position:" = "מיקום:";
+"Size:" = "גודל:";
+"Shape:" = "צורה:";

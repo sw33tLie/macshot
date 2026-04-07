@@ -465,3 +465,22 @@
 "Loupe" = "Loupe";
 "Stamp" = "Stamp";
 "Unlimited" = "Walang limitasyon";
+
+/* Save/Discard, Recording, Translation Engine, Upload, Inspector */
+"Save changes?" = "I-save ang mga pagbabago?";
+"Your annotations will be lost if you close without saving." = "Mawawala ang iyong mga anotasyon kung isasara mo nang hindi nagse-save.";
+"Save & Close" = "I-save at Isara";
+"Discard" = "Itapon";
+"Stop Recording" = "Ihinto ang Pag-record";
+"Pause" = "I-pause";
+"Resume" = "Ipagpatuloy";
+"Engine:" = "Engine:";
+"Google Translate" = "Google Translate";
+"Apple (on-device)" = "Apple (sa device)";
+"Apple translation is faster and works offline. Google Translate supports more languages." = "Mas mabilis ang pagsasalin ng Apple at gumagana offline. Mas maraming wika ang sinusuportahan ng Google Translate.";
+"Download language packs in System Settings…" = "Mag-download ng mga language pack sa System Settings…";
+"Configure S3 in Settings" = "I-configure ang S3 sa Mga Setting";
+"Sign in to Google Drive in Settings" = "Mag-sign in sa Google Drive sa Mga Setting";
+"Position:" = "Posisyon:";
+"Size:" = "Laki:";
+"Shape:" = "Hugis:";

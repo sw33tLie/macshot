@@ -465,3 +465,22 @@
 "Loupe" = "Φακός";
 "Stamp" = "Σφραγίδα";
 "Unlimited" = "Απεριόριστο";
+
+/* Save/Discard, Recording, Translation Engine, Upload, Inspector */
+"Save changes?" = "Αποθήκευση αλλαγών;";
+"Your annotations will be lost if you close without saving." = "Οι σημειώσεις σας θα χαθούν αν κλείσετε χωρίς αποθήκευση.";
+"Save & Close" = "Αποθήκευση & Κλείσιμο";
+"Discard" = "Απόρριψη";
+"Stop Recording" = "Διακοπή εγγραφής";
+"Pause" = "Παύση";
+"Resume" = "Συνέχιση";
+"Engine:" = "Μηχανή:";
+"Google Translate" = "Google Translate";
+"Apple (on-device)" = "Apple (στη συσκευή)";
+"Apple translation is faster and works offline. Google Translate supports more languages." = "Η μετάφραση Apple είναι πιο γρήγορη και λειτουργεί εκτός σύνδεσης. Το Google Translate υποστηρίζει περισσότερες γλώσσες.";
+"Download language packs in System Settings…" = "Λήψη πακέτων γλώσσας στις Ρυθμίσεις Συστήματος…";
+"Configure S3 in Settings" = "Ρύθμιση S3 στις Ρυθμίσεις";
+"Sign in to Google Drive in Settings" = "Σύνδεση στο Google Drive στις Ρυθμίσεις";
+"Position:" = "Θέση:";
+"Size:" = "Μέγεθος:";
+"Shape:" = "Σχήμα:";

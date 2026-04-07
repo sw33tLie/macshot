@@ -465,3 +465,22 @@
 "Loupe" = "Лупа";
 "Stamp" = "Печат";
 "Unlimited" = "Неограничено";
+
+/* Save/Discard, Recording, Translation Engine, Upload, Inspector */
+"Save changes?" = "Сачувати измене?";
+"Your annotations will be lost if you close without saving." = "Ваше ознаке ће бити изгубљене ако затворите без чувања.";
+"Save & Close" = "Сачувај и затвори";
+"Discard" = "Одбаци";
+"Stop Recording" = "Заустави снимање";
+"Pause" = "Паузирај";
+"Resume" = "Настави";
+"Engine:" = "Мотор:";
+"Google Translate" = "Google Translate";
+"Apple (on-device)" = "Apple (на уређају)";
+"Apple translation is faster and works offline. Google Translate supports more languages." = "Apple превод је бржи и ради офлајн. Google Translate подржава више језика.";
+"Download language packs in System Settings…" = "Преузмите језичке пакете у Подешавањима система…";
+"Configure S3 in Settings" = "Подесите S3 у Подешавањима";
+"Sign in to Google Drive in Settings" = "Пријавите се на Google Drive у Подешавањима";
+"Position:" = "Позиција:";
+"Size:" = "Величина:";
+"Shape:" = "Облик:";

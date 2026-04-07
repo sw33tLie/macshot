@@ -465,3 +465,22 @@
 "Loupe" = "Büyüteç";
 "Stamp" = "Damga";
 "Unlimited" = "Sınırsız";
+
+/* Save Confirmation / Recording / Translation / Upload / Inspector */
+"Save changes?" = "Değişiklikler kaydedilsin mi?";
+"Your annotations will be lost if you close without saving." = "Kaydetmeden kapatırsanız açıklamalarınız kaybolacak.";
+"Save & Close" = "Kaydet ve Kapat";
+"Discard" = "Vazgeç";
+"Stop Recording" = "Kaydı Durdur";
+"Pause" = "Duraklat";
+"Resume" = "Devam Et";
+"Engine:" = "Motor:";
+"Google Translate" = "Google Translate";
+"Apple (on-device)" = "Apple (cihaz üzerinde)";
+"Apple translation is faster and works offline. Google Translate supports more languages." = "Apple çevirisi daha hızlıdır ve çevrimdışı çalışır. Google Translate daha fazla dili destekler.";
+"Download language packs in System Settings…" = "Sistem Ayarları'ndan dil paketlerini indirin…";
+"Configure S3 in Settings" = "Ayarlar'da S3'ü yapılandırın";
+"Sign in to Google Drive in Settings" = "Ayarlar'da Google Drive'a giriş yapın";
+"Position:" = "Konum:";
+"Size:" = "Boyut:";
+"Shape:" = "Şekil:";

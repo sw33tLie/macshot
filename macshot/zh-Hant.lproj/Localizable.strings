@@ -465,3 +465,22 @@
 "Loupe" = "放大鏡";
 "Stamp" = "圖章";
 "Unlimited" = "不限";
+
+/* Save Confirmation / Recording / Translation / Upload / Inspector */
+"Save changes?" = "儲存更改？";
+"Your annotations will be lost if you close without saving." = "如果不儲存就關閉，您的標註將會遺失。";
+"Save & Close" = "儲存並關閉";
+"Discard" = "捨棄";
+"Stop Recording" = "停止錄製";
+"Pause" = "暫停";
+"Resume" = "繼續";
+"Engine:" = "引擎：";
+"Google Translate" = "Google Translate";
+"Apple (on-device)" = "Apple（裝置端）";
+"Apple translation is faster and works offline. Google Translate supports more languages." = "Apple 翻譯更快且支援離線使用。Google Translate 支援更多語言。";
+"Download language packs in System Settings…" = "在系統設定中下載語言套件⋯";
+"Configure S3 in Settings" = "在設定中設定 S3";
+"Sign in to Google Drive in Settings" = "在設定中登入 Google Drive";
+"Position:" = "位置：";
+"Size:" = "大小：";
+"Shape:" = "形狀：";

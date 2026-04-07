@@ -465,3 +465,22 @@
 "Loupe" = "Lup";
 "Stamp" = "Stempel";
 "Unlimited" = "Ubegr\U00E6nset";
+
+/* Save Confirmation / Recording / Translation / Upload / Inspector */
+"Save changes?" = "Gem \U00E6ndringer?";
+"Your annotations will be lost if you close without saving." = "Dine annotationer g\U00E5r tabt, hvis du lukker uden at gemme.";
+"Save & Close" = "Gem og luk";
+"Discard" = "Kassér";
+"Stop Recording" = "Stop optagelse";
+"Pause" = "Pause";
+"Resume" = "Genoptag";
+"Engine:" = "Motor:";
+"Google Translate" = "Google Translate";
+"Apple (on-device)" = "Apple (p\U00E5 enheden)";
+"Apple translation is faster and works offline. Google Translate supports more languages." = "Apple-overs\U00E6ttelse er hurtigere og virker offline. Google Translate underst\U00F8tter flere sprog.";
+"Download language packs in System Settings\U2026" = "Download sprogpakker i Systemindstillinger\U2026";
+"Configure S3 in Settings" = "Konfigur\U00E9r S3 i Indstillinger";
+"Sign in to Google Drive in Settings" = "Log ind p\U00E5 Google Drive i Indstillinger";
+"Position:" = "Position:";
+"Size:" = "St\U00F8rrelse:";
+"Shape:" = "Form:";

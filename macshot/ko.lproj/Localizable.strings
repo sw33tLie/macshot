@@ -465,3 +465,22 @@
 "Loupe" = "돋보기";
 "Stamp" = "스탬프";
 "Unlimited" = "무제한";
+
+/* Save Confirmation / Recording / Translation / Upload / Inspector */
+"Save changes?" = "변경 사항을 저장하시겠습니까?";
+"Your annotations will be lost if you close without saving." = "저장하지 않고 닫으면 주석이 사라집니다.";
+"Save & Close" = "저장 후 닫기";
+"Discard" = "버리기";
+"Stop Recording" = "녹화 중지";
+"Pause" = "일시정지";
+"Resume" = "재개";
+"Engine:" = "엔진:";
+"Google Translate" = "Google Translate";
+"Apple (on-device)" = "Apple (기기 내)";
+"Apple translation is faster and works offline. Google Translate supports more languages." = "Apple 번역은 더 빠르고 오프라인에서 작동합니다. Google Translate는 더 많은 언어를 지원합니다.";
+"Download language packs in System Settings…" = "시스템 설정에서 언어 팩 다운로드…";
+"Configure S3 in Settings" = "설정에서 S3 구성";
+"Sign in to Google Drive in Settings" = "설정에서 Google Drive에 로그인";
+"Position:" = "위치:";
+"Size:" = "크기:";
+"Shape:" = "모양:";

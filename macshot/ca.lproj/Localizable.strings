@@ -465,3 +465,22 @@
 "Loupe" = "Lupa";
 "Stamp" = "Segell";
 "Unlimited" = "Il·limitat";
+
+/* Save/Discard, Recording, Translation Engine, Upload, Inspector */
+"Save changes?" = "Desar els canvis?";
+"Your annotations will be lost if you close without saving." = "Les vostres anotacions es perdran si tanqueu sense desar.";
+"Save & Close" = "Desar i tancar";
+"Discard" = "Descartar";
+"Stop Recording" = "Aturar gravacio";
+"Pause" = "Pausa";
+"Resume" = "Reprendre";
+"Engine:" = "Motor:";
+"Google Translate" = "Google Translate";
+"Apple (on-device)" = "Apple (al dispositiu)";
+"Apple translation is faster and works offline. Google Translate supports more languages." = "La traduccio d'Apple es mes rapida i funciona sense connexio. Google Translate admet mes idiomes.";
+"Download language packs in System Settings…" = "Descarregar paquets d'idioma a la Configuracio del sistema…";
+"Configure S3 in Settings" = "Configurar S3 a la Configuracio";
+"Sign in to Google Drive in Settings" = "Iniciar sessio a Google Drive a la Configuracio";
+"Position:" = "Posicio:";
+"Size:" = "Mida:";
+"Shape:" = "Forma:";

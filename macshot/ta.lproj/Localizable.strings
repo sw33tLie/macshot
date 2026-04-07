@@ -465,3 +465,22 @@
 "Loupe" = "உருப்பெருக்கி";
 "Stamp" = "முத்திரை";
 "Unlimited" = "வரம்பற்ற";
+
+/* Save/Discard, Recording, Translation Engine, Upload, Inspector */
+"Save changes?" = "மாற்றங்களைச் சேமிக்கவா?";
+"Your annotations will be lost if you close without saving." = "சேமிக்காமல் மூடினால் உங்கள் குறிப்புகள் இழக்கப்படும்.";
+"Save & Close" = "சேமி & மூடு";
+"Discard" = "நிராகரி";
+"Stop Recording" = "பதிவை நிறுத்து";
+"Pause" = "இடைநிறுத்தம்";
+"Resume" = "தொடரவும்";
+"Engine:" = "இயந்திரம்:";
+"Google Translate" = "Google Translate";
+"Apple (on-device)" = "Apple (சாதனத்தில்)";
+"Apple translation is faster and works offline. Google Translate supports more languages." = "Apple மொழிபெயர்ப்பு வேகமானது மற்றும் ஆஃப்லைனில் வேலை செய்யும். Google Translate அதிக மொழிகளை ஆதரிக்கிறது.";
+"Download language packs in System Settings…" = "கணினி அமைப்புகளில் மொழி தொகுப்புகளைப் பதிவிறக்கவும்…";
+"Configure S3 in Settings" = "அமைப்புகளில் S3 கட்டமைக்கவும்";
+"Sign in to Google Drive in Settings" = "அமைப்புகளில் Google Drive-இல் உள்நுழையவும்";
+"Position:" = "நிலை:";
+"Size:" = "அளவு:";
+"Shape:" = "வடிவம்:";

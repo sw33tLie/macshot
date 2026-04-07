@@ -465,3 +465,22 @@
 "Loupe" = "ম্যাগনিফাইয়ার";
 "Stamp" = "স্ট্যাম্প";
 "Unlimited" = "সীমাহীন";
+
+/* Save/Discard, Recording, Translation Engine, Upload, Inspector */
+"Save changes?" = "পরিবর্তনগুলো সংরক্ষণ করবেন?";
+"Your annotations will be lost if you close without saving." = "সংরক্ষণ না করে বন্ধ করলে আপনার টীকাগুলো হারিয়ে যাবে।";
+"Save & Close" = "সংরক্ষণ ও বন্ধ";
+"Discard" = "বাতিল";
+"Stop Recording" = "রেকর্ডিং বন্ধ করুন";
+"Pause" = "বিরতি";
+"Resume" = "পুনরায় শুরু";
+"Engine:" = "ইঞ্জিন:";
+"Google Translate" = "Google Translate";
+"Apple (on-device)" = "Apple (ডিভাইসে)";
+"Apple translation is faster and works offline. Google Translate supports more languages." = "Apple অনুবাদ দ্রুত এবং অফলাইনে কাজ করে। Google Translate আরও বেশি ভাষা সমর্থন করে।";
+"Download language packs in System Settings…" = "সিস্টেম সেটিংসে ভাষা প্যাক ডাউনলোড করুন…";
+"Configure S3 in Settings" = "সেটিংসে S3 কনফিগার করুন";
+"Sign in to Google Drive in Settings" = "সেটিংসে Google Drive-এ সাইন ইন করুন";
+"Position:" = "অবস্থান:";
+"Size:" = "আকার:";
+"Shape:" = "আকৃতি:";

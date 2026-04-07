@@ -465,3 +465,22 @@
 "Loupe" = "Luuppi";
 "Stamp" = "Leima";
 "Unlimited" = "Rajoittamaton";
+
+/* Save Confirmation / Recording / Translation / Upload / Inspector */
+"Save changes?" = "Tallenna muutokset?";
+"Your annotations will be lost if you close without saving." = "Merkint\U00E4si menetet\U00E4\U00E4n, jos suljet tallentamatta.";
+"Save & Close" = "Tallenna ja sulje";
+"Discard" = "Hylk\U00E4\U00E4";
+"Stop Recording" = "Pys\U00E4yt\U00E4 nauhoitus";
+"Pause" = "Tauko";
+"Resume" = "Jatka";
+"Engine:" = "Moottori:";
+"Google Translate" = "Google Translate";
+"Apple (on-device)" = "Apple (laitteessa)";
+"Apple translation is faster and works offline. Google Translate supports more languages." = "Apple-k\U00E4\U00E4nn\U00F6s on nopeampi ja toimii offline-tilassa. Google Translate tukee useampia kieli\U00E4.";
+"Download language packs in System Settings\U2026" = "Lataa kielipaketteja J\U00E4rjestelm\U00E4asetuksista\U2026";
+"Configure S3 in Settings" = "M\U00E4\U00E4rit\U00E4 S3 asetuksissa";
+"Sign in to Google Drive in Settings" = "Kirjaudu Google Driveen asetuksissa";
+"Position:" = "Sijainti:";
+"Size:" = "Koko:";
+"Shape:" = "Muoto:";

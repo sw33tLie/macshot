@@ -465,3 +465,22 @@
 "Loupe" = "आवर्धक";
 "Stamp" = "स्टैंप";
 "Unlimited" = "असीमित";
+
+/* Save Confirmation / Recording / Translation / Upload / Inspector */
+"Save changes?" = "परिवर्तन सहेजें?";
+"Your annotations will be lost if you close without saving." = "यदि आप सहेजे बिना बंद करते हैं तो आपकी टिप्पणियाँ खो जाएँगी।";
+"Save & Close" = "सहेजें और बंद करें";
+"Discard" = "त्यागें";
+"Stop Recording" = "रिकॉर्डिंग रोकें";
+"Pause" = "विराम";
+"Resume" = "फिर से शुरू करें";
+"Engine:" = "इंजन:";
+"Google Translate" = "Google Translate";
+"Apple (on-device)" = "Apple (डिवाइस पर)";
+"Apple translation is faster and works offline. Google Translate supports more languages." = "Apple अनुवाद तेज़ है और ऑफ़लाइन काम करता है। Google Translate अधिक भाषाओं का समर्थन करता है।";
+"Download language packs in System Settings…" = "सिस्टम सेटिंग्स में भाषा पैक डाउनलोड करें…";
+"Configure S3 in Settings" = "सेटिंग्स में S3 कॉन्फ़िगर करें";
+"Sign in to Google Drive in Settings" = "सेटिंग्स में Google Drive में साइन इन करें";
+"Position:" = "स्थिति:";
+"Size:" = "आकार:";
+"Shape:" = "आकृति:";

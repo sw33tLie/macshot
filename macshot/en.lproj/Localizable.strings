@@ -463,3 +463,22 @@
 "Loupe" = "Loupe";
 "Stamp" = "Stamp";
 "Unlimited" = "Unlimited";
+
+/* Save dialog + misc */
+"Save changes?" = "Save changes?";
+"Your annotations will be lost if you close without saving." = "Your annotations will be lost if you close without saving.";
+"Save & Close" = "Save & Close";
+"Discard" = "Discard";
+"Stop Recording" = "Stop Recording";
+"Pause" = "Pause";
+"Resume" = "Resume";
+"Engine:" = "Engine:";
+"Google Translate" = "Google Translate";
+"Apple (on-device)" = "Apple (on-device)";
+"Apple translation is faster and works offline. Google Translate supports more languages." = "Apple translation is faster and works offline. Google Translate supports more languages.";
+"Download language packs in System Settings…" = "Download language packs in System Settings…";
+"Configure S3 in Settings" = "Configure S3 in Settings";
+"Sign in to Google Drive in Settings" = "Sign in to Google Drive in Settings";
+"Position:" = "Position:";
+"Size:" = "Size:";
+"Shape:" = "Shape:";
