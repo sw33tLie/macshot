@@ -688,6 +688,15 @@ extension OverlayWindowController: OverlayViewDelegate {
             saveImageToDirectory(image)
         }
         // mode 3: do nothing — image is passed to delegate which shows the thumbnail
+
+        // "Also open in Editor" preference
+        if UserDefaults.standard.bool(forKey: "quickCaptureOpenEditor") {
+            if let data = effectiveAnnotationData {
+                DetachedEditorWindowController.open(image: data.rawImage, annotations: data.annotations)
+            } else {
+                DetachedEditorWindowController.open(image: image)
+            }
+        }
     }
 
     func overlayViewDidRequestFileSave() {

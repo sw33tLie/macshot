@@ -43,6 +43,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
     private var accentColorWell: NSColorWell!
     private var iconColorWell: NSColorWell!
     private var quickModePopup: NSPopUpButton!
+    private var quickCaptureOpenEditorCheckbox: NSButton!
     private var imageFormatPopup: NSPopUpButton!
     private var qualitySlider: NSSlider!
     private var qualityLabel: NSTextField!
@@ -259,6 +260,10 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         quickModePopup.action = #selector(quickModeChanged(_:))
 
         stack.addArrangedSubview(labeledRow(L("Enter / Quick Capture:"), controls: [quickModePopup]))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+
+        quickCaptureOpenEditorCheckbox = NSButton(checkboxWithTitle: L("Also open in Editor"), target: self, action: #selector(quickCaptureOpenEditorChanged(_:)))
+        stack.addArrangedSubview(indented(quickCaptureOpenEditorCheckbox))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         // OCR action dropdown
@@ -1632,6 +1637,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         }
         let quickMode = UserDefaults.standard.object(forKey: "quickCaptureMode") as? Int ?? 1
         quickModePopup.selectItem(at: quickMode)
+        quickCaptureOpenEditorCheckbox.state = UserDefaults.standard.bool(forKey: "quickCaptureOpenEditor") ? .on : .off
 
         let format = ImageEncoder.format
         switch format {
@@ -1754,6 +1760,9 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
     }
     @objc private func quickModeChanged(_ sender: NSPopUpButton) {
         UserDefaults.standard.set(sender.indexOfSelectedItem, forKey: "quickCaptureMode")
+    }
+    @objc private func quickCaptureOpenEditorChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: "quickCaptureOpenEditor")
     }
     @objc private func languageChanged(_ sender: NSPopUpButton) {
         let languages = LanguageManager.availableLanguages

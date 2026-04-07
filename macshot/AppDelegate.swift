@@ -1120,8 +1120,10 @@ extension AppDelegate: OverlayWindowControllerDelegate {
 
         // Dismiss overlays — recording doesn't need them anymore
         dismissOverlays()
-        // Return focus to the previously active app so clicks work immediately
-        NSApp.hide(nil)
+        // Return focus to the previously active app so clicks work immediately.
+        // Don't use NSApp.hide() — it hides ALL windows including the recording
+        // HUD and selection border that are about to be created.
+        NSApp.deactivate()
 
         let delay = delayOverride ?? UserDefaults.standard.integer(forKey: "captureDelaySeconds")
         if delay > 0 {
@@ -1675,6 +1677,10 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         }
         playCopySound()
         showFloatingThumbnail(image: image)
+
+        if UserDefaults.standard.bool(forKey: "quickCaptureOpenEditor") {
+            DetachedEditorWindowController.open(image: image)
+        }
     }
 
     private func startDelayCountdown(seconds: Int) {
