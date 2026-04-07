@@ -1007,6 +1007,15 @@ extension AppDelegate: OverlayWindowControllerDelegate {
             DispatchQueue.main.async { [weak self] in
                 self?.showFloatingThumbnail(image: image, annotationData: annData, historyEntryID: entryID)
             }
+
+            // "Also open in Editor" preference — open with history entry ID so Done saves back
+            if UserDefaults.standard.bool(forKey: "quickCaptureOpenEditor") {
+                if let data = annotationData {
+                    DetachedEditorWindowController.open(image: data.rawImage, annotations: data.annotations, historyEntryID: entryID)
+                } else {
+                    DetachedEditorWindowController.open(image: image, historyEntryID: entryID)
+                }
+            }
         }
     }
 
@@ -1667,6 +1676,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         guard let image = finalImage else { return }
 
         ScreenshotHistory.shared.add(image: image)
+        let entryID = ScreenshotHistory.shared.entries.first?.id
         // quickCaptureMode: 0=save, 1=copy, 2=both, 3=do nothing (thumbnail only)
         let mode = UserDefaults.standard.object(forKey: "quickCaptureMode") as? Int ?? 1
         if mode == 1 || mode == 2 {
@@ -1679,7 +1689,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         showFloatingThumbnail(image: image)
 
         if UserDefaults.standard.bool(forKey: "quickCaptureOpenEditor") {
-            DetachedEditorWindowController.open(image: image)
+            DetachedEditorWindowController.open(image: image, historyEntryID: entryID)
         }
     }
 

@@ -195,6 +195,7 @@ class EditorTopBarView: NSView {
 
     /// Show a "Done" button for committing edits back to history.
     func showDoneButton() {
+        guard doneButton == nil else { return }
         let btn = NSButton()
         btn.bezelStyle = .recessed
         btn.isBordered = true
