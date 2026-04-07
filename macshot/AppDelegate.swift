@@ -1123,6 +1123,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         let fpsOverride = controller.sessionRecordingFPS
         let onStopOverride = controller.sessionRecordingOnStop
         let delayOverride = controller.sessionRecordingDelay
+        let hideHUD = controller.sessionHideRecordingHUD ?? UserDefaults.standard.bool(forKey: "hideRecordingHUD")
 
         // Detach webcam preview before dismissing overlays so we can reuse the live session
         let existingWebcam = controller.detachWebcamPreview()
@@ -1146,7 +1147,8 @@ extension AppDelegate: OverlayWindowControllerDelegate {
             beginRecording(rect: rect, screen: screen,
                            formatOverride: formatOverride, fpsOverride: fpsOverride,
                            onStopOverride: onStopOverride,
-                           existingWebcam: existingWebcam)
+                           existingWebcam: existingWebcam,
+                           hideHUD: hideHUD)
         }
     }
 
@@ -1226,7 +1228,8 @@ extension AppDelegate: OverlayWindowControllerDelegate {
     private func beginRecording(rect: NSRect, screen: NSScreen,
                                  formatOverride: String?, fpsOverride: Int?,
                                  onStopOverride: String?,
-                                 existingWebcam: WebcamOverlay? = nil) {
+                                 existingWebcam: WebcamOverlay? = nil,
+                                 hideHUD: Bool = false) {
         let engine = RecordingEngine()
         engine.onProgress = { [weak self] seconds in
             self?.updateRecordingHUD(seconds: seconds)
@@ -1287,32 +1290,34 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         }
         recordingEngine = engine
 
-        // Show selection border so user knows what area is being captured
-        // (may already exist from countdown — recreate to be safe)
-        selectionBorderOverlay?.close()
-        let border = SelectionBorderOverlay(screen: screen)
-        border.setSelectionRect(rect)
-        border.orderFront(nil)
-        selectionBorderOverlay = border
+        if !hideHUD {
+            // Show selection border so user knows what area is being captured
+            // (may already exist from countdown — recreate to be safe)
+            selectionBorderOverlay?.close()
+            let border = SelectionBorderOverlay(screen: screen)
+            border.setSelectionRect(rect)
+            border.orderFront(nil)
+            selectionBorderOverlay = border
 
-        // Show the floating timer HUD
-        let hud = RecordingHUDPanel()
-        hud.update(elapsedSeconds: 0)
-        hud.positionOnScreen(relativeTo: rect, screen: screen)
-        hud.onStopRecording = { [weak self] in
-            self?.stopRecording()
-        }
-        hud.onPauseRecording = { [weak self] in
-            self?.recordingEngine?.pauseRecording()
-        }
-        hud.onResumeRecording = { [weak self] in
-            self?.recordingEngine?.resumeRecording()
-        }
-        hud.orderFront(nil)
-        recordingHUDPanel = hud
+            // Show the floating timer HUD
+            let hud = RecordingHUDPanel()
+            hud.update(elapsedSeconds: 0)
+            hud.positionOnScreen(relativeTo: rect, screen: screen)
+            hud.onStopRecording = { [weak self] in
+                self?.stopRecording()
+            }
+            hud.onPauseRecording = { [weak self] in
+                self?.recordingEngine?.pauseRecording()
+            }
+            hud.onResumeRecording = { [weak self] in
+                self?.recordingEngine?.resumeRecording()
+            }
+            hud.orderFront(nil)
+            recordingHUDPanel = hud
 
-        engine.onPauseChanged = { [weak self] paused in
-            self?.recordingHUDPanel?.setPaused(paused)
+            engine.onPauseChanged = { [weak self] paused in
+                self?.recordingHUDPanel?.setPaused(paused)
+            }
         }
 
         // Start mouse highlight overlay if enabled

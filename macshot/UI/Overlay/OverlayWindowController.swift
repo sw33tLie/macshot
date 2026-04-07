@@ -57,6 +57,7 @@ class OverlayWindowController {
     var sessionRecordingFPS: Int? { overlayView?.sessionRecordingFPS }
     var sessionRecordingOnStop: String? { overlayView?.sessionRecordingOnStop }
     var sessionRecordingDelay: Int? { overlayView?.sessionRecordingDelay }
+    var sessionHideRecordingHUD: Bool? { overlayView?.sessionHideRecordingHUD }
 
     init(capture: ScreenCapture) {
         let screen = capture.screen

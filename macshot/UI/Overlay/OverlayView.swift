@@ -516,6 +516,7 @@ class OverlayView: NSView {
     var sessionRecordingFPS: Int?
     var sessionRecordingOnStop: String?
     var sessionRecordingDelay: Int?
+    var sessionHideRecordingHUD: Bool?
 
     // Scroll capture state
     var isScrollCapturing: Bool = false

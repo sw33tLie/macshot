@@ -369,10 +369,30 @@ extension OverlayView {
         delayPopup.action = #selector(DelayHandler.changed(_:))
         objc_setAssociatedObject(delayPopup, "handler", delayHandler, .OBJC_ASSOCIATION_RETAIN)
 
+        // Hide HUD checkbox
+        let effectiveHideHUD = sessionHideRecordingHUD ?? UserDefaults.standard.bool(forKey: "hideRecordingHUD")
+        let hideHUDCheck = NSButton(checkboxWithTitle: L("Hide controls"), target: nil, action: nil)
+        hideHUDCheck.controlSize = .small
+        hideHUDCheck.font = NSFont.systemFont(ofSize: 11)
+        hideHUDCheck.state = effectiveHideHUD ? .on : .off
+
+        class HideHUDHandler: NSObject {
+            weak var overlayView: OverlayView?
+            init(overlayView: OverlayView?) { self.overlayView = overlayView; super.init() }
+            @objc func changed(_ sender: NSButton) {
+                overlayView?.sessionHideRecordingHUD = (sender.state == .on)
+            }
+        }
+        let hideHUDHandler = HideHUDHandler(overlayView: self)
+        hideHUDCheck.target = hideHUDHandler
+        hideHUDCheck.action = #selector(HideHUDHandler.changed(_:))
+        objc_setAssociatedObject(hideHUDCheck, "handler", hideHUDHandler, .OBJC_ASSOCIATION_RETAIN)
+
         addRow(label: L("Format:"), control: formatSeg)
         addRow(label: L("FPS:"), control: fpsPopup)
         addRow(label: L("When done:"), control: whenDonePopup)
         addRow(label: L("Delay:"), control: delayPopup)
+        addRow(label: "", control: hideHUDCheck)
 
         // Webcam settings (only when webcam is enabled)
         if UserDefaults.standard.bool(forKey: "recordWebcam") {
