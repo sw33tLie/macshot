@@ -272,6 +272,9 @@ class OverlayView: NSView {
     private var textBoxResizeHandle: ResizeHandle = .none
     private var textBoxResizeStart: NSPoint = .zero
     private var textBoxOrigFrame: NSRect = .zero
+    // Text box move handle
+    private var isDraggingTextBox: Bool = false
+    private var textBoxDragOffset: NSPoint = .zero
 
     // Toolbars (drawn inline)
     var bottomButtons: [ToolbarButton] = []
@@ -1460,6 +1463,39 @@ class OverlayView: NSView {
             }
 
             context.restoreGraphicsState()
+
+            // Text box move handle (drawn in view space, above the NSScrollView)
+            if textEditView != nil, let sv = textEditor.scrollView, showToolbars {
+                let s: CGFloat = 20
+                let handleRect = NSRect(
+                    x: sv.frame.midX - s / 2,
+                    y: sv.frame.maxY + 8,
+                    width: s, height: s)
+                // Background circle
+                NSColor(white: 0.15, alpha: 0.85).setFill()
+                NSBezierPath(ovalIn: handleRect).fill()
+                NSColor.white.withAlphaComponent(0.3).setStroke()
+                let borderPath = NSBezierPath(ovalIn: handleRect.insetBy(dx: 0.5, dy: 0.5))
+                borderPath.lineWidth = 0.5
+                borderPath.stroke()
+                // SF Symbol move icon (tinted white for dark background)
+                if let moveIcon = NSImage(systemSymbolName: "arrow.up.and.down.and.arrow.left.and.right",
+                                          accessibilityDescription: nil)?
+                    .withSymbolConfiguration(.init(pointSize: 10, weight: .semibold)) {
+                    let tinted = moveIcon.copy() as! NSImage
+                    tinted.isTemplate = true
+                    tinted.lockFocus()
+                    NSColor.white.set()
+                    NSRect(origin: .zero, size: tinted.size).fill(using: .sourceAtop)
+                    tinted.unlockFocus()
+                    let iconSize = tinted.size
+                    let iconRect = NSRect(
+                        x: handleRect.midX - iconSize.width / 2,
+                        y: handleRect.midY - iconSize.height / 2,
+                        width: iconSize.width, height: iconSize.height)
+                    tinted.draw(in: iconRect, from: .zero, operation: .sourceOver, fraction: 0.9)
+                }
+            }
 
             // Live beautify preview — draw gradient background, shadow, and rounded image around selection
             let showBeautifyPreview = beautifyEnabled && state == .selected && !isScrollCapturing && !isRecording
@@ -4286,8 +4322,22 @@ class OverlayView: NSView {
 
         let isTextEditing = textEditView != nil
 
-        // Check text box resize handles when editing
+        // Check text box move handle and resize handles when editing
         if isTextEditing && showToolbars {
+            // Move handle: circle with move icon above the text box
+            if let sv = textEditor.scrollView {
+                let s: CGFloat = 20
+                let moveRect = NSRect(
+                    x: sv.frame.midX - s / 2,
+                    y: sv.frame.maxY + 8,
+                    width: s, height: s)
+                if moveRect.contains(point) {
+                    isDraggingTextBox = true
+                    textBoxDragOffset = NSPoint(x: point.x - sv.frame.origin.x,
+                                                y: point.y - sv.frame.origin.y)
+                    return
+                }
+            }
             // Check text box resize handles
             if let sv = textEditor.scrollView {
                 let hs: CGFloat = 10  // hit area
@@ -4504,6 +4554,19 @@ class OverlayView: NSView {
                 size: NSSize(
                     width: abs(clampedPoint.x - cropDragStart.x),
                     height: abs(clampedPoint.y - cropDragStart.y)))
+            needsDisplay = true
+            return
+        }
+
+        // Handle text box move
+        if isDraggingTextBox, let sv = textEditor.scrollView, let tv = textEditView {
+            let newX = point.x - textBoxDragOffset.x
+            let newY = point.y - textBoxDragOffset.y
+            sv.frame.origin = NSPoint(x: newX, y: newY)
+            tv.frame.size = sv.frame.size
+            tv.textContainer?.containerSize = NSSize(
+                width: sv.frame.width - tv.textContainerInset.width * 2,
+                height: CGFloat.greatestFiniteMagnitude)
             needsDisplay = true
             return
         }
@@ -4832,6 +4895,10 @@ class OverlayView: NSView {
             return
         }
 
+        if isDraggingTextBox {
+            isDraggingTextBox = false
+            return
+        }
         if isResizingTextBox {
             isResizingTextBox = false
             return
@@ -6383,17 +6450,59 @@ class OverlayView: NSView {
         // Forward Cmd shortcuts to the text view when editing — the main menu
         // intercepts these before keyDown reaches the overlay window.
         if event.modifierFlags.contains(.command), let char = event.charactersIgnoringModifiers {
-            // Text editing: forward to NSTextView
+            // Text editing: forward to NSTextView (only when text is actively selected)
             if let tv = textEditView {
                 switch char {
-                case "v": tv.paste(nil); return true
-                case "c": tv.copy(nil); return true
+                case "c":
+                    if tv.selectedRange().length > 0 {
+                        tv.copy(nil)
+                    } else {
+                        // No text selected — commit, copy annotation, then deselect
+                        // so the purple selection chrome doesn't flash
+                        commitTextFieldIfNeeded()
+                        if selectedAnnotations.isEmpty, let last = annotations.last, last.tool == .text {
+                            selectedAnnotation = last
+                        }
+                        copySelectedAnnotations()
+                        selectedAnnotations = []
+                        needsDisplay = true
+                    }
+                    return true
+                case "v":
+                    if NSPasteboard.general.data(forType: Self.annotationPasteboardType) != nil {
+                        commitTextFieldIfNeeded()
+                        pasteAnnotations()
+                        selectedAnnotations = []
+                        needsDisplay = true
+                    } else {
+                        tv.paste(nil)
+                    }
+                    return true
                 case "x": tv.cut(nil); return true
                 case "a": tv.selectAll(nil); return true
                 case "z":
                     if event.modifierFlags.contains(.shift) { tv.undoManager?.redo() }
                     else { tv.undoManager?.undo() }
                     return true
+                default: break
+                }
+            }
+
+            // Annotation copy/paste (no text editing active)
+            if state == .selected {
+                switch char {
+                case "c":
+                    if !selectedAnnotations.isEmpty {
+                        copySelectedAnnotations()
+                    } else {
+                        overlayDelegate?.overlayViewDidConfirm()
+                    }
+                    return true
+                case "v":
+                    if NSPasteboard.general.data(forType: Self.annotationPasteboardType) != nil {
+                        pasteAnnotations()
+                        return true
+                    }
                 default: break
                 }
             }
@@ -6532,37 +6641,8 @@ class OverlayView: NSView {
                 }
             }
             if event.modifierFlags.contains(.command) {
-                // When editing text, forward text-editing shortcuts to the text view
-                if let tv = textEditView, let char = event.charactersIgnoringModifiers {
-                    switch char {
-                    case "a":
-                        tv.selectAll(nil)
-                        return
-                    case "c":
-                        tv.copy(nil)
-                        return
-                    case "v":
-                        tv.paste(nil)
-                        return
-                    case "x":
-                        tv.cut(nil)
-                        return
-                    case "z":
-                        if event.modifierFlags.contains(.shift) {
-                            tv.undoManager?.redo()
-                        } else {
-                            tv.undoManager?.undo()
-                        }
-                        return
-                    default: break
-                    }
-                }
-                if event.charactersIgnoringModifiers == "c" {
-                    if state == .selected {
-                        overlayDelegate?.overlayViewDidConfirm()
-                    }
-                    return
-                }
+                // Cmd+C, Cmd+V, Cmd+X, Cmd+A, Cmd+Z are handled in performKeyEquivalent.
+                // Only Cmd+S and zoom shortcuts remain here.
                 if event.charactersIgnoringModifiers == "s" {
                     if state == .selected {
                         overlayDelegate?.overlayViewDidRequestSave()
@@ -6632,6 +6712,40 @@ class OverlayView: NSView {
             }
         }
         super.keyUp(with: event)
+    }
+
+    // MARK: - Annotation Copy/Paste
+
+    private static let annotationPasteboardType = NSPasteboard.PasteboardType("com.sw33tlie.macshot.annotations")
+
+    /// Copy selected annotations to the pasteboard.
+    func copySelectedAnnotations() {
+        let toCopy = selectedAnnotations.isEmpty ? [] : selectedAnnotations
+        guard !toCopy.isEmpty else { return }
+        guard let data = AnnotationSerializer.encode(toCopy) else { return }
+        let pb = NSPasteboard.general
+        pb.clearContents()
+        pb.setData(data, forType: Self.annotationPasteboardType)
+    }
+
+    /// Paste annotations from the pasteboard, offset slightly so they're visible.
+    func pasteAnnotations() {
+        let pb = NSPasteboard.general
+        guard let data = pb.data(forType: Self.annotationPasteboardType),
+              let pasted = AnnotationSerializer.decode(data) else { return }
+        selectedAnnotations = []
+        var newAnnotations: [Annotation] = []
+        for ann in pasted {
+            let copy = ann.clone()
+            copy.move(dx: 15, dy: -15)
+            annotations.append(copy)
+            undoStack.append(.added(copy))
+            newAnnotations.append(copy)
+        }
+        redoStack.removeAll()
+        selectedAnnotations = newAnnotations
+        cachedCompositedImage = nil
+        needsDisplay = true
     }
 
     // MARK: - Undo/Redo
