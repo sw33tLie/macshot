@@ -79,7 +79,11 @@ final class RecordingEngine: NSObject {
 
     /// Start recording the given rect (in NSScreen/AppKit coordinates, bottom-left origin).
     /// Optional overrides take precedence over UserDefaults for this session.
-    func startRecording(rect: NSRect, screen: NSScreen, formatOverride: String? = nil, fpsOverride: Int? = nil) {
+    /// Window IDs to exclude from the recording (e.g. selection border, HUD).
+    private var excludeWindowNumbers: [CGWindowID] = []
+
+    func startRecording(rect: NSRect, screen: NSScreen, formatOverride: String? = nil, fpsOverride: Int? = nil, excludeWindowNumbers: [CGWindowID] = []) {
+        self.excludeWindowNumbers = excludeWindowNumbers
         guard state == .idle else { return }
         state = .recording
 
@@ -163,7 +167,14 @@ final class RecordingEngine: NSObject {
                 return
             }
 
-            let filter = SCContentFilter(display: display, excludingWindows: [])
+            // Exclude specific macshot UI chrome windows (selection border, HUD)
+            // but NOT recording overlays (webcam, mouse highlight, keystrokes)
+            // which are intentionally part of the recording.
+            let excludeIDs = excludeWindowNumbers
+            let excludeWindows = excludeIDs.compactMap { wid in
+                content.windows.first(where: { CGWindowID($0.windowID) == wid })
+            }
+            let filter = SCContentFilter(display: display, excludingWindows: excludeWindows)
             let config = SCStreamConfiguration()
             config.width = Int(cropRect.width * screen.backingScaleFactor)
             config.height = Int(cropRect.height * screen.backingScaleFactor)
