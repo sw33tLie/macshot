@@ -25,6 +25,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     private var uploadToastController: UploadToastController?
     private var gifProcessingToast: UploadToastController?
     private var recordingEngine: RecordingEngine?
+    private var audioMergeController: AudioMergeController?
     private var recordingOverlayController: OverlayWindowController?
     private var recordingHUDPanel: RecordingHUDPanel?
     private var recordingScreenRect: NSRect = .zero  // screen-space capture rect
@@ -1228,6 +1229,10 @@ extension AppDelegate: OverlayWindowControllerDelegate {
             toast.onDismiss = { [weak self] in self?.gifProcessingToast = nil }
             toast.show(status: L("Processing GIF…"))
         }
+        // Capture audio settings before recording starts (they may change during)
+        let hadSystemAudio = UserDefaults.standard.bool(forKey: "recordSystemAudio")
+        let hadMicAudio = UserDefaults.standard.bool(forKey: "recordMicAudio")
+
         engine.onCompletion = { [weak self] url, error in
             guard let self = self else { return }
             self.gifProcessingToast?.dismiss()
@@ -1238,14 +1243,30 @@ extension AppDelegate: OverlayWindowControllerDelegate {
                 if url.pathExtension.lowercased() == "gif" {
                     ScreenshotHistory.shared.addRecording(url: url)
                 }
-                let onStop = onStopOverride ?? UserDefaults.standard.string(forKey: "recordingOnStop") ?? "editor"
-                switch onStop {
-                case "finder":
-                    NSWorkspace.shared.activateFileViewerSelecting([url])
-                case "clipboard":
-                    self.copyRecordingToClipboard(url: url)
-                default:
-                    VideoEditorWindowController.open(url: url)
+
+                let deliverRecording: (URL) -> Void = { [weak self] finalURL in
+                    guard let self = self else { return }
+                    let onStop = onStopOverride ?? UserDefaults.standard.string(forKey: "recordingOnStop") ?? "editor"
+                    switch onStop {
+                    case "finder":
+                        NSWorkspace.shared.activateFileViewerSelecting([finalURL])
+                    case "clipboard":
+                        self.copyRecordingToClipboard(url: finalURL)
+                    default:
+                        VideoEditorWindowController.open(url: finalURL)
+                    }
+                }
+
+                // Offer audio merge when both mic + system audio were recorded
+                if hadSystemAudio && hadMicAudio && url.pathExtension.lowercased() == "mp4" {
+                    let merger = AudioMergeController()
+                    self.audioMergeController = merger
+                    merger.show(url: url) { [weak self] finalURL in
+                        self?.audioMergeController = nil
+                        deliverRecording(finalURL)
+                    }
+                } else {
+                    deliverRecording(url)
                 }
             } else if let error = error {
                 #if DEBUG
