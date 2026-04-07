@@ -1,5 +1,21 @@
 # Changelog
 
+## [3.8.0-beta.9] - 2026-04-07
+
+### Added
+- **Customizable overlay/editor tool shortcuts** — tool shortcuts (P=Pencil, R=Rectangle, etc.) are now configurable in Preferences > Shortcuts. Each tool can be assigned a single key or set to None. Added Ellipse shortcut (O) by default.
+- **Audio merge dialog** — when recording with both system audio and microphone, a dialog appears after recording with volume sliders for each source. "Merge Audio" combines both into a single track for universal player compatibility; "Keep Separate" preserves the original two-track file.
+- **"Also open in Editor" option** — new checkbox in Preferences > General > Capture. When enabled, quick capture (Enter, hotkey, scroll capture) performs the save/copy action AND opens the editor with the image and annotations.
+
+### Changed
+- **Recording audio quality** — audio bitrate increased to 256kbps AAC with explicit stereo channel layout for better quality and broader player compatibility.
+- **Recording video metadata** — BT.709 color primaries, transfer function, and YCbCr matrix are now embedded in the video track for correct color rendering across all players.
+- **Recording audio sync** — audio samples arriving before the first video frame are buffered and flushed when the session starts, preventing gaps at the beginning of recordings. Single serial queue for all recording I/O eliminates data races.
+- **Mic audio track priority** — when both system audio and mic are recorded, the mic track is written first so players that only decode the first audio track get the mic content.
+
+### Fixed
+- **Recording HUD disappearing** — the recording control bar and selection border sometimes vanished when starting a recording. Caused by `NSApp.hide()` racing with panel creation; replaced with `NSApp.deactivate()`.
+
 ## [3.8.0-beta.8] - 2026-04-07
 
 ### Added
