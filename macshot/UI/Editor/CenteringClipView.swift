@@ -11,11 +11,17 @@ class CenteringClipView: NSClipView {
         let docFrame = documentView.frame
         var rect = super.constrainBoundsRect(proposedBounds)
 
-        if docFrame.width < rect.width {
-            rect.origin.x = (docFrame.width - rect.width) / 2
+        // Account for content insets — the visible area for centering purposes
+        // is smaller than the clip bounds by the inset amounts.
+        let insets = enclosingScrollView?.contentInsets ?? NSEdgeInsetsZero
+        let visibleW = rect.width - insets.left - insets.right
+        let visibleH = rect.height - insets.top - insets.bottom
+
+        if docFrame.width < visibleW {
+            rect.origin.x = (docFrame.width - visibleW) / 2 - insets.left
         }
-        if docFrame.height < rect.height {
-            rect.origin.y = (docFrame.height - rect.height) / 2
+        if docFrame.height < visibleH {
+            rect.origin.y = (docFrame.height - visibleH) / 2 - insets.bottom
         }
         return rect
     }

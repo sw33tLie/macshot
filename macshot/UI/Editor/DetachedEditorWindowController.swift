@@ -49,8 +49,11 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         let minH: CGFloat = 400
         let maxW = screenFrame.width * 0.9
         let maxH = screenFrame.height * 0.9
-        let winW = min(maxW, max(minW, imgSize.width + 100))
-        let winH = min(maxH, max(minH, imgSize.height + 100))
+        // Add space for top bar (32), bottom toolbar (44), options row (40), right toolbar (46), padding
+        let chromeW: CGFloat = 46 + 60    // right toolbar + horizontal padding
+        let chromeH: CGFloat = 32 + 44 + 40 + 40  // top bar + bottom toolbar + options row + padding
+        let winW = min(maxW, max(minW, imgSize.width + chromeW))
+        let winH = min(maxH, max(minH, imgSize.height + chromeH))
 
         let win = EditorWindow(
             contentRect: NSRect(x: screenFrame.midX - winW/2,
@@ -77,8 +80,12 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         view.currentColor = color
         view.currentStrokeWidth = strokeWidth
 
-        // NSScrollView for native zoom/pan/centering
-        let scrollView = NSScrollView(frame: NSRect(origin: .zero, size: NSSize(width: winW, height: winH)))
+        // NSScrollView for native zoom/pan/centering.
+        // The scroll view is inset from the top by the top bar height (32pt) so the
+        // scrollbar and content don't go behind the top bar. Bottom/right toolbars
+        // are handled via content insets since their sizes are dynamic.
+        let topBarHeight: CGFloat = 32
+        let scrollView = NSScrollView(frame: NSRect(x: 0, y: 0, width: winW, height: winH - topBarHeight))
         scrollView.autoresizingMask = [.width, .height]
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = true
@@ -95,11 +102,11 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         scrollView.verticalScrollElasticity = .none
         scrollView.usesPredominantAxisScrolling = false
         // Insets so user can scroll past document edges to see content behind toolbars:
-        // top=32 (top bar), bottom=80 (bottom toolbar + options row), right=46 (right toolbar)
+        // bottom=80 (bottom toolbar + options row), right=46 (right toolbar)
         scrollView.automaticallyAdjustsContentInsets = false
-        scrollView.contentInsets = NSEdgeInsets(top: 36, left: 0, bottom: 84, right: 50)
+        scrollView.contentInsets = NSEdgeInsets(top: 0, left: 0, bottom: 84, right: 50)
         // Extend scrollbar tracks to window edges (negate content insets effect on scrollers)
-        scrollView.scrollerInsets = NSEdgeInsets(top: -36, left: 0, bottom: -84, right: -50)
+        scrollView.scrollerInsets = NSEdgeInsets(top: 0, left: 0, bottom: -84, right: -50)
 
         let clipView = CenteringClipView(frame: scrollView.contentView.frame)
         clipView.drawsBackground = false
@@ -265,11 +272,30 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
     }
 
     func overlayViewDidRequestQuickSave() {
-        guard let view = overlayView,
-              let raw = view.captureSelectedRegion() else { return }
+        guard let raw = overlayView?.captureSelectedRegion() else { return }
         let image = applyPostProcessing(raw)
-        playCopySound()
 
+        // quickCaptureMode: 0=save, 1=copy, 2=both, 3=do nothing (thumbnail only)
+        let mode = UserDefaults.standard.object(forKey: "quickCaptureMode") as? Int ?? 1
+
+        if mode == 1 || mode == 2 {
+            ImageEncoder.copyToClipboard(image)
+        }
+        if mode == 0 || mode == 2 {
+            saveImageToDirectory(image)
+        }
+        playCopySound()
+        (NSApp.delegate as? AppDelegate)?.showFloatingThumbnail(image: image)
+    }
+
+    func overlayViewDidRequestFileSave() {
+        guard let raw = overlayView?.captureSelectedRegion() else { return }
+        let image = applyPostProcessing(raw)
+        saveImageToDirectory(image)
+        playCopySound()
+    }
+
+    private func saveImageToDirectory(_ image: NSImage) {
         let dirURL = SaveDirectoryAccess.resolve()
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd 'at' HH.mm.ss"
@@ -281,9 +307,6 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
             try? imageData.write(to: fileURL)
             SaveDirectoryAccess.stopAccessing(url: dirURL)
         }
-    }
-    func overlayViewDidRequestFileSave() {
-        overlayViewDidRequestQuickSave()
     }
     func overlayViewDidRequestUpload() {
         guard let raw = overlayView?.captureSelectedRegion() else { return }
