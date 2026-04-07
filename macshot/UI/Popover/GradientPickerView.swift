@@ -93,12 +93,17 @@ class GradientPickerView: NSView {
         let symbolConfig = NSImage.SymbolConfiguration(pointSize: 14, weight: .medium)
         if let plusIcon = NSImage(systemSymbolName: "photo.badge.plus", accessibilityDescription: nil)?
             .withSymbolConfiguration(symbolConfig) {
-            let iconSize = plusIcon.size
+            let tinted = plusIcon.copy() as! NSImage
+            tinted.lockFocus()
+            NSColor.white.set()
+            NSRect(origin: .zero, size: tinted.size).fill(using: .sourceAtop)
+            tinted.unlockFocus()
+            let iconSize = tinted.size
             let iconRect = NSRect(
                 x: pr.midX - iconSize.width / 2,
                 y: pr.midY - iconSize.height / 2,
                 width: iconSize.width, height: iconSize.height)
-            plusIcon.draw(in: iconRect, from: .zero, operation: .sourceOver, fraction: 0.6)
+            tinted.draw(in: iconRect, from: .zero, operation: .sourceOver, fraction: 0.7)
         }
     }
 
