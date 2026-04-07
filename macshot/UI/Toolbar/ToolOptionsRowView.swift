@@ -729,6 +729,10 @@ class ToolOptionsRowView: NSView {
         let fontBtn = NSButton(title: "\(displayName) ▾", target: self, action: #selector(fontFamilyClicked(_:)))
         fontBtn.bezelStyle = .recessed
         fontBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
+        fontBtn.attributedTitle = NSAttributedString(string: "\(displayName) ▾", attributes: [
+            .font: NSFont.systemFont(ofSize: 10, weight: .medium),
+            .baselineOffset: 0.5,
+        ])
         fontBtn.sizeToFit()
         fontBtn.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: max(65, fontBtn.frame.width + 8), height: 22)
         addSubview(fontBtn)
@@ -820,6 +824,10 @@ class ToolOptionsRowView: NSView {
         fillLabelBtn.setButtonType(.toggle)
         fillLabelBtn.state = ov.textEditor.bgEnabled ? .on : .off
         fillLabelBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
+        fillLabelBtn.attributedTitle = NSAttributedString(string: L("Fill"), attributes: [
+            .font: NSFont.systemFont(ofSize: 10, weight: .medium),
+            .baselineOffset: 0.5,
+        ])
         fillLabelBtn.sizeToFit()
         fillLabelBtn.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: max(30, fillLabelBtn.frame.width), height: 22)
         addSubview(fillLabelBtn)
@@ -846,6 +854,10 @@ class ToolOptionsRowView: NSView {
         outlineLabelBtn.setButtonType(.toggle)
         outlineLabelBtn.state = ov.textEditor.outlineEnabled ? .on : .off
         outlineLabelBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
+        outlineLabelBtn.attributedTitle = NSAttributedString(string: L("Outline"), attributes: [
+            .font: NSFont.systemFont(ofSize: 10, weight: .medium),
+            .baselineOffset: 0.5,
+        ])
         outlineLabelBtn.sizeToFit()
         outlineLabelBtn.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: max(50, outlineLabelBtn.frame.width), height: 22)
         addSubview(outlineLabelBtn)
@@ -1465,6 +1477,10 @@ class ToolOptionsRowView: NSView {
         outlineBtn.setButtonType(.toggle)
         outlineBtn.state = outlineEnabled ? .on : .off
         outlineBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
+        outlineBtn.attributedTitle = NSAttributedString(string: L("Outline"), attributes: [
+            .font: NSFont.systemFont(ofSize: 10, weight: .medium),
+            .baselineOffset: 0.5,
+        ])
         outlineBtn.sizeToFit()
         let rowHeight: CGFloat = frame.height > 0 ? frame.height : 30
         outlineBtn.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: max(50, outlineBtn.frame.width), height: 22)
