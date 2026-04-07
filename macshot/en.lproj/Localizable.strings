@@ -291,6 +291,7 @@
 "Google Drive (images + videos)" = "Google Drive (images + videos)";
 "imgbb (images only)" = "imgbb (images only)";
 "S3-Compatible (images + videos)" = "S3-Compatible (images + videos)";
+"Custom (imgbb-compatible)" = "Custom (imgbb-compatible)";
 "S3-Compatible Storage" = "S3-Compatible Storage";
 "Sign In with Google" = "Sign In with Google";
 "Sign Out" = "Sign Out";
@@ -314,6 +315,8 @@
 "No uploads yet." = "No uploads yet.";
 "Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible).";
 "A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support).";
+"Use any imgbb-compatible API endpoint. Works with self-hosted Chevereto instances and other compatible services." = "Use any imgbb-compatible API endpoint. Works with self-hosted Chevereto instances and other compatible services.";
+"Endpoint URL:" = "Endpoint URL:";
 "Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos.";
 "Configure S3 in Preferences" = "Configure S3 in Preferences";
 "Sign in to Google Drive in Preferences" = "Sign in to Google Drive in Preferences";
@@ -340,6 +343,7 @@
 "Upload to Google Drive?" = "Upload to Google Drive?";
 "Upload to S3?" = "Upload to S3?";
 "Upload to imgbb.com?" = "Upload to imgbb.com?";
+"Upload to custom endpoint?" = "Upload to custom endpoint?";
 "Your screenshot will be uploaded." = "Your screenshot will be uploaded.";
 
 /* Permission Onboarding */

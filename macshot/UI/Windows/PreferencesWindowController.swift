@@ -46,6 +46,8 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
     private var downscaleRetinaCheckbox: NSButton!
     private var embedColorProfileCheckbox: NSButton!
     private var imgbbKeyField: NSTextField!
+    private var customEndpointField: NSTextField!
+    private var customAPIKeyField: NSTextField!
     private var localMonitor: Any?
     private weak var uploadsStack: NSStackView?
     private var providerPopup: NSPopUpButton!
@@ -870,11 +872,12 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
         providerPopup = NSPopUpButton()
-        providerPopup.addItems(withTitles: [L("imgbb (images only)"), L("Google Drive (images + videos)"), L("S3-Compatible (images + videos)")])
+        providerPopup.addItems(withTitles: [L("imgbb (images only)"), L("Google Drive (images + videos)"), L("S3-Compatible (images + videos)"), L("Custom (imgbb-compatible)")])
         let currentProvider = UserDefaults.standard.string(forKey: "uploadProvider") ?? "imgbb"
         switch currentProvider {
         case "gdrive": providerPopup.selectItem(at: 1)
         case "s3": providerPopup.selectItem(at: 2)
+        case "custom": providerPopup.selectItem(at: 3)
         default: providerPopup.selectItem(at: 0)
         }
         providerPopup.target = self
@@ -1012,6 +1015,37 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         imgbbNote.font = NSFont.systemFont(ofSize: 10)
         imgbbNote.textColor = .secondaryLabelColor
         stack.addArrangedSubview(indented(imgbbNote))
+        stack.setCustomSpacing(16, after: stack.arrangedSubviews.last!)
+
+        // ── Custom (imgbb-compatible) ──
+        stack.addArrangedSubview(sectionHeader(L("Custom (imgbb-compatible)")))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        customEndpointField = NSTextField()
+        customEndpointField.placeholderString = "https://api.imgbb.com/1/upload"
+        customEndpointField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        customEndpointField.target = self
+        customEndpointField.action = #selector(customEndpointChanged(_:))
+        if let ep = UserDefaults.standard.string(forKey: "customEndpoint") {
+            customEndpointField.stringValue = ep
+        }
+        stack.addArrangedSubview(labeledRow(L("Endpoint URL:"), controls: [customEndpointField]))
+
+        customAPIKeyField = NSTextField()
+        customAPIKeyField.placeholderString = L("Leave empty to use default")
+        customAPIKeyField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        customAPIKeyField.target = self
+        customAPIKeyField.action = #selector(customAPIKeyChanged(_:))
+        if let key = UserDefaults.standard.string(forKey: "customAPIKey") {
+            customAPIKeyField.stringValue = key
+        }
+        stack.addArrangedSubview(labeledRow(L("API key:"), controls: [customAPIKeyField]))
+        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+
+        let customNote = NSTextField(wrappingLabelWithString: L("Use any imgbb-compatible API endpoint. Works with self-hosted Chevereto instances and other compatible services."))
+        customNote.font = NSFont.systemFont(ofSize: 10)
+        customNote.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(indented(customNote))
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // ── Upload History ──
@@ -1141,6 +1175,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         switch sender.indexOfSelectedItem {
         case 1: provider = "gdrive"
         case 2: provider = "s3"
+        case 3: provider = "custom"
         default: provider = "imgbb"
         }
         UserDefaults.standard.set(provider, forKey: "uploadProvider")
@@ -1627,6 +1662,16 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         let key = sender.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
         if key.isEmpty { UserDefaults.standard.removeObject(forKey: "imgbbAPIKey") }
         else { UserDefaults.standard.set(key, forKey: "imgbbAPIKey") }
+    }
+    @objc private func customEndpointChanged(_ sender: NSTextField) {
+        let value = sender.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        if value.isEmpty { UserDefaults.standard.removeObject(forKey: "customEndpoint") }
+        else { UserDefaults.standard.set(value, forKey: "customEndpoint") }
+    }
+    @objc private func customAPIKeyChanged(_ sender: NSTextField) {
+        let key = sender.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        if key.isEmpty { UserDefaults.standard.removeObject(forKey: "customAPIKey") }
+        else { UserDefaults.standard.set(key, forKey: "customAPIKey") }
     }
     @objc private func historySizeChanged(_ sender: NSStepper) {
         historySizeField.integerValue = sender.integerValue

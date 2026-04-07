@@ -16,7 +16,7 @@ enum ImageUploader {
         return defaultAPIKey
     }
 
-    static func upload(image: NSImage, completion: @escaping (Result<ImageUploadResult, Error>) -> Void) {
+    static func upload(image: NSImage, endpoint: String = "https://api.imgbb.com/1/upload", apiKey overrideKey: String? = nil, completion: @escaping (Result<ImageUploadResult, Error>) -> Void) {
         guard let tiffData = image.tiffRepresentation,
               let bitmap = NSBitmapImageRep(data: tiffData),
               let pngData = bitmap.representation(using: .png, properties: [:]) else {
@@ -26,7 +26,7 @@ enum ImageUploader {
 
         let base64String = pngData.base64EncodedString()
 
-        let urlString = "https://api.imgbb.com/1/upload?key=\(apiKey)"
+        let urlString = "\(endpoint)?key=\(overrideKey ?? Self.apiKey)"
         guard let url = URL(string: urlString) else {
             completion(.failure(NSError(domain: "ImageUploader", code: 2, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
             return
