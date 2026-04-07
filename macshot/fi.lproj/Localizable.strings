@@ -437,3 +437,31 @@
 "Cam pos:" = "Kameran sijainti:";
 "Cam size:" = "Kameran koko:";
 "Cam shape:" = "Kameran muoto:";
+
+/* New Strings */
+"Settings..." = "Asetukset...";
+"macshot Settings" = "macshot-asetukset";
+"Also open in Editor" = "Avaa my\U00F6s editorissa";
+"Hide controls" = "Piilota ohjaimet";
+"Hide recording controls" = "Piilota nauhoitusohjaimet";
+"Stop recording from the menu bar icon instead." = "Pys\U00E4yt\U00E4 nauhoitus valikkopalkin kuvakkeesta.";
+"Pixelate" = "Pikseloi";
+"Blur" = "Sumenna";
+"Solid" = "Yht\U00E4jaksoinen";
+"Erase" = "Pyhi";
+"Done" = "Valmis";
+"Do nothing" = "\U00C4l\U00E4 tee mit\U00E4\U00E4n";
+"Overlay / Editor Shortcuts" = "Peittokuvan / editorin pikan\U00E4pp\U00E4imet";
+"Set" = "Aseta";
+"Press..." = "Paina...";
+"Reset to default" = "Palauta oletukseksi";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "Paina yht\U00E4 n\U00E4pp\U00E4int\U00E4 m\U00E4\U00E4ritt\U00E4\U00E4ksesi sen ty\U00F6kalun pikan\U00E4pp\U00E4imeksi. N\U00E4m\U00E4 toimivat, kun peittokuva tai editori on aktiivinen.";
+"Keep Separate" = "Pid\U00E4 erillaan";
+"Merge Audio" = "Yhdist\U00E4 \U00E4\U00E4ni";
+"Audio Tracks" = "\U00C4\U00E4niraidat";
+"Adjust volume for each audio track:" = "S\U00E4\U00E4d\U00E4 kunkin \U00E4\U00E4niraidan \U00E4\U00E4nenvoimakkuus:";
+"Microphone:" = "Mikrofoni:";
+"System audio:" = "J\U00E4rjestelm\U00E4n \U00E4\U00E4ni:";
+"Loupe" = "Luuppi";
+"Stamp" = "Leima";
+"Unlimited" = "Rajoittamaton";

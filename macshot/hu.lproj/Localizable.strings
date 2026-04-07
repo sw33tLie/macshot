@@ -437,3 +437,31 @@
 "Cam pos:" = "Kam. poz.:";
 "Cam size:" = "Kam. méret:";
 "Cam shape:" = "Kam. alak:";
+
+/* New Strings */
+"Settings..." = "Beállítások...";
+"macshot Settings" = "macshot beállítások";
+"Also open in Editor" = "Megnyitás a szerkesztőben is";
+"Hide controls" = "Vezérlők elrejtése";
+"Hide recording controls" = "Felvételi vezérlők elrejtése";
+"Stop recording from the menu bar icon instead." = "Állítsd le a felvételt a menüsor ikonjából.";
+"Pixelate" = "Pixelezés";
+"Blur" = "Elmosás";
+"Solid" = "Színátfedés";
+"Erase" = "Törlés";
+"Done" = "Kész";
+"Do nothing" = "Ne csináljon semmit";
+"Overlay / Editor Shortcuts" = "Átfedés / Szerkesztő gyorsbillentyűk";
+"Set" = "Beállítás";
+"Press..." = "Nyomj...";
+"Reset to default" = "Visszaállítás alapértelmezettre";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "Nyomj meg egy billentyűt az adott eszköz gyorsbillentyűjének beállításához. Ezek az átfedés vagy a szerkesztő aktív állapotában működnek.";
+"Keep Separate" = "Külön tartás";
+"Merge Audio" = "Hang összevonása";
+"Audio Tracks" = "Hangsávok";
+"Adjust volume for each audio track:" = "Hangerő beállítása minden hangsávhoz:";
+"Microphone:" = "Mikrofon:";
+"System audio:" = "Rendszerhang:";
+"Loupe" = "Nagyító";
+"Stamp" = "Pecsét";
+"Unlimited" = "Korlátlan";

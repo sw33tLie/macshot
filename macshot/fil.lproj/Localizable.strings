@@ -437,3 +437,31 @@
 "Cam pos:" = "Pos. ng cam:";
 "Cam size:" = "Laki ng cam:";
 "Cam shape:" = "Hugis ng cam:";
+
+/* Settings */
+"Settings..." = "Mga Setting...";
+"macshot Settings" = "Mga Setting ng macshot";
+"Also open in Editor" = "Buksan din sa Editor";
+"Hide controls" = "Itago ang mga kontrol";
+"Hide recording controls" = "Itago ang mga kontrol sa pag-record";
+"Stop recording from the menu bar icon instead." = "Ihinto ang pag-record mula sa icon sa menu bar.";
+"Pixelate" = "Pixelate";
+"Blur" = "Blur";
+"Solid" = "Solid";
+"Erase" = "Burahin";
+"Done" = "Tapos na";
+"Do nothing" = "Walang gawin";
+"Overlay / Editor Shortcuts" = "Mga Shortcut ng Overlay / Editor";
+"Set" = "Itakda";
+"Press..." = "Pindutin...";
+"Reset to default" = "Ibalik sa dating setting";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "Pindutin ang isang key upang italaga ito bilang shortcut para sa tool na iyon. Gumagana ang mga ito kapag aktibo ang overlay o editor.";
+"Keep Separate" = "Panatilihing Hiwalay";
+"Merge Audio" = "Pagsamahin ang Audio";
+"Audio Tracks" = "Mga Audio Track";
+"Adjust volume for each audio track:" = "Ayusin ang volume para sa bawat audio track:";
+"Microphone:" = "Mikropono:";
+"System audio:" = "Audio ng sistema:";
+"Loupe" = "Loupe";
+"Stamp" = "Stamp";
+"Unlimited" = "Walang limitasyon";

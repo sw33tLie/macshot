@@ -437,3 +437,31 @@
 "Cam pos:" = "கேம் நிலை:";
 "Cam size:" = "கேம் அளவு:";
 "Cam shape:" = "கேம் வடிவம்:";
+
+/* Settings */
+"Settings..." = "அமைப்புகள்...";
+"macshot Settings" = "macshot அமைப்புகள்";
+"Also open in Editor" = "எடிட்டரிலும் திற";
+"Hide controls" = "கட்டுப்பாடுகளை மறை";
+"Hide recording controls" = "பதிவு கட்டுப்பாடுகளை மறை";
+"Stop recording from the menu bar icon instead." = "அதற்குப் பதிலாக மெனு பட்டை ஐகானிலிருந்து பதிவை நிறுத்தவும்.";
+"Pixelate" = "பிக்சலேட்";
+"Blur" = "மங்கலாக்கு";
+"Solid" = "திடமான";
+"Erase" = "அழி";
+"Done" = "முடிந்தது";
+"Do nothing" = "எதுவும் செய்யாதே";
+"Overlay / Editor Shortcuts" = "மேலடுக்கு / எடிட்டர் குறுக்குவழிகள்";
+"Set" = "அமை";
+"Press..." = "அழுத்தவும்...";
+"Reset to default" = "இயல்புநிலைக்கு மீட்டமை";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "அந்த கருவிக்கான குறுக்குவழியாக ஒரு விசையை அழுத்தவும். மேலடுக்கு அல்லது எடிட்டர் செயலில் இருக்கும்போது இவை வேலை செய்யும்.";
+"Keep Separate" = "தனித்தனியாக வை";
+"Merge Audio" = "ஒலியை ஒன்றிணை";
+"Audio Tracks" = "ஒலி தடங்கள்";
+"Adjust volume for each audio track:" = "ஒவ்வொரு ஒலி தடத்திற்கும் ஒலி அளவை சரிசெய்:";
+"Microphone:" = "மைக்ரோஃபோன்:";
+"System audio:" = "கணினி ஒலி:";
+"Loupe" = "உருப்பெருக்கி";
+"Stamp" = "முத்திரை";
+"Unlimited" = "வரம்பற்ற";

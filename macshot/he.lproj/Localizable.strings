@@ -437,3 +437,31 @@
 "Cam pos:" = "מיקום מצלמה:";
 "Cam size:" = "גודל מצלמה:";
 "Cam shape:" = "צורת מצלמה:";
+
+/* Settings */
+"Settings..." = "הגדרות...";
+"macshot Settings" = "הגדרות macshot";
+"Also open in Editor" = "פתח גם בעורך";
+"Hide controls" = "הסתר פקדים";
+"Hide recording controls" = "הסתר פקדי הקלטה";
+"Stop recording from the menu bar icon instead." = "עצור הקלטה מסמל שורת התפריטים במקום.";
+"Pixelate" = "פיקסול";
+"Blur" = "טשטוש";
+"Solid" = "מילוי";
+"Erase" = "מחיקה";
+"Done" = "סיום";
+"Do nothing" = "אל תעשה כלום";
+"Overlay / Editor Shortcuts" = "קיצורי דרך בשכבת העל / עורך";
+"Set" = "הגדר";
+"Press..." = "לחץ...";
+"Reset to default" = "אפס לברירת מחדל";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "לחץ על מקש בודד כדי להקצות אותו כקיצור עבור אותו כלי. אלה פועלים כשהשכבה או העורך פעילים.";
+"Keep Separate" = "שמור בנפרד";
+"Merge Audio" = "מזג שמע";
+"Audio Tracks" = "רצועות שמע";
+"Adjust volume for each audio track:" = "כוונן עוצמה לכל רצועת שמע:";
+"Microphone:" = "מיקרופון:";
+"System audio:" = "שמע מערכת:";
+"Loupe" = "זכוכית מגדלת";
+"Stamp" = "חותמת";
+"Unlimited" = "ללא הגבלה";

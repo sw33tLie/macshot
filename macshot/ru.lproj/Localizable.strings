@@ -437,3 +437,31 @@
 "Cam pos:" = "Поз. камеры:";
 "Cam size:" = "Разм. камеры:";
 "Cam shape:" = "Форма камеры:";
+
+/* New strings */
+"Settings..." = "Настройки...";
+"macshot Settings" = "Настройки macshot";
+"Also open in Editor" = "Также открыть в редакторе";
+"Hide controls" = "Скрыть элементы управления";
+"Hide recording controls" = "Скрыть элементы управления записью";
+"Stop recording from the menu bar icon instead." = "Остановите запись через значок в строке меню.";
+"Pixelate" = "Пикселизация";
+"Blur" = "Размытие";
+"Solid" = "Заливка";
+"Erase" = "Стереть";
+"Done" = "Готово";
+"Do nothing" = "Ничего не делать";
+"Overlay / Editor Shortcuts" = "Быстрые клавиши оверлея / редактора";
+"Set" = "Назначить";
+"Press..." = "Нажмите...";
+"Reset to default" = "Сбросить по умолчанию";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "Нажмите клавишу, чтобы назначить её быстрой клавишей для этого инструмента. Работает при активном оверлее или редакторе.";
+"Keep Separate" = "Оставить раздельно";
+"Merge Audio" = "Объединить аудио";
+"Audio Tracks" = "Аудиодорожки";
+"Adjust volume for each audio track:" = "Настройте громкость каждой аудиодорожки:";
+"Microphone:" = "Микрофон:";
+"System audio:" = "Системный звук:";
+"Loupe" = "Лупа";
+"Stamp" = "Штамп";
+"Unlimited" = "Без ограничений";

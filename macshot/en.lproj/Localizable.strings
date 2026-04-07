@@ -435,3 +435,31 @@
 
 /* Video Editor */
 "Copied to clipboard!" = "Copied to clipboard!";
+
+/* Recently added strings */
+"Settings..." = "Settings...";
+"macshot Settings" = "macshot Settings";
+"Also open in Editor" = "Also open in Editor";
+"Hide controls" = "Hide controls";
+"Hide recording controls" = "Hide recording controls";
+"Stop recording from the menu bar icon instead." = "Stop recording from the menu bar icon instead.";
+"Pixelate" = "Pixelate";
+"Blur" = "Blur";
+"Solid" = "Solid";
+"Erase" = "Erase";
+"Done" = "Done";
+"Do nothing" = "Do nothing";
+"Overlay / Editor Shortcuts" = "Overlay / Editor Shortcuts";
+"Set" = "Set";
+"Press..." = "Press...";
+"Reset to default" = "Reset to default";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active.";
+"Keep Separate" = "Keep Separate";
+"Merge Audio" = "Merge Audio";
+"Audio Tracks" = "Audio Tracks";
+"Adjust volume for each audio track:" = "Adjust volume for each audio track:";
+"Microphone:" = "Microphone:";
+"System audio:" = "System audio:";
+"Loupe" = "Loupe";
+"Stamp" = "Stamp";
+"Unlimited" = "Unlimited";

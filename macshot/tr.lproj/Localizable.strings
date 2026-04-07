@@ -437,3 +437,31 @@
 "Cam pos:" = "Kam. konum:";
 "Cam size:" = "Kam. boyut:";
 "Cam shape:" = "Kam. şekil:";
+
+/* New Strings */
+"Settings..." = "Ayarlar...";
+"macshot Settings" = "macshot Ayarları";
+"Also open in Editor" = "Düzenleyicide de aç";
+"Hide controls" = "Kontrolleri gizle";
+"Hide recording controls" = "Kayıt kontrollerini gizle";
+"Stop recording from the menu bar icon instead." = "Bunun yerine menü çubuğu simgesinden kaydı durdurun.";
+"Pixelate" = "Pikselleştir";
+"Blur" = "Bulanıklaştır";
+"Solid" = "Düz";
+"Erase" = "Sil";
+"Done" = "Bitti";
+"Do nothing" = "Hiçbir şey yapma";
+"Overlay / Editor Shortcuts" = "Kaplama / Düzenleyici Kısayolları";
+"Set" = "Ayarla";
+"Press..." = "Basın...";
+"Reset to default" = "Varsayılana sıfırla";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "Bir tuşa basarak o aracın kısayolunu atayın. Kaplama veya düzenleyici etkinken çalışırlar.";
+"Keep Separate" = "Ayrı Tut";
+"Merge Audio" = "Sesi Birleştir";
+"Audio Tracks" = "Ses İzleri";
+"Adjust volume for each audio track:" = "Her ses izi için ses seviyesini ayarlayın:";
+"Microphone:" = "Mikrofon:";
+"System audio:" = "Sistem sesi:";
+"Loupe" = "Büyüteç";
+"Stamp" = "Damga";
+"Unlimited" = "Sınırsız";

@@ -437,3 +437,31 @@
 "Cam pos:" = "Pos. kam:";
 "Cam size:" = "Ukuran kam:";
 "Cam shape:" = "Bentuk kam:";
+
+/* New Strings */
+"Settings..." = "Pengaturan...";
+"macshot Settings" = "Pengaturan macshot";
+"Also open in Editor" = "Buka juga di Editor";
+"Hide controls" = "Sembunyikan kontrol";
+"Hide recording controls" = "Sembunyikan kontrol rekaman";
+"Stop recording from the menu bar icon instead." = "Hentikan rekaman dari ikon bilah menu.";
+"Pixelate" = "Pikselasi";
+"Blur" = "Blur";
+"Solid" = "Solid";
+"Erase" = "Hapus";
+"Done" = "Selesai";
+"Do nothing" = "Tidak melakukan apa-apa";
+"Overlay / Editor Shortcuts" = "Pintasan Hamparan / Editor";
+"Set" = "Atur";
+"Press..." = "Tekan...";
+"Reset to default" = "Atur ulang ke default";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "Tekan satu tombol untuk menetapkannya sebagai pintasan untuk alat tersebut. Berfungsi saat hamparan atau editor aktif.";
+"Keep Separate" = "Pisahkan";
+"Merge Audio" = "Gabungkan Audio";
+"Audio Tracks" = "Trek Audio";
+"Adjust volume for each audio track:" = "Atur volume untuk setiap trek audio:";
+"Microphone:" = "Mikrofon:";
+"System audio:" = "Audio sistem:";
+"Loupe" = "Lup";
+"Stamp" = "Stempel";
+"Unlimited" = "Tak terbatas";

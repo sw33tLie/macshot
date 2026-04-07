@@ -437,3 +437,31 @@
 "Cam pos:" = "Kam. pos.:";
 "Cam size:" = "Kam. storlek:";
 "Cam shape:" = "Kam. form:";
+
+/* New Strings */
+"Settings..." = "Inst\U00E4llningar...";
+"macshot Settings" = "macshot-inst\U00E4llningar";
+"Also open in Editor" = "\U00D6ppna \U00E4ven i redigeraren";
+"Hide controls" = "D\U00F6lj kontroller";
+"Hide recording controls" = "D\U00F6lj inspelningskontroller";
+"Stop recording from the menu bar icon instead." = "Stoppa inspelningen fr\U00E5n menyradsikonen ist\U00E4llet.";
+"Pixelate" = "Pixelera";
+"Blur" = "Oskarp";
+"Solid" = "Solid";
+"Erase" = "Radera";
+"Done" = "Klar";
+"Do nothing" = "G\U00F6r ingenting";
+"Overlay / Editor Shortcuts" = "\U00D6verlagring / Redigeringsgenv\U00E4gar";
+"Set" = "St\U00E4ll in";
+"Press..." = "Tryck...";
+"Reset to default" = "\U00C5terst\U00E4ll till standard";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "Tryck p\U00E5 en tangent f\U00F6r att tilldela den som genv\U00E4g f\U00F6r det verktyget. Dessa fungerar n\U00E4r \U00F6verlagringen eller redigeraren \U00E4r aktiv.";
+"Keep Separate" = "Beh\U00E5ll separata";
+"Merge Audio" = "Sammanfoga ljud";
+"Audio Tracks" = "Ljudsp\U00E5r";
+"Adjust volume for each audio track:" = "Justera volymen f\U00F6r varje ljudsp\U00E5r:";
+"Microphone:" = "Mikrofon:";
+"System audio:" = "Systemljud:";
+"Loupe" = "Lupp";
+"Stamp" = "St\U00E4mpel";
+"Unlimited" = "Obegr\U00E4nsat";

@@ -437,3 +437,31 @@
 "Cam pos:" = "Vị trí cam:";
 "Cam size:" = "Kích thước cam:";
 "Cam shape:" = "Hình dạng cam:";
+
+/* New Strings */
+"Settings..." = "Cài đặt...";
+"macshot Settings" = "Cài đặt macshot";
+"Also open in Editor" = "Đồng thời mở trong trình chỉnh sửa";
+"Hide controls" = "Ẩn điều khiển";
+"Hide recording controls" = "Ẩn điều khiển quay";
+"Stop recording from the menu bar icon instead." = "Dừng quay từ biểu tượng thanh menu thay thế.";
+"Pixelate" = "Khảm";
+"Blur" = "Mờ";
+"Solid" = "Đặc";
+"Erase" = "Xóa";
+"Done" = "Xong";
+"Do nothing" = "Không làm gì";
+"Overlay / Editor Shortcuts" = "Phím tắt lớp phủ / trình chỉnh sửa";
+"Set" = "Đặt";
+"Press..." = "Nhấn...";
+"Reset to default" = "Đặt lại mặc định";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "Nhấn một phím để gán làm phím tắt cho công cụ đó. Hoạt động khi lớp phủ hoặc trình chỉnh sửa đang mở.";
+"Keep Separate" = "Giữ riêng";
+"Merge Audio" = "Gộp âm thanh";
+"Audio Tracks" = "Rãnh âm thanh";
+"Adjust volume for each audio track:" = "Điều chỉnh âm lượng cho từng rãnh âm thanh:";
+"Microphone:" = "Micro:";
+"System audio:" = "Âm thanh hệ thống:";
+"Loupe" = "Kính lúp";
+"Stamp" = "Tem";
+"Unlimited" = "Không giới hạn";

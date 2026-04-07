@@ -437,3 +437,31 @@
 "Cam pos:" = "Cam pos.:";
 "Cam size:" = "Cam grootte:";
 "Cam shape:" = "Cam vorm:";
+
+/* New strings */
+"Settings..." = "Instellingen...";
+"macshot Settings" = "macshot-instellingen";
+"Also open in Editor" = "Ook openen in editor";
+"Hide controls" = "Bedieningselementen verbergen";
+"Hide recording controls" = "Opnamebediening verbergen";
+"Stop recording from the menu bar icon instead." = "Stop de opname via het menubalkpictogram.";
+"Pixelate" = "Pixelen";
+"Blur" = "Vervagen";
+"Solid" = "Effen";
+"Erase" = "Wissen";
+"Done" = "Gereed";
+"Do nothing" = "Niets doen";
+"Overlay / Editor Shortcuts" = "Overlay- / editorsneltoetsen";
+"Set" = "Instellen";
+"Press..." = "Druk...";
+"Reset to default" = "Standaardwaarden herstellen";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "Druk op een toets om deze als sneltoets voor dat gereedschap toe te wijzen. Deze werken wanneer de overlay of editor actief is.";
+"Keep Separate" = "Gescheiden houden";
+"Merge Audio" = "Audio samenvoegen";
+"Audio Tracks" = "Audiotracks";
+"Adjust volume for each audio track:" = "Pas het volume aan voor elke audiotrack:";
+"Microphone:" = "Microfoon:";
+"System audio:" = "Systeemaudio:";
+"Loupe" = "Loep";
+"Stamp" = "Stempel";
+"Unlimited" = "Onbeperkt";

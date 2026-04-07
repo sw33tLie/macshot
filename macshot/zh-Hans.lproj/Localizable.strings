@@ -437,3 +437,31 @@
 "Cam pos:" = "摄像头位置:";
 "Cam size:" = "摄像头大小:";
 "Cam shape:" = "摄像头形状:";
+
+/* New Strings */
+"Settings..." = "设置...";
+"macshot Settings" = "macshot 设置";
+"Also open in Editor" = "同时在编辑器中打开";
+"Hide controls" = "隐藏控制";
+"Hide recording controls" = "隐藏录制控制";
+"Stop recording from the menu bar icon instead." = "改为从菜单栏图标停止录制。";
+"Pixelate" = "像素化";
+"Blur" = "模糊";
+"Solid" = "纯色";
+"Erase" = "擦除";
+"Done" = "完成";
+"Do nothing" = "不执行任何操作";
+"Overlay / Editor Shortcuts" = "覆盖层 / 编辑器快捷键";
+"Set" = "设置";
+"Press..." = "按下...";
+"Reset to default" = "恢复默认";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "按下一个键将其指定为该工具的快捷键。这些快捷键在覆盖层或编辑器激活时有效。";
+"Keep Separate" = "保持分离";
+"Merge Audio" = "合并音频";
+"Audio Tracks" = "音频轨道";
+"Adjust volume for each audio track:" = "调整每个音频轨道的音量:";
+"Microphone:" = "麦克风:";
+"System audio:" = "系统音频:";
+"Loupe" = "放大镜";
+"Stamp" = "图章";
+"Unlimited" = "无限制";

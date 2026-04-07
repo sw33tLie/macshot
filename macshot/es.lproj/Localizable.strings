@@ -437,3 +437,31 @@
 "Cam pos:" = "Pos. cam:";
 "Cam size:" = "Tam. cam:";
 "Cam shape:" = "Forma cam:";
+
+/* New strings */
+"Settings..." = "Ajustes...";
+"macshot Settings" = "Ajustes de macshot";
+"Also open in Editor" = "Abrir tambien en el editor";
+"Hide controls" = "Ocultar controles";
+"Hide recording controls" = "Ocultar controles de grabacion";
+"Stop recording from the menu bar icon instead." = "Detener la grabacion desde el icono de la barra de menu.";
+"Pixelate" = "Pixelar";
+"Blur" = "Difuminar";
+"Solid" = "Solido";
+"Erase" = "Borrar";
+"Done" = "Hecho";
+"Do nothing" = "No hacer nada";
+"Overlay / Editor Shortcuts" = "Atajos de overlay / editor";
+"Set" = "Asignar";
+"Press..." = "Presiona...";
+"Reset to default" = "Restablecer valores predeterminados";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "Presiona una tecla para asignarla como atajo de esa herramienta. Funcionan cuando el overlay o el editor esta activo.";
+"Keep Separate" = "Mantener separados";
+"Merge Audio" = "Combinar audio";
+"Audio Tracks" = "Pistas de audio";
+"Adjust volume for each audio track:" = "Ajustar el volumen de cada pista de audio:";
+"Microphone:" = "Microfono:";
+"System audio:" = "Audio del sistema:";
+"Loupe" = "Lupa";
+"Stamp" = "Sello";
+"Unlimited" = "Ilimitado";

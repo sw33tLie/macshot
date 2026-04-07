@@ -437,3 +437,31 @@
 "Cam pos:" = "Poz. cam.:";
 "Cam size:" = "Dim. cam.:";
 "Cam shape:" = "Forma cam.:";
+
+/* New Strings */
+"Settings..." = "Setari...";
+"macshot Settings" = "Setari macshot";
+"Also open in Editor" = "Deschide si in editor";
+"Hide controls" = "Ascunde controalele";
+"Hide recording controls" = "Ascunde controalele de inregistrare";
+"Stop recording from the menu bar icon instead." = "Opreste inregistrarea din pictograma barei de meniu.";
+"Pixelate" = "Pixelare";
+"Blur" = "Estompare";
+"Solid" = "Solid";
+"Erase" = "Sterge";
+"Done" = "Gata";
+"Do nothing" = "Nu face nimic";
+"Overlay / Editor Shortcuts" = "Scurtaturi suprapunere / editor";
+"Set" = "Seteaza";
+"Press..." = "Apasa...";
+"Reset to default" = "Reseteaza la implicit";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "Apasa o singura tasta pentru a o atribui ca scurtatura pentru acel instrument. Functioneaza cand suprapunerea sau editorul este activ.";
+"Keep Separate" = "Pastreaza separat";
+"Merge Audio" = "Combina audio";
+"Audio Tracks" = "Piste audio";
+"Adjust volume for each audio track:" = "Ajusteaza volumul pentru fiecare pista audio:";
+"Microphone:" = "Microfon:";
+"System audio:" = "Sunet sistem:";
+"Loupe" = "Lupa";
+"Stamp" = "Stampila";
+"Unlimited" = "Nelimitat";

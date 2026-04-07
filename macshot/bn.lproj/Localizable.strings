@@ -437,3 +437,31 @@
 "Cam pos:" = "ক্যাম অবস্থান:";
 "Cam size:" = "ক্যাম আকার:";
 "Cam shape:" = "ক্যাম আকৃতি:";
+
+/* Settings */
+"Settings..." = "সেটিংস...";
+"macshot Settings" = "macshot সেটিংস";
+"Also open in Editor" = "এডিটরেও খুলুন";
+"Hide controls" = "নিয়ন্ত্রণ লুকান";
+"Hide recording controls" = "রেকর্ডিং নিয়ন্ত্রণ লুকান";
+"Stop recording from the menu bar icon instead." = "পরিবর্তে মেনু বার আইকন থেকে রেকর্ডিং বন্ধ করুন।";
+"Pixelate" = "পিক্সেলেট";
+"Blur" = "ঝাপসা";
+"Solid" = "ঘন";
+"Erase" = "মুছুন";
+"Done" = "সম্পন্ন";
+"Do nothing" = "কিছু করবেন না";
+"Overlay / Editor Shortcuts" = "ওভারলে / এডিটর শর্টকাট";
+"Set" = "সেট করুন";
+"Press..." = "চাপুন...";
+"Reset to default" = "ডিফল্টে ফেরান";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "সেই টুলের শর্টকাট হিসেবে নির্ধারণ করতে একটি কী চাপুন। ওভারলে বা এডিটর সক্রিয় থাকলে এগুলো কাজ করে।";
+"Keep Separate" = "আলাদা রাখুন";
+"Merge Audio" = "অডিও মার্জ করুন";
+"Audio Tracks" = "অডিও ট্র্যাক";
+"Adjust volume for each audio track:" = "প্রতিটি অডিও ট্র্যাকের ভলিউম সমন্বয় করুন:";
+"Microphone:" = "মাইক্রোফোন:";
+"System audio:" = "সিস্টেম অডিও:";
+"Loupe" = "ম্যাগনিফাইয়ার";
+"Stamp" = "স্ট্যাম্প";
+"Unlimited" = "সীমাহীন";

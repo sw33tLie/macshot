@@ -437,3 +437,31 @@
 "Cam pos:" = "कैम स्थिति:";
 "Cam size:" = "कैम आकार:";
 "Cam shape:" = "कैम आकृति:";
+
+/* New Strings */
+"Settings..." = "सेटिंग्स...";
+"macshot Settings" = "macshot सेटिंग्स";
+"Also open in Editor" = "संपादक में भी खोलें";
+"Hide controls" = "नियंत्रण छिपाएँ";
+"Hide recording controls" = "रिकॉर्डिंग नियंत्रण छिपाएँ";
+"Stop recording from the menu bar icon instead." = "इसके बजाय मेनू बार आइकन से रिकॉर्डिंग बंद करें।";
+"Pixelate" = "पिक्सलेट";
+"Blur" = "ब्लर";
+"Solid" = "ठोस";
+"Erase" = "मिटाएँ";
+"Done" = "हो गया";
+"Do nothing" = "कुछ न करें";
+"Overlay / Editor Shortcuts" = "ओवरले / संपादक शॉर्टकट";
+"Set" = "सेट करें";
+"Press..." = "दबाएँ...";
+"Reset to default" = "डिफ़ॉल्ट पर रीसेट करें";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "उस उपकरण के शॉर्टकट के रूप में निर्दिष्ट करने के लिए एक कुंजी दबाएँ। ये ओवरले या संपादक सक्रिय होने पर काम करते हैं।";
+"Keep Separate" = "अलग रखें";
+"Merge Audio" = "ऑडियो मर्ज करें";
+"Audio Tracks" = "ऑडियो ट्रैक";
+"Adjust volume for each audio track:" = "प्रत्येक ऑडियो ट्रैक की आवाज़ समायोजित करें:";
+"Microphone:" = "माइक्रोफ़ोन:";
+"System audio:" = "सिस्टम ऑडियो:";
+"Loupe" = "आवर्धक";
+"Stamp" = "स्टैंप";
+"Unlimited" = "असीमित";

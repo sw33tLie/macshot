@@ -437,3 +437,31 @@
 "Cam pos:" = "موقعیت دوربین:";
 "Cam size:" = "اندازه دوربین:";
 "Cam shape:" = "شکل دوربین:";
+
+/* Settings */
+"Settings..." = "تنظیمات...";
+"macshot Settings" = "تنظیمات macshot";
+"Also open in Editor" = "باز کردن در ویرایشگر نیز";
+"Hide controls" = "پنهان کردن کنترل‌ها";
+"Hide recording controls" = "پنهان کردن کنترل‌های ضبط ویدیو";
+"Stop recording from the menu bar icon instead." = "به جای آن، ضبط ویدیو را از آیکون نوار منو متوقف کنید.";
+"Pixelate" = "پیکسلی";
+"Blur" = "تار";
+"Solid" = "توپر";
+"Erase" = "پاک کردن";
+"Done" = "انجام شد";
+"Do nothing" = "هیچ کاری نکن";
+"Overlay / Editor Shortcuts" = "میانبرهای همپوشانی / ویرایشگر";
+"Set" = "تنظیم";
+"Press..." = "فشار دهید...";
+"Reset to default" = "بازنشانی به پیش‌فرض";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "یک کلید را فشار دهید تا به عنوان میانبر آن ابزار تنظیم شود. این میانبرها زمانی کار می‌کنند که همپوشانی یا ویرایشگر فعال باشد.";
+"Keep Separate" = "جداگانه نگه دار";
+"Merge Audio" = "ادغام صدا";
+"Audio Tracks" = "تراک‌های صوتی";
+"Adjust volume for each audio track:" = "تنظیم صدا برای هر تراک صوتی:";
+"Microphone:" = "میکروفون:";
+"System audio:" = "صدای سیستم:";
+"Loupe" = "ذره‌بین";
+"Stamp" = "مهر";
+"Unlimited" = "نامحدود";

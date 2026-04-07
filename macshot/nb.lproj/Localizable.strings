@@ -437,3 +437,31 @@
 "Cam pos:" = "Kam.pos.:";
 "Cam size:" = "Kam.str.:";
 "Cam shape:" = "Kam.form:";
+
+/* New Strings */
+"Settings..." = "Innstillinger...";
+"macshot Settings" = "macshot-innstillinger";
+"Also open in Editor" = "\U00C5pne ogs\U00E5 i redigering";
+"Hide controls" = "Skjul kontroller";
+"Hide recording controls" = "Skjul opptakskontroller";
+"Stop recording from the menu bar icon instead." = "Stopp opptaket fra menylinjeikonen i stedet.";
+"Pixelate" = "Pikselering";
+"Blur" = "Uskarphet";
+"Solid" = "Heldekkende";
+"Erase" = "Slett";
+"Done" = "Ferdig";
+"Do nothing" = "Gj\U00F8r ingenting";
+"Overlay / Editor Shortcuts" = "Overlegg / Redigeringssnarveier";
+"Set" = "Angi";
+"Press..." = "Trykk...";
+"Reset to default" = "Tilbakestill til standard";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "Trykk p\U00E5 en enkelt tast for \U00E5 tilordne den som snarvei for det verkt\U00F8yet. Disse fungerer n\U00E5r overlegget eller redigeringen er aktiv.";
+"Keep Separate" = "Hold adskilt";
+"Merge Audio" = "Sl\U00E5 sammen lyd";
+"Audio Tracks" = "Lydspor";
+"Adjust volume for each audio track:" = "Juster volumet for hvert lydspor:";
+"Microphone:" = "Mikrofon:";
+"System audio:" = "Systemlyd:";
+"Loupe" = "Lupe";
+"Stamp" = "Stempel";
+"Unlimited" = "Ubegrenset";

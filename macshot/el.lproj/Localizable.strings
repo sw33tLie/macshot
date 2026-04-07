@@ -437,3 +437,31 @@
 "Cam pos:" = "Θέση κάμ.:";
 "Cam size:" = "Μέγ. κάμ.:";
 "Cam shape:" = "Σχήμα κάμ.:";
+
+/* Settings */
+"Settings..." = "Ρυθμίσεις...";
+"macshot Settings" = "Ρυθμίσεις macshot";
+"Also open in Editor" = "Άνοιγμα και σε επεξεργαστή";
+"Hide controls" = "Απόκρυψη χειριστηρίων";
+"Hide recording controls" = "Απόκρυψη χειριστηρίων εγγραφής";
+"Stop recording from the menu bar icon instead." = "Σταματήστε την εγγραφή από το εικονίδιο στη γραμμή μενού.";
+"Pixelate" = "Εικονοστοιχεία";
+"Blur" = "Θόλωμα";
+"Solid" = "Συμπαγές";
+"Erase" = "Διαγραφή";
+"Done" = "Τέλος";
+"Do nothing" = "Καμία ενέργεια";
+"Overlay / Editor Shortcuts" = "Συντομεύσεις επικάλυψης / επεξεργαστή";
+"Set" = "Ορισμός";
+"Press..." = "Πατήστε...";
+"Reset to default" = "Επαναφορά προεπιλογής";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "Πατήστε ένα μόνο πλήκτρο για να το ορίσετε ως συντόμευση για αυτό το εργαλείο. Λειτουργούν όταν η επικάλυψη ή ο επεξεργαστής είναι ενεργός.";
+"Keep Separate" = "Διατήρηση ξεχωριστά";
+"Merge Audio" = "Συγχώνευση ήχου";
+"Audio Tracks" = "Κομμάτια ήχου";
+"Adjust volume for each audio track:" = "Ρύθμιση έντασης για κάθε κομμάτι ήχου:";
+"Microphone:" = "Μικρόφωνο:";
+"System audio:" = "Ήχος συστήματος:";
+"Loupe" = "Φακός";
+"Stamp" = "Σφραγίδα";
+"Unlimited" = "Απεριόριστο";

@@ -437,3 +437,31 @@
 "Cam pos:" = "موضع الكام:";
 "Cam size:" = "حجم الكام:";
 "Cam shape:" = "شكل الكام:";
+
+/* New Strings */
+"Settings..." = "الإعدادات...";
+"macshot Settings" = "إعدادات macshot";
+"Also open in Editor" = "فتح في المحرر أيضًا";
+"Hide controls" = "إخفاء عناصر التحكم";
+"Hide recording controls" = "إخفاء عناصر تحكم التسجيل";
+"Stop recording from the menu bar icon instead." = "أوقف التسجيل من أيقونة شريط القوائم بدلًا من ذلك.";
+"Pixelate" = "بكسلة";
+"Blur" = "ضبابية";
+"Solid" = "صلب";
+"Erase" = "مسح";
+"Done" = "تم";
+"Do nothing" = "لا تفعل شيئًا";
+"Overlay / Editor Shortcuts" = "اختصارات الطبقة / المحرر";
+"Set" = "تعيين";
+"Press..." = "اضغط...";
+"Reset to default" = "إعادة التعيين إلى الافتراضي";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "اضغط على مفتاح واحد لتعيينه كاختصار لتلك الأداة. تعمل هذه الاختصارات عندما تكون الطبقة أو المحرر نشطًا.";
+"Keep Separate" = "إبقاء منفصل";
+"Merge Audio" = "دمج الصوت";
+"Audio Tracks" = "مسارات الصوت";
+"Adjust volume for each audio track:" = "ضبط مستوى الصوت لكل مسار:";
+"Microphone:" = "الميكروفون:";
+"System audio:" = "صوت النظام:";
+"Loupe" = "عدسة مكبرة";
+"Stamp" = "ختم";
+"Unlimited" = "غير محدود";

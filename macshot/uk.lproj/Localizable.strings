@@ -437,3 +437,31 @@
 "Cam pos:" = "Поз. камери:";
 "Cam size:" = "Розмір камери:";
 "Cam shape:" = "Форма камери:";
+
+/* New Strings */
+"Settings..." = "Налаштування...";
+"macshot Settings" = "Налаштування macshot";
+"Also open in Editor" = "Також відкрити в редакторі";
+"Hide controls" = "Сховати елементи керування";
+"Hide recording controls" = "Сховати елементи керування записом";
+"Stop recording from the menu bar icon instead." = "Зупиніть запис через іконку в смузі меню.";
+"Pixelate" = "Пікселізація";
+"Blur" = "Розмиття";
+"Solid" = "Суцільне";
+"Erase" = "Стерти";
+"Done" = "Готово";
+"Do nothing" = "Нічого не робити";
+"Overlay / Editor Shortcuts" = "Скорочення накладання / редактора";
+"Set" = "Встановити";
+"Press..." = "Натисніть...";
+"Reset to default" = "Скинути до стандартних";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "Натисніть одну клавішу, щоб призначити її скороченням для цього інструмента. Працює, коли активне накладання або редактор.";
+"Keep Separate" = "Зберігати окремо";
+"Merge Audio" = "Об'єднати аудіо";
+"Audio Tracks" = "Аудіодоріжки";
+"Adjust volume for each audio track:" = "Налаштуйте гучність для кожної аудіодоріжки:";
+"Microphone:" = "Мікрофон:";
+"System audio:" = "Системне аудіо:";
+"Loupe" = "Лупа";
+"Stamp" = "Штамп";
+"Unlimited" = "Без обмежень";

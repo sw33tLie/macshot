@@ -437,3 +437,31 @@
 "Cam pos:" = "Poz. kam.:";
 "Cam size:" = "Velk. kam.:";
 "Cam shape:" = "Tvar kam.:";
+
+/* New Strings */
+"Settings..." = "Nastavenia...";
+"macshot Settings" = "Nastavenia macshot";
+"Also open in Editor" = "Otvorit aj v editore";
+"Hide controls" = "Skryt ovladacie prvky";
+"Hide recording controls" = "Skryt ovladacie prvky nahravania";
+"Stop recording from the menu bar icon instead." = "Zastavte nahravanie pomocou ikony v liste menu.";
+"Pixelate" = "Pixelovanie";
+"Blur" = "Rozostrenie";
+"Solid" = "Plna";
+"Erase" = "Vymazat";
+"Done" = "Hotovo";
+"Do nothing" = "Nerobit nic";
+"Overlay / Editor Shortcuts" = "Skratky prekrytia / editora";
+"Set" = "Nastavit";
+"Press..." = "Stlacte...";
+"Reset to default" = "Obnovit predvolene";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "Stlacte jednu klavesu pre priradenie ako skratku pre dany nastroj. Funguju, ked je aktivne prekrytie alebo editor.";
+"Keep Separate" = "Ponechat oddelene";
+"Merge Audio" = "Zlucit zvuk";
+"Audio Tracks" = "Zvukove stopy";
+"Adjust volume for each audio track:" = "Upravte hlasitost pre kazdu zvukovu stopu:";
+"Microphone:" = "Mikrofon:";
+"System audio:" = "Systemovy zvuk:";
+"Loupe" = "Lupa";
+"Stamp" = "Peciatka";
+"Unlimited" = "Neobmedzene";

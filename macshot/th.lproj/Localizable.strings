@@ -437,3 +437,31 @@
 "Cam pos:" = "ตำแหน่งกล้อง:";
 "Cam size:" = "ขนาดกล้อง:";
 "Cam shape:" = "รูปทรงกล้อง:";
+
+/* New Strings */
+"Settings..." = "การตั้งค่า...";
+"macshot Settings" = "การตั้งค่า macshot";
+"Also open in Editor" = "เปิดในตัวแก้ไขด้วย";
+"Hide controls" = "ซ่อนตัวควบคุม";
+"Hide recording controls" = "ซ่อนตัวควบคุมการบันทึก";
+"Stop recording from the menu bar icon instead." = "หยุดบันทึกจากไอคอนแถบเมนูแทน";
+"Pixelate" = "พิกเซล";
+"Blur" = "เบลอ";
+"Solid" = "ทึบ";
+"Erase" = "ลบ";
+"Done" = "เสร็จ";
+"Do nothing" = "ไม่ทำอะไร";
+"Overlay / Editor Shortcuts" = "ปุ่มลัดโอเวอร์เลย์ / ตัวแก้ไข";
+"Set" = "ตั้ง";
+"Press..." = "กด...";
+"Reset to default" = "รีเซ็ตเป็นค่าเริ่มต้น";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "กดปุ่มเดียวเพื่อกำหนดเป็นปุ่มลัดสำหรับเครื่องมือนั้น ใช้งานได้เมื่อโอเวอร์เลย์หรือตัวแก้ไขทำงานอยู่";
+"Keep Separate" = "แยกไว้";
+"Merge Audio" = "รวมเสียง";
+"Audio Tracks" = "แทร็กเสียง";
+"Adjust volume for each audio track:" = "ปรับระดับเสียงสำหรับแต่ละแทร็กเสียง:";
+"Microphone:" = "ไมโครโฟน:";
+"System audio:" = "เสียงระบบ:";
+"Loupe" = "แว่นขยาย";
+"Stamp" = "แสตมป์";
+"Unlimited" = "ไม่จำกัด";

@@ -437,3 +437,31 @@
 "Cam pos:" = "캠 위치:";
 "Cam size:" = "캠 크기:";
 "Cam shape:" = "캠 모양:";
+
+/* New Strings */
+"Settings..." = "설정...";
+"macshot Settings" = "macshot 설정";
+"Also open in Editor" = "편집기에서도 열기";
+"Hide controls" = "컨트롤 숨기기";
+"Hide recording controls" = "녹화 컨트롤 숨기기";
+"Stop recording from the menu bar icon instead." = "대신 메뉴 막대 아이콘에서 녹화를 중지하세요.";
+"Pixelate" = "모자이크";
+"Blur" = "흐리게";
+"Solid" = "단색";
+"Erase" = "지우기";
+"Done" = "완료";
+"Do nothing" = "아무 동작 안 함";
+"Overlay / Editor Shortcuts" = "오버레이 / 편집기 단축키";
+"Set" = "설정";
+"Press..." = "누르세요...";
+"Reset to default" = "기본값으로 재설정";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "키 하나를 눌러 해당 도구의 단축키로 지정하세요. 오버레이 또는 편집기가 활성화된 상태에서 작동합니다.";
+"Keep Separate" = "별도 유지";
+"Merge Audio" = "오디오 병합";
+"Audio Tracks" = "오디오 트랙";
+"Adjust volume for each audio track:" = "각 오디오 트랙의 볼륨 조정:";
+"Microphone:" = "마이크:";
+"System audio:" = "시스템 오디오:";
+"Loupe" = "돋보기";
+"Stamp" = "스탬프";
+"Unlimited" = "무제한";

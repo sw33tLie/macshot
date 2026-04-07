@@ -437,3 +437,31 @@
 "Cam pos:" = "Поз. кам.:";
 "Cam size:" = "Вел. кам.:";
 "Cam shape:" = "Облик кам.:";
+
+/* Settings */
+"Settings..." = "Подешавања...";
+"macshot Settings" = "macshot подешавања";
+"Also open in Editor" = "Отвори и у уређивачу";
+"Hide controls" = "Сакриј контроле";
+"Hide recording controls" = "Сакриј контроле снимања";
+"Stop recording from the menu bar icon instead." = "Уместо тога, зауставите снимање преко иконице у траци менија.";
+"Pixelate" = "Пикселизација";
+"Blur" = "Замућење";
+"Solid" = "Попуна";
+"Erase" = "Обриши";
+"Done" = "Готово";
+"Do nothing" = "Не ради ништа";
+"Overlay / Editor Shortcuts" = "Пречице преклапања / уређивача";
+"Set" = "Постави";
+"Press..." = "Притисните...";
+"Reset to default" = "Врати на подразумевано";
+"Press a single key to assign it as the shortcut for that tool. These work when the overlay or editor is active." = "Притисните један тастер да га доделите као пречицу за тај алат. Ове пречице раде када је преклапање или уређивач активан.";
+"Keep Separate" = "Задржи одвојено";
+"Merge Audio" = "Споји звук";
+"Audio Tracks" = "Аудио трake";
+"Adjust volume for each audio track:" = "Подесите јачину звука за сваку аудио траку:";
+"Microphone:" = "Микрофон:";
+"System audio:" = "Системски звук:";
+"Loupe" = "Лупа";
+"Stamp" = "Печат";
+"Unlimited" = "Неограничено";
