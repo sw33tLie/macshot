@@ -297,6 +297,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         let pasteImageItem = NSMenuItem(title: L("Open from Clipboard"), action: #selector(openImageFromClipboard), keyEquivalent: "")
         pasteImageItem.target = self
         pasteImageItem.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: nil)
+        HotkeyManager.applyMenuShortcut(for: .openFromClipboard, to: pasteImageItem)
         menu.addItem(pasteImageItem)
 
         menu.addItem(NSMenuItem.separator())
@@ -347,6 +348,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             },
             scrollCapture: { [weak self] in
                 DispatchQueue.main.async { self?.scrollCapture() }
+            },
+            openFromClipboard: { [weak self] in
+                DispatchQueue.main.async { self?.openImageFromClipboard() }
             }
         )
     }
@@ -1365,8 +1369,15 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         // Turn menu bar icon into a stop button (ensure it's visible even if user hid it)
         enterRecordingMenuBarMode()
 
+        // Collect window IDs of UI chrome to exclude from the recording
+        // (selection border + HUD). Webcam, mouse highlight, and keystroke
+        // overlays are intentionally captured.
+        var excludeIDs: [CGWindowID] = []
+        if let w = selectionBorderOverlay { excludeIDs.append(CGWindowID(w.windowNumber)) }
+        if let w = recordingHUDPanel { excludeIDs.append(CGWindowID(w.windowNumber)) }
+
         // Start recording
-        engine.startRecording(rect: rect, screen: screen, formatOverride: formatOverride, fpsOverride: fpsOverride)
+        engine.startRecording(rect: rect, screen: screen, formatOverride: formatOverride, fpsOverride: fpsOverride, excludeWindowNumbers: excludeIDs)
     }
 
     func overlayDidRequestStopRecording(_ controller: OverlayWindowController) {
