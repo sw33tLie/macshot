@@ -44,8 +44,12 @@ private class SelectionBorderView: NSView {
 
         let borderColor = NSColor(calibratedRed: 0.55, green: 0.30, blue: 0.85, alpha: 0.8)
         borderColor.setStroke()
-        let path = NSBezierPath(rect: selectionRect)
-        path.lineWidth = 1.5
+        // Inset by -lineWidth so the stroke is entirely OUTSIDE the selection rect.
+        // This prevents the border from appearing in the recording even if the
+        // overlay window is captured (SCStream crops to the selection rect).
+        let lineW: CGFloat = 1.5
+        let path = NSBezierPath(rect: selectionRect.insetBy(dx: -lineW, dy: -lineW))
+        path.lineWidth = lineW
         path.stroke()
     }
 }
