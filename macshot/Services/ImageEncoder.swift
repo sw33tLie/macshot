@@ -62,9 +62,16 @@ enum ImageEncoder {
 
     /// Create a bitmap representation from an NSImage, optionally downscaling from Retina.
     /// This is the single conversion point — all encode paths go through here.
+    /// Uses cgImage(forProposedRect:) instead of tiffRepresentation to preserve
+    /// exact pixel data regardless of the current display's backing scale factor.
     private static func makeBitmap(_ image: NSImage) -> NSBitmapImageRep? {
-        guard let tiffData = image.tiffRepresentation,
-              let bitmap = NSBitmapImageRep(data: tiffData) else { return nil }
+        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+            // Fallback for images without a CGImage backing (e.g. PDF/EPS vectors)
+            guard let tiffData = image.tiffRepresentation,
+                  let bitmap = NSBitmapImageRep(data: tiffData) else { return nil }
+            return bitmap
+        }
+        let bitmap = NSBitmapImageRep(cgImage: cgImage)
 
         if downscaleRetina {
             let logicalW = Int(image.size.width)
@@ -73,8 +80,7 @@ enum ImageEncoder {
             let pixelH = bitmap.pixelsHigh
 
             if pixelW > logicalW && pixelH > logicalH {
-                guard let cgImage = bitmap.cgImage else { return bitmap }
-                let cs = CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
+                let cs = cgImage.colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
                 let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue
                 guard let ctx = CGContext(
                     data: nil,
