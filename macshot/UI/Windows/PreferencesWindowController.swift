@@ -19,6 +19,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
     private var hotkeyButtons: [HotkeyManager.HotkeySlot: NSButton] = [:]
     private var recordingSlot: HotkeyManager.HotkeySlot?
     private var toolShortcutFields: [ToolShortcutManager.Action: NSTextField] = [:]
+    private var toolShortcutButtons: [ToolShortcutManager.Action: NSButton] = [:]
     private var recordingToolAction: ToolShortcutManager.Action?
     private var savePathField: NSTextField!
     private var ocrActionPopup: NSPopUpButton!
@@ -563,30 +564,40 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
             field.widthAnchor.constraint(greaterThanOrEqualToConstant: 80).isActive = true
             field.stringValue = HotkeyManager.displayString(for: slot)
 
-            let btn = NSButton(title: L("Record"), target: self, action: #selector(recordShortcut(_:)))
+            let btn = NSButton(title: L("Set"), target: self, action: #selector(recordShortcut(_:)))
             btn.bezelStyle = .rounded
             btn.tag = slot.rawValue
 
             let clearBtn = NSButton(title: "", target: self, action: #selector(clearShortcut(_:)))
             clearBtn.bezelStyle = .inline
             clearBtn.isBordered = false
-            clearBtn.image = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: L("Clear shortcut"))
+            clearBtn.image = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: L("None"))
             clearBtn.contentTintColor = .secondaryLabelColor
             clearBtn.imagePosition = .imageOnly
             clearBtn.tag = slot.rawValue
-            clearBtn.toolTip = L("Clear shortcut")
+            clearBtn.toolTip = L("None")
             clearBtn.widthAnchor.constraint(equalToConstant: 20).isActive = true
+
+            let resetBtn = NSButton(title: "", target: self, action: #selector(resetShortcut(_:)))
+            resetBtn.bezelStyle = .inline
+            resetBtn.isBordered = false
+            resetBtn.image = NSImage(systemSymbolName: "arrow.counterclockwise.circle.fill", accessibilityDescription: L("Reset to default"))
+            resetBtn.contentTintColor = .secondaryLabelColor
+            resetBtn.imagePosition = .imageOnly
+            resetBtn.tag = slot.rawValue
+            resetBtn.toolTip = L("Reset to default")
+            resetBtn.widthAnchor.constraint(equalToConstant: 20).isActive = true
 
             hotkeyFields[slot] = field
             hotkeyButtons[slot] = btn
 
-            stack.addArrangedSubview(labeledRow("\(slot.label):", controls: [field, btn, clearBtn]))
+            stack.addArrangedSubview(labeledRow("\(slot.label):", controls: [field, btn, clearBtn, resetBtn]))
             stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
         }
 
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
-        let note = NSTextField(wrappingLabelWithString: L("Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut."))
+        let note = NSTextField(wrappingLabelWithString: L("Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut."))
         note.font = NSFont.systemFont(ofSize: 10)
         note.textColor = .secondaryLabelColor
         stack.addArrangedSubview(indented(note))
@@ -619,9 +630,20 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
             clearBtn.toolTip = L("None")
             clearBtn.widthAnchor.constraint(equalToConstant: 20).isActive = true
 
-            toolShortcutFields[action] = field
+            let resetBtn = NSButton(title: "", target: self, action: #selector(resetToolShortcut(_:)))
+            resetBtn.bezelStyle = .inline
+            resetBtn.isBordered = false
+            resetBtn.image = NSImage(systemSymbolName: "arrow.counterclockwise.circle.fill", accessibilityDescription: L("Reset to default"))
+            resetBtn.contentTintColor = .secondaryLabelColor
+            resetBtn.imagePosition = .imageOnly
+            resetBtn.tag = ToolShortcutManager.Action.allCases.firstIndex(of: action)!
+            resetBtn.toolTip = L("Reset to default")
+            resetBtn.widthAnchor.constraint(equalToConstant: 20).isActive = true
 
-            stack.addArrangedSubview(labeledRow("\(action.label):", controls: [field, btn, clearBtn]))
+            toolShortcutFields[action] = field
+            toolShortcutButtons[action] = btn
+
+            stack.addArrangedSubview(labeledRow("\(action.label):", controls: [field, btn, clearBtn, resetBtn]))
             stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
         }
 
@@ -691,9 +713,17 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         onHotkeyChanged?()
     }
 
+    @objc private func resetShortcut(_ sender: NSButton) {
+        guard let slot = HotkeyManager.HotkeySlot(rawValue: sender.tag) else { return }
+        stopShortcutRecording()
+        HotkeyManager.saveHotkey(for: slot, keyCode: slot.defaultKeyCode, modifiers: slot.defaultModifiers)
+        hotkeyFields[slot]?.stringValue = HotkeyManager.displayString(for: slot)
+        onHotkeyChanged?()
+    }
+
     private func stopShortcutRecording() {
         if let slot = recordingSlot {
-            hotkeyButtons[slot]?.title = L("Record")
+            hotkeyButtons[slot]?.title = L("Set")
             hotkeyFields[slot]?.stringValue = HotkeyManager.displayString(for: slot)
         }
         recordingSlot = nil
@@ -749,9 +779,19 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         toolShortcutFields[action]?.stringValue = L("None")
     }
 
+    @objc private func resetToolShortcut(_ sender: NSButton) {
+        let allActions = ToolShortcutManager.Action.allCases
+        guard sender.tag >= 0, sender.tag < allActions.count else { return }
+        let action = allActions[sender.tag]
+        stopToolShortcutRecording()
+        ToolShortcutManager.setKey(action.defaultKey, for: action)
+        toolShortcutFields[action]?.stringValue = ToolShortcutManager.displayString(for: action)
+    }
+
     private func stopToolShortcutRecording() {
         if let action = recordingToolAction {
             toolShortcutFields[action]?.stringValue = ToolShortcutManager.displayString(for: action)
+            toolShortcutButtons[action]?.title = L("Set")
         }
         recordingToolAction = nil
         if let m = localMonitor { NSEvent.removeMonitor(m); localMonitor = nil }
@@ -910,6 +950,16 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         recordingOnStopPopup.target = self
         recordingOnStopPopup.action = #selector(recordingOnStopChanged(_:))
         stack.addArrangedSubview(labeledRow(L("When done:"), controls: [recordingOnStopPopup]))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        let hideHUDCheckbox = NSButton(checkboxWithTitle: L("Hide recording controls"), target: self, action: #selector(hideRecordingHUDChanged(_:)))
+        hideHUDCheckbox.state = UserDefaults.standard.bool(forKey: "hideRecordingHUD") ? .on : .off
+        stack.addArrangedSubview(indented(hideHUDCheckbox))
+
+        let hideHUDNote = NSTextField(labelWithString: L("Stop recording from the menu bar icon instead."))
+        hideHUDNote.font = NSFont.systemFont(ofSize: 10)
+        hideHUDNote.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(indented(hideHUDNote))
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // ── Webcam ───────────────────────────────────────────
@@ -1845,6 +1895,9 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
     @objc private func recordingOnStopChanged(_ sender: NSPopUpButton) {
         let values = ["editor", "finder", "clipboard"]
         UserDefaults.standard.set(values[sender.indexOfSelectedItem], forKey: "recordingOnStop")
+    }
+    @objc private func hideRecordingHUDChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: "hideRecordingHUD")
     }
 
     @objc private func webcamPositionChanged(_ sender: NSPopUpButton) {
