@@ -369,7 +369,7 @@ final class TranslationBridge: ObservableObject {
                     guard self.translationID == activeID else { return }
                     self.cleanup()
                     let desc = error.localizedDescription
-                    let msg = "Apple Translation failed: \(desc). You can switch to Google Translate in Preferences."
+                    let msg = "Apple Translation failed: \(desc). You can switch to Google Translate in Settings."
                     completion?(.failure(TranslationError.appleTranslation(msg)))
                 }
             }

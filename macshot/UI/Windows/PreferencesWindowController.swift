@@ -93,7 +93,7 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
             backing: .buffered,
             defer: false
         )
-        window.title = L("macshot Preferences")
+        window.title = L("macshot Settings")
         window.center()
         window.isReleasedWhenClosed = false
         super.init(window: window)

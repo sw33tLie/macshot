@@ -302,7 +302,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
-        let prefsItem = NSMenuItem(title: L("Preferences..."), action: #selector(openPreferences), keyEquivalent: ",")
+        let prefsItem = NSMenuItem(title: L("Settings..."), action: #selector(openPreferences), keyEquivalent: ",")
         prefsItem.target = self
         prefsItem.image = NSImage(systemSymbolName: "gear", accessibilityDescription: nil)
         menu.addItem(prefsItem)
@@ -832,7 +832,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         }
 
         if provider == "s3" && !S3Uploader.shared.isConfigured {
-            toast.showError(message: "S3 not configured — check Preferences")
+            toast.showError(message: "S3 not configured — check Settings")
             return
         }
 

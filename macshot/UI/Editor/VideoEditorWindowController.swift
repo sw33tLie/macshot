@@ -969,11 +969,11 @@ private final class VideoEditorView: NSView {
         let provider = UserDefaults.standard.string(forKey: "uploadProvider") ?? "imgbb"
 
         if provider == "gdrive" && !GoogleDriveUploader.shared.isSignedIn {
-            showStatus(L("Sign in to Google Drive in Preferences"), isError: true)
+            showStatus(L("Sign in to Google Drive in Settings"), isError: true)
             return
         }
         if provider == "s3" && !S3Uploader.shared.isConfigured {
-            showStatus(L("Configure S3 in Preferences"), isError: true)
+            showStatus(L("Configure S3 in Settings"), isError: true)
             return
         }
         if provider != "gdrive" && provider != "s3" {
