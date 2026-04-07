@@ -13,10 +13,10 @@
             <enclosure url="https://github.com/sw33tLie/macshot/releases/download/v3.7.0/MacShot.dmg" length="5358295" type="application/octet-stream" sparkle:edSignature="/X2jDgHWwMIWeiPylwxluhu/ccaLceyaBqz4I+8L5utyGt2kNfhxNtn9AGZwVxhmQ5AoY/2IEKzGpzfbRttlAw==" />
         </item>
 <item>
-    <title>v4.0.0-beta.03</title>
-    <pubDate>Tue, 07 Apr 2026 21:23:18 +0000</pubDate>
-    <sparkle:version>14</sparkle:version>
-    <sparkle:shortVersionString>4.0.0-beta.03</sparkle:shortVersionString>
+    <title>v4.0.0-beta.04</title>
+    <pubDate>Tue, 07 Apr 2026 22:03:31 +0000</pubDate>
+    <sparkle:version>15</sparkle:version>
+    <sparkle:shortVersionString>4.0.0-beta.04</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
     <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
@@ -27,13 +27,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Added</h3><ul> <li><b>Custom background image for beautify</b> — click the "+" button in the gradient picker to choose any image as the beautify background. Image stored persistently, shown as a selectable thumbnail swatch. Aspect-fill rendering with center crop.</li> <li><b>Background blur slider</b> — when a custom background image is active, a Blur slider appears in the beautify options row. Applies CIGaussianBlur (0–50px) to the background image.</li> <li><b>6 new gradient styles</b> — Emerald, Cherry, Sapphire, Sand, Pure White, Pure Black.</li> <li><b>Annotation copy/paste (Cmd+C/V)</b> — copy selected annotations and paste them as duplicates. Works with text, shapes, and multi-selection. Text annotations: Cmd+C with no text selected copies the whole text box.</li> <li><b>Zero-lag Refined pencil mode</b> — Refined smoothing now draws raw points instantly during the stroke, applying the moving average + Chaikin smoothing retroactively on mouse up. Same visual result, zero input lag.</li>  </ul><h3>Changed</h3><ul> <li><b>Text tool uses standard annotation chrome</b> — committed text annotations now show the same purple selection UI as all other shapes (resize handles, rotate, delete, edit button). Handles actually resize the text box. Double-click to re-enter editing. Removed custom dashed border and move handle.</li> <li><b>Renamed Preferences to Settings</b> — menu item, window title, and all user-facing references updated.</li>  </ul><h3>Fixed</h3><ul> <li><b>Editor OCR ignoring preference</b> — OCR button in editor now respects the "Copy to clipboard only" setting. OCR window Copy button no longer fails to close (controller retained properly).</li> <li><b>Color wheel checkmark visibility</b> — checkmark now uses dark stroke on light swatches (white, yellow) for contrast.</li>  </ul><h3>Translations</h3><ul> <li><b>26 new strings translated</b> across all 40 languages: Settings, Also open in Editor, Hide controls, Pixelate, Blur, Solid, Erase, Done, Do nothing, overlay shortcuts, audio merge dialog, and more.</li></ul>
+      <h3>Added</h3><ul> <li><b>Auto-save to history on every editor output</b> — Copy, Save, Pin, Upload, and Share from the editor now automatically persist the current image and annotations to screenshot history. A history entry is created on first output if none exists.</li> <li><b>Unsaved changes warning on editor close</b> — closing the editor with unsaved changes shows a "Save & Close / Discard / Cancel" dialog. Warns for captures that were never saved (the image would be lost), and for history entries with annotation changes since last save.</li>  </ul><h3>Fixed</h3><ul> <li><b>Refined pencil stroke endpoint</b> — strokes now end exactly where the user released the mouse instead of stopping short due to the smoothing algorithm pulling the endpoint inward.</li></ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v4.0.0-beta.03/MacShot.dmg"
-        length="5838225"
+        url="https://github.com/sw33tLie/macshot/releases/download/v4.0.0-beta.04/MacShot.dmg"
+        length="5855977"
         type="application/octet-stream"
-        sparkle:edSignature="shtoVIYnHc+RppORgowLJo0d7LIqbcd3m+wKggh1hLuPluR4r9Us3zpCbvvz3ml+6qE8zBLZkpb6rg0d9ppKCQ=="
+        sparkle:edSignature="+KyuUMQKcTUkEein9LPhar4vvSV/synsZSXgh4KLVt/DTuJPvHZeeuviU/4OXYk7ToVPsSJUS8P+Q25rFLYTBg=="
     />
 </item>
     </channel>
