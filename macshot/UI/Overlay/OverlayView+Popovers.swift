@@ -166,6 +166,8 @@ extension OverlayView {
             self.cachedCompositedImage = nil
             self.needsDisplay = true
             self.updateBeautifySwatch(styleIndex: idx)
+            // Rebuild options row so blur slider appears/disappears
+            self.rebuildToolbarLayout()
         }
         picker.onCustomImage = { [weak self] in
             PopoverHelper.dismiss()
@@ -208,6 +210,7 @@ extension OverlayView {
             self.cachedCompositedImage = nil
             self.needsDisplay = true
             self.updateBeautifySwatch(styleIndex: -1)
+            self.rebuildToolbarLayout()
         }
     }
 
