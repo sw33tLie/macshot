@@ -24,6 +24,7 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
     private var overlayView: OverlayView?
     private var topBar: EditorTopBarView?
     private var addCaptureHandler: AddCaptureOverlayHandler?
+    private var ocrController: OCRResultController?
     private static var activeControllers: [DetachedEditorWindowController] = []
 
     /// History entry ID — when set, "Done" button appears and commits edits back to history.
@@ -261,9 +262,24 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
               let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return }
         let request = VisionOCR.makeTextRecognitionRequest { [weak self] req, _ in
             let lines = (req.results as? [VNRecognizedTextObservation])?.compactMap { $0.topCandidates(1).first?.string } ?? []
+            let text = lines.joined(separator: "\n")
             DispatchQueue.main.async {
-                guard self != nil else { return }
-                OCRResultController(text: lines.joined(separator: "\n"), image: image).show()
+                guard let self = self else { return }
+                // OCR action: 0 = window + copy, 1 = window only, 2 = copy only
+                let ocrAction = UserDefaults.standard.integer(forKey: "ocrAction")
+                let shouldCopy = ocrAction == 0 || ocrAction == 2
+                let shouldShowWindow = ocrAction == 0 || ocrAction == 1
+
+                if shouldCopy && !text.isEmpty {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(text, forType: .string)
+                }
+                if shouldShowWindow {
+                    self.ocrController?.close()
+                    let ocr = OCRResultController(text: text, image: image)
+                    self.ocrController = ocr
+                    ocr.show()
+                }
             }
         }
         DispatchQueue.global(qos: .userInitiated).async {
