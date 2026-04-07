@@ -1,5 +1,25 @@
 # Changelog
 
+## [4.0.0-beta.03] - 2026-04-07
+
+### Added
+- **Custom background image for beautify** — click the "+" button in the gradient picker to choose any image as the beautify background. Image stored persistently, shown as a selectable thumbnail swatch. Aspect-fill rendering with center crop.
+- **Background blur slider** — when a custom background image is active, a Blur slider appears in the beautify options row. Applies CIGaussianBlur (0–50px) to the background image.
+- **6 new gradient styles** — Emerald, Cherry, Sapphire, Sand, Pure White, Pure Black.
+- **Annotation copy/paste (Cmd+C/V)** — copy selected annotations and paste them as duplicates. Works with text, shapes, and multi-selection. Text annotations: Cmd+C with no text selected copies the whole text box.
+- **Zero-lag Refined pencil mode** — Refined smoothing now draws raw points instantly during the stroke, applying the moving average + Chaikin smoothing retroactively on mouse up. Same visual result, zero input lag.
+
+### Changed
+- **Text tool uses standard annotation chrome** — committed text annotations now show the same purple selection UI as all other shapes (resize handles, rotate, delete, edit button). Handles actually resize the text box. Double-click to re-enter editing. Removed custom dashed border and move handle.
+- **Renamed Preferences to Settings** — menu item, window title, and all user-facing references updated.
+
+### Fixed
+- **Editor OCR ignoring preference** — OCR button in editor now respects the "Copy to clipboard only" setting. OCR window Copy button no longer fails to close (controller retained properly).
+- **Color wheel checkmark visibility** — checkmark now uses dark stroke on light swatches (white, yellow) for contrast.
+
+### Translations
+- **26 new strings translated** across all 40 languages: Settings, Also open in Editor, Hide controls, Pixelate, Blur, Solid, Erase, Done, Do nothing, overlay shortcuts, audio merge dialog, and more.
+
 ## [4.0.0-beta.02] - 2026-04-07
 
 ### Added
