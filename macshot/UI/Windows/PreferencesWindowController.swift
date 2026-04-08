@@ -2050,10 +2050,6 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
     }
 
     func windowWillClose(_ notification: Notification) {
-        // Revert to accessory (no dock icon) if no other titled windows are open
-        let hasOtherWindows = NSApp.windows.contains { $0 !== window && $0.isVisible && $0.styleMask.contains(.titled) }
-        if !hasOtherWindows {
-            NSApp.setActivationPolicy(.accessory)
-        }
+        (NSApp.delegate as? AppDelegate)?.returnFocusIfNeeded()
     }
 }

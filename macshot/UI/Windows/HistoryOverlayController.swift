@@ -102,6 +102,11 @@ final class HistoryOverlayController: NSObject, QLPreviewPanelDataSource, QLPrev
         panel?.alphaValue = 0.0
     }
 
+    func confirmClearHistory() {
+        dismiss()
+        (NSApp.delegate as? AppDelegate)?.confirmClearHistory()
+    }
+
     func dismiss() {
         NotificationCenter.default.removeObserver(self,
             name: NSApplication.didResignActiveNotification, object: nil)
@@ -345,6 +350,7 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
     private static let sidePadding: CGFloat = 24
     private static let topBarHeight: CGFloat = 50
     private static let cornerRadius: CGFloat = 14
+    private var trashButtonRect: NSRect = .zero
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -502,6 +508,37 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
                      withAttributes: attrs)
 
             x += tabWidths[i] + tabGap
+        }
+
+        // Trash button (top-right)
+        let trashSize: CGFloat = 22
+        let trashRect = NSRect(
+            x: bounds.maxX - Self.sidePadding - trashSize,
+            y: tabY + (tabH - trashSize) / 2,
+            width: trashSize, height: trashSize)
+        trashButtonRect = trashRect
+        if let trashIcon = NSImage(systemSymbolName: "trash", accessibilityDescription: L("Clear History"))?
+            .withSymbolConfiguration(.init(pointSize: 12, weight: .medium)) {
+            let tinted = trashIcon.copy() as! NSImage
+            tinted.isTemplate = false
+            tinted.lockFocus()
+            NSColor.white.withAlphaComponent(0.45).set()
+            NSRect(origin: .zero, size: tinted.size).fill(using: .sourceAtop)
+            tinted.unlockFocus()
+            let iconSize = tinted.size
+            // Flip the icon since the view is flipped (isFlipped = true)
+            NSGraphicsContext.saveGraphicsState()
+            let xform = NSAffineTransform()
+            xform.translateX(by: trashRect.midX, yBy: trashRect.midY)
+            xform.scaleX(by: 1, yBy: -1)
+            xform.translateX(by: -trashRect.midX, yBy: -trashRect.midY)
+            xform.concat()
+            tinted.draw(in: NSRect(
+                x: trashRect.midX - iconSize.width / 2,
+                y: trashRect.midY - iconSize.height / 2,
+                width: iconSize.width, height: iconSize.height),
+                from: .zero, operation: .sourceOver, fraction: 1.0)
+            NSGraphicsContext.restoreGraphicsState()
         }
     }
 
@@ -726,6 +763,13 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
                 mouseDownCardIndex = -1
                 return
             }
+        }
+
+        // Trash button — clear all history with confirmation
+        if trashButtonRect.insetBy(dx: -4, dy: -4).contains(point) {
+            controller?.confirmClearHistory()
+            mouseDownCardIndex = -1
+            return
         }
 
         // Record for click/drag detection

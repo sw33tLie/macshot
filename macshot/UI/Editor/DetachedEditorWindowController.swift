@@ -234,10 +234,7 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         window = nil
         Self.activeControllers.removeAll { $0 === self }
         if Self.activeControllers.isEmpty {
-            let hasOtherWindows = NSApp.windows.contains { $0 !== closingWindow && $0.isVisible && $0.styleMask.contains(.titled) }
-            if !hasOtherWindows {
-                NSApp.setActivationPolicy(.accessory)
-            }
+            (NSApp.delegate as? AppDelegate)?.returnFocusIfNeeded()
         }
     }
 
@@ -254,12 +251,25 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
             rawImage: rawImage,
             annotations: annotations.isEmpty ? nil : annotations)
         lastSavedUndoDepth = view.undoStack.count
+        // Update floating thumbnail if it's still visible
+        (NSApp.delegate as? AppDelegate)?.refreshThumbnail(for: entryID, image: finalImage)
     }
 
     /// Commit current editor state back to the history entry, then close.
     private func commitToHistory() {
+        // Capture the final image before close tears down the view
+        let finalImage: NSImage?
+        if let view = overlayView, let composited = view.captureSelectedRegion() {
+            finalImage = applyPostProcessing(composited)
+        } else {
+            finalImage = nil
+        }
         saveToHistory()
         window?.close()
+        // Show a new floating thumbnail with the saved image
+        if let image = finalImage, let entryID = historyEntryID {
+            (NSApp.delegate as? AppDelegate)?.showFloatingThumbnail(image: image, historyEntryID: entryID)
+        }
     }
 
     /// Called by output actions (copy, save, etc.) to persist changes to history.
