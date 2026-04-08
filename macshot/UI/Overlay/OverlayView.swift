@@ -6013,7 +6013,8 @@ class OverlayView: NSView {
         }
 
         // Shift+click on empty space — start lasso marquee selection
-        if shiftHeld {
+        // (disabled for pencil/marker where Shift constrains to straight lines)
+        if shiftHeld && currentTool != .pencil && currentTool != .marker {
             isLassoSelecting = true
             lassoStart = point
             lassoRect = .zero

@@ -3,10 +3,11 @@ import Vision
 import CoreImage
 
 /// Editor window that intercepts Cmd+Q to close itself instead of quitting the app.
+/// Uses performClose so windowShouldClose is called (triggers unsaved changes warning).
 private class EditorWindow: NSWindow {
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
         if event.modifierFlags.contains(.command) && event.charactersIgnoringModifiers == "q" {
-            close()
+            performClose(nil)
             return true
         }
         return super.performKeyEquivalent(with: event)
@@ -291,7 +292,7 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
     func overlayViewDidBeginSelection() {}
     func overlayViewRemoteSelectionDidChange(_ rect: NSRect) {}
     func overlayViewRemoteSelectionDidFinish(_ rect: NSRect) {}
-    func overlayViewDidCancel() { window?.close() }
+    func overlayViewDidCancel() { window?.performClose(nil) }
 
     func overlayViewDidConfirm() {
         guard let raw = overlayView?.captureSelectedRegion() else { return }

@@ -22,7 +22,7 @@ class RecordingHUDPanel: NSPanel {
 
     init() {
         super.init(
-            contentRect: NSRect(x: 0, y: 0, width: 180, height: 32),
+            contentRect: NSRect(x: 0, y: 0, width: 164, height: 32),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered, defer: true
         )
@@ -128,7 +128,7 @@ class RecordingHUDPanel: NSPanel {
         // Drag handle (right side)
         let handleW: CGFloat = 20
         // Fixed width so the panel never resizes during recording (prevents origin jumps)
-        let totalW: CGFloat = 174
+        let totalW: CGFloat = 164
         dragHandle.frame = NSRect(x: totalW - handleW - pad, y: (h - 16) / 2, width: handleW, height: 16)
 
         // Only set frame size once (first layout), not on every timer tick
