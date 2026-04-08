@@ -2557,13 +2557,16 @@ class OverlayView: NSView {
 
         let w = cgImage.width
         let h = cgImage.height
-        let cs = cgImage.colorSpace ?? CGColorSpaceCreateDeviceRGB()
+        // Use a known-good pixel format — the source image's bitmapInfo may be
+        // unsupported by CGContext (e.g. 16-bit float or unusual alpha layout).
+        let cs = CGColorSpaceCreateDeviceRGB()
+        let bitmapInfo = CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue
         guard
             let ctx = CGContext(
                 data: nil, width: w, height: h,
-                bitsPerComponent: cgImage.bitsPerComponent,
+                bitsPerComponent: 8,
                 bytesPerRow: 0, space: cs,
-                bitmapInfo: cgImage.bitmapInfo.rawValue)
+                bitmapInfo: bitmapInfo)
         else { return }
         ctx.translateBy(x: CGFloat(w), y: 0)
         ctx.scaleBy(x: -1, y: 1)
@@ -2604,13 +2607,14 @@ class OverlayView: NSView {
 
         let w = cgImage.width
         let h = cgImage.height
-        let cs = cgImage.colorSpace ?? CGColorSpaceCreateDeviceRGB()
+        let cs = CGColorSpaceCreateDeviceRGB()
+        let bitmapInfo = CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue
         guard
             let ctx = CGContext(
                 data: nil, width: w, height: h,
-                bitsPerComponent: cgImage.bitsPerComponent,
+                bitsPerComponent: 8,
                 bytesPerRow: 0, space: cs,
-                bitmapInfo: cgImage.bitmapInfo.rawValue)
+                bitmapInfo: bitmapInfo)
         else { return }
         ctx.translateBy(x: 0, y: CGFloat(h))
         ctx.scaleBy(x: 1, y: -1)
@@ -5655,6 +5659,22 @@ class OverlayView: NSView {
         }
     }
 
+    /// Reposition the webcam preview to follow the current selection without restarting the camera.
+    private func repositionWebcamSetupPreview() {
+        guard let overlay = webcamSetupPreview,
+              let screen = window?.screen ?? NSScreen.main else { return }
+        let position = WebcamPosition(rawValue: UserDefaults.standard.string(forKey: "webcamPosition") ?? "bottomRight") ?? .bottomRight
+        let size = WebcamSize(rawValue: UserDefaults.standard.string(forKey: "webcamSize") ?? "medium") ?? .medium
+        let shape = WebcamShape(rawValue: UserDefaults.standard.string(forKey: "webcamShape") ?? "circle") ?? .circle
+        let screenOrigin = screen.frame.origin
+        let screenRect = NSRect(
+            x: selectionRect.origin.x + screenOrigin.x,
+            y: selectionRect.origin.y + screenOrigin.y,
+            width: selectionRect.width,
+            height: selectionRect.height)
+        overlay.configure(position: position, size: size, shape: shape, recordingRect: screenRect)
+    }
+
     private func showCameraPermissionAlert() {
         let alert = NSAlert()
         alert.messageText = L("Camera Access Required")
@@ -5745,10 +5765,12 @@ class OverlayView: NSView {
             // Synchronous drag loop: tracks mouse from button press until release
             let startPoint = convert(win.mouseLocationOutsideOfEventStream, from: nil)
             let offset = NSPoint(x: startPoint.x - selectionRect.origin.x, y: startPoint.y - selectionRect.origin.y)
+            let hasWebcam = webcamSetupPreview != nil
             while true {
                 guard let event = win.nextEvent(matching: [.leftMouseDragged, .leftMouseUp]) else { break }
                 let point = convert(event.locationInWindow, from: nil)
                 selectionRect.origin = NSPoint(x: point.x - offset.x, y: point.y - offset.y)
+                if hasWebcam { repositionWebcamSetupPreview() }
                 needsDisplay = true
                 displayIfNeeded()
                 if event.type == .leftMouseUp { break }
@@ -5760,7 +5782,6 @@ class OverlayView: NSView {
                 moveBtn.needsDisplay = true
             }
             scheduleBarcodeDetection()
-            updateWebcamSetupPreview()
             needsDisplay = true
         case .undo:
             undo()

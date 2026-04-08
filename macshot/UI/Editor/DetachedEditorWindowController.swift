@@ -35,11 +35,16 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
     /// True if the image has never been output (copied, saved, etc.) — closing would lose the capture.
     /// Set to false on first output action. Editors opened from files start false.
     private var screenshotNeverOutput: Bool = true
+    /// When true, force beautify off on open (image already has beautify baked in).
+    private var disableBeautifyOnOpen: Bool = false
 
     /// Open an editor window with the given image (typically from captureSelectedRegion).
-    static func open(image: NSImage, tool: AnnotationTool = .arrow, color: NSColor = .systemRed, strokeWidth: CGFloat = 3, annotations: [Annotation] = [], historyEntryID: String? = nil, fromCapture: Bool = false) {
+    /// When `disableBeautify` is true, beautify starts off regardless of UserDefaults
+    /// (used when the image already has beautify baked in).
+    static func open(image: NSImage, tool: AnnotationTool = .arrow, color: NSColor = .systemRed, strokeWidth: CGFloat = 3, annotations: [Annotation] = [], historyEntryID: String? = nil, fromCapture: Bool = false, disableBeautify: Bool = false) {
         let controller = DetachedEditorWindowController()
         controller.historyEntryID = historyEntryID
+        controller.disableBeautifyOnOpen = disableBeautify
         // Only warn about unsaved capture if the image came from a live capture (not a file on disk)
         controller.screenshotNeverOutput = fromCapture && historyEntryID == nil
         controller.show(image: image, tool: tool, color: color, strokeWidth: strokeWidth, annotations: annotations)
@@ -88,6 +93,9 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         view.currentTool = tool
         view.currentColor = color
         view.currentStrokeWidth = strokeWidth
+        if disableBeautifyOnOpen {
+            view.beautifyEnabled = false
+        }
 
         // NSScrollView for native zoom/pan/centering.
         // The scroll view is inset from the top by the top bar height (32pt) so the

@@ -399,8 +399,22 @@ final class RecordingEngine: NSObject {
 
         // Add mic FIRST so it becomes the primary audio track in the file.
         // Most players only decode the first audio track.
+        // Mic is encoded as mono — many USB/interface mics expose a stereo device
+        // where only one channel carries audio, causing one-ear playback in stereo.
+        // Mono encoding downmixes both channels, fixing this for all mic types.
         if UserDefaults.standard.bool(forKey: "recordMicAudio") {
-            let micIn = AVAssetWriterInput(mediaType: .audio, outputSettings: audioSettings)
+            let micLayout = AudioChannelLayout(
+                mChannelLayoutTag: kAudioChannelLayoutTag_Mono,
+                mChannelBitmap: [], mNumberChannelDescriptions: 0,
+                mChannelDescriptions: AudioChannelDescription())
+            let micSettings: [String: Any] = [
+                AVFormatIDKey: kAudioFormatMPEG4AAC,
+                AVSampleRateKey: 48000,
+                AVNumberOfChannelsKey: 1,
+                AVEncoderBitRateKey: 128000,
+                AVChannelLayoutKey: Data(bytes: [micLayout], count: MemoryLayout<AudioChannelLayout>.size),
+            ]
+            let micIn = AVAssetWriterInput(mediaType: .audio, outputSettings: micSettings)
             micIn.expectsMediaDataInRealTime = true
             writer.add(micIn)
             self.micAudioInput = micIn

@@ -367,6 +367,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     /// The app that was active before macshot showed its overlay.
     private var previousApp: NSRunningApplication?
 
+    /// True when floating thumbnails or pin windows are visible.
+    var hasVisibleFloatingPanels: Bool {
+        !thumbnailControllers.isEmpty || !pinControllers.isEmpty
+    }
+
     /// Call when a macshot window closes. If no titled windows remain,
     /// switches to accessory activation policy and returns focus to
     /// the previous app (or the next regular app in line).
@@ -379,12 +384,31 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             NSApp.setActivationPolicy(.accessory)
             if let prev = appToActivate, !prev.isTerminated,
                prev.bundleIdentifier != Bundle.main.bundleIdentifier {
-                prev.activate(options: .activateIgnoringOtherApps)
+                Self.activateApp(prev)
+            } else if let appDel = NSApp.delegate as? AppDelegate,
+                      appDel.hasVisibleFloatingPanels {
+                // Floating thumbnails/pins are visible — just yield active status
+                // without hiding. NSApp.hide would kill them.
+                Self.activateApp(
+                    NSWorkspace.shared.runningApplications.first {
+                        $0.isActive && $0.bundleIdentifier != Bundle.main.bundleIdentifier
+                    } ?? NSWorkspace.shared.frontmostApplication ?? NSRunningApplication.current
+                )
             } else {
-                // No known previous app — hide macshot so macOS activates the next app.
-                // All floating panels have hidesOnDeactivate=false so they stay visible.
+                // No known previous app and no floating panels —
+                // hide macshot so macOS activates the next app.
                 NSApp.hide(nil)
             }
+        }
+    }
+
+    /// Activate another app using the modern cooperative activation API.
+    static func activateApp(_ app: NSRunningApplication) {
+        if #available(macOS 14.0, *) {
+            NSApp.yieldActivation(to: app)
+            app.activate()
+        } else {
+            app.activate(options: .activateIgnoringOtherApps)
         }
     }
 
@@ -606,12 +630,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                     controller.applyFullScreenSelection()
                 }
                 if self.pendingFullScreenRecord && isMouseScreen {
+                    // Enter recording mode in the overlay (shows recording toolbar)
                     controller.enterRecordingMode()
                     if self.pendingFullScreenRecordAutoStart {
-                        // Auto-start recording after a brief moment to let the overlay settle
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            controller.autoStartRecording()
-                        }
+                        controller.autoStartRecording()
                     }
                 }
                 self.overlayControllers.append(controller)
@@ -737,7 +759,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             if let data = annotationData {
                 DetachedEditorWindowController.open(image: data.rawImage, annotations: data.annotations, historyEntryID: historyEntryID)
             } else {
-                DetachedEditorWindowController.open(image: image, historyEntryID: historyEntryID)
+                // Image already has beautify/effects baked in — disable to avoid double-applying
+                DetachedEditorWindowController.open(image: image, historyEntryID: historyEntryID, disableBeautify: true)
             }
         }
         controller.onUpload = { [weak self] in
@@ -1043,7 +1066,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
                 if let data = annotationData {
                     DetachedEditorWindowController.open(image: data.rawImage, annotations: data.annotations, historyEntryID: entryID)
                 } else {
-                    DetachedEditorWindowController.open(image: image, historyEntryID: entryID)
+                    DetachedEditorWindowController.open(image: image, historyEntryID: entryID, disableBeautify: true)
                 }
             }
         }
@@ -1118,7 +1141,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         pinControllers.append(pin)
         // Return focus to previous app — pin stays visible (hidesOnDeactivate=false, orderFrontRegardless)
         if let app = appToRefocus, !app.isTerminated, app.bundleIdentifier != Bundle.main.bundleIdentifier {
-            DispatchQueue.main.async { app.activate(options: .activateIgnoringOtherApps) }
+            DispatchQueue.main.async { AppDelegate.activateApp(app) }
         }
     }
 
@@ -1149,7 +1172,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         showUploadProgress(image: image)
         // Return focus — upload toast stays visible (hidesOnDeactivate=false)
         if let app = appToRefocus, !app.isTerminated, app.bundleIdentifier != Bundle.main.bundleIdentifier {
-            DispatchQueue.main.async { app.activate(options: .activateIgnoringOtherApps) }
+            DispatchQueue.main.async { AppDelegate.activateApp(app) }
         }
     }
 
@@ -1167,14 +1190,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         // Detach webcam preview before dismissing overlays so we can reuse the live session
         let existingWebcam = controller.detachWebcamPreview()
 
-        // Dismiss overlays — recording doesn't need them anymore.
-        // Skip refocus — NSApp.deactivate() below handles focus return.
         dismissOverlays(refocusPreviousApp: false)
-        // Return focus to the previously active app so clicks work immediately.
-        // Don't use NSApp.hide() — it hides ALL windows including the recording
-        // HUD and selection border that are about to be created.
-        NSApp.deactivate()
-        previousApp = nil
 
         let delay = delayOverride ?? UserDefaults.standard.integer(forKey: "captureDelaySeconds")
         if delay > 0 {
@@ -1190,6 +1206,16 @@ extension AppDelegate: OverlayWindowControllerDelegate {
                            onStopOverride: onStopOverride,
                            existingWebcam: existingWebcam,
                            hideHUD: hideHUD)
+        }
+        // Return focus: switch to accessory so macshot releases active status,
+        // then yield to previousApp. If previousApp is stale, the setActivationPolicy
+        // alone should cause macOS to activate the next app.
+        DispatchQueue.main.async { [weak self] in
+            NSApp.setActivationPolicy(.accessory)
+            if let app = self?.previousApp, !app.isTerminated, app.bundleIdentifier != Bundle.main.bundleIdentifier {
+                AppDelegate.activateApp(app)
+            }
+            self?.previousApp = nil
         }
     }
 
@@ -1224,7 +1250,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         // Show selection border during countdown so user sees what area will be recorded
         let border = SelectionBorderOverlay(screen: screen)
         border.setSelectionRect(rect)
-        border.orderFront(nil)
+        border.orderFrontRegardless()
         selectionBorderOverlay = border
 
         // Escape to cancel
@@ -1331,15 +1357,15 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         }
         recordingEngine = engine
 
-        if !hideHUD {
-            // Show selection border so user knows what area is being captured
-            // (may already exist from countdown — recreate to be safe)
-            selectionBorderOverlay?.close()
-            let border = SelectionBorderOverlay(screen: screen)
-            border.setSelectionRect(rect)
-            border.orderFront(nil)
-            selectionBorderOverlay = border
+        // Always show selection border so user knows what area is being recorded
+        // (may already exist from countdown — recreate to be safe)
+        selectionBorderOverlay?.close()
+        let border = SelectionBorderOverlay(screen: screen)
+        border.setSelectionRect(rect)
+        border.orderFrontRegardless()
+        selectionBorderOverlay = border
 
+        if !hideHUD {
             // Show the floating timer HUD
             let hud = RecordingHUDPanel()
             hud.update(elapsedSeconds: 0)
@@ -1353,7 +1379,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
             hud.onResumeRecording = { [weak self] in
                 self?.recordingEngine?.resumeRecording()
             }
-            hud.orderFront(nil)
+            hud.orderFrontRegardless()
             recordingHUDPanel = hud
 
             engine.onPauseChanged = { [weak self] paused in
@@ -1364,7 +1390,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         // Start mouse highlight overlay if enabled
         if UserDefaults.standard.bool(forKey: "recordMouseHighlight") {
             let overlay = MouseHighlightOverlay(screen: screen)
-            overlay.orderFront(nil)
+            overlay.orderFrontRegardless()
             overlay.startMonitoring()
             mouseHighlightOverlay = overlay
         }
@@ -1373,7 +1399,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         if UserDefaults.standard.bool(forKey: "recordKeystroke") && KeystrokeOverlay.hasInputMonitoringPermission {
             let overlay = KeystrokeOverlay(screen: screen)
             overlay.setRecordingRect(rect)
-            overlay.orderFront(nil)
+            overlay.orderFrontRegardless()
             overlay.startMonitoring()
             keystrokeOverlay = overlay
         }
@@ -1384,7 +1410,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
             if let existing = existingWebcam {
                 // Reuse the live preview — just lock it in place
                 existing.setDraggable(false)
-                existing.orderFront(nil)
+                existing.orderFrontRegardless()
                 webcamOverlay = existing
             } else {
                 let overlay = WebcamOverlay(screen: screen)
@@ -1394,7 +1420,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
                 overlay.configure(position: position, size: wcSize, shape: shape, recordingRect: rect)
                 overlay.startPreview(deviceUID: UserDefaults.standard.string(forKey: "selectedCameraDeviceUID"))
                 overlay.setDraggable(false)
-                overlay.orderFront(nil)
+                overlay.orderFrontRegardless()
                 webcamOverlay = overlay
             }
         } else {

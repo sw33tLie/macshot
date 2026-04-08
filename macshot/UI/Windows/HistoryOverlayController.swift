@@ -179,12 +179,12 @@ final class HistoryOverlayController: NSObject, QLPreviewPanelDataSource, QLPrev
             return
         }
 
-        // Fall back to flattened image (old entries or missing files)
+        // Fall back to flattened image (old entries or missing files) — beautify already baked in
         guard let image = ScreenshotHistory.shared.loadImage(for: entry) else { return }
         dismiss()
         let entryID = entry.id
         DispatchQueue.main.async {
-            DetachedEditorWindowController.open(image: image, historyEntryID: entryID)
+            DetachedEditorWindowController.open(image: image, historyEntryID: entryID, disableBeautify: true)
         }
     }
 
