@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.0.0-beta.06] - 2026-04-08
+
+### Fixed
+- **Focus returns to previous app after capture** — closing the overlay (Escape, Enter, Cmd+C, etc.) now re-activates the previously focused application. No more click-to-refocus.
+- **Annotations preserved in beautified window snaps** — beautify + window snap captures now include annotations. Previously, annotations were lost because the beautify input used the raw window image without them.
+
 ## [4.0.0-beta.05] - 2026-04-08
 
 ### Fixed
