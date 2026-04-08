@@ -1,5 +1,15 @@
 # Changelog
 
+## [4.0.0-beta.05] - 2026-04-08
+
+### Fixed
+- **Cmd+Q and Escape now trigger unsaved changes warning** — previously bypassed the save dialog and closed the editor without warning.
+- **Lasso selection disabled for pencil/marker** — Shift+drag in pencil and marker tools now constrains to straight lines as expected, instead of triggering the lasso marquee selection.
+- **Recording HUD spacing** — reduced excess padding on the right side of the timer for balanced layout.
+
+### Translations
+- **17 new strings translated** across 40 languages: save dialog (Save & Close, Discard), recording controls (Stop/Pause/Resume), translation engine settings, webcam labels.
+
 ## [4.0.0-beta.04] - 2026-04-07
 
 ### Added
