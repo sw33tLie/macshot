@@ -364,7 +364,29 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     private var pendingScrollCaptureMode: Bool = false
     private var capturedWindowTitle: String?
     /// The app that was active before the overlay appeared — re-activated on dismiss.
+    /// The app that was active before macshot showed its overlay.
     private var previousApp: NSRunningApplication?
+
+    /// Call when a macshot window closes. If no titled windows remain,
+    /// switches to accessory activation policy and returns focus to
+    /// the previous app (or the next regular app in line).
+    func returnFocusIfNeeded() {
+        let appToActivate = previousApp
+        previousApp = nil
+        DispatchQueue.main.async {
+            let hasVisibleWindows = NSApp.windows.contains { $0.isVisible && $0.styleMask.contains(.titled) }
+            guard !hasVisibleWindows else { return }
+            NSApp.setActivationPolicy(.accessory)
+            if let prev = appToActivate, !prev.isTerminated,
+               prev.bundleIdentifier != Bundle.main.bundleIdentifier {
+                prev.activate(options: .activateIgnoringOtherApps)
+            } else {
+                // No known previous app — hide macshot so macOS activates the next app.
+                // All floating panels have hidesOnDeactivate=false so they stay visible.
+                NSApp.hide(nil)
+            }
+        }
+    }
 
     // MARK: - Capture
 
@@ -662,21 +684,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         isCapturing = false
         // Restore hidden thumbnails
         for tc in thumbnailControllers { tc.showWindow() }
-        // Return focus to the previously active app.
-        // Deferred so overlay windows finish closing first.
         if refocusPreviousApp {
-            let appToActivate = previousApp
-            previousApp = nil
-            DispatchQueue.main.async {
-                let hasVisibleWindows = NSApp.windows.contains { $0.isVisible && $0.styleMask.contains(.titled) }
-                if !hasVisibleWindows {
-                    if let app = appToActivate {
-                        app.activate(options: .activateIgnoringOtherApps)
-                    } else {
-                        NSApp.hide(nil)
-                    }
-                }
-            }
+            returnFocusIfNeeded()
         }
     }
 
@@ -704,6 +713,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         }
 
         let controller = FloatingThumbnailController(image: image)
+        controller.historyEntryID = historyEntryID
         controller.onDismiss = { [weak self] in
             self?.thumbnailControllers.removeAll { $0 === controller }
             self?.reflowThumbnails()
@@ -792,6 +802,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             let h = c.windowFrame.height  // height doesn't change, only Y moves
             c.moveTo(y: y)
             y += h + gap
+        }
+    }
+
+    /// Update a floating thumbnail's image if it matches the given history entry.
+    func refreshThumbnail(for entryID: String, image: NSImage) {
+        for tc in thumbnailControllers where tc.historyEntryID == entryID {
+            tc.updateImage(image)
         }
     }
 
@@ -1093,20 +1110,24 @@ extension AppDelegate: OverlayWindowControllerDelegate {
 
     func overlayDidRequestPin(_ controller: OverlayWindowController, image: NSImage) {
         ScreenshotHistory.shared.add(image: image)
-        dismissOverlays()
+        let appToRefocus = previousApp
+        dismissOverlays(refocusPreviousApp: false)
         let pin = PinWindowController(image: image)
         pin.delegate = self
         pin.show()
         pinControllers.append(pin)
+        // Return focus to previous app — pin stays visible (hidesOnDeactivate=false, orderFrontRegardless)
+        if let app = appToRefocus, !app.isTerminated, app.bundleIdentifier != Bundle.main.bundleIdentifier {
+            DispatchQueue.main.async { app.activate(options: .activateIgnoringOtherApps) }
+        }
     }
 
     func overlayDidRequestOCR(_ controller: OverlayWindowController, text: String, image: NSImage?) {
-        dismissOverlays()
-
         // OCR action: 0 = window + copy (default), 1 = window only, 2 = copy only
         let ocrAction = UserDefaults.standard.integer(forKey: "ocrAction")
         let shouldCopy = ocrAction == 0 || ocrAction == 2
         let shouldShowWindow = ocrAction == 0 || ocrAction == 1
+        dismissOverlays(refocusPreviousApp: !shouldShowWindow)
 
         if shouldCopy && !text.isEmpty {
             NSPasteboard.general.clearContents()
@@ -1123,8 +1144,13 @@ extension AppDelegate: OverlayWindowControllerDelegate {
 
     func overlayDidRequestUpload(_ controller: OverlayWindowController, image: NSImage) {
         ScreenshotHistory.shared.add(image: image)
-        dismissOverlays()
+        let appToRefocus = previousApp
+        dismissOverlays(refocusPreviousApp: false)
         showUploadProgress(image: image)
+        // Return focus — upload toast stays visible (hidesOnDeactivate=false)
+        if let app = appToRefocus, !app.isTerminated, app.bundleIdentifier != Bundle.main.bundleIdentifier {
+            DispatchQueue.main.async { app.activate(options: .activateIgnoringOtherApps) }
+        }
     }
 
     func overlayDidRequestStartRecording(_ controller: OverlayWindowController, rect: NSRect, screen: NSScreen) {
@@ -1846,6 +1872,19 @@ extension AppDelegate: NSMenuDelegate {
     }
 
     @objc private func clearHistory() {
-        ScreenshotHistory.shared.clear()
+        confirmClearHistory()
+    }
+
+    /// Show a confirmation dialog before clearing all history. Reused by history panel trash button.
+    func confirmClearHistory() {
+        let alert = NSAlert()
+        alert.messageText = L("Clear History?")
+        alert.informativeText = L("This will permanently delete all screenshots from history.")
+        alert.addButton(withTitle: L("Clear All"))
+        alert.addButton(withTitle: L("Cancel"))
+        alert.alertStyle = .warning
+        if alert.runModal() == .alertFirstButtonReturn {
+            ScreenshotHistory.shared.clear()
+        }
     }
 }

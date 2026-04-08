@@ -77,10 +77,7 @@ final class VideoEditorWindowController: NSObject, NSWindowDelegate {
         window = nil
         Self.activeControllers.removeAll { $0 === self }
         if Self.activeControllers.isEmpty {
-            let hasOtherWindows = NSApp.windows.contains { $0 !== closingWindow && $0.isVisible && $0.styleMask.contains(.titled) }
-            if !hasOtherWindows {
-                NSApp.setActivationPolicy(.accessory)
-            }
+            (NSApp.delegate as? AppDelegate)?.returnFocusIfNeeded()
         }
     }
 }

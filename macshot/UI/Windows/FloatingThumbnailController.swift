@@ -5,8 +5,10 @@ class FloatingThumbnailController: NSObject, NSDraggingSource {
 
     private var window: NSPanel?
     private var dismissTask: DispatchWorkItem?
-    let image: NSImage
+    private(set) var image: NSImage
     private var thumbnailView: ThumbnailView?
+    /// History entry ID — used to match and update the thumbnail when the editor saves.
+    var historyEntryID: String?
     /// The intended final frame — used instead of window.frame to avoid reading
     /// intermediate positions during slide-in or reflow animations.
     private var targetFrame: NSRect = .zero
@@ -59,6 +61,7 @@ class FloatingThumbnailController: NSObject, NSDraggingSource {
         panel.backgroundColor = .clear
         panel.hasShadow = true
         panel.isReleasedWhenClosed = false
+        panel.hidesOnDeactivate = false
         panel.collectionBehavior = [.canJoinAllSpaces, .stationary]
         panel.acceptsMouseMovedEvents = true
 
@@ -133,6 +136,12 @@ class FloatingThumbnailController: NSObject, NSDraggingSource {
     func hideWindow() { window?.orderOut(nil) }
     func showWindow() { window?.orderFront(nil) }
 
+    /// Update the displayed image (e.g. after editor saves new annotations).
+    func updateImage(_ newImage: NSImage) {
+        image = newImage
+        thumbnailView?.updateImage(newImage)
+    }
+
     /// Animate this thumbnail to a new Y position (used when a lower thumbnail is dismissed).
     func moveTo(y: CGFloat) {
         guard let window = window else { return }
@@ -201,7 +210,7 @@ private class ThumbnailView: NSView {
     var onHoverEnter: (() -> Void)?
     var onHoverExit:  (() -> Void)?
 
-    private let image: NSImage
+    private var image: NSImage
     private let thumbSize: NSSize
     private var dragStartPoint: NSPoint?
     private var isHovering: Bool = false
@@ -228,6 +237,11 @@ private class ThumbnailView: NSView {
         updateTrackingArea()
     }
     required init?(coder: NSCoder) { fatalError() }
+
+    func updateImage(_ newImage: NSImage) {
+        image = newImage
+        needsDisplay = true
+    }
 
     override func updateTrackingAreas() {
         super.updateTrackingAreas()

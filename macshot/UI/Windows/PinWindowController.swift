@@ -47,6 +47,7 @@ class PinWindowController {
         panel.isOpaque = false
         panel.backgroundColor = .clear
         panel.hasShadow = true
+        panel.hidesOnDeactivate = false
         panel.isMovableByWindowBackground = true
         panel.isReleasedWhenClosed = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
@@ -120,7 +121,7 @@ class PinWindowController {
     }
 
     func show() {
-        window?.makeKeyAndOrderFront(nil)
+        window?.orderFrontRegardless()
     }
 
     func close() {

@@ -6165,8 +6165,8 @@ class OverlayView: NSView {
             needsDisplay = true
             return true
         }
-        // Check edit button (text annotations)
-        if annotationEditButtonRect != .zero && annotationEditButtonRect.contains(point) {
+        // Check edit button (text annotations only)
+        if selected.tool == .text && annotationEditButtonRect != .zero && annotationEditButtonRect.contains(point) {
             textEditor.restoreState(from: selected)
             if let idx = annotations.firstIndex(where: { $0 === selected }) {
                 annotations.remove(at: idx)
