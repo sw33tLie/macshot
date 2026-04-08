@@ -244,6 +244,26 @@ class OverlayWindowController {
         return CaptureAnnotationData(rawImage: rawImage, annotations: shifted)
     }
 
+    /// Composite annotations onto the snapped window image (preserving transparency).
+    private func compositeAnnotationsOnSnappedWindow(_ windowImage: NSImage) -> NSImage {
+        guard let view = overlayView else { return windowImage }
+        let annotations = view.annotations
+        guard !annotations.isEmpty else { return windowImage }
+        let sel = view.selectionRect
+        let size = windowImage.size
+        let result = NSImage(size: size, flipped: false) { _ in
+            windowImage.draw(in: NSRect(origin: .zero, size: size), from: .zero, operation: .copy, fraction: 1.0)
+            guard let ctx = NSGraphicsContext.current else { return true }
+            // Translate so annotation coords (relative to selectionRect) map to image coords
+            ctx.cgContext.translateBy(x: -sel.origin.x, y: -sel.origin.y)
+            for annotation in annotations {
+                annotation.draw(in: ctx)
+            }
+            return true
+        }
+        return result
+    }
+
     private func applyBeautifyIfNeeded(_ image: NSImage?) -> NSImage? {
         guard let image = image, let view = overlayView else { return image }
         var result = image
@@ -326,7 +346,7 @@ extension OverlayWindowController: OverlayViewDelegate {
         }
         if hasBeautify {
             // For snapped windows, use the independently captured window image (transparent corners)
-            let beautifyInput = (beautifyCfg.isWindowSnap && snapWindowImg != nil) ? snapWindowImg! : finalImage
+            let beautifyInput = (beautifyCfg.isWindowSnap && snapWindowImg != nil) ? compositeAnnotationsOnSnappedWindow(snapWindowImg!) : finalImage
             finalImage = BeautifyRenderer.render(image: beautifyInput, config: beautifyCfg)
         }
 
@@ -670,7 +690,7 @@ extension OverlayWindowController: OverlayViewDelegate {
         var image = compositedImage
         if hasEffects { image = ImageEffects.apply(to: image, config: effectsCfg) }
         if hasBeautify {
-            let beautifyInput = (beautifyCfg.isWindowSnap && snapWindowImg != nil) ? snapWindowImg! : image
+            let beautifyInput = (beautifyCfg.isWindowSnap && snapWindowImg != nil) ? compositeAnnotationsOnSnappedWindow(snapWindowImg!) : image
             image = BeautifyRenderer.render(image: beautifyInput, config: beautifyCfg)
         }
 
@@ -712,7 +732,7 @@ extension OverlayWindowController: OverlayViewDelegate {
         var image = rawImage
         if hasEffects { image = ImageEffects.apply(to: image, config: effectsCfg) }
         if hasBeautify {
-            let beautifyInput = (beautifyCfg.isWindowSnap && snapWindowImg != nil) ? snapWindowImg! : image
+            let beautifyInput = (beautifyCfg.isWindowSnap && snapWindowImg != nil) ? compositeAnnotationsOnSnappedWindow(snapWindowImg!) : image
             image = BeautifyRenderer.render(image: beautifyInput, config: beautifyCfg)
         }
 

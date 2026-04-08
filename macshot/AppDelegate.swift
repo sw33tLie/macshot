@@ -363,6 +363,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     private var pendingQuickCaptureMode: Bool = false
     private var pendingScrollCaptureMode: Bool = false
     private var capturedWindowTitle: String?
+    /// The app that was active before the overlay appeared — re-activated on dismiss.
+    private var previousApp: NSRunningApplication?
 
     // MARK: - Capture
 
@@ -449,7 +451,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             UserDefaults.standard.set(false, forKey: "beautifyEnabled")
         }
 
-        // Grab focused window title before overlay steals focus
+        // Grab focused app and window title before overlay steals focus
+        previousApp = NSWorkspace.shared.frontmostApplication
         capturedWindowTitle = Self.focusedWindowTitle()
 
         dismissOverlays()
@@ -649,7 +652,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         dismissOverlays()
     }
 
-    private func dismissOverlays() {
+    private func dismissOverlays(refocusPreviousApp: Bool = true) {
         autoreleasepool {
             for controller in overlayControllers {
                 controller.dismiss()
@@ -659,6 +662,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         isCapturing = false
         // Restore hidden thumbnails
         for tc in thumbnailControllers { tc.showWindow() }
+        // Return focus to the previously active app.
+        // Deferred so overlay windows finish closing first.
+        if refocusPreviousApp {
+            let appToActivate = previousApp
+            previousApp = nil
+            DispatchQueue.main.async {
+                let hasVisibleWindows = NSApp.windows.contains { $0.isVisible && $0.styleMask.contains(.titled) }
+                if !hasVisibleWindows {
+                    if let app = appToActivate {
+                        app.activate(options: .activateIgnoringOtherApps)
+                    } else {
+                        NSApp.hide(nil)
+                    }
+                }
+            }
+        }
     }
 
     func showFloatingThumbnail(image: NSImage, annotationData: CaptureAnnotationData? = nil, historyEntryID: String? = nil) {
@@ -983,17 +1002,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         }
         dismissOverlays()
 
-        // Give focus back to the previously active app on cancel.
-        // NSApp.hide deactivates macshot, letting macOS activate the next app in the stack.
-        // Check inside the async block so windows created right after cancel (e.g. editor) are detected.
-        if recordingEngine == nil {
-            DispatchQueue.main.async {
-                let hasVisibleWindows = NSApp.windows.contains { $0.isVisible && $0.styleMask.contains(.titled) }
-                if !hasVisibleWindows {
-                    NSApp.hide(nil)
-                }
-            }
-        }
+        // Focus is returned to the previous app by dismissOverlays() above.
     }
 
     func overlayDidConfirm(_ controller: OverlayWindowController, capturedImage: NSImage?, annotationData: CaptureAnnotationData?) {
@@ -1132,12 +1141,14 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         // Detach webcam preview before dismissing overlays so we can reuse the live session
         let existingWebcam = controller.detachWebcamPreview()
 
-        // Dismiss overlays — recording doesn't need them anymore
-        dismissOverlays()
+        // Dismiss overlays — recording doesn't need them anymore.
+        // Skip refocus — NSApp.deactivate() below handles focus return.
+        dismissOverlays(refocusPreviousApp: false)
         // Return focus to the previously active app so clicks work immediately.
         // Don't use NSApp.hide() — it hides ALL windows including the recording
         // HUD and selection border that are about to be created.
         NSApp.deactivate()
+        previousApp = nil
 
         let delay = delayOverride ?? UserDefaults.standard.integer(forKey: "captureDelaySeconds")
         if delay > 0 {
