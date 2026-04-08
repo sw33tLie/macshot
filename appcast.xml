@@ -13,10 +13,10 @@
             <enclosure url="https://github.com/sw33tLie/macshot/releases/download/v3.7.0/MacShot.dmg" length="5358295" type="application/octet-stream" sparkle:edSignature="/X2jDgHWwMIWeiPylwxluhu/ccaLceyaBqz4I+8L5utyGt2kNfhxNtn9AGZwVxhmQ5AoY/2IEKzGpzfbRttlAw==" />
         </item>
 <item>
-    <title>v4.0.0-beta.05</title>
-    <pubDate>Wed, 08 Apr 2026 02:32:08 +0000</pubDate>
-    <sparkle:version>16</sparkle:version>
-    <sparkle:shortVersionString>4.0.0-beta.05</sparkle:shortVersionString>
+    <title>v4.0.0-beta.06</title>
+    <pubDate>Wed, 08 Apr 2026 14:40:50 +0000</pubDate>
+    <sparkle:version>17</sparkle:version>
+    <sparkle:shortVersionString>4.0.0-beta.06</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
     <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
@@ -27,13 +27,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Fixed</h3><ul> <li><b>Cmd+Q and Escape now trigger unsaved changes warning</b> — previously bypassed the save dialog and closed the editor without warning.</li> <li><b>Lasso selection disabled for pencil/marker</b> — Shift+drag in pencil and marker tools now constrains to straight lines as expected, instead of triggering the lasso marquee selection.</li> <li><b>Recording HUD spacing</b> — reduced excess padding on the right side of the timer for balanced layout.</li>  </ul><h3>Translations</h3><ul> <li><b>17 new strings translated</b> across 40 languages: save dialog (Save & Close, Discard), recording controls (Stop/Pause/Resume), translation engine settings, webcam labels.</li></ul>
+      <h3>Fixed</h3><ul> <li><b>Focus returns to previous app after capture</b> — closing the overlay (Escape, Enter, Cmd+C, etc.) now re-activates the previously focused application. No more click-to-refocus.</li> <li><b>Annotations preserved in beautified window snaps</b> — beautify + window snap captures now include annotations. Previously, annotations were lost because the beautify input used the raw window image without them.</li></ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v4.0.0-beta.05/MacShot.dmg"
-        length="5882459"
+        url="https://github.com/sw33tLie/macshot/releases/download/v4.0.0-beta.06/MacShot.dmg"
+        length="5893014"
         type="application/octet-stream"
-        sparkle:edSignature="TTCWmM5LIct/K1ZDSROtcB8aa3QG7RIr27pW5An/D8p18riU8zP6ncqXPiK1gV+IqMw1M8FGpekXbcD0xW/2Aw=="
+        sparkle:edSignature="FRv5d+QVlq2inCQqRy8E0oU8FB/TqJ+qFw6YYtFE5WCsotkcawWtmXbxtzQIQ9aEpYZODPqVvRawSPZ7TcPgBg=="
     />
 </item>
     </channel>
