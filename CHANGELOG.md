@@ -1,5 +1,51 @@
 # Changelog
 
+## [4.0.0] - 2026-04-09
+
+### Added
+- **Screen recording** — record MP4 or GIF with configurable FPS (up to 120fps), system audio + microphone capture, annotation drawing during recording, and mouse click highlighting. Pause/resume support with gap-free output. Audio merge dialog for dual-source recordings.
+- **Webcam overlay** — live camera feed bubble during recordings. Circle or rounded rectangle shape, four corner positions, three sizes. Camera device picker via right-click.
+- **Keystroke overlay** — show pressed keys on-screen during recording. "Shortcuts Only" vs "All Keystrokes" modes.
+- **Recording countdown** — configurable delay timer before recording starts.
+- **Video editor** — standalone window for trimming, exporting, and uploading recorded videos. Timeline thumbnail strip, arrow key frame stepping, Copy button.
+- **Editable annotation history** — screenshots save raw image + annotation data alongside the composited image. Editing from history reopens with live, editable annotations. "Done" button commits changes back to the same history entry.
+- **Lasso marquee selection** — hold Shift and drag on empty space from any tool (including pencil/marker) to select multiple annotations at once.
+- **Shift+Click multi-selection** — hold Shift and click annotations to toggle them in/out of the selection. Drag moves all selected, Delete removes all selected, color changes apply to all.
+- **Annotation copy/paste (Cmd+C/V)** — copy selected annotations and paste as duplicates. Works with multi-selection.
+- **Annotation outlines** — outline toggle + color picker for arrows, lines, rectangles, ellipses, and number tools.
+- **Custom beautify backgrounds** — use any image as the beautify background with optional blur slider. 6 new gradient styles.
+- **Apple Translation (on-device)** — translate on-device using Apple's Translation framework on macOS 15+. Faster, offline, and private. Auto-detects source language.
+- **Smart marker mode** — OCR-based text detection snaps the marker to actual text lines. Vertical pill cursor with dynamic sizing.
+- **WYSIWYG drawing cursor** — pencil and marker tools show a live dot preview matching exact stroke size and color.
+- **"Open from Clipboard" hotkey** — configurable global hotkey to open clipboard image in editor.
+- **"Also open in Editor" option** — quick capture performs the action AND opens the editor.
+- **"Do nothing" Quick Capture mode** — capture without copying or saving; decide later via thumbnail.
+- **Customizable overlay/editor tool shortcuts** — all tool shortcuts configurable in Settings.
+- **Pencil smoothing modes** — 3-mode selector: None, Smooth (Chaikin), Refined (moving average + Chaikin with zero input lag).
+- **Beta update channel** — opt-in pre-release builds via Sparkle.
+- **WebP image opening** — open .webp files for editing via menu, Finder, or drag-to-dock.
+
+### Changed
+- **Text tool uses standard annotation chrome** — text annotations show the same selection UI as shapes (resize handles, rotate, delete). Double-click to re-enter editing.
+- **Unified Censor tool** — Pixelate, Blur, Solid, and Erase modes merged into a single toolbar button. Erase mode samples surrounding colors for seamless fills.
+- **Click-to-select annotations** — click any annotation with any tool to select it and edit properties in real time. Pencil/marker use long-press to avoid interfering with drawing.
+- **Recent Captures panel** — horizontal scrolling thumbnails with filter tabs, right-click context menu, drag-and-drop.
+- **Pixelate annotations** — now movable, resizable, and reorderable. Re-bakes from original screenshot.
+- **sRGB color profile** — proper pixel value conversion for accurate colors matching native macOS screenshots.
+- **Renamed Preferences to Settings** — all user-facing references updated.
+
+### Fixed
+- **Blurry screenshots on mixed-DPI setups** — direct CGImage extraction preserves exact pixel data regardless of display.
+- **Pre-macOS 14 capture corruption** — uses `CGWindowListCreateImage` on macOS 12–13 instead of raw memcpy.
+- **Capture delay on macOS Tahoe** — pre-warm SCShareableContent cache, reducing 2-second delay to near-instant.
+- **Focus returns to previous app after capture** — overlay dismiss re-activates the previously focused application.
+- **Purple selection border no longer appears in recordings** — UI chrome excluded from SCStream capture.
+- **Recording pause/resume produces gap-free video** — paused time subtracted from timestamps.
+- **Light mode toolbar readability** — toolbar and popovers force dark appearance for consistent contrast.
+- **Scroll capture reliability** — complete engine rewrite with CPU-backed frame comparison, Vision-based offset detection, and incremental stitching.
+- **Multi-select drag works in text tool mode** — text tool no longer blocks dragging multi-selected annotations.
+- **Pencil/marker shift-constrain** — straightening now anchors from where Shift was pressed, not the stroke origin.
+
 ## [4.0.0-beta.06] - 2026-04-08
 
 ### Fixed
