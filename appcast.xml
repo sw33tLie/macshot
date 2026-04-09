@@ -6,8 +6,8 @@
         <description>macshot updates</description>
 <item>
     <title>v4.0.1</title>
-    <pubDate>Thu, 09 Apr 2026 13:00:12 +0000</pubDate>
-    <sparkle:version>21</sparkle:version>
+    <pubDate>Thu, 09 Apr 2026 13:49:06 +0000</pubDate>
+    <sparkle:version>23</sparkle:version>
     <sparkle:shortVersionString>4.0.1</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
 
@@ -23,9 +23,9 @@
     ]]></description>
     <enclosure
         url="https://github.com/sw33tLie/macshot/releases/download/v4.0.1/MacShot.dmg"
-        length="5904820"
+        length="5898809"
         type="application/octet-stream"
-        sparkle:edSignature="Iui03W0rVkJx4h1KImWqsUbF6dZL/XE8OjlSsZDIWC9HgPiTzILQbQn+bk2nUu++TR4z8w/0RLt54blnGzWpDA=="
+        sparkle:edSignature="PhTJ2x9txgjjNXgZ+YWVu/ozlN6O58mBkrsLRvQCyYKw6wY7PY25MfNc15mwbWVx8DkxlYPaetuU8Hi/sRSICQ=="
     />
 </item>
     </channel>
