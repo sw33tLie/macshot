@@ -61,7 +61,9 @@ struct BeautifyConfig {
 
     /// Convenience: the resolved style from styles array
     var style: BeautifyStyle {
-        BeautifyRenderer.styles[styleIndex % BeautifyRenderer.styles.count]
+        let count = BeautifyRenderer.styles.count
+        let idx = ((styleIndex % count) + count) % count
+        return BeautifyRenderer.styles[idx]
     }
 }
 

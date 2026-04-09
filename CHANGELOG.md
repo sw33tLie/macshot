@@ -1,9 +1,10 @@
 # Changelog
 
-## [4.0.2-beta.1] - 2026-04-09
+## [4.0.2-beta.2] - 2026-04-09
 
 ### Fixed
 - **Crash on macOS 26 (Tahoe) when using beautify** — `BeautifyRenderer` was marked `@MainActor` which caused all rendering code inside `NSImage` drawing handler closures to violate actor isolation under macOS 26's stricter concurrency enforcement. Removed class-level `@MainActor`, now only applied to the SwiftUI `ImageRenderer` methods that actually require it.
+- **Crash with negative style index** — `BeautifyConfig.style` used Swift's sign-preserving `%` operator, causing array out-of-bounds when `styleIndex` was `-1` (custom background image). Fixed modulo to always produce a valid index.
 
 ## [4.0.1] - 2026-04-09
 
