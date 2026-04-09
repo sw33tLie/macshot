@@ -385,8 +385,11 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Save the generated appcast before switching branches
+          cp appcast.xml /tmp/appcast.xml
           git fetch origin main
-          git checkout main
+          git checkout -f main
+          cp /tmp/appcast.xml appcast.xml
           if [ "$IS_BETA" = "false" ]; then
             sed -i '' "s/v[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*/v${VERSION}/" website/index.html
             git add website/index.html
