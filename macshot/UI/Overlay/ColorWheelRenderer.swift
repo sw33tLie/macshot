@@ -5,6 +5,7 @@ import Cocoa
 class ColorWheelRenderer {
 
     var isVisible: Bool = false
+    var isSticky: Bool = false  // true when wheel stays open for click-to-pick (iPad/Sidecar)
     var center: NSPoint = .zero
     var hoveredIndex: Int = -1
 
@@ -39,6 +40,7 @@ class ColorWheelRenderer {
 
     func dismiss() {
         isVisible = false
+        isSticky = false
         hoveredIndex = -1
     }
 

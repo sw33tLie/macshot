@@ -8,6 +8,8 @@ final class PencilToolHandler: AnnotationToolHandler {
 
     /// Shift-constrain direction for freeform drawing. 0 = undecided, 1 = horizontal, 2 = vertical.
     private var freeformShiftDirection: Int = 0
+    /// The point where shift-constrain started (where the user first held Shift mid-stroke).
+    private var shiftAnchor: NSPoint = .zero
     /// Moving average window for live smoothing (Refined mode).
     private var rawPointBuffer: [NSPoint] = []
     private let smoothWindowSize: Int = 8
@@ -18,6 +20,7 @@ final class PencilToolHandler: AnnotationToolHandler {
 
     func start(at point: NSPoint, canvas: AnnotationCanvas) -> Annotation? {
         freeformShiftDirection = 0
+        shiftAnchor = .zero
         rawPointBuffer = [point]
         let annotation = Annotation(
             tool: .pencil,
@@ -36,20 +39,27 @@ final class PencilToolHandler: AnnotationToolHandler {
         var clampedPoint = point
 
         if shiftHeld {
-            let refPoint = annotation.points?.last ?? annotation.startPoint
-            let dx = clampedPoint.x - refPoint.x
-            let dy = clampedPoint.y - refPoint.y
+            // Capture the anchor point when shift is first pressed
+            if freeformShiftDirection == 0 && shiftAnchor == .zero {
+                shiftAnchor = annotation.points?.last ?? annotation.startPoint
+            }
+            let dx = clampedPoint.x - shiftAnchor.x
+            let dy = clampedPoint.y - shiftAnchor.y
 
             if freeformShiftDirection == 0 && hypot(dx, dy) > 5 {
                 freeformShiftDirection = abs(dx) >= abs(dy) ? 1 : 2
             }
             if freeformShiftDirection == 1 {
-                clampedPoint = NSPoint(x: clampedPoint.x, y: annotation.startPoint.y)
+                clampedPoint = NSPoint(x: clampedPoint.x, y: shiftAnchor.y)
             } else if freeformShiftDirection == 2 {
-                clampedPoint = NSPoint(x: annotation.startPoint.x, y: clampedPoint.y)
+                clampedPoint = NSPoint(x: shiftAnchor.x, y: clampedPoint.y)
             } else {
-                clampedPoint = annotation.startPoint
+                clampedPoint = shiftAnchor
             }
+        } else if freeformShiftDirection != 0 {
+            // Shift released — reset so next shift press picks a new anchor
+            freeformShiftDirection = 0
+            shiftAnchor = .zero
         }
 
         // Refined mode: collect raw points for retroactive smoothing on finish.

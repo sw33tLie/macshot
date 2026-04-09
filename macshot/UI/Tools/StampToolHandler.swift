@@ -50,7 +50,7 @@ enum StampEmojis {
         "🔥", "🐛", "💀", "🎉",  // reactions: hot, bug, dead, celebrate
         "👀", "💡", "🎯", "⭐",  // look here, idea, bullseye, star
         "❤️", "👍", "👎", "🚀",  // love, thumbs, launch
-        "✏️", "🔒", "⚡", "💣",  // edit, lock, lightning, bomb
+        "✏️", "🔒", "⚡", "📌",  // edit, lock, lightning, pin
     ]
 
     /// Render an emoji string to an NSImage.

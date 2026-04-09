@@ -479,6 +479,7 @@ class OverlayView: NSView {
     private var annotationDeleteButtonRect: NSRect = .zero
     private var annotationEditButtonRect: NSRect = .zero
     private var annotationResizeHandleRects: [(ResizeHandle, NSRect)] = []
+    private var multiSelectDeleteButtonRect: NSRect = .zero  // consolidated delete for multi-selection
 
     // Overlay error message
     private var overlayErrorMessage: String? = nil
@@ -778,6 +779,13 @@ class OverlayView: NSView {
 
     override func mouseMoved(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
+
+        // Sticky color wheel: track hover with mouse movement
+        if colorWheel.isVisible && colorWheel.isSticky {
+            colorWheel.updateHover(at: point)
+            needsDisplay = true
+            return
+        }
 
         // Stamp cursor preview — track in view coords (same as annotations)
         if currentTool == .stamp && currentStampImage != nil && state == .selected && !isRecording
@@ -1096,6 +1104,12 @@ class OverlayView: NSView {
                     NSCursor.arrow.set()
                     return
                 }
+            }
+
+            // Multi-select delete button
+            if selectedAnnotations.count > 1 && multiSelectDeleteButtonRect.contains(point) {
+                NSCursor.arrow.set()
+                return
             }
 
             // Body hover — open hand (skip for pencil/marker where click always draws)
@@ -1448,6 +1462,8 @@ class OverlayView: NSView {
                     // Only draw full controls (handles, buttons) for single selection
                     drawAnnotationControls(for: selected, fullControls: selectedAnnotations.count == 1)
                 }
+                // Consolidated delete button for multi-selection
+                drawMultiSelectDeleteButton()
             }
 
             // Pencil/marker cursor dot preview inside zoom transform so it scales with zoom
@@ -1500,6 +1516,7 @@ class OverlayView: NSView {
                     for selected in selectedAnnotations {
                         drawAnnotationControls(for: selected, fullControls: selectedAnnotations.count == 1)
                     }
+                    drawMultiSelectDeleteButton()
                     context.restoreGraphicsState()
                 }
 
@@ -1571,6 +1588,7 @@ class OverlayView: NSView {
                     for selected in selectedAnnotations {
                         drawAnnotationControls(for: selected, fullControls: selectedAnnotations.count == 1)
                     }
+                    drawMultiSelectDeleteButton()
                     context.restoreGraphicsState()
                 }
                 if currentTool == .loupe && selectionRect.contains(loupeCursorPoint) && loupeCursorPoint != .zero {
@@ -3443,6 +3461,11 @@ class OverlayView: NSView {
     private func drawAnnotationControls(for annotation: Annotation, fullControls: Bool = true) {
         // Arrow, line, and measure: show only 2 endpoint handles, no bounding box
         if annotation.tool == .arrow || annotation.tool == .line || annotation.tool == .measure {
+            if !fullControls {
+                drawAnnotationOutlineGlow(annotation)
+                return
+            }
+
             let pts = annotation.waypoints
             let s: CGFloat = 10
             let sm: CGFloat = 8
@@ -3522,23 +3545,12 @@ class OverlayView: NSView {
             }
 
             // Delete button near endPoint
-            let btnSize: CGFloat = 20
+            let btnSize: CGFloat = 22
             let deleteRect = NSRect(
                 x: annotation.endPoint.x + 8, y: annotation.endPoint.y + 2, width: btnSize,
                 height: btnSize)
             annotationDeleteButtonRect = deleteRect
-            NSColor(red: 0.9, green: 0.2, blue: 0.2, alpha: 0.9).setFill()
-            NSBezierPath(ovalIn: deleteRect).fill()
-            let xAttrs: [NSAttributedString.Key: Any] = [
-                .font: NSFont.boldSystemFont(ofSize: 11),
-                .foregroundColor: NSColor.white,
-            ]
-            let xStr = "×" as NSString
-            let xSize = xStr.size(withAttributes: xAttrs)
-            xStr.draw(
-                at: NSPoint(
-                    x: deleteRect.midX - xSize.width / 2, y: deleteRect.midY - xSize.height / 2),
-                withAttributes: xAttrs)
+            drawDeleteCircle(in: deleteRect)
             annotationEditButtonRect = .zero
             return
         }
@@ -3596,7 +3608,13 @@ class OverlayView: NSView {
 
         let padded = baseRect.insetBy(dx: -4, dy: -4)
 
-        // Apply annotation rotation to controls
+        // Generic outline glow — works for all annotation types, single and multi-select
+        drawAnnotationOutlineGlow(annotation)
+
+        // Multi-select: no handles, rotate, or delete buttons
+        guard fullControls else { return }
+
+        // Apply annotation rotation to controls (handles, delete button)
         if annotation.rotation != 0 && annotation.supportsRotation {
             let center = NSPoint(x: baseRect.midX, y: baseRect.midY)
             let xform = NSAffineTransform()
@@ -3605,59 +3623,6 @@ class OverlayView: NSView {
             xform.translateX(by: -center.x, yBy: -center.y)
             NSGraphicsContext.current?.cgContext.saveGState()
             xform.concat()
-        }
-
-        // Draw accent highlight on the annotation's actual shape
-        let accentHighlight = ToolbarLayout.accentColor.withAlphaComponent(0.55)
-        accentHighlight.setStroke()
-        switch annotation.tool {
-        case .pencil, .marker:
-            // Trace the actual stroke path with a glow, using a transparency layer
-            // to prevent alpha compounding at self-intersections and line joins
-            if let points = annotation.points, points.count >= 2 {
-                let ctx = NSGraphicsContext.current?.cgContext
-                ctx?.saveGState()
-                ctx?.setAlpha(0.55)
-                ctx?.beginTransparencyLayer(auxiliaryInfo: nil)
-                let path = NSBezierPath()
-                path.move(to: points[0])
-                for i in 1..<points.count { path.line(to: points[i]) }
-                let effectiveWidth = annotation.tool == .marker ? annotation.strokeWidth * 6 : annotation.strokeWidth
-                path.lineWidth = effectiveWidth + 6
-                path.lineCapStyle = .round
-                path.lineJoinStyle = .round
-                ToolbarLayout.accentColor.setStroke()
-                path.stroke()
-                ctx?.endTransparencyLayer()
-                ctx?.restoreGState()
-            }
-        case .rectangle, .filledRectangle:
-            let r = annotation.rectCornerRadius
-            let shapePath = NSBezierPath(roundedRect: annotation.boundingRect, xRadius: r, yRadius: r)
-            shapePath.lineWidth = annotation.strokeWidth + 6
-            shapePath.lineCapStyle = .round
-            shapePath.lineJoinStyle = .round
-            shapePath.stroke()
-        case .ellipse:
-            let shapePath = NSBezierPath(ovalIn: annotation.boundingRect)
-            shapePath.lineWidth = annotation.strokeWidth + 6
-            shapePath.lineCapStyle = .round
-            shapePath.lineJoinStyle = .round
-            shapePath.stroke()
-        default:
-            let shapePath = NSBezierPath(roundedRect: padded, xRadius: 2, yRadius: 2)
-            shapePath.lineWidth = annotation.strokeWidth + 6
-            shapePath.lineCapStyle = .round
-            shapePath.lineJoinStyle = .round
-            shapePath.stroke()
-        }
-
-        // Skip handles, rotate, and delete buttons for multi-select (just show the glow)
-        guard fullControls else {
-            if annotation.rotation != 0 && annotation.supportsRotation {
-                NSGraphicsContext.current?.cgContext.restoreGState()
-            }
-            return
         }
 
         // Draw resize handles (8 positions) — loupe/pencil/marker don't support resize
@@ -3733,22 +3698,11 @@ class OverlayView: NSView {
         }
 
         // Delete button (X) at top-right outside the box
-        let btnSize: CGFloat = 20
+        let btnSize: CGFloat = 22
         let deleteRect = NSRect(
             x: padded.maxX + 4, y: padded.maxY - btnSize, width: btnSize, height: btnSize)
         annotationDeleteButtonRect = deleteRect
-        NSColor(red: 0.9, green: 0.2, blue: 0.2, alpha: 0.9).setFill()
-        NSBezierPath(ovalIn: deleteRect).fill()
-        let xAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.boldSystemFont(ofSize: 11),
-            .foregroundColor: NSColor.white,
-        ]
-        let xStr = "×" as NSString
-        let xSize = xStr.size(withAttributes: xAttrs)
-        xStr.draw(
-            at: NSPoint(
-                x: deleteRect.midX - xSize.width / 2, y: deleteRect.midY - xSize.height / 2),
-            withAttributes: xAttrs)
+        drawDeleteCircle(in: deleteRect)
 
         // Edit button (pencil) for text annotations
         if annotation.tool == .text {
@@ -3776,6 +3730,187 @@ class OverlayView: NSView {
         } else {
             annotationEditButtonRect = .zero
         }
+    }
+
+    /// Shared CIContext for outline glow rendering — reused across frames.
+    private static let outlineGlowCIContext = CIContext()
+
+    /// Draw a generic outline glow around any annotation by rendering it offscreen,
+    /// dilating the alpha mask, then compositing the outline back. Cached on the annotation.
+    private func drawAnnotationOutlineGlow(_ annotation: Annotation) {
+        let outlineWidth: CGFloat = 3
+        // Generous padding — accounts for stroke width, line caps, Chaikin smoothing overshoot,
+        // arrowheads, and the dilation radius. Bitmap is cached so size doesn't matter per-frame.
+        let effectiveStroke = annotation.tool == .marker ? annotation.strokeWidth * 6 : annotation.strokeWidth
+        let padding = effectiveStroke + outlineWidth + 20
+
+        // Compute actual bounding box — for pencil/marker, use the points array
+        // since boundingRect only considers startPoint/endPoint.
+        let baseBBox: NSRect
+        if let pts = annotation.points, !pts.isEmpty,
+           (annotation.tool == .pencil || annotation.tool == .marker) {
+            var minX = CGFloat.greatestFiniteMagnitude, minY = CGFloat.greatestFiniteMagnitude
+            var maxX = -CGFloat.greatestFiniteMagnitude, maxY = -CGFloat.greatestFiniteMagnitude
+            for p in pts {
+                minX = min(minX, p.x); minY = min(minY, p.y)
+                maxX = max(maxX, p.x); maxY = max(maxY, p.y)
+            }
+            baseBBox = NSRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+        } else {
+            baseBBox = annotation.boundingRect
+        }
+        let bbox = baseBBox.insetBy(dx: -padding, dy: -padding)
+        guard bbox.width > 0, bbox.height > 0 else { return }
+
+        // Use cached glow if available and position hasn't changed
+        if let cached = annotation.outlineGlowImage, annotation.outlineGlowRect == bbox {
+            guard let context = NSGraphicsContext.current else { return }
+            context.cgContext.saveGState()
+            context.cgContext.setAlpha(0.55)
+            cached.draw(in: bbox, from: .zero, operation: .sourceOver, fraction: 1.0)
+            context.cgContext.restoreGState()
+            return
+        }
+
+        let scale: CGFloat = window?.backingScaleFactor ?? 2.0
+        let pxW = Int(ceil(bbox.width * scale))
+        let pxH = Int(ceil(bbox.height * scale))
+        guard pxW > 0, pxH > 0, pxW < 8000, pxH < 8000 else { return }
+
+        // Render the annotation into an offscreen bitmap using lockFocus
+        // (ensures identical coordinate space to the live overlay)
+        let offscreen = NSImage(size: NSSize(width: bbox.width * scale, height: bbox.height * scale))
+        offscreen.lockFocus()
+        guard let offNSCtx = NSGraphicsContext.current else { offscreen.unlockFocus(); return }
+        offNSCtx.cgContext.scaleBy(x: scale, y: scale)
+        offNSCtx.cgContext.translateBy(x: -bbox.origin.x, y: -bbox.origin.y)
+        annotation.draw(in: offNSCtx)
+        offscreen.unlockFocus()
+
+        guard let cgOrig = offscreen.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return }
+
+        let ciOrig = CIImage(cgImage: cgOrig)
+        guard let dilateFilter = CIFilter(name: "CIMorphologyMaximum") else { return }
+        dilateFilter.setValue(ciOrig, forKey: kCIInputImageKey)
+        dilateFilter.setValue(outlineWidth * scale, forKey: kCIInputRadiusKey)
+        guard let dilated = dilateFilter.outputImage else { return }
+
+        guard let colorFilter = CIFilter(name: "CIFalseColor") else { return }
+        let accentCI = CIColor(color: ToolbarLayout.accentColor) ?? CIColor.blue
+        colorFilter.setValue(dilated, forKey: kCIInputImageKey)
+        colorFilter.setValue(accentCI, forKey: "inputColor0")
+        colorFilter.setValue(accentCI, forKey: "inputColor1")
+        guard let colored = colorFilter.outputImage else { return }
+
+        guard let subtractFilter = CIFilter(name: "CISourceOutCompositing") else { return }
+        subtractFilter.setValue(colored, forKey: kCIInputImageKey)
+        subtractFilter.setValue(ciOrig, forKey: kCIInputBackgroundImageKey)
+        guard let outline = subtractFilter.outputImage else { return }
+
+        guard let outlineCG = Self.outlineGlowCIContext.createCGImage(outline, from: ciOrig.extent) else { return }
+
+        let outlineImage = NSImage(cgImage: outlineCG, size: bbox.size)
+        annotation.outlineGlowImage = outlineImage
+        annotation.outlineGlowRect = bbox
+
+        guard let context = NSGraphicsContext.current else { return }
+        context.cgContext.saveGState()
+        context.cgContext.setAlpha(0.55)
+        outlineImage.draw(in: bbox, from: .zero, operation: .sourceOver, fraction: 1.0)
+        context.cgContext.restoreGState()
+    }
+
+    /// Draw a single-annotation delete circle — dark fill, red border, red xmark icon.
+    private func drawDeleteCircle(in rect: NSRect) {
+        // Dark fill
+        NSColor(white: 0.12, alpha: 0.94).setFill()
+        NSBezierPath(ovalIn: rect).fill()
+        // Red border
+        let borderColor = NSColor(red: 0.9, green: 0.3, blue: 0.3, alpha: 0.9)
+        borderColor.setStroke()
+        let border = NSBezierPath(ovalIn: rect.insetBy(dx: 0.75, dy: 0.75))
+        border.lineWidth = 1.5
+        border.stroke()
+        // Red xmark icon
+        let iconCfg = NSImage.SymbolConfiguration(pointSize: 9, weight: .bold)
+        if let xImg = NSImage(systemSymbolName: "xmark", accessibilityDescription: nil)?
+            .withSymbolConfiguration(iconCfg) {
+            let tinted = NSImage(size: xImg.size, flipped: false) { r in
+                xImg.draw(in: r)
+                NSColor(red: 1.0, green: 0.4, blue: 0.4, alpha: 1.0).setFill()
+                r.fill(using: .sourceAtop)
+                return true
+            }
+            tinted.draw(in: NSRect(x: rect.midX - xImg.size.width / 2,
+                                    y: rect.midY - xImg.size.height / 2,
+                                    width: xImg.size.width, height: xImg.size.height),
+                        from: .zero, operation: .sourceOver, fraction: 1.0)
+        }
+    }
+
+    /// Draw a pill-shaped "Delete N" button below the multi-selection bounding box.
+    private func drawMultiSelectDeleteButton() {
+        guard selectedAnnotations.count > 1 else {
+            multiSelectDeleteButtonRect = .zero
+            return
+        }
+
+        // Compute union bounding rect of all selected annotations
+        var unionRect = selectedAnnotations[0].boundingRect
+        for ann in selectedAnnotations.dropFirst() {
+            unionRect = unionRect.union(ann.boundingRect)
+        }
+
+        // Build label
+        let count = selectedAnnotations.count
+        let label = L("Delete") + " \(count)"
+        let labelAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 13, weight: .medium),
+            .foregroundColor: NSColor.white,
+        ]
+        let labelSize = (label as NSString).size(withAttributes: labelAttrs)
+
+        // Pill dimensions
+        let iconSize: CGFloat = 13
+        let hPad: CGFloat = 12
+        let gap: CGFloat = 5
+        let pillW = hPad + iconSize + gap + labelSize.width + hPad
+        let pillH: CGFloat = 28
+        let pillX = unionRect.midX - pillW / 2
+        let pillY = unionRect.minY - pillH - 8
+
+        let pillRect = NSRect(x: pillX, y: pillY, width: pillW, height: pillH)
+        multiSelectDeleteButtonRect = pillRect
+
+        // Dark background pill
+        NSColor(white: 0.12, alpha: 0.94).setFill()
+        NSBezierPath(roundedRect: pillRect, xRadius: pillH / 2, yRadius: pillH / 2).fill()
+        NSColor.white.withAlphaComponent(0.08).setStroke()
+        let borderPath = NSBezierPath(roundedRect: pillRect.insetBy(dx: 0.5, dy: 0.5),
+                                       xRadius: pillH / 2, yRadius: pillH / 2)
+        borderPath.lineWidth = 0.5
+        borderPath.stroke()
+
+        // Trash icon
+        let iconCfg = NSImage.SymbolConfiguration(pointSize: iconSize, weight: .medium)
+        if let trashImg = NSImage(systemSymbolName: "trash", accessibilityDescription: nil)?
+            .withSymbolConfiguration(iconCfg) {
+            let tinted = NSImage(size: trashImg.size, flipped: false) { rect in
+                trashImg.draw(in: rect)
+                NSColor(red: 1.0, green: 0.4, blue: 0.4, alpha: 1.0).setFill()
+                rect.fill(using: .sourceAtop)
+                return true
+            }
+            let iconY = pillRect.midY - trashImg.size.height / 2
+            tinted.draw(in: NSRect(x: pillX + hPad, y: iconY,
+                                    width: trashImg.size.width, height: trashImg.size.height),
+                        from: .zero, operation: .sourceOver, fraction: 1.0)
+        }
+
+        // Label
+        let labelX = pillX + hPad + iconSize + gap
+        let labelY = pillRect.midY - labelSize.height / 2
+        (label as NSString).draw(at: NSPoint(x: labelX, y: labelY), withAttributes: labelAttrs)
     }
 
     private func annotationAllHandleRects(for rect: NSRect) -> [(ResizeHandle, NSRect)] {
@@ -4381,6 +4516,20 @@ class OverlayView: NSView {
             needsDisplay = true
 
         case .selected:
+            // Sticky color wheel: click to pick a color
+            if colorWheel.isVisible && colorWheel.isSticky {
+                colorWheel.updateHover(at: point)
+                if colorWheel.hoveredColor != nil {
+                    currentColor = colorWheel.hoveredColor!
+                    applyColorToTextIfEditing()
+                    applyColorToSelectedAnnotation()
+                    rebuildToolbarLayout()
+                }
+                colorWheel.dismiss()
+                needsDisplay = true
+                return
+            }
+
             // Check size label click
             if sizeLabelRect.contains(point) && sizeInputField == nil {
                 showSizeInput()
@@ -5108,15 +5257,19 @@ class OverlayView: NSView {
     }
 
     override func rightMouseUp(with event: NSEvent) {
-        if colorWheel.isVisible {
+        if colorWheel.isVisible && !colorWheel.isSticky {
             if colorWheel.hoveredColor != nil {
+                // User dragged to a color — pick it and dismiss
                 currentColor = colorWheel.hoveredColor!
                 applyColorToTextIfEditing()
                 applyColorToSelectedAnnotation()
                 rebuildToolbarLayout()
+                colorWheel.dismiss()
+            } else {
+                // User released without dragging — enter sticky mode
+                // so they can click a color (iPad/Sidecar/accessibility)
+                colorWheel.isSticky = true
             }
-            colorWheel.dismiss()
-            colorWheel.hoveredIndex = -1
             needsDisplay = true
             return
         }
@@ -5959,6 +6112,21 @@ class OverlayView: NSView {
         // and drags always draw, even single dots).
         let isPencilOrMarker = currentTool == .pencil || currentTool == .marker
 
+        // Multi-select delete button — check before single-select controls
+        if selectedAnnotations.count > 1 && multiSelectDeleteButtonRect.contains(point) {
+            for ann in selectedAnnotations {
+                if let idx = annotations.firstIndex(where: { $0 === ann }) {
+                    annotations.remove(at: idx)
+                    undoStack.append(.deleted(ann, idx))
+                }
+            }
+            redoStack.removeAll()
+            selectedAnnotations = []
+            cachedCompositedImage = nil
+            needsDisplay = true
+            return
+        }
+
         // Always check selected annotation controls (delete, resize, etc.) for all tools
         if currentTool != .colorSampler {
             if let selected = selectedAnnotation {
@@ -6034,8 +6202,7 @@ class OverlayView: NSView {
         }
 
         // Shift+click on empty space — start lasso marquee selection
-        // (disabled for pencil/marker where Shift constrains to straight lines)
-        if shiftHeld && currentTool != .pencil && currentTool != .marker {
+        if shiftHeld {
             isLassoSelecting = true
             lassoStart = point
             lassoRect = .zero
@@ -6599,7 +6766,10 @@ class OverlayView: NSView {
                 overlayDelegate?.overlayViewDidRequestStopScrollCapture()
                 return
             }
-            if textEditView != nil {
+            if colorWheel.isVisible && colorWheel.isSticky {
+                colorWheel.dismiss()
+                needsDisplay = true
+            } else if textEditView != nil {
                 cancelTextEditing()
             } else if PopoverHelper.isVisible {
                 PopoverHelper.dismiss()

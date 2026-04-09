@@ -10,6 +10,8 @@ final class MarkerToolHandler: AnnotationToolHandler {
 
     /// Shift-constrain direction for freeform drawing. 0 = undecided, 1 = horizontal, 2 = vertical.
     private var freeformShiftDirection: Int = 0
+    /// The point where shift-constrain started (where the user first held Shift mid-stroke).
+    private var shiftAnchor: NSPoint = .zero
 
     /// Cached OCR observations for the current selection, to avoid re-running OCR on every stroke.
     private var cachedObservations: [VNRecognizedTextObservation]?
@@ -42,6 +44,7 @@ final class MarkerToolHandler: AnnotationToolHandler {
 
     func start(at point: NSPoint, canvas: AnnotationCanvas) -> Annotation? {
         freeformShiftDirection = 0
+        shiftAnchor = .zero
         var strokeWidth = canvas.currentMarkerSize
         if canvas.smartMarkerEnabled {
             // Use detected text line height if available so the stroke matches during drag
@@ -65,26 +68,32 @@ final class MarkerToolHandler: AnnotationToolHandler {
         var clampedPoint = point
 
         if shiftHeld || canvas.smartMarkerEnabled {
-            // Smart marker always constrains to horizontal
-            let refPoint = annotation.points?.last ?? annotation.startPoint
-            let dx = clampedPoint.x - refPoint.x
-            let dy = clampedPoint.y - refPoint.y
-
             if canvas.smartMarkerEnabled {
-                // Always horizontal for smart marker
+                // Always horizontal for smart marker — anchor is always stroke start
                 clampedPoint = NSPoint(x: clampedPoint.x, y: annotation.startPoint.y)
             } else {
+                // Capture the anchor point when shift is first pressed
+                if freeformShiftDirection == 0 && shiftAnchor == .zero {
+                    shiftAnchor = annotation.points?.last ?? annotation.startPoint
+                }
+                let dx = clampedPoint.x - shiftAnchor.x
+                let dy = clampedPoint.y - shiftAnchor.y
+
                 if freeformShiftDirection == 0 && hypot(dx, dy) > 5 {
                     freeformShiftDirection = abs(dx) >= abs(dy) ? 1 : 2
                 }
                 if freeformShiftDirection == 1 {
-                    clampedPoint = NSPoint(x: clampedPoint.x, y: annotation.startPoint.y)
+                    clampedPoint = NSPoint(x: clampedPoint.x, y: shiftAnchor.y)
                 } else if freeformShiftDirection == 2 {
-                    clampedPoint = NSPoint(x: annotation.startPoint.x, y: clampedPoint.y)
+                    clampedPoint = NSPoint(x: shiftAnchor.x, y: clampedPoint.y)
                 } else {
-                    clampedPoint = annotation.startPoint
+                    clampedPoint = shiftAnchor
                 }
             }
+        } else if freeformShiftDirection != 0 {
+            // Shift released — reset so next shift press picks a new anchor
+            freeformShiftDirection = 0
+            shiftAnchor = .zero
         }
 
         // No snap guides for freeform tools

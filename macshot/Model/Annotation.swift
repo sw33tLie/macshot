@@ -166,6 +166,8 @@ class Annotation {
     var sourceImage: NSImage?    // for pixelate: temporary reference during drawing (cleared after bake)
     var sourceImageBounds: NSRect = .zero  // the bounds the image was drawn into
     var bakedBlurNSImage: NSImage?    // baked result for pixelate/blur (NSImage avoids CGImage flip issues)
+    var outlineGlowImage: NSImage?   // cached selection outline glow (invalidated on move/change)
+    var outlineGlowRect: NSRect = .zero  // the rect the cached glow covers
     var textImage: NSImage?   // snapshot of the NSTextView at commit time — drawn as-is, no coord math
     var textDrawRect: NSRect = .zero  // where to draw textImage in OverlayView coords
     var fontSize: CGFloat = 20
@@ -439,6 +441,12 @@ class Annotation {
         // Clear baked image so it re-renders at the new position
         if tool == .loupe || tool == .pixelate {
             bakedBlurNSImage = nil
+        }
+        // Shift the cached glow rect instead of invalidating — the glow shape
+        // doesn't change during a move, only its position.
+        if outlineGlowImage != nil {
+            outlineGlowRect.origin.x += dx
+            outlineGlowRect.origin.y += dy
         }
     }
 

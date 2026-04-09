@@ -1190,32 +1190,30 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         // Detach webcam preview before dismissing overlays so we can reuse the live session
         let existingWebcam = controller.detachWebcamPreview()
 
-        dismissOverlays(refocusPreviousApp: false)
+        // Use the same focus return path as normal screenshot confirm:
+        // dismissOverlays with refocus → returnFocusIfNeeded → NSApp.hide(nil).
+        // This reliably transfers focus AND mouse event routing.
+        // Then create recording UI on the next run loop — all non-activating
+        // panels, so they appear without stealing focus back.
+        dismissOverlays()  // refocusPreviousApp: true (default) — handles focus
+        previousApp = nil
 
         let delay = delayOverride ?? UserDefaults.standard.integer(forKey: "captureDelaySeconds")
-        if delay > 0 {
-            // Can't reuse webcam during countdown — tear it down, beginRecording will create fresh
-            existingWebcam?.stopPreview()
-            existingWebcam?.close()
-            startRecordingCountdown(seconds: delay, rect: rect, screen: screen,
-                                    formatOverride: formatOverride, fpsOverride: fpsOverride,
-                                    onStopOverride: onStopOverride)
-        } else {
-            beginRecording(rect: rect, screen: screen,
-                           formatOverride: formatOverride, fpsOverride: fpsOverride,
-                           onStopOverride: onStopOverride,
-                           existingWebcam: existingWebcam,
-                           hideHUD: hideHUD)
-        }
-        // Return focus: switch to accessory so macshot releases active status,
-        // then yield to previousApp. If previousApp is stale, the setActivationPolicy
-        // alone should cause macOS to activate the next app.
         DispatchQueue.main.async { [weak self] in
-            NSApp.setActivationPolicy(.accessory)
-            if let app = self?.previousApp, !app.isTerminated, app.bundleIdentifier != Bundle.main.bundleIdentifier {
-                AppDelegate.activateApp(app)
+            guard let self = self else { return }
+            if delay > 0 {
+                existingWebcam?.stopPreview()
+                existingWebcam?.close()
+                self.startRecordingCountdown(seconds: delay, rect: rect, screen: screen,
+                                        formatOverride: formatOverride, fpsOverride: fpsOverride,
+                                        onStopOverride: onStopOverride)
+            } else {
+                self.beginRecording(rect: rect, screen: screen,
+                               formatOverride: formatOverride, fpsOverride: fpsOverride,
+                               onStopOverride: onStopOverride,
+                               existingWebcam: existingWebcam,
+                               hideHUD: hideHUD)
             }
-            self?.previousApp = nil
         }
     }
 
@@ -1387,8 +1385,8 @@ extension AppDelegate: OverlayWindowControllerDelegate {
             }
         }
 
-        // Start mouse highlight overlay if enabled
-        if UserDefaults.standard.bool(forKey: "recordMouseHighlight") {
+        // Start mouse highlight overlay if enabled (requires Input Monitoring permission)
+        if UserDefaults.standard.bool(forKey: "recordMouseHighlight") && CGPreflightListenEventAccess() {
             let overlay = MouseHighlightOverlay(screen: screen)
             overlay.orderFrontRegardless()
             overlay.startMonitoring()
