@@ -65,7 +65,7 @@ struct BeautifyConfig {
     }
 }
 
-@MainActor class BeautifyRenderer {
+class BeautifyRenderer {
 
     private static func meshStyle(name: String, points: [SIMD2<Float>], colors: [NSColor], fallbackStops: [(NSColor, CGFloat)], fallbackAngle: CGFloat = 135) -> BeautifyStyle {
         BeautifyStyle(
@@ -485,7 +485,7 @@ struct BeautifyConfig {
 
     /// Pre-render the mesh gradient for a given size (call before entering NSImage drawing handlers
     /// to avoid calling @MainActor-isolated SwiftUI ImageRenderer from a non-isolated closure).
-    static func prerenderBackground(config: BeautifyConfig, width: Int, height: Int) -> CGImage? {
+    @MainActor static func prerenderBackground(config: BeautifyConfig, width: Int, height: Int) -> CGImage? {
         if config.isCustomBackground { return nil }
         let style = config.style
         if #available(macOS 15.0, *), let mesh = style.meshDef {
@@ -573,7 +573,7 @@ struct BeautifyConfig {
     }
 
     /// Render a SwiftUI MeshGradient offscreen into a CGImage (macOS 15+)
-    @available(macOS 15.0, *)
+    @MainActor @available(macOS 15.0, *)
     static func renderMeshGradient(_ mesh: MeshGradientDef, width: Int, height: Int) -> CGImage? {
         let w = max(width, 1)
         let h = max(height, 1)
@@ -593,7 +593,7 @@ struct BeautifyConfig {
     }
 
     /// Render a mesh gradient swatch for the picker (cached-friendly small size)
-    @available(macOS 15.0, *)
+    @MainActor @available(macOS 15.0, *)
     static func renderMeshSwatch(_ mesh: MeshGradientDef, size: CGFloat) -> NSImage? {
         guard let cgImage = renderMeshGradient(mesh, width: Int(size * 2), height: Int(size * 2)) else { return nil }
         return NSImage(cgImage: cgImage, size: NSSize(width: size, height: size))
