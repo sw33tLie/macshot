@@ -24,10 +24,10 @@
     <enclosure url="https://github.com/sw33tLie/macshot/releases/download/v4.0.1/MacShot.dmg" length="5898809" type="application/octet-stream" sparkle:edSignature="PhTJ2x9txgjjNXgZ+YWVu/ozlN6O58mBkrsLRvQCyYKw6wY7PY25MfNc15mwbWVx8DkxlYPaetuU8Hi/sRSICQ==" />
 </item>
 <item>
-    <title>v4.0.2-beta.2</title>
-    <pubDate>Thu, 09 Apr 2026 17:02:34 +0000</pubDate>
-    <sparkle:version>26</sparkle:version>
-    <sparkle:shortVersionString>4.0.2-beta.2</sparkle:shortVersionString>
+    <title>v4.0.2-beta.3</title>
+    <pubDate>Thu, 09 Apr 2026 17:50:31 +0000</pubDate>
+    <sparkle:version>27</sparkle:version>
+    <sparkle:shortVersionString>4.0.2-beta.3</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
     <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
@@ -38,13 +38,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Fixed</h3><ul> <li><b>Crash on macOS 26 (Tahoe) when using beautify</b> — `BeautifyRenderer` was marked `@MainActor` which caused all rendering code inside `NSImage` drawing handler closures to violate actor isolation under macOS 26's stricter concurrency enforcement. Removed class-level `@MainActor`, now only applied to the SwiftUI `ImageRenderer` methods that actually require it.</li> <li><b>Crash with negative style index</b> — `BeautifyConfig.style` used Swift's sign-preserving `%` operator, causing array out-of-bounds when `styleIndex` was `-1` (custom background image). Fixed modulo to always produce a valid index.</li></ul>
+      <h3>Fixed</h3><ul> <li><b>Crash on macOS 26 (Tahoe) when using beautify</b> — `BeautifyRenderer` was marked `@MainActor` which caused all rendering code inside `NSImage` drawing handler closures to violate actor isolation under macOS 26's stricter concurrency enforcement. Removed class-level `@MainActor`, now only applied to the SwiftUI `ImageRenderer` methods that actually require it.</li> <li><b>Crash with negative style index</b> — `BeautifyConfig.style` used Swift's sign-preserving `%` operator, causing array out-of-bounds when `styleIndex` was `-1` (custom background image). Fixed modulo to always produce a valid index.</li> <li><b>Missing translations</b> — 8 UI strings were missing from localization files. Added translations for all 40 locales. Wrapped "Same as screenshots" with `L()`.</li> <li><b>Beautify custom background lag</b> — custom background images were re-decoded and re-processed (including CIFilter blur) on every draw frame during selection resize. Now pre-rendered to a cached CGImage once when the image or blur setting changes.</li></ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v4.0.2-beta.2/MacShot.dmg"
-        length="5897928"
+        url="https://github.com/sw33tLie/macshot/releases/download/v4.0.2-beta.3/MacShot.dmg"
+        length="5911326"
         type="application/octet-stream"
-        sparkle:edSignature="6WGwvwUGG7i5G/OYIaMqUHYt9APMEidd5joWB/sQyhhln2tCWWIlkpQV+iazM2lC0AOlR/0NPiUGidpPw2c3AA=="
+        sparkle:edSignature="1ouo12gWPiIhdzm0eNuv9qHTw4YTwRKeNSzeF+6j4sQC+rcXJwGUOSCNeBhZaWwyeHNzEpabzdEKJ5OZK3qVCA=="
     />
 </item>
     </channel>
