@@ -485,7 +485,7 @@ class BeautifyRenderer {
 
     /// Pre-render the mesh gradient for a given size (call before entering NSImage drawing handlers
     /// to avoid calling @MainActor-isolated SwiftUI ImageRenderer from a non-isolated closure).
-    @MainActor static func prerenderBackground(config: BeautifyConfig, width: Int, height: Int) -> CGImage? {
+    static func prerenderBackground(config: BeautifyConfig, width: Int, height: Int) -> CGImage? {
         if config.isCustomBackground { return nil }
         let style = config.style
         if #available(macOS 15.0, *), let mesh = style.meshDef {
@@ -572,8 +572,9 @@ class BeautifyRenderer {
         context.drawLinearGradient(gradient, start: start, end: end, options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
     }
 
-    /// Render a SwiftUI MeshGradient offscreen into a CGImage (macOS 15+)
-    @MainActor @available(macOS 15.0, *)
+    /// Render a SwiftUI MeshGradient offscreen into a CGImage (macOS 15+).
+    /// Must be called from the main thread (uses SwiftUI ImageRenderer).
+    @available(macOS 15.0, *)
     static func renderMeshGradient(_ mesh: MeshGradientDef, width: Int, height: Int) -> CGImage? {
         let w = max(width, 1)
         let h = max(height, 1)
@@ -587,13 +588,15 @@ class BeautifyRenderer {
         )
         .frame(width: CGFloat(w), height: CGFloat(h))
 
-        let renderer = ImageRenderer(content: view)
-        renderer.scale = 1.0
-        return renderer.cgImage
+        return MainActor.assumeIsolated {
+            let renderer = ImageRenderer(content: view)
+            renderer.scale = 1.0
+            return renderer.cgImage
+        }
     }
 
     /// Render a mesh gradient swatch for the picker (cached-friendly small size)
-    @MainActor @available(macOS 15.0, *)
+    @available(macOS 15.0, *)
     static func renderMeshSwatch(_ mesh: MeshGradientDef, size: CGFloat) -> NSImage? {
         guard let cgImage = renderMeshGradient(mesh, width: Int(size * 2), height: Int(size * 2)) else { return nil }
         return NSImage(cgImage: cgImage, size: NSSize(width: size, height: size))
