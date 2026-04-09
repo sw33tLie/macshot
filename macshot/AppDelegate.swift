@@ -3,6 +3,7 @@ import Carbon
 import Sparkle
 import UniformTypeIdentifiers
 import AVFoundation
+import WebP
 
 @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
@@ -984,8 +985,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func openImageFile(url: URL) {
-        guard let image = NSImage(contentsOf: url) else { return }
-        // Use the filename (without extension) for the editor window title
+        let image: NSImage
+        if url.pathExtension.lowercased() == "webp",
+           let data = try? Data(contentsOf: url),
+           let decoded = try? WebPDecoder().decode(toNSImage: data, options: WebPDecoderOptions()) {
+            image = decoded
+        } else if let loaded = NSImage(contentsOf: url) {
+            image = loaded
+        } else {
+            return
+        }
         DetachedEditorWindowController.open(image: image)
     }
 
