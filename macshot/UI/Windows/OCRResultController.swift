@@ -229,7 +229,9 @@ class OCRResultController: NSObject {
         window?.orderOut(nil)
         window?.close()
         window = nil
-        (NSApp.delegate as? AppDelegate)?.returnFocusIfNeeded()
+        MainActor.assumeIsolated {
+            (NSApp.delegate as? AppDelegate)?.returnFocusIfNeeded()
+        }
     }
 
     // MARK: - Actions

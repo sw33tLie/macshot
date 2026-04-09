@@ -104,7 +104,9 @@ final class HistoryOverlayController: NSObject, QLPreviewPanelDataSource, QLPrev
 
     func confirmClearHistory() {
         dismiss()
-        (NSApp.delegate as? AppDelegate)?.confirmClearHistory()
+        MainActor.assumeIsolated {
+            (NSApp.delegate as? AppDelegate)?.confirmClearHistory()
+        }
     }
 
     func dismiss() {
