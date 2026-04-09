@@ -491,3 +491,5 @@
 "This will permanently delete all screenshots from history." = "Isso excluirá permanentemente todas as capturas de tela do histórico.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Clique em \"Definir\" e pressione uma combinação de teclas com pelo menos um modificador (⌘, ⌥, ⌃, ⇧) para definir um atalho.";
 "Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Os arquivos são enviados para uma pasta \"macshot\" no seu Google Drive. Tudo permanece privado — nada é compartilhado publicamente.";
+
+"Pressure" = "Pressão";

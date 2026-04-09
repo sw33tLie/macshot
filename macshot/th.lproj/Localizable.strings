@@ -491,3 +491,5 @@
 "This will permanently delete all screenshots from history." = "การดำเนินการนี้จะลบภาพหน้าจอทั้งหมดออกจากประวัติอย่างถาวร";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "คลิก \"ตั้งค่า\" แล้วกดคีย์ผสมที่มีปุ่มตัวแก้ไขอย่างน้อยหนึ่งปุ่ม (⌘, ⌥, ⌃, ⇧) เพื่อตั้งค่าทางลัด";
 "Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "ไฟล์จะถูกอัปโหลดไปยังโฟลเดอร์ \"macshot\" ใน Google Drive ของคุณ ทุกอย่างเป็นส่วนตัว — ไม่มีการแชร์สาธารณะ";
+
+"Pressure" = "แรงกด";

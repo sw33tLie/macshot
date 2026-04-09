@@ -1,6 +1,10 @@
 # Changelog
 
-## [4.0.2-beta.3] - 2026-04-09
+## [4.0.2-beta.4] - 2026-04-09
+
+### Added
+- **Pen pressure sensitivity** — Apple Pencil (Sidecar) and tablet pressure varies stroke width in real time. Toggle via "Pressure" checkbox in pencil tool options. Pressure data is preserved through smoothing and in editable history. Non-tablet users are unaffected.
+- **Paste screenshot as file in Finder** — Cmd+V in Finder now pastes the captured screenshot as a PNG file.
 
 ### Fixed
 - **Crash on macOS 26 (Tahoe) when using beautify** — `BeautifyRenderer` was marked `@MainActor` which caused all rendering code inside `NSImage` drawing handler closures to violate actor isolation under macOS 26's stricter concurrency enforcement. Removed class-level `@MainActor`, now only applied to the SwiftUI `ImageRenderer` methods that actually require it.

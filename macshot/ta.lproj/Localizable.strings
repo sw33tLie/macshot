@@ -493,3 +493,5 @@
 "This will permanently delete all screenshots from history." = "இது வரலாற்றில் உள்ள அனைத்து ஸ்கிரீன்ஷாட்களையும் நிரந்தரமாக நீக்கும்.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "\"அமை\" என்பதை கிளிக் செய்து, குறுக்குவழியை அமைக்க குறைந்தது ஒரு மாற்றி (⌘, ⌥, ⌃, ⇧) கொண்ட விசை சேர்க்கையை அழுத்தவும்.";
 "Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "கோப்புகள் உங்கள் Google Drive-ல் உள்ள \"macshot\" கோப்புறையில் பதிவேற்றப்படும். அனைத்தும் தனிப்பட்டதாக இருக்கும் — எதுவும் பொதுவில் பகிரப்படாது.";
+
+"Pressure" = "அழுத்தம்";

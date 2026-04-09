@@ -163,6 +163,7 @@ class Annotation {
     var number: Int?
     var numberFormat: NumberFormat = .decimal
     var points: [NSPoint]?
+    var pressures: [CGFloat]?  // per-point pressure (parallel to points), nil = uniform width
     var sourceImage: NSImage?    // for pixelate: temporary reference during drawing (cleared after bake)
     var sourceImageBounds: NSRect = .zero  // the bounds the image was drawn into
     var bakedBlurNSImage: NSImage?    // baked result for pixelate/blur (NSImage avoids CGImage flip issues)
@@ -235,6 +236,7 @@ class Annotation {
         c.number = number
         c.numberFormat = numberFormat
         c.points = points
+        c.pressures = pressures
         c.bakedBlurNSImage = bakedBlurNSImage
         c.textImage = textImage
         c.textDrawRect = textDrawRect
@@ -693,6 +695,47 @@ class Annotation {
                 let dotRect = NSRect(x: x - dotRadius, y: y - dotRadius, width: dotRadius * 2, height: dotRadius * 2)
                 NSBezierPath(ovalIn: dotRect).fill()
                 dist += spacing
+            }
+
+            ctx.endTransparencyLayer()
+            ctx.setAlpha(1.0)
+            return
+        }
+
+        // Variable-width stroke (pressure sensitive)
+        if let pressures = pressures, pressures.count == points.count, lineStyle == .solid {
+            ctx.setAlpha(alpha)
+            ctx.beginTransparencyLayer(auxiliaryInfo: nil)
+            color.withAlphaComponent(1.0).setFill()
+
+            // Draw filled circles at each point + connecting quads for smooth width transitions
+            for i in 0..<points.count {
+                let r = max(width * pressures[i], 0.5) / 2
+                ctx.fillEllipse(in: CGRect(x: points[i].x - r, y: points[i].y - r, width: r * 2, height: r * 2))
+
+                if i > 0 {
+                    let p0 = points[i - 1]
+                    let p1 = points[i]
+                    let r0 = max(width * pressures[i - 1], 0.5) / 2
+                    let r1 = max(width * pressures[i], 0.5) / 2
+
+                    let dx = p1.x - p0.x
+                    let dy = p1.y - p0.y
+                    let len = hypot(dx, dy)
+                    guard len > 0.1 else { continue }
+                    // Normal perpendicular to the line segment
+                    let nx = -dy / len
+                    let ny = dx / len
+
+                    // Build a quad connecting the two circles
+                    let quad = NSBezierPath()
+                    quad.move(to: NSPoint(x: p0.x + nx * r0, y: p0.y + ny * r0))
+                    quad.line(to: NSPoint(x: p1.x + nx * r1, y: p1.y + ny * r1))
+                    quad.line(to: NSPoint(x: p1.x - nx * r1, y: p1.y - ny * r1))
+                    quad.line(to: NSPoint(x: p0.x - nx * r0, y: p0.y - ny * r0))
+                    quad.close()
+                    quad.fill()
+                }
             }
 
             ctx.endTransparencyLayer()

@@ -179,6 +179,13 @@ class ToolOptionsRowView: NSView {
             seg.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: seg.frame.width, height: 22)
             addSubview(seg)
             curX += seg.frame.width + 4
+
+            // ── Pressure sensitivity toggle ──
+            curX = addSeparator(at: curX)
+            curX = addToggle(at: curX, title: L("Pressure"), isOn: ov.pencilPressureEnabled) { [weak ov] isOn in
+                ov?.pencilPressureEnabled = isOn
+                UserDefaults.standard.set(isOn, forKey: "pencilPressureEnabled")
+            }
         }
 
         // ── Smart marker toggle ──

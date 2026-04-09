@@ -493,3 +493,5 @@
 "This will permanently delete all screenshots from history." = "Αυτό θα διαγράψει μόνιμα όλα τα στιγμιότυπα από το ιστορικό.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Κάνε κλικ στο \"Ορισμός\" και πάτησε έναν συνδυασμό πλήκτρων με τουλάχιστον έναν τροποποιητή (⌘, ⌥, ⌃, ⇧) για να ορίσεις μια συντόμευση.";
 "Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Τα αρχεία ανεβαίνουν σε έναν φάκελο \"macshot\" στο Google Drive σου. Όλα παραμένουν ιδιωτικά — τίποτα δεν κοινοποιείται δημόσια.";
+
+"Pressure" = "Πίεση";

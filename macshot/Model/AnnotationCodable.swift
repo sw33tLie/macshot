@@ -35,6 +35,7 @@ struct CodableAnnotation: Codable {
 
     // Points (pencil/marker freeform paths)
     var points: [[CGFloat]]?  // [[x, y], ...]
+    var pressures: [CGFloat]?  // per-point pressure (parallel to points)
 
     // Line/arrow bend points
     var controlPointXY: [CGFloat]?  // [x, y]
@@ -103,6 +104,7 @@ extension Annotation {
         if let pts = points {
             c.points = pts.map { [$0.x, $0.y] }
         }
+        c.pressures = pressures
 
         // Control/anchor points
         if let cp = controlPoint { c.controlPointXY = [cp.x, cp.y] }
@@ -174,6 +176,7 @@ extension Annotation {
                 return NSPoint(x: p[0], y: p[1])
             }
         }
+        ann.pressures = c.pressures
 
         // Control/anchor points
         if let cp = c.controlPointXY, cp.count == 2 {

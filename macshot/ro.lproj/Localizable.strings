@@ -491,3 +491,5 @@
 "This will permanently delete all screenshots from history." = "Aceasta va șterge definitiv toate capturile de ecran din istoric.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Apasă \"Setează\" și tastează o combinație de taste cu cel puțin un modificator (⌘, ⌥, ⌃, ⇧) pentru a seta o scurtătură.";
 "Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Fișierele sunt încărcate într-un folder \"macshot\" din Google Drive-ul tău. Totul rămâne privat — nimic nu este distribuit public.";
+
+"Pressure" = "Presiune";

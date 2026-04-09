@@ -442,6 +442,9 @@ class OverlayView: NSView {
         }
         return UserDefaults.standard.object(forKey: "pencilSmoothMode") as? Int ?? 1
     }()
+    var pencilPressureEnabled: Bool =
+        UserDefaults.standard.object(forKey: "pencilPressureEnabled") as? Bool ?? false
+    var currentPressure: CGFloat = 1.0
     var smartMarkerEnabled: Bool =
         UserDefaults.standard.object(forKey: "smartMarkerEnabled") as? Bool ?? false
     private var roundedRectEnabled: Bool =
@@ -3206,8 +3209,10 @@ class OverlayView: NSView {
             path.lineWidth = 1.0
             path.stroke()
         } else {
-            // Pencil: solid dot at stroke width
-            let radius = drawingCursorRadius
+            // Pencil: solid dot at stroke width (scaled by pressure when enabled)
+            var radius = drawingCursorRadius
+            if pencilPressureEnabled { radius *= currentPressure }
+            radius = max(radius, 0.5)
             let circleRect = NSRect(
                 x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)
             let path = NSBezierPath(ovalIn: circleRect)
@@ -4382,6 +4387,9 @@ class OverlayView: NSView {
 
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
+        // Update pressure for tablet/Sidecar (0.0 for non-tablet events → treat as 1.0)
+        let p = event.pressure
+        currentPressure = p > 0 ? CGFloat(p) : 1.0
 
         // Auto-measure: click to commit the preview annotation
         if autoMeasureKeyHeld, let preview = autoMeasurePreview {
@@ -5024,6 +5032,8 @@ class OverlayView: NSView {
                     }
                     spaceRepositionLast = canvasPoint
                 } else {
+                    let p = event.pressure
+                    currentPressure = p > 0 ? CGFloat(p) : 1.0
                     updateAnnotation(
                         at: canvasPoint, shiftHeld: event.modifierFlags.contains(.shift))
                 }

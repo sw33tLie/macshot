@@ -491,3 +491,5 @@
 "This will permanently delete all screenshots from history." = "Ini akan menghapus semua tangkapan layar dari riwayat secara permanen.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Klik \"Atur\" dan tekan kombinasi tombol dengan setidaknya satu modifier (⌘, ⌥, ⌃, ⇧) untuk menetapkan pintasan.";
 "Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "File diunggah ke folder \"macshot\" di Google Drive Anda. Semuanya tetap privat — tidak ada yang dibagikan secara publik.";
+
+"Pressure" = "Tekanan";

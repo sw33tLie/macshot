@@ -12,6 +12,7 @@ final class PencilToolHandler: AnnotationToolHandler {
     private var shiftAnchor: NSPoint = .zero
     /// Moving average window for live smoothing (Refined mode).
     private var rawPointBuffer: [NSPoint] = []
+    private var rawPressureBuffer: [CGFloat] = []
     private let smoothWindowSize: Int = 8
 
     var cursor: NSCursor? { nil }  // dot preview replaces system cursor
@@ -22,6 +23,7 @@ final class PencilToolHandler: AnnotationToolHandler {
         freeformShiftDirection = 0
         shiftAnchor = .zero
         rawPointBuffer = [point]
+        rawPressureBuffer = [canvas.currentPressure]
         let annotation = Annotation(
             tool: .pencil,
             startPoint: point,
@@ -30,6 +32,9 @@ final class PencilToolHandler: AnnotationToolHandler {
             strokeWidth: canvas.currentStrokeWidth
         )
         annotation.points = [point]
+        if canvas.pencilPressureEnabled {
+            annotation.pressures = [canvas.currentPressure]
+        }
         annotation.lineStyle = canvas.currentLineStyle
         return annotation
     }
@@ -66,6 +71,7 @@ final class PencilToolHandler: AnnotationToolHandler {
         // Draw the raw point immediately (zero lag) — smoothing is applied in finish().
         if canvas.pencilSmoothMode == 2 {
             rawPointBuffer.append(clampedPoint)
+            rawPressureBuffer.append(canvas.currentPressure)
         }
 
         // No snap guides for freeform tools
@@ -74,6 +80,7 @@ final class PencilToolHandler: AnnotationToolHandler {
 
         annotation.endPoint = clampedPoint
         annotation.points?.append(clampedPoint)
+        annotation.pressures?.append(canvas.currentPressure)
     }
 
     func finish(canvas: AnnotationCanvas) {
@@ -87,6 +94,10 @@ final class PencilToolHandler: AnnotationToolHandler {
         // Single click: offset points slightly so the round line cap renders a visible dot
         if points.count < 3, let p = points.first {
             annotation.points = [p, NSPoint(x: p.x + 0.5, y: p.y), NSPoint(x: p.x + 0.5, y: p.y)]
+            if annotation.pressures != nil {
+                let pr = annotation.pressures?.first ?? 1.0
+                annotation.pressures = [pr, pr, pr]
+            }
         } else if canvas.pencilSmoothMode == 2 {
             // Refined: retroactively apply moving average to the full raw buffer,
             // then Chaikin polish. Same result as live-smoothing but with zero
@@ -99,9 +110,21 @@ final class PencilToolHandler: AnnotationToolHandler {
                 final.append(last)
             }
             annotation.points = final
+            // Interpolate pressures to match smoothed point count
+            if annotation.pressures != nil {
+                let smoothedP = Self.movingAverageSmoothValues(rawPressureBuffer, windowSize: smoothWindowSize)
+                var finalP = Self.chaikinSmoothValues(smoothedP, iterations: 2)
+                if let lastP = rawPressureBuffer.last {
+                    if finalP.count < final.count { finalP.append(lastP) }
+                }
+                annotation.pressures = finalP
+            }
         } else if canvas.pencilSmoothMode >= 1 {
             // Mode 1 (Smooth): Chaikin on finish only
             annotation.points = Self.chaikinSmooth(points, iterations: 2)
+            if let pressures = annotation.pressures {
+                annotation.pressures = Self.chaikinSmoothValues(pressures, iterations: 2)
+            }
         }
 
         // Update drawing cursor position so dot doesn't jump back to pre-drag location
@@ -111,6 +134,7 @@ final class PencilToolHandler: AnnotationToolHandler {
         commitAnnotation(annotation, canvas: canvas)
         freeformShiftDirection = 0
         rawPointBuffer.removeAll()
+        rawPressureBuffer.removeAll()
     }
 
     // MARK: - Smoothing
@@ -128,6 +152,36 @@ final class PencilToolHandler: AnnotationToolHandler {
             for j in lo...i { avgX += pts[j].x; avgY += pts[j].y }
             let n = CGFloat(i - lo + 1)
             result.append(NSPoint(x: avgX / n, y: avgY / n))
+        }
+        return result
+    }
+
+    /// Moving average for scalar values (pressures), matching movingAverageSmooth for points.
+    static func movingAverageSmoothValues(_ vals: [CGFloat], windowSize: Int) -> [CGFloat] {
+        guard vals.count > 2 else { return vals }
+        var result: [CGFloat] = []
+        result.reserveCapacity(vals.count)
+        for i in 0..<vals.count {
+            let lo = max(0, i - windowSize + 1)
+            var sum: CGFloat = 0
+            for j in lo...i { sum += vals[j] }
+            result.append(sum / CGFloat(i - lo + 1))
+        }
+        return result
+    }
+
+    /// Chaikin smoothing for scalar values (pressures), matching chaikinSmooth for points.
+    static func chaikinSmoothValues(_ vals: [CGFloat], iterations: Int) -> [CGFloat] {
+        guard vals.count > 2 else { return vals }
+        var result = vals
+        for _ in 0..<iterations {
+            var next: [CGFloat] = [result[0]]
+            for i in 0..<result.count - 1 {
+                next.append(0.75 * result[i] + 0.25 * result[i + 1])
+                next.append(0.25 * result[i] + 0.75 * result[i + 1])
+            }
+            next.append(result[result.count - 1])
+            result = next
         }
         return result
     }

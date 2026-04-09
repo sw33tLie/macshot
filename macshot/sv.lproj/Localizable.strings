@@ -493,3 +493,5 @@
 "This will permanently delete all screenshots from history." = "Detta kommer permanent att ta bort alla skärmdumpar från historiken.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Klicka på \"Ange\" och tryck på en tangentkombination med minst en modifierare (⌘, ⌥, ⌃, ⇧) för att ange en genväg.";
 "Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Filer laddas upp till en \"macshot\"-mapp i din Google Drive. Allt förblir privat — inget delas offentligt.";
+
+"Pressure" = "Tryck";

@@ -493,3 +493,5 @@
 "This will permanently delete all screenshots from history." = "এটি ইতিহাস থেকে সমস্ত স্ক্রিনশট স্থায়ীভাবে মুছে দেবে।";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "\"Set\" ক্লিক করুন এবং একটি শর্টকাট নির্ধারণ করতে কমপক্ষে একটি মডিফায়ার (⌘, ⌥, ⌃, ⇧) সহ একটি কী সমন্বয় চাপুন।";
 "Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "ফাইলগুলি আপনার Google Drive-এর \"macshot\" ফোল্ডারে আপলোড করা হয়। সব কিছু ব্যক্তিগত থাকে — কিছুই প্রকাশ্যে শেয়ার করা হয় না।";
+
+"Pressure" = "চাপ";

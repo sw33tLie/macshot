@@ -493,3 +493,5 @@
 "This will permanently delete all screenshots from history." = "這將從歷史記錄中永久刪除所有截圖。";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "點擊\"設定\"，然後按下包含至少一個修飾鍵（⌘、⌥、⌃、⇧）的組合鍵來設定快捷鍵。";
 "Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "檔案將上傳至您 Google Drive 中的\"macshot\"資料夾。所有內容均保持私密——不會公開分享任何內容。";
+
+"Pressure" = "壓感";

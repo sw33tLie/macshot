@@ -493,3 +493,5 @@
 "This will permanently delete all screenshots from history." = "기록에서 모든 스크린샷이 영구적으로 삭제됩니다.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "\"설정\" 을 클릭하고 적어도 하나의 수정 키 (⌘, ⌥, ⌃, ⇧) 가 포함된 키 조합을 눌러 단축키를 설정하세요.";
 "Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "파일은 Google Drive의 \"macshot\" 폴더에 업로드됩니다. 모든 것은 비공개로 유지되며 공개적으로 공유되지 않습니다.";
+
+"Pressure" = "필압";

@@ -493,3 +493,5 @@
 "This will permanently delete all screenshots from history." = "Ovo će trajno obrisati sve snimke ekrana iz istorije.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Kliknite \"Postavi\" i pritisnite kombinaciju tastera sa barem jednim modifikatorom (⌘, ⌥, ⌃, ⇧) da biste postavili prečicu.";
 "Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Fajlovi se otpremaju u fasciklu \"macshot\" na vašem Google disku. Sve ostaje privatno — ništa se ne deli javno.";
+
+"Pressure" = "Pritisak";

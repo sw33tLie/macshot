@@ -493,3 +493,5 @@
 "This will permanently delete all screenshots from history." = "Permanenteng mabubura ang lahat ng screenshot mula sa history.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "I-click ang \"Set\" at pindutin ang kombinasyon ng key na may kahit isang modifier (⌘, ⌥, ⌃, ⇧) upang magtakda ng shortcut.";
 "Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Ina-upload ang mga file sa isang \"macshot\" na folder sa iyong Google Drive. Nananatiling pribado ang lahat — walang ibinabahagi nang publiko.";
+
+"Pressure" = "Pressure";

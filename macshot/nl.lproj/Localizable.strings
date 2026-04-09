@@ -491,3 +491,5 @@
 "This will permanently delete all screenshots from history." = "Hiermee worden alle schermafbeeldingen definitief uit de geschiedenis verwijderd.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Klik op \"Instellen\" en druk op een toetscombinatie met ten minste één modifier (⌘, ⌥, ⌃, ⇧) om een sneltoets in te stellen.";
 "Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Bestanden worden geüpload naar een \"macshot\"-map in uw Google Drive. Alles blijft privé — er wordt niets openbaar gedeeld.";
+
+"Pressure" = "Druk";
