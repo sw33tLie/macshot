@@ -6136,8 +6136,12 @@ class OverlayView: NSView {
 
         // Click-to-select body: for pencil/marker, only instant-select when Shift is held
         // (otherwise they use long-press below to avoid accidental selection while drawing).
+        // Text tool: use instant-select when Shift is held (multi-select) or when clicking
+        // on an already-selected annotation (allows multi-drag).
         let shiftHeld = NSEvent.modifierFlags.contains(.shift)
-        let useInstantSelect = currentTool != .colorSampler && currentTool != .text
+        let textHasSelection = currentTool == .text && !selectedAnnotations.isEmpty
+        let useInstantSelect = currentTool != .colorSampler
+            && (currentTool != .text || shiftHeld || textHasSelection)
             && (!isPencilOrMarker || shiftHeld)
         if useInstantSelect {
             if let clicked = annotations.reversed().first(where: { $0.isMovable && $0.hitTest(point: point) }) {
