@@ -195,6 +195,7 @@ enum ImageEncoder {
     /// Copy image to pasteboard as PNG.
     /// Explicitly sets PNG data so receiving apps (browsers, editors) get
     /// a lossless PNG instead of the TIFF that NSImage.writeObjects provides.
+    /// Also writes a temporary file URL so Finder paste (Cmd+V in a folder) works.
     static func copyToClipboard(_ image: NSImage) {
         // Clear pasteboard immediately so Cmd+V doesn't paste stale content
         let pasteboard = NSPasteboard.general
@@ -203,8 +204,19 @@ enum ImageEncoder {
         DispatchQueue.global(qos: .userInitiated).async {
             guard let bitmap = makeBitmap(image),
                   let pngData = bitmap.representation(using: .png, properties: [:]) else { return }
+            // Write a temp file so Finder can paste it as a file
+            let tmpURL = FileManager.default.temporaryDirectory
+                .appendingPathComponent("macshot-clipboard-\(UUID().uuidString).png")
+            let fileURL: URL? = (try? pngData.write(to: tmpURL)) != nil ? tmpURL : nil
             DispatchQueue.main.async {
+                // Declare both types so image editors get PNG data and Finder gets a file URL.
+                var types: [NSPasteboard.PasteboardType] = [.png]
+                if fileURL != nil { types.append(.fileURL) }
+                pasteboard.declareTypes(types, owner: nil)
                 pasteboard.setData(pngData, forType: .png)
+                if let url = fileURL {
+                    pasteboard.setString(url.absoluteString, forType: .fileURL)
+                }
             }
         }
     }
