@@ -463,9 +463,7 @@ private final class VideoEditorView: NSView {
         let btnY: CGFloat = 12
         let gap: CGFloat = 8
         let iconBtnW: CGFloat = 34
-        // Use compact (icon-only) buttons when window is narrow
-        let compact = bounds.width < 700
-        let labelBtnW: CGFloat = compact ? iconBtnW : 100
+        let labelBtnW: CGFloat = 100
 
         // Pre-compute right group width so left content knows where to stop
         let copyArrowW: CGFloat = 20
@@ -525,7 +523,7 @@ private final class VideoEditorView: NSView {
             x += segW + 12
         }
 
-        if !compact {
+        do {
             let infoAttrs: [NSAttributedString.Key: Any] = [
                 .font: NSFont.systemFont(ofSize: 10, weight: .regular),
                 .foregroundColor: NSColor.white.withAlphaComponent(0.4),
@@ -603,19 +601,7 @@ private final class VideoEditorView: NSView {
         NSColor.white.withAlphaComponent(0.1).setFill()
         NSBezierPath(roundedRect: fullCopyRect, xRadius: 6, yRadius: 6).fill()
 
-        if compact {
-            if let img = NSImage(systemSymbolName: "doc.on.doc", accessibilityDescription: nil)?
-                    .withSymbolConfiguration(.init(pointSize: 13, weight: .medium)) {
-                let tinted = NSImage(size: img.size, flipped: false) { r in
-                    img.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1)
-                    NSColor.white.setFill()
-                    r.fill(using: .sourceAtop)
-                    return true
-                }
-                tinted.draw(in: NSRect(x: copyBtnRect.midX - img.size.width / 2, y: copyBtnRect.midY - img.size.height / 2,
-                                        width: img.size.width, height: img.size.height))
-            }
-        } else {
+        do {
             let iconSize: CGFloat = 12
             let copyAttrs: [NSAttributedString.Key: Any] = [
                 .font: NSFont.systemFont(ofSize: 11, weight: .medium),
@@ -666,11 +652,7 @@ private final class VideoEditorView: NSView {
         let uploadProvider = UserDefaults.standard.string(forKey: "uploadProvider") ?? "imgbb"
         let canUpload = (uploadProvider == "gdrive" && GoogleDriveUploader.shared.isSignedIn) || (uploadProvider == "s3" && S3Uploader.shared.isConfigured)
         uploadBtnRect = NSRect(x: x, y: btnY, width: labelBtnW, height: btnH)
-        if compact {
-            drawIconButton(rect: uploadBtnRect, symbol: "icloud.and.arrow.up", accent: false)
-        } else {
-            drawLabelButton(rect: uploadBtnRect, symbol: "icloud.and.arrow.up", label: L("Upload"), dimmed: !canUpload)
-        }
+        drawLabelButton(rect: uploadBtnRect, symbol: "icloud.and.arrow.up", label: L("Upload"), dimmed: !canUpload)
         let arrowW: CGFloat = 20
         x -= gap + labelBtnW + arrowW
         let fullSaveW = labelBtnW + arrowW
@@ -682,21 +664,8 @@ private final class VideoEditorView: NSView {
         NSColor.white.withAlphaComponent(0.1).setFill()
         NSBezierPath(roundedRect: fullSaveRect, xRadius: 6, yRadius: 6).fill()
 
-        // Draw save icon + label in left portion
-        if compact {
-            if let img = NSImage(systemSymbolName: "square.and.arrow.down", accessibilityDescription: nil)?
-                    .withSymbolConfiguration(.init(pointSize: 13, weight: .medium)) {
-                let tinted = NSImage(size: img.size, flipped: false) { r in
-                    img.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1)
-                    NSColor.white.setFill()
-                    r.fill(using: .sourceAtop)
-                    return true
-                }
-                let imgRect = NSRect(x: saveBtnRect.midX - img.size.width / 2, y: saveBtnRect.midY - img.size.height / 2,
-                                      width: img.size.width, height: img.size.height)
-                tinted.draw(in: imgRect)
-            }
-        } else {
+        // Draw save icon + label
+        do {
             let iconSize: CGFloat = 12
             let attrs: [NSAttributedString.Key: Any] = [
                 .font: NSFont.systemFont(ofSize: 11, weight: .medium),
