@@ -1341,13 +1341,14 @@ class ToolOptionsRowView: NSView {
             label.sizeToFit()
         }
         ov.textEditor.applyFontSizeChange()
+        ov.applyTextFormattingToSelectedAnnotations()
         ov.needsDisplay = true
     }
 
-    @objc private func boldToggled() { overlayView?.textEditor.toggleBold(); overlayView.map { $0.needsDisplay = true; rebuild(for: $0.currentTool) } }
-    @objc private func italicToggled() { overlayView?.textEditor.toggleItalic(); overlayView.map { $0.needsDisplay = true; rebuild(for: $0.currentTool) } }
-    @objc private func underlineToggled() { overlayView?.textEditor.toggleUnderline(); overlayView.map { $0.needsDisplay = true; rebuild(for: $0.currentTool) } }
-    @objc private func strikethroughToggled() { overlayView?.textEditor.toggleStrikethrough(); overlayView.map { $0.needsDisplay = true; rebuild(for: $0.currentTool) } }
+    @objc private func boldToggled() { overlayView?.textEditor.toggleBold(); overlayView.map { $0.applyTextFormattingToSelectedAnnotations(); $0.needsDisplay = true; rebuild(for: $0.currentTool) } }
+    @objc private func italicToggled() { overlayView?.textEditor.toggleItalic(); overlayView.map { $0.applyTextFormattingToSelectedAnnotations(); $0.needsDisplay = true; rebuild(for: $0.currentTool) } }
+    @objc private func underlineToggled() { overlayView?.textEditor.toggleUnderline(); overlayView.map { $0.applyTextFormattingToSelectedAnnotations(); $0.needsDisplay = true; rebuild(for: $0.currentTool) } }
+    @objc private func strikethroughToggled() { overlayView?.textEditor.toggleStrikethrough(); overlayView.map { $0.applyTextFormattingToSelectedAnnotations(); $0.needsDisplay = true; rebuild(for: $0.currentTool) } }
 
     @objc private func measureUnitChanged(_ sender: NSSegmentedControl) {
         guard let ov = overlayView else { return }
@@ -1423,6 +1424,7 @@ class ToolOptionsRowView: NSView {
             ov.textEditor.fontFamily = family
             UserDefaults.standard.set(family, forKey: "textFontFamily")
             ov.textEditor.applyFontSizeChange()
+            ov.applyTextFormattingToSelectedAnnotations()
             ov.rebuildToolbarLayout()
             ov.needsDisplay = true
             PopoverHelper.dismiss()
@@ -1438,6 +1440,7 @@ class ToolOptionsRowView: NSView {
         if let align = NSTextAlignment(rawValue: sender.tag) {
             ov.textEditor.alignment = align
             ov.textEditor.applyAlignment()
+            ov.applyTextFormattingToSelectedAnnotations()
             // Update all alignment buttons — only the selected one should be on
             for case let btn as NSButton in subviews where
                 btn.tag == NSTextAlignment.left.rawValue ||
@@ -1455,6 +1458,7 @@ class ToolOptionsRowView: NSView {
         UserDefaults.standard.set(Double(ov.textEditor.fontSize), forKey: "textFontSize")
         ov.textEditor.applyFontSizeChange()
         ov.textEditor.resizeToFit()
+        ov.applyTextFormattingToSelectedAnnotations()
         if let label = viewWithTag(998) as? NSTextField { label.stringValue = "\(Int(ov.textEditor.fontSize))" }
         ov.needsDisplay = true
     }
@@ -1465,6 +1469,7 @@ class ToolOptionsRowView: NSView {
         UserDefaults.standard.set(Double(ov.textEditor.fontSize), forKey: "textFontSize")
         ov.textEditor.applyFontSizeChange()
         ov.textEditor.resizeToFit()
+        ov.applyTextFormattingToSelectedAnnotations()
         if let label = viewWithTag(998) as? NSTextField { label.stringValue = "\(Int(ov.textEditor.fontSize))" }
         ov.needsDisplay = true
     }
@@ -1475,6 +1480,7 @@ class ToolOptionsRowView: NSView {
         UserDefaults.standard.set(ov.textEditor.bgEnabled, forKey: "textBgEnabled")
         // Update swatch opacity
         if let swatch = viewWithTag(975) { swatch.layer?.opacity = ov.textEditor.bgEnabled ? 1.0 : 0.3 }
+        ov.applyTextBgOutlineToSelectedAnnotations()
         ov.needsDisplay = true
     }
 
@@ -1483,6 +1489,7 @@ class ToolOptionsRowView: NSView {
         ov.textEditor.outlineEnabled = sender.state == .on
         UserDefaults.standard.set(ov.textEditor.outlineEnabled, forKey: "textOutlineEnabled")
         if let swatch = viewWithTag(976) { swatch.layer?.opacity = ov.textEditor.outlineEnabled ? 1.0 : 0.3 }
+        ov.applyTextBgOutlineToSelectedAnnotations()
         ov.needsDisplay = true
     }
 

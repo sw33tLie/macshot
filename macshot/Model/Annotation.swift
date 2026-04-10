@@ -1455,6 +1455,79 @@ class Annotation {
         image.draw(in: textDrawRect)
     }
 
+    /// Re-render the text image from attributedText with current formatting properties.
+    /// Call after changing fontSize, bold, italic, font family, alignment, etc. on a committed text annotation.
+    func reRenderTextImage() {
+        guard tool == .text, let attrText = attributedText, textDrawRect != .zero else { return }
+
+        // Rebuild attributed string with updated properties
+        let mutable = NSMutableAttributedString(attributedString: attrText)
+        let range = NSRange(location: 0, length: mutable.length)
+
+        var font: NSFont
+        if let familyName = fontFamilyName, familyName != "System",
+           let familyFont = NSFont(name: familyName, size: fontSize) {
+            font = familyFont
+        } else {
+            font = NSFont.systemFont(ofSize: fontSize)
+        }
+        if isBold && isItalic {
+            font = NSFontManager.shared.convert(font, toHaveTrait: [.boldFontMask, .italicFontMask])
+        } else if isBold {
+            font = NSFontManager.shared.convert(font, toHaveTrait: .boldFontMask)
+        } else if isItalic {
+            font = NSFontManager.shared.convert(font, toHaveTrait: .italicFontMask)
+        }
+        mutable.addAttribute(.font, value: font, range: range)
+
+        if isUnderline {
+            mutable.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: range)
+        } else {
+            mutable.removeAttribute(.underlineStyle, range: range)
+        }
+        if isStrikethrough {
+            mutable.addAttribute(.strikethroughStyle, value: NSUnderlineStyle.single.rawValue, range: range)
+        } else {
+            mutable.removeAttribute(.strikethroughStyle, range: range)
+        }
+        let paraStyle = NSMutableParagraphStyle()
+        paraStyle.alignment = textAlignment
+        mutable.addAttribute(.paragraphStyle, value: paraStyle, range: range)
+
+        attributedText = mutable
+
+        // Calculate new size using the current textDrawRect width
+        let inset: CGFloat = 4
+        let drawWidth = textDrawRect.width - inset * 2
+        let boundingRect = mutable.boundingRect(
+            with: NSSize(width: drawWidth, height: .greatestFiniteMagnitude),
+            options: [.usesLineFragmentOrigin, .usesFontLeading])
+        let newHeight = max(textDrawRect.height, ceil(boundingRect.height) + inset * 2)
+        let imgSize = NSSize(width: textDrawRect.width, height: newHeight)
+
+        // Re-render image
+        let img = NSImage(size: imgSize, flipped: true) { _ in
+            mutable.draw(in: NSRect(
+                x: inset, y: inset,
+                width: imgSize.width - inset * 2,
+                height: imgSize.height - inset * 2))
+            return true
+        }
+        textImage = img
+
+        // Update draw rect height (keep top edge fixed in AppKit coords: maxY stays the same)
+        let heightDelta = newHeight - textDrawRect.height
+        if heightDelta != 0 {
+            textDrawRect = NSRect(
+                x: textDrawRect.minX, y: textDrawRect.minY - heightDelta,
+                width: textDrawRect.width, height: newHeight)
+            startPoint = textDrawRect.origin
+            endPoint = NSPoint(x: textDrawRect.maxX, y: textDrawRect.maxY)
+        }
+
+        outlineGlowImage = nil
+    }
+
     private func drawNumber() {
         guard let number = number else { return }
         let radius: CGFloat = 8 + strokeWidth * 3
