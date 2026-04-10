@@ -382,14 +382,15 @@ private final class VideoEditorView: NSView {
         NSColor.white.withAlphaComponent(0.06).setFill()
         trackPath.fill()
 
-        // Draw thumbnails
+        // Draw thumbnails — use floor/ceil to avoid sub-pixel gaps between tiles
         NSGraphicsContext.saveGraphicsState()
         trackPath.addClip()
         if !thumbnailImages.isEmpty {
             let count = thumbnailImages.count
-            let thumbW = tlW / CGFloat(count)
             for (i, img) in thumbnailImages.enumerated() {
-                let r = NSRect(x: tlX + CGFloat(i) * thumbW, y: tlY, width: thumbW + 1, height: tlH)
+                let x0 = floor(tlX + CGFloat(i) * tlW / CGFloat(count))
+                let x1 = ceil(tlX + CGFloat(i + 1) * tlW / CGFloat(count))
+                let r = NSRect(x: x0, y: tlY, width: x1 - x0, height: tlH)
                 img.draw(in: r, from: .zero, operation: .sourceOver, fraction: 0.5)
             }
         }
