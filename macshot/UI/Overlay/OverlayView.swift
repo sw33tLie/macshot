@@ -6216,6 +6216,41 @@ class OverlayView: NSView {
         needsDisplay = true
     }
 
+    /// Apply current text formatting from textEditor to selected text annotations (when not actively editing).
+    func applyTextFormattingToSelectedAnnotations() {
+        guard textEditor.textView == nil else { return }  // skip if actively editing
+        var changed = false
+        for ann in selectedAnnotations where ann.tool == .text {
+            ann.fontSize = textEditor.fontSize
+            ann.isBold = textEditor.bold
+            ann.isItalic = textEditor.italic
+            ann.isUnderline = textEditor.underline
+            ann.isStrikethrough = textEditor.strikethrough
+            ann.fontFamilyName = textEditor.fontFamily == "System" ? nil : textEditor.fontFamily
+            ann.textAlignment = textEditor.alignment
+            ann.reRenderTextImage()
+            changed = true
+        }
+        if changed {
+            cachedCompositedImage = nil
+            needsDisplay = true
+        }
+    }
+
+    /// Apply text background/outline toggle to selected text annotations.
+    func applyTextBgOutlineToSelectedAnnotations() {
+        guard textEditor.textView == nil else { return }
+        var changed = false
+        for ann in selectedAnnotations where ann.tool == .text {
+            ann.textBgColor = textEditor.bgEnabled ? textEditor.bgColor : nil
+            ann.textOutlineColor = textEditor.outlineEnabled ? textEditor.outlineColor : nil
+            changed = true
+        }
+        if changed {
+            cachedCompositedImage = nil
+        }
+    }
+
     /// Returns currentColor with opacity applied for tools that respect it.
     /// Marker uses a fixed alpha in its draw method; loupe/measure/pixelate/blur are color-independent.
     func opacityAppliedColor(for tool: AnnotationTool) -> NSColor {
