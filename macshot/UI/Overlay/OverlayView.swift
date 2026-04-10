@@ -7828,34 +7828,6 @@ extension OverlayView: AnnotationCanvas {
 
 extension OverlayView: TextEditingCanvas {}
 
-// MARK: - HoverButton
-
-class HoverButton: NSButton {
-    private var trackingArea: NSTrackingArea?
-
-    override func updateTrackingAreas() {
-        super.updateTrackingAreas()
-        if let existing = trackingArea {
-            removeTrackingArea(existing)
-        }
-        let area = NSTrackingArea(
-            rect: bounds, options: [.mouseEnteredAndExited, .activeAlways], owner: self,
-            userInfo: nil)
-        addTrackingArea(area)
-        trackingArea = area
-    }
-
-    override func mouseEntered(with event: NSEvent) {
-        wantsLayer = true
-        layer?.backgroundColor = NSColor.white.withAlphaComponent(0.15).cgColor
-        layer?.cornerRadius = 4
-    }
-
-    override func mouseExited(with event: NSEvent) {
-        layer?.backgroundColor = nil
-    }
-}
-
 /// Small rounded-rect tooltip view used for editor mode toolbar hover labels.
 private class TooltipBackgroundView: NSView {
     var text: String = ""

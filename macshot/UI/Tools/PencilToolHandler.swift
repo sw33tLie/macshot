@@ -170,22 +170,6 @@ final class PencilToolHandler: AnnotationToolHandler {
         return result
     }
 
-    /// Chaikin smoothing for scalar values (pressures), matching chaikinSmooth for points.
-    static func chaikinSmoothValues(_ vals: [CGFloat], iterations: Int) -> [CGFloat] {
-        guard vals.count > 2 else { return vals }
-        var result = vals
-        for _ in 0..<iterations {
-            var next: [CGFloat] = [result[0]]
-            for i in 0..<result.count - 1 {
-                next.append(0.75 * result[i] + 0.25 * result[i + 1])
-                next.append(0.25 * result[i] + 0.75 * result[i + 1])
-            }
-            next.append(result[result.count - 1])
-            result = next
-        }
-        return result
-    }
-
     /// Chaikin corner-cutting: each iteration replaces every segment with two points
     /// at 25% and 75% along it, keeping endpoints fixed. 2 passes gives gentle smoothing.
     static func chaikinSmooth(_ pts: [NSPoint], iterations: Int) -> [NSPoint] {
