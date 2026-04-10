@@ -6024,7 +6024,14 @@ class OverlayView: NSView {
         if let idx = bottomButtons.firstIndex(where: { if case .color = $0.action { return true } else { return false } }) {
             bottomButtons[idx].bgColor = currentColor
             bottomStripView?.updateState(from: bottomButtons)
-            bottomStripView?.needsDisplay = true
+            // Schedule button redraw on next run loop iteration so it happens after
+            // the overlay's own draw pass (which can paint over button subviews).
+            if idx < (bottomStripView?.buttonViews.count ?? 0) {
+                let buttonView = bottomStripView?.buttonViews[idx]
+                DispatchQueue.main.async {
+                    buttonView?.needsDisplay = true
+                }
+            }
         }
     }
 
