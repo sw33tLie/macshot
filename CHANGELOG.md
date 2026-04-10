@@ -1,5 +1,20 @@
 # Changelog
 
+## [4.0.2-beta.5] - 2026-04-10
+
+### Changed
+- **Recording always produces MP4** — format picker removed from recording settings and preferences. GIF export is now a post-recording option in the video editor via an MP4/GIF toggle, so you can decide the format after seeing what you captured.
+- **Preferences renamed to Settings** — all references updated throughout the app.
+
+### Fixed
+- **Annotation drawing performance** — overlay was redrawing every annotation from scratch on every frame (even for cursor movement). Committed annotations are now cached into a single image, making drawing with many annotations smooth.
+- **Dragging/resizing annotations with many drawings** — during drag, resize, or rotation of an annotation, only the manipulated annotation redraws live; all others use a cached image.
+- **Rotation lag on annotations** — the selection outline glow was regenerating expensive CIFilter pipeline on every frame during rotation. Now cached at rotation=0 and rotated via GPU transform at draw time.
+- **Selection outline clipping on rotated shapes** — the glow bitmap was sized to the unrotated bounding box, clipping rotated shapes. Now expands to the rotated bounding box.
+- **Selection outline not following rotation** — outline glow cache wasn't invalidated on rotation change, showing a stale unrotated outline.
+- **Dock icon click opens Settings over video editor** — clicking the macshot dock icon when a video editor window was already open would open Settings on top. Now only opens Settings when no windows are visible.
+- **Video editor ignores custom accent color** — trim handles, play button, and other controls were hardcoded to purple instead of using the user's custom accent color.
+
 ## [4.0.2-beta.4] - 2026-04-09
 
 ### Added
