@@ -523,8 +523,8 @@ private final class VideoEditorView: NSView {
                 .font: NSFont.systemFont(ofSize: 10, weight: .regular),
                 .foregroundColor: NSColor.white.withAlphaComponent(0.4),
             ]
-            let fileSize = (try? FileManager.default.attributesOfItem(atPath: videoURL.path)[.size] as? Int) ?? 0
-            let sizeStr = ByteCountFormatter.string(fromByteCount: Int64(fileSize), countStyle: .file)
+            let sourceFileSize = (try? FileManager.default.attributesOfItem(atPath: videoURL.path)[.size] as? Int) ?? 0
+            let sizeStr = ByteCountFormatter.string(fromByteCount: Int64(sourceFileSize), countStyle: .file)
             let fpsValue = asset?.tracks(withMediaType: .video).first?.nominalFrameRate ?? 0
             let fpsStr = fpsValue > 0 ? "\(Int(fpsValue.rounded()))fps" : ""
             let infoStr = "\(sizeStr)  ·  \(fpsStr)" as NSString
@@ -553,6 +553,30 @@ private final class VideoEditorView: NSView {
                 dimensionsBtnRect = NSRect(x: x, y: btnY, width: dimBtnW, height: btnH)
                 dimStr.draw(at: NSPoint(x: x + 4, y: btnY + (btnH - dimSize.height) / 2), withAttributes: dimAttrs)
                 x += dimBtnW
+            }
+
+            // Estimated export size — show when trim, scale, or format change would affect output
+            let trimRatio = duration > 0 ? (trimEnd - trimStart) / duration : 1.0
+            let scaleRatio = exportScale * exportScale  // pixels scale quadratically
+            let willChange = trimRatio < 0.99 || scaleRatio < 0.99 || exportAsGIF
+            if willChange && sourceFileSize > 0 {
+                let estimated: Int64
+                if exportAsGIF {
+                    // GIF is typically 2-5x larger per second than MP4 at same resolution,
+                    // but capped at 15fps. Rough estimate: source bitrate * 3 * trim * scale.
+                    let gifFPSRatio = min(15.0, fpsValue) / max(fpsValue, 1.0)
+                    estimated = Int64(Double(sourceFileSize) * trimRatio * scaleRatio * 3.0 * Double(gifFPSRatio))
+                } else {
+                    estimated = Int64(Double(sourceFileSize) * trimRatio * scaleRatio)
+                }
+                let estStr = "  ·  ~\(ByteCountFormatter.string(fromByteCount: estimated, countStyle: .file))" as NSString
+                let estAttrs: [NSAttributedString.Key: Any] = [
+                    .font: NSFont.systemFont(ofSize: 10, weight: .medium),
+                    .foregroundColor: NSColor.white.withAlphaComponent(0.35),
+                ]
+                let estSize = estStr.size(withAttributes: estAttrs)
+                estStr.draw(at: NSPoint(x: x + 4, y: btnY + (btnH - estSize.height) / 2), withAttributes: estAttrs)
+                x += estSize.width + 8
             }
         }
 
