@@ -1,31 +1,31 @@
 # Changelog
 
-## [4.0.2-beta.5] - 2026-04-10
-
-### Changed
-- **Recording always produces MP4** — format picker removed from recording settings and preferences. GIF export is now a post-recording option in the video editor via an MP4/GIF toggle, so you can decide the format after seeing what you captured.
-- **Preferences renamed to Settings** — all references updated throughout the app.
-
-### Fixed
-- **Annotation drawing performance** — overlay was redrawing every annotation from scratch on every frame (even for cursor movement). Committed annotations are now cached into a single image, making drawing with many annotations smooth.
-- **Dragging/resizing annotations with many drawings** — during drag, resize, or rotation of an annotation, only the manipulated annotation redraws live; all others use a cached image.
-- **Rotation lag on annotations** — the selection outline glow was regenerating expensive CIFilter pipeline on every frame during rotation. Now cached at rotation=0 and rotated via GPU transform at draw time.
-- **Selection outline clipping on rotated shapes** — the glow bitmap was sized to the unrotated bounding box, clipping rotated shapes. Now expands to the rotated bounding box.
-- **Selection outline not following rotation** — outline glow cache wasn't invalidated on rotation change, showing a stale unrotated outline.
-- **Dock icon click opens Settings over video editor** — clicking the macshot dock icon when a video editor window was already open would open Settings on top. Now only opens Settings when no windows are visible.
-- **Video editor ignores custom accent color** — trim handles, play button, and other controls were hardcoded to purple instead of using the user's custom accent color.
-
-## [4.0.2-beta.4] - 2026-04-09
+## [4.0.2] - 2026-04-10
 
 ### Added
 - **Pen pressure sensitivity** — Apple Pencil (Sidecar) and tablet pressure varies stroke width in real time. Toggle via "Pressure" checkbox in pencil tool options. Pressure data is preserved through smoothing and in editable history. Non-tablet users are unaffected.
 - **Paste screenshot as file in Finder** — Cmd+V in Finder now pastes the captured screenshot as a PNG file.
 
+### Changed
+- **Recording always produces MP4** — format picker removed from recording settings. GIF export is now a post-recording option in the video editor via an MP4/GIF toggle, so you can decide the format after seeing what you captured.
+- **Video editor uses custom accent color** — trim handles, play button, and other controls now respect the user's custom accent color instead of hardcoded purple.
+
 ### Fixed
-- **Crash on macOS 26 (Tahoe) when using beautify** — `BeautifyRenderer` was marked `@MainActor` which caused all rendering code inside `NSImage` drawing handler closures to violate actor isolation under macOS 26's stricter concurrency enforcement. Removed class-level `@MainActor`, now only applied to the SwiftUI `ImageRenderer` methods that actually require it.
-- **Crash with negative style index** — `BeautifyConfig.style` used Swift's sign-preserving `%` operator, causing array out-of-bounds when `styleIndex` was `-1` (custom background image). Fixed modulo to always produce a valid index.
-- **Missing translations** — 8 UI strings were missing from localization files. Added translations for all 40 locales. Wrapped "Same as screenshots" with `L()`.
-- **Beautify custom background lag** — custom background images were re-decoded and re-processed (including CIFilter blur) on every draw frame during selection resize. Now pre-rendered to a cached CGImage once when the image or blur setting changes.
+- **Annotation drawing performance** — overlay was redrawing every annotation from scratch on every frame (even for cursor movement). Committed annotations are now cached into a single bitmap, making drawing with many annotations smooth.
+- **Dragging/resizing/rotating annotations with many drawings** — during manipulation, only the affected annotation redraws live; all others use a cached image.
+- **Rotation lag on annotations** — the selection outline glow was regenerating an expensive CIFilter pipeline on every frame during rotation. Now cached at rotation=0 and rotated via GPU transform at draw time.
+- **Zoom lag with annotations** — pinch-zooming caused all annotations to re-render every frame because NSImage's drawing handler was re-invoked at each new scale. Replaced with a fixed bitmap that blits without re-rendering.
+- **Selection outline clipping on rotated shapes** — the glow bitmap was sized to the unrotated bounding box, clipping rotated shapes. Now expands to the rotated bounding box.
+- **Selection outline not following rotation** — outline glow cache wasn't invalidated on rotation change, showing a stale unrotated outline.
+- **Annotation color shift after drawing** — cached annotation layer used deviceRGB instead of the display's color space (Display P3), causing a subtle color change when annotations moved to the cache. Now uses the window's screen color space.
+- **Zoom coordinate misalignment** — zooming back to 1x via trackpad left residual floating-point anchor values, causing background and annotation layers to drift apart. Anchors now reset to zero at 1x.
+- **Window snap state not synced across monitors** — pressing Tab to toggle window snapping only updated the helper text on the active monitor. Now syncs across all screens.
+- **Crash on macOS 26 (Tahoe) when using beautify** — `BeautifyRenderer` actor isolation violated under macOS 26's stricter concurrency enforcement. Fixed `@MainActor` scope.
+- **Crash with negative beautify style index** — modulo operator produced negative index with custom background images. Fixed to always produce a valid index.
+- **Beautify custom background lag** — custom background images were re-decoded and re-processed (including CIFilter blur) on every draw frame. Now pre-rendered to a cached CGImage.
+- **Dock icon click opens Settings over video editor** — now only opens Settings when no windows are visible.
+- **Recording HUD disappears when closing old video editor** — closing a previous video editor window while recording would hide the app and kill the recording UI. Now skips focus return while recording is active.
+- **Missing translations** — 8 UI strings added across all 40 locales.
 
 ## [4.0.1] - 2026-04-09
 
