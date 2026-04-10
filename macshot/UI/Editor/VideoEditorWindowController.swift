@@ -43,8 +43,8 @@ final class VideoEditorWindowController: NSObject, NSWindowDelegate {
 
         // Scale down to fit screen, maintaining aspect ratio
         let scale = min(1.0, min(maxW / contentW, (maxH - controlsH) / contentH))
-        let winW = max(480, contentW * scale)
-        let winH = max(360, contentH * scale + controlsH)
+        let winW = max(820, contentW * scale)
+        let winH = max(400, contentH * scale + controlsH)
         let winX = screen.frame.midX - winW / 2
         let winY = screen.frame.midY - winH / 2
 
@@ -54,7 +54,7 @@ final class VideoEditorWindowController: NSObject, NSWindowDelegate {
             backing: .buffered, defer: false
         )
         win.title = L("macshot Video Editor")
-        win.minSize = NSSize(width: 700, height: 400)
+        win.minSize = NSSize(width: 820, height: 400)
         win.isReleasedWhenClosed = false
         win.delegate = self
         win.collectionBehavior = [.fullScreenAuxiliary]
