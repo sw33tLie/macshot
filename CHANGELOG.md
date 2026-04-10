@@ -1,5 +1,23 @@
 # Changelog
 
+## [4.0.3] - 2026-04-10
+
+### Added
+- **Text formatting on selected annotations** — font size, bold, italic, underline, strikethrough, font family, alignment, background, and outline controls now work on selected text annotations without entering edit mode.
+
+### Fixed
+- **Pen pressure sensitivity** — light touch now gives 30%–100% of stroke width (was 0%–100%), power curve reduces drastic variation, pressure smoothing no longer over-averages, and cursor preview dot no longer flickers with pressure changes.
+- **Drawing color resets to red** — color and opacity now persist across captures and app launches.
+- **Text shifts left and reflows on commit** — NSTextView's default `lineFragmentPadding` was making editing width narrower than the snapshot, causing position shift and word reflow.
+- **Multi-line text clipped after commit** — scrollView frame wasn't resized to fit content before snapshotting.
+- **Toolbar color swatch not updating** — color changes from any source (eyedropper, picker, color wheel) now immediately update the toolbar preview.
+- **Toolbar doesn't reflect selected text formatting** — selecting a text annotation now loads its actual font size, bold, italic, etc. into the toolbar controls.
+- **Annotation resize lag** — expensive CIFilter outline glow was regenerating every frame during resize. Now draws a simple stroke rect during resize.
+- **Upload history layout** — rows now stretch to full width in Settings.
+- **Annotation control button styles** — edit (pencil) and rotation buttons now match the delete button style: dark fill, accent border, bold white icon.
+- **Recording HUD disappears when closing old video editor** — app no longer hides while recording is active.
+- **Rotation handle icon off-center** — switched to symmetric symbol with sub-pixel alignment correction.
+
 ## [4.0.2] - 2026-04-10
 
 ### Added
