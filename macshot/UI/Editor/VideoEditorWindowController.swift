@@ -54,7 +54,7 @@ final class VideoEditorWindowController: NSObject, NSWindowDelegate {
             backing: .buffered, defer: false
         )
         win.title = L("macshot Video Editor")
-        win.minSize = NSSize(width: 600, height: 400)
+        win.minSize = NSSize(width: 700, height: 400)
         win.isReleasedWhenClosed = false
         win.delegate = self
         win.collectionBehavior = [.fullScreenAuxiliary]
@@ -118,6 +118,12 @@ private final class VideoEditorView: NSView {
     private var formatGIFRect: NSRect = .zero
     private var isConvertingGIF: Bool = false
 
+    // Export dimensions
+    private var originalWidth: Int = 0
+    private var originalHeight: Int = 0
+    private var exportScale: CGFloat = 1.0  // 1.0 = original, 0.5 = 50%, etc.
+    private var dimensionsBtnRect: NSRect = .zero
+
     // Button rects
     private var playBtnRect: NSRect = .zero
     private var saveBtnRect: NSRect = .zero
@@ -161,6 +167,13 @@ private final class VideoEditorView: NSView {
         let asset = AVAsset(url: videoURL)
         self.asset = asset
 
+        // Store original pixel dimensions
+        if let track = asset.tracks(withMediaType: .video).first {
+            let size = track.naturalSize.applying(track.preferredTransform)
+            originalWidth = Int(abs(size.width))
+            originalHeight = Int(abs(size.height))
+        }
+
         Task {
             // Use video track duration (asset duration can be wrong when audio track is present)
             let seconds: Double
@@ -197,6 +210,13 @@ private final class VideoEditorView: NSView {
             duration = 1.0
         }
         trimEnd = duration
+
+        // Store original GIF dimensions
+        if let src = CGImageSourceCreateWithURL(videoURL as CFURL, nil),
+           let img = CGImageSourceCreateImageAtIndex(src, 0, nil) {
+            originalWidth = img.width
+            originalHeight = img.height
+        }
 
         let iv = NSImageView()
         iv.image = gifImage
@@ -506,18 +526,34 @@ private final class VideoEditorView: NSView {
             let fileSize = (try? FileManager.default.attributesOfItem(atPath: videoURL.path)[.size] as? Int) ?? 0
             let sizeStr = ByteCountFormatter.string(fromByteCount: Int64(fileSize), countStyle: .file)
             let fpsValue = asset?.tracks(withMediaType: .video).first?.nominalFrameRate ?? 0
-            let fpsStr = fpsValue > 0 ? "\(Int(fpsValue.rounded()))fps  ·  " : ""
-            var resStr = ""
-            if let track = asset?.tracks(withMediaType: .video).first {
-                let size = track.naturalSize.applying(track.preferredTransform)
-                resStr = "\(Int(abs(size.width)))×\(Int(abs(size.height)))"
-            } else if isGIF, let src = CGImageSourceCreateWithURL(videoURL as CFURL, nil),
-                      let img = CGImageSourceCreateImageAtIndex(src, 0, nil) {
-                resStr = "\(img.width)×\(img.height)"
-            }
-            let infoStr = "\(sizeStr)  ·  \(fpsStr)\(resStr)" as NSString
+            let fpsStr = fpsValue > 0 ? "\(Int(fpsValue.rounded()))fps" : ""
+            let infoStr = "\(sizeStr)  ·  \(fpsStr)" as NSString
             let infoSize = infoStr.size(withAttributes: infoAttrs)
             infoStr.draw(at: NSPoint(x: x + 4, y: btnY + (btnH - infoSize.height) / 2), withAttributes: infoAttrs)
+            x += infoSize.width + 12
+
+            // Dimensions dropdown button
+            if originalWidth > 0 {
+                let exportW = Int(CGFloat(originalWidth) * exportScale)
+                let exportH = Int(CGFloat(originalHeight) * exportScale)
+                let dimLabel: String
+                if exportScale >= 0.999 {
+                    dimLabel = "\(originalWidth)×\(originalHeight)"
+                } else {
+                    let pct = Int((exportScale * 100).rounded())
+                    dimLabel = "\(exportW)×\(exportH) (\(pct)%)"
+                }
+                let dimAttrs: [NSAttributedString.Key: Any] = [
+                    .font: NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .medium),
+                    .foregroundColor: NSColor.white.withAlphaComponent(exportScale < 0.999 ? 0.7 : 0.4),
+                ]
+                let dimStr = "  ·  \(dimLabel) ▾" as NSString
+                let dimSize = dimStr.size(withAttributes: dimAttrs)
+                let dimBtnW = dimSize.width + 8
+                dimensionsBtnRect = NSRect(x: x, y: btnY, width: dimBtnW, height: btnH)
+                dimStr.draw(at: NSPoint(x: x + 4, y: btnY + (btnH - dimSize.height) / 2), withAttributes: dimAttrs)
+                x += dimBtnW
+            }
         }
 
         // Right group: save, upload, finder, copy
@@ -792,6 +828,11 @@ private final class VideoEditorView: NSView {
             exportAsGIF = true; savedURL = nil; needsDisplay = true; return
         }
 
+        // Dimensions dropdown
+        if dimensionsBtnRect.contains(point) && originalWidth > 0 {
+            showDimensionsMenu(); return
+        }
+
         // Buttons
         if playBtnRect.contains(point) { togglePlayPause(); return }
         if muteBtnRect.contains(point) { toggleMute(); return }
@@ -930,23 +971,55 @@ private final class VideoEditorView: NSView {
     }
 
     private func exportSession(asset: AVAsset, timeRange: CMTimeRange, outputURL: URL) -> AVAssetExportSession? {
-        // If muted, create a composition without audio tracks
-        if isMuted {
-            let composition = AVMutableComposition()
-            guard let videoTrack = asset.tracks(withMediaType: .video).first,
-                  let compositionVideoTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid) else { return nil }
-            try? compositionVideoTrack.insertTimeRange(timeRange, of: videoTrack, at: .zero)
-            guard let session = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetHighestQuality) else { return nil }
-            session.outputURL = outputURL
-            session.outputFileType = .mp4
-            return session
-        } else {
-            guard let session = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetHighestQuality) else { return nil }
-            session.outputURL = outputURL
-            session.outputFileType = .mp4
-            session.timeRange = timeRange
-            return session
+        let needsScale = exportScale < 0.999
+
+        // Build a composition when we need to strip audio or scale
+        let composition = AVMutableComposition()
+        guard let videoTrack = asset.tracks(withMediaType: .video).first,
+              let compositionVideoTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid) else { return nil }
+        try? compositionVideoTrack.insertTimeRange(timeRange, of: videoTrack, at: .zero)
+
+        // Include audio unless muted
+        if !isMuted {
+            for audioTrack in asset.tracks(withMediaType: .audio) {
+                if let compAudio = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid) {
+                    try? compAudio.insertTimeRange(timeRange, of: audioTrack, at: .zero)
+                }
+            }
         }
+
+        let presetName = needsScale ? AVAssetExportPresetHighestQuality : AVAssetExportPresetHighestQuality
+        guard let session = AVAssetExportSession(asset: composition, presetName: presetName) else { return nil }
+        session.outputURL = outputURL
+        session.outputFileType = .mp4
+
+        // Apply scale via video composition
+        if needsScale {
+            let naturalSize = videoTrack.naturalSize.applying(videoTrack.preferredTransform)
+            let w = abs(naturalSize.width)
+            let h = abs(naturalSize.height)
+            // Round to even for codec compatibility
+            let scaledW = CGFloat((Int(w * exportScale) / 2) * 2)
+            let scaledH = CGFloat((Int(h * exportScale) / 2) * 2)
+
+            let instruction = AVMutableVideoCompositionInstruction()
+            instruction.timeRange = CMTimeRange(start: .zero, duration: composition.duration)
+            let layerInstruction = AVMutableVideoCompositionLayerInstruction(assetTrack: compositionVideoTrack)
+
+            // Apply the original transform (handles rotation) scaled down
+            var transform = videoTrack.preferredTransform
+            transform = transform.concatenating(CGAffineTransform(scaleX: exportScale, y: exportScale))
+            layerInstruction.setTransform(transform, at: .zero)
+            instruction.layerInstructions = [layerInstruction]
+
+            let videoComposition = AVMutableVideoComposition()
+            videoComposition.instructions = [instruction]
+            videoComposition.renderSize = CGSize(width: scaledW, height: scaledH)
+            videoComposition.frameDuration = CMTime(value: 1, timescale: CMTimeScale(videoTrack.nominalFrameRate))
+            session.videoComposition = videoComposition
+        }
+
+        return session
     }
 
     private func saveVideo() {
@@ -988,8 +1061,46 @@ private final class VideoEditorView: NSView {
     }
 
     private func showSaveMenu() {
-        // Currently unused — save arrow just does Save As
         saveVideoAs()
+    }
+
+    private func showDimensionsMenu() {
+        let menu = NSMenu()
+        let w = originalWidth, h = originalHeight
+
+        // Original (100%)
+        let origItem = NSMenuItem(title: "\(w) × \(h)  (Original)", action: #selector(dimensionSelected(_:)), keyEquivalent: "")
+        origItem.target = self
+        origItem.tag = 100
+        origItem.state = exportScale >= 0.999 ? .on : .off
+        menu.addItem(origItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        // Preset percentages — only include if the result is at least 128px wide
+        let presets: [(Int, String)] = [(75, "75%"), (50, "50%"), (33, "33%"), (25, "25%")]
+        for (pct, label) in presets {
+            let scaledW = w * pct / 100
+            let scaledH = h * pct / 100
+            guard scaledW >= 128 else { continue }
+            // Round to even for codec compatibility
+            let evenW = (scaledW / 2) * 2
+            let evenH = (scaledH / 2) * 2
+            let item = NSMenuItem(title: "\(evenW) × \(evenH)  (\(label))", action: #selector(dimensionSelected(_:)), keyEquivalent: "")
+            item.target = self
+            item.tag = pct
+            item.state = abs(exportScale - CGFloat(pct) / 100.0) < 0.01 ? .on : .off
+            menu.addItem(item)
+        }
+
+        let pos = NSPoint(x: dimensionsBtnRect.minX, y: dimensionsBtnRect.maxY)
+        menu.popUp(positioning: nil, at: pos, in: self)
+    }
+
+    @objc private func dimensionSelected(_ sender: NSMenuItem) {
+        exportScale = CGFloat(sender.tag) / 100.0
+        savedURL = nil
+        needsDisplay = true
     }
 
     private func convertToGIF(destURL: URL, completion: ((Bool) -> Void)? = nil) {
@@ -1002,6 +1113,7 @@ private final class VideoEditorView: NSView {
         let timeRange = CMTimeRange(start: startTime, end: endTime)
         // GIF capped at 15fps
         let gifFPS = min(15, asset.tracks(withMediaType: .video).first.map { Int($0.nominalFrameRate.rounded()) } ?? 15)
+        let scale = exportScale
 
         Task.detached(priority: .userInitiated) { [weak self] in
             do {
@@ -1014,9 +1126,19 @@ private final class VideoEditorView: NSView {
                     }
                     return
                 }
-                let outputSettings: [String: Any] = [
+
+                // If scaling, request scaled output directly from AVAssetReaderTrackOutput
+                var outputSettings: [String: Any] = [
                     kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
                 ]
+                if scale < 0.999 {
+                    let natSize = videoTrack.naturalSize.applying(videoTrack.preferredTransform)
+                    let w = Int(abs(natSize.width) * scale) / 2 * 2
+                    let h = Int(abs(natSize.height) * scale) / 2 * 2
+                    outputSettings[kCVPixelBufferWidthKey as String] = w
+                    outputSettings[kCVPixelBufferHeightKey as String] = h
+                }
+
                 let trackOutput = AVAssetReaderTrackOutput(track: videoTrack, outputSettings: outputSettings)
                 trackOutput.alwaysCopiesSampleData = false
                 reader.timeRange = timeRange
@@ -1058,7 +1180,8 @@ private final class VideoEditorView: NSView {
 
     private func saveToDestination(_ destURL: URL, dirURL: URL?) {
         let needsTrim = trimStart > 0.01 || (duration - trimEnd) > 0.01
-        let needsExport = needsTrim || isMuted
+        let needsScale = exportScale < 0.999
+        let needsExport = needsTrim || isMuted || needsScale
 
         if !needsExport {
             // No processing needed — copy temp file to destination
