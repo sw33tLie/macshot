@@ -3725,15 +3725,15 @@ class OverlayView: NSView {
             NSGraphicsContext.current?.cgContext.restoreGState()
         }
 
-        // Rotation handle (above top-center)
+        // Rotation handle (above top-center) — matches delete/edit button style
         annotationRotateHandleRect = .zero
         if annotation.supportsRotation {
             let center = NSPoint(x: padded.midX, y: padded.midY)
-            let handleDist: CGFloat = padded.height / 2 + 24
+            let hs: CGFloat = 22
+            let handleDist: CGFloat = padded.height / 2 + 20
             // Rotate the handle position by the annotation's current rotation
             let handleX = center.x - handleDist * sin(annotation.rotation)
             let handleY = center.y + handleDist * cos(annotation.rotation)
-            let hs: CGFloat = 14
             let rotRect = NSRect(x: handleX - hs / 2, y: handleY - hs / 2, width: hs, height: hs)
             annotationRotateHandleRect = rotRect
 
@@ -3748,18 +3748,17 @@ class OverlayView: NSView {
             connPath.line(to: NSPoint(x: handleX, y: handleY))
             connPath.stroke()
 
-            // Draw rotate icon circle
-            NSColor(white: 0.2, alpha: 0.9).setFill()
+            // Dark fill (same as delete/edit)
+            NSColor(white: 0.12, alpha: 0.94).setFill()
             NSBezierPath(ovalIn: rotRect).fill()
-            NSColor.white.withAlphaComponent(0.8).setStroke()
-            NSBezierPath(ovalIn: rotRect.insetBy(dx: 0.5, dy: 0.5)).stroke()
+            // Accent border
+            ToolbarLayout.accentColor.withAlphaComponent(0.9).setStroke()
+            let rotBorder = NSBezierPath(ovalIn: rotRect.insetBy(dx: 0.75, dy: 0.75))
+            rotBorder.lineWidth = 1.5
+            rotBorder.stroke()
 
-            // Draw rotate arrow icon — draw into a fixed square centered in the circle
-            let iconSize: CGFloat = 10
-            let iconRect = NSRect(
-                x: rotRect.midX - iconSize / 2, y: rotRect.midY - iconSize / 2,
-                width: iconSize, height: iconSize)
-            let cfg = NSImage.SymbolConfiguration(pointSize: iconSize, weight: .bold)
+            // White rotate icon
+            let cfg = NSImage.SymbolConfiguration(pointSize: 9, weight: .bold)
             if let img = NSImage(
                 systemSymbolName: "arrow.trianglehead.2.clockwise.rotate.90",
                 accessibilityDescription: nil)?.withSymbolConfiguration(cfg)
@@ -3770,9 +3769,9 @@ class OverlayView: NSView {
                     rect.fill(using: .sourceAtop)
                     return true
                 }
-                tinted.draw(
-                    in: iconRect, from: .zero, operation: .sourceOver, fraction: 1.0,
-                    respectFlipped: true, hints: nil)
+                tinted.draw(in: NSRect(
+                    x: rotRect.midX - img.size.width / 2, y: rotRect.midY - img.size.height / 2,
+                    width: img.size.width, height: img.size.height))
             }
         }
 
