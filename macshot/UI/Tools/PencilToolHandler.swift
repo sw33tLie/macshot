@@ -110,20 +110,20 @@ final class PencilToolHandler: AnnotationToolHandler {
                 final.append(last)
             }
             annotation.points = final
-            // Interpolate pressures to match smoothed point count
+            // Interpolate pressures to match smoothed point count.
+            // Use gentle smoothing (moving average only, no Chaikin) to preserve
+            // the user's pressure intent, then linearly interpolate to match point count.
             if annotation.pressures != nil {
-                let smoothedP = Self.movingAverageSmoothValues(rawPressureBuffer, windowSize: smoothWindowSize)
-                var finalP = Self.chaikinSmoothValues(smoothedP, iterations: 2)
-                if let lastP = rawPressureBuffer.last {
-                    if finalP.count < final.count { finalP.append(lastP) }
-                }
+                let smoothedP = Self.movingAverageSmoothValues(rawPressureBuffer, windowSize: max(smoothWindowSize / 2, 3))
+                let finalP = Self.interpolateToCount(smoothedP, targetCount: final.count)
                 annotation.pressures = finalP
             }
         } else if canvas.pencilSmoothMode >= 1 {
             // Mode 1 (Smooth): Chaikin on finish only
             annotation.points = Self.chaikinSmooth(points, iterations: 2)
             if let pressures = annotation.pressures {
-                annotation.pressures = Self.chaikinSmoothValues(pressures, iterations: 2)
+                // Interpolate pressures to match smoothed point count without over-averaging
+                annotation.pressures = Self.interpolateToCount(pressures, targetCount: annotation.points!.count)
             }
         }
 
@@ -201,6 +201,23 @@ final class PencilToolHandler: AnnotationToolHandler {
             }
             next.append(result[result.count - 1])
             result = next
+        }
+        return result
+    }
+
+    /// Linearly interpolate a values array to a target count.
+    /// Preserves first and last values exactly; intermediate values are lerped.
+    static func interpolateToCount(_ values: [CGFloat], targetCount: Int) -> [CGFloat] {
+        guard values.count >= 2, targetCount >= 2 else { return values }
+        if values.count == targetCount { return values }
+        var result: [CGFloat] = []
+        result.reserveCapacity(targetCount)
+        for i in 0..<targetCount {
+            let t = CGFloat(i) / CGFloat(targetCount - 1) * CGFloat(values.count - 1)
+            let lo = Int(t)
+            let hi = min(lo + 1, values.count - 1)
+            let frac = t - CGFloat(lo)
+            result.append(values[lo] * (1 - frac) + values[hi] * frac)
         }
         return result
     }

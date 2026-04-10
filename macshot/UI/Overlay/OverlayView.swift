@@ -3256,10 +3256,9 @@ class OverlayView: NSView {
             path.lineWidth = 1.0
             path.stroke()
         } else {
-            // Pencil: solid dot at stroke width (scaled by pressure when enabled)
-            var radius = drawingCursorRadius
-            if pencilPressureEnabled { radius *= currentPressure }
-            radius = max(radius, 0.5)
+            // Pencil: solid dot at stroke width (fixed size — don't scale by pressure
+            // to avoid distracting size ripple while moving the cursor)
+            let radius = max(drawingCursorRadius, 0.5)
             let circleRect = NSRect(
                 x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)
             let path = NSBezierPath(ovalIn: circleRect)
