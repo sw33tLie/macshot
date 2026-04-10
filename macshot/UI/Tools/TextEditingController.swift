@@ -336,6 +336,8 @@ class TextEditingController {
         guard let tv = textView, let sv = scrollView else { return }
         let text = tv.string
         if !text.isEmpty {
+            // Ensure scrollView frame matches actual text height before snapshotting
+            resizeToFit()
             let attrStr = NSAttributedString(attributedString: tv.textStorage!)
             let imgSize = sv.frame.size
             let inset = tv.textContainerInset

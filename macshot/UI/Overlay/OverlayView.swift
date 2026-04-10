@@ -5999,6 +5999,14 @@ class OverlayView: NSView {
         updateWebcamSetupPreview()
     }
 
+    /// Update the color swatch on the main toolbar's color button without a full rebuild.
+    private func updateToolbarColorSwatch() {
+        if let idx = bottomButtons.firstIndex(where: { if case .color = $0.action { return true } else { return false } }) {
+            bottomButtons[idx].bgColor = currentColor
+            bottomStripView?.updateState(from: bottomButtons)
+        }
+    }
+
     func handleToolbarAction(_ action: ToolbarButtonAction, mousePoint: NSPoint = .zero) {
         switch action {
         case .tool(let tool):
@@ -7506,6 +7514,7 @@ class OverlayView: NSView {
             picker.saveToSelectedSlot(color)
             // Update toolbar color swatches without rebuilding (which destroys the popover anchor)
             self.toolOptionsRowView?.updateSwatchColors()
+            self.updateToolbarColorSwatch()
             self.needsDisplay = true
         }
         picker.onOpacityChanged = { [weak self] opacity in
