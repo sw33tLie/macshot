@@ -557,7 +557,6 @@ class OverlayView: NSView {
     var autoConfirmMode: Bool = false  // set by "Add Capture" — auto-confirms selection (no toolbars, no save)
 
     // Recording session overrides (popover settings — nil means use UserDefaults default)
-    var sessionRecordingFormat: String?
     var sessionRecordingFPS: Int?
     var sessionRecordingOnStop: String?
     var sessionRecordingDelay: Int?
@@ -3797,7 +3796,7 @@ class OverlayView: NSView {
 
         // Compute actual bounding box — for pencil/marker, use the points array
         // since boundingRect only considers startPoint/endPoint.
-        var baseBBox: NSRect
+        let baseBBox: NSRect
         if let pts = annotation.points, !pts.isEmpty,
            (annotation.tool == .pencil || annotation.tool == .marker) {
             var minX = CGFloat.greatestFiniteMagnitude, minY = CGFloat.greatestFiniteMagnitude
@@ -3810,42 +3809,59 @@ class OverlayView: NSView {
         } else {
             baseBBox = annotation.boundingRect
         }
-        // Expand to rotated bounding box so the glow covers the full rotated shape
+
+        // For the glow cache, always use the unrotated bbox. We'll apply rotation at draw time.
+        // This avoids regenerating the expensive CIFilter pipeline on every rotation change.
+        let unrotatedBBox = baseBBox.insetBy(dx: -padding, dy: -padding)
+        guard unrotatedBBox.width > 0, unrotatedBBox.height > 0 else { return }
+
+        // Expand to rotated bounding box for the draw rect so the image covers the full rotated shape
+        let drawBBox: NSRect
         if annotation.rotation != 0 && annotation.supportsRotation {
-            let cx = baseBBox.midX, cy = baseBBox.midY
+            let cx = unrotatedBBox.midX, cy = unrotatedBBox.midY
             let cos_r = abs(cos(annotation.rotation)), sin_r = abs(sin(annotation.rotation))
-            let w = baseBBox.width, h = baseBBox.height
+            let w = unrotatedBBox.width, h = unrotatedBBox.height
             let rotW = w * cos_r + h * sin_r
             let rotH = w * sin_r + h * cos_r
-            baseBBox = NSRect(x: cx - rotW / 2, y: cy - rotH / 2, width: rotW, height: rotH)
+            drawBBox = NSRect(x: cx - rotW / 2, y: cy - rotH / 2, width: rotW, height: rotH)
+        } else {
+            drawBBox = unrotatedBBox
         }
-        let bbox = baseBBox.insetBy(dx: -padding, dy: -padding)
-        guard bbox.width > 0, bbox.height > 0 else { return }
 
-        // Use cached glow if available and position/rotation hasn't changed
-        if let cached = annotation.outlineGlowImage, annotation.outlineGlowRect == bbox, annotation.outlineGlowRotation == annotation.rotation {
+        // Use cached glow if available and unrotated position hasn't changed.
+        // Rotation is handled at draw time via transform, not by regenerating the glow.
+        if let cached = annotation.outlineGlowImage, annotation.outlineGlowRect == unrotatedBBox {
             guard let context = NSGraphicsContext.current else { return }
             context.cgContext.saveGState()
             context.cgContext.setAlpha(0.55)
-            cached.draw(in: bbox, from: .zero, operation: .sourceOver, fraction: 1.0)
+            if annotation.rotation != 0 && annotation.supportsRotation {
+                let cx = unrotatedBBox.midX, cy = unrotatedBBox.midY
+                context.cgContext.translateBy(x: cx, y: cy)
+                context.cgContext.rotate(by: annotation.rotation)
+                context.cgContext.translateBy(x: -cx, y: -cy)
+            }
+            cached.draw(in: unrotatedBBox, from: .zero, operation: .sourceOver, fraction: 1.0)
             context.cgContext.restoreGState()
             return
         }
 
         let scale: CGFloat = window?.backingScaleFactor ?? 2.0
-        let pxW = Int(ceil(bbox.width * scale))
-        let pxH = Int(ceil(bbox.height * scale))
+        let pxW = Int(ceil(unrotatedBBox.width * scale))
+        let pxH = Int(ceil(unrotatedBBox.height * scale))
         guard pxW > 0, pxH > 0, pxW < 8000, pxH < 8000 else { return }
 
-        // Render the annotation into an offscreen bitmap using lockFocus
-        // (ensures identical coordinate space to the live overlay)
-        let offscreen = NSImage(size: NSSize(width: bbox.width * scale, height: bbox.height * scale))
+        // Render the annotation at rotation=0 into an offscreen bitmap.
+        // We temporarily zero out rotation so the glow is cached unrotated.
+        let savedRotation = annotation.rotation
+        annotation.rotation = 0
+        let offscreen = NSImage(size: NSSize(width: unrotatedBBox.width * scale, height: unrotatedBBox.height * scale))
         offscreen.lockFocus()
-        guard let offNSCtx = NSGraphicsContext.current else { offscreen.unlockFocus(); return }
+        guard let offNSCtx = NSGraphicsContext.current else { annotation.rotation = savedRotation; offscreen.unlockFocus(); return }
         offNSCtx.cgContext.scaleBy(x: scale, y: scale)
-        offNSCtx.cgContext.translateBy(x: -bbox.origin.x, y: -bbox.origin.y)
+        offNSCtx.cgContext.translateBy(x: -unrotatedBBox.origin.x, y: -unrotatedBBox.origin.y)
         annotation.draw(in: offNSCtx)
         offscreen.unlockFocus()
+        annotation.rotation = savedRotation
 
         guard let cgOrig = offscreen.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return }
 
@@ -3869,15 +3885,20 @@ class OverlayView: NSView {
 
         guard let outlineCG = Self.outlineGlowCIContext.createCGImage(outline, from: ciOrig.extent) else { return }
 
-        let outlineImage = NSImage(cgImage: outlineCG, size: bbox.size)
+        let outlineImage = NSImage(cgImage: outlineCG, size: unrotatedBBox.size)
         annotation.outlineGlowImage = outlineImage
-        annotation.outlineGlowRect = bbox
-        annotation.outlineGlowRotation = annotation.rotation
+        annotation.outlineGlowRect = unrotatedBBox
 
         guard let context = NSGraphicsContext.current else { return }
         context.cgContext.saveGState()
         context.cgContext.setAlpha(0.55)
-        outlineImage.draw(in: bbox, from: .zero, operation: .sourceOver, fraction: 1.0)
+        if annotation.rotation != 0 && annotation.supportsRotation {
+            let cx = unrotatedBBox.midX, cy = unrotatedBBox.midY
+            context.cgContext.translateBy(x: cx, y: cy)
+            context.cgContext.rotate(by: annotation.rotation)
+            context.cgContext.translateBy(x: -cx, y: -cy)
+        }
+        outlineImage.draw(in: unrotatedBBox, from: .zero, operation: .sourceOver, fraction: 1.0)
         context.cgContext.restoreGState()
     }
 

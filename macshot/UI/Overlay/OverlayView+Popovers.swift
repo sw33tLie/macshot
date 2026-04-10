@@ -266,9 +266,6 @@ extension OverlayView {
         }
 
         // Read current effective values (session override > UserDefaults default)
-        let effectiveFormat =
-            sessionRecordingFormat ?? UserDefaults.standard.string(forKey: "recordingFormat")
-            ?? "mp4"
         let effectiveFPS =
             sessionRecordingFPS
             ?? (UserDefaults.standard.integer(forKey: "recordingFPS") > 0
@@ -277,66 +274,22 @@ extension OverlayView {
             sessionRecordingOnStop ?? UserDefaults.standard.string(forKey: "recordingOnStop")
             ?? "editor"
 
-        // Format: MP4 / GIF
-        let formatSeg = NSSegmentedControl(
-            labels: ["MP4", "GIF"], trackingMode: .selectOne,
-            target: nil, action: nil)
-        formatSeg.selectedSegment = effectiveFormat == "gif" ? 1 : 0
-        (formatSeg.cell as? NSSegmentedCell)?.segmentStyle = .roundRect
-
         // FPS popup
         let fpsPopup = NSPopUpButton()
         fpsPopup.controlSize = .small
         fpsPopup.font = NSFont.systemFont(ofSize: 11)
-
-        func populateFPS(isGIF: Bool, selectedFPS: Int) {
-            fpsPopup.removeAllItems()
-            if isGIF {
-                fpsPopup.addItems(withTitles: ["5", "10", "15"])
-                if selectedFPS <= 5 {
-                    fpsPopup.selectItem(at: 0)
-                } else if selectedFPS <= 10 {
-                    fpsPopup.selectItem(at: 1)
-                } else {
-                    fpsPopup.selectItem(at: 2)
-                }
-            } else {
-                fpsPopup.addItems(withTitles: ["15", "30", "60", "120"])
-                if selectedFPS <= 15 {
-                    fpsPopup.selectItem(at: 0)
-                } else if selectedFPS <= 30 {
-                    fpsPopup.selectItem(at: 1)
-                } else if selectedFPS <= 60 {
-                    fpsPopup.selectItem(at: 2)
-                } else {
-                    fpsPopup.selectItem(at: 3)
-                }
-            }
+        fpsPopup.addItems(withTitles: ["15", "30", "60", "120"])
+        if effectiveFPS <= 15 {
+            fpsPopup.selectItem(at: 0)
+        } else if effectiveFPS <= 30 {
+            fpsPopup.selectItem(at: 1)
+        } else if effectiveFPS <= 60 {
+            fpsPopup.selectItem(at: 2)
+        } else {
+            fpsPopup.selectItem(at: 3)
         }
-        populateFPS(isGIF: effectiveFormat == "gif", selectedFPS: effectiveFPS)
 
         // Handlers write to session overrides, not UserDefaults
-        class FormatHandler: NSObject {
-            weak var overlayView: OverlayView?
-            let fpsPopup: NSPopUpButton
-            let populateFPS: (Bool, Int) -> Void
-            init(
-                overlayView: OverlayView?, fpsPopup: NSPopUpButton,
-                populateFPS: @escaping (Bool, Int) -> Void
-            ) {
-                self.overlayView = overlayView
-                self.fpsPopup = fpsPopup
-                self.populateFPS = populateFPS
-                super.init()
-            }
-            @objc func changed(_ sender: NSSegmentedControl) {
-                let isGIF = sender.selectedSegment == 1
-                overlayView?.sessionRecordingFormat = isGIF ? "gif" : "mp4"
-                let currentFPS = overlayView?.sessionRecordingFPS ?? 30
-                populateFPS(isGIF, currentFPS)
-            }
-        }
-
         class FPSHandler: NSObject {
             weak var overlayView: OverlayView?
             init(overlayView: OverlayView?) {
@@ -366,12 +319,6 @@ extension OverlayView {
         fpsPopup.target = fpsHandler
         fpsPopup.action = #selector(FPSHandler.changed(_:))
         objc_setAssociatedObject(fpsPopup, "handler", fpsHandler, .OBJC_ASSOCIATION_RETAIN)
-
-        let formatHandler = FormatHandler(
-            overlayView: self, fpsPopup: fpsPopup, populateFPS: populateFPS)
-        formatSeg.target = formatHandler
-        formatSeg.action = #selector(FormatHandler.changed(_:))
-        objc_setAssociatedObject(formatSeg, "handler", formatHandler, .OBJC_ASSOCIATION_RETAIN)
 
         // When done popup
         let whenDonePopup = NSPopUpButton()
@@ -439,7 +386,6 @@ extension OverlayView {
         hideHUDCheck.action = #selector(HideHUDHandler.changed(_:))
         objc_setAssociatedObject(hideHUDCheck, "handler", hideHUDHandler, .OBJC_ASSOCIATION_RETAIN)
 
-        addRow(label: L("Format:"), control: formatSeg)
         addRow(label: L("FPS:"), control: fpsPopup)
         addRow(label: L("When done:"), control: whenDonePopup)
         addRow(label: L("Delay:"), control: delayPopup)

@@ -24,7 +24,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     private var delayEscMonitor: Any?
     private var pendingDelaySelection: NSRect = .zero
     private var uploadToastController: UploadToastController?
-    private var gifProcessingToast: UploadToastController?
     private var recordingEngine: RecordingEngine?
     private var audioMergeController: AudioMergeController?
     private var recordingOverlayController: OverlayWindowController?
@@ -1190,7 +1189,6 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         recordingScreen = screen
 
         // Capture session overrides before dismissing overlays (which destroys the overlay view)
-        let formatOverride = controller.sessionRecordingFormat
         let fpsOverride = controller.sessionRecordingFPS
         let onStopOverride = controller.sessionRecordingOnStop
         let delayOverride = controller.sessionRecordingDelay
@@ -1214,11 +1212,11 @@ extension AppDelegate: OverlayWindowControllerDelegate {
                 existingWebcam?.stopPreview()
                 existingWebcam?.close()
                 self.startRecordingCountdown(seconds: delay, rect: rect, screen: screen,
-                                        formatOverride: formatOverride, fpsOverride: fpsOverride,
+                                        fpsOverride: fpsOverride,
                                         onStopOverride: onStopOverride)
             } else {
                 self.beginRecording(rect: rect, screen: screen,
-                               formatOverride: formatOverride, fpsOverride: fpsOverride,
+                               fpsOverride: fpsOverride,
                                onStopOverride: onStopOverride,
                                existingWebcam: existingWebcam,
                                hideHUD: hideHUD)
@@ -1227,7 +1225,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
     }
 
     private func startRecordingCountdown(seconds: Int, rect: NSRect, screen: NSScreen,
-                                          formatOverride: String?, fpsOverride: Int?,
+                                          fpsOverride: Int?,
                                           onStopOverride: String?) {
         let size = NSSize(width: 140, height: 140)
         let origin = NSPoint(
@@ -1280,7 +1278,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
                 self?.delayCountdownWindow = nil
                 self?.removeDelayEscMonitors()
                 self?.beginRecording(rect: rect, screen: screen,
-                                     formatOverride: formatOverride, fpsOverride: fpsOverride,
+                                     fpsOverride: fpsOverride,
                                      onStopOverride: onStopOverride)
             } else {
                 countdownView.remaining = remaining
@@ -1300,7 +1298,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
     }
 
     private func beginRecording(rect: NSRect, screen: NSScreen,
-                                 formatOverride: String?, fpsOverride: Int?,
+                                 fpsOverride: Int?,
                                  onStopOverride: String?,
                                  existingWebcam: WebcamOverlay? = nil,
                                  hideHUD: Bool = false) {
@@ -1308,30 +1306,15 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         engine.onProgress = { [weak self] seconds in
             self?.updateRecordingHUD(seconds: seconds)
         }
-        engine.onProcessing = { [weak self] in
-            guard let self = self else { return }
-            self.stopRecordingUI()
-            self.gifProcessingToast?.dismiss()
-            let toast = UploadToastController()
-            self.gifProcessingToast = toast
-            toast.onDismiss = { [weak self] in self?.gifProcessingToast = nil }
-            toast.show(status: L("Processing GIF…"))
-        }
         // Capture audio settings before recording starts (they may change during)
         let hadSystemAudio = UserDefaults.standard.bool(forKey: "recordSystemAudio")
         let hadMicAudio = UserDefaults.standard.bool(forKey: "recordMicAudio")
 
         engine.onCompletion = { [weak self] url, error in
             guard let self = self else { return }
-            self.gifProcessingToast?.dismiss()
             self.stopRecordingUI()
 
             if let url = url {
-                // Add GIF recordings to screenshot history
-                if url.pathExtension.lowercased() == "gif" {
-                    ScreenshotHistory.shared.addRecording(url: url)
-                }
-
                 let deliverRecording: (URL) -> Void = { [weak self] finalURL in
                     guard let self = self else { return }
                     let onStop = onStopOverride ?? UserDefaults.standard.string(forKey: "recordingOnStop") ?? "editor"
@@ -1346,7 +1329,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
                 }
 
                 // Offer audio merge when both mic + system audio were recorded
-                if hadSystemAudio && hadMicAudio && url.pathExtension.lowercased() == "mp4" {
+                if hadSystemAudio && hadMicAudio {
                     let merger = AudioMergeController()
                     self.audioMergeController = merger
                     merger.show(url: url) { [weak self] finalURL in
@@ -1447,7 +1430,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         if let w = recordingHUDPanel { excludeIDs.append(CGWindowID(w.windowNumber)) }
 
         // Start recording
-        engine.startRecording(rect: rect, screen: screen, formatOverride: formatOverride, fpsOverride: fpsOverride, excludeWindowNumbers: excludeIDs)
+        engine.startRecording(rect: rect, screen: screen, fpsOverride: fpsOverride, excludeWindowNumbers: excludeIDs)
     }
 
     func overlayDidRequestStopRecording(_ controller: OverlayWindowController) {

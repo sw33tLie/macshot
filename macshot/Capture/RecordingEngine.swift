@@ -7,11 +7,6 @@ import CoreGraphics
 typealias RecordingProgressCallback = (_ seconds: Int) -> Void
 typealias RecordingCompletionCallback = (_ url: URL?, _ error: Error?) -> Void
 
-enum RecordingFormat: String {
-    case mp4 = "mp4"
-    case gif = "gif"
-}
-
 @MainActor
 final class RecordingEngine: NSObject {
 
@@ -22,7 +17,6 @@ final class RecordingEngine: NSObject {
 
     // MARK: - Config (read from UserDefaults at start)
 
-    private var format: RecordingFormat = .mp4
     private var fps: Int = 30
     private var cropRect: CGRect = .zero      // in screen coordinates (top-left origin)
     private var screen: NSScreen = NSScreen.main ?? NSScreen.screens.first ?? NSScreen()
@@ -56,14 +50,9 @@ final class RecordingEngine: NSObject {
     private var micDataOutput: AVCaptureAudioDataOutput?
     private var micDelegate: MicCaptureDelegate?
 
-    // MARK: - GIF
-
-    private var gifEncoder: GIFEncoder?
-
     // MARK: - Callbacks
 
     var onProgress: RecordingProgressCallback?
-    var onProcessing: (() -> Void)?
     var onCompletion: RecordingCompletionCallback?
 
     private var progressTimer: Timer?
@@ -82,7 +71,7 @@ final class RecordingEngine: NSObject {
     /// Window IDs to exclude from the recording (e.g. selection border, HUD).
     private var excludeWindowNumbers: [CGWindowID] = []
 
-    func startRecording(rect: NSRect, screen: NSScreen, formatOverride: String? = nil, fpsOverride: Int? = nil, excludeWindowNumbers: [CGWindowID] = []) {
+    func startRecording(rect: NSRect, screen: NSScreen, fpsOverride: Int? = nil, excludeWindowNumbers: [CGWindowID] = []) {
         self.excludeWindowNumbers = excludeWindowNumbers
         guard state == .idle else { return }
         state = .recording
@@ -98,15 +87,13 @@ final class RecordingEngine: NSObject {
                                width: rect.width,
                                height: rect.height)
 
-        let effectiveFormat = formatOverride ?? UserDefaults.standard.string(forKey: "recordingFormat") ?? "mp4"
-        self.format = RecordingFormat(rawValue: effectiveFormat) ?? .mp4
         let defaultFPS = UserDefaults.standard.integer(forKey: "recordingFPS") > 0
             ? UserDefaults.standard.integer(forKey: "recordingFPS") : 30
         self.fps = fpsOverride ?? defaultFPS
         Task {
             // Resolve mic permission before starting capture so the prompt
             // doesn't block the UI while frames are already being recorded.
-            if format == .mp4 && UserDefaults.standard.bool(forKey: "recordMicAudio") {
+            if UserDefaults.standard.bool(forKey: "recordMicAudio") {
                 let micStatus = AVCaptureDevice.authorizationStatus(for: .audio)
                 if micStatus == .notDetermined {
                     let granted = await AVCaptureDevice.requestAccess(for: .audio)
@@ -184,9 +171,9 @@ final class RecordingEngine: NSObject {
             config.pixelFormat = kCVPixelFormatType_32BGRA
             config.scalesToFit = false
 
-            // System audio capture (MP4 only, off by default, macOS 13+)
+            // System audio capture (off by default, macOS 13+)
             if #available(macOS 13.0, *) {
-                let recordAudio = UserDefaults.standard.bool(forKey: "recordSystemAudio") && format == .mp4
+                let recordAudio = UserDefaults.standard.bool(forKey: "recordSystemAudio")
                 config.capturesAudio = recordAudio
                 config.excludesCurrentProcessAudio = true  // don't capture macshot's own sounds
             }
@@ -201,11 +188,7 @@ final class RecordingEngine: NSObject {
                 return
             }
 
-            if format == .mp4 {
-                try setupAssetWriter(url: outURL, width: pixelW, height: pixelH)
-            } else {
-                gifEncoder = GIFEncoder(url: outURL, fps: min(fps, 15), sourceFPS: fps)
-            }
+            try setupAssetWriter(url: outURL, width: pixelW, height: pixelH)
 
             let output = RecordingStreamOutput()
             output.onFrame = { [weak self] pixelBuffer, presentationTime in
@@ -222,7 +205,7 @@ final class RecordingEngine: NSObject {
             let stream = SCStream(filter: filter, configuration: config, delegate: output)
             try stream.addStreamOutput(output, type: .screen, sampleHandlerQueue: recordingQueue)
             if #available(macOS 13.0, *) {
-                let recordAudio = UserDefaults.standard.bool(forKey: "recordSystemAudio") && format == .mp4
+                let recordAudio = UserDefaults.standard.bool(forKey: "recordSystemAudio")
                 if recordAudio {
                     try stream.addStreamOutput(output, type: .audio, sampleHandlerQueue: recordingQueue)
                 }
@@ -231,7 +214,7 @@ final class RecordingEngine: NSObject {
             self.stream = stream
 
             // Start mic capture if enabled and authorized (permission resolved before capture started)
-            if format == .mp4 && UserDefaults.standard.bool(forKey: "recordMicAudio") &&
+            if UserDefaults.standard.bool(forKey: "recordMicAudio") &&
                AVCaptureDevice.authorizationStatus(for: .audio) == .authorized {
                 await MainActor.run { self.startMicCapture() }
             }
@@ -258,11 +241,7 @@ final class RecordingEngine: NSObject {
         streamOutput = nil
         await MainActor.run { self.stopMicCapture() }
 
-        if format == .mp4 {
-            await finalizeMP4()
-        } else {
-            await finalizeGIF()
-        }
+        await finalizeMP4()
     }
 
     // MARK: - Frame handling
@@ -276,15 +255,11 @@ final class RecordingEngine: NSObject {
 
     private func handleFrame(pixelBuffer: CVPixelBuffer, presentationTime: CMTime) {
         guard state == .recording else { return }
-        if format == .mp4 {
-            writeMP4Frame(buffer: pixelBuffer, presentationTime: adjustedTime(presentationTime))
-        } else {
-            gifEncoder?.addFrame(pixelBuffer)
-        }
+        writeMP4Frame(buffer: pixelBuffer, presentationTime: adjustedTime(presentationTime))
     }
 
     private func handleAudioSample(_ sampleBuffer: CMSampleBuffer) {
-        guard state == .recording, format == .mp4, let audioInput = audioInput else { return }
+        guard state == .recording, let audioInput = audioInput else { return }
         if !sessionStarted {
             pendingAudioSamples.append(sampleBuffer)
             return
@@ -296,7 +271,7 @@ final class RecordingEngine: NSObject {
     }
 
     private func handleMicSample(_ sampleBuffer: CMSampleBuffer) {
-        guard state == .recording, format == .mp4, let micInput = micAudioInput else { return }
+        guard state == .recording, let micInput = micAudioInput else { return }
         if !sessionStarted {
             pendingMicSamples.append(sampleBuffer)
             return
@@ -480,29 +455,13 @@ final class RecordingEngine: NSObject {
         await MainActor.run { self.succeed() }
     }
 
-    // MARK: - GIF
-
-    private func finalizeGIF() async {
-        await MainActor.run { self.onProcessing?() }
-        let encoder = gifEncoder
-        gifEncoder = nil
-        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            DispatchQueue.global(qos: .userInitiated).async {
-                encoder?.finish()
-                continuation.resume()
-            }
-        }
-        await MainActor.run { self.succeed() }
-    }
-
     // MARK: - Output URL
 
     private func makeOutputURL() -> URL? {
         // Save to temp directory — always writable in sandbox.
         // The video editor handles final export to the user's chosen location.
         let dir = FileManager.default.temporaryDirectory
-        let ext = format.rawValue
-        let name = "Recording \(OverlayWindowController.formattedTimestamp()).\(ext)"
+        let name = "Recording \(OverlayWindowController.formattedTimestamp()).mp4"
         return dir.appendingPathComponent(name)
     }
 

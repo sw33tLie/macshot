@@ -169,7 +169,6 @@ class Annotation {
     var bakedBlurNSImage: NSImage?    // baked result for pixelate/blur (NSImage avoids CGImage flip issues)
     var outlineGlowImage: NSImage?   // cached selection outline glow (invalidated on move/change)
     var outlineGlowRect: NSRect = .zero  // the rect the cached glow covers
-    var outlineGlowRotation: CGFloat = 0  // rotation when glow was cached
     var textImage: NSImage?   // snapshot of the NSTextView at commit time — drawn as-is, no coord math
     var textDrawRect: NSRect = .zero  // where to draw textImage in OverlayView coords
     var fontSize: CGFloat = 20

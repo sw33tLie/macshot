@@ -53,7 +53,6 @@ class OverlayWindowController {
     var remoteSelectionRect: NSRect { overlayView?.remoteSelectionRect ?? .zero }
 
     // Session recording overrides (from toolbar popover, nil = use UserDefaults default)
-    var sessionRecordingFormat: String? { overlayView?.sessionRecordingFormat }
     var sessionRecordingFPS: Int? { overlayView?.sessionRecordingFPS }
     var sessionRecordingOnStop: String? { overlayView?.sessionRecordingOnStop }
     var sessionRecordingDelay: Int? { overlayView?.sessionRecordingDelay }

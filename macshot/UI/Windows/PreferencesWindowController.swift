@@ -68,7 +68,6 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
     private var s3TestBtn: NSButton!
     private var s3StatusLabel: NSTextField!
     // Recording tab controls
-    private var recordingFormatPopup: NSPopUpButton!
     private var recordingFPSPopup: NSPopUpButton!
     private var recordingOnStopPopup: NSPopUpButton!
     private var recSavePathField: NSTextField!
@@ -910,16 +909,9 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         stack.translatesAutoresizingMaskIntoConstraints = false
         stack.edgeInsets = NSEdgeInsets(top: 0, left: 20, bottom: 16, right: 20)
 
-        // ── Format ────────────────────────────────────────────
+        // ── Output ────────────────────────────────────────────
         stack.addArrangedSubview(sectionHeader(L("Output")))
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
-
-        recordingFormatPopup = NSPopUpButton()
-        recordingFormatPopup.addItems(withTitles: [L("MP4 (H.264)"), L("GIF")])
-        recordingFormatPopup.target = self
-        recordingFormatPopup.action = #selector(recordingFormatChanged(_:))
-        stack.addArrangedSubview(labeledRow(L("Format:"), controls: [recordingFormatPopup]))
-        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         recordingFPSPopup = NSPopUpButton()
         recordingFPSPopup.addItems(withTitles: [L("15 fps"), L("24 fps"), L("30 fps"), L("60 fps"), L("120 fps")])
@@ -1709,9 +1701,10 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         imgbbKeyField.stringValue = UserDefaults.standard.string(forKey: "imgbbAPIKey") ?? ""
 
         // Recording
-        let recFormat = UserDefaults.standard.string(forKey: "recordingFormat") ?? "mp4"
-        recordingFormatPopup.selectItem(at: recFormat == "gif" ? 1 : 0)
-        updateFPSForFormat()
+        let recFPS = UserDefaults.standard.integer(forKey: "recordingFPS")
+        let mp4Options = [15, 24, 30, 60, 120]
+        let fpsIdx = mp4Options.firstIndex(of: recFPS) ?? 2
+        recordingFPSPopup.selectItem(at: fpsIdx)
 
         let onStop = UserDefaults.standard.string(forKey: "recordingOnStop") ?? "editor"
         switch onStop {
@@ -1863,34 +1856,10 @@ class PreferencesWindowController: NSWindowController, NSTabViewDelegate, NSWind
         historySizeField.alphaValue = unlimited ? 0.35 : 1.0
         historySizeStepper.isEnabled = !unlimited
     }
-    @objc private func recordingFormatChanged(_ sender: NSPopUpButton) {
-        let isGIF = sender.indexOfSelectedItem == 1
-        UserDefaults.standard.set(isGIF ? "gif" : "mp4", forKey: "recordingFormat")
-        updateFPSForFormat()
-    }
     @objc private func recordingFPSChanged(_ sender: NSPopUpButton) {
-        let isGIF = (UserDefaults.standard.string(forKey: "recordingFormat") ?? "mp4") == "gif"
-        let fpsOptions = isGIF ? [5, 10, 15] : [15, 24, 30, 60, 120]
+        let fpsOptions = [15, 24, 30, 60, 120]
         let fps = fpsOptions[min(sender.indexOfSelectedItem, fpsOptions.count - 1)]
         UserDefaults.standard.set(fps, forKey: "recordingFPS")
-    }
-    private func updateFPSForFormat() {
-        let isGIF = (UserDefaults.standard.string(forKey: "recordingFormat") ?? "mp4") == "gif"
-        let currentFPS = UserDefaults.standard.integer(forKey: "recordingFPS")
-        recordingFPSPopup.removeAllItems()
-        if isGIF {
-            recordingFPSPopup.addItems(withTitles: [L("5 fps"), L("10 fps"), L("15 fps")])
-            let gifOptions = [5, 10, 15]
-            let cappedFPS = min(currentFPS > 0 ? currentFPS : 15, 15)
-            let idx = gifOptions.firstIndex(of: cappedFPS) ?? 2
-            recordingFPSPopup.selectItem(at: idx)
-            UserDefaults.standard.set(gifOptions[idx], forKey: "recordingFPS")
-        } else {
-            recordingFPSPopup.addItems(withTitles: [L("15 fps"), L("24 fps"), L("30 fps"), L("60 fps"), L("120 fps")])
-            let mp4Options = [15, 24, 30, 60, 120]
-            let idx = mp4Options.firstIndex(of: currentFPS) ?? 2
-            recordingFPSPopup.selectItem(at: idx)
-        }
     }
     @objc private func recordingOnStopChanged(_ sender: NSPopUpButton) {
         let values = ["editor", "finder", "clipboard"]

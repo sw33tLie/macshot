@@ -742,7 +742,7 @@ private final class VideoEditorView: NSView {
         // Buttons
         if playBtnRect.contains(point) { togglePlayPause(); return }
         if muteBtnRect.contains(point) { toggleMute(); return }
-        if saveArrowRect.contains(point) { saveVideoAs(); return }
+        if saveArrowRect.contains(point) { showSaveMenu(); return }
         if saveBtnRect.contains(point) { saveVideo(); return }
         if uploadBtnRect.contains(point) { uploadVideo(); return }
         if finderBtnRect.contains(point) {
@@ -892,13 +892,95 @@ private final class VideoEditorView: NSView {
 
     private func saveVideoAs() {
         let panel = NSSavePanel()
-        panel.allowedContentTypes = isGIF ? [.gif] : [.mpeg4Movie]
-        panel.nameFieldStringValue = videoURL.deletingPathExtension().lastPathComponent + ".\(videoURL.pathExtension)"
+        panel.allowedContentTypes = [.mpeg4Movie]
+        panel.nameFieldStringValue = videoURL.deletingPathExtension().lastPathComponent + ".mp4"
         panel.directoryURL = SaveDirectoryAccess.recordingDirectoryHint()
         panel.level = .statusBar + 3
         panel.begin { [weak self] response in
             guard let self = self, response == .OK, let url = panel.url else { return }
             self.saveToDestination(url, dirURL: nil)
+        }
+    }
+
+    private func showSaveMenu() {
+        let menu = NSMenu()
+        let saveAsItem = NSMenuItem(title: L("Save As…"), action: #selector(saveAsAction), keyEquivalent: "")
+        saveAsItem.target = self
+        menu.addItem(saveAsItem)
+        menu.addItem(NSMenuItem.separator())
+        let gifItem = NSMenuItem(title: L("Save as GIF…"), action: #selector(saveAsGIFAction), keyEquivalent: "")
+        gifItem.target = self
+        menu.addItem(gifItem)
+        let pos = NSPoint(x: saveArrowRect.minX, y: saveArrowRect.maxY)
+        menu.popUp(positioning: nil, at: pos, in: self)
+    }
+
+    @objc private func saveAsAction() { saveVideoAs() }
+
+    @objc private func saveAsGIFAction() {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.gif]
+        panel.nameFieldStringValue = videoURL.deletingPathExtension().lastPathComponent + ".gif"
+        panel.directoryURL = SaveDirectoryAccess.recordingDirectoryHint()
+        panel.level = .statusBar + 3
+        panel.begin { [weak self] response in
+            guard let self = self, response == .OK, let url = panel.url else { return }
+            self.convertToGIF(destURL: url)
+        }
+    }
+
+    private func convertToGIF(destURL: URL) {
+        guard let asset = asset else { return }
+        showStatus(L("Converting to GIF…"))
+
+        let startTime = CMTime(seconds: trimStart, preferredTimescale: 600)
+        let endTime = CMTime(seconds: trimEnd, preferredTimescale: 600)
+        let timeRange = CMTimeRange(start: startTime, end: endTime)
+        // GIF capped at 15fps
+        let gifFPS = min(15, asset.tracks(withMediaType: .video).first.map { Int($0.nominalFrameRate.rounded()) } ?? 15)
+
+        Task.detached(priority: .userInitiated) { [weak self] in
+            do {
+                let reader = try AVAssetReader(asset: asset)
+                guard let videoTrack = asset.tracks(withMediaType: .video).first else {
+                    await MainActor.run { self?.showStatus(L("No video track found"), isError: true) }
+                    return
+                }
+                let outputSettings: [String: Any] = [
+                    kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+                ]
+                let trackOutput = AVAssetReaderTrackOutput(track: videoTrack, outputSettings: outputSettings)
+                trackOutput.alwaysCopiesSampleData = false
+                reader.timeRange = timeRange
+                reader.add(trackOutput)
+
+                let tmpURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".gif")
+                let sourceFPS = Int(videoTrack.nominalFrameRate.rounded())
+                let encoder = GIFEncoder(url: tmpURL, fps: gifFPS, sourceFPS: max(sourceFPS, gifFPS))
+                reader.startReading()
+
+                while reader.status == .reading {
+                    if let sampleBuffer = trackOutput.copyNextSampleBuffer(),
+                       let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
+                        encoder.addFrame(pixelBuffer)
+                    }
+                }
+                encoder.finish()
+
+                // Move to destination
+                try? FileManager.default.removeItem(at: destURL)
+                try FileManager.default.moveItem(at: tmpURL, to: destURL)
+
+                await MainActor.run {
+                    self?.savedURL = destURL
+                    self?.showStatus(String(format: L("Saved to %@"), destURL.lastPathComponent))
+                    self?.needsDisplay = true
+                }
+            } catch {
+                await MainActor.run {
+                    self?.showStatus(L("GIF conversion failed"), isError: true)
+                }
+            }
         }
     }
 
