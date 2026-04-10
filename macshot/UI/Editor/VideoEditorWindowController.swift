@@ -466,6 +466,12 @@ private final class VideoEditorView: NSView {
         let compact = bounds.width < 700
         let labelBtnW: CGFloat = compact ? iconBtnW : 100
 
+        // Pre-compute right group width so left content knows where to stop
+        let copyArrowW: CGFloat = 20
+        let saveArrowW: CGFloat = 20
+        let rightGroupW = (labelBtnW + copyArrowW) + gap + iconBtnW + gap + labelBtnW + gap + (labelBtnW + saveArrowW)
+        let maxLeftX = bounds.width - timelinePad - rightGroupW - 12  // 12pt breathing room
+
         // Left group: play, mute
         var x: CGFloat = timelinePad
 
@@ -529,11 +535,14 @@ private final class VideoEditorView: NSView {
             let fpsStr = fpsValue > 0 ? "\(Int(fpsValue.rounded()))fps" : ""
             let infoStr = "\(sizeStr)  ·  \(fpsStr)" as NSString
             let infoSize = infoStr.size(withAttributes: infoAttrs)
-            infoStr.draw(at: NSPoint(x: x + 4, y: btnY + (btnH - infoSize.height) / 2), withAttributes: infoAttrs)
-            x += infoSize.width + 12
+            if x + infoSize.width < maxLeftX {
+                infoStr.draw(at: NSPoint(x: x + 4, y: btnY + (btnH - infoSize.height) / 2), withAttributes: infoAttrs)
+                x += infoSize.width + 12
+            }
 
             // Dimensions dropdown button
-            if originalWidth > 0 {
+            dimensionsBtnRect = .zero
+            if originalWidth > 0 && x < maxLeftX {
                 let exportW = Int(CGFloat(originalWidth) * exportScale)
                 let exportH = Int(CGFloat(originalHeight) * exportScale)
                 let dimLabel: String
@@ -550,20 +559,20 @@ private final class VideoEditorView: NSView {
                 let dimStr = "  ·  \(dimLabel) ▼" as NSString
                 let dimSize = dimStr.size(withAttributes: dimAttrs)
                 let dimBtnW = dimSize.width + 8
-                dimensionsBtnRect = NSRect(x: x, y: btnY, width: dimBtnW, height: btnH)
-                dimStr.draw(at: NSPoint(x: x + 4, y: btnY + (btnH - dimSize.height) / 2), withAttributes: dimAttrs)
-                x += dimBtnW
+                if x + dimBtnW < maxLeftX {
+                    dimensionsBtnRect = NSRect(x: x, y: btnY, width: dimBtnW, height: btnH)
+                    dimStr.draw(at: NSPoint(x: x + 4, y: btnY + (btnH - dimSize.height) / 2), withAttributes: dimAttrs)
+                    x += dimBtnW
+                }
             }
 
             // Estimated export size — show when trim, scale, or format change would affect output
             let trimRatio = duration > 0 ? (trimEnd - trimStart) / duration : 1.0
             let scaleRatio = exportScale * exportScale  // pixels scale quadratically
             let willChange = trimRatio < 0.99 || scaleRatio < 0.99 || exportAsGIF
-            if willChange && sourceFileSize > 0 {
+            if willChange && sourceFileSize > 0 && x < maxLeftX {
                 let estimated: Int64
                 if exportAsGIF {
-                    // GIF is typically 2-5x larger per second than MP4 at same resolution,
-                    // but capped at 15fps. Rough estimate: source bitrate * 3 * trim * scale.
                     let gifFPSRatio = min(15.0, fpsValue) / max(fpsValue, 1.0)
                     estimated = Int64(Double(sourceFileSize) * trimRatio * scaleRatio * 3.0 * Double(gifFPSRatio))
                 } else {
@@ -575,14 +584,14 @@ private final class VideoEditorView: NSView {
                     .foregroundColor: NSColor.white.withAlphaComponent(0.35),
                 ]
                 let estSize = estStr.size(withAttributes: estAttrs)
-                estStr.draw(at: NSPoint(x: x + 4, y: btnY + (btnH - estSize.height) / 2), withAttributes: estAttrs)
-                x += estSize.width + 8
+                if x + estSize.width + 8 < maxLeftX {
+                    estStr.draw(at: NSPoint(x: x + 4, y: btnY + (btnH - estSize.height) / 2), withAttributes: estAttrs)
+                }
             }
         }
 
         // Right group: save, upload, finder, copy
         x = bounds.width - timelinePad
-        let copyArrowW: CGFloat = 20
         let fullCopyW = labelBtnW + copyArrowW
         x -= fullCopyW
         let fullCopyRect = NSRect(x: x, y: btnY, width: fullCopyW, height: btnH)
