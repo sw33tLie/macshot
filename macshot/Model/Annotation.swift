@@ -708,16 +708,26 @@ class Annotation {
             ctx.beginTransparencyLayer(auxiliaryInfo: nil)
             color.withAlphaComponent(1.0).setFill()
 
+            // Map raw pressure (0–1) to a usable width range:
+            // - Minimum 30% of stroke width even at lightest touch
+            // - Power curve (0.6) compresses the range so light/medium pressure
+            //   differences are subtle, heavy pressure stands out
+            let minFraction: CGFloat = 0.3
+            func pressureWidth(_ p: CGFloat) -> CGFloat {
+                let mapped = minFraction + pow(min(max(p, 0), 1), 0.6) * (1.0 - minFraction)
+                return max(width * mapped, 0.5)
+            }
+
             // Draw filled circles at each point + connecting quads for smooth width transitions
             for i in 0..<points.count {
-                let r = max(width * pressures[i], 0.5) / 2
+                let r = pressureWidth(pressures[i]) / 2
                 ctx.fillEllipse(in: CGRect(x: points[i].x - r, y: points[i].y - r, width: r * 2, height: r * 2))
 
                 if i > 0 {
                     let p0 = points[i - 1]
                     let p1 = points[i]
-                    let r0 = max(width * pressures[i - 1], 0.5) / 2
-                    let r1 = max(width * pressures[i], 0.5) / 2
+                    let r0 = pressureWidth(pressures[i - 1]) / 2
+                    let r1 = pressureWidth(pressures[i]) / 2
 
                     let dx = p1.x - p0.x
                     let dy = p1.y - p0.y
