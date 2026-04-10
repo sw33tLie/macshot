@@ -547,7 +547,7 @@ private final class VideoEditorView: NSView {
                     .font: NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .medium),
                     .foregroundColor: NSColor.white.withAlphaComponent(exportScale < 0.999 ? 0.7 : 0.4),
                 ]
-                let dimStr = "  ·  \(dimLabel) ▾" as NSString
+                let dimStr = "  ·  \(dimLabel) ▼" as NSString
                 let dimSize = dimStr.size(withAttributes: dimAttrs)
                 let dimBtnW = dimSize.width + 8
                 dimensionsBtnRect = NSRect(x: x, y: btnY, width: dimBtnW, height: btnH)
