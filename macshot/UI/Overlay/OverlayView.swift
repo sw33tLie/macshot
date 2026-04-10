@@ -223,6 +223,10 @@ class OverlayView: NSView {
                 toolOptionsRowView?.clearEditingAnnotation()
 
                 if selectedAnnotations.count == 1, let ann = newSingle {
+                    // Load text annotation properties into textEditor so toolbar shows correct state
+                    if ann.tool == .text {
+                        textEditor.restoreState(from: ann)
+                    }
                     toolOptionsRowView?.rebuild(forAnnotation: ann)
                     repositionToolbars()
                 } else if selectedAnnotations.isEmpty {
