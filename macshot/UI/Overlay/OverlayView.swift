@@ -7204,36 +7204,37 @@ class OverlayView: NSView {
     }
 
     /// Render annotations into a fixed bitmap at the current backing scale.
-    /// Returns an NSImage backed by a single NSBitmapImageRep so AppKit never
-    /// re-invokes a drawing handler when the image is drawn into a zoomed context.
+    /// Uses CGBitmapContext with the window's color space so colors match exactly.
+    /// Returns an NSImage backed by a CGImage so AppKit never re-invokes a
+    /// drawing handler when the image is drawn into a zoomed context.
     private func renderAnnotationBitmap(annotations: [Annotation]) -> NSImage {
         let size = bounds.size
         let scale = window?.backingScaleFactor ?? 2.0
         let pxW = Int(ceil(size.width * scale))
         let pxH = Int(ceil(size.height * scale))
-        guard let bitmap = NSBitmapImageRep(
-            bitmapDataPlanes: nil, pixelsWide: pxW, pixelsHigh: pxH,
-            bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
-            colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0
+        let colorSpace = window?.screen?.colorSpace?.cgColorSpace ?? CGColorSpaceCreateDeviceRGB()
+        guard let cgCtx = CGContext(
+            data: nil, width: pxW, height: pxH,
+            bitsPerComponent: 8, bytesPerRow: 0,
+            space: colorSpace,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
         ) else { return NSImage(size: size) }
-        bitmap.size = size  // points, not pixels
+        // Scale so drawing in points maps to pixels
+        cgCtx.scaleBy(x: scale, y: scale)
 
+        let nsCtx = NSGraphicsContext(cgContext: cgCtx, flipped: false)
         NSGraphicsContext.saveGraphicsState()
-        let ctx = NSGraphicsContext(bitmapImageRep: bitmap)
-        NSGraphicsContext.current = ctx
-        if let context = ctx {
-            for annotation in annotations where annotation.tool == .pixelate {
-                annotation.draw(in: context)
-            }
-            for annotation in annotations where annotation.tool != .pixelate {
-                annotation.draw(in: context)
-            }
+        NSGraphicsContext.current = nsCtx
+        for annotation in annotations where annotation.tool == .pixelate {
+            annotation.draw(in: nsCtx)
+        }
+        for annotation in annotations where annotation.tool != .pixelate {
+            annotation.draw(in: nsCtx)
         }
         NSGraphicsContext.restoreGraphicsState()
 
-        let image = NSImage(size: size)
-        image.addRepresentation(bitmap)
-        return image
+        guard let cgImage = cgCtx.makeImage() else { return NSImage(size: size) }
+        return NSImage(cgImage: cgImage, size: size)
     }
 
     // MARK: - Output
