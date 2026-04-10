@@ -26,14 +26,6 @@ enum LineStyle: Int, CaseIterable {
     case dashed = 1
     case dotted = 2
 
-    var label: String {
-        switch self {
-        case .solid: return "Solid"
-        case .dashed: return "Dashed"
-        case .dotted: return "Dotted"
-        }
-    }
-
     func apply(to path: NSBezierPath) {
         switch self {
         case .solid: break
@@ -96,15 +88,6 @@ enum NumberFormat: Int, CaseIterable {
         case .roman: return Self.toRoman(number)
         case .alpha: return Self.toAlpha(number, uppercase: true)
         case .alphaLower: return Self.toAlpha(number, uppercase: false)
-        }
-    }
-
-    var label: String {
-        switch self {
-        case .decimal: return "1"
-        case .roman: return "I"
-        case .alpha: return "A"
-        case .alphaLower: return "a"
         }
     }
 

@@ -84,35 +84,6 @@ enum SaveDirectoryAccess {
         UserDefaults.standard.removeObject(forKey: recBookmarkKey)
     }
 
-    static var hasRecordingDirectory: Bool {
-        UserDefaults.standard.string(forKey: recPathKey) != nil
-    }
-
-    /// Resolve recording save directory. Falls back to general save directory.
-    static func resolveRecordingDirectory() -> URL {
-        if let bookmarkData = UserDefaults.standard.data(forKey: recBookmarkKey) {
-            var isStale = false
-            if let url = try? URL(resolvingBookmarkData: bookmarkData,
-                                   options: .withSecurityScope,
-                                   relativeTo: nil,
-                                   bookmarkDataIsStale: &isStale) {
-                if isStale {
-                    if let fresh = try? url.bookmarkData(options: .withSecurityScope,
-                                                          includingResourceValuesForKeys: nil,
-                                                          relativeTo: nil) {
-                        UserDefaults.standard.set(fresh, forKey: recBookmarkKey)
-                    }
-                }
-                _ = url.startAccessingSecurityScopedResource()
-                return url
-            }
-        }
-        if let path = UserDefaults.standard.string(forKey: recPathKey) {
-            return URL(fileURLWithPath: path)
-        }
-        return resolve()
-    }
-
     /// Like resolveRecordingDirectory(), but returns nil if no valid security-scoped bookmark exists.
     /// Use this to decide whether to fall back to a Save As panel.
     static func resolveRecordingDirectoryIfAccessible() -> URL? {

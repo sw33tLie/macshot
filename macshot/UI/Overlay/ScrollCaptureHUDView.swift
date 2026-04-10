@@ -112,13 +112,6 @@ class ScrollCaptureHUDView: NSView {
         onStop?()
     }
 
-    var preferredSize: NSSize {
-        infoLabel.sizeToFit()
-        let pad: CGFloat = 8
-        let stopBtnW: CGFloat = 56
-        let autoBtnW: CGFloat = isAutoScrolling ? 90 : 86
-        return NSSize(width: pad + infoLabel.frame.width + pad + autoBtnW + pad + stopBtnW + pad, height: 36)
-    }
 }
 
 /// Floating panel that hosts the scroll capture HUD. Uses its own window so it receives

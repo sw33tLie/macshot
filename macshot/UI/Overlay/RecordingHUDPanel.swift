@@ -181,11 +181,6 @@ class RecordingHUDPanel: NSPanel {
         setFrameOrigin(NSPoint(x: pillX, y: pillY))
     }
 
-    func position(relativeTo selectionRect: NSRect, in overlayWindow: NSWindow) {
-        let selScreen = overlayWindow.convertToScreen(selectionRect)
-        positionOnScreen(relativeTo: selScreen, screen: overlayWindow.screen)
-    }
-
     // MARK: - Actions
 
     @objc private func stopClicked() { onStopRecording?() }

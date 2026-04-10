@@ -115,11 +115,6 @@ enum ToolShortcutManager {
         _cachedLookup = lookup
     }
 
-    /// Invalidate cache (call when shortcuts change).
-    static func invalidateCache() {
-        _cachedLookup = nil
-    }
-
     /// Display string for a key (for UI).
     static func displayString(for action: Action) -> String {
         let k = key(for: action)
