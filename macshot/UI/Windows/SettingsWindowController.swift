@@ -1213,10 +1213,12 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
         // Placeholder for upload history rows
         let historyContainer = NSStackView()
         historyContainer.orientation = .vertical
-        historyContainer.alignment = .leading
+        historyContainer.alignment = .width
         historyContainer.spacing = 6
         historyContainer.translatesAutoresizingMaskIntoConstraints = false
         stack.addArrangedSubview(historyContainer)
+        // Stretch to full stack width
+        historyContainer.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -40).isActive = true
         self.uploadsStack = historyContainer
 
         let clipView = scroll.contentView
@@ -1421,8 +1423,6 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
                                         link: upload["link"] ?? "",
                                         deleteURL: upload["deleteURL"] ?? "")
                 stack.addArrangedSubview(row)
-                // stretch row to fill stack width (accounting for edgeInsets 12+12)
-                row.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -24).isActive = true
             }
         }
     }
