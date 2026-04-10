@@ -61,6 +61,11 @@ protocol AnnotationCanvas: AnyObject {
 
     /// Drawing cursor preview position (canvas space). Set after pencil/marker finish so preview doesn't jump.
     var drawingCursorPoint: NSPoint { get set }
+
+    /// The current annotation layer cache (may be nil).
+    var annotationLayerCache: NSImage? { get }
+    /// Incrementally add a newly committed annotation to the cached annotation layer.
+    func appendToAnnotationCache(_ annotation: Annotation, previousCache: NSImage)
 }
 
 /// Protocol for extracted annotation tool logic.
@@ -96,12 +101,19 @@ extension AnnotationToolHandler {
     /// Commit the active annotation to the canvas annotations array + undo stack.
     func commitAnnotation(_ annotation: Annotation, canvas: AnnotationCanvas) {
         annotation.bakePixelate()
+        // Save existing cache before append clears it
+        let previousCache = canvas.annotationLayerCache
         canvas.annotations.append(annotation)
         canvas.undoStack.append(.added(annotation))
         canvas.redoStack.removeAll()
         canvas.activeAnnotation = nil
         canvas.snapGuideX = nil
         canvas.snapGuideY = nil
+        // Incrementally draw the new annotation onto the previous cache
+        // instead of rebuilding from scratch (avoids cursor flicker on commit).
+        if let prev = previousCache {
+            canvas.appendToAnnotationCache(annotation, previousCache: prev)
+        }
         canvas.setNeedsDisplay()
     }
 }

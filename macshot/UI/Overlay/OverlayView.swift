@@ -7284,6 +7284,41 @@ class OverlayView: NSView {
         return image
     }
 
+    var annotationLayerCache: NSImage? { cachedAnnotationLayer }
+
+    /// Incrementally add a newly committed annotation onto a previous cache snapshot.
+    /// Avoids a full rebuild which can cause a visible lag (cursor disappears for a frame).
+    func appendToAnnotationCache(_ annotation: Annotation, previousCache: NSImage) {
+        guard let existingCG = previousCache.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        else { return }
+
+        let size = bounds.size
+        let scale = window?.backingScaleFactor ?? 2.0
+        let pxW = Int(ceil(size.width * scale))
+        let pxH = Int(ceil(size.height * scale))
+        let colorSpace = window?.screen?.colorSpace?.cgColorSpace ?? CGColorSpaceCreateDeviceRGB()
+        guard let cgCtx = CGContext(
+            data: nil, width: pxW, height: pxH,
+            bitsPerComponent: 8, bytesPerRow: 0,
+            space: colorSpace,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return }
+        cgCtx.scaleBy(x: scale, y: scale)
+
+        // Draw existing cache
+        cgCtx.draw(existingCG, in: CGRect(origin: .zero, size: size))
+
+        // Draw new annotation on top
+        let nsCtx = NSGraphicsContext(cgContext: cgCtx, flipped: false)
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = nsCtx
+        annotation.draw(in: nsCtx)
+        NSGraphicsContext.restoreGraphicsState()
+
+        guard let cgImage = cgCtx.makeImage() else { return }
+        cachedAnnotationLayer = NSImage(cgImage: cgImage, size: size)
+    }
+
     /// Build annotation layer excluding specific annotations (used during drag/resize).
     private func buildAnnotationLayer(excluding: Set<ObjectIdentifier>) -> NSImage {
         let filtered = annotations.filter { !excluding.contains(ObjectIdentifier($0)) }
