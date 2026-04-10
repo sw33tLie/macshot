@@ -25,8 +25,8 @@
 </item>
 <item>
     <title>v4.0.2-beta.5</title>
-    <pubDate>Fri, 10 Apr 2026 02:22:31 +0000</pubDate>
-    <sparkle:version>29</sparkle:version>
+    <pubDate>Fri, 10 Apr 2026 02:23:37 +0000</pubDate>
+    <sparkle:version>30</sparkle:version>
     <sparkle:shortVersionString>4.0.2-beta.5</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
     <sparkle:channel>beta</sparkle:channel>
@@ -42,9 +42,9 @@
     ]]></description>
     <enclosure
         url="https://github.com/sw33tLie/macshot/releases/download/v4.0.2-beta.5/MacShot.dmg"
-        length="5932125"
+        length="5926348"
         type="application/octet-stream"
-        sparkle:edSignature="OfdlDLTM42RWusxOHnpgBNKfqJZCELD4DF1RuaF19lbN0Yra7L2gzOhPRDl0kPkD/G8t6vDEc/C8Vz29BvgWCg=="
+        sparkle:edSignature="Z+CVrLrvnkFbujTPyawR+f91CS46N4bcJMUFMfqxqoxr1E44WxbXl7AaN/tNPHWaahZWzaQ85dLJh7akQTa7Dg=="
     />
 </item>
     </channel>
