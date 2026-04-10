@@ -3779,15 +3779,22 @@ class OverlayView: NSView {
         annotationDeleteButtonRect = deleteRect
         drawDeleteCircle(in: deleteRect)
 
-        // Edit button (pencil) for text annotations
+        // Edit button (pencil) for text annotations — matches delete button style
         if annotation.tool == .text {
             let editRect = NSRect(
                 x: padded.maxX + 4, y: padded.maxY - btnSize * 2 - 4, width: btnSize,
                 height: btnSize)
             annotationEditButtonRect = editRect
-            NSColor(white: 0.3, alpha: 0.9).setFill()
+            // Dark fill (same as delete)
+            NSColor(white: 0.12, alpha: 0.94).setFill()
             NSBezierPath(ovalIn: editRect).fill()
-            let symbolConfig = NSImage.SymbolConfiguration(pointSize: 10, weight: .medium)
+            // Accent border
+            ToolbarLayout.accentColor.withAlphaComponent(0.9).setStroke()
+            let editBorder = NSBezierPath(ovalIn: editRect.insetBy(dx: 0.75, dy: 0.75))
+            editBorder.lineWidth = 1.5
+            editBorder.stroke()
+            // White pencil icon
+            let symbolConfig = NSImage.SymbolConfiguration(pointSize: 9, weight: .bold)
             if let img = NSImage(systemSymbolName: "pencil", accessibilityDescription: nil)?
                 .withSymbolConfiguration(symbolConfig)
             {
@@ -3813,6 +3820,16 @@ class OverlayView: NSView {
     /// Draw a generic outline glow around any annotation by rendering it offscreen,
     /// dilating the alpha mask, then compositing the outline back. Cached on the annotation.
     private func drawAnnotationOutlineGlow(_ annotation: Annotation) {
+        // Skip expensive glow during resize — bounding box changes every frame,
+        // invalidating the CIFilter cache. A simple stroke rect is drawn instead.
+        if isResizingAnnotation && isSelected(annotation) {
+            let rect = annotation.boundingRect.insetBy(dx: -2, dy: -2)
+            ToolbarLayout.accentColor.withAlphaComponent(0.5).setStroke()
+            let path = NSBezierPath(roundedRect: rect, xRadius: 2, yRadius: 2)
+            path.lineWidth = 2
+            path.stroke()
+            return
+        }
         let outlineWidth: CGFloat = 3
         // Generous padding — accounts for stroke width, line caps, Chaikin smoothing overshoot,
         // arrowheads, and the dilation radius. Bitmap is cached so size doesn't matter per-frame.
