@@ -282,6 +282,7 @@ class TextEditingController {
         tv.isVerticallyResizable = true
         tv.isHorizontallyResizable = false
         tv.textContainerInset = NSSize(width: 4, height: 4)
+        tv.textContainer?.lineFragmentPadding = 0
         tv.textContainer?.containerSize = NSSize(width: viewFrame.width - 8, height: CGFloat.greatestFiniteMagnitude)
         tv.textContainer?.widthTracksTextView = true
 
