@@ -3347,11 +3347,20 @@ class OverlayView: NSView {
         // Canvas point currently under cursor (before zoom change)
         let canvasUnderCursor = viewToCanvas(cursorView)
         zoomLevel = max(zoomMin, min(zoomMax, level))
-        // After zoom change, pin that canvas point to the cursor's view position.
-        // because applyZoomTransform runs after the editor translate.
-        zoomAnchorCanvas = canvasUnderCursor
-        zoomAnchorView = cursorView
-        clampZoomAnchor()
+
+        // When zooming back to 1×, reset anchors to avoid floating-point drift
+        // that causes visual misalignment between background and annotations.
+        if abs(zoomLevel - 1.0) < 0.005 {
+            zoomLevel = 1.0
+            zoomAnchorCanvas = .zero
+            zoomAnchorView = .zero
+        } else {
+            // After zoom change, pin that canvas point to the cursor's view position.
+            // because applyZoomTransform runs after the editor translate.
+            zoomAnchorCanvas = canvasUnderCursor
+            zoomAnchorView = cursorView
+            clampZoomAnchor()
+        }
         showZoomLabel()
         needsDisplay = true
     }
