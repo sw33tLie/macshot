@@ -189,6 +189,7 @@ class OverlayView: NSView {
             if let data = try? NSKeyedArchiver.archivedData(withRootObject: currentColor, requiringSecureCoding: true) {
                 UserDefaults.standard.set(data, forKey: "lastUsedColor")
             }
+            updateToolbarColorSwatch()
         }
     }
     /// currentColor with opacity applied — used for all tools except marker, loupe, measure, pixelate, blur
@@ -7577,7 +7578,6 @@ class OverlayView: NSView {
             picker.saveToSelectedSlot(color)
             // Update toolbar color swatches without rebuilding (which destroys the popover anchor)
             self.toolOptionsRowView?.updateSwatchColors()
-            self.updateToolbarColorSwatch()
             self.needsDisplay = true
         }
         picker.onOpacityChanged = { [weak self] opacity in
