@@ -382,7 +382,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     func returnFocusIfNeeded() {
         let appToActivate = previousApp
         previousApp = nil
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            // Don't hide the app while a recording is in progress — the HUD
+            // and selection border are non-titled panels that would be killed.
+            if self?.recordingEngine != nil { return }
             let hasVisibleWindows = NSApp.windows.contains { $0.isVisible && $0.styleMask.contains(.titled) }
             guard !hasVisibleWindows else { return }
             NSApp.setActivationPolicy(.accessory)

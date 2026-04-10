@@ -7188,43 +7188,51 @@ class OverlayView: NSView {
 
     // MARK: - Annotation layer cache
 
-    /// Render all committed annotations into a transparent image (canvas-space, no zoom).
+    /// Render all committed annotations into a transparent bitmap (canvas-space, no zoom).
     /// Reused across frames until annotations change, avoiding per-frame iteration.
     private func annotationLayerImage() -> NSImage {
         if let cached = cachedAnnotationLayer { return cached }
-        let size = bounds.size
-        let image = NSImage(size: size, flipped: false) { [annotations] _ in
-            guard let context = NSGraphicsContext.current else { return true }
-            // Censor annotations render first so other annotations appear on top
-            for annotation in annotations where annotation.tool == .pixelate {
-                annotation.draw(in: context)
-            }
-            for annotation in annotations where annotation.tool != .pixelate {
-                annotation.draw(in: context)
-            }
-            return true
-        }
-        // Force rasterization so subsequent draws are a fast blit
-        _ = image.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        let image = renderAnnotationBitmap(annotations: annotations)
         cachedAnnotationLayer = image
         return image
     }
 
     /// Build annotation layer excluding specific annotations (used during drag/resize).
     private func buildAnnotationLayer(excluding: Set<ObjectIdentifier>) -> NSImage {
-        let size = bounds.size
         let filtered = annotations.filter { !excluding.contains(ObjectIdentifier($0)) }
-        let image = NSImage(size: size, flipped: false) { _ in
-            guard let context = NSGraphicsContext.current else { return true }
-            for annotation in filtered where annotation.tool == .pixelate {
+        return renderAnnotationBitmap(annotations: filtered)
+    }
+
+    /// Render annotations into a fixed bitmap at the current backing scale.
+    /// Returns an NSImage backed by a single NSBitmapImageRep so AppKit never
+    /// re-invokes a drawing handler when the image is drawn into a zoomed context.
+    private func renderAnnotationBitmap(annotations: [Annotation]) -> NSImage {
+        let size = bounds.size
+        let scale = window?.backingScaleFactor ?? 2.0
+        let pxW = Int(ceil(size.width * scale))
+        let pxH = Int(ceil(size.height * scale))
+        guard let bitmap = NSBitmapImageRep(
+            bitmapDataPlanes: nil, pixelsWide: pxW, pixelsHigh: pxH,
+            bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+            colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0
+        ) else { return NSImage(size: size) }
+        bitmap.size = size  // points, not pixels
+
+        NSGraphicsContext.saveGraphicsState()
+        let ctx = NSGraphicsContext(bitmapImageRep: bitmap)
+        NSGraphicsContext.current = ctx
+        if let context = ctx {
+            for annotation in annotations where annotation.tool == .pixelate {
                 annotation.draw(in: context)
             }
-            for annotation in filtered where annotation.tool != .pixelate {
+            for annotation in annotations where annotation.tool != .pixelate {
                 annotation.draw(in: context)
             }
-            return true
         }
-        _ = image.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        NSGraphicsContext.restoreGraphicsState()
+
+        let image = NSImage(size: size)
+        image.addRepresentation(bitmap)
         return image
     }
 
