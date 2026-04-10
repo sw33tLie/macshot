@@ -28,6 +28,7 @@ protocol OverlayViewDelegate: AnyObject {
     func overlayViewDidRequestInputMonitoringPermission()
     func overlayViewDidBeginSelection()
     func overlayViewRemoteSelectionDidChange(_ rect: NSRect)
+    func overlayViewDidChangeWindowSnapState()
     func overlayViewRemoteSelectionDidFinish(_ rect: NSRect)
     func overlayViewDidRequestAddCapture()
 }
@@ -6899,6 +6900,8 @@ class OverlayView: NSView {
                 windowSnapEnabled = !windowSnapEnabled
                 hoveredWindowRect = nil
                 needsDisplay = true
+                // Notify other overlays to redraw (for multi-monitor setups)
+                overlayDelegate?.overlayViewDidChangeWindowSnapState()
             }
         case 3:  // F — full screen capture (only in idle state with snap on)
             if state == .idle && windowSnapEnabled {

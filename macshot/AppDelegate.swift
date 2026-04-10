@@ -1737,6 +1737,15 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         return stitchCrossScreenCapture(primary: controller, others: others)
     }
 
+    func overlayDidChangeWindowSnapState(_ controller: OverlayWindowController) {
+        // Notify all other overlays to redraw (for multi-monitor setups)
+        // When window snap state changes via Tab key, all overlays need to update
+        // their helper text to show the new ON/OFF state
+        for other in overlayControllers where other !== controller {
+            other.triggerRedraw()
+        }
+    }
+
     private func handleScrollCaptureCompleted(finalImage: NSImage?) {
         scrollCapturePreviewPanel?.close()
         scrollCapturePreviewPanel = nil
