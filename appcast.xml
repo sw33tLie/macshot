@@ -4,32 +4,13 @@
         <title>macshot</title>
         <link>https://github.com/sw33tLie/macshot</link>
         <description>macshot updates</description>
-<item xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
-    <title>v4.0.1</title>
-    <pubDate>Thu, 09 Apr 2026 13:49:06 +0000</pubDate>
-    <sparkle:version>23</sparkle:version>
-    <sparkle:shortVersionString>4.0.1</sparkle:shortVersionString>
+<item>
+    <title>v4.0.2</title>
+    <pubDate>Fri, 10 Apr 2026 14:54:15 +0000</pubDate>
+    <sparkle:version>31</sparkle:version>
+    <sparkle:shortVersionString>4.0.2</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
 
-    <description>
-      &lt;style&gt;
-        body { font-family: -apple-system, sans-serif; font-size: 13px; padding: 12px; }
-        h3 { font-size: 14px; margin: 12px 0 6px 0; }
-        h3:first-child { margin-top: 0; }
-        ul { padding-left: 18px; margin: 4px 0; }
-        li { margin: 4px 0; line-height: 1.5; }
-      &lt;/style&gt;
-      &lt;h3&gt;Fixed&lt;/h3&gt;&lt;ul&gt; &lt;li&gt;&lt;b&gt;Crash on macOS 26 (Tahoe) when using beautify with mesh gradient styles&lt;/b&gt; — SwiftUI `ImageRenderer` was called from inside an `NSImage` drawing handler closure, violating `@MainActor` isolation under macOS 26's stricter concurrency enforcement. Mesh gradients are now pre-rendered before entering the drawing handler.&lt;/li&gt; &lt;li&gt;&lt;b&gt;Menu bar icon not centered&lt;/b&gt; — SVG viewBox was non-square (658×570) with misaligned origin, causing the icon to render off-center. Fixed to a properly centered square viewBox. Added `preserves-vector-representation` for crisp rendering.&lt;/li&gt;&lt;/ul&gt;
-    </description>
-    <enclosure url="https://github.com/sw33tLie/macshot/releases/download/v4.0.1/MacShot.dmg" length="5898809" type="application/octet-stream" sparkle:edSignature="PhTJ2x9txgjjNXgZ+YWVu/ozlN6O58mBkrsLRvQCyYKw6wY7PY25MfNc15mwbWVx8DkxlYPaetuU8Hi/sRSICQ==" />
-</item>
-<item>
-    <title>v4.0.2-beta.5</title>
-    <pubDate>Fri, 10 Apr 2026 02:23:37 +0000</pubDate>
-    <sparkle:version>30</sparkle:version>
-    <sparkle:shortVersionString>4.0.2-beta.5</sparkle:shortVersionString>
-    <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
-    <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
       <style>
         body { font-family: -apple-system, sans-serif; font-size: 13px; padding: 12px; }
@@ -38,13 +19,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Changed</h3><ul> <li><b>Recording always produces MP4</b> — format picker removed from recording settings and preferences. GIF export is now a post-recording option in the video editor via an MP4/GIF toggle, so you can decide the format after seeing what you captured.</li> <li><b>Preferences renamed to Settings</b> — all references updated throughout the app.</li>  </ul><h3>Fixed</h3><ul> <li><b>Annotation drawing performance</b> — overlay was redrawing every annotation from scratch on every frame (even for cursor movement). Committed annotations are now cached into a single image, making drawing with many annotations smooth.</li> <li><b>Dragging/resizing annotations with many drawings</b> — during drag, resize, or rotation of an annotation, only the manipulated annotation redraws live; all others use a cached image.</li> <li><b>Rotation lag on annotations</b> — the selection outline glow was regenerating expensive CIFilter pipeline on every frame during rotation. Now cached at rotation=0 and rotated via GPU transform at draw time.</li> <li><b>Selection outline clipping on rotated shapes</b> — the glow bitmap was sized to the unrotated bounding box, clipping rotated shapes. Now expands to the rotated bounding box.</li> <li><b>Selection outline not following rotation</b> — outline glow cache wasn't invalidated on rotation change, showing a stale unrotated outline.</li> <li><b>Dock icon click opens Settings over video editor</b> — clicking the macshot dock icon when a video editor window was already open would open Settings on top. Now only opens Settings when no windows are visible.</li> <li><b>Video editor ignores custom accent color</b> — trim handles, play button, and other controls were hardcoded to purple instead of using the user's custom accent color.</li></ul>
+      <h3>Added</h3><ul> <li><b>Pen pressure sensitivity</b> — Apple Pencil (Sidecar) and tablet pressure varies stroke width in real time. Toggle via "Pressure" checkbox in pencil tool options. Pressure data is preserved through smoothing and in editable history. Non-tablet users are unaffected.</li> <li><b>Paste screenshot as file in Finder</b> — Cmd+V in Finder now pastes the captured screenshot as a PNG file.</li>  </ul><h3>Changed</h3><ul> <li><b>Recording always produces MP4</b> — format picker removed from recording settings. GIF export is now a post-recording option in the video editor via an MP4/GIF toggle, so you can decide the format after seeing what you captured.</li> <li><b>Video editor uses custom accent color</b> — trim handles, play button, and other controls now respect the user's custom accent color instead of hardcoded purple.</li>  </ul><h3>Fixed</h3><ul> <li><b>Annotation drawing performance</b> — overlay was redrawing every annotation from scratch on every frame (even for cursor movement). Committed annotations are now cached into a single bitmap, making drawing with many annotations smooth.</li> <li><b>Dragging/resizing/rotating annotations with many drawings</b> — during manipulation, only the affected annotation redraws live; all others use a cached image.</li> <li><b>Rotation lag on annotations</b> — the selection outline glow was regenerating an expensive CIFilter pipeline on every frame during rotation. Now cached at rotation=0 and rotated via GPU transform at draw time.</li> <li><b>Zoom lag with annotations</b> — pinch-zooming caused all annotations to re-render every frame because NSImage's drawing handler was re-invoked at each new scale. Replaced with a fixed bitmap that blits without re-rendering.</li> <li><b>Selection outline clipping on rotated shapes</b> — the glow bitmap was sized to the unrotated bounding box, clipping rotated shapes. Now expands to the rotated bounding box.</li> <li><b>Selection outline not following rotation</b> — outline glow cache wasn't invalidated on rotation change, showing a stale unrotated outline.</li> <li><b>Annotation color shift after drawing</b> — cached annotation layer used deviceRGB instead of the display's color space (Display P3), causing a subtle color change when annotations moved to the cache. Now uses the window's screen color space.</li> <li><b>Zoom coordinate misalignment</b> — zooming back to 1x via trackpad left residual floating-point anchor values, causing background and annotation layers to drift apart. Anchors now reset to zero at 1x.</li> <li><b>Window snap state not synced across monitors</b> — pressing Tab to toggle window snapping only updated the helper text on the active monitor. Now syncs across all screens.</li> <li><b>Crash on macOS 26 (Tahoe) when using beautify</b> — `BeautifyRenderer` actor isolation violated under macOS 26's stricter concurrency enforcement. Fixed `@MainActor` scope.</li> <li><b>Crash with negative beautify style index</b> — modulo operator produced negative index with custom background images. Fixed to always produce a valid index.</li> <li><b>Beautify custom background lag</b> — custom background images were re-decoded and re-processed (including CIFilter blur) on every draw frame. Now pre-rendered to a cached CGImage.</li> <li><b>Dock icon click opens Settings over video editor</b> — now only opens Settings when no windows are visible.</li> <li><b>Recording HUD disappears when closing old video editor</b> — closing a previous video editor window while recording would hide the app and kill the recording UI. Now skips focus return while recording is active.</li> <li><b>Missing translations</b> — 8 UI strings added across all 40 locales.</li></ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v4.0.2-beta.5/MacShot.dmg"
-        length="5926348"
+        url="https://github.com/sw33tLie/macshot/releases/download/v4.0.2/MacShot.dmg"
+        length="5925448"
         type="application/octet-stream"
-        sparkle:edSignature="Z+CVrLrvnkFbujTPyawR+f91CS46N4bcJMUFMfqxqoxr1E44WxbXl7AaN/tNPHWaahZWzaQ85dLJh7akQTa7Dg=="
+        sparkle:edSignature="E8vVKrycVuGep1Bq3F5Jah9Hbux7OqWbf0Dab5yAkl9f3siSr0R7DI5QwvqSzFRJ6h75wGO+2LqReAi1VMQqDQ=="
     />
 </item>
     </channel>
