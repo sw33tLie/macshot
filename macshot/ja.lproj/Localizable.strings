@@ -181,6 +181,7 @@
 "Language:" = "言語:";
 "Restart the app to fully apply the new language." = "新しい言語を完全に適用するには、アプリを再起動してください。";
 "Capture" = "キャプチャ";
+"Play sound on capture" = "キャプチャ時にサウンドを再生";
 "Play sound on copy" = "コピー時にサウンドを再生";
 "Remember last selection area" = "前回の選択範囲を記憶";
 "Remember last selected tool" = "前回選択したツールを記憶";
@@ -216,6 +217,7 @@
 "Appearance" = "外観";
 "Accent color:" = "アクセントカラー:";
 "Icon color:" = "アイコンカラー:";
+"Background color:" = "背景色:";
 "Reset" = "リセット";
 "OCR Capture:" = "OCR キャプチャ:";
 "Show window + copy to clipboard" = "ウインドウを表示 + クリップボードにコピー";

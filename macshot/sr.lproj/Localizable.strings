@@ -181,6 +181,7 @@
 "Language:" = "Језик:";
 "Restart the app to fully apply the new language." = "Поново покрените апликацију да бисте у потпуности применили нови језик.";
 "Capture" = "Снимање";
+"Play sound on capture" = "Пусти звук при снимању";
 "Play sound on copy" = "Звучни сигнал при копирању";
 "Remember last selection area" = "Запамти последњу област селекције";
 "Remember last selected tool" = "Запамти последњи изабрани алат";
@@ -216,6 +217,7 @@
 "Appearance" = "Изглед";
 "Accent color:" = "Боја акцента:";
 "Icon color:" = "Боја иконице:";
+"Background color:" = "Боја позадине:";
 "Reset" = "Ресетуј";
 "OCR Capture:" = "OCR снимање:";
 "Show window + copy to clipboard" = "Прикажи прозор + копирај у оставу";

@@ -43,6 +43,7 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
     private var betaUpdateCheckbox: NSButton!
     private var accentColorWell: NSColorWell!
     private var iconColorWell: NSColorWell!
+    private var bgColorWell: NSColorWell!
     private var quickModePopup: NSPopUpButton!
     private var quickCaptureOpenEditorCheckbox: NSButton!
     private var imageFormatPopup: NSPopUpButton!
@@ -509,6 +510,11 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
         iconColorWell.target = self
         iconColorWell.action = #selector(iconColorChanged(_:))
 
+        bgColorWell = NSColorWell(frame: NSRect(x: 0, y: 0, width: 36, height: 24))
+        bgColorWell.color = ToolbarLayout.bgColor
+        bgColorWell.target = self
+        bgColorWell.action = #selector(bgColorChanged(_:))
+
         let resetColorsBtn = NSButton(title: L("Reset"), target: self, action: #selector(resetToolbarColors(_:)))
         resetColorsBtn.bezelStyle = .rounded
         resetColorsBtn.controlSize = .small
@@ -516,6 +522,8 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
         stack.addArrangedSubview(indented(labeledRow(L("Accent color:"), controls: [accentColorWell])))
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
         stack.addArrangedSubview(indented(labeledRow(L("Icon color:"), controls: [iconColorWell])))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+        stack.addArrangedSubview(indented(labeledRow(L("Background color:"), controls: [bgColorWell])))
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
         stack.addArrangedSubview(indented(labeledRow("", controls: [resetColorsBtn])))
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
@@ -1660,6 +1668,7 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
 
         accentColorWell.color = ToolbarLayout.accentColor
         iconColorWell.color = ToolbarLayout.iconColor
+        bgColorWell.color = ToolbarLayout.bgColor
 
         let historySize = UserDefaults.standard.object(forKey: "historySize") as? Int ?? 10
         historySizeField.integerValue = historySize
@@ -1936,10 +1945,15 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
         ToolbarLayout.saveIconColor(sender.color)
         notifyToolbarColorChange()
     }
+    @objc private func bgColorChanged(_ sender: NSColorWell) {
+        ToolbarLayout.saveBgColor(sender.color)
+        notifyToolbarColorChange()
+    }
     @objc private func resetToolbarColors(_ sender: NSButton) {
         ToolbarLayout.resetColors()
         accentColorWell.color = ToolbarLayout.defaultAccentColor
         iconColorWell.color = ToolbarLayout.defaultIconColor
+        bgColorWell.color = ToolbarLayout.defaultBgColor
         notifyToolbarColorChange()
     }
     private func notifyToolbarColorChange() {

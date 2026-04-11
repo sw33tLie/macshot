@@ -85,14 +85,14 @@ class GradientPickerView: NSView {
         // "+" button — always present, always opens file picker
         let pr = rectForIndex(idx)
         let plusPath = NSBezierPath(roundedRect: pr, xRadius: 6, yRadius: 6)
-        NSColor(white: 0.25, alpha: 1.0).setFill()
+        ToolbarLayout.iconColor.withAlphaComponent(0.15).setFill()
         plusPath.fill()
         let symbolConfig = NSImage.SymbolConfiguration(pointSize: 14, weight: .medium)
         if let plusIcon = NSImage(systemSymbolName: "photo.badge.plus", accessibilityDescription: nil)?
             .withSymbolConfiguration(symbolConfig) {
             let tinted = plusIcon.copy() as! NSImage
             tinted.lockFocus()
-            NSColor.white.set()
+            ToolbarLayout.iconColor.set()
             NSRect(origin: .zero, size: tinted.size).fill(using: .sourceAtop)
             tinted.unlockFocus()
             let iconSize = tinted.size

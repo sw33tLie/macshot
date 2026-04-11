@@ -98,7 +98,7 @@ class FontPickerView: NSScrollView {
             guard rowRect.intersects(dirtyRect) else { continue }
 
             if entry.isSeparator {
-                NSColor.white.withAlphaComponent(0.1).setFill()
+                ToolbarLayout.iconColor.withAlphaComponent(0.1).setFill()
                 NSRect(x: 8, y: rowRect.midY - 0.5, width: frame.width - 16, height: 1).fill()
                 continue
             }
@@ -135,7 +135,7 @@ class FontPickerView: NSScrollView {
 
             let attrs: [NSAttributedString.Key: Any] = [
                 .font: displayFont,
-                .foregroundColor: NSColor.white.withAlphaComponent(isSelected ? 1.0 : 0.8),
+                .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(isSelected ? 1.0 : 0.8),
             ]
             let displayName = entry.family == "System" ? "System (SF Pro)" : entry.family
             let str = displayName as NSString

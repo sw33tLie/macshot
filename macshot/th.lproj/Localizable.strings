@@ -181,6 +181,7 @@
 "Language:" = "ภาษา:";
 "Restart the app to fully apply the new language." = "เริ่มแอปใหม่เพื่อใช้ภาษาใหม่อย่างสมบูรณ์";
 "Capture" = "การจับภาพ";
+"Play sound on capture" = "เล่นเสียงเมื่อจับภาพ";
 "Play sound on copy" = "เล่นเสียงเมื่อคัดลอก";
 "Remember last selection area" = "จำพื้นที่เลือกล่าสุด";
 "Remember last selected tool" = "จำเครื่องมือที่เลือกล่าสุด";
@@ -216,6 +217,7 @@
 "Appearance" = "รูปลักษณ์";
 "Accent color:" = "สีเน้น:";
 "Icon color:" = "สีไอคอน:";
+"Background color:" = "สีพื้นหลัง:";
 "Reset" = "รีเซ็ต";
 "OCR Capture:" = "การจับภาพ OCR:";
 "Show window + copy to clipboard" = "แสดงหน้าต่าง + คัดลอกไปยังคลิปบอร์ด";

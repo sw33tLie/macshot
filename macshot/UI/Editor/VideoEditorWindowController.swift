@@ -58,7 +58,7 @@ final class VideoEditorWindowController: NSObject, NSWindowDelegate {
         win.isReleasedWhenClosed = false
         win.delegate = self
         win.collectionBehavior = [.fullScreenAuxiliary]
-        win.backgroundColor = NSColor(white: 0.12, alpha: 1)
+        win.backgroundColor = ToolbarLayout.bgColor
 
         let view = VideoEditorView(frame: NSRect(x: 0, y: 0, width: winW, height: winH), videoURL: url)
         win.contentView = view
@@ -349,11 +349,11 @@ private final class VideoEditorView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         // Controls background
         let controlsBg = NSRect(x: 0, y: 0, width: bounds.width, height: controlsH)
-        NSColor(white: 0.08, alpha: 1).setFill()
+        ToolbarLayout.bgColor.setFill()
         NSBezierPath(rect: controlsBg).fill()
 
         // Separator
-        NSColor.white.withAlphaComponent(0.1).setFill()
+        ToolbarLayout.iconColor.withAlphaComponent(0.1).setFill()
         NSBezierPath(rect: NSRect(x: 0, y: controlsH, width: bounds.width, height: 0.5)).fill()
 
         guard duration > 0 else { return }
@@ -378,7 +378,7 @@ private final class VideoEditorView: NSView {
 
         // Track background with rounded clip
         let trackPath = NSBezierPath(roundedRect: timelineRect, xRadius: 5, yRadius: 5)
-        NSColor.white.withAlphaComponent(0.06).setFill()
+        ToolbarLayout.iconColor.withAlphaComponent(0.06).setFill()
         trackPath.fill()
 
         // Draw thumbnails — use floor/ceil to avoid sub-pixel gaps between tiles
@@ -433,20 +433,20 @@ private final class VideoEditorView: NSView {
             let playheadX = max(tlX, min(tlX + tlW, tlX + CGFloat(currentTime / duration) * tlW))
 
             // Playhead line with subtle shadow
-            NSColor.white.withAlphaComponent(0.9).setFill()
+            ToolbarLayout.iconColor.withAlphaComponent(0.9).setFill()
             let playheadRect = NSRect(x: playheadX - 1, y: tlY - 2, width: 2, height: tlH + 4)
             NSBezierPath(roundedRect: playheadRect, xRadius: 1, yRadius: 1).fill()
 
             // Playhead circle
             let circleR: CGFloat = 5
             let circleX = max(tlX + circleR, min(tlX + tlW - circleR, playheadX))
-            NSColor.white.setFill()
+            ToolbarLayout.iconColor.setFill()
             NSBezierPath(ovalIn: NSRect(x: circleX - circleR, y: tlY + tlH + 2, width: circleR * 2, height: circleR * 2)).fill()
         }
     }
 
     private func drawHandleGrip(in rect: NSRect) {
-        NSColor.white.withAlphaComponent(0.5).setStroke()
+        ToolbarLayout.iconColor.withAlphaComponent(0.5).setStroke()
         let path = NSBezierPath()
         path.lineWidth = 1
         let midY = rect.midY
@@ -494,7 +494,7 @@ private final class VideoEditorView: NSView {
             formatGIFRect = NSRect(x: formatToggleRect.minX + halfW, y: segY, width: halfW, height: segH)
 
             // Background
-            NSColor.white.withAlphaComponent(0.08).setFill()
+            ToolbarLayout.iconColor.withAlphaComponent(0.08).setFill()
             NSBezierPath(roundedRect: formatToggleRect, xRadius: 5, yRadius: 5).fill()
 
             // Selected segment highlight
@@ -505,11 +505,11 @@ private final class VideoEditorView: NSView {
             // Labels
             let selAttrs: [NSAttributedString.Key: Any] = [
                 .font: NSFont.systemFont(ofSize: 11, weight: .semibold),
-                .foregroundColor: NSColor.white,
+                .foregroundColor: ToolbarLayout.iconColor,
             ]
             let unselAttrs: [NSAttributedString.Key: Any] = [
                 .font: NSFont.systemFont(ofSize: 11, weight: .medium),
-                .foregroundColor: NSColor.white.withAlphaComponent(0.5),
+                .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(0.5),
             ]
             let mp4Str = "MP4" as NSString
             let gifStr = "GIF" as NSString
@@ -525,7 +525,7 @@ private final class VideoEditorView: NSView {
         do {
             let infoAttrs: [NSAttributedString.Key: Any] = [
                 .font: NSFont.systemFont(ofSize: 10, weight: .regular),
-                .foregroundColor: NSColor.white.withAlphaComponent(0.4),
+                .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(0.4),
             ]
             let sourceFileSize = (try? FileManager.default.attributesOfItem(atPath: videoURL.path)[.size] as? Int) ?? 0
             let sizeStr = ByteCountFormatter.string(fromByteCount: Int64(sourceFileSize), countStyle: .file)
@@ -552,7 +552,7 @@ private final class VideoEditorView: NSView {
                 }
                 let dimAttrs: [NSAttributedString.Key: Any] = [
                     .font: NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .medium),
-                    .foregroundColor: NSColor.white.withAlphaComponent(exportScale < 0.999 ? 0.7 : 0.4),
+                    .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(exportScale < 0.999 ? 0.7 : 0.4),
                 ]
                 let dimStr = "  ·  \(dimLabel) ▼" as NSString
                 let dimSize = dimStr.size(withAttributes: dimAttrs)
@@ -579,7 +579,7 @@ private final class VideoEditorView: NSView {
                 let estStr = "  ·  ~\(ByteCountFormatter.string(fromByteCount: estimated, countStyle: .file))" as NSString
                 let estAttrs: [NSAttributedString.Key: Any] = [
                     .font: NSFont.systemFont(ofSize: 10, weight: .medium),
-                    .foregroundColor: NSColor.white.withAlphaComponent(0.35),
+                    .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(0.35),
                 ]
                 let estSize = estStr.size(withAttributes: estAttrs)
                 if x + estSize.width + 8 < maxLeftX {
@@ -597,14 +597,14 @@ private final class VideoEditorView: NSView {
         copyArrowRect = NSRect(x: x + labelBtnW, y: btnY, width: copyArrowW, height: btnH)
 
         // Draw combined background
-        NSColor.white.withAlphaComponent(0.1).setFill()
+        ToolbarLayout.iconColor.withAlphaComponent(0.1).setFill()
         NSBezierPath(roundedRect: fullCopyRect, xRadius: 6, yRadius: 6).fill()
 
         do {
             let iconSize: CGFloat = 12
             let copyAttrs: [NSAttributedString.Key: Any] = [
                 .font: NSFont.systemFont(ofSize: 11, weight: .medium),
-                .foregroundColor: NSColor.white.withAlphaComponent(0.85),
+                .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(0.85),
             ]
             let copyLabel = L("Copy") as NSString
             let copyLabelSize = copyLabel.size(withAttributes: copyAttrs)
@@ -614,7 +614,7 @@ private final class VideoEditorView: NSView {
                     .withSymbolConfiguration(.init(pointSize: iconSize, weight: .medium)) {
                 let tinted = NSImage(size: img.size, flipped: false) { r in
                     img.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1)
-                    NSColor.white.withAlphaComponent(0.85).setFill()
+                    ToolbarLayout.iconColor.withAlphaComponent(0.85).setFill()
                     r.fill(using: .sourceAtop)
                     return true
                 }
@@ -624,7 +624,7 @@ private final class VideoEditorView: NSView {
         }
 
         // Separator line
-        NSColor.white.withAlphaComponent(0.2).setStroke()
+        ToolbarLayout.iconColor.withAlphaComponent(0.2).setStroke()
         let copySep = NSBezierPath()
         copySep.move(to: NSPoint(x: copyArrowRect.minX, y: copyArrowRect.minY + 4))
         copySep.line(to: NSPoint(x: copyArrowRect.minX, y: copyArrowRect.maxY - 4))
@@ -636,7 +636,7 @@ private final class VideoEditorView: NSView {
                 .withSymbolConfiguration(.init(pointSize: 8, weight: .semibold)) {
             let tinted = NSImage(size: chevron.size, flipped: false) { r in
                 chevron.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1)
-                NSColor.white.withAlphaComponent(0.6).setFill()
+                ToolbarLayout.iconColor.withAlphaComponent(0.6).setFill()
                 r.fill(using: .sourceAtop)
                 return true
             }
@@ -660,7 +660,7 @@ private final class VideoEditorView: NSView {
         saveArrowRect = NSRect(x: x + labelBtnW, y: btnY, width: arrowW, height: btnH)
 
         // Draw combined background
-        NSColor.white.withAlphaComponent(0.1).setFill()
+        ToolbarLayout.iconColor.withAlphaComponent(0.1).setFill()
         NSBezierPath(roundedRect: fullSaveRect, xRadius: 6, yRadius: 6).fill()
 
         // Draw save icon + label
@@ -668,7 +668,7 @@ private final class VideoEditorView: NSView {
             let iconSize: CGFloat = 12
             let attrs: [NSAttributedString.Key: Any] = [
                 .font: NSFont.systemFont(ofSize: 11, weight: .medium),
-                .foregroundColor: NSColor.white.withAlphaComponent(0.85),
+                .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(0.85),
             ]
             let saveLabel = L("Save") as NSString
             let labelSize = saveLabel.size(withAttributes: attrs)
@@ -678,7 +678,7 @@ private final class VideoEditorView: NSView {
                     .withSymbolConfiguration(.init(pointSize: iconSize, weight: .medium)) {
                 let tinted = NSImage(size: img.size, flipped: false) { r in
                     img.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1)
-                    NSColor.white.withAlphaComponent(0.85).setFill()
+                    ToolbarLayout.iconColor.withAlphaComponent(0.85).setFill()
                     r.fill(using: .sourceAtop)
                     return true
                 }
@@ -688,7 +688,7 @@ private final class VideoEditorView: NSView {
         }
 
         // Draw separator line
-        NSColor.white.withAlphaComponent(0.2).setStroke()
+        ToolbarLayout.iconColor.withAlphaComponent(0.2).setStroke()
         let sep = NSBezierPath()
         sep.move(to: NSPoint(x: saveArrowRect.minX, y: saveArrowRect.minY + 4))
         sep.line(to: NSPoint(x: saveArrowRect.minX, y: saveArrowRect.maxY - 4))
@@ -700,7 +700,7 @@ private final class VideoEditorView: NSView {
                 .withSymbolConfiguration(.init(pointSize: 8, weight: .semibold)) {
             let tinted = NSImage(size: chevron.size, flipped: false) { r in
                 chevron.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1)
-                NSColor.white.withAlphaComponent(0.6).setFill()
+                ToolbarLayout.iconColor.withAlphaComponent(0.6).setFill()
                 r.fill(using: .sourceAtop)
                 return true
             }
@@ -710,7 +710,7 @@ private final class VideoEditorView: NSView {
     }
 
     private func drawIconButton(rect: NSRect, symbol: String, accent: Bool, active: Bool = false, dimmed: Bool = false) {
-        let bg = accent ? ToolbarLayout.accentColor : (active ? ToolbarLayout.accentColor.withAlphaComponent(0.4) : NSColor.white.withAlphaComponent(dimmed ? 0.04 : 0.1))
+        let bg = accent ? ToolbarLayout.accentColor : (active ? ToolbarLayout.accentColor.withAlphaComponent(0.4) : ToolbarLayout.iconColor.withAlphaComponent(dimmed ? 0.04 : 0.1))
         bg.setFill()
         NSBezierPath(roundedRect: rect, xRadius: 6, yRadius: 6).fill()
 
@@ -719,7 +719,7 @@ private final class VideoEditorView: NSView {
                 .withSymbolConfiguration(.init(pointSize: 13, weight: .medium)) {
             let tinted = NSImage(size: img.size, flipped: false) { r in
                 img.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1)
-                NSColor.white.withAlphaComponent(alpha).setFill()
+                ToolbarLayout.iconColor.withAlphaComponent(alpha).setFill()
                 r.fill(using: .sourceAtop)
                 return true
             }
@@ -730,7 +730,7 @@ private final class VideoEditorView: NSView {
     }
 
     private func drawLabelButton(rect: NSRect, symbol: String, label: String, dimmed: Bool = false) {
-        let bg = NSColor.white.withAlphaComponent(dimmed ? 0.04 : 0.1)
+        let bg = ToolbarLayout.iconColor.withAlphaComponent(dimmed ? 0.04 : 0.1)
         bg.setFill()
         NSBezierPath(roundedRect: rect, xRadius: 6, yRadius: 6).fill()
 
@@ -738,7 +738,7 @@ private final class VideoEditorView: NSView {
         let iconSize: CGFloat = 12
         let attrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: 11, weight: .medium),
-            .foregroundColor: NSColor.white.withAlphaComponent(alpha),
+            .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(alpha),
         ]
         let str = label as NSString
         let textSize = str.size(withAttributes: attrs)
@@ -750,7 +750,7 @@ private final class VideoEditorView: NSView {
                 .withSymbolConfiguration(.init(pointSize: iconSize, weight: .medium)) {
             let tinted = NSImage(size: img.size, flipped: false) { r in
                 img.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1)
-                NSColor.white.withAlphaComponent(alpha).setFill()
+                ToolbarLayout.iconColor.withAlphaComponent(alpha).setFill()
                 r.fill(using: .sourceAtop)
                 return true
             }
@@ -768,7 +768,7 @@ private final class VideoEditorView: NSView {
         let rightStr = String(format: L("%@ selected"), formatTime(trimDuration)) as NSString
         let attrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium),
-            .foregroundColor: NSColor.white.withAlphaComponent(0.5),
+            .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(0.5),
         ]
 
         leftStr.draw(at: NSPoint(x: timelinePad, y: labelY), withAttributes: attrs)

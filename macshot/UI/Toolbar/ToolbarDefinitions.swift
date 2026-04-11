@@ -59,6 +59,7 @@ class ToolbarLayout {
     // Default theme colors (Flameshot purple style)
     static let defaultAccentColor = NSColor(calibratedRed: 0.55, green: 0.30, blue: 0.85, alpha: 1.0)
     static let defaultIconColor = NSColor.white
+    static let defaultBgColor = NSColor(white: 0.12, alpha: 1.0)
 
     // User-customizable colors — read from UserDefaults with defaults matching the original look
     static var accentColor: NSColor {
@@ -75,8 +76,14 @@ class ToolbarLayout {
         }
         return defaultIconColor
     }
+    static var bgColor: NSColor {
+        if let data = UserDefaults.standard.data(forKey: "toolbarBgColor"),
+           let color = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data) {
+            return color
+        }
+        return defaultBgColor
+    }
     static var handleColor: NSColor { accentColor }
-    static var bgColor = NSColor(white: 0.12, alpha: 1.0)
     static let cornerRadius: CGFloat = 6
 
     /// Save accent color to UserDefaults.
@@ -93,10 +100,27 @@ class ToolbarLayout {
         }
     }
 
-    /// Reset both colors to defaults.
+    /// Appearance matching the toolbar background brightness.
+    /// Dark background → `.darkAqua`, light background → `.aqua`.
+    static var appearance: NSAppearance? {
+        let color = bgColor.usingColorSpace(.deviceRGB) ?? bgColor
+        var brightness: CGFloat = 0
+        color.getHue(nil, saturation: nil, brightness: &brightness, alpha: nil)
+        return NSAppearance(named: brightness > 0.5 ? .aqua : .darkAqua)
+    }
+
+    /// Save background color to UserDefaults.
+    static func saveBgColor(_ color: NSColor) {
+        if let data = try? NSKeyedArchiver.archivedData(withRootObject: color, requiringSecureCoding: false) {
+            UserDefaults.standard.set(data, forKey: "toolbarBgColor")
+        }
+    }
+
+    /// Reset all colors to defaults.
     static func resetColors() {
         UserDefaults.standard.removeObject(forKey: "toolbarAccentColor")
         UserDefaults.standard.removeObject(forKey: "toolbarIconColor")
+        UserDefaults.standard.removeObject(forKey: "toolbarBgColor")
     }
 
     // Bottom toolbar items (drawing tools + colors + undo/redo + processing actions)

@@ -181,6 +181,7 @@
 "Language:" = "Wika:";
 "Restart the app to fully apply the new language." = "I-restart ang app upang ganap na mailapat ang bagong wika.";
 "Capture" = "Pagkuha";
+"Play sound on capture" = "Mag-play ng tunog sa pagkuha";
 "Play sound on copy" = "Magpatugtog ng tunog kapag kinopya";
 "Remember last selection area" = "Tandaan ang huling napiling lugar";
 "Remember last selected tool" = "Tandaan ang huling napiling kasangkapan";
@@ -216,6 +217,7 @@
 "Appearance" = "Hitsura";
 "Accent color:" = "Kulay ng accent:";
 "Icon color:" = "Kulay ng icon:";
+"Background color:" = "Kulay ng background:";
 "Reset" = "I-reset";
 "OCR Capture:" = "OCR Capture:";
 "Show window + copy to clipboard" = "Ipakita ang window + kopyahin sa clipboard";

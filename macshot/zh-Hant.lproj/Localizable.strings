@@ -181,6 +181,7 @@
 "Language:" = "語言：";
 "Restart the app to fully apply the new language." = "重新啟動 App 以完整套用新語言。";
 "Capture" = "擷取";
+"Play sound on capture" = "擷取時播放提示音";
 "Play sound on copy" = "拷貝時播放音效";
 "Remember last selection area" = "記住上次的選取區域";
 "Remember last selected tool" = "記住上次選取的工具";
@@ -216,6 +217,7 @@
 "Appearance" = "外觀";
 "Accent color:" = "強調色：";
 "Icon color:" = "圖像顏色：";
+"Background color:" = "背景顏色：";
 "Reset" = "重置";
 "OCR Capture:" = "OCR 擷取：";
 "Show window + copy to clipboard" = "顯示視窗 + 拷貝至剪貼簿";

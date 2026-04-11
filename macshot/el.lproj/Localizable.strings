@@ -181,6 +181,7 @@
 "Language:" = "Γλώσσα:";
 "Restart the app to fully apply the new language." = "Επανεκκινήστε την εφαρμογή για πλήρη εφαρμογή της νέας γλώσσας.";
 "Capture" = "Λήψη";
+"Play sound on capture" = "Αναπαραγωγή ήχου κατά τη λήψη";
 "Play sound on copy" = "Αναπαραγωγή ήχου κατά την αντιγραφή";
 "Remember last selection area" = "Απομνημόνευση τελευταίας περιοχής επιλογής";
 "Remember last selected tool" = "Απομνημόνευση τελευταίου επιλεγμένου εργαλείου";
@@ -216,6 +217,7 @@
 "Appearance" = "Εμφάνιση";
 "Accent color:" = "Χρώμα τονισμού:";
 "Icon color:" = "Χρώμα εικονιδίου:";
+"Background color:" = "Χρώμα φόντου:";
 "Reset" = "Επαναφορά";
 "OCR Capture:" = "Λήψη OCR:";
 "Show window + copy to clipboard" = "Εμφάνιση παραθύρου + αντιγραφή στο πρόχειρο";

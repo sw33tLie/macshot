@@ -181,6 +181,7 @@
 "Language:" = "Язык:";
 "Restart the app to fully apply the new language." = "Перезапустите приложение для полного применения нового языка.";
 "Capture" = "Захват";
+"Play sound on capture" = "Воспроизводить звук при захвате";
 "Play sound on copy" = "Воспроизводить звук при копировании";
 "Remember last selection area" = "Запоминать последнюю область выделения";
 "Remember last selected tool" = "Запоминать последний выбранный инструмент";
@@ -216,6 +217,7 @@
 "Appearance" = "Оформление";
 "Accent color:" = "Цвет акцента:";
 "Icon color:" = "Цвет значка:";
+"Background color:" = "Цвет фона:";
 "Reset" = "Сбросить";
 "OCR Capture:" = "Захват OCR:";
 "Show window + copy to clipboard" = "Показать окно и скопировать";

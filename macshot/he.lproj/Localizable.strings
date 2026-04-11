@@ -181,6 +181,7 @@
 "Language:" = "שפה:";
 "Restart the app to fully apply the new language." = "הפעל מחדש את האפליקציה להחלת השפה החדשה במלואה.";
 "Capture" = "לכידה";
+"Play sound on capture" = "השמע צליל בעת לכידה";
 "Play sound on copy" = "נגן צליל בהעתקה";
 "Remember last selection area" = "זכור אזור בחירה אחרון";
 "Remember last selected tool" = "זכור כלי שנבחר אחרון";
@@ -216,6 +217,7 @@
 "Appearance" = "מראה";
 "Accent color:" = "צבע הדגשה:";
 "Icon color:" = "צבע סמל:";
+"Background color:" = "צבע רקע:";
 "Reset" = "איפוס";
 "OCR Capture:" = "לכידת OCR:";
 "Show window + copy to clipboard" = "הצג חלון + העתק ללוח";

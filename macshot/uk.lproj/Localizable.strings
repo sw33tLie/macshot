@@ -181,6 +181,7 @@
 "Language:" = "Мова:";
 "Restart the app to fully apply the new language." = "Перезапустіть програму, щоб повністю застосувати нову мову.";
 "Capture" = "Захоплення";
+"Play sound on capture" = "Відтворити звук при захопленні";
 "Play sound on copy" = "Відтворювати звук при копіюванні";
 "Remember last selection area" = "Запам'ятовувати останню область виділення";
 "Remember last selected tool" = "Запам'ятовувати останній вибраний інструмент";
@@ -216,6 +217,7 @@
 "Appearance" = "Зовнішній вигляд";
 "Accent color:" = "Колір акценту:";
 "Icon color:" = "Колір іконки:";
+"Background color:" = "Колір фону:";
 "Reset" = "Скинути";
 "OCR Capture:" = "Захоплення OCR:";
 "Show window + copy to clipboard" = "Показати вікно + копіювати до буфера обміну";

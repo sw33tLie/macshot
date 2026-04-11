@@ -181,6 +181,7 @@
 "Language:" = "Sprog:";
 "Restart the app to fully apply the new language." = "Genstart appen for at anvende det nye sprog fuldt ud.";
 "Capture" = "Optagelse";
+"Play sound on capture" = "Afspil lyd ved optagelse";
 "Play sound on copy" = "Afspil lyd ved kopiering";
 "Remember last selection area" = "Husk sidste markeringsomr\U00E5de";
 "Remember last selected tool" = "Husk sidst valgte v\U00E6rkt\U00F8j";
@@ -216,6 +217,7 @@
 "Appearance" = "Udseende";
 "Accent color:" = "Accentfarve:";
 "Icon color:" = "Ikonfarve:";
+"Background color:" = "Baggrundsfarve:";
 "Reset" = "Nulstil";
 "OCR Capture:" = "OCR-optagelse:";
 "Show window + copy to clipboard" = "Vis vindue + kopi\U00E9r til udklipsholder";

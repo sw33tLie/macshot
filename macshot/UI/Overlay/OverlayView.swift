@@ -268,7 +268,7 @@ class OverlayView: NSView {
     /// When shift+clicking an already-selected annotation, defer the deselect
     /// to mouseUp so the user can still drag the full multi-selection.
     private weak var shiftClickPendingDeselect: Annotation?
-    /// Lasso selection: Shift+drag on empty space draws a marquee rectangle.
+    /// Lasso selection: Ctrl+drag on empty space draws a marquee rectangle.
     private var isLassoSelecting: Bool = false
     private var lassoStart: NSPoint = .zero
     private var lassoRect: NSRect = .zero
@@ -803,6 +803,7 @@ class OverlayView: NSView {
     @objc private func handleToolbarColorsChanged() {
         // Rebuild toolbars and options row with new colors
         toolOptionsRowView?.layer?.backgroundColor = ToolbarLayout.bgColor.cgColor
+        toolOptionsRowView?.appearance = ToolbarLayout.appearance
         rebuildToolbarLayout()
         if let tool = toolOptionsRowView?.currentTool {
             toolOptionsRowView?.rebuild(for: tool)
@@ -1929,10 +1930,9 @@ class OverlayView: NSView {
     }
 
     private static let sizeLabelFont = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium)
-    private static let sizeLabelAttrs: [NSAttributedString.Key: Any] = [
-        .font: sizeLabelFont,
-        .foregroundColor: NSColor.white,
-    ]
+    private var sizeLabelAttrs: [NSAttributedString.Key: Any] {
+        [.font: Self.sizeLabelFont, .foregroundColor: ToolbarLayout.iconColor]
+    }
 
     private func drawSizeLabel() {
         guard sizeInputField == nil else { return }  // don't draw while editing
@@ -1943,7 +1943,7 @@ class OverlayView: NSView {
         let pixelH = Int(selectionRect.height * scale)
         let text = "\(pixelW) \u{00D7} \(pixelH)"
 
-        let attrs = Self.sizeLabelAttrs
+        let attrs = sizeLabelAttrs
         let textSize = (text as NSString).size(withAttributes: attrs)
         let padding: CGFloat = 6
         let labelW = textSize.width + padding * 2
@@ -1988,7 +1988,7 @@ class OverlayView: NSView {
         let alpha = zoomLabelOpacity
         let attrs: [NSAttributedString.Key: Any] = [
             .font: Self.sizeLabelFont,
-            .foregroundColor: NSColor.white.withAlphaComponent(alpha),
+            .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(alpha),
         ]
         let textSize = (text as NSString).size(withAttributes: attrs)
         let padding: CGFloat = 6
@@ -5554,7 +5554,7 @@ class OverlayView: NSView {
 
         let attrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: 11, weight: .medium),
-            .foregroundColor: NSColor.white,
+            .foregroundColor: ToolbarLayout.iconColor,
         ]
         let str = tooltip as NSString
         let textSize = str.size(withAttributes: attrs)
@@ -6335,8 +6335,8 @@ class OverlayView: NSView {
             }
         }
 
-        // Shift+click on empty space — start lasso marquee selection
-        if shiftHeld {
+        // Ctrl+click on empty space — start lasso marquee selection
+        if NSEvent.modifierFlags.contains(.control) {
             isLassoSelecting = true
             lassoStart = point
             lassoRect = .zero
@@ -7767,7 +7767,7 @@ private class TooltipBackgroundView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         let attrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: 11, weight: .medium),
-            .foregroundColor: NSColor.white,
+            .foregroundColor: ToolbarLayout.iconColor,
         ]
         ToolbarLayout.bgColor.setFill()
         NSBezierPath(roundedRect: bounds, xRadius: 4, yRadius: 4).fill()

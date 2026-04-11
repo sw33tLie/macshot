@@ -181,6 +181,7 @@
 "Language:" = "भाषा:";
 "Restart the app to fully apply the new language." = "नई भाषा पूरी तरह लागू करने के लिए ऐप पुनः आरंभ करें।";
 "Capture" = "कैप्चर";
+"Play sound on capture" = "कैप्चर पर ध्वनि चलाएं";
 "Play sound on copy" = "कॉपी पर ध्वनि बजाएँ";
 "Remember last selection area" = "अंतिम चयन क्षेत्र याद रखें";
 "Remember last selected tool" = "अंतिम चयनित उपकरण याद रखें";
@@ -216,6 +217,7 @@
 "Appearance" = "दिखावट";
 "Accent color:" = "एक्सेंट रंग:";
 "Icon color:" = "आइकन रंग:";
+"Background color:" = "पृष्ठभूमि रंग:";
 "Reset" = "रीसेट";
 "OCR Capture:" = "OCR कैप्चर:";
 "Show window + copy to clipboard" = "विंडो दिखाएँ + क्लिपबोर्ड पर कॉपी करें";

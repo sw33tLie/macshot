@@ -181,6 +181,7 @@
 "Language:" = "Jazyk:";
 "Restart the app to fully apply the new language." = "Restartujte aplikaciu pre uplne pouzitie noveho jazyka.";
 "Capture" = "Zachytenie";
+"Play sound on capture" = "Prehrať zvuk pri snímaní";
 "Play sound on copy" = "Prehrat zvuk pri kopirovani";
 "Remember last selection area" = "Pamatat si poslednu vybranu oblast";
 "Remember last selected tool" = "Pamatat si posledny vybrany nastroj";
@@ -216,6 +217,7 @@
 "Appearance" = "Vzhled";
 "Accent color:" = "Farba akcentu:";
 "Icon color:" = "Farba ikony:";
+"Background color:" = "Farba pozadia:";
 "Reset" = "Resetovat";
 "OCR Capture:" = "OCR zachytenie:";
 "Show window + copy to clipboard" = "Zobrazit okno + kopirovat do schranky";

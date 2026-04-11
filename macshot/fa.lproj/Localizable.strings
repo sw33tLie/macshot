@@ -181,6 +181,7 @@
 "Language:" = "زبان:";
 "Restart the app to fully apply the new language." = "برنامه را مجددا راه‌اندازی کنید تا زبان جدید به طور کامل اعمال شود.";
 "Capture" = "ضبط";
+"Play sound on capture" = "پخش صدا هنگام ضبط تصویر";
 "Play sound on copy" = "پخش صدا هنگام کپی";
 "Remember last selection area" = "به خاطر سپردن آخرین ناحیه انتخابی";
 "Remember last selected tool" = "به خاطر سپردن آخرین ابزار انتخابی";
@@ -216,6 +217,7 @@
 "Appearance" = "ظاهر";
 "Accent color:" = "رنگ تاکیدی:";
 "Icon color:" = "رنگ آیکون:";
+"Background color:" = "رنگ پس‌زمینه:";
 "Reset" = "بازنشانی";
 "OCR Capture:" = "ضبط OCR:";
 "Show window + copy to clipboard" = "نمایش پنجره + کپی به کلیپ‌بورد";

@@ -37,10 +37,10 @@ class RecordingHUDPanel: NSPanel {
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
 
         containerView.wantsLayer = true
-        containerView.layer?.backgroundColor = NSColor(white: 0.12, alpha: 0.94).cgColor
+        containerView.layer?.backgroundColor = ToolbarLayout.bgColor.withAlphaComponent(0.94).cgColor
         containerView.layer?.cornerRadius = cornerRadius
         containerView.layer?.borderWidth = 0.5
-        containerView.layer?.borderColor = NSColor.white.withAlphaComponent(0.1).cgColor
+        containerView.layer?.borderColor = ToolbarLayout.iconColor.withAlphaComponent(0.1).cgColor
         containerView.panel = self
         contentView = containerView
 
@@ -56,7 +56,7 @@ class RecordingHUDPanel: NSPanel {
         stopButton.bezelStyle = .regularSquare
         stopButton.isBordered = false
         stopButton.image = NSImage(systemSymbolName: "stop.fill", accessibilityDescription: "Stop")
-        stopButton.contentTintColor = .white
+        stopButton.contentTintColor = ToolbarLayout.iconColor
         stopButton.imageScaling = .scaleProportionallyDown
         stopButton.target = self
         stopButton.action = #selector(stopClicked)
@@ -69,7 +69,7 @@ class RecordingHUDPanel: NSPanel {
     private func setupPauseButton() {
         pauseButton.bezelStyle = .regularSquare
         pauseButton.isBordered = false
-        pauseButton.contentTintColor = .white
+        pauseButton.contentTintColor = ToolbarLayout.iconColor
         pauseButton.imageScaling = .scaleProportionallyDown
         pauseButton.target = self
         pauseButton.action = #selector(pauseClicked)
@@ -87,7 +87,7 @@ class RecordingHUDPanel: NSPanel {
         containerView.addSubview(recordDot)
 
         timeLabel.font = .monospacedDigitSystemFont(ofSize: 13, weight: .semibold)
-        timeLabel.textColor = .white
+        timeLabel.textColor = ToolbarLayout.iconColor
         timeLabel.isBezeled = false
         timeLabel.drawsBackground = false
         timeLabel.isEditable = false
@@ -98,7 +98,7 @@ class RecordingHUDPanel: NSPanel {
         let cfg = NSImage.SymbolConfiguration(pointSize: 10, weight: .medium)
         dragHandle.image = NSImage(systemSymbolName: "line.3.horizontal", accessibilityDescription: "Drag")?
             .withSymbolConfiguration(cfg)
-        dragHandle.contentTintColor = NSColor.white.withAlphaComponent(0.35)
+        dragHandle.contentTintColor = ToolbarLayout.iconColor.withAlphaComponent(0.35)
         dragHandle.imageScaling = .scaleProportionallyDown
         containerView.addSubview(dragHandle)
     }
@@ -266,7 +266,7 @@ private class HUDContainerView: NSView {
         super.draw(dirtyRect)
         // Draw a subtle separator before the drag handle
         let sepX = bounds.width - 30
-        NSColor.white.withAlphaComponent(0.12).setStroke()
+        ToolbarLayout.iconColor.withAlphaComponent(0.12).setStroke()
         let sep = NSBezierPath()
         sep.move(to: NSPoint(x: sepX, y: 6))
         sep.line(to: NSPoint(x: sepX, y: bounds.height - 6))

@@ -19,7 +19,7 @@ class ScrollCaptureHUDView: NSView {
         layer?.cornerRadius = ToolbarLayout.cornerRadius
 
         infoLabel.font = .systemFont(ofSize: 12, weight: .medium)
-        infoLabel.textColor = .white
+        infoLabel.textColor = ToolbarLayout.iconColor
         infoLabel.isEditable = false
         infoLabel.isBordered = false
         infoLabel.drawsBackground = false

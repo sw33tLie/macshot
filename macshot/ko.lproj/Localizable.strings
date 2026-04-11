@@ -181,6 +181,7 @@
 "Language:" = "언어:";
 "Restart the app to fully apply the new language." = "새 언어를 완전히 적용하려면 앱을 재시작하세요.";
 "Capture" = "캡처";
+"Play sound on capture" = "캡처 시 소리 재생";
 "Play sound on copy" = "복사 시 소리 재생";
 "Remember last selection area" = "마지막 선택 영역 기억";
 "Remember last selected tool" = "마지막 선택 도구 기억";
@@ -216,6 +217,7 @@
 "Appearance" = "모양새";
 "Accent color:" = "강조 색상:";
 "Icon color:" = "아이콘 색상:";
+"Background color:" = "배경색:";
 "Reset" = "재설정";
 "OCR Capture:" = "OCR 캡처:";
 "Show window + copy to clipboard" = "윈도우 표시 + 클립보드에 복사";

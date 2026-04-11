@@ -181,6 +181,7 @@
 "Language:" = "ভাষা:";
 "Restart the app to fully apply the new language." = "নতুন ভাষা সম্পূর্ণভাবে প্রয়োগ করতে অ্যাপ পুনরায় চালু করুন।";
 "Capture" = "ক্যাপচার";
+"Play sound on capture" = "ক্যাপচারে শব্দ বাজান";
 "Play sound on copy" = "কপিতে শব্দ বাজান";
 "Remember last selection area" = "শেষ নির্বাচিত এলাকা মনে রাখুন";
 "Remember last selected tool" = "শেষ নির্বাচিত টুল মনে রাখুন";
@@ -216,6 +217,7 @@
 "Appearance" = "চেহারা";
 "Accent color:" = "অ্যাক্সেন্ট রং:";
 "Icon color:" = "আইকন রং:";
+"Background color:" = "পটভূমির রঙ:";
 "Reset" = "রিসেট";
 "OCR Capture:" = "OCR ক্যাপচার:";
 "Show window + copy to clipboard" = "উইন্ডো দেখান + ক্লিপবোর্ডে কপি";

@@ -181,6 +181,7 @@
 "Language:" = "Limba:";
 "Restart the app to fully apply the new language." = "Reporneste aplicatia pentru a aplica complet noua limba.";
 "Capture" = "Captura";
+"Play sound on capture" = "Redă sunet la captură";
 "Play sound on copy" = "Reda sunet la copiere";
 "Remember last selection area" = "Retine ultima zona de selectie";
 "Remember last selected tool" = "Retine ultimul instrument selectat";
@@ -216,6 +217,7 @@
 "Appearance" = "Aspect";
 "Accent color:" = "Culoare accent:";
 "Icon color:" = "Culoare pictograma:";
+"Background color:" = "Culoare fundal:";
 "Reset" = "Reseteaza";
 "OCR Capture:" = "Captura OCR:";
 "Show window + copy to clipboard" = "Afiseaza fereastra + copiaza in clipboard";

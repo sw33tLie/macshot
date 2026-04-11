@@ -51,7 +51,7 @@ class EmojiPickerView: NSView {
         }
 
         // Separator
-        NSColor.white.withAlphaComponent(0.08).setFill()
+        ToolbarLayout.iconColor.withAlphaComponent(0.08).setFill()
         NSBezierPath(rect: NSRect(x: padding, y: tabY - 1, width: bounds.width - padding * 2, height: 0.5)).fill()
 
         // Emoji grid

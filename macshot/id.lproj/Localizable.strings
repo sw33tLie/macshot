@@ -181,6 +181,7 @@
 "Language:" = "Bahasa:";
 "Restart the app to fully apply the new language." = "Mulai ulang aplikasi untuk menerapkan bahasa baru sepenuhnya.";
 "Capture" = "Tangkapan";
+"Play sound on capture" = "Putar suara saat menangkap";
 "Play sound on copy" = "Putar suara saat menyalin";
 "Remember last selection area" = "Ingat area seleksi terakhir";
 "Remember last selected tool" = "Ingat alat terakhir yang dipilih";
@@ -216,6 +217,7 @@
 "Appearance" = "Tampilan";
 "Accent color:" = "Warna aksen:";
 "Icon color:" = "Warna ikon:";
+"Background color:" = "Warna latar belakang:";
 "Reset" = "Atur Ulang";
 "OCR Capture:" = "Tangkapan OCR:";
 "Show window + copy to clipboard" = "Tampilkan jendela + salin ke papan klip";

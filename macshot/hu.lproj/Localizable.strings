@@ -181,6 +181,7 @@
 "Language:" = "Nyelv:";
 "Restart the app to fully apply the new language." = "Indítsd újra az alkalmazást az új nyelv teljes alkalmazásához.";
 "Capture" = "Rögzítés";
+"Play sound on capture" = "Hang lejátszása rögzítéskor";
 "Play sound on copy" = "Hang lejátszása másoláskor";
 "Remember last selection area" = "Utolsó kiválasztási terület megjegyzése";
 "Remember last selected tool" = "Utolsó kiválasztott eszköz megjegyzése";
@@ -216,6 +217,7 @@
 "Appearance" = "Megjelenés";
 "Accent color:" = "Kiemelőszín:";
 "Icon color:" = "Ikon szín:";
+"Background color:" = "Háttérszín:";
 "Reset" = "Visszaállítás";
 "OCR Capture:" = "OCR rögzítés:";
 "Show window + copy to clipboard" = "Ablak megjelenítése + másolás a vágólapra";

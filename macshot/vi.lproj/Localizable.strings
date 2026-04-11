@@ -181,6 +181,7 @@
 "Language:" = "Ngôn ngữ:";
 "Restart the app to fully apply the new language." = "Khởi động lại ứng dụng để áp dụng đầy đủ ngôn ngữ mới.";
 "Capture" = "Chụp";
+"Play sound on capture" = "Phát âm thanh khi chụp";
 "Play sound on copy" = "Phát âm thanh khi sao chép";
 "Remember last selection area" = "Nhớ vùng chọn lần trước";
 "Remember last selected tool" = "Nhớ công cụ đã chọn lần trước";
@@ -216,6 +217,7 @@
 "Appearance" = "Giao diện";
 "Accent color:" = "Màu nhấn:";
 "Icon color:" = "Màu biểu tượng:";
+"Background color:" = "Màu nền:";
 "Reset" = "Đặt lại";
 "OCR Capture:" = "Chụp OCR:";
 "Show window + copy to clipboard" = "Hiện cửa sổ + sao chép vào bộ nhớ tạm";

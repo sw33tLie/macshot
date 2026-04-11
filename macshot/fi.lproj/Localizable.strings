@@ -181,6 +181,7 @@
 "Language:" = "Kieli:";
 "Restart the app to fully apply the new language." = "Kaynnista sovellus uudelleen ottaaksesi uuden kielen kayttoon.";
 "Capture" = "Kaappaus";
+"Play sound on capture" = "Toista ääni kaappauksessa";
 "Play sound on copy" = "Toista aani kopioitaessa";
 "Remember last selection area" = "Muista viimeisin valinta-alue";
 "Remember last selected tool" = "Muista viimeksi valittu tyokalu";
@@ -216,6 +217,7 @@
 "Appearance" = "Ulkoasu";
 "Accent color:" = "Korostusväri:";
 "Icon color:" = "Kuvakkeen väri:";
+"Background color:" = "Taustaväri:";
 "Reset" = "Nollaa";
 "OCR Capture:" = "OCR-kaappaus:";
 "Show window + copy to clipboard" = "Nayta ikkuna + kopioi leikepoydale";

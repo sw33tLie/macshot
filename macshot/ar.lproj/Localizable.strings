@@ -181,6 +181,7 @@
 "Language:" = "اللغة:";
 "Restart the app to fully apply the new language." = "أعد تشغيل التطبيق لتطبيق اللغة الجديدة بالكامل.";
 "Capture" = "الالتقاط";
+"Play sound on capture" = "تشغيل صوت عند الالتقاط";
 "Play sound on copy" = "تشغيل صوت عند النسخ";
 "Remember last selection area" = "تذكّر آخر منطقة تحديد";
 "Remember last selected tool" = "تذكّر آخر أداة محددة";
@@ -216,6 +217,7 @@
 "Appearance" = "المظهر";
 "Accent color:" = "لون التمييز:";
 "Icon color:" = "لون الأيقونة:";
+"Background color:" = "لون الخلفية:";
 "Reset" = "إعادة تعيين";
 "OCR Capture:" = "التقاط OCR:";
 "Show window + copy to clipboard" = "عرض النافذة + نسخ إلى الحافظة";

@@ -181,6 +181,7 @@
 "Language:" = "Spr\U00E5k:";
 "Restart the app to fully apply the new language." = "Start appen p\U00E5 nytt for \U00E5 bruke det nye spr\U00E5ket.";
 "Capture" = "Opptak";
+"Play sound on capture" = "Spill lyd ved opptak";
 "Play sound on copy" = "Spill lyd ved kopiering";
 "Remember last selection area" = "Husk siste utvalgsomr\U00E5de";
 "Remember last selected tool" = "Husk siste valgte verkt\U00F8y";
@@ -216,6 +217,7 @@
 "Appearance" = "Utseende";
 "Accent color:" = "Aksentfarge:";
 "Icon color:" = "Ikonfarge:";
+"Background color:" = "Bakgrunnsfarge:";
 "Reset" = "Tilbakestill";
 "OCR Capture:" = "OCR-opptak:";
 "Show window + copy to clipboard" = "Vis vindu + kopier til utklippstavlen";

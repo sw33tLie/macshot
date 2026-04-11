@@ -181,6 +181,7 @@
 "Language:" = "மொழி:";
 "Restart the app to fully apply the new language." = "புதிய மொழியை முழுமையாகப் பயன்படுத்த பயன்பாட்டை மறுதொடக்கம் செய்யுங்கள்.";
 "Capture" = "பிடிப்பு";
+"Play sound on capture" = "படமெடுக்கும்போது ஒலி எழுப்பு";
 "Play sound on copy" = "நகலெடுக்கும்போது ஒலி எழுப்பு";
 "Remember last selection area" = "கடைசி தேர்வுப் பகுதியை நினைவில் கொள்";
 "Remember last selected tool" = "கடைசி தேர்ந்தெடுத்த கருவியை நினைவில் கொள்";
@@ -216,6 +217,7 @@
 "Appearance" = "தோற்றம்";
 "Accent color:" = "முதன்மை நிறம்:";
 "Icon color:" = "ஐகான் நிறம்:";
+"Background color:" = "பின்னணி நிறம்:";
 "Reset" = "மீட்டமை";
 "OCR Capture:" = "OCR பிடிப்பு:";
 "Show window + copy to clipboard" = "சாளரத்தைக் காட்டு + ஒட்டுப்பலகையில் நகலெடு";

@@ -13,12 +13,12 @@ class EditorTopBarView: NSView {
     override init(frame: NSRect) {
         super.init(frame: frame)
         wantsLayer = true
-        layer?.backgroundColor = NSColor(white: 0.10, alpha: 1.0).cgColor
+        layer?.backgroundColor = ToolbarLayout.bgColor.cgColor
         autoresizingMask = [.width, .minYMargin]  // pin to top, stretch width
 
         sizeLabel = makeLabel("")
         sizeLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium)
-        sizeLabel.textColor = NSColor.white.withAlphaComponent(0.45)
+        sizeLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.45)
 
         let cropBtn = makeButton("crop", tooltip: L("Crop"), action: #selector(cropClicked))
         let flipHBtn = makeButton("arrow.left.and.right.righttriangle.left.righttriangle.right", tooltip: L("Flip Horizontal"), action: #selector(flipHClicked))
@@ -31,7 +31,7 @@ class EditorTopBarView: NSView {
         zoomButton.isBordered = false
         zoomButton.title = "100% ▾"
         zoomButton.font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium)
-        zoomButton.contentTintColor = NSColor.white.withAlphaComponent(0.45)
+        zoomButton.contentTintColor = ToolbarLayout.iconColor.withAlphaComponent(0.45)
         zoomButton.target = self
         zoomButton.action = #selector(zoomButtonClicked)
 
@@ -92,7 +92,7 @@ class EditorTopBarView: NSView {
         btn.isBordered = false
         btn.image = NSImage(systemSymbolName: symbol, accessibilityDescription: tooltip)?
             .withSymbolConfiguration(.init(pointSize: 13, weight: .medium))
-        btn.contentTintColor = NSColor.white.withAlphaComponent(0.85)
+        btn.contentTintColor = ToolbarLayout.iconColor.withAlphaComponent(0.85)
         btn.toolTip = tooltip
         btn.target = self
         btn.action = action

@@ -181,6 +181,7 @@
 "Language:" = "语言:";
 "Restart the app to fully apply the new language." = "重新启动应用以完全应用新语言。";
 "Capture" = "捕获";
+"Play sound on capture" = "截图时播放提示音";
 "Play sound on copy" = "拷贝时播放声音";
 "Remember last selection area" = "记住上次选择区域";
 "Remember last selected tool" = "记住上次选择的工具";
@@ -216,6 +217,7 @@
 "Appearance" = "外观";
 "Accent color:" = "强调色:";
 "Icon color:" = "图标颜色:";
+"Background color:" = "背景颜色:";
 "Reset" = "重置";
 "OCR Capture:" = "OCR 捕获:";
 "Show window + copy to clipboard" = "显示窗口 + 拷贝到剪贴板";

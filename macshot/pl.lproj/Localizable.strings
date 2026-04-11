@@ -182,6 +182,7 @@
 "Restart the app to fully apply the new language." = "Uruchom ponownie aplikację, aby w pełni zastosować nowy język.";
 "Capture" = "Zrzut";
 "Play sound on capture" = "Odtwórz dźwięk przy przechwyceniu";
+"Play sound on copy" = "Odtwórz dźwięk przy kopiowaniu";
 "Remember last selection area" = "Zapamiętaj ostatni obszar zaznaczenia";
 "Remember last selected tool" = "Zapamiętaj ostatnio wybrane narzędzie";
 "Show floating thumbnail after capture" = "Pokaż pływającą miniaturę po zrzucie";
@@ -216,6 +217,7 @@
 "Appearance" = "Wygląd";
 "Accent color:" = "Kolor akcentu:";
 "Icon color:" = "Kolor ikony:";
+"Background color:" = "Kolor tła:";
 "Reset" = "Resetuj";
 "OCR Capture:" = "Zrzut OCR:";
 "Show window + copy to clipboard" = "Pokaż okno + kopiuj do Schowka";

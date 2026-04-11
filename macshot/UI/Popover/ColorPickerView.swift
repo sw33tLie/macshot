@@ -111,7 +111,7 @@ class ColorPickerView: NSView {
             NSBezierPath(roundedRect: r, xRadius: 4, yRadius: 4).fill()
 
             if colorsMatch(selectedColor, color) {
-                NSColor.white.setStroke()
+                ToolbarLayout.iconColor.setStroke()
                 let border = NSBezierPath(roundedRect: r.insetBy(dx: -1, dy: -1), xRadius: 5, yRadius: 5)
                 border.lineWidth = 2
                 border.stroke()
@@ -134,19 +134,19 @@ class ColorPickerView: NSView {
                 saved.setFill()
                 NSBezierPath(ovalIn: r).fill()
                 if selectedColorSlot == i {
-                    NSColor.white.setStroke()
+                    ToolbarLayout.iconColor.setStroke()
                     let b = NSBezierPath(ovalIn: r.insetBy(dx: -2, dy: -2))
                     b.lineWidth = 2.5
                     b.stroke()
                 }
             } else {
                 if selectedColorSlot == i {
-                    NSColor.white.withAlphaComponent(0.5).setStroke()
+                    ToolbarLayout.iconColor.withAlphaComponent(0.5).setStroke()
                     let b = NSBezierPath(ovalIn: r.insetBy(dx: 1, dy: 1))
                     b.lineWidth = 2
                     b.stroke()
                 } else {
-                    NSColor.white.withAlphaComponent(0.2).setStroke()
+                    ToolbarLayout.iconColor.withAlphaComponent(0.2).setStroke()
                     let dash = NSBezierPath(ovalIn: r.insetBy(dx: 1, dy: 1))
                     dash.lineWidth = 1
                     dash.setLineDash([3, 3], count: 2, phase: 0)
@@ -216,7 +216,7 @@ class ColorPickerView: NSView {
         NSGradient(starting: selectedColor.withAlphaComponent(0), ending: selectedColor.withAlphaComponent(1))?.draw(in: path, angle: 0)
 
         // Border
-        NSColor.white.withAlphaComponent(0.3).setStroke()
+        ToolbarLayout.iconColor.withAlphaComponent(0.3).setStroke()
         let border = NSBezierPath(roundedRect: rect, xRadius: 4, yRadius: 4)
         border.lineWidth = 0.5
         border.stroke()
@@ -225,7 +225,7 @@ class ColorPickerView: NSView {
         let thumbX = rect.minX + opacity * rect.width
         let thumbH = rect.height + 4
         let thumbRect = NSRect(x: thumbX - 4, y: rect.midY - thumbH / 2, width: 8, height: thumbH)
-        NSColor.white.setFill()
+        ToolbarLayout.iconColor.setFill()
         NSBezierPath(roundedRect: thumbRect, xRadius: 3, yRadius: 3).fill()
         NSColor.black.withAlphaComponent(0.3).setStroke()
         NSBezierPath(roundedRect: thumbRect, xRadius: 3, yRadius: 3).stroke()
@@ -234,7 +234,7 @@ class ColorPickerView: NSView {
         let label = "\(Int(opacity * 100))%" as NSString
         let attrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.monospacedDigitSystemFont(ofSize: 8, weight: .medium),
-            .foregroundColor: NSColor.white.withAlphaComponent(0.8),
+            .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(0.8),
         ]
         let size = label.size(withAttributes: attrs)
         label.draw(at: NSPoint(x: rect.maxX - size.width - 2, y: rect.midY - size.height / 2), withAttributes: attrs)
@@ -282,7 +282,7 @@ class ColorPickerView: NSView {
         let bx = rect.minX + brightness * rect.width
         let thumbH = rect.height + 4
         let thumbRect = NSRect(x: bx - 4, y: rect.midY - thumbH / 2, width: 8, height: thumbH)
-        NSColor.white.setFill()
+        ToolbarLayout.iconColor.setFill()
         NSBezierPath(roundedRect: thumbRect, xRadius: 3, yRadius: 3).fill()
         NSColor.black.withAlphaComponent(0.3).setStroke()
         NSBezierPath(roundedRect: thumbRect, xRadius: 3, yRadius: 3).stroke()
@@ -297,17 +297,17 @@ class ColorPickerView: NSView {
         let circleRect = NSRect(x: rect.minX + 6, y: rect.midY - circleSize / 2, width: circleSize, height: circleSize)
         selectedColor.withAlphaComponent(opacity).setFill()
         NSBezierPath(ovalIn: circleRect).fill()
-        NSColor.white.withAlphaComponent(0.3).setStroke()
+        ToolbarLayout.iconColor.withAlphaComponent(0.3).setStroke()
         NSBezierPath(ovalIn: circleRect).stroke()
 
         // Hex text
         let hashAttrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.monospacedSystemFont(ofSize: 11, weight: .regular),
-            .foregroundColor: NSColor.white.withAlphaComponent(0.5),
+            .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(0.5),
         ]
         let hexAttrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.monospacedSystemFont(ofSize: 11, weight: .medium),
-            .foregroundColor: NSColor.white.withAlphaComponent(0.9),
+            .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(0.9),
         ]
         let hashSize = ("#" as NSString).size(withAttributes: hashAttrs)
         let hashX = circleRect.maxX + 6

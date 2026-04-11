@@ -181,6 +181,7 @@
 "Language:" = "Idioma:";
 "Restart the app to fully apply the new language." = "Reinicie a aplicacao para aplicar completamente o novo idioma.";
 "Capture" = "Captura";
+"Play sound on capture" = "Reproduzir som ao capturar";
 "Play sound on copy" = "Reproduzir som ao copiar";
 "Remember last selection area" = "Recordar ultima area de selecao";
 "Remember last selected tool" = "Recordar ultima ferramenta selecionada";
@@ -216,6 +217,7 @@
 "Appearance" = "Aparencia";
 "Accent color:" = "Cor de destaque:";
 "Icon color:" = "Cor do icone:";
+"Background color:" = "Cor de fundo:";
 "Reset" = "Repor";
 "OCR Capture:" = "Captura OCR:";
 "Show window + copy to clipboard" = "Mostrar janela + copiar para a area de transferencia";

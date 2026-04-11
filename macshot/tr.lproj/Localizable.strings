@@ -181,6 +181,7 @@
 "Language:" = "Dil:";
 "Restart the app to fully apply the new language." = "Yeni dili tamamen uygulamak için uygulamayı yeniden başlatın.";
 "Capture" = "Yakalama";
+"Play sound on capture" = "Yakalama sırasında ses çal";
 "Play sound on copy" = "Kopyalamada ses çal";
 "Remember last selection area" = "Son seçim alanını hatırla";
 "Remember last selected tool" = "Son seçilen aracı hatırla";
@@ -216,6 +217,7 @@
 "Appearance" = "Görünüm";
 "Accent color:" = "Vurgu rengi:";
 "Icon color:" = "Simge rengi:";
+"Background color:" = "Arka plan rengi:";
 "Reset" = "Sıfırla";
 "OCR Capture:" = "OCR Yakalama:";
 "Show window + copy to clipboard" = "Pencere göster + panoya kopyala";

@@ -181,6 +181,7 @@
 "Language:" = "Taal:";
 "Restart the app to fully apply the new language." = "Herstart de app om de nieuwe taal volledig toe te passen.";
 "Capture" = "Opname";
+"Play sound on capture" = "Geluid afspelen bij opname";
 "Play sound on copy" = "Geluid afspelen bij kopieren";
 "Remember last selection area" = "Laatste selectiegebied onthouden";
 "Remember last selected tool" = "Laatst geselecteerd gereedschap onthouden";
@@ -216,6 +217,7 @@
 "Appearance" = "Weergave";
 "Accent color:" = "Accentkleur:";
 "Icon color:" = "Pictogramkleur:";
+"Background color:" = "Achtergrondkleur:";
 "Reset" = "Herstel";
 "OCR Capture:" = "OCR-opname:";
 "Show window + copy to clipboard" = "Venster tonen + kopieren naar klembord";
