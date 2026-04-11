@@ -19,7 +19,7 @@
 "Capture Screen" = "Przechwyć ekran";
 "Capture OCR" = "Wykonaj OCR";
 "Quick Capture" = "Szybkie przechwycenie";
-"Scroll Capture" = "Przechwyć z przewijaniem";
+"Scroll Capture" = "Przechwyć i przewiń";
 "Capture Delay" = "Przechwycenie z opóźnieniem";
 "None" = "Brak";
 "%d seconds" = "%d s";
@@ -181,7 +181,7 @@
 "Language:" = "Język:";
 "Restart the app to fully apply the new language." = "Uruchom ponownie aplikację, aby w pełni zastosować nowy język.";
 "Capture" = "Zrzut";
-"Play sound on copy" = "Odtwórz dźwięk przy kopiowaniu";
+"Play sound on capture" = "Odtwórz dźwięk przy przechwyceniu";
 "Remember last selection area" = "Zapamiętaj ostatni obszar zaznaczenia";
 "Remember last selected tool" = "Zapamiętaj ostatnio wybrane narzędzie";
 "Show floating thumbnail after capture" = "Pokaż pływającą miniaturę po zrzucie";
