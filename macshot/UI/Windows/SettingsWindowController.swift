@@ -124,25 +124,30 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
         generalTab.view = makeGeneralTabView()
         tabView.addTabViewItem(generalTab)
 
-        let shortcutsTab = NSTabViewItem(identifier: "shortcuts")
-        shortcutsTab.label = L("Shortcuts")
-        shortcutsTab.view = makeShortcutsTabView()
-        tabView.addTabViewItem(shortcutsTab)
+        let captureTab = NSTabViewItem(identifier: "capture")
+        captureTab.label = L("Capture")
+        captureTab.view = makeCaptureTabView()
+        tabView.addTabViewItem(captureTab)
 
-        let toolsTab = NSTabViewItem(identifier: "tools")
-        toolsTab.label = L("Tools")
-        toolsTab.view = makeToolsTabView()
-        tabView.addTabViewItem(toolsTab)
+        let editorTab = NSTabViewItem(identifier: "editor")
+        editorTab.label = L("Editor")
+        editorTab.view = makeEditorTabView()
+        tabView.addTabViewItem(editorTab)
+
+        let outputTab = NSTabViewItem(identifier: "output")
+        outputTab.label = L("Output")
+        outputTab.view = makeOutputTabView()
+        tabView.addTabViewItem(outputTab)
 
         let recordingTab = NSTabViewItem(identifier: "recording")
         recordingTab.label = L("Recording")
         recordingTab.view = makeRecordingTabView()
         tabView.addTabViewItem(recordingTab)
 
-        let uploadsTab = NSTabViewItem(identifier: "uploads")
-        uploadsTab.label = L("Uploads")
-        uploadsTab.view = makeUploadsTabView()
-        tabView.addTabViewItem(uploadsTab)
+        let shortcutsTab = NSTabViewItem(identifier: "shortcuts")
+        shortcutsTab.label = L("Shortcuts")
+        shortcutsTab.view = makeShortcutsTabView()
+        tabView.addTabViewItem(shortcutsTab)
 
         let aboutTab = NSTabViewItem(identifier: "about")
         aboutTab.label = L("About")
@@ -249,7 +254,74 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
         stack.addArrangedSubview(indented(langNote))
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
-        // ── Capture ──────────────────────────────────────────
+        // ── Application ──────────────────────────────────────
+        stack.addArrangedSubview(sectionHeader(L("Application")))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        copySoundCheckbox = NSButton(checkboxWithTitle: L("Play sound on capture"), target: self, action: #selector(copySoundChanged(_:)))
+        rememberToolCheckbox = NSButton(checkboxWithTitle: L("Remember last selected tool"), target: self, action: #selector(rememberToolChanged(_:)))
+        launchAtLoginCheckbox = NSButton(checkboxWithTitle: L("Launch at login"), target: self, action: #selector(launchAtLoginChanged(_:)))
+
+        for cb in [copySoundCheckbox!, rememberToolCheckbox!, launchAtLoginCheckbox!] {
+            stack.addArrangedSubview(indented(cb))
+            stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+        }
+
+        hideMenuBarIconCheckbox = NSButton(checkboxWithTitle: L("Hide menu bar icon"), target: self, action: #selector(hideMenuBarIconChanged(_:)))
+        stack.addArrangedSubview(indented(hideMenuBarIconCheckbox))
+        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+
+        let hideNote = NSTextField(wrappingLabelWithString: L("Hotkeys still work. To show the icon again, re-launch macshot."))
+        hideNote.font = NSFont.systemFont(ofSize: 10)
+        hideNote.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(indented(hideNote))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+
+        autoUpdateCheckbox = NSButton(checkboxWithTitle: L("Check for updates automatically"), target: self, action: #selector(autoUpdateChanged(_:)))
+        stack.addArrangedSubview(indented(autoUpdateCheckbox))
+        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+
+        betaUpdateCheckbox = NSButton(checkboxWithTitle: L("Check for beta updates"), target: self, action: #selector(betaUpdateChanged(_:)))
+        stack.addArrangedSubview(indented(betaUpdateCheckbox))
+        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
+
+        let spacer = NSView()
+        spacer.translatesAutoresizingMaskIntoConstraints = false
+        spacer.setContentHuggingPriority(.fittingSizeCompression, for: .vertical)
+        stack.addArrangedSubview(spacer)
+
+        // Make stack fill scroll width
+        let clipView = scroll.contentView
+        scroll.documentView = stack
+
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: clipView.topAnchor),
+            stack.leadingAnchor.constraint(equalTo: clipView.leadingAnchor),
+            stack.trailingAnchor.constraint(equalTo: clipView.trailingAnchor),
+            stack.heightAnchor.constraint(greaterThanOrEqualTo: clipView.heightAnchor),
+        ])
+
+        return scroll
+    }
+
+    // MARK: - Capture Tab
+
+    private func makeCaptureTabView() -> NSView {
+        let scroll = NSScrollView()
+        scroll.hasVerticalScroller = true
+        scroll.autohidesScrollers = true
+        scroll.borderType = .noBorder
+        scroll.drawsBackground = false
+        scroll.autoresizingMask = [.width, .height]
+
+        let stack = NSStackView()
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 0
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.edgeInsets = NSEdgeInsets(top: 0, left: 20, bottom: 16, right: 20)
+
+        // ── Capture Actions ──────────────────────────────────
         stack.addArrangedSubview(sectionHeader(L("Capture")))
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
@@ -280,19 +352,20 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
         stack.setCustomSpacing(12, after: stack.arrangedSubviews.last!)
 
         // Checkboxes
-        copySoundCheckbox = NSButton(checkboxWithTitle: L("Play sound on capture"), target: self, action: #selector(copySoundChanged(_:)))
         rememberSelectionCheckbox = NSButton(checkboxWithTitle: L("Remember last selection area"), target: self, action: #selector(rememberSelectionChanged(_:)))
-        rememberToolCheckbox = NSButton(checkboxWithTitle: L("Remember last selected tool"), target: self, action: #selector(rememberToolChanged(_:)))
         thumbnailCheckbox = NSButton(checkboxWithTitle: L("Show floating thumbnail after capture"), target: self, action: #selector(thumbnailChanged(_:)))
-        launchAtLoginCheckbox = NSButton(checkboxWithTitle: L("Launch at login"), target: self, action: #selector(launchAtLoginChanged(_:)))
         snapGuidesCheckbox = NSButton(checkboxWithTitle: L("Show snap alignment guides"), target: self, action: #selector(snapGuidesChanged(_:)))
         captureCursorCheckbox = NSButton(checkboxWithTitle: L("Capture mouse cursor in screenshot"), target: self, action: #selector(captureCursorChanged(_:)))
         windowTitleCheckbox = NSButton(checkboxWithTitle: L("Use window title in saved filename"), target: self, action: #selector(windowTitleChanged(_:)))
 
-        for cb in [copySoundCheckbox!, rememberSelectionCheckbox!, rememberToolCheckbox!, thumbnailCheckbox!] {
+        for cb in [rememberSelectionCheckbox!, thumbnailCheckbox!, snapGuidesCheckbox!, captureCursorCheckbox!, windowTitleCheckbox!] {
             stack.addArrangedSubview(indented(cb))
             stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
         }
+
+        // ── Thumbnails ───────────────────────────────────────
+        stack.addArrangedSubview(sectionHeader(L("Floating Thumbnail")))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
         // Thumbnail auto-dismiss stepper
         thumbnailAutoDismissField = NSTextField()
@@ -312,7 +385,7 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
         dismissNote.font = NSFont.systemFont(ofSize: 11)
         dismissNote.textColor = .secondaryLabelColor
 
-        stack.addArrangedSubview(indented(labeledRow(L("  Dismiss after:"), controls: [thumbnailAutoDismissField!, thumbnailAutoDismissStepper!, dismissNote])))
+        stack.addArrangedSubview(labeledRow(L("Dismiss after:"), controls: [thumbnailAutoDismissField!, thumbnailAutoDismissStepper!, dismissNote]))
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
         // Thumbnail stacking popup
@@ -321,7 +394,7 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
         thumbnailStackingPopup.target = self
         thumbnailStackingPopup.action = #selector(thumbnailStackingChanged(_:))
 
-        stack.addArrangedSubview(indented(labeledRow(L("  Multiple previews:"), controls: [thumbnailStackingPopup!])))
+        stack.addArrangedSubview(labeledRow(L("Multiple previews:"), controls: [thumbnailStackingPopup!]))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         let sizeSlider = NSSlider(value: UserDefaults.standard.object(forKey: "thumbnailScale") as? Double ?? 1.0,
@@ -331,137 +404,49 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
         thumbnailScaleLabel = NSTextField(labelWithString: scalePercentString(sizeSlider.doubleValue))
         thumbnailScaleLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .regular)
         thumbnailScaleLabel.textColor = .secondaryLabelColor
-        stack.addArrangedSubview(indented(labeledRow(L("  Preview size:"), controls: [sizeSlider, thumbnailScaleLabel])))
-        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
-
-        stack.addArrangedSubview(indented(snapGuidesCheckbox))
-        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
-
-        stack.addArrangedSubview(indented(captureCursorCheckbox))
-        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
-
-        stack.addArrangedSubview(indented(windowTitleCheckbox))
-        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
-
-        stack.addArrangedSubview(indented(launchAtLoginCheckbox))
-        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
-
-        hideMenuBarIconCheckbox = NSButton(checkboxWithTitle: L("Hide menu bar icon"), target: self, action: #selector(hideMenuBarIconChanged(_:)))
-        stack.addArrangedSubview(indented(hideMenuBarIconCheckbox))
-        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
-
-        let hideNote = NSTextField(wrappingLabelWithString: L("Hotkeys still work. To show the icon again, re-launch macshot."))
-        hideNote.font = NSFont.systemFont(ofSize: 10)
-        hideNote.textColor = .secondaryLabelColor
-        stack.addArrangedSubview(indented(hideNote))
-        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
-
-        autoUpdateCheckbox = NSButton(checkboxWithTitle: L("Check for updates automatically"), target: self, action: #selector(autoUpdateChanged(_:)))
-        stack.addArrangedSubview(indented(autoUpdateCheckbox))
-        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
-
-        betaUpdateCheckbox = NSButton(checkboxWithTitle: L("Check for beta updates"), target: self, action: #selector(betaUpdateChanged(_:)))
-        stack.addArrangedSubview(indented(betaUpdateCheckbox))
-        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
-
+        stack.addArrangedSubview(labeledRow(L("Preview size:"), controls: [sizeSlider, thumbnailScaleLabel]))
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
-        // ── Output ───────────────────────────────────────────
-        stack.addArrangedSubview(sectionHeader(L("Output")))
+        // ── Scroll Capture ───────────────────────────────────
+        stack.addArrangedSubview(sectionHeader(L("Scroll Capture")))
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
-        // Save folder
-        savePathField = NSTextField()
-        savePathField.isEditable = false
-        savePathField.isSelectable = false
-        savePathField.lineBreakMode = .byTruncatingMiddle
-
-        let browseBtn = NSButton(title: L("Browse…"), target: self, action: #selector(browseSavePath(_:)))
-        browseBtn.bezelStyle = .rounded
-
-        stack.addArrangedSubview(labeledRow(L("Save folder:"), controls: [savePathField, browseBtn]))
+        scrollAutoScrollCheckbox = NSButton(checkboxWithTitle: L("Auto-scroll (sends synthetic scroll events)"),
+                                            target: self, action: #selector(scrollAutoScrollChanged(_:)))
+        stack.addArrangedSubview(indented(scrollAutoScrollCheckbox))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
-        // Image format
-        imageFormatPopup = NSPopUpButton()
-        imageFormatPopup.addItems(withTitles: ["PNG", "JPEG", "HEIC", "WebP"])
-        imageFormatPopup.target = self
-        imageFormatPopup.action = #selector(imageFormatChanged(_:))
-
-        stack.addArrangedSubview(labeledRow(L("Image format:"), controls: [imageFormatPopup]))
+        scrollSpeedPopup = NSPopUpButton()
+        scrollSpeedPopup.addItems(withTitles: [L("Slow"), L("Medium"), L("Fast"), L("Very fast")])
+        scrollSpeedPopup.target = self
+        scrollSpeedPopup.action = #selector(scrollSpeedChanged(_:))
+        stack.addArrangedSubview(labeledRow(L("Scroll speed:"), controls: [scrollSpeedPopup]))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
-        // Quality (applies to JPEG and HEIC)
-        qualitySlider = NSSlider()
-        qualitySlider.minValue = 10
-        qualitySlider.maxValue = 100
-        qualitySlider.target = self
-        qualitySlider.action = #selector(qualityChanged(_:))
-        qualitySlider.widthAnchor.constraint(equalToConstant: 160).isActive = true
+        scrollMaxHeightField = NSTextField()
+        scrollMaxHeightField.isEditable = false
+        scrollMaxHeightField.isSelectable = false
+        scrollMaxHeightField.font = .monospacedDigitSystemFont(ofSize: 13, weight: .regular)
+        scrollMaxHeightField.translatesAutoresizingMaskIntoConstraints = false
+        scrollMaxHeightField.widthAnchor.constraint(equalToConstant: 60).isActive = true
 
-        qualityLabel = NSTextField(labelWithString: String(format: L("%d%%"), 85))
-        qualityLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .regular)
-        qualityLabel.widthAnchor.constraint(equalToConstant: 44).isActive = true
+        scrollMaxHeightStepper = NSStepper()
+        scrollMaxHeightStepper.minValue = 0
+        scrollMaxHeightStepper.maxValue = 100000
+        scrollMaxHeightStepper.increment = 5000
+        scrollMaxHeightStepper.valueWraps = false
+        scrollMaxHeightStepper.target = self
+        scrollMaxHeightStepper.action = #selector(scrollMaxHeightChanged(_:))
 
-        qualityRowLabel = NSTextField(labelWithString: L("Quality:"))
-        qualityRowLabel.font = NSFont.systemFont(ofSize: 13)
-        qualityRowLabel.alignment = .right
-        qualityRowLabel.translatesAutoresizingMaskIntoConstraints = false
-        qualityRowLabel.widthAnchor.constraint(equalToConstant: 140).isActive = true
-
-        let qualityRow = NSStackView(views: [qualityRowLabel, qualitySlider, qualityLabel])
-        qualityRow.orientation = .horizontal
-        qualityRow.spacing = 8
-        qualityRow.alignment = .centerY
-        qualityRow.translatesAutoresizingMaskIntoConstraints = false
-
-        stack.addArrangedSubview(qualityRow)
+        let maxHeightNote = NSTextField(labelWithString: L("px (0 = unlimited)"))
+        maxHeightNote.font = .systemFont(ofSize: 11)
+        maxHeightNote.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(labeledRow(L("Max height:"), controls: [scrollMaxHeightField, scrollMaxHeightStepper, maxHeightNote]))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
-        // Downscale Retina
-        downscaleRetinaCheckbox = NSButton(checkboxWithTitle: L("Save at standard resolution (1x)"), target: self, action: #selector(downscaleRetinaChanged(_:)))
-        stack.addArrangedSubview(indented(downscaleRetinaCheckbox))
-        stack.setCustomSpacing(2, after: stack.arrangedSubviews.last!)
-
-        let downscaleNote = NSTextField(labelWithString: L("Halves dimensions on Retina displays, ~4x smaller files"))
-        downscaleNote.font = NSFont.systemFont(ofSize: 10)
-        downscaleNote.textColor = .tertiaryLabelColor
-        stack.addArrangedSubview(indented(downscaleNote))
-        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
-
-        // Embed color profile
-        embedColorProfileCheckbox = NSButton(checkboxWithTitle: L("Embed sRGB color profile"), target: self, action: #selector(embedColorProfileChanged(_:)))
-        stack.addArrangedSubview(indented(embedColorProfileCheckbox))
-        stack.setCustomSpacing(2, after: stack.arrangedSubviews.last!)
-
-        let profileNote = NSTextField(labelWithString: L("Ensures consistent colors across different displays"))
-        profileNote.font = NSFont.systemFont(ofSize: 10)
-        profileNote.textColor = .tertiaryLabelColor
-        stack.addArrangedSubview(indented(profileNote))
-        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
-
-        // History size
-        historySizeField = NSTextField()
-        historySizeField.isEditable = false
-        historySizeField.isSelectable = false
-        historySizeField.alignment = .center
-        historySizeField.widthAnchor.constraint(equalToConstant: 40).isActive = true
-
-        historySizeStepper = NSStepper()
-        historySizeStepper.minValue = 0
-        historySizeStepper.maxValue = 50
-        historySizeStepper.increment = 1
-        historySizeStepper.target = self
-        historySizeStepper.action = #selector(historySizeChanged(_:))
-
-        historyUnlimitedCheckbox = NSButton(checkboxWithTitle: L("Unlimited"), target: self, action: #selector(historyUnlimitedChanged(_:)))
-        historyUnlimitedCheckbox.font = NSFont.systemFont(ofSize: 11)
-
-        let histNote = NSTextField(labelWithString: L("(0 = off)"))
-        histNote.font = NSFont.systemFont(ofSize: 11)
-        histNote.textColor = .secondaryLabelColor
-
-        stack.addArrangedSubview(labeledRow(L("History size:"), controls: [historySizeField, historySizeStepper, histNote, historyUnlimitedCheckbox]))
+        scrollFrozenDetectionCheckbox = NSButton(checkboxWithTitle: L("Detect fixed/sticky headers"),
+                                                 target: self, action: #selector(scrollFrozenDetectionChanged(_:)))
+        stack.addArrangedSubview(indented(scrollFrozenDetectionCheckbox))
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // ── Translation ──────────────────────────────────────
@@ -495,32 +480,11 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
             stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
         }
 
-        // ── Appearance ───────────────────────────────────────
-        stack.addArrangedSubview(sectionHeader(L("Appearance")))
-        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+        let spacer = NSView()
+        spacer.translatesAutoresizingMaskIntoConstraints = false
+        spacer.setContentHuggingPriority(.fittingSizeCompression, for: .vertical)
+        stack.addArrangedSubview(spacer)
 
-        accentColorWell = NSColorWell(frame: NSRect(x: 0, y: 0, width: 36, height: 24))
-        accentColorWell.color = ToolbarLayout.accentColor
-        accentColorWell.target = self
-        accentColorWell.action = #selector(accentColorChanged(_:))
-
-        iconColorWell = NSColorWell(frame: NSRect(x: 0, y: 0, width: 36, height: 24))
-        iconColorWell.color = ToolbarLayout.iconColor
-        iconColorWell.target = self
-        iconColorWell.action = #selector(iconColorChanged(_:))
-
-        let resetColorsBtn = NSButton(title: L("Reset"), target: self, action: #selector(resetToolbarColors(_:)))
-        resetColorsBtn.bezelStyle = .rounded
-        resetColorsBtn.controlSize = .small
-
-        stack.addArrangedSubview(indented(labeledRow(L("Accent color:"), controls: [accentColorWell])))
-        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
-        stack.addArrangedSubview(indented(labeledRow(L("Icon color:"), controls: [iconColorWell])))
-        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
-        stack.addArrangedSubview(indented(labeledRow("", controls: [resetColorsBtn])))
-        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
-
-        // Make stack fill scroll width
         let clipView = scroll.contentView
         scroll.documentView = stack
 
@@ -528,7 +492,7 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
             stack.topAnchor.constraint(equalTo: clipView.topAnchor),
             stack.leadingAnchor.constraint(equalTo: clipView.leadingAnchor),
             stack.trailingAnchor.constraint(equalTo: clipView.trailingAnchor),
-            // no bottom constraint — stack grows to fit content, scroll handles overflow
+            stack.heightAnchor.constraint(greaterThanOrEqualTo: clipView.heightAnchor),
         ])
 
         return scroll
@@ -798,7 +762,7 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
 
     // MARK: - Tools Tab
 
-    private func makeToolsTabView() -> NSView {
+    private func makeEditorTabView() -> NSView {
         let scroll = NSScrollView()
         scroll.hasVerticalScroller = true
         scroll.autohidesScrollers = true
@@ -879,6 +843,31 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
         let rightActionsGrid = makeToggleGrid(items: rightActionItems,
                                               defaultsKey: "enabledActions", enabledValues: enabledActions)
         stack.addArrangedSubview(rightActionsGrid)
+        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
+
+        // ── Appearance ───────────────────────────────────────
+        stack.addArrangedSubview(sectionHeader(L("Appearance")))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        accentColorWell = NSColorWell(frame: NSRect(x: 0, y: 0, width: 36, height: 24))
+        accentColorWell.color = ToolbarLayout.accentColor
+        accentColorWell.target = self
+        accentColorWell.action = #selector(accentColorChanged(_:))
+
+        iconColorWell = NSColorWell(frame: NSRect(x: 0, y: 0, width: 36, height: 24))
+        iconColorWell.color = ToolbarLayout.iconColor
+        iconColorWell.target = self
+        iconColorWell.action = #selector(iconColorChanged(_:))
+
+        let resetColorsBtn = NSButton(title: L("Reset"), target: self, action: #selector(resetToolbarColors(_:)))
+        resetColorsBtn.bezelStyle = .rounded
+        resetColorsBtn.controlSize = .small
+
+        stack.addArrangedSubview(indented(labeledRow(L("Accent color:"), controls: [accentColorWell])))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+        stack.addArrangedSubview(indented(labeledRow(L("Icon color:"), controls: [iconColorWell])))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+        stack.addArrangedSubview(indented(labeledRow("", controls: [resetColorsBtn])))
 
         let clipView = scroll.contentView
         scroll.documentView = stack
@@ -979,48 +968,6 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
         stack.addArrangedSubview(labeledRow(L("Shape:"), controls: [webcamShapePopup]))
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
-        // ── Scroll Capture ────────────────────────────────────
-        stack.addArrangedSubview(sectionHeader(L("Scroll Capture")))
-        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
-
-        scrollAutoScrollCheckbox = NSButton(checkboxWithTitle: L("Auto-scroll (sends synthetic scroll events)"),
-                                            target: self, action: #selector(scrollAutoScrollChanged(_:)))
-        stack.addArrangedSubview(scrollAutoScrollCheckbox)
-        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
-
-        scrollSpeedPopup = NSPopUpButton()
-        scrollSpeedPopup.addItems(withTitles: [L("Slow"), L("Medium"), L("Fast"), L("Very fast")])
-        scrollSpeedPopup.target = self
-        scrollSpeedPopup.action = #selector(scrollSpeedChanged(_:))
-        stack.addArrangedSubview(labeledRow(L("Scroll speed:"), controls: [scrollSpeedPopup]))
-        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
-
-        scrollMaxHeightField = NSTextField()
-        scrollMaxHeightField.isEditable = false
-        scrollMaxHeightField.isSelectable = false
-        scrollMaxHeightField.font = .monospacedDigitSystemFont(ofSize: 13, weight: .regular)
-        scrollMaxHeightField.translatesAutoresizingMaskIntoConstraints = false
-        scrollMaxHeightField.widthAnchor.constraint(equalToConstant: 60).isActive = true
-
-        scrollMaxHeightStepper = NSStepper()
-        scrollMaxHeightStepper.minValue = 0
-        scrollMaxHeightStepper.maxValue = 100000
-        scrollMaxHeightStepper.increment = 5000
-        scrollMaxHeightStepper.valueWraps = false
-        scrollMaxHeightStepper.target = self
-        scrollMaxHeightStepper.action = #selector(scrollMaxHeightChanged(_:))
-
-        let maxHeightNote = NSTextField(labelWithString: L("px (0 = unlimited)"))
-        maxHeightNote.font = .systemFont(ofSize: 11)
-        maxHeightNote.textColor = .secondaryLabelColor
-        stack.addArrangedSubview(labeledRow(L("Max height:"), controls: [scrollMaxHeightField, scrollMaxHeightStepper, maxHeightNote]))
-        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
-
-        scrollFrozenDetectionCheckbox = NSButton(checkboxWithTitle: L("Detect fixed/sticky headers"),
-                                                 target: self, action: #selector(scrollFrozenDetectionChanged(_:)))
-        stack.addArrangedSubview(scrollFrozenDetectionCheckbox)
-        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
-
         // Spacer to absorb remaining height, keeping content pinned to top
         let spacer = NSView()
         spacer.translatesAutoresizingMaskIntoConstraints = false
@@ -1040,9 +987,9 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
         return scroll
     }
 
-    // MARK: - Uploads Tab
+    // MARK: - Output Tab
 
-    private func makeUploadsTabView() -> NSView {
+    private func makeOutputTabView() -> NSView {
         let scroll = NSScrollView()
         scroll.hasVerticalScroller = true
         scroll.autohidesScrollers = true
@@ -1053,11 +1000,112 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
         let stack = NSStackView()
         stack.orientation = .vertical
         stack.alignment = .leading
-        stack.spacing = 6
+        stack.spacing = 0
         stack.translatesAutoresizingMaskIntoConstraints = false
         stack.edgeInsets = NSEdgeInsets(top: 0, left: 20, bottom: 16, right: 20)
 
-        // ── Upload Provider ──
+        // ── Image Output ─────────────────────────────────────
+        stack.addArrangedSubview(sectionHeader(L("Image")))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        // Image format
+        imageFormatPopup = NSPopUpButton()
+        imageFormatPopup.addItems(withTitles: ["PNG", "JPEG", "HEIC", "WebP"])
+        imageFormatPopup.target = self
+        imageFormatPopup.action = #selector(imageFormatChanged(_:))
+
+        stack.addArrangedSubview(labeledRow(L("Image format:"), controls: [imageFormatPopup]))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        // Quality (applies to JPEG and HEIC)
+        qualitySlider = NSSlider()
+        qualitySlider.minValue = 10
+        qualitySlider.maxValue = 100
+        qualitySlider.target = self
+        qualitySlider.action = #selector(qualityChanged(_:))
+        qualitySlider.widthAnchor.constraint(equalToConstant: 160).isActive = true
+
+        qualityLabel = NSTextField(labelWithString: String(format: L("%d%%"), 85))
+        qualityLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .regular)
+        qualityLabel.widthAnchor.constraint(equalToConstant: 44).isActive = true
+
+        qualityRowLabel = NSTextField(labelWithString: L("Quality:"))
+        qualityRowLabel.font = NSFont.systemFont(ofSize: 13)
+        qualityRowLabel.alignment = .right
+        qualityRowLabel.translatesAutoresizingMaskIntoConstraints = false
+        qualityRowLabel.widthAnchor.constraint(equalToConstant: 140).isActive = true
+
+        let qualityRow = NSStackView(views: [qualityRowLabel, qualitySlider, qualityLabel])
+        qualityRow.orientation = .horizontal
+        qualityRow.spacing = 8
+        qualityRow.alignment = .centerY
+        qualityRow.translatesAutoresizingMaskIntoConstraints = false
+
+        stack.addArrangedSubview(qualityRow)
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        // Downscale Retina
+        downscaleRetinaCheckbox = NSButton(checkboxWithTitle: L("Save at standard resolution (1x)"), target: self, action: #selector(downscaleRetinaChanged(_:)))
+        stack.addArrangedSubview(indented(downscaleRetinaCheckbox))
+        stack.setCustomSpacing(2, after: stack.arrangedSubviews.last!)
+
+        let downscaleNote = NSTextField(labelWithString: L("Halves dimensions on Retina displays, ~4x smaller files"))
+        downscaleNote.font = NSFont.systemFont(ofSize: 10)
+        downscaleNote.textColor = .tertiaryLabelColor
+        stack.addArrangedSubview(indented(downscaleNote))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+
+        // Embed color profile
+        embedColorProfileCheckbox = NSButton(checkboxWithTitle: L("Embed sRGB color profile"), target: self, action: #selector(embedColorProfileChanged(_:)))
+        stack.addArrangedSubview(indented(embedColorProfileCheckbox))
+        stack.setCustomSpacing(2, after: stack.arrangedSubviews.last!)
+
+        let profileNote = NSTextField(labelWithString: L("Ensures consistent colors across different displays"))
+        profileNote.font = NSFont.systemFont(ofSize: 10)
+        profileNote.textColor = .tertiaryLabelColor
+        stack.addArrangedSubview(indented(profileNote))
+        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
+
+        // ── Save Location ────────────────────────────────────
+        stack.addArrangedSubview(sectionHeader(L("Save Location")))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        savePathField = NSTextField()
+        savePathField.isEditable = false
+        savePathField.isSelectable = false
+        savePathField.lineBreakMode = .byTruncatingMiddle
+
+        let browseBtn = NSButton(title: L("Browse…"), target: self, action: #selector(browseSavePath(_:)))
+        browseBtn.bezelStyle = .rounded
+
+        stack.addArrangedSubview(labeledRow(L("Save folder:"), controls: [savePathField, browseBtn]))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        // History size
+        historySizeField = NSTextField()
+        historySizeField.isEditable = false
+        historySizeField.isSelectable = false
+        historySizeField.alignment = .center
+        historySizeField.widthAnchor.constraint(equalToConstant: 40).isActive = true
+
+        historySizeStepper = NSStepper()
+        historySizeStepper.minValue = 0
+        historySizeStepper.maxValue = 50
+        historySizeStepper.increment = 1
+        historySizeStepper.target = self
+        historySizeStepper.action = #selector(historySizeChanged(_:))
+
+        historyUnlimitedCheckbox = NSButton(checkboxWithTitle: L("Unlimited"), target: self, action: #selector(historyUnlimitedChanged(_:)))
+        historyUnlimitedCheckbox.font = NSFont.systemFont(ofSize: 11)
+
+        let histNote = NSTextField(labelWithString: L("(0 = off)"))
+        histNote.font = NSFont.systemFont(ofSize: 11)
+        histNote.textColor = .secondaryLabelColor
+
+        stack.addArrangedSubview(labeledRow(L("History size:"), controls: [historySizeField, historySizeStepper, histNote, historyUnlimitedCheckbox]))
+        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
+
+        // ── Upload Provider ──────────────────────────────────
         stack.addArrangedSubview(sectionHeader(L("Upload Provider")))
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
@@ -1210,14 +1258,12 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
         stack.addArrangedSubview(sectionHeader(L("Upload History")))
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
-        // Placeholder for upload history rows
         let historyContainer = NSStackView()
         historyContainer.orientation = .vertical
         historyContainer.alignment = .width
         historyContainer.spacing = 6
         historyContainer.translatesAutoresizingMaskIntoConstraints = false
         stack.addArrangedSubview(historyContainer)
-        // Stretch to full stack width
         historyContainer.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -40).isActive = true
         self.uploadsStack = historyContainer
 
@@ -2005,7 +2051,7 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
     // MARK: - NSTabViewDelegate
 
     func tabView(_ tabView: NSTabView, didSelect tabViewItem: NSTabViewItem?) {
-        if tabViewItem?.identifier as? String == "uploads" {
+        if tabViewItem?.identifier as? String == "output" {
             reloadUploadsTab()
         }
     }

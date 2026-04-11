@@ -493,3 +493,8 @@
 "Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "ファイルはGoogle Driveの \"macshot\" フォルダにアップロードされます。すべてプライベートに保たれ、公開されることはありません。";
 
 "Pressure" = "筆圧";
+"Editor" = "エディタ";
+"Floating Thumbnail" = "フローティングサムネイル";
+"Application" = "アプリケーション";
+"Image" = "画像";
+"Save Location" = "保存場所";
