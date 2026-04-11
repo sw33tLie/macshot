@@ -24,10 +24,10 @@
     <enclosure url="https://github.com/sw33tLie/macshot/releases/download/v4.0.3/MacShot.dmg" length="5938740" type="application/octet-stream" sparkle:edSignature="BGC8P7ltzqUeFQZ+7Ktw54uq+mj8Cz9SsLs4JNfdtfKRiKCoQ+62NkPxq1WAowi65YqqSgP3is8H94lejKEOAw==" />
 </item>
 <item>
-    <title>v4.0.4-beta.1</title>
-    <pubDate>Fri, 10 Apr 2026 22:40:36 +0000</pubDate>
-    <sparkle:version>33</sparkle:version>
-    <sparkle:shortVersionString>4.0.4-beta.1</sparkle:shortVersionString>
+    <title>v4.0.4-beta.2</title>
+    <pubDate>Sat, 11 Apr 2026 18:03:11 +0000</pubDate>
+    <sparkle:version>34</sparkle:version>
+    <sparkle:shortVersionString>4.0.4-beta.2</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
     <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
@@ -38,13 +38,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Added</h3><ul> <li><b>Export dimensions dropdown</b> — scale down recordings before saving (Original, 75%, 50%, 33%, 25%). Applied at export time; recordings always capture at full resolution.</li> <li><b>Estimated export file size</b> — shows estimated output size in the video editor when trim, scale, or format change would affect the result.</li>  </ul><h3>Fixed</h3><ul> <li><b>Cursor flicker after finishing a stroke</b> — the annotation cache is now incrementally updated on commit instead of rebuilt from scratch, eliminating the frame gap.</li> <li><b>Video editor bottom bar overlap</b> — left-side info gracefully hides when the window is narrow instead of overlapping action buttons.</li> <li><b>Timeline thumbnail seams</b> — sub-pixel gaps between thumbnail tiles eliminated with floor/ceil rounding.</li>  </ul><h3>Changed</h3><ul> <li><b>Video editor minimum width</b> increased to 820px to ensure all controls fit.</li> <li><b>~785 lines of dead code removed</b> — identified by Periphery static analysis across 5 cleanup batches.</li></ul>
+      <h3>Added</h3><ul> <li><b>Customizable toolbar background color</b> — new "Background color" setting in Preferences > Appearance. All toolbar text, icons, borders, and system controls adapt to stay readable on any background.</li> <li><b>Adaptive toolbar appearance</b> — toolbar and popovers automatically switch between light and dark AppKit appearance based on background brightness.</li>  </ul><h3>Fixed</h3><ul> <li><b>Global hotkeys stop working after closing editor</b> — `NSApp.hide(nil)` could suspend the Carbon event loop; replaced with cooperative focus transfer.</li> <li><b>Window snap highlight not showing on overlay appear</b> — snap query now runs immediately at the mouse position instead of waiting for mouse movement. (PR #100, thanks @TimFang4162)</li>  </ul><h3>Changed</h3><ul> <li><b>Lasso selection moved to Ctrl+drag</b> — frees Shift for line/shape constraining without timing conflicts.</li> <li><b>Stamp quick bar trimmed</b> — removed less common emojis (edit, lock, lightning, pin) from the quick bar; still accessible via the emoji picker.</li> <li><b>Translations</b> — added "Background color:" and "Play sound on capture" across all 40 locales.</li></ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v4.0.4-beta.1/MacShot.dmg"
-        length="5935338"
+        url="https://github.com/sw33tLie/macshot/releases/download/v4.0.4-beta.2/MacShot.dmg"
+        length="5944655"
         type="application/octet-stream"
-        sparkle:edSignature="CHU60k6AfiVkqi9PsetgVZ/n9ipH7X1ANkGUa9rtLZY+Bwqs1jf3HruBPtOc7C0foLEg1V/51BucmjLfjBpuAw=="
+        sparkle:edSignature="SRGFIWe1VPZDTxI47baDK6TpTkRvMLKJzIAEscoaxw9J/NWs2rtktGptTjJqDXC3KUl4QV6GDpq7pNjtKkIgCA=="
     />
 </item>
     </channel>
