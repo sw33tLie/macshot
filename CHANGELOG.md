@@ -1,5 +1,20 @@
 # Changelog
 
+## [4.0.4-beta.2] - 2026-04-11
+
+### Added
+- **Customizable toolbar background color** — new "Background color" setting in Preferences > Appearance. All toolbar text, icons, borders, and system controls adapt to stay readable on any background.
+- **Adaptive toolbar appearance** — toolbar and popovers automatically switch between light and dark AppKit appearance based on background brightness.
+
+### Fixed
+- **Global hotkeys stop working after closing editor** — `NSApp.hide(nil)` could suspend the Carbon event loop; replaced with cooperative focus transfer.
+- **Window snap highlight not showing on overlay appear** — snap query now runs immediately at the mouse position instead of waiting for mouse movement. (PR #100, thanks @TimFang4162)
+
+### Changed
+- **Lasso selection moved to Ctrl+drag** — frees Shift for line/shape constraining without timing conflicts.
+- **Stamp quick bar trimmed** — removed less common emojis (edit, lock, lightning, pin) from the quick bar; still accessible via the emoji picker.
+- **Translations** — added "Background color:" and "Play sound on capture" across all 40 locales.
+
 ## [4.0.4-beta.1] - 2026-04-10
 
 ### Added
