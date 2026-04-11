@@ -391,19 +391,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             if let prev = appToActivate, !prev.isTerminated,
                prev.bundleIdentifier != Bundle.main.bundleIdentifier {
                 Self.activateApp(prev)
-            } else if let appDel = NSApp.delegate as? AppDelegate,
-                      appDel.hasVisibleFloatingPanels {
-                // Floating thumbnails/pins are visible — just yield active status
-                // without hiding. NSApp.hide would kill them.
+            } else {
+                // No known previous app — yield focus to whatever is frontmost.
+                // Avoid NSApp.hide(nil) which can suspend the Carbon event loop
+                // and break global hotkeys until the app is reactivated.
                 Self.activateApp(
                     NSWorkspace.shared.runningApplications.first {
                         $0.isActive && $0.bundleIdentifier != Bundle.main.bundleIdentifier
                     } ?? NSWorkspace.shared.frontmostApplication ?? NSRunningApplication.current
                 )
-            } else {
-                // No known previous app and no floating panels —
-                // hide macshot so macOS activates the next app.
-                NSApp.hide(nil)
             }
         }
     }
