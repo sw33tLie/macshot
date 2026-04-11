@@ -746,6 +746,39 @@ class OverlayView: NSView {
     var snappedWindowImage: NSImage? = nil
     private var windowSnapQueryInFlight: Bool = false
 
+    /// Perform a window snap query at the given screen point (AppKit screen coordinates).
+    private func queryWindowSnap(at screenPoint: NSPoint) {
+        guard !windowSnapQueryInFlight,
+            state == .idle && windowSnapEnabled,
+            !(remoteSelectionRect.width >= 1 && remoteSelectionRect.height >= 1),
+            let viewWindow = window
+        else { return }
+        let overlayWindowNumber = viewWindow.windowNumber
+        let windowOrigin = viewWindow.frame.origin
+        let viewBounds = bounds
+        let screenH = NSScreen.screens.first?.frame.height ?? NSScreen.main?.frame.height ?? 0
+        windowSnapQueryInFlight = true
+        DispatchQueue.global(qos: .userInteractive).async { [weak self] in
+            let result = Self.windowRectOnBackground(
+                screenPoint: screenPoint,
+                overlayWindowNumber: overlayWindowNumber,
+                windowOrigin: windowOrigin,
+                viewBounds: viewBounds,
+                screenH: screenH
+            )
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                self.windowSnapQueryInFlight = false
+                let newRect = result?.rect
+                if newRect != self.hoveredWindowRect {
+                    self.hoveredWindowRect = newRect
+                    self.hoveredWindowID = result?.windowID
+                    self.needsDisplay = true
+                }
+            }
+        }
+    }
+
     // Mic level monitor (volume meter shown when mic is enabled before recording)
     private var micLevelEngine: AVAudioEngine?
     private var micLevelTimer: Timer?
@@ -789,10 +822,17 @@ class OverlayView: NSView {
             owner: self, userInfo: nil)
         addTrackingArea(area)
 
-        // Let the overlay render before starting expensive window snap queries
+        // Brief cooldown so the window server finishes compositing the overlay
+        // before we query CGWindowListCopyWindowInfo.
         windowSnapCooldown = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
-            self?.windowSnapCooldown = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) { [weak self] in
+            guard let self = self else { return }
+            self.windowSnapCooldown = false
+            // Perform an initial snap query at the current mouse position so the
+            // highlight appears immediately without requiring the user to move the mouse.
+            if self.state == .idle && self.windowSnapEnabled && !self.windowSnapQueryInFlight {
+                self.queryWindowSnap(at: NSEvent.mouseLocation)
+            }
         }
 
         NotificationCenter.default.addObserver(
@@ -873,33 +913,9 @@ class OverlayView: NSView {
             guard
                 let screenPoint = window.map({
                     NSPoint(x: $0.frame.origin.x + point.x, y: $0.frame.origin.y + point.y)
-                }),
-                let viewWindow = window
+                })
             else { return }
-            let overlayWindowNumber = viewWindow.windowNumber
-            let windowOrigin = viewWindow.frame.origin
-            let viewBounds = bounds
-            let screenH = NSScreen.screens.first?.frame.height ?? NSScreen.main?.frame.height ?? 0
-            windowSnapQueryInFlight = true
-            DispatchQueue.global(qos: .userInteractive).async { [weak self] in
-                let result = Self.windowRectOnBackground(
-                    screenPoint: screenPoint,
-                    overlayWindowNumber: overlayWindowNumber,
-                    windowOrigin: windowOrigin,
-                    viewBounds: viewBounds,
-                    screenH: screenH
-                )
-                DispatchQueue.main.async {
-                    guard let self = self else { return }
-                    self.windowSnapQueryInFlight = false
-                    let newRect = result?.rect
-                    if newRect != self.hoveredWindowRect {
-                        self.hoveredWindowRect = newRect
-                        self.hoveredWindowID = result?.windowID
-                        self.needsDisplay = true
-                    }
-                }
-            }
+            queryWindowSnap(at: screenPoint)
         }
 
         // Track cursor for loupe live preview (use canvas space for zoom correctness)
