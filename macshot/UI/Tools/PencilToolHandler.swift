@@ -100,21 +100,20 @@ final class PencilToolHandler: AnnotationToolHandler {
             }
         } else if canvas.pencilSmoothMode == 2 {
             // Refined: retroactively apply moving average to the full raw buffer,
-            // then Chaikin polish. Same result as live-smoothing but with zero
-            // lag during drawing. Preserve exact endpoint so stroke ends where
-            // the user released the mouse.
-            let lastRaw = rawPointBuffer.last
-            let smoothed = Self.movingAverageSmooth(rawPointBuffer, windowSize: smoothWindowSize)
-            var final = Self.chaikinSmooth(smoothed, iterations: 2)
-            if let last = lastRaw, let finalLast = final.last, finalLast != last {
-                final.append(last)
-            }
+            // then Chaikin polish. Pad the end of the buffer with copies of the
+            // last raw point so the moving average converges to the true endpoint
+            // naturally — no abrupt straight segment needed.
+            let padCount = smoothWindowSize - 1
+            let padded = rawPointBuffer + Array(repeating: rawPointBuffer.last!, count: padCount)
+            let smoothed = Self.movingAverageSmooth(padded, windowSize: smoothWindowSize)
+            let final = Self.chaikinSmooth(smoothed, iterations: 2)
             annotation.points = final
             // Interpolate pressures to match smoothed point count.
             // Use gentle smoothing (moving average only, no Chaikin) to preserve
             // the user's pressure intent, then linearly interpolate to match point count.
             if annotation.pressures != nil {
-                let smoothedP = Self.movingAverageSmoothValues(rawPressureBuffer, windowSize: max(smoothWindowSize / 2, 3))
+                let paddedP = rawPressureBuffer + Array(repeating: rawPressureBuffer.last!, count: padCount)
+                let smoothedP = Self.movingAverageSmoothValues(paddedP, windowSize: max(smoothWindowSize / 2, 3))
                 let finalP = Self.interpolateToCount(smoothedP, targetCount: final.count)
                 annotation.pressures = finalP
             }
