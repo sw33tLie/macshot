@@ -1,34 +1,29 @@
 # Changelog
 
-## [4.0.4-beta.2] - 2026-04-11
+## [4.0.4] - 2026-04-13
 
 ### Added
 - **Customizable toolbar background color** — new "Background color" setting in Preferences > Appearance. All toolbar text, icons, borders, and system controls adapt to stay readable on any background.
 - **Adaptive toolbar appearance** — toolbar and popovers automatically switch between light and dark AppKit appearance based on background brightness.
-
-### Fixed
-- **Global hotkeys stop working after closing editor** — `NSApp.hide(nil)` could suspend the Carbon event loop; replaced with cooperative focus transfer.
-- **Window snap highlight not showing on overlay appear** — snap query now runs immediately at the mouse position instead of waiting for mouse movement. (PR #100, thanks @TimFang4162)
-
-### Changed
-- **Lasso selection moved to Ctrl+drag** — frees Shift for line/shape constraining without timing conflicts.
-- **Stamp quick bar trimmed** — removed less common emojis (edit, lock, lightning, pin) from the quick bar; still accessible via the emoji picker.
-- **Translations** — added "Background color:" and "Play sound on capture" across all 40 locales.
-
-## [4.0.4-beta.1] - 2026-04-10
-
-### Added
 - **Export dimensions dropdown** — scale down recordings before saving (Original, 75%, 50%, 33%, 25%). Applied at export time; recordings always capture at full resolution.
 - **Estimated export file size** — shows estimated output size in the video editor when trim, scale, or format change would affect the result.
 
 ### Fixed
-- **Cursor flicker after finishing a stroke** — the annotation cache is now incrementally updated on commit instead of rebuilt from scratch, eliminating the frame gap.
+- **Multi-line text clipped after commit** — text snapshot now uses the same measurement as the rendering engine, preventing the last line from being cut off at non-default font sizes.
+- **Ctrl+lasso broken in pencil mode** — Ctrl now enables instant annotation selection in pencil mode (no long-press delay). Multi-selections can be dragged without holding Ctrl, matching all other tools.
+- **Pen pressure over-smoothing after many strokes** — committed annotations are now drawn from a cached bitmap during active drawing, preventing progressive frame time degradation that caused macOS to coalesce tablet events and reduce stroke fidelity.
+- **Pen pressure range** — light touch now gives 20–100% of stroke width (was 30–100%) for finer control.
+- **Apple Translation language list empty on first use** — the Translation framework can return stale results at launch; empty results are no longer cached, so the language picker retries on next open.
+- **Global hotkeys stop working after closing editor** — `NSApp.hide(nil)` could suspend the Carbon event loop; replaced with cooperative focus transfer.
+- **Window snap highlight not showing on overlay appear** — snap query now runs immediately at the mouse position instead of waiting for mouse movement. (PR #100, thanks @TimFang4162)
+- **Smoother refined pencil stroke tails** — end of refined strokes no longer has an abrupt straight segment.
+- **Cursor flicker after finishing a stroke** — the annotation cache is now incrementally updated on commit instead of rebuilt from scratch.
 - **Video editor bottom bar overlap** — left-side info gracefully hides when the window is narrow instead of overlapping action buttons.
-- **Timeline thumbnail seams** — sub-pixel gaps between thumbnail tiles eliminated with floor/ceil rounding.
+- **Timeline thumbnail seams** — sub-pixel gaps between thumbnail tiles eliminated.
 
 ### Changed
+- **Lasso selection moved to Ctrl+drag** — frees Shift for line/shape constraining without timing conflicts.
 - **Video editor minimum width** increased to 820px to ensure all controls fit.
-- **~785 lines of dead code removed** — identified by Periphery static analysis across 5 cleanup batches.
 
 ## [4.0.3] - 2026-04-10
 
