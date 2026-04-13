@@ -7384,8 +7384,19 @@ class OverlayView: NSView {
             scale = window?.backingScaleFactor ?? 2.0
         }
 
-        let pixelW = Int(selectionRect.width * scale)
-        let pixelH = Int(selectionRect.height * scale)
+        // Snap selection rect to pixel boundaries to prevent sub-pixel
+        // interpolation blur (especially visible on 1x non-Retina displays
+        // where fractional mouse coordinates aren't absorbed by 2x scaling).
+        let snappedRect = NSRect(
+            x: round(selectionRect.origin.x * scale) / scale,
+            y: round(selectionRect.origin.y * scale) / scale,
+            width: round(selectionRect.width * scale) / scale,
+            height: round(selectionRect.height * scale) / scale
+        )
+
+        let pixelW = Int(snappedRect.width * scale)
+        let pixelH = Int(snappedRect.height * scale)
+        guard pixelW > 0, pixelH > 0 else { return nil }
         // Use the source image's color space to avoid expensive color conversion on render.
         // Fall back to sRGB if unavailable.
         let cs: CGColorSpace
@@ -7408,9 +7419,12 @@ class OverlayView: NSView {
             )
         else { return nil }
 
+        // Disable interpolation for pixel-perfect output — the screenshot
+        // pixels should map 1:1 to the output without any filtering.
+        cgCtx.interpolationQuality = .none
         // Scale the CG context so drawing in points maps to the correct pixels.
         cgCtx.scaleBy(x: scale, y: scale)
-        cgCtx.translateBy(x: -selectionRect.origin.x, y: -selectionRect.origin.y)
+        cgCtx.translateBy(x: -snappedRect.origin.x, y: -snappedRect.origin.y)
 
         let nsContext = NSGraphicsContext(cgContext: cgCtx, flipped: false)
         NSGraphicsContext.saveGraphicsState()
@@ -7432,7 +7446,7 @@ class OverlayView: NSView {
         NSGraphicsContext.restoreGraphicsState()
 
         guard let cgImage = cgCtx.makeImage() else { return nil }
-        return NSImage(cgImage: cgImage, size: selectionRect.size)
+        return NSImage(cgImage: cgImage, size: snappedRect.size)
     }
 
     // MARK: - Cleanup
