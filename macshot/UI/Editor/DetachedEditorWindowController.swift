@@ -6,7 +6,7 @@ import CoreImage
 /// Uses performClose so windowShouldClose is called (triggers unsaved changes warning).
 private class EditorWindow: NSWindow {
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
-        if event.modifierFlags.contains(.command) && event.charactersIgnoringModifiers == "q" {
+        if event.modifierFlags.contains(.command) && event.keyCode == 12 {  // Q
             performClose(nil)
             return true
         }

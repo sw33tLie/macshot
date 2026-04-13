@@ -361,22 +361,22 @@ private class KeyablePanel: NSPanel {
         if let fr = firstResponder as? NSTextView {
             let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
             if flags == .command {
-                switch event.charactersIgnoringModifiers {
-                case "c": fr.copy(nil);      return true
-                case "x": fr.cut(nil);       return true
-                case "v": fr.paste(nil);     return true
-                case "a": fr.selectAll(nil); return true
-                case "z": fr.undoManager?.undo(); return true
+                switch event.keyCode {
+                case 8:  fr.copy(nil);      return true  // C
+                case 7:  fr.cut(nil);       return true  // X
+                case 9:  fr.paste(nil);     return true  // V
+                case 0:  fr.selectAll(nil); return true  // A
+                case 6:  fr.undoManager?.undo(); return true  // Z
                 default: break
                 }
             }
-            if flags == [.command, .shift], event.charactersIgnoringModifiers == "z" {
+            if flags == [.command, .shift], event.keyCode == 6 {  // Z
                 fr.undoManager?.redo(); return true
             }
         }
         // Cmd+W to close — handle outside the text view check so it always works
         if event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
-           event.charactersIgnoringModifiers == "w" {
+           event.keyCode == 13 {  // W
             performClose(nil)
             return true
         }

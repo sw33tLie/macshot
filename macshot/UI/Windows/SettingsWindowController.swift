@@ -5,7 +5,7 @@ import ServiceManagement
 /// Settings window that intercepts Cmd+Q to close itself instead of quitting the app.
 private class SettingsWindow: NSWindow {
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
-        if event.modifierFlags.contains(.command) && event.charactersIgnoringModifiers == "q" {
+        if event.modifierFlags.contains(.command) && event.keyCode == 12 {  // Q
             close()
             return true
         }
