@@ -125,7 +125,13 @@ enum TranslationService {
             }
 
             await MainActor.run {
-                cachedAppleAvailability = installed
+                // Only cache if we found at least one installed language.
+                // If the Translation framework wasn't ready (e.g. right after
+                // launch), all languages come back as not-installed — don't
+                // cache that or the popover stays empty for the whole session.
+                if installed.values.contains(true) {
+                    cachedAppleAvailability = installed
+                }
                 completion(installed)
             }
         }
