@@ -332,8 +332,28 @@ class TextEditingController {
             // Ensure scrollView frame matches actual text height before snapshotting
             resizeToFit()
             let attrStr = NSAttributedString(attributedString: tv.textStorage!)
-            let imgSize = sv.frame.size
             let inset = tv.textContainerInset
+            let drawWidth = sv.frame.width - inset.width * 2
+
+            // Measure with NSAttributedString.boundingRect — this matches the
+            // layout engine used by attrStr.draw(in:), which can differ from
+            // NSLayoutManager.usedRect (used by resizeToFit for live editing).
+            // Using the wrong measurement caused the last line to be clipped.
+            let textBounds = attrStr.boundingRect(
+                with: NSSize(width: drawWidth, height: .greatestFiniteMagnitude),
+                options: [.usesLineFragmentOrigin, .usesFontLeading])
+            let minH = max(28, fontSize + 12)
+            let imgHeight = max(minH, ceil(textBounds.height) + inset.height * 2)
+            let imgSize = NSSize(width: sv.frame.width, height: imgHeight)
+
+            // Update scrollView frame to match the measured height so canvas
+            // coordinates are correct (pin top edge).
+            if abs(imgHeight - sv.frame.height) > 0.5 {
+                let topEdge = sv.frame.maxY
+                sv.frame = NSRect(x: sv.frame.minX, y: topEdge - imgHeight,
+                                  width: sv.frame.width, height: imgHeight)
+            }
+
             let img = NSImage(size: imgSize, flipped: true) { _ in
                 attrStr.draw(
                     in: NSRect(

@@ -6276,15 +6276,19 @@ class OverlayView: NSView {
             }
         }
 
-        // Click-to-select body: for pencil/marker, only instant-select when Shift is held
-        // (otherwise they use long-press below to avoid accidental selection while drawing).
+        // Click-to-select body: for pencil/marker, only instant-select when Shift or Ctrl
+        // is held, OR when a multi-selection already exists (so the user can drag the group
+        // without holding a modifier — same behavior as all other tools).
+        // Ctrl acts as an explicit "interact with annotations" modifier — no delay.
         // Text tool: use instant-select when Shift is held (multi-select) or when clicking
         // on an already-selected annotation (allows multi-drag).
         let shiftHeld = NSEvent.modifierFlags.contains(.shift)
+        let ctrlHeld = NSEvent.modifierFlags.contains(.control)
+        let pencilHasMultiSelection = isPencilOrMarker && selectedAnnotations.count > 1
         let textHasSelection = currentTool == .text && !selectedAnnotations.isEmpty
         let useInstantSelect = currentTool != .colorSampler
             && (currentTool != .text || shiftHeld || textHasSelection)
-            && (!isPencilOrMarker || shiftHeld)
+            && (!isPencilOrMarker || shiftHeld || ctrlHeld || pencilHasMultiSelection)
         if useInstantSelect {
             if let clicked = annotations.reversed().first(where: { $0.isMovable && $0.hitTest(point: point) }) {
                 shiftClickPendingDeselect = nil
@@ -6310,6 +6314,15 @@ class OverlayView: NSView {
                 needsDisplay = true
                 return
             }
+        }
+
+        // Ctrl+click on empty space — start lasso marquee selection
+        if ctrlHeld {
+            isLassoSelecting = true
+            lassoStart = point
+            lassoRect = .zero
+            needsDisplay = true
+            return
         }
 
         // Pencil/marker without Shift: start a long-press timer. If the user holds
@@ -6349,15 +6362,6 @@ class OverlayView: NSView {
                     }
                 }
             }
-        }
-
-        // Ctrl+click on empty space — start lasso marquee selection
-        if NSEvent.modifierFlags.contains(.control) {
-            isLassoSelecting = true
-            lassoStart = point
-            lassoRect = .zero
-            needsDisplay = true
-            return
         }
 
         // Clicking empty space — clear selection and start new annotation
