@@ -1397,9 +1397,11 @@ class OverlayView: NSView {
             let editorDrawnFromCache = (self as? EditorView)?.drewFromCompositeCache ?? false
 
             if !editorDrawnFromCache {
-                // Fast path: when not actively drawing, use a cached transparent image
-                // of all committed annotations instead of iterating them each frame.
-                if !isActivelyDrawing && !annotations.isEmpty && !isEditorMode {
+                // Use cached annotation layer whenever possible — even during active
+                // drawing. Committed annotations don't change while a new stroke is
+                // being drawn, so re-iterating them every frame wastes CPU and causes
+                // event coalescing (fewer mouse events → over-smoothed strokes).
+                if !annotations.isEmpty && !isEditorMode {
                     if (isDraggingAnnotation || isResizingAnnotation || isRotatingAnnotation),
                        let staticLayer = cachedAnnotationLayerExcludingSelected {
                         // During drag/resize: draw cached static annotations + selected ones live
@@ -1415,7 +1417,8 @@ class OverlayView: NSView {
                         applyCanvasTransform(to: context)
                         layer.draw(in: bounds, from: .zero, operation: .sourceOver, fraction: 1.0)
                     }
-                } else {
+                } else if !annotations.isEmpty {
+                    // Editor mode: no annotation layer cache, draw individually.
                     // Draw translate overlays clipped to selection (they must stay inside).
                     context.saveGraphicsState()
                     applyCanvasTransform(to: context)

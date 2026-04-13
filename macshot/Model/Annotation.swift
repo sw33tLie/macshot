@@ -645,10 +645,10 @@ class Annotation {
             color.withAlphaComponent(1.0).setFill()
 
             // Map raw pressure (0–1) to a usable width range:
-            // - Minimum 30% of stroke width even at lightest touch
+            // - Minimum 20% of stroke width even at lightest touch
             // - Power curve (0.6) compresses the range so light/medium pressure
             //   differences are subtle, heavy pressure stands out
-            let minFraction: CGFloat = 0.3
+            let minFraction: CGFloat = 0.2
             func pressureWidth(_ p: CGFloat) -> CGFloat {
                 let mapped = minFraction + pow(min(max(p, 0), 1), 0.6) * (1.0 - minFraction)
                 return max(width * mapped, 0.5)
