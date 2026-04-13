@@ -4448,7 +4448,15 @@ class OverlayView: NSView {
         let point = convert(event.locationInWindow, from: nil)
         // Update pressure for tablet/Sidecar (0.0 for non-tablet events → treat as 1.0)
         let p = event.pressure
+        #if PRESSURE_EMULATION
+        // Debug: simulate pressure from mouse speed. Slow = heavy (1.0), fast = light (0.2).
+        // Uses deltaX/deltaY from the event to compute instantaneous speed.
+        let speed = hypot(event.deltaX, event.deltaY)
+        let simulated = max(0.2, min(1.0, 1.0 - speed / 40.0))
+        currentPressure = simulated
+        #else
         currentPressure = p > 0 ? CGFloat(p) : 1.0
+        #endif
 
         // Auto-measure: click to commit the preview annotation
         if autoMeasureKeyHeld, let preview = autoMeasurePreview {
@@ -5092,7 +5100,12 @@ class OverlayView: NSView {
                     spaceRepositionLast = canvasPoint
                 } else {
                     let p = event.pressure
+                    #if PRESSURE_EMULATION
+                    let speed = hypot(event.deltaX, event.deltaY)
+                    currentPressure = max(0.2, min(1.0, 1.0 - speed / 40.0))
+                    #else
                     currentPressure = p > 0 ? CGFloat(p) : 1.0
+                    #endif
                     updateAnnotation(
                         at: canvasPoint, shiftHeld: event.modifierFlags.contains(.shift))
                 }
