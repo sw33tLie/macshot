@@ -4,32 +4,13 @@
         <title>macshot</title>
         <link>https://github.com/sw33tLie/macshot</link>
         <description>macshot updates</description>
-<item xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
-    <title>v4.0.3</title>
-    <pubDate>Fri, 10 Apr 2026 18:34:30 +0000</pubDate>
-    <sparkle:version>32</sparkle:version>
-    <sparkle:shortVersionString>4.0.3</sparkle:shortVersionString>
+<item>
+    <title>v4.0.4</title>
+    <pubDate>Mon, 13 Apr 2026 01:42:48 +0000</pubDate>
+    <sparkle:version>35</sparkle:version>
+    <sparkle:shortVersionString>4.0.4</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
 
-    <description>
-      &lt;style&gt;
-        body { font-family: -apple-system, sans-serif; font-size: 13px; padding: 12px; }
-        h3 { font-size: 14px; margin: 12px 0 6px 0; }
-        h3:first-child { margin-top: 0; }
-        ul { padding-left: 18px; margin: 4px 0; }
-        li { margin: 4px 0; line-height: 1.5; }
-      &lt;/style&gt;
-      &lt;h3&gt;Added&lt;/h3&gt;&lt;ul&gt; &lt;li&gt;&lt;b&gt;Text formatting on selected annotations&lt;/b&gt; — font size, bold, italic, underline, strikethrough, font family, alignment, background, and outline controls now work on selected text annotations without entering edit mode.&lt;/li&gt;  &lt;/ul&gt;&lt;h3&gt;Fixed&lt;/h3&gt;&lt;ul&gt; &lt;li&gt;&lt;b&gt;Pen pressure sensitivity&lt;/b&gt; — light touch now gives 30%–100% of stroke width (was 0%–100%), power curve reduces drastic variation, pressure smoothing no longer over-averages, and cursor preview dot no longer flickers with pressure changes.&lt;/li&gt; &lt;li&gt;&lt;b&gt;Drawing color resets to red&lt;/b&gt; — color and opacity now persist across captures and app launches.&lt;/li&gt; &lt;li&gt;&lt;b&gt;Text shifts left and reflows on commit&lt;/b&gt; — NSTextView's default `lineFragmentPadding` was making editing width narrower than the snapshot, causing position shift and word reflow.&lt;/li&gt; &lt;li&gt;&lt;b&gt;Multi-line text clipped after commit&lt;/b&gt; — scrollView frame wasn't resized to fit content before snapshotting.&lt;/li&gt; &lt;li&gt;&lt;b&gt;Toolbar color swatch not updating&lt;/b&gt; — color changes from any source (eyedropper, picker, color wheel) now immediately update the toolbar preview.&lt;/li&gt; &lt;li&gt;&lt;b&gt;Toolbar doesn't reflect selected text formatting&lt;/b&gt; — selecting a text annotation now loads its actual font size, bold, italic, etc. into the toolbar controls.&lt;/li&gt; &lt;li&gt;&lt;b&gt;Annotation resize lag&lt;/b&gt; — expensive CIFilter outline glow was regenerating every frame during resize. Now draws a simple stroke rect during resize.&lt;/li&gt; &lt;li&gt;&lt;b&gt;Upload history layout&lt;/b&gt; — rows now stretch to full width in Settings.&lt;/li&gt; &lt;li&gt;&lt;b&gt;Annotation control button styles&lt;/b&gt; — edit (pencil) and rotation buttons now match the delete button style: dark fill, accent border, bold white icon.&lt;/li&gt; &lt;li&gt;&lt;b&gt;Recording HUD disappears when closing old video editor&lt;/b&gt; — app no longer hides while recording is active.&lt;/li&gt; &lt;li&gt;&lt;b&gt;Rotation handle icon off-center&lt;/b&gt; — switched to symmetric symbol with sub-pixel alignment correction.&lt;/li&gt;&lt;/ul&gt;
-    </description>
-    <enclosure url="https://github.com/sw33tLie/macshot/releases/download/v4.0.3/MacShot.dmg" length="5938740" type="application/octet-stream" sparkle:edSignature="BGC8P7ltzqUeFQZ+7Ktw54uq+mj8Cz9SsLs4JNfdtfKRiKCoQ+62NkPxq1WAowi65YqqSgP3is8H94lejKEOAw==" />
-</item>
-<item>
-    <title>v4.0.4-beta.2</title>
-    <pubDate>Sat, 11 Apr 2026 18:03:11 +0000</pubDate>
-    <sparkle:version>34</sparkle:version>
-    <sparkle:shortVersionString>4.0.4-beta.2</sparkle:shortVersionString>
-    <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
-    <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
       <style>
         body { font-family: -apple-system, sans-serif; font-size: 13px; padding: 12px; }
@@ -38,13 +19,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Added</h3><ul> <li><b>Customizable toolbar background color</b> — new "Background color" setting in Preferences > Appearance. All toolbar text, icons, borders, and system controls adapt to stay readable on any background.</li> <li><b>Adaptive toolbar appearance</b> — toolbar and popovers automatically switch between light and dark AppKit appearance based on background brightness.</li>  </ul><h3>Fixed</h3><ul> <li><b>Global hotkeys stop working after closing editor</b> — `NSApp.hide(nil)` could suspend the Carbon event loop; replaced with cooperative focus transfer.</li> <li><b>Window snap highlight not showing on overlay appear</b> — snap query now runs immediately at the mouse position instead of waiting for mouse movement. (PR #100, thanks @TimFang4162)</li>  </ul><h3>Changed</h3><ul> <li><b>Lasso selection moved to Ctrl+drag</b> — frees Shift for line/shape constraining without timing conflicts.</li> <li><b>Stamp quick bar trimmed</b> — removed less common emojis (edit, lock, lightning, pin) from the quick bar; still accessible via the emoji picker.</li> <li><b>Translations</b> — added "Background color:" and "Play sound on capture" across all 40 locales.</li></ul>
+      <h3>Added</h3><ul> <li><b>Customizable toolbar background color</b> — new "Background color" setting in Preferences > Appearance. All toolbar text, icons, borders, and system controls adapt to stay readable on any background.</li> <li><b>Adaptive toolbar appearance</b> — toolbar and popovers automatically switch between light and dark AppKit appearance based on background brightness.</li> <li><b>Export dimensions dropdown</b> — scale down recordings before saving (Original, 75%, 50%, 33%, 25%). Applied at export time; recordings always capture at full resolution.</li> <li><b>Estimated export file size</b> — shows estimated output size in the video editor when trim, scale, or format change would affect the result.</li>  </ul><h3>Fixed</h3><ul> <li><b>Multi-line text clipped after commit</b> — text snapshot now uses the same measurement as the rendering engine, preventing the last line from being cut off at non-default font sizes.</li> <li><b>Ctrl+lasso broken in pencil mode</b> — Ctrl now enables instant annotation selection in pencil mode (no long-press delay). Multi-selections can be dragged without holding Ctrl, matching all other tools.</li> <li><b>Pen pressure over-smoothing after many strokes</b> — committed annotations are now drawn from a cached bitmap during active drawing, preventing progressive frame time degradation that caused macOS to coalesce tablet events and reduce stroke fidelity.</li> <li><b>Pen pressure range</b> — light touch now gives 20–100% of stroke width (was 30–100%) for finer control.</li> <li><b>Apple Translation language list empty on first use</b> — the Translation framework can return stale results at launch; empty results are no longer cached, so the language picker retries on next open.</li> <li><b>Global hotkeys stop working after closing editor</b> — `NSApp.hide(nil)` could suspend the Carbon event loop; replaced with cooperative focus transfer.</li> <li><b>Window snap highlight not showing on overlay appear</b> — snap query now runs immediately at the mouse position instead of waiting for mouse movement. (PR #100, thanks @TimFang4162)</li> <li><b>Smoother refined pencil stroke tails</b> — end of refined strokes no longer has an abrupt straight segment.</li> <li><b>Cursor flicker after finishing a stroke</b> — the annotation cache is now incrementally updated on commit instead of rebuilt from scratch.</li> <li><b>Video editor bottom bar overlap</b> — left-side info gracefully hides when the window is narrow instead of overlapping action buttons.</li> <li><b>Timeline thumbnail seams</b> — sub-pixel gaps between thumbnail tiles eliminated.</li>  </ul><h3>Changed</h3><ul> <li><b>Lasso selection moved to Ctrl+drag</b> — frees Shift for line/shape constraining without timing conflicts.</li> <li><b>Video editor minimum width</b> increased to 820px to ensure all controls fit.</li></ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v4.0.4-beta.2/MacShot.dmg"
-        length="5944655"
+        url="https://github.com/sw33tLie/macshot/releases/download/v4.0.4/MacShot.dmg"
+        length="5940423"
         type="application/octet-stream"
-        sparkle:edSignature="SRGFIWe1VPZDTxI47baDK6TpTkRvMLKJzIAEscoaxw9J/NWs2rtktGptTjJqDXC3KUl4QV6GDpq7pNjtKkIgCA=="
+        sparkle:edSignature="Bcj1UKJt6ByGyOk28g/M7CFxKiId+FvNsHSxUXlcv0BiHEBmpSSJ4/S3yPCIcLQpOhZzLZ9ADN9OsV4Q2qgRBw=="
     />
 </item>
     </channel>
