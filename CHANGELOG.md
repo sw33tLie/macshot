@@ -1,5 +1,10 @@
 # Changelog
 
+## [4.0.5-beta.1] - 2026-04-14
+
+### Fixed
+- **Color dithering in pinned images and editor window** — macOS's window compositor applies ordered dithering to layer content rendered via `draw()`, altering pixel values in solid-color areas (e.g. `#111D2F` becomes an alternating pattern of `#121D2F`, `#101D2E`, `#131D2D`). This was visible when re-capturing pinned screenshots or the editor window with the overlay. Fixed by disabling the `AutomaticAppKit` layer content format in favor of explicit `RGBA8`, ensuring pixel-perfect color reproduction.
+
 ## [4.0.4] - 2026-04-13
 
 ### Added
