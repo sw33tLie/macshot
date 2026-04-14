@@ -24,10 +24,10 @@
     <enclosure url="https://github.com/sw33tLie/macshot/releases/download/v4.0.4/MacShot.dmg" length="5940423" type="application/octet-stream" sparkle:edSignature="Bcj1UKJt6ByGyOk28g/M7CFxKiId+FvNsHSxUXlcv0BiHEBmpSSJ4/S3yPCIcLQpOhZzLZ9ADN9OsV4Q2qgRBw==" />
 </item>
 <item>
-    <title>v4.0.5-beta.5</title>
-    <pubDate>Tue, 14 Apr 2026 16:51:09 +0000</pubDate>
-    <sparkle:version>40</sparkle:version>
-    <sparkle:shortVersionString>4.0.5-beta.5</sparkle:shortVersionString>
+    <title>v4.0.5-beta.6</title>
+    <pubDate>Tue, 14 Apr 2026 17:35:32 +0000</pubDate>
+    <sparkle:version>41</sparkle:version>
+    <sparkle:shortVersionString>4.0.5-beta.6</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
     <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
@@ -38,13 +38,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Added</h3><ul> <li><b>DMG drag-to-install layout</b> — DMG now shows app icon + Applications folder with arrow background, matching the standard macOS install experience.</li> <li><b>Move to Applications prompt</b> — when launched from a DMG or translocated path, offers to copy the app to /Applications with one click.</li> <li><b>Duplicate instance alert</b> — shows a message instead of silently quitting when macshot is already running.</li>  </ul><h3>Fixed</h3><ul> <li><b>Saved screenshots have wrong colors on multi-monitor setups</b> — the save pipeline was converting Display P3 pixels to sRGB, shifting colors on mixed-colorspace setups (P3 built-in + sRGB external). Now embeds the native display color profile without altering pixel values. Removed the "Embed sRGB color profile" toggle — native profile is always embedded.</li> <li><b>GIF export crash on longer recordings</b> — `CGImageDestinationFinalize` read freed pixel buffer memory (use-after-free) because `alwaysCopiesSampleData=false` allowed buffer recycling. Each frame's pixels are now copied into an owned context immediately.</li> <li><b>GIF export freezes the UI</b> — switched from Swift concurrency `Task.detached` (cooperative thread pool shares threads with the main actor) to GCD `.background` queue (real kernel thread that macOS deprioritizes).</li> <li><b>GIF export shows no progress</b> — "Processing GIF…" status now persists with a percentage indicator (0–50% during frame reading, then 100% after finalize).</li> <li><b>Focus not returning to previous app</b> — `dismissOverlays` in `startCapture` was consuming `previousApp` before the new capture started, so focus couldn't be returned after the capture finished.</li> <li><b>Text tool can't select other annotations</b> — clicking an arrow/rectangle while in text mode now selects it instead of requiring a tool switch.</li> <li><b>Text annotation bounding box too wide</b> — width now shrinks to fit the actual text content on commit instead of keeping the original drag width. Fixed single-character minimum width.</li> <li><b>Multi-select conflicts with Shift constraining</b> — multi-select moved from Shift+click to Ctrl+click, consistent with Ctrl+drag for lasso. Shift is now purely for angle/shape constraining.</li>  </ul><h3>Changed</h3><ul> <li><b>Faster first capture</b> — Core Animation/Metal pipeline pre-warmed at app launch. ScreenCaptureKit content cache no longer bypassed on every capture.</li></ul>
+      <h3>Fixed</h3><ul> <li><b>Capture speed dramatically improved</b> — ScreenCaptureKit content cache now persists indefinitely (only refreshes on monitor connect/disconnect). Eliminates the 200–500ms window enumeration delay on every capture. Concurrent callers share a single in-flight request instead of making duplicate XPC calls.</li> <li><b>Floating thumbnails appearing in screenshots</b> — added 50ms delay after hiding thumbnails so the window server finishes compositing before capture.</li></ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v4.0.5-beta.5/MacShot.dmg"
-        length="5367682"
+        url="https://github.com/sw33tLie/macshot/releases/download/v4.0.5-beta.6/MacShot.dmg"
+        length="5366047"
         type="application/octet-stream"
-        sparkle:edSignature="PacckeoHODMH06Sc8mWBDzFh4wW8wGNlM2Bw4KwWOfptnmEQQMJYb7tFnfsEeSi2JthEgdIlmSU4fYXzpaieCg=="
+        sparkle:edSignature="KHjaWWH1gxYxQbduiDR4gV7L+Z0UjsCgD8bckb1oxEroF49bCciRjaWvJk8VvYVScTRUeCTkCKk6Nus5QGoNCw=="
     />
 </item>
     </channel>
