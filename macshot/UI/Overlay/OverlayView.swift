@@ -265,7 +265,7 @@ class OverlayView: NSView {
     private var isDraggingAnnotation: Bool = false
     private var didMoveAnnotation: Bool = false
     private var annotationDragStart: NSPoint = .zero
-    /// When shift+clicking an already-selected annotation, defer the deselect
+    /// When ctrl+clicking an already-selected annotation, defer the deselect
     /// to mouseUp so the user can still drag the full multi-selection.
     private weak var shiftClickPendingDeselect: Annotation?
     /// Lasso selection: Ctrl+drag on empty space draws a marquee rectangle.
@@ -5256,7 +5256,7 @@ class OverlayView: NSView {
                 lassoRect = .zero
                 needsDisplay = true
             } else if isDraggingAnnotation {
-                // Deferred shift+click deselect: only remove the annotation if
+                // Deferred ctrl+click deselect: only remove the annotation if
                 // the user didn't drag (i.e. it was a click, not a move).
                 if let pending = shiftClickPendingDeselect {
                     shiftClickPendingDeselect = nil
@@ -6296,37 +6296,36 @@ class OverlayView: NSView {
             }
         }
 
-        // Click-to-select body: for pencil/marker, only instant-select when Shift or Ctrl
-        // is held, OR when a multi-selection already exists (so the user can drag the group
-        // without holding a modifier — same behavior as all other tools).
-        // Ctrl acts as an explicit "interact with annotations" modifier — no delay.
-        // Text tool: allow selecting non-text annotations on click (so you can
-        // grab an arrow/rect while in text mode). Only skip instant-select when
-        // clicking empty space (where a new text box should be created).
-        let shiftHeld = NSEvent.modifierFlags.contains(.shift)
+        // Click-to-select body: Ctrl+click adds/removes from multi-selection
+        // (consistent with Ctrl+drag for lasso). Shift is reserved for angle/shape
+        // constraining during drawing.
+        // For pencil/marker, only instant-select when Ctrl is held or a multi-selection
+        // already exists (so the user can drag the group without a modifier).
+        // Text tool: allow selecting annotations on click; only skip instant-select
+        // when clicking empty space (where a new text box should be created).
         let ctrlHeld = NSEvent.modifierFlags.contains(.control)
         let pencilHasMultiSelection = isPencilOrMarker && selectedAnnotations.count > 1
         let textHitsAnnotation = currentTool == .text
             && annotations.reversed().contains(where: { $0.isMovable && $0.hitTest(point: point) })
         let useInstantSelect = currentTool != .colorSampler
-            && (currentTool != .text || shiftHeld || textHitsAnnotation)
-            && (!isPencilOrMarker || shiftHeld || ctrlHeld || pencilHasMultiSelection)
+            && (currentTool != .text || ctrlHeld || textHitsAnnotation)
+            && (!isPencilOrMarker || ctrlHeld || pencilHasMultiSelection)
         if useInstantSelect {
             if let clicked = annotations.reversed().first(where: { $0.isMovable && $0.hitTest(point: point) }) {
                 shiftClickPendingDeselect = nil
-                if shiftHeld {
+                if ctrlHeld {
                     if isSelected(clicked) {
                         // Defer deselect to mouseUp — allows dragging the full
-                        // multi-selection even when shift+clicking a selected item.
+                        // multi-selection even when ctrl+clicking a selected item.
                         shiftClickPendingDeselect = clicked
                     } else {
                         selectedAnnotations.append(clicked)
                     }
                 } else if !isSelected(clicked) {
-                    // Not Shift, not already selected: replace selection
+                    // Not Ctrl, not already selected: replace selection
                     selectedAnnotation = clicked
                 }
-                // If already selected without Shift: keep current selection (allows multi-drag)
+                // If already selected without Ctrl: keep current selection (allows multi-drag)
                 isDraggingAnnotation = true
                 didMoveAnnotation = false
                 annotationDragStart = point
@@ -6347,10 +6346,10 @@ class OverlayView: NSView {
             return
         }
 
-        // Pencil/marker without Shift: start a long-press timer. If the user holds
+        // Pencil/marker without Ctrl: start a long-press timer. If the user holds
         // still for 300ms on an annotation, select it. Otherwise drawing starts
         // normally (the timer is cancelled in mouseDragged when movement exceeds 3px).
-        if isPencilOrMarker && !shiftHeld {
+        if isPencilOrMarker && !ctrlHeld {
             let hasAnnotationUnder = annotations.reversed().contains(where: { $0.isMovable && $0.hitTest(point: point) })
             if hasAnnotationUnder {
                 longPressPoint = point
@@ -6363,7 +6362,7 @@ class OverlayView: NSView {
                     // Select the annotation under the long-press point
                     if let clicked = self.annotations.reversed().first(where: { $0.isMovable && $0.hitTest(point: point) }) {
                         self.shiftClickPendingDeselect = nil
-                        if NSEvent.modifierFlags.contains(.shift) {
+                        if NSEvent.modifierFlags.contains(.control) {
                             if self.isSelected(clicked) {
                                 self.shiftClickPendingDeselect = clicked
                             } else {
