@@ -567,20 +567,28 @@ extension OverlayWindowController: OverlayViewDelegate {
         let croppedImage: NSImage? =
             overlayDelegate?.overlayCrossScreenImage(self)
             ?? {
-                guard let src = view.screenshotImage,
-                      let srcCG = src.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
-                // Pixel-perfect crop via CGImage.cropping() — no color space
-                // conversion, no draw pipeline, just a sub-image reference.
+                guard let src = view.screenshotImage else { return nil }
+                // Render the crop into a concrete 8-bit bitmap now, so the editor
+                // doesn't hit a 16-bit float conversion on first draw.
                 let scale = view.window?.backingScaleFactor ?? 2.0
-                let imgH = CGFloat(srcCG.height) / scale
-                // CGImage uses top-left origin; sel is in AppKit bottom-left coords.
-                let cropRect = CGRect(
-                    x: sel.origin.x * scale,
-                    y: (imgH - sel.origin.y - sel.height) * scale,
-                    width: sel.width * scale,
-                    height: sel.height * scale)
-                guard let cropped = srcCG.cropping(to: cropRect) else { return nil }
-                return NSImage(cgImage: cropped, size: sel.size)
+                let pxW = Int(sel.width * scale)
+                let pxH = Int(sel.height * scale)
+                let cs = CGColorSpaceCreateDeviceRGB()
+                let bitmapInfo = CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue
+                guard let ctx = CGContext(
+                    data: nil, width: pxW, height: pxH,
+                    bitsPerComponent: 8, bytesPerRow: pxW * 4,
+                    space: cs, bitmapInfo: bitmapInfo
+                ) else { return nil }
+                let gctx = NSGraphicsContext(cgContext: ctx, flipped: false)
+                NSGraphicsContext.saveGraphicsState()
+                NSGraphicsContext.current = gctx
+                src.draw(
+                    in: NSRect(origin: .zero, size: NSSize(width: pxW, height: pxH)),
+                    from: sel, operation: .copy, fraction: 1.0)
+                NSGraphicsContext.restoreGraphicsState()
+                guard let cgImage = ctx.makeImage() else { return nil }
+                return NSImage(cgImage: cgImage, size: sel.size)
             }()
         guard let image = croppedImage else { return }
 

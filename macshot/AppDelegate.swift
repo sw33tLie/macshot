@@ -70,18 +70,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             setMenuBarIconVisible(false)
         }
         registerHotkey()
-        // Pre-warm ScreenCaptureKit so the first capture isn't slow.
-        // Cache persists until display configuration changes (monitor connect/disconnect).
-        ScreenCaptureManager.registerDisplayChangeHandler()
-        ScreenCaptureManager.prewarm()
-        // Pre-warm Core Animation / Metal pipeline so the first fullscreen
-        // overlay window doesn't stall ~500ms on CA::Transaction::commit.
-        let warmup = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1, height: 1),
-                              styleMask: [.borderless], backing: .buffered, defer: false)
-        warmup.isOpaque = false
-        warmup.backgroundColor = .clear
-        warmup.orderFront(nil)
-        warmup.orderOut(nil)
         // Pre-warm CoreAudio so the first capture sound doesn't stall ~1s.
         if let sound = Self.captureSound {
             sound.volume = 0
@@ -567,18 +555,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // Clean up stale overlays without consuming previousApp — we just set it.
         dismissOverlays(refocusPreviousApp: false)
 
-        // Hide floating thumbnails and flush the window server composition
-        // so they don't appear in the captured screenshot.
+        // Hide floating thumbnails so they don't visually flash on the overlay.
+        // They're also excluded via ScreenCaptureKit's excludingWindows filter
+        // in performCapture() so they never appear in the captured image.
         for tc in thumbnailControllers { tc.hideWindow() }
-        CATransaction.flush()
 
         let delay = UserDefaults.standard.integer(forKey: "captureDelaySeconds")
         if delay > 0 {
             showPreCaptureCountdown(seconds: delay)
         } else {
-            // Brief delay so the window server finishes compositing thumbnail
-            // removal before the screenshot is taken.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+            DispatchQueue.main.async { [weak self] in
                 self?.performCapture()
             }
         }

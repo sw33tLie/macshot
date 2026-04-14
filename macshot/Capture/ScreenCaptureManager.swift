@@ -12,53 +12,24 @@ class ScreenCaptureManager {
 
     /// Cached shareable content to avoid repeated (slow) enumeration.
     private static var cachedContent: SCShareableContent?
-    private static var displayConfigChanged = true
+    private static var cachedContentTime: Date = .distantPast
+    /// Cache is valid for 2 seconds — long enough to survive the hotkey→capture gap,
+    /// short enough that display changes are picked up.
+    private static let cacheTTL: TimeInterval = 2.0
 
-    /// Register for display reconfiguration notifications to invalidate cache
-    /// only when monitors are connected/disconnected. Called once at app launch.
-    static func registerDisplayChangeHandler() {
-        CGDisplayRegisterReconfigurationCallback(displayReconfigCallback, nil)
-    }
-
-    private static let displayReconfigCallback: CGDisplayReconfigurationCallBack = { displayID, flags, _ in
-        if flags.contains(.addFlag) || flags.contains(.removeFlag) ||
-           flags.contains(.enabledFlag) || flags.contains(.disabledFlag) {
-            ScreenCaptureManager.displayConfigChanged = true
-            ScreenCaptureManager.cachedContent = nil
-        }
-    }
-
-    /// In-flight fetch task — shared so concurrent callers (prewarm + capture)
-    /// await the same XPC call instead of making duplicate requests.
-    private static var fetchTask: Task<SCShareableContent, Error>?
-
-    /// Fetch shareable content, using a persistent cache that only invalidates
-    /// when display configuration changes (monitor connect/disconnect).
-    /// The cached data is only used to resolve displays for the capture filter —
-    /// actual screenshot pixels are always fresh from SCScreenshotManager.
-    /// If a fetch is already in flight (e.g. from prewarm), callers join it
-    /// instead of starting a second XPC call.
+    /// Fetch shareable content, using a short-lived cache to avoid redundant enumeration.
     private static func shareableContent() async throws -> SCShareableContent {
-        if let cached = cachedContent, !displayConfigChanged {
+        if let cached = cachedContent, Date().timeIntervalSince(cachedContentTime) < cacheTTL {
             return cached
         }
-        // Join in-flight fetch if one exists (prevents duplicate XPC calls
-        // when prewarm and capture race on first launch)
-        if let existing = fetchTask {
-            return try await existing.value
-        }
-        let task = Task {
-            let content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: true)
-            cachedContent = content
-            displayConfigChanged = false
-            fetchTask = nil
-            return content
-        }
-        fetchTask = task
-        return try await task.value
+        let content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: true)
+        cachedContent = content
+        cachedContentTime = Date()
+        return content
     }
 
-    /// Pre-warm the shareable content cache so the first capture is instant.
+    /// Pre-warm the shareable content cache so the next capture is instant.
+    /// Call this when the menu bar opens or a hotkey is pressed — before the actual capture starts.
     static func prewarm() {
         Task {
             _ = try? await shareableContent()
@@ -68,7 +39,15 @@ class ScreenCaptureManager {
     static func captureAllScreens(excludingWindowNumbers: [CGWindowID] = [], completion: @escaping ([ScreenCapture]) -> Void) {
         Task {
             do {
-                let content = try await shareableContent()
+                // When excluding windows, fetch fresh content so newly-created
+                // windows (e.g. thumbnails spawned after the cache was built) are
+                // present in the window list and can actually be excluded.
+                let content: SCShareableContent
+                if !excludingWindowNumbers.isEmpty {
+                    content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: true)
+                } else {
+                    content = try await shareableContent()
+                }
                 let displays = content.displays
                 let screens = NSScreen.screens
 
@@ -111,6 +90,10 @@ class ScreenCaptureManager {
                                 let cpuImage = Self.copyTo8BitBGRA(image) ?? image
                                 return ScreenCapture(screen: screen, image: cpuImage)
                             } else {
+                                // macOS 12.3–13.x: use CGWindowListCreateImage which returns
+                                // a CGImage directly — no pixel buffer format ambiguity.
+                                // Convert the AppKit screen frame (bottom-left origin) to the
+                                // CGDisplay coordinate space (top-left origin) for the capture rect.
                                 let mainHeight = NSScreen.screens.first?.frame.height ?? screen.frame.height
                                 let cgRect = CGRect(
                                     x: screen.frame.origin.x,
