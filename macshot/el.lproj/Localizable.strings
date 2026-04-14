@@ -20,6 +20,7 @@
 "Capture OCR" = "Λήψη OCR";
 "Quick Capture" = "Γρήγορη λήψη";
 "Scroll Capture" = "Λήψη με κύλιση";
+"Capture Last Area" = "Λήψη τελευταίας περιοχής";
 "Capture Delay" = "Καθυστέρηση λήψης";
 "None" = "Καμία";
 "%d seconds" = "%d δευτερόλεπτα";
@@ -183,7 +184,6 @@
 "Capture" = "Λήψη";
 "Play sound on capture" = "Αναπαραγωγή ήχου κατά τη λήψη";
 "Play sound on copy" = "Αναπαραγωγή ήχου κατά την αντιγραφή";
-"Remember last selection area" = "Απομνημόνευση τελευταίας περιοχής επιλογής";
 "Remember last selected tool" = "Απομνημόνευση τελευταίου επιλεγμένου εργαλείου";
 "Show floating thumbnail after capture" = "Εμφάνιση αιωρούμενης μικρογραφίας μετά τη λήψη";
 "Launch at login" = "Εκκίνηση κατά τη σύνδεση";

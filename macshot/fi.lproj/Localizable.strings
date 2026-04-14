@@ -20,6 +20,7 @@
 "Capture OCR" = "Kaappaa OCR";
 "Quick Capture" = "Pikakaappaus";
 "Scroll Capture" = "Vierityskaappaus";
+"Capture Last Area" = "Kaappaa viimeinen alue";
 "Capture Delay" = "Kaappausviive";
 "None" = "Ei mitaan";
 "%d seconds" = "%d sekuntia";
@@ -183,7 +184,6 @@
 "Capture" = "Kaappaus";
 "Play sound on capture" = "Toista ääni kaappauksessa";
 "Play sound on copy" = "Toista aani kopioitaessa";
-"Remember last selection area" = "Muista viimeisin valinta-alue";
 "Remember last selected tool" = "Muista viimeksi valittu tyokalu";
 "Show floating thumbnail after capture" = "Nayta kelluva pienoiskuva kaappauksen jalkeen";
 "Launch at login" = "Kaynnista kirjautumisen yhteydessa";

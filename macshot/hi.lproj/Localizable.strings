@@ -20,6 +20,7 @@
 "Capture OCR" = "OCR कैप्चर करें";
 "Quick Capture" = "त्वरित कैप्चर";
 "Scroll Capture" = "स्क्रॉल कैप्चर";
+"Capture Last Area" = "अंतिम क्षेत्र कैप्चर करें";
 "Capture Delay" = "कैप्चर विलंब";
 "None" = "कोई नहीं";
 "%d seconds" = "%d सेकंड";
@@ -183,7 +184,6 @@
 "Capture" = "कैप्चर";
 "Play sound on capture" = "कैप्चर पर ध्वनि चलाएं";
 "Play sound on copy" = "कॉपी पर ध्वनि बजाएँ";
-"Remember last selection area" = "अंतिम चयन क्षेत्र याद रखें";
 "Remember last selected tool" = "अंतिम चयनित उपकरण याद रखें";
 "Show floating thumbnail after capture" = "कैप्चर के बाद फ़्लोटिंग थंबनेल दिखाएँ";
 "Launch at login" = "लॉगिन पर लॉन्च करें";

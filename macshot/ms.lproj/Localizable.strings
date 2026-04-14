@@ -20,6 +20,7 @@
 "Capture OCR" = "Tangkap OCR";
 "Quick Capture" = "Tangkapan Pantas";
 "Scroll Capture" = "Tangkapan Tatal";
+"Capture Last Area" = "Tangkap Kawasan Terakhir";
 "Capture Delay" = "Lengah Tangkapan";
 "None" = "Tiada";
 "%d seconds" = "%d saat";
@@ -183,7 +184,6 @@
 "Capture" = "Tangkapan";
 "Play sound on capture" = "Main bunyi semasa tangkapan";
 "Play sound on copy" = "Main bunyi semasa salin";
-"Remember last selection area" = "Ingat kawasan pilihan terakhir";
 "Remember last selected tool" = "Ingat alat pilihan terakhir";
 "Show floating thumbnail after capture" = "Tunjuk lakaran kecil terapung selepas tangkapan";
 "Launch at login" = "Lancar semasa log masuk";

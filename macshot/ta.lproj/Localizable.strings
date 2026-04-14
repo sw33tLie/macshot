@@ -20,6 +20,7 @@
 "Capture OCR" = "OCR பிடிப்பு";
 "Quick Capture" = "விரைவு பிடிப்பு";
 "Scroll Capture" = "உருள் பிடிப்பு";
+"Capture Last Area" = "கடைசி பகுதியை பிடி";
 "Capture Delay" = "பிடிப்பு தாமதம்";
 "None" = "இல்லை";
 "%d seconds" = "%d வினாடிகள்";
@@ -183,7 +184,6 @@
 "Capture" = "பிடிப்பு";
 "Play sound on capture" = "படமெடுக்கும்போது ஒலி எழுப்பு";
 "Play sound on copy" = "நகலெடுக்கும்போது ஒலி எழுப்பு";
-"Remember last selection area" = "கடைசி தேர்வுப் பகுதியை நினைவில் கொள்";
 "Remember last selected tool" = "கடைசி தேர்ந்தெடுத்த கருவியை நினைவில் கொள்";
 "Show floating thumbnail after capture" = "பிடிப்புக்குப் பிறகு மிதக்கும் சிறுபடத்தைக் காட்டு";
 "Launch at login" = "உள்நுழையும்போது தொடங்கு";

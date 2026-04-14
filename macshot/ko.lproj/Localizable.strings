@@ -20,6 +20,7 @@
 "Capture OCR" = "OCR 캡처";
 "Quick Capture" = "빠른 캡처";
 "Scroll Capture" = "스크롤 캡처";
+"Capture Last Area" = "마지막 영역 캡처";
 "Capture Delay" = "지연 캡처";
 "None" = "없음";
 "%d seconds" = "%d초";
@@ -183,7 +184,6 @@
 "Capture" = "캡처";
 "Play sound on capture" = "캡처 시 소리 재생";
 "Play sound on copy" = "복사 시 소리 재생";
-"Remember last selection area" = "마지막 선택 영역 기억";
 "Remember last selected tool" = "마지막 선택 도구 기억";
 "Show floating thumbnail after capture" = "캡처 후 플로팅 썸네일 표시";
 "Launch at login" = "로그인 시 실행";

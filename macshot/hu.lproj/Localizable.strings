@@ -20,6 +20,7 @@
 "Capture OCR" = "OCR rögzítés";
 "Quick Capture" = "Gyors rögzítés";
 "Scroll Capture" = "Görgetett rögzítés";
+"Capture Last Area" = "Utolsó terület rögzítése";
 "Capture Delay" = "Rögzítés késleltetéssel";
 "None" = "Nincs";
 "%d seconds" = "%d másodperc";
@@ -183,7 +184,6 @@
 "Capture" = "Rögzítés";
 "Play sound on capture" = "Hang lejátszása rögzítéskor";
 "Play sound on copy" = "Hang lejátszása másoláskor";
-"Remember last selection area" = "Utolsó kiválasztási terület megjegyzése";
 "Remember last selected tool" = "Utolsó kiválasztott eszköz megjegyzése";
 "Show floating thumbnail after capture" = "Lebegő bélyegkép megjelenítése rögzítés után";
 "Launch at login" = "Indítás bejelentkezéskor";

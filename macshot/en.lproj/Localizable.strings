@@ -197,7 +197,6 @@
 "Restart the app to fully apply the new language." = "Restart the app to fully apply the new language.";
 "Capture" = "Capture";
 "Play sound on capture" = "Play sound on capture";
-"Remember last selection area" = "Remember last selection area";
 "Remember last selected tool" = "Remember last selected tool";
 "Show floating thumbnail after capture" = "Show floating thumbnail after capture";
 "Launch at login" = "Launch at login";
@@ -414,6 +413,7 @@
 
 /* Hotkey Labels */
 "History" = "History";
+"Capture Last Area" = "Capture Last Area";
 
 /* Preferences - Shortcuts note */
 "Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut.";

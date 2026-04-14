@@ -20,6 +20,7 @@
 "Capture OCR" = "Заснемане OCR";
 "Quick Capture" = "Бързо заснемане";
 "Scroll Capture" = "Заснемане с превъртане";
+"Capture Last Area" = "Заснемане на последната област";
 "Capture Delay" = "Забавено заснемане";
 "None" = "Няма";
 "%d seconds" = "%d секунди";
@@ -183,7 +184,6 @@
 "Capture" = "Заснемане";
 "Play sound on capture" = "Възпроизвеждане на звук при заснемане";
 "Play sound on copy" = "Звук при копиране";
-"Remember last selection area" = "Запомняне на последната избрана област";
 "Remember last selected tool" = "Запомняне на последния избран инструмент";
 "Show floating thumbnail after capture" = "Показване на плаващ миниатюр след заснемане";
 "Launch at login" = "Стартиране при вход";

@@ -20,6 +20,7 @@
 "Capture OCR" = "OCR キャプチャ";
 "Quick Capture" = "クイックキャプチャ";
 "Scroll Capture" = "スクロールキャプチャ";
+"Capture Last Area" = "前回のエリアをキャプチャ";
 "Capture Delay" = "キャプチャ遅延";
 "None" = "なし";
 "%d seconds" = "%d 秒";
@@ -183,7 +184,6 @@
 "Capture" = "キャプチャ";
 "Play sound on capture" = "キャプチャ時にサウンドを再生";
 "Play sound on copy" = "コピー時にサウンドを再生";
-"Remember last selection area" = "前回の選択範囲を記憶";
 "Remember last selected tool" = "前回選択したツールを記憶";
 "Show floating thumbnail after capture" = "キャプチャ後にフローティングサムネイルを表示";
 "Launch at login" = "ログイン時に起動";

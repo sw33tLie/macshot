@@ -20,6 +20,7 @@
 "Capture OCR" = "จับภาพ OCR";
 "Quick Capture" = "จับภาพด่วน";
 "Scroll Capture" = "จับภาพแบบเลื่อน";
+"Capture Last Area" = "จับภาพพื้นที่ล่าสุด";
 "Capture Delay" = "หน่วงเวลาจับภาพ";
 "None" = "ไม่มี";
 "%d seconds" = "%d วินาที";
@@ -183,7 +184,6 @@
 "Capture" = "การจับภาพ";
 "Play sound on capture" = "เล่นเสียงเมื่อจับภาพ";
 "Play sound on copy" = "เล่นเสียงเมื่อคัดลอก";
-"Remember last selection area" = "จำพื้นที่เลือกล่าสุด";
 "Remember last selected tool" = "จำเครื่องมือที่เลือกล่าสุด";
 "Show floating thumbnail after capture" = "แสดงภาพขนาดย่อลอยหลังจับภาพ";
 "Launch at login" = "เปิดเมื่อเข้าสู่ระบบ";

@@ -6,6 +6,7 @@
 "Capture OCR" = "Cattura OCR";
 "Quick Capture" = "Cattura rapida";
 "Scroll Capture" = "Cattura a scorrimento";
+"Capture Last Area" = "Cattura ultima area";
 "Capture Delay" = "Ritardo cattura";
 "None" = "Nessuno";
 "%d seconds" = "%d secondi";
@@ -169,7 +170,6 @@
 "Capture" = "Cattura";
 "Play sound on capture" = "Riproduci suono alla cattura";
 "Play sound on copy" = "Riproduci suono alla copia";
-"Remember last selection area" = "Ricorda ultima area di selezione";
 "Remember last selected tool" = "Ricorda ultimo strumento selezionato";
 "Show floating thumbnail after capture" = "Mostra miniatura mobile dopo la cattura";
 "Launch at login" = "Avvia al login";

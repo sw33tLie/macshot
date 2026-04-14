@@ -285,6 +285,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         HotkeyManager.applyMenuShortcut(for: .quickCapture, to: quickCaptureItem)
         menu.addItem(quickCaptureItem)
 
+        let captureLastAreaItem = NSMenuItem(title: L("Capture Last Area"), action: #selector(captureLastArea), keyEquivalent: "")
+        captureLastAreaItem.target = self
+        captureLastAreaItem.image = NSImage(systemSymbolName: "arrow.counterclockwise.circle", accessibilityDescription: nil)
+        HotkeyManager.applyMenuShortcut(for: .captureLastArea, to: captureLastAreaItem)
+        menu.addItem(captureLastAreaItem)
+
         let scrollCaptureItem = NSMenuItem(title: L("Scroll Capture"), action: #selector(scrollCapture), keyEquivalent: "")
         scrollCaptureItem.target = self
         scrollCaptureItem.image = NSImage(systemSymbolName: "scroll", accessibilityDescription: nil)
@@ -403,6 +409,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             },
             openFromClipboard: { [weak self] in
                 DispatchQueue.main.async { self?.openImageFromClipboard() }
+            },
+            captureLastArea: { [weak self] in
+                DispatchQueue.main.async { self?.captureLastArea() }
             }
         )
     }
@@ -502,6 +511,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         pendingScrollCaptureMode = true
         startCapture(fromMenu: true)
     }
+
+    /// Open the capture overlay with the last selection area pre-applied.
+    /// If no previous selection exists, falls back to a normal capture.
+    @objc private func captureLastArea() {
+        pendingRestoreLastArea = true
+        startCapture(fromMenu: true)
+    }
+    private var pendingRestoreLastArea: Bool = false
 
     @objc private func recordArea() {
         pendingRecordMode = true
@@ -677,9 +694,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         CATransaction.flush()
         NSApp.activate(ignoringOtherApps: true)
 
-        if !pendingFullScreen && !pendingFullScreenRecord {
-            restoreLastSelectionIfNeeded(controllers: overlayControllers)
-        }
         pendingRecordMode = false
         pendingFullScreenRecordAutoStart = false
         pendingOCRMode = false
@@ -705,6 +719,25 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                     controller.setScreenshot(capture.image)
                 }
             }
+
+            // Apply last selection area if "Capture Last Area" was triggered
+            if self.pendingRestoreLastArea {
+                self.pendingRestoreLastArea = false
+                self.restoreLastSelection(controllers: self.overlayControllers)
+            }
+        }
+    }
+
+    /// Apply the stored last selection rect to the matching overlay controller.
+    private func restoreLastSelection(controllers: [OverlayWindowController]) {
+        guard let rectStr = UserDefaults.standard.string(forKey: "lastSelectionRect"),
+              let screenStr = UserDefaults.standard.string(forKey: "lastSelectionScreenFrame") else { return }
+        let savedRect = NSRectFromString(rectStr)
+        let savedScreenFrame = NSRectFromString(screenStr)
+        guard savedRect.width > 1, savedRect.height > 1 else { return }
+        for controller in controllers where controller.screen.frame == savedScreenFrame {
+            controller.applySelection(savedRect)
+            break
         }
     }
 
@@ -722,19 +755,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         return nil
     }
 
-    private func restoreLastSelectionIfNeeded(controllers: [OverlayWindowController]) {
-        guard UserDefaults.standard.bool(forKey: "rememberLastSelection") else { return }
-        guard let rectStr = UserDefaults.standard.string(forKey: "lastSelectionRect"),
-              let screenStr = UserDefaults.standard.string(forKey: "lastSelectionScreenFrame") else { return }
-        let savedRect = NSRectFromString(rectStr)
-        let savedScreenFrame = NSRectFromString(screenStr)
-        guard savedRect.width > 1, savedRect.height > 1 else { return }
-        // Apply to the controller whose screen matches the saved screen frame
-        for controller in controllers where controller.screen.frame == savedScreenFrame {
-            controller.applySelection(savedRect)
-            break
-        }
-    }
 
     @objc private func handleShowAndOpenPrefs() {
         if UserDefaults.standard.bool(forKey: "hideMenuBarIcon") {
@@ -1081,6 +1101,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         case "history":             showHistoryOverlay()
         case "settings":            openSettings()
         case "stop-recording":      stopRecording()
+        case "capture-last":        captureLastArea()
         case "open":
             if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
                let path = components.queryItems?.first(where: { $0.name == "file" })?.value {

@@ -20,6 +20,7 @@
 "Capture OCR" = "OCR-f\U00E5ngst";
 "Quick Capture" = "Snabbf\U00E5ngst";
 "Scroll Capture" = "Rullf\U00E5ngst";
+"Capture Last Area" = "Fånga senaste området";
 "Capture Delay" = "F\U00F6rdr\U00F6jning";
 "None" = "Ingen";
 "%d seconds" = "%d sekunder";
@@ -183,7 +184,6 @@
 "Capture" = "F\U00E5ngst";
 "Play sound on capture" = "Spela ljud vid skärmdump";
 "Play sound on copy" = "Spela ljud vid kopiering";
-"Remember last selection area" = "Kom ih\U00E5g senaste markeringsomr\U00E5de";
 "Remember last selected tool" = "Kom ih\U00E5g senast valt verktyg";
 "Show floating thumbnail after capture" = "Visa flytande miniatyrbild efter f\U00E5ngst";
 "Launch at login" = "Starta vid inloggning";

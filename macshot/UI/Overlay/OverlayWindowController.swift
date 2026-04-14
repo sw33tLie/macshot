@@ -233,8 +233,7 @@ class OverlayWindowController {
     }
 
     private func saveSelectionIfNeeded() {
-        guard UserDefaults.standard.bool(forKey: "rememberLastSelection"),
-            let view = overlayView, view.state == .selected,
+        guard let view = overlayView, view.state == .selected,
             view.selectionRect.width > 1, view.selectionRect.height > 1
         else { return }
         UserDefaults.standard.set(NSStringFromRect(view.selectionRect), forKey: "lastSelectionRect")

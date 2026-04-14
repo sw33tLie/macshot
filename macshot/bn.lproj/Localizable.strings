@@ -20,6 +20,7 @@
 "Capture OCR" = "OCR ক্যাপচার";
 "Quick Capture" = "দ্রুত ক্যাপচার";
 "Scroll Capture" = "স্ক্রল ক্যাপচার";
+"Capture Last Area" = "শেষ এলাকা ক্যাপচার";
 "Capture Delay" = "বিলম্বিত ক্যাপচার";
 "None" = "কিছুই না";
 "%d seconds" = "%d সেকেন্ড";
@@ -183,7 +184,6 @@
 "Capture" = "ক্যাপচার";
 "Play sound on capture" = "ক্যাপচারে শব্দ বাজান";
 "Play sound on copy" = "কপিতে শব্দ বাজান";
-"Remember last selection area" = "শেষ নির্বাচিত এলাকা মনে রাখুন";
 "Remember last selected tool" = "শেষ নির্বাচিত টুল মনে রাখুন";
 "Show floating thumbnail after capture" = "ক্যাপচারের পর ভাসমান থাম্বনেইল দেখান";
 "Launch at login" = "লগইনে চালু করুন";

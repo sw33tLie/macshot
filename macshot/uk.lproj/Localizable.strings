@@ -20,6 +20,7 @@
 "Capture OCR" = "Захоплення OCR";
 "Quick Capture" = "Швидке захоплення";
 "Scroll Capture" = "Захоплення з прокруткою";
+"Capture Last Area" = "Захопити останню область";
 "Capture Delay" = "Затримка захоплення";
 "None" = "Немає";
 "%d seconds" = "%d секунд";
@@ -183,7 +184,6 @@
 "Capture" = "Захоплення";
 "Play sound on capture" = "Відтворити звук при захопленні";
 "Play sound on copy" = "Відтворювати звук при копіюванні";
-"Remember last selection area" = "Запам'ятовувати останню область виділення";
 "Remember last selected tool" = "Запам'ятовувати останній вибраний інструмент";
 "Show floating thumbnail after capture" = "Показувати плаваючу мініатюру після захоплення";
 "Launch at login" = "Запускати при вході в систему";

@@ -20,6 +20,7 @@
 "Capture OCR" = "Zachytit OCR";
 "Quick Capture" = "Rychle zachytit";
 "Scroll Capture" = "Zachytit posunem";
+"Capture Last Area" = "Zachytit poslední oblast";
 "Capture Delay" = "Zachytit se zpozděním";
 "None" = "Žádné";
 "%d seconds" = "%d sekund";
@@ -183,7 +184,6 @@
 "Capture" = "Snímání";
 "Play sound on capture" = "Přehrát zvuk při snímání";
 "Play sound on copy" = "Přehrát zvuk při kopírování";
-"Remember last selection area" = "Zapamatovat poslední vybranou oblast";
 "Remember last selected tool" = "Zapamatovat poslední vybraný nástroj";
 "Show floating thumbnail after capture" = "Zobrazit plovoucí náhled po zachycení";
 "Launch at login" = "Spustit při přihlášení";

@@ -20,6 +20,7 @@
 "Capture OCR" = "Ta bilde for OCR";
 "Quick Capture" = "Hurtigopptak";
 "Scroll Capture" = "Rulleopptak";
+"Capture Last Area" = "Ta bilde av siste område";
 "Capture Delay" = "Forsinket opptak";
 "None" = "Ingen";
 "%d seconds" = "%d sekunder";
@@ -183,7 +184,6 @@
 "Capture" = "Opptak";
 "Play sound on capture" = "Spill lyd ved opptak";
 "Play sound on copy" = "Spill lyd ved kopiering";
-"Remember last selection area" = "Husk siste utvalgsomr\U00E5de";
 "Remember last selected tool" = "Husk siste valgte verkt\U00F8y";
 "Show floating thumbnail after capture" = "Vis flytende miniatyrbilde etter opptak";
 "Launch at login" = "Start ved innlogging";

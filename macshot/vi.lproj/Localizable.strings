@@ -20,6 +20,7 @@
 "Capture OCR" = "Chụp OCR";
 "Quick Capture" = "Chụp nhanh";
 "Scroll Capture" = "Chụp cuộn trang";
+"Capture Last Area" = "Chụp vùng cuối cùng";
 "Capture Delay" = "Chụp hẹn giờ";
 "None" = "Không";
 "%d seconds" = "%d giây";
@@ -183,7 +184,6 @@
 "Capture" = "Chụp";
 "Play sound on capture" = "Phát âm thanh khi chụp";
 "Play sound on copy" = "Phát âm thanh khi sao chép";
-"Remember last selection area" = "Nhớ vùng chọn lần trước";
 "Remember last selected tool" = "Nhớ công cụ đã chọn lần trước";
 "Show floating thumbnail after capture" = "Hiển thị ảnh thu nhỏ nổi sau khi chụp";
 "Launch at login" = "Khởi chạy khi đăng nhập";

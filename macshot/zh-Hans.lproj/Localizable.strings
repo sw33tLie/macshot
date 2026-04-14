@@ -20,6 +20,7 @@
 "Capture OCR" = "捕获 OCR";
 "Quick Capture" = "快速捕获";
 "Scroll Capture" = "滚动捕获";
+"Capture Last Area" = "捕获上次区域";
 "Capture Delay" = "延时捕获";
 "None" = "无";
 "%d seconds" = "%d 秒";
@@ -183,7 +184,6 @@
 "Capture" = "捕获";
 "Play sound on capture" = "截图时播放提示音";
 "Play sound on copy" = "拷贝时播放声音";
-"Remember last selection area" = "记住上次选择区域";
 "Remember last selected tool" = "记住上次选择的工具";
 "Show floating thumbnail after capture" = "捕获后显示浮动缩略图";
 "Launch at login" = "登录时启动";

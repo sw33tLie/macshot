@@ -20,6 +20,7 @@
 "Capture OCR" = "Snimi OCR";
 "Quick Capture" = "Brzo snimanje";
 "Scroll Capture" = "Snimanje pomicanjem";
+"Capture Last Area" = "Snimi zadnje područje";
 "Capture Delay" = "Odgoda snimanja";
 "None" = "Nema";
 "%d seconds" = "%d sekundi";
@@ -183,7 +184,6 @@
 "Capture" = "Snimanje";
 "Play sound on capture" = "Reproduciraj zvuk pri snimanju";
 "Play sound on copy" = "Reproduciraj zvuk pri kopiranju";
-"Remember last selection area" = "Zapamti zadnje podrucje odabira";
 "Remember last selected tool" = "Zapamti zadnji odabrani alat";
 "Show floating thumbnail after capture" = "Prikazi plutajucu minijaturu nakon snimanja";
 "Launch at login" = "Pokreni pri prijavi";

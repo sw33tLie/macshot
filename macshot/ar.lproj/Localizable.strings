@@ -20,6 +20,7 @@
 "Capture OCR" = "التقاط OCR";
 "Quick Capture" = "التقاط سريع";
 "Scroll Capture" = "التقاط بالتمرير";
+"Capture Last Area" = "التقاط آخر منطقة";
 "Capture Delay" = "تأخير الالتقاط";
 "None" = "بدون";
 "%d seconds" = "%d ثوانٍ";
@@ -183,7 +184,6 @@
 "Capture" = "الالتقاط";
 "Play sound on capture" = "تشغيل صوت عند الالتقاط";
 "Play sound on copy" = "تشغيل صوت عند النسخ";
-"Remember last selection area" = "تذكّر آخر منطقة تحديد";
 "Remember last selected tool" = "تذكّر آخر أداة محددة";
 "Show floating thumbnail after capture" = "عرض الصورة المصغرة العائمة بعد الالتقاط";
 "Launch at login" = "التشغيل عند تسجيل الدخول";

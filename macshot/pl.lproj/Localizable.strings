@@ -20,6 +20,7 @@
 "Capture OCR" = "Wykonaj OCR";
 "Quick Capture" = "Szybkie przechwycenie";
 "Scroll Capture" = "Przechwyć i przewiń";
+"Capture Last Area" = "Przechwyć ostatni obszar";
 "Capture Delay" = "Przechwycenie z opóźnieniem";
 "None" = "Brak";
 "%d seconds" = "%d s";
@@ -183,7 +184,6 @@
 "Capture" = "Zrzut";
 "Play sound on capture" = "Odtwórz dźwięk przy przechwyceniu";
 "Play sound on copy" = "Odtwórz dźwięk przy kopiowaniu";
-"Remember last selection area" = "Zapamiętaj ostatni obszar zaznaczenia";
 "Remember last selected tool" = "Zapamiętaj ostatnio wybrane narzędzie";
 "Show floating thumbnail after capture" = "Pokaż pływającą miniaturę po zrzucie";
 "Launch at login" = "Uruchamiaj przy logowaniu";

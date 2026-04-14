@@ -20,6 +20,7 @@
 "Capture OCR" = "לכידת OCR";
 "Quick Capture" = "לכידה מהירה";
 "Scroll Capture" = "לכידת גלילה";
+"Capture Last Area" = "לכוד אזור אחרון";
 "Capture Delay" = "השהיית לכידה";
 "None" = "ללא";
 "%d seconds" = "%d שניות";
@@ -183,7 +184,6 @@
 "Capture" = "לכידה";
 "Play sound on capture" = "השמע צליל בעת לכידה";
 "Play sound on copy" = "נגן צליל בהעתקה";
-"Remember last selection area" = "זכור אזור בחירה אחרון";
 "Remember last selected tool" = "זכור כלי שנבחר אחרון";
 "Show floating thumbnail after capture" = "הצג תמונה ממוזערת צפה לאחר לכידה";
 "Launch at login" = "הפעל בהתחברות";

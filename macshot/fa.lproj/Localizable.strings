@@ -20,6 +20,7 @@
 "Capture OCR" = "ضبط OCR";
 "Quick Capture" = "ضبط سریع";
 "Scroll Capture" = "ضبط پیمایشی";
+"Capture Last Area" = "ضبط آخرین ناحیه";
 "Capture Delay" = "تاخیر ضبط";
 "None" = "هیچ";
 "%d seconds" = "%d ثانیه";
@@ -183,7 +184,6 @@
 "Capture" = "ضبط";
 "Play sound on capture" = "پخش صدا هنگام ضبط تصویر";
 "Play sound on copy" = "پخش صدا هنگام کپی";
-"Remember last selection area" = "به خاطر سپردن آخرین ناحیه انتخابی";
 "Remember last selected tool" = "به خاطر سپردن آخرین ابزار انتخابی";
 "Show floating thumbnail after capture" = "نمایش تصویر بندانگشتی شناور پس از ضبط";
 "Launch at login" = "اجرا هنگام ورود";

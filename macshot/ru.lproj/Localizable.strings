@@ -20,6 +20,7 @@
 "Capture OCR" = "Захват OCR";
 "Quick Capture" = "Быстрый захват";
 "Scroll Capture" = "Захват прокрутки";
+"Capture Last Area" = "Захват последней области";
 "Capture Delay" = "Захват с задержкой";
 "None" = "Нет";
 "%d seconds" = "%d сек.";
@@ -183,7 +184,6 @@
 "Capture" = "Захват";
 "Play sound on capture" = "Воспроизводить звук при захвате";
 "Play sound on copy" = "Воспроизводить звук при копировании";
-"Remember last selection area" = "Запоминать последнюю область выделения";
 "Remember last selected tool" = "Запоминать последний выбранный инструмент";
 "Show floating thumbnail after capture" = "Показывать миниатюру после захвата";
 "Launch at login" = "Запускать при входе в систему";

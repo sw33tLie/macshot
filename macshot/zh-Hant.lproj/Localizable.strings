@@ -20,6 +20,7 @@
 "Capture OCR" = "擷取 OCR";
 "Quick Capture" = "快速擷取";
 "Scroll Capture" = "捲動擷取";
+"Capture Last Area" = "擷取上次區域";
 "Capture Delay" = "延遲擷取";
 "None" = "無";
 "%d seconds" = "%d 秒";
@@ -183,7 +184,6 @@
 "Capture" = "擷取";
 "Play sound on capture" = "擷取時播放提示音";
 "Play sound on copy" = "拷貝時播放音效";
-"Remember last selection area" = "記住上次的選取區域";
 "Remember last selected tool" = "記住上次選取的工具";
 "Show floating thumbnail after capture" = "擷取後顯示浮動縮圖";
 "Launch at login" = "登入時啟動";

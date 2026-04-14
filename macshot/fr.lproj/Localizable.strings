@@ -20,6 +20,7 @@
 "Capture OCR" = "Capturer OCR";
 "Quick Capture" = "Capture rapide";
 "Scroll Capture" = "Capture par défilement";
+"Capture Last Area" = "Capturer la dernière zone";
 "Capture Delay" = "Délai de capture";
 "None" = "Aucun";
 "%d seconds" = "%d secondes";
@@ -183,7 +184,6 @@
 "Capture" = "Capture";
 "Play sound on capture" = "Jouer un son lors de la capture";
 "Play sound on copy" = "Son lors de la copie";
-"Remember last selection area" = "Mémoriser la dernière zone de sélection";
 "Remember last selected tool" = "Mémoriser le dernier outil sélectionné";
 "Show floating thumbnail after capture" = "Afficher la vignette flottante après la capture";
 "Launch at login" = "Lancer au démarrage";

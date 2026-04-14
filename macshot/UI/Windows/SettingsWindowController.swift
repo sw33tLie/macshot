@@ -24,7 +24,7 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
     private var savePathField: NSTextField!
     private var ocrActionPopup: NSPopUpButton!
     private var copySoundCheckbox: NSButton!
-    private var rememberSelectionCheckbox: NSButton!
+    // rememberSelectionCheckbox removed — selection is always saved for "Capture Last Area"
     private var rememberToolCheckbox: NSButton!
     private var thumbnailCheckbox: NSButton!
     private var thumbnailAutoDismissStepper: NSStepper!
@@ -282,7 +282,6 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
 
         // Checkboxes
         copySoundCheckbox = NSButton(checkboxWithTitle: L("Play sound on capture"), target: self, action: #selector(copySoundChanged(_:)))
-        rememberSelectionCheckbox = NSButton(checkboxWithTitle: L("Remember last selection area"), target: self, action: #selector(rememberSelectionChanged(_:)))
         rememberToolCheckbox = NSButton(checkboxWithTitle: L("Remember last selected tool"), target: self, action: #selector(rememberToolChanged(_:)))
         thumbnailCheckbox = NSButton(checkboxWithTitle: L("Show floating thumbnail after capture"), target: self, action: #selector(thumbnailChanged(_:)))
         launchAtLoginCheckbox = NSButton(checkboxWithTitle: L("Launch at login"), target: self, action: #selector(launchAtLoginChanged(_:)))
@@ -290,7 +289,7 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
         captureCursorCheckbox = NSButton(checkboxWithTitle: L("Capture mouse cursor in screenshot"), target: self, action: #selector(captureCursorChanged(_:)))
         windowTitleCheckbox = NSButton(checkboxWithTitle: L("Use window title in saved filename"), target: self, action: #selector(windowTitleChanged(_:)))
 
-        for cb in [copySoundCheckbox!, rememberSelectionCheckbox!, rememberToolCheckbox!, thumbnailCheckbox!] {
+        for cb in [copySoundCheckbox!, rememberToolCheckbox!, thumbnailCheckbox!] {
             stack.addArrangedSubview(indented(cb))
             stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
         }
@@ -1631,7 +1630,7 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
         let copySound = UserDefaults.standard.object(forKey: "playCopySound") as? Bool ?? true
         copySoundCheckbox.state = copySound ? .on : .off
 
-        rememberSelectionCheckbox.state = UserDefaults.standard.bool(forKey: "rememberLastSelection") ? .on : .off
+        // rememberSelectionCheckbox removed
 
         let rememberTool = UserDefaults.standard.object(forKey: "rememberLastTool") as? Bool ?? true
         rememberToolCheckbox.state = rememberTool ? .on : .off
@@ -1778,9 +1777,6 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
     }
     @objc private func copySoundChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "playCopySound")
-    }
-    @objc private func rememberSelectionChanged(_ sender: NSButton) {
-        UserDefaults.standard.set(sender.state == .on, forKey: "rememberLastSelection")
     }
     @objc private func rememberToolChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "rememberLastTool")

@@ -20,6 +20,7 @@
 "Capture OCR" = "OCR Yakala";
 "Quick Capture" = "Hızlı Yakalama";
 "Scroll Capture" = "Kaydırmalı Yakalama";
+"Capture Last Area" = "Son Alanı Yakala";
 "Capture Delay" = "Gecikmeli Yakalama";
 "None" = "Yok";
 "%d seconds" = "%d saniye";
@@ -183,7 +184,6 @@
 "Capture" = "Yakalama";
 "Play sound on capture" = "Yakalama sırasında ses çal";
 "Play sound on copy" = "Kopyalamada ses çal";
-"Remember last selection area" = "Son seçim alanını hatırla";
 "Remember last selected tool" = "Son seçilen aracı hatırla";
 "Show floating thumbnail after capture" = "Yakalamadan sonra kayan küçük resim göster";
 "Launch at login" = "Oturum açılışında başlat";

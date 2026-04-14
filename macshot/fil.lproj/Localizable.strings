@@ -20,6 +20,7 @@
 "Capture OCR" = "Kunan ang OCR";
 "Quick Capture" = "Mabilisang Pagkuha";
 "Scroll Capture" = "Scroll Capture";
+"Capture Last Area" = "Kunin ang Huling Lugar";
 "Capture Delay" = "Pagkaantala ng Pagkuha";
 "None" = "Wala";
 "%d seconds" = "%d segundo";
@@ -183,7 +184,6 @@
 "Capture" = "Pagkuha";
 "Play sound on capture" = "Mag-play ng tunog sa pagkuha";
 "Play sound on copy" = "Magpatugtog ng tunog kapag kinopya";
-"Remember last selection area" = "Tandaan ang huling napiling lugar";
 "Remember last selected tool" = "Tandaan ang huling napiling kasangkapan";
 "Show floating thumbnail after capture" = "Ipakita ang lumulutang na thumbnail pagkatapos kumuha";
 "Launch at login" = "Buksan kapag nag-login";

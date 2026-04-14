@@ -20,6 +20,7 @@
 "Capture OCR" = "Captura OCR";
 "Quick Capture" = "Captura rapida";
 "Scroll Capture" = "Captura cu derulare";
+"Capture Last Area" = "Captură ultima zonă";
 "Capture Delay" = "Intarziere captura";
 "None" = "Fara";
 "%d seconds" = "%d secunde";
@@ -183,7 +184,6 @@
 "Capture" = "Captura";
 "Play sound on capture" = "Redă sunet la captură";
 "Play sound on copy" = "Reda sunet la copiere";
-"Remember last selection area" = "Retine ultima zona de selectie";
 "Remember last selected tool" = "Retine ultimul instrument selectat";
 "Show floating thumbnail after capture" = "Afiseaza miniatura flotanta dupa captura";
 "Launch at login" = "Porneste la autentificare";

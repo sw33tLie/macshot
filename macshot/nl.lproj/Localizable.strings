@@ -20,6 +20,7 @@
 "Capture OCR" = "OCR vastleggen";
 "Quick Capture" = "Snelle opname";
 "Scroll Capture" = "Scrollopname";
+"Capture Last Area" = "Laatste gebied vastleggen";
 "Capture Delay" = "Opnamevertraging";
 "None" = "Geen";
 "%d seconds" = "%d seconden";
@@ -183,7 +184,6 @@
 "Capture" = "Opname";
 "Play sound on capture" = "Geluid afspelen bij opname";
 "Play sound on copy" = "Geluid afspelen bij kopieren";
-"Remember last selection area" = "Laatste selectiegebied onthouden";
 "Remember last selected tool" = "Laatst geselecteerd gereedschap onthouden";
 "Show floating thumbnail after capture" = "Zwevende miniatuur tonen na opname";
 "Launch at login" = "Open bij inloggen";
