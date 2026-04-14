@@ -24,10 +24,10 @@
     <enclosure url="https://github.com/sw33tLie/macshot/releases/download/v4.0.4/MacShot.dmg" length="5940423" type="application/octet-stream" sparkle:edSignature="Bcj1UKJt6ByGyOk28g/M7CFxKiId+FvNsHSxUXlcv0BiHEBmpSSJ4/S3yPCIcLQpOhZzLZ9ADN9OsV4Q2qgRBw==" />
 </item>
 <item>
-    <title>v4.0.5-beta.1</title>
-    <pubDate>Tue, 14 Apr 2026 01:35:20 +0000</pubDate>
-    <sparkle:version>36</sparkle:version>
-    <sparkle:shortVersionString>4.0.5-beta.1</sparkle:shortVersionString>
+    <title>v4.0.5-beta.2</title>
+    <pubDate>Tue, 14 Apr 2026 01:42:59 +0000</pubDate>
+    <sparkle:version>37</sparkle:version>
+    <sparkle:shortVersionString>4.0.5-beta.2</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
     <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
@@ -38,13 +38,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Fixed</h3><ul> <li><b>Color dithering in pinned images and editor window</b> — macOS's window compositor applies ordered dithering to layer content rendered via `draw()`, altering pixel values in solid-color areas (e.g. `#111D2F` becomes an alternating pattern of `#121D2F`, `#101D2E`, `#131D2D`). This was visible when re-capturing pinned screenshots or the editor window with the overlay. Fixed by disabling the `AutomaticAppKit` layer content format in favor of explicit `RGBA8`, ensuring pixel-perfect color reproduction.</li></ul>
+      <h3>Fixed</h3><ul> <li><b>Color dithering in pinned images and editor window</b> — macOS's window compositor applies ordered dithering to layer content rendered via `draw()`, altering pixel values in solid-color areas (e.g. `#111D2F` becomes an alternating pattern of `#121D2F`, `#101D2E`, `#131D2D`). This was visible when re-capturing pinned screenshots or the editor window with the overlay. Fixed by disabling the `AutomaticAppKit` layer content format in favor of explicit `RGBA8`, ensuring pixel-perfect color reproduction.</li> <li><b>Editor window color shift</b> — "Open in Editor Window" cropped the selection into a `CGColorSpaceCreateDeviceRGB` context, converting Display P3 pixels to DeviceRGB and shifting colors. Now uses zero-copy `CGImage.cropping()` which preserves the original color space.</li></ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v4.0.5-beta.1/MacShot.dmg"
-        length="5938630"
+        url="https://github.com/sw33tLie/macshot/releases/download/v4.0.5-beta.2/MacShot.dmg"
+        length="5943899"
         type="application/octet-stream"
-        sparkle:edSignature="IjSejnzI4WyIW16Q/hH7zN/Risd93KRveVYXvBNz4OkgfmMvHNb51C99K/hMvdU4ziv4o2ZaT1imeeUsHLoTDw=="
+        sparkle:edSignature="wTtMC/mevDQmOdRsOge+rNy+OI1+sLl0EvcYpjkLiDL4oWuRQLj4LPRhY0wDxRNBuQ+/MBHrfxIZXl3AdszQAA=="
     />
 </item>
     </channel>
