@@ -1001,11 +1001,39 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
     /// Handle files opened via Finder "Open With", drag-to-dock, or command line.
     func application(_ application: NSApplication, open urls: [URL]) {
-        let imageExtensions: Set<String> = ["png", "jpg", "jpeg", "tiff", "tif", "bmp", "gif", "heic", "heif", "webp", "icns"]
         for url in urls {
+            if url.scheme == "macshot" {
+                handleURLSchemeAction(url)
+                continue
+            }
+            let imageExtensions: Set<String> = ["png", "jpg", "jpeg", "tiff", "tif", "bmp", "gif", "heic", "heif", "webp", "icns"]
             let ext = url.pathExtension.lowercased()
             guard imageExtensions.contains(ext) else { continue }
             openImageFile(url: url)
+        }
+    }
+
+    /// Handle macshot:// URL scheme actions from external tools (Raycast, Alfred, etc.).
+    /// Usage: `open macshot://capture`, `open macshot://ocr`, etc.
+    private func handleURLSchemeAction(_ url: URL) {
+        guard let action = url.host else { return }
+        switch action {
+        case "capture":             captureScreen()
+        case "capture-fullscreen":  captureFullScreen()
+        case "quick-capture":       quickCapture()
+        case "ocr":                 captureOCR()
+        case "record":              recordArea()
+        case "record-fullscreen":   recordFullScreen()
+        case "scroll-capture":      scrollCapture()
+        case "history":             showHistoryOverlay()
+        case "settings":            openSettings()
+        case "stop-recording":      stopRecording()
+        case "open":
+            if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+               let path = components.queryItems?.first(where: { $0.name == "file" })?.value {
+                openImageFile(url: URL(fileURLWithPath: path))
+            }
+        default: break
         }
     }
 

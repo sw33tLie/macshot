@@ -12,6 +12,14 @@
 				<string>com.googleusercontent.apps.92758256085-8gkpg2b9to7bu7to0vgh9c7af755hp5d</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>macshot Actions</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>macshot</string>
+			</array>
+		</dict>
 	</array>
 	<key>CFBundleDocumentTypes</key>
 	<array>
