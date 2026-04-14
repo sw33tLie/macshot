@@ -1331,21 +1331,25 @@ class OverlayView: NSView {
             // live screen content everywhere (not just inside the selection).
             context.cgContext.clear(bounds)
         } else if !isRecording {
-            // Draw screenshot
             if let image = screenshotImage {
+                // Draw screenshot + dark overlay
                 image.draw(in: bounds, from: .zero, operation: .copy, fraction: 1.0)
+                NSColor.black.withAlphaComponent(0.45).setFill()
+                NSBezierPath(rect: bounds).fill()
+            } else {
+                // No screenshot yet (async capture in flight) — fully transparent
+                // so the live desktop shows through the non-opaque overlay window.
+                context.cgContext.clear(bounds)
             }
-
-            // Draw dark overlay
-            NSColor.black.withAlphaComponent(0.45).setFill()
-            NSBezierPath(rect: bounds).fill()
         }
 
         // Window snap highlight (drawn before helper text so text appears on top)
         drawWindowSnapHighlight()
 
-        // Helper text
-        if state == .idle {
+        // Helper text — only show after screenshot arrives to avoid stale text
+        // from the pre-screenshot draw lingering due to partial redraws.
+        let hasScreenshot = screenshotImage != nil || isEditorMode
+        if state == .idle && hasScreenshot {
             drawIdleHelperText()
         } else if state == .selecting {
             drawSelectingHelperText()

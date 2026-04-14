@@ -69,6 +69,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         registerHotkey()
         // Pre-warm ScreenCaptureKit so the first capture isn't slow.
         ScreenCaptureManager.prewarm()
+        // Pre-warm Core Animation / Metal pipeline so the first fullscreen
+        // overlay window doesn't stall ~500ms on CA::Transaction::commit.
+        let warmup = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1, height: 1),
+                              styleMask: [.borderless], backing: .buffered, defer: false)
+        warmup.isOpaque = false
+        warmup.backgroundColor = .clear
+        warmup.orderFront(nil)
+        warmup.orderOut(nil)
         // Pre-warm CoreAudio so the first capture sound doesn't stall ~1s.
         if let sound = Self.captureSound {
             sound.volume = 0
@@ -505,7 +513,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         previousApp = NSWorkspace.shared.frontmostApplication
         capturedWindowTitle = Self.focusedWindowTitle()
 
-        dismissOverlays()
+        // Clean up stale overlays without consuming previousApp — we just set it.
+        dismissOverlays(refocusPreviousApp: false)
 
         // Hide floating thumbnails so they don't visually flash on the overlay.
         // They're also excluded via ScreenCaptureKit's excludingWindows filter
@@ -598,64 +607,66 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func performCapture() {
-        // Exclude floating thumbnail windows so they never appear in captures,
-        // even if the window server hasn't fully recomposited after orderOut.
+        // Show overlay windows immediately (dark tint, no screenshot yet)
+        // so the user gets instant visual feedback while captures run in background.
+        let screens = NSScreen.screens
+        let mouseScreen = screens.first { $0.frame.contains(NSEvent.mouseLocation) }
+        for screen in screens {
+            let controller = OverlayWindowController(screen: screen)
+            controller.overlayDelegate = self
+            controller.capturedWindowTitle = capturedWindowTitle
+            if pendingRecordMode { controller.setAutoRecordMode() }
+            if pendingOCRMode { controller.setAutoOCRMode() }
+            if pendingQuickCaptureMode { controller.setAutoQuickSaveMode() }
+            if pendingScrollCaptureMode { controller.setAutoScrollCaptureMode() }
+            controller.showOverlay()
+            let isMouseScreen = (screen == mouseScreen) || (mouseScreen == nil && screen == NSScreen.main)
+            if (pendingFullScreen || pendingFullScreenRecord) && isMouseScreen {
+                controller.applyFullScreenSelection()
+            }
+            if pendingFullScreenRecord && isMouseScreen {
+                controller.enterRecordingMode()
+                if pendingFullScreenRecordAutoStart {
+                    controller.autoStartRecording()
+                }
+            }
+            overlayControllers.append(controller)
+        }
+
+        CATransaction.flush()
+        NSApp.activate(ignoringOtherApps: true)
+
+        if !pendingFullScreen && !pendingFullScreenRecord {
+            restoreLastSelectionIfNeeded(controllers: overlayControllers)
+        }
+
+        pendingRecordMode = false
+        pendingFullScreenRecordAutoStart = false
+        pendingOCRMode = false
+        pendingQuickCaptureMode = false
+        pendingScrollCaptureMode = false
+        pendingFullScreen = false
+        pendingFullScreenRecord = false
+
+        // Capture screenshots in background, then deliver to already-visible overlays.
         let excludeIDs = thumbnailControllers.compactMap { $0.windowNumber }
+            + overlayControllers.compactMap { $0.windowNumber }
         ScreenCaptureManager.captureAllScreens(excludingWindowNumbers: excludeIDs) { [weak self] captures in
             guard let self = self else { return }
 
             if captures.isEmpty {
-                self.isCapturing = false
-                // Permission was revoked or never granted — show onboarding instead of a generic alert
+                // Permission revoked — dismiss overlays and show onboarding
+                self.dismissOverlays(refocusPreviousApp: true)
                 self.showOnboarding()
                 return
             }
 
+            // Match captures to overlay controllers by screen and set the screenshot
             for capture in captures {
-                let controller = OverlayWindowController(capture: capture)
-                controller.overlayDelegate = self
-                controller.capturedWindowTitle = self.capturedWindowTitle
-                if self.pendingRecordMode {
-                    controller.setAutoRecordMode()
+                if let controller = self.overlayControllers.first(where: { $0.screen == capture.screen }) {
+                    controller.setScreenshot(capture.image)
                 }
-                if self.pendingOCRMode {
-                    controller.setAutoOCRMode()
-                }
-                if self.pendingQuickCaptureMode {
-                    controller.setAutoQuickSaveMode()
-                }
-                if self.pendingScrollCaptureMode {
-                    controller.setAutoScrollCaptureMode()
-                }
-                controller.showOverlay()
-                let mouseScreen = NSScreen.screens.first { $0.frame.contains(NSEvent.mouseLocation) }
-                let isMouseScreen = (capture.screen == mouseScreen) || (mouseScreen == nil && capture.screen == NSScreen.main)
-                if (self.pendingFullScreen || self.pendingFullScreenRecord) && isMouseScreen {
-                    controller.applyFullScreenSelection()
-                }
-                if self.pendingFullScreenRecord && isMouseScreen {
-                    // Enter recording mode in the overlay (shows recording toolbar)
-                    controller.enterRecordingMode()
-                    if self.pendingFullScreenRecordAutoStart {
-                        controller.autoStartRecording()
-                    }
-                }
-                self.overlayControllers.append(controller)
             }
-
-            CATransaction.flush()
-            NSApp.activate(ignoringOtherApps: true)
-
-            self.pendingRecordMode = false
-            self.pendingFullScreenRecordAutoStart = false
-            self.pendingOCRMode = false
-            self.pendingQuickCaptureMode = false
-            self.pendingScrollCaptureMode = false
-            if !self.pendingFullScreen && !self.pendingFullScreenRecord {
-                self.restoreLastSelectionIfNeeded(controllers: self.overlayControllers)
-            }
-            self.pendingFullScreen = false
-            self.pendingFullScreenRecord = false
         }
     }
 

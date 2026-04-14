@@ -60,9 +60,20 @@ class OverlayWindowController {
     var sessionHideRecordingHUD: Bool? { overlayView?.sessionHideRecordingHUD }
 
     init(capture: ScreenCapture) {
-        let screen = capture.screen
-        self.screen = screen
+        self.screen = capture.screen
+        setupWindow(screen: capture.screen)
+        let nsImage = NSImage(cgImage: capture.image, size: capture.screen.frame.size)
+        overlayView?.screenshotImage = nsImage
+    }
 
+    /// Create an overlay for a screen without a screenshot yet.
+    /// Call `setScreenshot(_:)` once the capture completes.
+    init(screen: NSScreen) {
+        self.screen = screen
+        setupWindow(screen: screen)
+    }
+
+    private func setupWindow(screen: NSScreen) {
         let window = OverlayWindow(
             contentRect: screen.frame,
             styleMask: [.borderless],
@@ -79,8 +90,6 @@ class OverlayWindowController {
         window.isReleasedWhenClosed = false
 
         let view = OverlayView()
-        let nsImage = NSImage(cgImage: capture.image, size: screen.frame.size)
-        view.screenshotImage = nsImage
         view.frame = NSRect(origin: .zero, size: screen.frame.size)
         view.autoresizingMask = [.width, .height]
         view.overlayDelegate = self
@@ -88,6 +97,16 @@ class OverlayWindowController {
         window.contentView = view
         self.overlayWindow = window
         self.overlayView = view
+    }
+
+    /// Set the screenshot image after the overlay is already visible.
+    func setScreenshot(_ image: CGImage) {
+        let nsImage = NSImage(cgImage: image, size: screen.frame.size)
+        overlayView?.screenshotImage = nsImage
+        // Force immediate full redraw — needsDisplay alone can use dirty rect
+        // optimization which may leave stale transparent pixels from the
+        // pre-screenshot frame.
+        overlayView?.display()
     }
 
     func showOverlay() {
