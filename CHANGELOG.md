@@ -1,5 +1,20 @@
 # Changelog
 
+## [4.0.5-beta.9] - 2026-04-15
+
+### Added
+- **Capture Last Area** — new action that opens the overlay with the previous selection pre-applied. Available in the menu bar, as a configurable hotkey (Settings > Shortcuts), and via `macshot://capture-last` URL scheme.
+- **URL scheme toggle** — "Enable macshot:// URL scheme" checkbox in Settings (enabled by default).
+
+### Fixed
+- **Instant overlay** — overlay now appears immediately (transparent) while screenshots capture in background. Eliminates all delay on hotkey press.
+- **Window snap highlight race condition** — snap query deferred until screenshot arrives, preventing blue highlight artifacts on the transparent pre-screenshot overlay.
+- **Permanent ScreenCaptureKit cache** — display enumeration cached for app lifetime, only refreshed on monitor connect/disconnect. First capture after launch is the only slow one.
+
+### Changed
+- **Removed "Remember last selection area" setting** — selection is now always saved. Use the new "Capture Last Area" action to re-capture the same region on demand.
+- **Multi-select moved to Ctrl+click** — consistent with Ctrl+drag for lasso. Shift is now purely for angle/shape constraining.
+
 ## [4.0.5-beta.8] - 2026-04-14
 
 ### Fixed
