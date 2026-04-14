@@ -24,10 +24,10 @@
     <enclosure url="https://github.com/sw33tLie/macshot/releases/download/v4.0.4/MacShot.dmg" length="5940423" type="application/octet-stream" sparkle:edSignature="Bcj1UKJt6ByGyOk28g/M7CFxKiId+FvNsHSxUXlcv0BiHEBmpSSJ4/S3yPCIcLQpOhZzLZ9ADN9OsV4Q2qgRBw==" />
 </item>
 <item>
-    <title>v4.0.5-beta.7</title>
-    <pubDate>Tue, 14 Apr 2026 18:05:47 +0000</pubDate>
-    <sparkle:version>42</sparkle:version>
-    <sparkle:shortVersionString>4.0.5-beta.7</sparkle:shortVersionString>
+    <title>v4.0.5-beta.8</title>
+    <pubDate>Tue, 14 Apr 2026 21:29:43 +0000</pubDate>
+    <sparkle:version>43</sparkle:version>
+    <sparkle:shortVersionString>4.0.5-beta.8</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
     <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
@@ -38,13 +38,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Fixed</h3><ul> <li><b>Reverted capture pipeline to v4.0.4</b> — experimental performance changes introduced race conditions and rendering artifacts. Capture flow restored to the stable v4.0.4 implementation.</li></ul>
+      <h3>Fixed</h3><ul> <li><b>Completely wrong colors on some external monitors</b> — displays with certain ICC profiles (e.g. ViewSonic 4K) caused the 8-bit pixel conversion to fail silently, passing through raw 16-bit GPU data with swapped Red/Blue channels. Now tries multiple pixel formats with automatic fallback.</li></ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v4.0.5-beta.7/MacShot.dmg"
-        length="5366686"
+        url="https://github.com/sw33tLie/macshot/releases/download/v4.0.5-beta.8/MacShot.dmg"
+        length="5370943"
         type="application/octet-stream"
-        sparkle:edSignature="rddHY/+zrGS1QmaMCuJRjmJf+3hyDrHfaEa0a+SmT1xF9UdZUtCiGNsGDolMCoUqTj+bKaoTdJFhKnA8tujLCQ=="
+        sparkle:edSignature="oCpHdL6zfOrNmqn1Nuyo1Qo3d0jhQ2I6lIdu/TQb0lAzdXxUnmf/3Qd/X3d8FoMjNqQk7o2f6LXarT6G+817BA=="
     />
 </item>
     </channel>
