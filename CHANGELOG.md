@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.0.5-beta.6] - 2026-04-14
+
+### Fixed
+- **Capture speed dramatically improved** — ScreenCaptureKit content cache now persists indefinitely (only refreshes on monitor connect/disconnect). Eliminates the 200–500ms window enumeration delay on every capture. Concurrent callers share a single in-flight request instead of making duplicate XPC calls.
+- **Floating thumbnails appearing in screenshots** — added 50ms delay after hiding thumbnails so the window server finishes compositing before capture.
+
 ## [4.0.5-beta.5] - 2026-04-14
 
 ### Added
