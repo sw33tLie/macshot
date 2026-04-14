@@ -71,6 +71,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         }
         registerHotkey()
         // Pre-warm ScreenCaptureKit so the first capture isn't slow.
+        // Cache persists until display configuration changes (monitor connect/disconnect).
+        ScreenCaptureManager.registerDisplayChangeHandler()
         ScreenCaptureManager.prewarm()
         // Pre-warm Core Animation / Metal pipeline so the first fullscreen
         // overlay window doesn't stall ~500ms on CA::Transaction::commit.
@@ -565,16 +567,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // Clean up stale overlays without consuming previousApp — we just set it.
         dismissOverlays(refocusPreviousApp: false)
 
-        // Hide floating thumbnails so they don't visually flash on the overlay.
-        // They're also excluded via ScreenCaptureKit's excludingWindows filter
-        // in performCapture() so they never appear in the captured image.
+        // Hide floating thumbnails and flush the window server composition
+        // so they don't appear in the captured screenshot.
         for tc in thumbnailControllers { tc.hideWindow() }
+        CATransaction.flush()
 
         let delay = UserDefaults.standard.integer(forKey: "captureDelaySeconds")
         if delay > 0 {
             showPreCaptureCountdown(seconds: delay)
         } else {
-            DispatchQueue.main.async { [weak self] in
+            // Brief delay so the window server finishes compositing thumbnail
+            // removal before the screenshot is taken.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
                 self?.performCapture()
             }
         }
@@ -656,8 +660,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func performCapture() {
-        // Exclude floating thumbnail windows so they never appear in captures,
-        // even if the window server hasn't fully recomposited after orderOut.
+        // Exclude thumbnail windows as a safety net — orderOut may not be
+        // composited yet. Uses cached SCShareableContent (no slow re-fetch).
         let excludeIDs = thumbnailControllers.compactMap { $0.windowNumber }
         ScreenCaptureManager.captureAllScreens(excludingWindowNumbers: excludeIDs) { [weak self] captures in
             guard let self = self else { return }
