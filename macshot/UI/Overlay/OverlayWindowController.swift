@@ -103,23 +103,30 @@ class OverlayWindowController {
     func setScreenshot(_ image: CGImage) {
         let nsImage = NSImage(cgImage: image, size: screen.frame.size)
         overlayView?.screenshotImage = nsImage
-        // Force immediate full redraw — needsDisplay alone can use dirty rect
-        // optimization which may leave stale transparent pixels from the
-        // pre-screenshot frame.
-        overlayView?.display()
+        // Enable interaction now that the screenshot is ready — the window
+        // was shown with ignoresMouseEvents=true to prevent the user from
+        // starting a selection before the image exists (causes tint artifacts).
+        overlayWindow?.ignoresMouseEvents = false
+        overlayWindow?.makeKeyAndOrderFront(nil)
+        if let view = overlayView {
+            overlayWindow?.makeFirstResponder(view)
+        }
     }
 
     func showOverlay() {
         guard let window = overlayWindow else { return }
-        // Force the view to render into its backing store before showing the window.
-        // This ensures the screenshot is fully drawn when the window appears,
-        // preventing a flash of the deactivating app underneath.
-        if let view = overlayView {
-            view.displayIfNeeded()
-        }
-        window.makeKeyAndOrderFront(nil)
-        if let view = overlayView {
-            window.makeFirstResponder(view)
+        if overlayView?.screenshotImage != nil {
+            // Screenshot already set (sync init path) — show and accept input immediately.
+            if let view = overlayView { view.displayIfNeeded() }
+            window.makeKeyAndOrderFront(nil)
+            if let view = overlayView { window.makeFirstResponder(view) }
+        } else {
+            // Async path — show the window as a visual indicator but block
+            // mouse input until setScreenshot() delivers the image.
+            // This prevents the user from starting a selection before the
+            // screenshot exists, which causes tint artifacts in the selection area.
+            window.ignoresMouseEvents = true
+            window.orderFront(nil)
         }
     }
 
