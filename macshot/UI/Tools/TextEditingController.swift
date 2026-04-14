@@ -344,15 +344,17 @@ class TextEditingController {
                 options: [.usesLineFragmentOrigin, .usesFontLeading])
             let minH = max(28, fontSize + 12)
             let imgHeight = max(minH, ceil(textBounds.height) + inset.height * 2)
-            let imgSize = NSSize(width: sv.frame.width, height: imgHeight)
+            // Shrink width to fit the actual text (+ insets) so the bounding
+            // box doesn't extend far past the text content.
+            let fittedWidth = ceil(textBounds.width) + inset.width * 2
+            let imgWidth = max(fittedWidth, fontSize + 12)  // minimum width
+            let imgSize = NSSize(width: imgWidth, height: imgHeight)
 
-            // Update scrollView frame to match the measured height so canvas
-            // coordinates are correct (pin top edge).
-            if abs(imgHeight - sv.frame.height) > 0.5 {
-                let topEdge = sv.frame.maxY
-                sv.frame = NSRect(x: sv.frame.minX, y: topEdge - imgHeight,
-                                  width: sv.frame.width, height: imgHeight)
-            }
+            // Update scrollView frame to match the measured size so canvas
+            // coordinates are correct (pin top-left edge).
+            let topEdge = sv.frame.maxY
+            sv.frame = NSRect(x: sv.frame.minX, y: topEdge - imgHeight,
+                              width: imgWidth, height: imgHeight)
 
             let img = NSImage(size: imgSize, flipped: true) { _ in
                 attrStr.draw(

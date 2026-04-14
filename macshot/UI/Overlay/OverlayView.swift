@@ -6300,14 +6300,16 @@ class OverlayView: NSView {
         // is held, OR when a multi-selection already exists (so the user can drag the group
         // without holding a modifier — same behavior as all other tools).
         // Ctrl acts as an explicit "interact with annotations" modifier — no delay.
-        // Text tool: use instant-select when Shift is held (multi-select) or when clicking
-        // on an already-selected annotation (allows multi-drag).
+        // Text tool: allow selecting non-text annotations on click (so you can
+        // grab an arrow/rect while in text mode). Only skip instant-select when
+        // clicking empty space (where a new text box should be created).
         let shiftHeld = NSEvent.modifierFlags.contains(.shift)
         let ctrlHeld = NSEvent.modifierFlags.contains(.control)
         let pencilHasMultiSelection = isPencilOrMarker && selectedAnnotations.count > 1
-        let textHasSelection = currentTool == .text && !selectedAnnotations.isEmpty
+        let textHitsAnnotation = currentTool == .text
+            && annotations.reversed().contains(where: { $0.isMovable && $0.hitTest(point: point) })
         let useInstantSelect = currentTool != .colorSampler
-            && (currentTool != .text || shiftHeld || textHasSelection)
+            && (currentTool != .text || shiftHeld || textHitsAnnotation)
             && (!isPencilOrMarker || shiftHeld || ctrlHeld || pencilHasMultiSelection)
         if useInstantSelect {
             if let clicked = annotations.reversed().first(where: { $0.isMovable && $0.hitTest(point: point) }) {
