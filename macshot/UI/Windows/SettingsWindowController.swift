@@ -51,7 +51,7 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
     private var qualityLabel: NSTextField!
     private var qualityRowLabel: NSTextField!
     private var downscaleRetinaCheckbox: NSButton!
-    private var embedColorProfileCheckbox: NSButton!
+    // embedColorProfileCheckbox removed — native color profile is always embedded
     private var imgbbKeyField: NSTextField!
     private var localMonitor: Any?
     private weak var uploadsStack: NSStackView?
@@ -430,16 +430,7 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
         stack.addArrangedSubview(indented(downscaleNote))
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
-        // Embed color profile
-        embedColorProfileCheckbox = NSButton(checkboxWithTitle: L("Embed sRGB color profile"), target: self, action: #selector(embedColorProfileChanged(_:)))
-        stack.addArrangedSubview(indented(embedColorProfileCheckbox))
-        stack.setCustomSpacing(2, after: stack.arrangedSubviews.last!)
-
-        let profileNote = NSTextField(labelWithString: L("Ensures consistent colors across different displays"))
-        profileNote.font = NSFont.systemFont(ofSize: 10)
-        profileNote.textColor = .tertiaryLabelColor
-        stack.addArrangedSubview(indented(profileNote))
-        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+        // Color profile is always embedded (native display profile) — no toggle needed.
 
         // History size
         historySizeField = NSTextField()
@@ -1703,8 +1694,6 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
         qualityLabel.stringValue = String(format: L("%d%%"), quality)
 
         downscaleRetinaCheckbox.state = ImageEncoder.downscaleRetina ? .on : .off
-        embedColorProfileCheckbox.state = ImageEncoder.embedColorProfile ? .on : .off
-
         updateQualityVisibility()
 
         imgbbKeyField.stringValue = UserDefaults.standard.string(forKey: "imgbbAPIKey") ?? ""
@@ -1836,9 +1825,6 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
     }
     @objc private func downscaleRetinaChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "downscaleRetina")
-    }
-    @objc private func embedColorProfileChanged(_ sender: NSButton) {
-        UserDefaults.standard.set(sender.state == .on, forKey: "embedColorProfile")
     }
     @objc private func imgbbKeyChanged(_ sender: NSTextField) {
         let key = sender.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)

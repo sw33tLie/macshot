@@ -208,7 +208,7 @@ TextEditingCanvas                — Coordinate transforms + annotation storage 
 - Output: `saveDirectory`, `autoCopyToClipboard`, `playCopySound`
 - Selection: `lastSelectionRect`, `lastSelectionScreenFrame`, `rememberLastSelection`
 - Thumbnails: `showFloatingThumbnail`, `thumbnailStacking`, `thumbnailAutoDismissSeconds`
-- Image: `imageFormat` (png/jpeg/heic/webp), `imageQuality` (0.0–1.0), `downscaleRetina` (bool), `embedColorProfile` (bool)
+- Image: `imageFormat` (png/jpeg/heic/webp), `imageQuality` (0.0–1.0), `downscaleRetina` (bool)
 - Recording: `recordingFormat` (mp4/gif), `recordingFPS`, `recordingOnStop`
 - History: `historySize`
 - Tools: `enabledTools`, `knownToolRawValues`

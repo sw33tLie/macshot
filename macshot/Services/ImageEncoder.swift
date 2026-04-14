@@ -34,12 +34,6 @@ enum ImageEncoder {
         UserDefaults.standard.bool(forKey: "downscaleRetina")
     }
 
-    /// Whether to embed an sRGB ICC color profile in saved images.
-    static var embedColorProfile: Bool {
-        let val = UserDefaults.standard.object(forKey: "embedColorProfile") as? Bool
-        return val ?? true  // on by default
-    }
-
     static var fileExtension: String {
         switch format {
         case .png: return "png"
@@ -118,20 +112,20 @@ enum ImageEncoder {
         }
     }
 
-    /// Encode PNG, optionally embedding sRGB profile via CGImageDestination.
+    /// Encode PNG with native color profile embedded.
     private static func encodePNG(bitmap: NSBitmapImageRep) -> Data? {
-        if embedColorProfile, let cgImage = bitmap.cgImage {
-            return encodeWithCGImageDestination(cgImage: cgImage, type: "public.png", lossyQuality: nil)
+        guard let cgImage = bitmap.cgImage else {
+            return bitmap.representation(using: .png, properties: [:])
         }
-        return bitmap.representation(using: .png, properties: [:])
+        return encodeWithCGImageDestination(cgImage: cgImage, type: "public.png", lossyQuality: nil)
     }
 
-    /// Encode JPEG, optionally embedding sRGB profile via CGImageDestination.
+    /// Encode JPEG with native color profile embedded.
     private static func encodeJPEG(bitmap: NSBitmapImageRep, quality: CGFloat) -> Data? {
-        if embedColorProfile, let cgImage = bitmap.cgImage {
-            return encodeWithCGImageDestination(cgImage: cgImage, type: "public.jpeg", lossyQuality: quality)
+        guard let cgImage = bitmap.cgImage else {
+            return bitmap.representation(using: .jpeg, properties: [.compressionFactor: quality])
         }
-        return bitmap.representation(using: .jpeg, properties: [.compressionFactor: quality])
+        return encodeWithCGImageDestination(cgImage: cgImage, type: "public.jpeg", lossyQuality: quality)
     }
 
     /// Encode HEIC via CGImageDestination (NSBitmapImageRep doesn't support HEIC).
@@ -147,8 +141,8 @@ enum ImageEncoder {
         guard let srcImage = bitmap.cgImage else { return nil }
         let w = srcImage.width
         let h = srcImage.height
-        // Re-render into a known premultipliedLast RGBA context
-        let cs = CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
+        // Re-render into a known premultipliedLast RGBA context (preserving source color space)
+        let cs = srcImage.colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
         guard let ctx = CGContext(
             data: nil, width: w, height: h,
             bitsPerComponent: 8, bytesPerRow: w * 4,
@@ -162,7 +156,9 @@ enum ImageEncoder {
         return try? encoder.encode(RGBA: rgbaImage, config: config)
     }
 
-    /// Generic CGImageDestination encoder — handles sRGB profile embedding.
+    /// Generic CGImageDestination encoder — embeds the source color profile.
+    /// The CGImage already carries its display's ICC profile (e.g. Display P3).
+    /// CGImageDestination embeds it automatically — no pixel conversion needed.
     private static func encodeWithCGImageDestination(cgImage: CGImage, type: String, lossyQuality: CGFloat?) -> Data? {
         let data = NSMutableData()
         guard let dest = CGImageDestinationCreateWithData(data as CFMutableData, type as CFString, 1, nil) else { return nil }
@@ -172,21 +168,7 @@ enum ImageEncoder {
             properties[kCGImageDestinationLossyCompressionQuality as String] = q
         }
 
-        // Convert to sRGB color space (proper pixel value conversion, not just re-tagging)
-        var imageToEncode = cgImage
-        if embedColorProfile, let sRGB = CGColorSpace(name: CGColorSpace.sRGB) {
-            let w = cgImage.width, h = cgImage.height
-            if let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8,
-                                   bytesPerRow: w * 4, space: sRGB,
-                                   bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) {
-                ctx.draw(cgImage, in: CGRect(x: 0, y: 0, width: w, height: h))
-                if let converted = ctx.makeImage() {
-                    imageToEncode = converted
-                }
-            }
-        }
-
-        CGImageDestinationAddImage(dest, imageToEncode, properties as CFDictionary)
+        CGImageDestinationAddImage(dest, cgImage, properties as CFDictionary)
         return CGImageDestinationFinalize(dest) ? data as Data : nil
     }
 

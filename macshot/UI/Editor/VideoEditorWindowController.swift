@@ -909,13 +909,15 @@ private final class VideoEditorView: NSView {
         needsDisplay = true
     }
 
-    private func showStatus(_ msg: String, isError: Bool = false) {
+    private func showStatus(_ msg: String, isError: Bool = false, persist: Bool = false) {
         statusMessage = msg
         statusIsError = isError
         statusTimer?.invalidate()
-        statusTimer = Timer.scheduledTimer(withTimeInterval: isError ? 6 : 3, repeats: false) { [weak self] _ in
-            self?.statusMessage = nil
-            self?.needsDisplay = true
+        if !persist {
+            statusTimer = Timer.scheduledTimer(withTimeInterval: isError ? 6 : 3, repeats: false) { [weak self] _ in
+                self?.statusMessage = nil
+                self?.needsDisplay = true
+            }
         }
         needsDisplay = true
     }
@@ -1107,7 +1109,7 @@ private final class VideoEditorView: NSView {
 
     private func convertToGIF(destURL: URL, completion: ((Bool) -> Void)? = nil) {
         guard let asset = asset else { completion?(false); return }
-        showStatus(L("Converting to GIF…"))
+        showStatus(L("Processing GIF…"), persist: true)
 
         let startTime = CMTime(seconds: trimStart, preferredTimescale: 600)
         let endTime = CMTime(seconds: trimEnd, preferredTimescale: 600)
@@ -1116,11 +1118,15 @@ private final class VideoEditorView: NSView {
         let gifFPS = min(15, asset.tracks(withMediaType: .video).first.map { Int($0.nominalFrameRate.rounded()) } ?? 15)
         let scale = exportScale
 
-        Task.detached(priority: .userInitiated) { [weak self] in
+        // Use GCD background queue instead of Swift concurrency Task.detached.
+        // Swift's cooperative thread pool shares threads with the main actor,
+        // so CPU-bound GIF encoding can starve the UI. A GCD .background queue
+        // gets its own kernel thread that macOS properly deprioritizes.
+        DispatchQueue.global(qos: .background).async { [weak self] in
             do {
                 let reader = try AVAssetReader(asset: asset)
                 guard let videoTrack = asset.tracks(withMediaType: .video).first else {
-                    await MainActor.run {
+                    DispatchQueue.main.async {
                         self?.showStatus(L("No video track found"), isError: true)
                         completion?(false)
                     }
@@ -1149,26 +1155,50 @@ private final class VideoEditorView: NSView {
                 let encoder = GIFEncoder(url: tmpURL, fps: gifFPS, sourceFPS: max(sourceFPS, gifFPS))
                 reader.startReading()
 
+                // Estimate total frames for progress reporting
+                let durationSec = CMTimeGetSeconds(timeRange.duration)
+                let estimatedFrames = max(1, Int(durationSec * Double(sourceFPS)))
+                var framesRead = 0
+                var lastReportedPct = -1
+
                 while reader.status == .reading {
-                    if let sampleBuffer = trackOutput.copyNextSampleBuffer(),
-                       let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
-                        encoder.addFrame(pixelBuffer)
+                    autoreleasepool {
+                        if let sampleBuffer = trackOutput.copyNextSampleBuffer(),
+                           let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
+                            encoder.addFrame(pixelBuffer)
+                            framesRead += 1
+                        }
+                    }
+                    // Update progress on main thread (reading = 0–50%, finalize = 50–100%)
+                    let pct = min(50, framesRead * 50 / estimatedFrames)
+                    if pct != lastReportedPct {
+                        lastReportedPct = pct
+                        DispatchQueue.main.async {
+                            self?.showStatus(String(format: L("Processing GIF…") + " %d%%", pct), persist: true)
+                        }
                     }
                 }
+
+                DispatchQueue.main.async {
+                    self?.showStatus(L("Processing GIF…") + " 50%", persist: true)
+                }
                 encoder.finish()
+                DispatchQueue.main.async {
+                    self?.showStatus(L("Processing GIF…") + " 100%", persist: true)
+                }
 
                 // Move to destination
                 try? FileManager.default.removeItem(at: destURL)
                 try FileManager.default.moveItem(at: tmpURL, to: destURL)
 
-                await MainActor.run {
+                DispatchQueue.main.async {
                     self?.savedURL = destURL
                     self?.showStatus(String(format: L("Saved to %@"), destURL.lastPathComponent))
                     self?.needsDisplay = true
                     completion?(true)
                 }
             } catch {
-                await MainActor.run {
+                DispatchQueue.main.async {
                     self?.showStatus(L("GIF conversion failed"), isError: true)
                     completion?(false)
                 }

@@ -5,6 +5,8 @@ import UniformTypeIdentifiers
 import CoreVideo
 
 /// Accumulates CVPixelBuffer frames and writes them as an animated GIF.
+/// Each frame's pixel data is copied immediately so the pixel buffer can be
+/// safely recycled (alwaysCopiesSampleData=false).
 final class GIFEncoder {
 
     private let url: URL
@@ -59,24 +61,44 @@ final class GIFEncoder {
         guard let dest = destination else { return }
 
         CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
-        defer { CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly) }
 
         let width = CVPixelBufferGetWidth(pixelBuffer)
         let height = CVPixelBufferGetHeight(pixelBuffer)
         let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
-        guard let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer) else { return }
+        guard let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer) else {
+            CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly)
+            return
+        }
 
+        // Wrap the pixel buffer in a CGContext to get a CGImage reference,
+        // then copy into an owned context so the image survives after unlock.
+        // CGImageDestinationFinalize reads all frames later — each CGImage
+        // must own its pixel data independently.
         let colorSpace = CGColorSpaceCreateDeviceRGB()
-        guard let ctx = CGContext(
+        let bitmapInfo = CGImageAlphaInfo.noneSkipFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue
+        guard let srcCtx = CGContext(
             data: baseAddress,
-            width: width,
-            height: height,
-            bitsPerComponent: 8,
-            bytesPerRow: bytesPerRow,
-            space: colorSpace,
-            bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue
-        ), let cgImage = ctx.makeImage() else { return }
+            width: width, height: height,
+            bitsPerComponent: 8, bytesPerRow: bytesPerRow,
+            space: colorSpace, bitmapInfo: bitmapInfo
+        ), let srcImage = srcCtx.makeImage() else {
+            CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly)
+            return
+        }
 
+        guard let ownedCtx = CGContext(
+            data: nil,
+            width: width, height: height,
+            bitsPerComponent: 8, bytesPerRow: width * 4,
+            space: colorSpace, bitmapInfo: bitmapInfo
+        ) else {
+            CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly)
+            return
+        }
+        ownedCtx.draw(srcImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+        CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly)
+
+        guard let cgImage = ownedCtx.makeImage() else { return }
         CGImageDestinationAddImage(dest, cgImage, frameProperties as CFDictionary)
         frameCount += 1
     }
