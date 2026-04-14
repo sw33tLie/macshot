@@ -1,5 +1,10 @@
 # Changelog
 
+## [4.0.5-beta.8] - 2026-04-14
+
+### Fixed
+- **Completely wrong colors on some external monitors** — displays with certain ICC profiles (e.g. ViewSonic 4K) caused the 8-bit pixel conversion to fail silently, passing through raw 16-bit GPU data with swapped Red/Blue channels. Now tries multiple pixel formats with automatic fallback.
+
 ## [4.0.5-beta.7] - 2026-04-14
 
 ### Fixed
