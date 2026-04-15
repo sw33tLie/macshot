@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.0.5-beta.14] - 2026-04-15
+
+### Fixed
+- **Wrong colors on external monitors (fourth attempt)** — explicitly set `colorSpaceName = sRGB` on all ScreenCaptureKit configurations (screenshots, window capture, recording). On systems where the display color profile is not reported correctly (e.g. DisplayLink adapters), ScreenCaptureKit was returning untagged pixel data that AppKit misinterpreted. Forcing sRGB ensures correct color tagging regardless of display driver quirks.
+
+### Improved
+- **Copy Screen Info diagnostic** — now also reports `CGDisplayCopyColorSpace` (the CoreGraphics-level ICC profile) alongside `NSScreen.colorSpace` to help diagnose display driver issues.
+
 ## [4.0.5-beta.13] - 2026-04-15
 
 ### Added

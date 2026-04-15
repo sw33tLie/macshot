@@ -90,6 +90,7 @@ class ScreenCaptureManager {
                                 config.showsCursor = UserDefaults.standard.bool(
                                     forKey: "captureCursor")
                                 config.captureResolution = .best
+                                config.colorSpaceName = CGColorSpace.sRGB as CFString
 
                                 guard
                                     let image = try? await SCScreenshotManager.captureImage(
@@ -174,6 +175,7 @@ class ScreenCaptureManager {
             config.height = Int(scWindow.frame.height) * scale
             config.showsCursor = false
             config.captureResolution = .best
+            config.colorSpaceName = CGColorSpace.sRGB as CFString
 
             guard
                 let image = try? await SCScreenshotManager.captureImage(
