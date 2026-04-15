@@ -1342,10 +1342,14 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
                 for (i, screen) in NSScreen.screens.enumerated() {
                     let id = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? UInt32 ?? 0
                     let cs = screen.colorSpace?.cgColorSpace
+                    // CGDisplayCopyColorSpace reads the display ICC profile directly,
+                    // bypassing NSScreen — helps diagnose DisplayLink/driver issues.
+                    let cgCS = CGDisplayCopyColorSpace(id)
                     lines.append("Screen \(i): \(screen.localizedName) (ID: \(id))")
                     lines.append("  frame: \(screen.frame)")
                     lines.append("  backingScale: \(screen.backingScaleFactor)")
-                    lines.append("  colorSpace: \(cs?.name as String? ?? "nil")")
+                    lines.append("  NSScreen.colorSpace: \(cs?.name as String? ?? "nil")")
+                    lines.append("  CGDisplayCopyColorSpace: \(cgCS.name as String? ?? "nil")")
                     lines.append("  cs model: \(cs?.model.rawValue ?? -1)")
                     lines.append("")
                 }
@@ -1358,6 +1362,7 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
                         config.width = display.width
                         config.height = display.height
                         config.captureResolution = .best
+                        config.colorSpaceName = CGColorSpace.sRGB as CFString
                         if let img = try? await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config) {
                             lines.append("Display \(display.displayID) (\(display.width)x\(display.height)):")
                             lines.append("  CGImage size: \(img.width)x\(img.height)")
