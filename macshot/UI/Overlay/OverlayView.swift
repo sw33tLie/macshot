@@ -89,14 +89,19 @@ class OverlayView: NSView {
     /// When in scroll view mode, toolbar strips are added to this view (window content) instead of self.
     weak var chromeParentView: NSView?
 
-    /// Raw CGImage kept in sync with screenshotImage.
-    /// Used for drawing via CGContext.draw() to bypass AppKit color matching,
+    /// Raw CGImage for drawing via CGContext.draw() to bypass AppKit color matching,
     /// which produces wrong colors on systems with broken display color profiles.
+    /// Set this BEFORE setting screenshotImage to avoid an NSImage round-trip.
     var screenshotCGImage: CGImage?
 
     var screenshotImage: NSImage? {
         didSet {
-            screenshotCGImage = screenshotImage?.cgImage(forProposedRect: nil, context: nil, hints: nil)
+            // Only extract from NSImage if screenshotCGImage wasn't pre-set by the caller.
+            if screenshotCGImage == nil && screenshotImage != nil {
+                screenshotCGImage = screenshotImage?.cgImage(forProposedRect: nil, context: nil, hints: nil)
+            } else if screenshotImage == nil {
+                screenshotCGImage = nil
+            }
             needsDisplay = true
             // Screenshot just arrived (async capture) — enable snap queries now.
             if screenshotImage != nil && windowSnapCooldown {
@@ -2670,6 +2675,7 @@ class OverlayView: NSView {
         ctx.draw(cgImage, in: CGRect(x: 0, y: 0, width: w, height: h))
         guard let flipped = ctx.makeImage() else { return }
 
+        screenshotCGImage = flipped
         screenshotImage = NSImage(cgImage: flipped, size: original.size)
 
         // Mirror annotation X coordinates around the image center
@@ -2718,6 +2724,7 @@ class OverlayView: NSView {
         ctx.draw(cgImage, in: CGRect(x: 0, y: 0, width: w, height: h))
         guard let flipped = ctx.makeImage() else { return }
 
+        screenshotCGImage = flipped
         screenshotImage = NSImage(cgImage: flipped, size: original.size)
 
         // Mirror annotation Y coordinates around the image center
@@ -2842,6 +2849,7 @@ class OverlayView: NSView {
         let offsets = annotations.map { ($0, shiftDx, shiftDy) }
         undoStack.append(.imageTransform(previousImage: prevImage, annotationOffsets: offsets))
 
+        screenshotCGImage = newCG
         screenshotImage = NSImage(cgImage: newCG, size: NSSize(width: newPtW, height: newPtH))
         cachedOpaqueRect = nil  // invalidate — image content changed
 
@@ -2928,6 +2936,7 @@ class OverlayView: NSView {
         let ciCtx = CIContext()
         guard let inverted = ciCtx.createCGImage(output, from: output.extent) else { return }
 
+        screenshotCGImage = inverted
         screenshotImage = NSImage(cgImage: inverted, size: original.size)
         cachedCompositedImage = nil
         needsDisplay = true
@@ -3450,6 +3459,7 @@ class OverlayView: NSView {
         let croppedPointSize = NSSize(
             width: CGFloat(croppedCG.width) / pixScale,
             height: CGFloat(croppedCG.height) / pixScale)
+        screenshotCGImage = croppedCG
         screenshotImage = NSImage(cgImage: croppedCG, size: croppedPointSize)
 
         // Update selectionRect to match new image size

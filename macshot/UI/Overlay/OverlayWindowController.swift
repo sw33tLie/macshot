@@ -63,8 +63,8 @@ class OverlayWindowController {
         let screen = capture.screen
         self.screen = screen
         setupWindow(screen: screen)
-        let nsImage = NSImage(cgImage: capture.image, size: screen.frame.size)
-        overlayView?.screenshotImage = nsImage
+        overlayView?.screenshotCGImage = capture.image
+        overlayView?.screenshotImage = NSImage(cgImage: capture.image, size: screen.frame.size)
     }
 
     /// Create an overlay without a screenshot — shows instantly as transparent.
@@ -102,8 +102,8 @@ class OverlayWindowController {
 
     /// Set the screenshot after the overlay is visible.
     func setScreenshot(_ image: CGImage) {
-        let nsImage = NSImage(cgImage: image, size: screen.frame.size)
-        overlayView?.screenshotImage = nsImage
+        overlayView?.screenshotCGImage = image
+        overlayView?.screenshotImage = NSImage(cgImage: image, size: screen.frame.size)
         // Enable interaction now that the screenshot is ready.
         overlayWindow?.ignoresMouseEvents = false
         overlayWindow?.makeKeyAndOrderFront(nil)
