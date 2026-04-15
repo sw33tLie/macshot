@@ -1,5 +1,10 @@
 # Changelog
 
+## [4.0.5-beta.15] - 2026-04-15
+
+### Improved
+- **Copy Screen Info diagnostic** — now saves a raw test PNG to `~/Desktop/macshot-raw-test.png` using pure CoreGraphics (no NSImage/AppKit). This helps diagnose whether color issues originate in ScreenCaptureKit or in the AppKit drawing pipeline.
+
 ## [4.0.5-beta.14] - 2026-04-15
 
 ### Fixed

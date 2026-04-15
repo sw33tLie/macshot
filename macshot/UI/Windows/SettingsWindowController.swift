@@ -1376,6 +1376,24 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
                             lines.append("")
                         }
                     }
+                    // Save raw CGImage from first display to Desktop for color diagnosis.
+                    // Uses pure CGImageDestination — no NSImage, no AppKit drawing pipeline.
+                    if let firstDisplay = content.displays.first {
+                        let diagFilter = SCContentFilter(display: firstDisplay, excludingWindows: [])
+                        let diagConfig = SCStreamConfiguration()
+                        diagConfig.width = firstDisplay.width
+                        diagConfig.height = firstDisplay.height
+                        diagConfig.captureResolution = .best
+                        diagConfig.colorSpaceName = CGColorSpace.sRGB as CFString
+                        if let rawImg = try? await SCScreenshotManager.captureImage(contentFilter: diagFilter, configuration: diagConfig) {
+                            let desktop = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Desktop/macshot-raw-test.png")
+                            if let dest = CGImageDestinationCreateWithURL(desktop as CFURL, "public.png" as CFString, 1, nil) {
+                                CGImageDestinationAddImage(dest, rawImg, nil)
+                                CGImageDestinationFinalize(dest)
+                                lines.append("Raw test image saved to: ~/Desktop/macshot-raw-test.png")
+                            }
+                        }
+                    }
                 } catch {
                     lines.append("Capture error: \(error.localizedDescription)")
                 }
