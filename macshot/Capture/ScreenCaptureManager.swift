@@ -126,32 +126,19 @@ class ScreenCaptureManager {
         }
     }
 
-    /// Convert a CGImage (potentially ARGB16F or other GPU format) into an 8-bit bitmap.
-    /// This forces the pixel format conversion on the current (background) thread so it
-    /// doesn't stall the main thread when the image is first drawn.
-    /// Uses premultipliedLast (RGBA) which is universally supported by CGContext
-    /// regardless of the source image's pixel format.
+    /// Convert a CGImage (potentially ARGB16F or other GPU format) into an 8-bit sRGB bitmap.
+    /// Always normalizes to sRGB — some external monitors have ICC profiles that don't
+    /// round-trip correctly through AppKit's rendering pipeline, causing wrong colors.
+    /// sRGB is universally understood by every display, app, and image format.
     private static func copyTo8BitBGRA(_ src: CGImage) -> CGImage? {
         let w = src.width
         let h = src.height
-        // Use the source image's color space (typically display P3 on modern Macs) so
-        // CoreGraphics doesn't need a color space conversion when drawing to screen.
-        let cs = src.colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB)!
-        // Try RGBA first (universally compatible), fall back to BGRA, then
-        // sRGB if the display's color space doesn't support either format.
-        let formats: [(CGColorSpace, UInt32)] = [
-            (cs, CGImageAlphaInfo.premultipliedLast.rawValue),
-            (cs, CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue),
-            (CGColorSpace(name: CGColorSpace.sRGB) ?? cs, CGImageAlphaInfo.premultipliedLast.rawValue),
-        ]
-        var ctx: CGContext?
-        for (space, info) in formats {
-            ctx = CGContext(data: nil, width: w, height: h,
-                           bitsPerComponent: 8, bytesPerRow: w * 4,
-                           space: space, bitmapInfo: info)
-            if ctx != nil { break }
-        }
-        guard let ctx = ctx else { return nil }
+        let srgb = CGColorSpace(name: CGColorSpace.sRGB)!
+        guard let ctx = CGContext(data: nil, width: w, height: h,
+                                  bitsPerComponent: 8, bytesPerRow: w * 4,
+                                  space: srgb,
+                                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
         ctx.draw(src, in: CGRect(x: 0, y: 0, width: w, height: h))
         guard let result = ctx.makeImage() else { return nil }
         // Force pixel data to materialize now (not lazily on first draw).

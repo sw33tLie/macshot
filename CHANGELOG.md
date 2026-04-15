@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.0.5-beta.11] - 2026-04-15
+
+### Fixed
+- **Wrong colors on external monitors (editor + saved files)** — captured screenshots are now normalized to sRGB at capture time instead of preserving the monitor's native ICC profile. Some external monitors (e.g. ViewSonic VX4380) have profiles that don't round-trip correctly through AppKit's rendering pipeline. Converting to sRGB immediately after ScreenCaptureKit returns the raw image ensures correct colors everywhere.
+- **Last used tool not persisted across app restarts** — the selected annotation tool (pencil, arrow, etc.) now survives app restarts via UserDefaults.
+
 ## [4.0.5-beta.10] - 2026-04-15
 
 ### Fixed
