@@ -1010,11 +1010,16 @@ class Annotation {
         }
         let spx = -sin(startAngle), spy = cos(startAngle)
 
-        // Sizing — scale everything down when arrow is short
-        let sizeScale = min(1.0, max(0.2, totalLen / 120))
-        let tailHalf = max(2, strokeWidth * 0.5) * sizeScale
-        let shaftHalf = max(4, strokeWidth * 1.5) * sizeScale
-        let headHalf = shaftHalf * 2.0
+        // Sizing — the arrow's cross-section (shaft + head width) should never
+        // exceed the arrow's length. Scale everything down proportionally.
+        let rawTailHalf = max(2, strokeWidth * 0.5)
+        let rawShaftHalf = max(4, strokeWidth * 1.5)
+        let rawHeadHalf = rawShaftHalf * 2.0
+        let maxCrossSection = rawHeadHalf * 2  // full head width
+        let fitScale = min(1.0, totalLen / max(1, maxCrossSection * 1.5))
+        let tailHalf = rawTailHalf * fitScale
+        let shaftHalf = rawShaftHalf * fitScale
+        let headHalf = rawHeadHalf * fitScale
         let headLen = min(totalLen * 0.35, headHalf * 1.8)
         let r: CGFloat = min(headLen * 0.22, headHalf * 0.3)  // corner rounding
 
