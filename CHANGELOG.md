@@ -1,9 +1,9 @@
 # Changelog
 
-## [4.0.5-beta.16] - 2026-04-15
+## [4.0.5-beta.17] - 2026-04-15
 
 ### Fixed
-- **Wrong colors on external monitors (fifth attempt)** — bypass AppKit's NSImage color matching entirely. The raw CGImage from ScreenCaptureKit is now drawn directly via `CGContext.draw()` in both the overlay display and the save/export pipeline. On systems where macOS reports nil display color profiles (e.g. with DisplayLink adapters), AppKit's `NSImage.draw()` was silently applying incorrect color conversions. Drawing the raw CGImage via CoreGraphics passes pixels through unchanged.
+- **Wrong colors on external monitors (fifth attempt)** — bypass AppKit's NSImage color matching entirely. The raw CGImage from ScreenCaptureKit is now stored directly and drawn via `CGContext.draw()` in both the overlay display and the save/export pipeline, never passing through `NSImage.draw()`. On systems where macOS reports nil display color profiles (e.g. with DisplayLink adapters), AppKit was silently applying incorrect color conversions. Drawing the raw CGImage via CoreGraphics passes pixels through unchanged.
 
 ## [4.0.5-beta.14] - 2026-04-15
 
