@@ -33,7 +33,9 @@ class EditorView: OverlayView {
         }
 
         drewFromCompositeCache = false
-        if let image = screenshotImage {
+        if let cg = screenshotCGImage, let ctx = NSGraphicsContext.current {
+            drawCGImage(cg, in: selectionRect, context: ctx)
+        } else if let image = screenshotImage {
             image.draw(in: selectionRect, from: .zero, operation: .copy, fraction: 1.0)
         }
     }
