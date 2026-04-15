@@ -2,8 +2,8 @@
 
 ## [4.0.5-beta.15] - 2026-04-15
 
-### Improved
-- **Copy Screen Info diagnostic** — now saves a raw test PNG to `~/Desktop/macshot-raw-test.png` using pure CoreGraphics (no NSImage/AppKit). This helps diagnose whether color issues originate in ScreenCaptureKit or in the AppKit drawing pipeline.
+### Fixed
+- **Wrong colors on external monitors (fifth attempt)** — bypass AppKit's NSImage color matching entirely. The raw CGImage from ScreenCaptureKit is now drawn directly via `CGContext.draw()` in both the overlay display and the save/export pipeline. On systems where macOS reports nil display color profiles (e.g. with DisplayLink adapters), AppKit's `NSImage.draw()` was silently applying incorrect color conversions. Drawing the raw CGImage via CoreGraphics passes pixels through unchanged.
 
 ## [4.0.5-beta.14] - 2026-04-15
 

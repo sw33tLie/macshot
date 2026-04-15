@@ -89,8 +89,14 @@ class OverlayView: NSView {
     /// When in scroll view mode, toolbar strips are added to this view (window content) instead of self.
     weak var chromeParentView: NSView?
 
+    /// Raw CGImage kept in sync with screenshotImage.
+    /// Used for drawing via CGContext.draw() to bypass AppKit color matching,
+    /// which produces wrong colors on systems with broken display color profiles.
+    var screenshotCGImage: CGImage?
+
     var screenshotImage: NSImage? {
         didSet {
+            screenshotCGImage = screenshotImage?.cgImage(forProposedRect: nil, context: nil, hints: nil)
             needsDisplay = true
             // Screenshot just arrived (async capture) — enable snap queries now.
             if screenshotImage != nil && windowSnapCooldown {
@@ -100,6 +106,37 @@ class OverlayView: NSView {
                 }
             }
         }
+    }
+
+    /// Draw a CGImage into the current CGContext, mapping it to the given rect.
+    /// Bypasses NSImage.draw() and its AppKit color matching pipeline.
+    func drawCGImage(_ cgImage: CGImage, in rect: NSRect, context: NSGraphicsContext) {
+        let cg = context.cgContext
+        cg.saveGState()
+        cg.interpolationQuality = .none
+        cg.draw(cgImage, in: rect)
+        cg.restoreGState()
+    }
+
+    /// Draw a sub-region of a CGImage into the destination rect.
+    /// `fromRect` is in the NSImage coordinate space (points, bottom-left origin).
+    /// The CGImage is cropped to the corresponding pixel region before drawing.
+    func drawCGImage(_ cgImage: CGImage, in destRect: NSRect, from fromRect: NSRect, imageSize: NSSize, context: NSGraphicsContext) {
+        let scaleX = CGFloat(cgImage.width) / imageSize.width
+        let scaleY = CGFloat(cgImage.height) / imageSize.height
+        // NSImage uses bottom-left origin; CGImage uses top-left origin
+        let pixelRect = CGRect(
+            x: fromRect.origin.x * scaleX,
+            y: (imageSize.height - fromRect.origin.y - fromRect.height) * scaleY,
+            width: fromRect.width * scaleX,
+            height: fromRect.height * scaleY
+        )
+        guard let cropped = cgImage.cropping(to: pixelRect) else { return }
+        let cg = context.cgContext
+        cg.saveGState()
+        cg.interpolationQuality = .none
+        cg.draw(cropped, in: destRect)
+        cg.restoreGState()
     }
 
     // State
@@ -1345,9 +1382,9 @@ class OverlayView: NSView {
             // live screen content everywhere (not just inside the selection).
             context.cgContext.clear(bounds)
         } else if !isRecording {
-            if let image = screenshotImage {
+            if let cg = screenshotCGImage {
                 // Screenshot ready — draw it with dark overlay
-                image.draw(in: bounds, from: .zero, operation: .copy, fraction: 1.0)
+                drawCGImage(cg, in: bounds, context: context)
                 NSColor.black.withAlphaComponent(0.45).setFill()
                 NSBezierPath(rect: bounds).fill()
             } else {
@@ -1374,8 +1411,8 @@ class OverlayView: NSView {
             if shouldClipSelectionImage() {
                 context.saveGraphicsState()
                 NSBezierPath(rect: remoteSelectionRect).setClip()
-                if let image = screenshotImage {
-                    image.draw(in: bounds, from: .zero, operation: .copy, fraction: 1.0)
+                if let cg = screenshotCGImage {
+                    drawCGImage(cg, in: bounds, context: context)
                 }
                 context.restoreGraphicsState()
             }
@@ -1405,8 +1442,8 @@ class OverlayView: NSView {
                 context.saveGraphicsState()
                 NSBezierPath(rect: selectionRect).setClip()
                 applyZoomTransform(to: context)
-                if !isScrollCapturing, !isRecording, let image = screenshotImage {
-                    image.draw(in: bounds, from: .zero, operation: .copy, fraction: 1.0)
+                if !isScrollCapturing, !isRecording, let cg = screenshotCGImage {
+                    drawCGImage(cg, in: bounds, context: context)
                 }
                 context.restoreGraphicsState()
             }
@@ -2228,8 +2265,8 @@ class OverlayView: NSView {
             // then draw the dark overlay back so we have a clean base for the gradient.
             context.cgContext.saveGState()
             NSBezierPath(rect: expandedRect).addClip()
-            if let image = screenshotImage {
-                image.draw(in: bounds, from: .zero, operation: .copy, fraction: 1.0)
+            if let cg = screenshotCGImage {
+                drawCGImage(cg, in: bounds, context: context)
             }
             NSColor.black.withAlphaComponent(0.45).setFill()
             NSBezierPath(rect: expandedRect).fill()
@@ -3251,7 +3288,8 @@ class OverlayView: NSView {
     // MARK: - Loupe Preview
 
     private func drawLoupePreview(at center: NSPoint) {
-        guard let screenshot = screenshotImage, let context = NSGraphicsContext.current else {
+        guard let screenshot = screenshotImage, let cg = screenshotCGImage,
+              let context = NSGraphicsContext.current else {
             return
         }
         let size = currentLoupeSize
@@ -3278,7 +3316,7 @@ class OverlayView: NSView {
             x: (srcRect.origin.x - drawRect.origin.x) * scaleX,
             y: (srcRect.origin.y - drawRect.origin.y) * scaleY,
             width: srcRect.width * scaleX, height: srcRect.height * scaleY)
-        screenshot.draw(in: squareRect, from: fromRect, operation: .copy, fraction: 1.0)
+        drawCGImage(cg, in: squareRect, from: fromRect, imageSize: imgSize, context: context)
 
         // Simple border
         NSColor.white.withAlphaComponent(0.6).setStroke()
@@ -7365,14 +7403,19 @@ class OverlayView: NSView {
 
         let drawRect = captureDrawRect
         let annotationsCopy = annotations
+        let rawCG = screenshotCGImage
         var success = false
         let image = NSImage(size: drawRect.size, flipped: false) { _ in
             guard let context = NSGraphicsContext.current else {
                 return true
             }
-            screenshot.draw(
-                in: NSRect(origin: .zero, size: drawRect.size), from: .zero, operation: .copy,
-                fraction: 1.0)
+            if let cg = rawCG {
+                context.cgContext.draw(cg, in: NSRect(origin: .zero, size: drawRect.size))
+            } else {
+                screenshot.draw(
+                    in: NSRect(origin: .zero, size: drawRect.size), from: .zero, operation: .copy,
+                    fraction: 1.0)
+            }
             // Translate so annotations at selectionRect coords render correctly
             context.cgContext.translateBy(x: -drawRect.origin.x, y: -drawRect.origin.y)
             // Censor annotations render first so other annotations appear on top
@@ -7465,9 +7508,11 @@ class OverlayView: NSView {
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.current = nsContext
 
-        if let screenshot = screenshotImage {
-            // In editor mode the image is at selectionRect (natural size);
-            // in overlay mode it fills bounds (full screen).
+        // Draw the raw CGImage directly via CoreGraphics to bypass AppKit color matching.
+        if let cg = screenshotCGImage {
+            let drawRect = captureDrawRect
+            cgCtx.draw(cg, in: drawRect)
+        } else if let screenshot = screenshotImage {
             let drawRect = captureDrawRect
             screenshot.draw(in: drawRect, from: .zero, operation: .copy, fraction: 1.0)
         }
