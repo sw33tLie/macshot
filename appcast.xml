@@ -24,10 +24,10 @@
     <enclosure url="https://github.com/sw33tLie/macshot/releases/download/v4.0.4/MacShot.dmg" length="5940423" type="application/octet-stream" sparkle:edSignature="Bcj1UKJt6ByGyOk28g/M7CFxKiId+FvNsHSxUXlcv0BiHEBmpSSJ4/S3yPCIcLQpOhZzLZ9ADN9OsV4Q2qgRBw==" />
 </item>
 <item>
-    <title>v4.0.5-beta.9</title>
-    <pubDate>Tue, 14 Apr 2026 23:19:51 +0000</pubDate>
-    <sparkle:version>44</sparkle:version>
-    <sparkle:shortVersionString>4.0.5-beta.9</sparkle:shortVersionString>
+    <title>v4.0.5-beta.10</title>
+    <pubDate>Wed, 15 Apr 2026 15:21:41 +0000</pubDate>
+    <sparkle:version>49</sparkle:version>
+    <sparkle:shortVersionString>4.0.5-beta.10</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
     <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
@@ -38,13 +38,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Added</h3><ul> <li><b>Capture Last Area</b> — new action that opens the overlay with the previous selection pre-applied. Available in the menu bar, as a configurable hotkey (Settings > Shortcuts), and via `macshot://capture-last` URL scheme.</li> <li><b>URL scheme toggle</b> — "Enable macshot:// URL scheme" checkbox in Settings (enabled by default).</li>  </ul><h3>Fixed</h3><ul> <li><b>Instant overlay</b> — overlay now appears immediately (transparent) while screenshots capture in background. Eliminates all delay on hotkey press.</li> <li><b>Window snap highlight race condition</b> — snap query deferred until screenshot arrives, preventing blue highlight artifacts on the transparent pre-screenshot overlay.</li> <li><b>Permanent ScreenCaptureKit cache</b> — display enumeration cached for app lifetime, only refreshed on monitor connect/disconnect. First capture after launch is the only slow one.</li>  </ul><h3>Changed</h3><ul> <li><b>Removed "Remember last selection area" setting</b> — selection is now always saved. Use the new "Capture Last Area" action to re-capture the same region on demand.</li> <li><b>Multi-select moved to Ctrl+click</b> — consistent with Ctrl+drag for lasso. Shift is now purely for angle/shape constraining.</li></ul>
+      <h3>Fixed</h3><ul> <li><b>Wrong colors on external monitors (editor + saved files)</b> — replaced all uses of `CGColorSpaceCreateDeviceRGB()` (device-dependent, untagged) with either the source image's ICC profile or explicit sRGB. Fixes wildly shifted colors on displays with non-standard color profiles (e.g. ViewSonic VX4380, VG2448).</li></ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v4.0.5-beta.9/MacShot.dmg"
-        length="5379942"
+        url="https://github.com/sw33tLie/macshot/releases/download/v4.0.5-beta.10/MacShot.dmg"
+        length="5376210"
         type="application/octet-stream"
-        sparkle:edSignature="lFgK/PWoLKM5z4zV58kAd2Au+gJ+HQ2n6s5LQSjLBemOG+hB7RL13tae5OswbYsu5r0edhVr8B1BGSqqHAxZCg=="
+        sparkle:edSignature="Z7lM3v2mBHRCArxo1bXbujlCvhlZ7j5OQ57Z13/TtmQMraBC/5rdqw9Vkfbmg2OIf/E4rnH/574Xy9aB/+rmBA=="
     />
 </item>
     </channel>
