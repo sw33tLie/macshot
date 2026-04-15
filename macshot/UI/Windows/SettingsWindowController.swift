@@ -1,6 +1,7 @@
 import Cocoa
 import Carbon
 import ServiceManagement
+import ScreenCaptureKit
 
 /// Settings window that intercepts Cmd+Q to close itself instead of quitting the app.
 private class SettingsWindow: NSWindow {
@@ -1311,8 +1312,78 @@ class SettingsWindowController: NSWindowController, NSTabViewDelegate, NSWindowD
         license.font = NSFont.systemFont(ofSize: 11)
         license.textColor = .tertiaryLabelColor
         stack.addArrangedSubview(license)
+        stack.setCustomSpacing(20, after: license)
+
+        // Screen Info (debug) — gathers display & capture metadata, copies to clipboard
+        let screenInfoBtn = NSButton(title: L("Copy Screen Info"), target: self, action: #selector(copyScreenInfo))
+        screenInfoBtn.bezelStyle = .rounded
+        screenInfoBtn.font = NSFont.systemFont(ofSize: 11)
+        screenInfoBtn.tag = 9999  // tag for lookup in action handler
+        stack.addArrangedSubview(screenInfoBtn)
+
+        let screenInfoHint = NSTextField(labelWithString: L("Copies display and capture diagnostics to clipboard"))
+        screenInfoHint.font = NSFont.systemFont(ofSize: 10)
+        screenInfoHint.textColor = .tertiaryLabelColor
+        stack.addArrangedSubview(screenInfoHint)
 
         return container
+    }
+
+    @objc private func copyScreenInfo() {
+        if #available(macOS 14.0, *) {
+            Task { @MainActor in
+                var lines: [String] = []
+                let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
+                let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
+                lines.append("macshot \(version) (\(build))")
+                lines.append("macOS \(ProcessInfo.processInfo.operatingSystemVersionString)")
+                lines.append("")
+                lines.append("=== NSScreen Info ===")
+                for (i, screen) in NSScreen.screens.enumerated() {
+                    let id = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? UInt32 ?? 0
+                    let cs = screen.colorSpace?.cgColorSpace
+                    lines.append("Screen \(i): \(screen.localizedName) (ID: \(id))")
+                    lines.append("  frame: \(screen.frame)")
+                    lines.append("  backingScale: \(screen.backingScaleFactor)")
+                    lines.append("  colorSpace: \(cs?.name as String? ?? "nil")")
+                    lines.append("  cs model: \(cs?.model.rawValue ?? -1)")
+                    lines.append("")
+                }
+                do {
+                    let content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: true)
+                    lines.append("=== ScreenCaptureKit Capture Info ===")
+                    for display in content.displays {
+                        let filter = SCContentFilter(display: display, excludingWindows: [])
+                        let config = SCStreamConfiguration()
+                        config.width = display.width
+                        config.height = display.height
+                        config.captureResolution = .best
+                        if let img = try? await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config) {
+                            lines.append("Display \(display.displayID) (\(display.width)x\(display.height)):")
+                            lines.append("  CGImage size: \(img.width)x\(img.height)")
+                            lines.append("  bitsPerComponent: \(img.bitsPerComponent)")
+                            lines.append("  bitsPerPixel: \(img.bitsPerPixel)")
+                            lines.append("  bytesPerRow: \(img.bytesPerRow)")
+                            lines.append("  bitmapInfo: \(img.bitmapInfo.rawValue)")
+                            lines.append("  alphaInfo: \(img.alphaInfo.rawValue)")
+                            lines.append("  colorSpace: \(img.colorSpace?.name as String? ?? "nil")")
+                            lines.append("  cs model: \(img.colorSpace?.model.rawValue ?? -1)")
+                            lines.append("")
+                        }
+                    }
+                } catch {
+                    lines.append("Capture error: \(error.localizedDescription)")
+                }
+                let result = lines.joined(separator: "\n")
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(result, forType: .string)
+                // Flash the button title to confirm
+                if let btn = self.window?.contentView?.viewWithTag(9999) as? NSButton {
+                    btn.title = L("Copied!")
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { btn.title = L("Copy Screen Info") }
+                }
+            }
+        }
     }
 
     private func updateGDriveStatus() {

@@ -1,6 +1,9 @@
 # Changelog
 
-## [4.0.5-beta.12] - 2026-04-15
+## [4.0.5-beta.13] - 2026-04-15
+
+### Added
+- **Copy Screen Info** button in Settings > About — copies display and capture diagnostics to clipboard for bug reports.
 
 ### Fixed
 - **Wrong colors on external monitors (third attempt)** — removed the 8-bit pixel format conversion (`copyTo8BitBGRA`) that was corrupting colors on some monitors. The raw CGImage from ScreenCaptureKit is now passed through directly and AppKit handles color management natively, matching how other screenshot tools (e.g. Shottr) work.
