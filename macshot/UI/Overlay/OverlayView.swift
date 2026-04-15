@@ -174,8 +174,14 @@ class OverlayView: NSView {
         ]
         return Dictionary(uniqueKeysWithValues: handlers.map { ($0.tool, $0) })
     }()
-    /// Last tool the user explicitly picked — shared across overlay instances within one app session.
-    private static var lastUsedTool: AnnotationTool = .arrow
+    /// Last tool the user explicitly picked — persisted across app launches.
+    private static var lastUsedTool: AnnotationTool = {
+        if let raw = UserDefaults.standard.object(forKey: "lastUsedTool") as? Int,
+           let tool = AnnotationTool(rawValue: raw) {
+            return tool
+        }
+        return .arrow
+    }()
     var currentTool: AnnotationTool = {
         let remember = UserDefaults.standard.object(forKey: "rememberLastTool") as? Bool ?? true
         return remember ? OverlayView.lastUsedTool : .arrow
@@ -184,6 +190,7 @@ class OverlayView: NSView {
             // Persist drawing tool choices; skip transient/mode tools
             if currentTool != .select && currentTool != .loupe {
                 OverlayView.lastUsedTool = currentTool
+                UserDefaults.standard.set(currentTool.rawValue, forKey: "lastUsedTool")
             }
         }
     }
