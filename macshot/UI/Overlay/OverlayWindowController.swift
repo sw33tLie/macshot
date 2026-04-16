@@ -89,6 +89,12 @@ class OverlayWindowController {
         window.acceptsMouseMovedEvents = true
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         window.isReleasedWhenClosed = false
+        // Force the window backing store to sRGB so CGContext.draw() of our
+        // sRGB-tagged screenshot is a no-op (same color space). Without this,
+        // the backing store defaults to the display's ICC profile and Core
+        // Graphics performs an sRGB→display-profile conversion at draw time
+        // that mangles colors on monitors with non-sRGB profiles.
+        window.colorSpace = .sRGB
 
         let view = OverlayView()
         view.frame = NSRect(origin: .zero, size: screen.frame.size)

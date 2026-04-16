@@ -51,6 +51,7 @@ class PinWindowController {
         panel.isMovableByWindowBackground = true
         panel.isReleasedWhenClosed = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        panel.colorSpace = .sRGB
         panel.contentAspectRatio = size
         // Allow scroll/magnify events to reach the view even when panel is not key
         panel.becomesKeyOnlyIfNeeded = true

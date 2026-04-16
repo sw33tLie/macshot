@@ -83,6 +83,7 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         win.isReleasedWhenClosed = false
         win.delegate = self
         win.collectionBehavior = [.fullScreenAuxiliary]
+        win.colorSpace = .sRGB
 
         // Create EditorView as the document view inside an NSScrollView
         let view = EditorView()
