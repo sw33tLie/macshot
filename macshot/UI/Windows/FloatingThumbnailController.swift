@@ -63,6 +63,7 @@ class FloatingThumbnailController: NSObject, NSDraggingSource {
         panel.isReleasedWhenClosed = false
         panel.hidesOnDeactivate = false
         panel.collectionBehavior = [.canJoinAllSpaces, .stationary]
+        panel.colorSpace = .sRGB
         panel.acceptsMouseMovedEvents = true
 
         let view = ThumbnailView(image: image, thumbSize: thumbSize)

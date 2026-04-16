@@ -1,5 +1,10 @@
 # Changelog
 
+## [4.0.5-beta.18] - 2026-04-16
+
+### Fixed
+- **Wrong colors on external monitors** — set `NSWindow.colorSpace = .sRGB` on all windows that display screenshots (overlay, editor, pin, thumbnail). The window backing store defaults to the display's ICC profile, so drawing an sRGB-tagged CGImage triggered a color space conversion at draw time that mangled colors on monitors with non-sRGB profiles. With matching color spaces the draw-time conversion is a no-op; the compositor handles sRGB→display mapping correctly via the GPU. Same fix used by WezTerm and Servo.
+
 ## [4.0.5-beta.17] - 2026-04-15
 
 ### Fixed
