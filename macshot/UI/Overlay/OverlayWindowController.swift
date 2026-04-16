@@ -718,6 +718,33 @@ extension OverlayWindowController: OverlayViewDelegate {
     }
 
     func overlayViewDidRequestQuickSave() {
+        // --- Diagnostic: save raw CGImage directly via CGImageDestination ---
+        // No CGContext, no NSImage, no color conversion. If this file has
+        // correct colors, the bug is in our rendering pipeline.
+        if let rawCropped = overlayView?.cropRawCGImage() {
+            let dirURL = SaveDirectoryAccess.resolve()
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd 'at' HH.mm.ss"
+            let timestamp = formatter.string(from: Date())
+            let fileURL = dirURL.appendingPathComponent("Screenshot \(timestamp).png")
+            DispatchQueue.global(qos: .userInitiated).async {
+                let data = NSMutableData()
+                if let dest = CGImageDestinationCreateWithData(data as CFMutableData, "public.png" as CFString, 1, nil) {
+                    CGImageDestinationAddImage(dest, rawCropped, nil)
+                    if CGImageDestinationFinalize(dest) {
+                        try? (data as Data).write(to: fileURL)
+                    }
+                }
+                SaveDirectoryAccess.stopAccessing(url: dirURL)
+            }
+        }
+
+        playCopySound()
+        dismiss()
+        overlayDelegate?.overlayDidConfirm(self, capturedImage: nil, annotationData: nil)
+        return
+        // --- End diagnostic ---
+
         // Snapshot post-processing config before dismissing
         let hasEffects = overlayView?.effectsActive ?? false
         let effectsCfg = overlayView?.effectsConfig ?? ImageEffectsConfig()
