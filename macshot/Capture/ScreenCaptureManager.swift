@@ -90,7 +90,17 @@ class ScreenCaptureManager {
                                 config.showsCursor = UserDefaults.standard.bool(
                                     forKey: "captureCursor")
                                 config.captureResolution = .best
-                                config.colorSpaceName = CGColorSpace.sRGB as CFString
+                                // Only set colorSpaceName when the screen reports a known
+                                // profile. On systems where NSScreen.colorSpace is nil
+                                // (e.g. DisplayLink adapters, some ViewSonic monitors),
+                                // forcing sRGB makes ScreenCaptureKit convert through a
+                                // broken/unknown profile and produces mangled colors.
+                                // Leaving it unset lets SCK use the display's native
+                                // color space, which preserves correct pixel values.
+                                if let csName = screen.colorSpace?.cgColorSpace?.name,
+                                   CFEqual(csName, CGColorSpace.sRGB) || CFEqual(csName, CGColorSpace.displayP3) {
+                                    config.colorSpaceName = csName
+                                }
 
                                 guard
                                     let image = try? await SCScreenshotManager.captureImage(
@@ -175,7 +185,10 @@ class ScreenCaptureManager {
             config.height = Int(scWindow.frame.height) * scale
             config.showsCursor = false
             config.captureResolution = .best
-            config.colorSpaceName = CGColorSpace.sRGB as CFString
+            if let csName = screen.colorSpace?.cgColorSpace?.name,
+               CFEqual(csName, CGColorSpace.sRGB) || CFEqual(csName, CGColorSpace.displayP3) {
+                config.colorSpaceName = csName
+            }
 
             guard
                 let image = try? await SCScreenshotManager.captureImage(

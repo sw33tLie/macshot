@@ -83,7 +83,13 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         win.isReleasedWhenClosed = false
         win.delegate = self
         win.collectionBehavior = [.fullScreenAuxiliary]
-        win.colorSpace = .sRGB
+        // Match window color space to the image so CGContext.draw() doesn't convert.
+        if let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil),
+           let cgCS = cgImage.colorSpace, let nsCS = NSColorSpace(cgColorSpace: cgCS) {
+            win.colorSpace = nsCS
+        } else {
+            win.colorSpace = .sRGB
+        }
 
         // Create EditorView as the document view inside an NSScrollView
         let view = EditorView()

@@ -63,6 +63,7 @@ class OverlayWindowController {
         let screen = capture.screen
         self.screen = screen
         setupWindow(screen: screen)
+        matchWindowColorSpace(to: capture.image)
         overlayView?.screenshotCGImage = capture.image
         overlayView?.screenshotImage = NSImage(cgImage: capture.image, size: screen.frame.size)
     }
@@ -89,12 +90,6 @@ class OverlayWindowController {
         window.acceptsMouseMovedEvents = true
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         window.isReleasedWhenClosed = false
-        // Force the window backing store to sRGB so CGContext.draw() of our
-        // sRGB-tagged screenshot is a no-op (same color space). Without this,
-        // the backing store defaults to the display's ICC profile and Core
-        // Graphics performs an sRGB→display-profile conversion at draw time
-        // that mangles colors on monitors with non-sRGB profiles.
-        window.colorSpace = .sRGB
 
         let view = OverlayView()
         view.frame = NSRect(origin: .zero, size: screen.frame.size)
@@ -106,8 +101,20 @@ class OverlayWindowController {
         self.overlayView = view
     }
 
+    /// Match the window backing store's color space to the captured image's
+    /// color space so CGContext.draw() is a no-op (no color conversion).
+    /// Falls back to sRGB if the image has no color space.
+    private func matchWindowColorSpace(to image: CGImage) {
+        if let cgCS = image.colorSpace, let nsCS = NSColorSpace(cgColorSpace: cgCS) {
+            overlayWindow?.colorSpace = nsCS
+        } else {
+            overlayWindow?.colorSpace = .sRGB
+        }
+    }
+
     /// Set the screenshot after the overlay is visible.
     func setScreenshot(_ image: CGImage) {
+        matchWindowColorSpace(to: image)
         overlayView?.screenshotCGImage = image
         overlayView?.screenshotImage = NSImage(cgImage: image, size: screen.frame.size)
         // Enable interaction now that the screenshot is ready.
