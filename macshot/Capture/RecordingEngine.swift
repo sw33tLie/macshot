@@ -169,7 +169,10 @@ final class RecordingEngine: NSObject {
             config.showsCursor = true   // we'll draw our own highlight on top if needed
             config.sourceRect = cropRect
             config.pixelFormat = kCVPixelFormatType_32BGRA
-            config.colorSpaceName = CGColorSpace.sRGB as CFString
+            if let csName = screen.colorSpace?.cgColorSpace?.name,
+               CFEqual(csName, CGColorSpace.sRGB) || CFEqual(csName, CGColorSpace.displayP3) {
+                config.colorSpaceName = csName
+            }
             config.scalesToFit = false
 
             // System audio capture (off by default, macOS 13+)

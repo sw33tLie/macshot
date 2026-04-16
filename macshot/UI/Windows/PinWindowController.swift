@@ -51,7 +51,12 @@ class PinWindowController {
         panel.isMovableByWindowBackground = true
         panel.isReleasedWhenClosed = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        panel.colorSpace = .sRGB
+        if let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil),
+           let cgCS = cgImage.colorSpace, let nsCS = NSColorSpace(cgColorSpace: cgCS) {
+            panel.colorSpace = nsCS
+        } else {
+            panel.colorSpace = .sRGB
+        }
         panel.contentAspectRatio = size
         // Allow scroll/magnify events to reach the view even when panel is not key
         panel.becomesKeyOnlyIfNeeded = true

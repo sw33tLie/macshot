@@ -1,5 +1,10 @@
 # Changelog
 
+## [4.0.5-beta.19] - 2026-04-16
+
+### Fixed
+- **Wrong colors on external monitors** — stop forcing `colorSpaceName = sRGB` on ScreenCaptureKit captures. On systems where `NSScreen.colorSpace` is nil (e.g. DisplayLink adapters, some ViewSonic monitors), this forced an internal color conversion through a broken/unknown display profile, mangling pixel values before macshot even receives them. Now only sets `colorSpaceName` when the screen reports a known profile (sRGB or Display P3), matching how Snapzy handles this. Window backing store color space is also matched to the captured image's color space to avoid draw-time conversion.
+
 ## [4.0.5-beta.18] - 2026-04-16
 
 ### Fixed
