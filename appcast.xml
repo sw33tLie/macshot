@@ -24,10 +24,10 @@
     <enclosure url="https://github.com/sw33tLie/macshot/releases/download/v4.0.4/MacShot.dmg" length="5940423" type="application/octet-stream" sparkle:edSignature="Bcj1UKJt6ByGyOk28g/M7CFxKiId+FvNsHSxUXlcv0BiHEBmpSSJ4/S3yPCIcLQpOhZzLZ9ADN9OsV4Q2qgRBw==" />
 </item>
 <item>
-    <title>v4.0.5-beta.18</title>
-    <pubDate>Thu, 16 Apr 2026 14:16:54 +0000</pubDate>
-    <sparkle:version>59</sparkle:version>
-    <sparkle:shortVersionString>4.0.5-beta.18</sparkle:shortVersionString>
+    <title>v4.0.5-beta.19</title>
+    <pubDate>Thu, 16 Apr 2026 14:40:31 +0000</pubDate>
+    <sparkle:version>60</sparkle:version>
+    <sparkle:shortVersionString>4.0.5-beta.19</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
     <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
@@ -38,13 +38,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Fixed</h3><ul> <li><b>Wrong colors on external monitors</b> — set `NSWindow.colorSpace = .sRGB` on all windows that display screenshots (overlay, editor, pin, thumbnail). The window backing store defaults to the display's ICC profile, so drawing an sRGB-tagged CGImage triggered a color space conversion at draw time that mangled colors on monitors with non-sRGB profiles. With matching color spaces the draw-time conversion is a no-op; the compositor handles sRGB→display mapping correctly via the GPU. Same fix used by WezTerm and Servo.</li></ul>
+      <h3>Fixed</h3><ul> <li><b>Wrong colors on external monitors</b> — stop forcing `colorSpaceName = sRGB` on ScreenCaptureKit captures. On systems where `NSScreen.colorSpace` is nil (e.g. DisplayLink adapters, some ViewSonic monitors), this forced an internal color conversion through a broken/unknown display profile, mangling pixel values before macshot even receives them. Now only sets `colorSpaceName` when the screen reports a known profile (sRGB or Display P3), matching how Snapzy handles this. Window backing store color space is also matched to the captured image's color space to avoid draw-time conversion.</li></ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v4.0.5-beta.18/MacShot.dmg"
-        length="5397775"
+        url="https://github.com/sw33tLie/macshot/releases/download/v4.0.5-beta.19/MacShot.dmg"
+        length="5397450"
         type="application/octet-stream"
-        sparkle:edSignature="+WvTRD0uaCVOUBKJ/Rq6yks9s0B9KRgTijDFwIV3omgZJWUINrsK07kfNl4u5h+079O1rait8/5jGadWp3APCA=="
+        sparkle:edSignature="VWBu1k0jjFmdnUOwFDy6N/OxCGI9mpQbGt7ODQA99elyMpbQSH03bHNlPTvBkhFTgM7/43Z4UwBNwvABmJXsDg=="
     />
 </item>
     </channel>
