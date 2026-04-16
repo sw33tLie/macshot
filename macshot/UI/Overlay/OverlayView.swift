@@ -7449,6 +7449,29 @@ class OverlayView: NSView {
         return renderSelectedRegion(includeAnnotations: true)
     }
 
+    /// Crop the raw CGImage to the selection rect without any CGContext drawing.
+    /// Uses CGImage.cropping(to:) which is a zero-copy pixel slice — no color
+    /// conversion, no channel reinterpretation. For diagnostics and as a fast
+    /// path when there are no annotations.
+    func cropRawCGImage() -> CGImage? {
+        guard let cgImage = screenshotCGImage,
+              selectionRect.width > 0, selectionRect.height > 0 else { return nil }
+        let imgW = CGFloat(cgImage.width)
+        let imgH = CGFloat(cgImage.height)
+        let viewSize = isEditorMode ? selectionRect.size : bounds.size
+        let scaleX = imgW / viewSize.width
+        let scaleY = imgH / viewSize.height
+        // Convert selection rect from view coords (bottom-left origin) to
+        // CGImage coords (top-left origin)
+        let pixelRect = CGRect(
+            x: round(selectionRect.origin.x * scaleX),
+            y: round((viewSize.height - selectionRect.origin.y - selectionRect.height) * scaleY),
+            width: round(selectionRect.width * scaleX),
+            height: round(selectionRect.height * scaleY)
+        )
+        return cgImage.cropping(to: pixelRect)
+    }
+
     /// Capture the selected region WITHOUT annotations — just the raw screenshot.
     /// Used for editable history: the raw image is stored alongside annotation data.
     func captureSelectedRegionRaw() -> NSImage? {

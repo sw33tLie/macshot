@@ -1,5 +1,10 @@
 # Changelog
 
+## [4.0.5-beta.20] - 2026-04-16
+
+### Changed
+- **Diagnostic build** — quick save now writes the raw CGImage directly to disk via CGImageDestination, bypassing all CGContext drawing, NSImage, and color conversion. If the saved file has correct colors, the capture is fine and the bug is in our rendering pipeline. If still wrong, ScreenCaptureKit itself is producing bad data.
+
 ## [4.0.5-beta.19] - 2026-04-16
 
 ### Fixed
