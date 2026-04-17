@@ -130,6 +130,7 @@ private final class VideoEditorView: NSView {
     // Zoom segments: user-authored regions that zoom into the video during
     // that portion of playback and during export.
     private var zoomSegments: [VideoZoomSegment] = []
+    private var censorSegments: [VideoCensorSegment] = []
     private var selectedSegmentID: UUID?
     // Drag state: segment being dragged, which edge/body, pixels-from-anchor
     private enum SegmentDragKind { case move, resizeStart, resizeEnd }
@@ -156,8 +157,14 @@ private final class VideoEditorView: NSView {
     private let controlsH: CGFloat = 172  // grown to fit the slim Zooms row above the buttons
     private let timelinePad: CGFloat = 20
     private let zoomsRowH: CGFloat = 22
-    private var zoomsTrackRect: NSRect = .zero // track portion (same x-range as timeline)
+    private var zoomsTrackRect: NSRect = .zero // row 0 track portion (same x-range as timeline)
     private var zoomsAddRects: [(NSRect, Double, Double)] = []  // [(rect, gapStartTime, gapEndTime)]
+
+    /// Row index assigned to each effect segment by the stacking layout.
+    /// Recomputed every draw. Keyed by segment UUID.
+    private var effectRowAssignment: [UUID: Int] = [:]
+    /// Number of effect rows visible (1 = single-height row).
+    private var effectRowCount: Int = 1
 
     init(frame: NSRect, videoURL: URL) {
         self.videoURL = videoURL
@@ -266,7 +273,11 @@ private final class VideoEditorView: NSView {
     }
 
     private func buildPlayerView() {
-        let item = AVPlayerItem(url: videoURL)
+        // Use the same AVAsset instance the rest of the editor uses so that
+        // track IDs our composition references line up with what AVPlayer is
+        // decoding.
+        let playerAsset = asset ?? AVAsset(url: videoURL)
+        let item = AVPlayerItem(asset: playerAsset)
         let player = AVPlayer(playerItem: item)
         self.player = player
 
@@ -375,6 +386,7 @@ private final class VideoEditorView: NSView {
 
         guard duration > 0 else { return }
 
+        layoutEffectRows()
         drawTimeline()
         drawZoomsRow()
         drawButtons()
@@ -382,12 +394,66 @@ private final class VideoEditorView: NSView {
         if let msg = statusMessage { drawStatus(msg) }
     }
 
+    /// Assign each effect segment to the lowest row where it doesn't overlap
+    /// any already-placed segment in that row (greedy interval coloring).
+    /// Row 0 is closest to the timeline above; additional rows stack downward
+    /// toward the button area (controls row pushes the timeline up, not down).
+    private func layoutEffectRows() {
+        effectRowAssignment.removeAll(keepingCapacity: true)
+        struct Item {
+            let id: UUID
+            let start: Double
+            let end: Double
+        }
+        var items: [Item] = []
+        for z in zoomSegments where z.endTime > z.startTime {
+            items.append(Item(id: z.id, start: z.startTime, end: z.endTime))
+        }
+        for c in censorSegments where c.endTime > c.startTime {
+            items.append(Item(id: c.id, start: c.startTime, end: c.endTime))
+        }
+        items.sort { $0.start < $1.start }
+
+        // Per-row list of ranges we've already placed.
+        var rows: [[ClosedRange<Double>]] = [[]]
+        let maxRows = 3  // hard cap so we never push the timeline into the buttons
+        for item in items {
+            var assigned = -1
+            for (idx, ranges) in rows.enumerated() {
+                let clashes = ranges.contains { r in
+                    // Touching endpoints do not clash; treat [a, b] and [b, c] as non-overlapping
+                    return item.start < r.upperBound && item.end > r.lowerBound
+                        && !(item.start >= r.upperBound || item.end <= r.lowerBound)
+                }
+                if !clashes {
+                    assigned = idx
+                    break
+                }
+            }
+            if assigned < 0 {
+                if rows.count < maxRows {
+                    rows.append([])
+                    assigned = rows.count - 1
+                } else {
+                    assigned = maxRows - 1  // overflow: crowd into the last row
+                }
+            }
+            rows[assigned].append(item.start...item.end)
+            effectRowAssignment[item.id] = assigned
+        }
+        effectRowCount = max(1, rows.count)
+    }
+
     private func drawTimeline() {
         let tlX = timelinePad
         let tlW = bounds.width - timelinePad * 2
-        // Timeline sits above the slim Zooms row; buttons at y=12, zooms at y=50, timeline at y=82.
-        let tlY: CGFloat = 82
+        // Timeline sits above the Effects row(s); buttons at y=12, row 0 at y=50.
+        // Each extra row pushes the timeline up by rowStride points so the two
+        // stay visually connected.
         let tlH: CGFloat = 36
+        let rowStride: CGFloat = zoomsRowH + 2
+        let extraRows = max(0, effectRowCount - 1)
+        let tlY: CGFloat = 82 + CGFloat(extraRows) * rowStride
         timelineRect = NSRect(x: tlX, y: tlY, width: tlW, height: tlH)
 
         // Regenerate thumbnails if width changed significantly
@@ -464,127 +530,206 @@ private final class VideoEditorView: NSView {
         }
     }
 
-    /// Pill rect for a segment on the Zooms row, aligned with the timeline.
-    private func zoomPillRect(for segment: VideoZoomSegment) -> NSRect {
+    /// Pill rect for any effect segment, using its assigned row from the
+    /// stacking layout. Row 0 is the bottom row (at the fixed y=50 anchor);
+    /// additional rows stack UP toward the timeline. The timeline itself
+    /// shifts up by `rowStride` for each extra row — see drawTimeline.
+    private func effectPillRect(id: UUID, start: Double, end: Double) -> NSRect {
         guard duration > 0, zoomsTrackRect.width > 0 else { return .zero }
-        let x0 = zoomsTrackRect.minX + CGFloat(segment.startTime / duration) * zoomsTrackRect.width
-        let x1 = zoomsTrackRect.minX + CGFloat(segment.endTime / duration) * zoomsTrackRect.width
-        return NSRect(x: x0, y: zoomsTrackRect.minY, width: max(2, x1 - x0), height: zoomsTrackRect.height)
+        let row = effectRowAssignment[id] ?? 0
+        let rowStride = zoomsRowH + 2
+        // AppKit y increases upward; higher row index means visually higher (farther from buttons)
+        let y = zoomsTrackRect.minY + CGFloat(row) * rowStride
+        let x0 = zoomsTrackRect.minX + CGFloat(start / duration) * zoomsTrackRect.width
+        let x1 = zoomsTrackRect.minX + CGFloat(end / duration) * zoomsTrackRect.width
+        return NSRect(x: x0, y: y, width: max(2, x1 - x0), height: zoomsTrackRect.height)
+    }
+
+    private func zoomPillRect(for segment: VideoZoomSegment) -> NSRect {
+        return effectPillRect(id: segment.id, start: segment.startTime, end: segment.endTime)
+    }
+
+    private func censorPillRect(for segment: VideoCensorSegment) -> NSRect {
+        return effectPillRect(id: segment.id, start: segment.startTime, end: segment.endTime)
+    }
+
+    /// Shared pill renderer for zoom + censor. Handles fill, fade strips,
+    /// centered icon+label, selection border, and edge resize handles.
+    private func drawEffectPill(rect: NSRect,
+                                 isSelected: Bool,
+                                 baseFillColor: NSColor,
+                                 fadeInFrac: Double,
+                                 fadeOutFrac: Double,
+                                 iconSymbol: String,
+                                 label: String) {
+        let fillColor = baseFillColor.withAlphaComponent(isSelected ? 1.0 : 0.88)
+        let path = NSBezierPath(roundedRect: rect, xRadius: 6, yRadius: 6)
+        fillColor.setFill()
+        path.fill()
+
+        // Darker strips on fade regions
+        let fadeColor = NSColor.black.withAlphaComponent(0.18)
+        let fadeInW = CGFloat(fadeInFrac) * rect.width
+        let fadeOutW = CGFloat(fadeOutFrac) * rect.width
+        NSGraphicsContext.saveGraphicsState()
+        path.addClip()
+        fadeColor.setFill()
+        if fadeInW > 1 {
+            NSBezierPath(rect: NSRect(x: rect.minX, y: rect.minY, width: fadeInW, height: rect.height)).fill()
+        }
+        if fadeOutW > 1 {
+            NSBezierPath(rect: NSRect(x: rect.maxX - fadeOutW, y: rect.minY, width: fadeOutW, height: rect.height)).fill()
+        }
+        NSGraphicsContext.restoreGraphicsState()
+
+        // Centered label with icon
+        let labelAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .semibold),
+            .foregroundColor: NSColor.white,
+        ]
+        let labelNS = label as NSString
+        let labelSize = labelNS.size(withAttributes: labelAttrs)
+        let iconSize: CGFloat = 11
+        let contentW = iconSize + 4 + labelSize.width
+        if rect.width > contentW + 6 {
+            let startX = rect.midX - contentW / 2
+            if let icon = NSImage(systemSymbolName: iconSymbol, accessibilityDescription: nil)?
+                    .withSymbolConfiguration(.init(pointSize: iconSize, weight: .semibold)) {
+                let tinted = NSImage(size: icon.size, flipped: false) { r in
+                    icon.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1)
+                    NSColor.white.setFill()
+                    r.fill(using: .sourceAtop)
+                    return true
+                }
+                tinted.draw(in: NSRect(x: startX,
+                                        y: rect.midY - icon.size.height / 2,
+                                        width: icon.size.width, height: icon.size.height))
+            }
+            labelNS.draw(at: NSPoint(x: startX + iconSize + 4,
+                                      y: rect.midY - labelSize.height / 2),
+                          withAttributes: labelAttrs)
+        } else if rect.width > iconSize + 4 {
+            // Narrow pill: icon only
+            if let icon = NSImage(systemSymbolName: iconSymbol, accessibilityDescription: nil)?
+                    .withSymbolConfiguration(.init(pointSize: iconSize, weight: .semibold)) {
+                let tinted = NSImage(size: icon.size, flipped: false) { r in
+                    icon.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1)
+                    NSColor.white.setFill()
+                    r.fill(using: .sourceAtop)
+                    return true
+                }
+                tinted.draw(in: NSRect(x: rect.midX - icon.size.width / 2,
+                                        y: rect.midY - icon.size.height / 2,
+                                        width: icon.size.width, height: icon.size.height))
+            }
+        }
+
+        if isSelected {
+            NSColor.white.withAlphaComponent(0.95).setStroke()
+            let border = NSBezierPath(roundedRect: rect.insetBy(dx: 0.75, dy: 0.75), xRadius: 6, yRadius: 6)
+            border.lineWidth = 1.5
+            border.stroke()
+        }
+
+        // Edge resize handles — matching style of trim-bar handles.
+        let handleW: CGFloat = 6
+        let handleH: CGFloat = rect.height + 6
+        let handleY = rect.minY - 3
+        let handleAlpha: CGFloat = isSelected ? 1.0 : 0.9
+        let handleColor = NSColor.white.withAlphaComponent(handleAlpha)
+
+        let leftHandle = NSRect(x: rect.minX - handleW / 2 + 1, y: handleY,
+                                 width: handleW, height: handleH)
+        handleColor.setFill()
+        NSBezierPath(roundedRect: leftHandle, xRadius: 2, yRadius: 2).fill()
+        drawZoomHandleGrip(in: leftHandle)
+
+        let rightHandle = NSRect(x: rect.maxX - handleW / 2 - 1, y: handleY,
+                                  width: handleW, height: handleH)
+        handleColor.setFill()
+        NSBezierPath(roundedRect: rightHandle, xRadius: 2, yRadius: 2).fill()
+        drawZoomHandleGrip(in: rightHandle)
     }
 
     /// Draws the slim Zooms row under the main timeline. The track uses the
     /// full timeline width; segments render as full-height pills and the
-    /// remaining time is covered by a "Click to zoom" dashed placeholder.
+    /// remaining time is covered by a "Click to add effect" dashed placeholder.
     private func drawZoomsRow() {
         let rowY: CGFloat = 50
         zoomsTrackRect = NSRect(x: timelineRect.minX, y: rowY,
                                  width: timelineRect.width, height: zoomsRowH)
 
-        // Persistent track background so there's always a visible bar beneath
-        // segments and gaps, matching the style of the main timeline track.
-        let bgPath = NSBezierPath(roundedRect: zoomsTrackRect, xRadius: 5, yRadius: 5)
+        // Persistent track background spanning every stacked row so all
+        // effect pills sit on a continuous bar, not just row 0.
+        let rowStride = zoomsRowH + 2
+        let extraRows = max(0, effectRowCount - 1)
+        let bgRect = NSRect(
+            x: zoomsTrackRect.minX,
+            y: zoomsTrackRect.minY,
+            width: zoomsTrackRect.width,
+            height: zoomsTrackRect.height + CGFloat(extraRows) * rowStride
+        )
+        let bgPath = NSBezierPath(roundedRect: bgRect, xRadius: 5, yRadius: 5)
         ToolbarLayout.iconColor.withAlphaComponent(0.06).setFill()
         bgPath.fill()
 
-        // Draw each segment as a blue pill. Selected gets a white border.
+        // Draw all zoom pills (blue) and censor pills (red) at their assigned
+        // rows. Selected gets a white border.
         for segment in zoomSegments {
             let rect = zoomPillRect(for: segment)
             guard rect.width > 0 else { continue }
-            let isSelected = segment.id == selectedSegmentID
-            let baseFill = NSColor(calibratedRed: 0.25, green: 0.55, blue: 1.0, alpha: isSelected ? 1.0 : 0.88)
-            let path = NSBezierPath(roundedRect: rect, xRadius: 6, yRadius: 6)
-            baseFill.setFill()
-            path.fill()
-
-            // Subtle darker strips on fade regions to visualize the ramp
-            let fadeColor = NSColor.black.withAlphaComponent(0.18)
-            let fadeInW = CGFloat(segment.effectiveFadeIn / max(segment.duration, 0.001)) * rect.width
-            let fadeOutW = CGFloat(segment.effectiveFadeOut / max(segment.duration, 0.001)) * rect.width
-            NSGraphicsContext.saveGraphicsState()
-            path.addClip()
-            fadeColor.setFill()
-            if fadeInW > 1 {
-                NSBezierPath(rect: NSRect(x: rect.minX, y: rect.minY, width: fadeInW, height: rect.height)).fill()
-            }
-            if fadeOutW > 1 {
-                NSBezierPath(rect: NSRect(x: rect.maxX - fadeOutW, y: rect.minY, width: fadeOutW, height: rect.height)).fill()
-            }
-            NSGraphicsContext.restoreGraphicsState()
-
-            // Centered label: magnifier icon + "Nx"
-            let zoomLabel = formatZoom(segment.zoomLevel) as NSString
-            let zoomAttrs: [NSAttributedString.Key: Any] = [
-                .font: NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .semibold),
-                .foregroundColor: NSColor.white,
-            ]
-            let zoomSize = zoomLabel.size(withAttributes: zoomAttrs)
-            let labelIconSize: CGFloat = 11
-            let contentW = labelIconSize + 4 + zoomSize.width
-            if rect.width > contentW + 6 {
-                let startX = rect.midX - contentW / 2
-                if let icon = NSImage(systemSymbolName: "plus.magnifyingglass", accessibilityDescription: nil)?
-                        .withSymbolConfiguration(.init(pointSize: labelIconSize, weight: .semibold)) {
-                    let tinted = NSImage(size: icon.size, flipped: false) { r in
-                        icon.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1)
-                        NSColor.white.setFill()
-                        r.fill(using: .sourceAtop)
-                        return true
-                    }
-                    tinted.draw(in: NSRect(x: startX,
-                                            y: rect.midY - icon.size.height / 2,
-                                            width: icon.size.width, height: icon.size.height))
-                }
-                zoomLabel.draw(at: NSPoint(x: startX + labelIconSize + 4,
-                                            y: rect.midY - zoomSize.height / 2),
-                                withAttributes: zoomAttrs)
-            }
-
-            if isSelected {
-                NSColor.white.withAlphaComponent(0.95).setStroke()
-                let border = NSBezierPath(roundedRect: rect.insetBy(dx: 0.75, dy: 0.75), xRadius: 6, yRadius: 6)
-                border.lineWidth = 1.5
-                border.stroke()
-            }
-
-            // Resize handles at each edge — styled like the trim bar's handles
-            // so users recognise they're draggable. A slimmer profile because
-            // the zooms row is narrower than the main timeline.
-            let handleW: CGFloat = 6
-            let handleH: CGFloat = rect.height + 6
-            let handleY = rect.minY - 3
-            let handleAlpha: CGFloat = isSelected ? 1.0 : 0.9
-            let handleColor = NSColor.white.withAlphaComponent(handleAlpha)
-
-            // Left handle
-            let leftHandle = NSRect(x: rect.minX - handleW / 2 + 1, y: handleY,
-                                     width: handleW, height: handleH)
-            handleColor.setFill()
-            NSBezierPath(roundedRect: leftHandle, xRadius: 2, yRadius: 2).fill()
-            drawZoomHandleGrip(in: leftHandle)
-
-            // Right handle
-            let rightHandle = NSRect(x: rect.maxX - handleW / 2 - 1, y: handleY,
-                                      width: handleW, height: handleH)
-            handleColor.setFill()
-            NSBezierPath(roundedRect: rightHandle, xRadius: 2, yRadius: 2).fill()
-            drawZoomHandleGrip(in: rightHandle)
+            drawEffectPill(
+                rect: rect,
+                isSelected: segment.id == selectedSegmentID,
+                baseFillColor: NSColor(calibratedRed: 0.25, green: 0.55, blue: 1.0, alpha: 1.0),
+                fadeInFrac: segment.effectiveFadeIn / max(segment.duration, 0.001),
+                fadeOutFrac: segment.effectiveFadeOut / max(segment.duration, 0.001),
+                iconSymbol: "plus.magnifyingglass",
+                label: formatZoom(segment.zoomLevel)
+            )
         }
 
-        // Dashed "Click to zoom" placeholders fill every free gap in the row.
-        // Each gap stores its time range so clicking a specific position inside
-        // the placeholder places the new segment exactly where the cursor is.
+        for segment in censorSegments {
+            let rect = censorPillRect(for: segment)
+            guard rect.width > 0 else { continue }
+            let styleIcon: String
+            let styleLabel: String
+            switch segment.style {
+            case .solid:    styleIcon = "square.fill";         styleLabel = L("Solid")
+            case .pixelate: styleIcon = "squareshape.split.2x2"; styleLabel = L("Pixelate")
+            case .blur:     styleIcon = "drop.fill";           styleLabel = L("Blur")
+            }
+            drawEffectPill(
+                rect: rect,
+                isSelected: segment.id == selectedSegmentID,
+                baseFillColor: NSColor(calibratedRed: 0.95, green: 0.35, blue: 0.35, alpha: 1.0),
+                fadeInFrac: segment.effectiveFadeIn / max(segment.duration, 0.001),
+                fadeOutFrac: segment.effectiveFadeOut / max(segment.duration, 0.001),
+                iconSymbol: styleIcon,
+                label: styleLabel
+            )
+        }
+
+        // Dashed "Click to add effect" placeholders fill every free gap in row 0.
+        // Gap detection uses the *combined* schedule — a gap exists where no
+        // segment of either type covers that time.
         zoomsAddRects.removeAll(keepingCapacity: true)
         guard duration > 0 && zoomsTrackRect.width > 20 else { return }
 
-        let sorted = zoomSegments.sorted { $0.startTime < $1.startTime }
-        // Build the list of free time intervals [(gapStart, gapEnd)]
+        struct TimeRange { let start: Double; let end: Double }
+        let combined: [TimeRange] = (zoomSegments.map { TimeRange(start: $0.startTime, end: $0.endTime) }
+                                   + censorSegments.map { TimeRange(start: $0.startTime, end: $0.endTime) })
+            .sorted { $0.start < $1.start }
+        // Re-alias as the same shape the existing gap algorithm expects.
+        // Build the list of free time intervals [(gapStart, gapEnd)] across
+        // both zoom and censor timelines.
         var intervals: [(Double, Double)] = []
         var cursor: Double = 0
-        for seg in sorted {
-            if seg.startTime > cursor + 0.001 {
-                intervals.append((cursor, seg.startTime))
+        for seg in combined {
+            if seg.start > cursor + 0.001 {
+                intervals.append((cursor, seg.start))
             }
-            cursor = max(cursor, seg.endTime)
+            cursor = max(cursor, seg.end)
         }
         if cursor < duration - 0.001 {
             intervals.append((cursor, duration))
@@ -592,7 +737,7 @@ private final class VideoEditorView: NSView {
 
         for (gapStart, gapEnd) in intervals {
             // Allow any gap that can fit the minimum segment duration so there's
-            // always a visible "Click to zoom" slot between adjacent segments.
+            // always a visible "Click to add effect" slot between adjacent segments.
             guard gapEnd - gapStart >= VideoZoomSegment.minDuration else { continue }
             let leftPad: CGFloat = gapStart > 0.001 ? 2 : 0
             let rightPad: CGFloat = gapEnd < duration - 0.001 ? 2 : 0
@@ -609,7 +754,7 @@ private final class VideoEditorView: NSView {
             NSColor(calibratedRed: 0.25, green: 0.55, blue: 1.0, alpha: 0.55).setStroke()
             dash.stroke()
 
-            let addStr = L("Click to zoom") as NSString
+            let addStr = L("Click to add effect") as NSString
             let addAttrs: [NSAttributedString.Key: Any] = [
                 .font: NSFont.systemFont(ofSize: 10, weight: .medium),
                 .foregroundColor: NSColor(calibratedRed: 0.5, green: 0.75, blue: 1.0, alpha: 1.0),
@@ -1068,20 +1213,29 @@ private final class VideoEditorView: NSView {
             isDraggingEnd = true; return
         }
 
-        // Zooms row: segment hit-testing — edges first, then body. Iterate
-        // reverse so the most recently added segment wins on overlap.
-        // Handles stick ~3px above and below the track and ~3px outside each
-        // edge, so extend the hit zone slightly above/below the pill rect.
-        let zoomsHitRect = zoomsTrackRect.insetBy(dx: -5, dy: -5)
-        if duration > 0 && zoomsHitRect.contains(point) {
+        // Effects row(s): segment hit-testing — edges first, then body.
+        // Iterate reverse so the most recently added segment wins on overlap.
+        // Handles stick above/below pill; extra rows stack UP above row 0 so
+        // the hit zone extends upward by (rowCount - 1) * rowStride.
+        let rowStride = zoomsRowH + 2
+        let extraRows = max(0, effectRowCount - 1)
+        let effectsHitRect = NSRect(
+            x: zoomsTrackRect.minX - 5,
+            y: zoomsTrackRect.minY - 5,
+            width: zoomsTrackRect.width + 10,
+            height: zoomsTrackRect.height + 10 + CGFloat(extraRows) * rowStride
+        )
+        if duration > 0 && effectsHitRect.contains(point) {
             let edgeHitW: CGFloat = 9
+            let clickTime = Double((point.x - zoomsTrackRect.minX) / zoomsTrackRect.width) * duration
+
+            // Zoom segments — reversed so latest-drawn wins on overlap
             for segment in zoomSegments.reversed() {
                 let pill = zoomPillRect(for: segment)
                 if pill.insetBy(dx: -edgeHitW, dy: -5).contains(point) {
                     let wasSelected = (selectedSegmentID == segment.id)
                     selectedSegmentID = segment.id
                     draggingSegmentID = segment.id
-                    let clickTime = Double((point.x - zoomsTrackRect.minX) / zoomsTrackRect.width) * duration
                     if abs(point.x - pill.minX) < edgeHitW {
                         draggingSegmentKind = .resizeStart
                         draggingSegmentAnchor = clickTime - segment.startTime
@@ -1091,8 +1245,6 @@ private final class VideoEditorView: NSView {
                     } else {
                         draggingSegmentKind = .move
                         draggingSegmentAnchor = clickTime - segment.startTime
-                        // Second click on an already-selected segment body opens
-                        // the center/zoom picker popover.
                         if wasSelected && event.clickCount == 1 {
                             showZoomSegmentPopover(for: segment, at: pill)
                         }
@@ -1102,13 +1254,40 @@ private final class VideoEditorView: NSView {
                     return
                 }
             }
-            // Click-to-zoom placeholder: add a segment AT the click position
+
+            // Censor segments — same interaction model
+            for segment in censorSegments.reversed() {
+                let pill = censorPillRect(for: segment)
+                if pill.insetBy(dx: -edgeHitW, dy: -5).contains(point) {
+                    let wasSelected = (selectedSegmentID == segment.id)
+                    selectedSegmentID = segment.id
+                    draggingSegmentID = segment.id
+                    if abs(point.x - pill.minX) < edgeHitW {
+                        draggingSegmentKind = .resizeStart
+                        draggingSegmentAnchor = clickTime - segment.startTime
+                    } else if abs(point.x - pill.maxX) < edgeHitW {
+                        draggingSegmentKind = .resizeEnd
+                        draggingSegmentAnchor = clickTime - segment.endTime
+                    } else {
+                        draggingSegmentKind = .move
+                        draggingSegmentAnchor = clickTime - segment.startTime
+                        if wasSelected && event.clickCount == 1 {
+                            showCensorSegmentPopover(for: segment, at: pill)
+                        }
+                    }
+                    savedURL = nil
+                    needsDisplay = true
+                    return
+                }
+            }
+
+            // Click-to-add-effect placeholder: open a small menu so the user
+            // picks the effect type, then add a segment at the click position.
             for (rect, gapStart, gapEnd) in zoomsAddRects where rect.contains(point) {
-                let clickTime = Double((point.x - zoomsTrackRect.minX) / zoomsTrackRect.width) * duration
-                addZoomSegment(clickTime: clickTime, gapStart: gapStart, gapEnd: gapEnd)
+                showAddEffectMenu(at: point, clickTime: clickTime, gapStart: gapStart, gapEnd: gapEnd)
                 return
             }
-            // Empty area of the Zooms row — deselect
+            // Empty area of the effects row(s) — deselect
             if selectedSegmentID != nil {
                 selectedSegmentID = nil
                 needsDisplay = true
@@ -1181,58 +1360,100 @@ private final class VideoEditorView: NSView {
             player?.seek(to: CMTime(seconds: trimEnd, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero)
             needsDisplay = true
         } else if let segID = draggingSegmentID,
-                  let kind = draggingSegmentKind,
-                  let segment = zoomSegments.first(where: { $0.id == segID }) {
-            // Segment drags are in the Zooms row's x-range
+                  let kind = draggingSegmentKind {
+            // Segment drags are in the Effects row's x-range.
             let t = max(0, min(duration, Double((point.x - zoomsTrackRect.minX) / zoomsTrackRect.width) * duration))
-            dragSegment(segment, kind: kind, time: t)
+            if let segment = zoomSegments.first(where: { $0.id == segID }) {
+                dragZoomSegment(segment, kind: kind, time: t)
+            } else if let segment = censorSegments.first(where: { $0.id == segID }) {
+                dragCensorSegment(segment, kind: kind, time: t)
+            }
         } else if isDraggingScrubber {
             scrubTo(point: point)
         }
     }
 
-    private func dragSegment(_ segment: VideoZoomSegment, kind: SegmentDragKind, time t: Double) {
+    /// Collision avoidance for drags: two zooms can't overlap; two censors
+    /// can't overlap; but zoom+censor CAN (the stacking layout gives them
+    /// different rows).
+    private func dragZoomSegment(_ segment: VideoZoomSegment, kind: SegmentDragKind, time t: Double) {
+        let others = zoomSegments.filter { $0.id != segment.id }
+            .map { (start: $0.startTime, end: $0.endTime) }
         switch kind {
         case .move:
-            let segDuration = segment.duration
-            var newStart = t - draggingSegmentAnchor
-            newStart = max(0, min(duration - segDuration, newStart))
-            var newEnd = newStart + segDuration
-            // Collision avoidance: don't push into neighbours
-            let others = zoomSegments.filter { $0.id != segment.id }.sorted { $0.startTime < $1.startTime }
-            for other in others {
-                if newStart < other.endTime && newEnd > other.startTime {
-                    // Collision: push to the side we came from based on current position
-                    if segment.startTime < other.startTime {
-                        newEnd = other.startTime
-                        newStart = newEnd - segDuration
-                    } else {
-                        newStart = other.endTime
-                        newEnd = newStart + segDuration
-                    }
-                }
-            }
+            let (newStart, newEnd) = resolveMove(segment: (segment.startTime, segment.endTime),
+                                                 to: t - draggingSegmentAnchor,
+                                                 others: others)
             segment.startTime = max(0, newStart)
             segment.endTime = min(duration, newEnd)
         case .resizeStart:
             let minEnd = segment.endTime - VideoZoomSegment.minDuration
-            let newStart = max(0, min(minEnd, t - draggingSegmentAnchor))
-            // Don't cross neighbour end
-            let leftNeighbours = zoomSegments.filter { $0.id != segment.id && $0.endTime <= segment.endTime }
-            let lowerBound = leftNeighbours.map { $0.endTime }.max() ?? 0
-            segment.startTime = max(lowerBound, newStart)
+            var newStart = max(0, min(minEnd, t - draggingSegmentAnchor))
+            let lowerBound = others.filter { $0.end <= segment.endTime }.map(\.end).max() ?? 0
+            newStart = max(lowerBound, newStart)
+            segment.startTime = newStart
         case .resizeEnd:
             let minStart = segment.startTime + VideoZoomSegment.minDuration
-            let newEnd = max(minStart, min(duration, t - draggingSegmentAnchor))
-            // Don't cross neighbour start
-            let rightNeighbours = zoomSegments.filter { $0.id != segment.id && $0.startTime >= segment.startTime }
-            let upperBound = rightNeighbours.map { $0.startTime }.min() ?? duration
-            segment.endTime = min(upperBound, newEnd)
+            var newEnd = max(minStart, min(duration, t - draggingSegmentAnchor))
+            let upperBound = others.filter { $0.start >= segment.startTime }.map(\.start).min() ?? duration
+            newEnd = min(upperBound, newEnd)
+            segment.endTime = newEnd
         }
         savedURL = nil
-        // Rebuild the video composition on mouseUp, not on every drag frame —
-        // setting AVPlayerItem.videoComposition invalidates the decoder pipeline.
         needsDisplay = true
+    }
+
+    private func dragCensorSegment(_ segment: VideoCensorSegment, kind: SegmentDragKind, time t: Double) {
+        let others = censorSegments.filter { $0.id != segment.id }
+            .map { (start: $0.startTime, end: $0.endTime) }
+        switch kind {
+        case .move:
+            let (newStart, newEnd) = resolveMove(segment: (segment.startTime, segment.endTime),
+                                                 to: t - draggingSegmentAnchor,
+                                                 others: others)
+            segment.startTime = max(0, newStart)
+            segment.endTime = min(duration, newEnd)
+        case .resizeStart:
+            let minEnd = segment.endTime - VideoCensorSegment.minDuration
+            var newStart = max(0, min(minEnd, t - draggingSegmentAnchor))
+            let lowerBound = others.filter { $0.end <= segment.endTime }.map(\.end).max() ?? 0
+            newStart = max(lowerBound, newStart)
+            segment.startTime = newStart
+        case .resizeEnd:
+            let minStart = segment.startTime + VideoCensorSegment.minDuration
+            var newEnd = max(minStart, min(duration, t - draggingSegmentAnchor))
+            let upperBound = others.filter { $0.start >= segment.startTime }.map(\.start).min() ?? duration
+            newEnd = min(upperBound, newEnd)
+            segment.endTime = newEnd
+        }
+        savedURL = nil
+        needsDisplay = true
+    }
+
+    /// Shared move math for both segment types. `segment` is the current
+    /// (start, end); `to` is the desired new start (pre-collision); `others`
+    /// are the same-type neighbours the segment can't overlap.
+    private func resolveMove(segment: (Double, Double),
+                              to desiredStart: Double,
+                              others: [(start: Double, end: Double)]) -> (Double, Double) {
+        let segDuration = segment.1 - segment.0
+        var newStart = desiredStart
+        newStart = max(0, min(duration - segDuration, newStart))
+        var newEnd = newStart + segDuration
+        let currentStart = segment.0
+        let sorted = others.sorted { $0.start < $1.start }
+        for other in sorted {
+            if newStart < other.end && newEnd > other.start {
+                if currentStart < other.start {
+                    newEnd = other.start
+                    newStart = newEnd - segDuration
+                } else {
+                    newStart = other.end
+                    newEnd = newStart + segDuration
+                }
+            }
+        }
+        return (newStart, newEnd)
     }
 
     override func mouseUp(with event: NSEvent) {
@@ -1351,7 +1572,7 @@ private final class VideoEditorView: NSView {
 
     private func exportSession(asset: AVAsset, timeRange: CMTimeRange, outputURL: URL) -> AVAssetExportSession? {
         let needsScale = exportScale < 0.999
-        let hasZoom = !zoomSegments.isEmpty
+        let hasEffects = !zoomSegments.isEmpty || !censorSegments.isEmpty
 
         let composition = AVMutableComposition()
         guard let videoTrack = asset.tracks(withMediaType: .video).first,
@@ -1370,19 +1591,32 @@ private final class VideoEditorView: NSView {
         session.outputURL = outputURL
         session.outputFileType = .mp4
 
-        if needsScale || hasZoom {
+        if needsScale || hasEffects {
             let naturalSize = videoTrack.naturalSize.applying(videoTrack.preferredTransform)
             let (scaledW, scaledH) = VideoEncodingSettings.evenDimensions(
                 width: abs(naturalSize.width) * exportScale,
                 height: abs(naturalSize.height) * exportScale
             )
-            session.videoComposition = buildZoomVideoComposition(
-                for: composition,
-                videoTrack: compositionVideoTrack,
-                renderSize: CGSize(width: scaledW, height: scaledH),
-                timeShift: CMTimeGetSeconds(timeRange.start),
-                timeRangeDuration: CMTimeGetSeconds(composition.duration)
-            )
+            let renderSize = CGSize(width: scaledW, height: scaledH)
+            let timeShift = CMTimeGetSeconds(timeRange.start)
+            let totalDuration = CMTimeGetSeconds(composition.duration)
+            if hasEffects {
+                session.videoComposition = buildEffectsVideoComposition(
+                    for: composition,
+                    videoTrack: compositionVideoTrack,
+                    renderSize: renderSize,
+                    timeShift: timeShift,
+                    timeRangeDuration: totalDuration
+                )
+            } else {
+                // Scale-only: no custom compositor needed, use a plain layer
+                // instruction with a single transform.
+                session.videoComposition = buildScaleOnlyComposition(
+                    videoTrack: compositionVideoTrack,
+                    renderSize: renderSize,
+                    totalDuration: totalDuration
+                )
+            }
         }
 
         return session
@@ -1505,9 +1739,9 @@ private final class VideoEditorView: NSView {
         // GIF capped at 15fps
         let gifFPS = min(15, asset.tracks(withMediaType: .video).first.map { Int($0.nominalFrameRate.rounded()) } ?? 15)
         let scale = exportScale
-        let hasZoom = !zoomSegments.isEmpty
+        let hasEffects = !zoomSegments.isEmpty || !censorSegments.isEmpty
 
-        // Build the zoom-composition pipeline on the main thread before jumping
+        // Build the effects-composition pipeline on the main thread before jumping
         // to background so the video composition builder sees our current state.
         var readerAsset: AVAsset = asset
         var readerVideoTrackOpt: AVAssetTrack? = asset.tracks(withMediaType: .video).first
@@ -1515,7 +1749,7 @@ private final class VideoEditorView: NSView {
         var readerVideoComposition: AVMutableVideoComposition?
         var readerOutW = 0
         var readerOutH = 0
-        if hasZoom, let vt = readerVideoTrackOpt {
+        if hasEffects, let vt = readerVideoTrackOpt {
             let comp = AVMutableComposition()
             if let cvt = comp.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid) {
                 try? cvt.insertTimeRange(timeRange, of: vt, at: .zero)
@@ -1529,7 +1763,7 @@ private final class VideoEditorView: NSView {
                 readerAsset = comp
                 readerVideoTrackOpt = cvt
                 readerTimeRange = CMTimeRange(start: .zero, duration: timeRange.duration)
-                readerVideoComposition = buildZoomVideoComposition(
+                readerVideoComposition = buildEffectsVideoComposition(
                     for: comp,
                     videoTrack: cvt,
                     renderSize: CGSize(width: outW, height: outH),
@@ -1640,8 +1874,8 @@ private final class VideoEditorView: NSView {
         let needsTrim = trimStart > 0.01 || (duration - trimEnd) > 0.01
         let needsScale = exportScale < 0.999
         let needsRecompress = exportQuality != .high
-        let needsZoom = !zoomSegments.isEmpty
-        let needsExport = needsTrim || isMuted || needsScale || needsRecompress || needsZoom
+        let needsEffects = !zoomSegments.isEmpty || !censorSegments.isEmpty
+        let needsExport = needsTrim || isMuted || needsScale || needsRecompress || needsEffects
 
         if !needsExport {
             // No processing needed — copy temp file to destination
@@ -1722,16 +1956,16 @@ private final class VideoEditorView: NSView {
 
         let includeAudio = !isMuted
         let audioTracks = asset.tracks(withMediaType: .audio)
-        let hasZoom = !zoomSegments.isEmpty
+        let hasEffects = !zoomSegments.isEmpty || !censorSegments.isEmpty
 
-        // When zoom segments exist we must route the read side through a video
-        // composition so the compositor applies zoom transforms. Otherwise we
-        // read raw scaled frames directly from the track.
+        // When effects exist we must route the read side through a video
+        // composition so the compositor applies zoom + censor transforms.
+        // Otherwise we read raw scaled frames directly from the track.
         let readerAsset: AVAsset
         let readerVideoTrack: AVAssetTrack
         let readerTimeRange: CMTimeRange
         let readerComposition: AVMutableVideoComposition?
-        if hasZoom {
+        if hasEffects {
             let comp = AVMutableComposition()
             guard let cvt = comp.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid) else {
                 completion(false); return
@@ -1740,7 +1974,7 @@ private final class VideoEditorView: NSView {
             readerAsset = comp
             readerVideoTrack = cvt
             readerTimeRange = CMTimeRange(start: .zero, duration: timeRange.duration)
-            readerComposition = buildZoomVideoComposition(
+            readerComposition = buildEffectsVideoComposition(
                 for: comp,
                 videoTrack: cvt,
                 renderSize: CGSize(width: outW, height: outH),
@@ -1767,7 +2001,7 @@ private final class VideoEditorView: NSView {
                 videoInput.expectsMediaDataInRealTime = false
                 // Orientation: the video composition path already produces upright
                 // render-size frames, so don't re-apply preferredTransform.
-                if !hasZoom {
+                if !hasEffects {
                     videoInput.transform = videoTrack.preferredTransform
                 }
                 guard writer.canAdd(videoInput) else { completion(false); return }
@@ -1946,8 +2180,8 @@ private final class VideoEditorView: NSView {
         }
 
         let needsTrim = trimStart > 0.01 || (duration - trimEnd) > 0.01
-        let needsZoom = !zoomSegments.isEmpty
-        let needsExport = needsTrim || isMuted || needsZoom
+        let needsEffects = !zoomSegments.isEmpty || !censorSegments.isEmpty
+        let needsExport = needsTrim || isMuted || needsEffects
 
         if !needsExport {
             uploadFileURL(videoURL, false)
@@ -1988,6 +2222,7 @@ private final class VideoEditorView: NSView {
         case 51, 117: // Delete / Forward-Delete
             if let id = selectedSegmentID {
                 zoomSegments.removeAll { $0.id == id }
+                censorSegments.removeAll { $0.id == id }
                 selectedSegmentID = nil
                 savedURL = nil
                 applyZoomTransformForCurrentTime()
@@ -2025,7 +2260,7 @@ private final class VideoEditorView: NSView {
         guard duration > 0 else { return }
         let gapDuration = gapEnd - gapStart
         guard gapDuration >= VideoZoomSegment.minDuration else {
-            showStatus(L("Not enough room for a zoom segment here"), isError: true)
+            showStatus(L("Not enough room here"), isError: true)
             return
         }
         let preferred = 2.0
@@ -2046,12 +2281,123 @@ private final class VideoEditorView: NSView {
         needsDisplay = true
     }
 
+    private func addCensorSegment(clickTime: Double, gapStart: Double, gapEnd: Double) {
+        guard duration > 0 else { return }
+        let gapDuration = gapEnd - gapStart
+        guard gapDuration >= VideoCensorSegment.minDuration else {
+            showStatus(L("Not enough room here"), isError: true)
+            return
+        }
+        let preferred = 2.0
+        let segDuration = min(preferred, gapDuration)
+        var start = clickTime - segDuration / 2
+        start = max(gapStart, min(gapEnd - segDuration, start))
+        let seg = VideoCensorSegment(
+            startTime: start,
+            endTime: start + segDuration,
+            style: .blur
+        )
+        censorSegments.append(seg)
+        selectedSegmentID = seg.id
+        savedURL = nil
+        applyZoomTransformForCurrentTime()
+        needsDisplay = true
+    }
+
+    /// NSMenu anchored at the click point that picks which effect to add.
+    private func showAddEffectMenu(at point: NSPoint, clickTime: Double, gapStart: Double, gapEnd: Double) {
+        let menu = NSMenu()
+        let zoomItem = NSMenuItem(
+            title: L("Add Zoom"),
+            action: #selector(handleAddZoomMenuItem(_:)),
+            keyEquivalent: ""
+        )
+        zoomItem.image = NSImage(systemSymbolName: "plus.magnifyingglass", accessibilityDescription: nil)
+        zoomItem.target = self
+        zoomItem.representedObject = AddEffectContext(clickTime: clickTime, gapStart: gapStart, gapEnd: gapEnd)
+        menu.addItem(zoomItem)
+
+        let censorItem = NSMenuItem(
+            title: L("Add Censor"),
+            action: #selector(handleAddCensorMenuItem(_:)),
+            keyEquivalent: ""
+        )
+        censorItem.image = NSImage(systemSymbolName: "eye.slash", accessibilityDescription: nil)
+        censorItem.target = self
+        censorItem.representedObject = AddEffectContext(clickTime: clickTime, gapStart: gapStart, gapEnd: gapEnd)
+        menu.addItem(censorItem)
+
+        menu.popUp(positioning: nil, at: point, in: self)
+    }
+
+    @objc private func handleAddZoomMenuItem(_ sender: NSMenuItem) {
+        guard let ctx = sender.representedObject as? AddEffectContext else { return }
+        addZoomSegment(clickTime: ctx.clickTime, gapStart: ctx.gapStart, gapEnd: ctx.gapEnd)
+    }
+
+    @objc private func handleAddCensorMenuItem(_ sender: NSMenuItem) {
+        guard let ctx = sender.representedObject as? AddEffectContext else { return }
+        addCensorSegment(clickTime: ctx.clickTime, gapStart: ctx.gapStart, gapEnd: ctx.gapEnd)
+    }
+
+    /// Carrier for menu-item context — NSMenuItem.representedObject needs NSObject-compatible.
+    private final class AddEffectContext: NSObject {
+        let clickTime: Double
+        let gapStart: Double
+        let gapEnd: Double
+        init(clickTime: Double, gapStart: Double, gapEnd: Double) {
+            self.clickTime = clickTime
+            self.gapStart = gapStart
+            self.gapEnd = gapEnd
+        }
+    }
+
     /// Show the zoom-center picker popover for a segment.
     fileprivate func showZoomSegmentPopover(for segment: VideoZoomSegment, at anchorRect: NSRect) {
         presentZoomSettingsPopover(for: segment, anchorRect: anchorRect)
     }
 
+    /// Show the censor picker popover (style + region) for a segment.
+    fileprivate func showCensorSegmentPopover(for segment: VideoCensorSegment, at anchorRect: NSRect) {
+        presentCensorSettingsPopover(for: segment, anchorRect: anchorRect)
+    }
+
     private var activeZoomPopover: NSPopover?
+
+    /// Temporary stub — real popover implementation lives in
+    /// VideoCensorSegmentPopover.swift once the popover UI task lands.
+    private func presentCensorSettingsPopover(for segment: VideoCensorSegment, anchorRect: NSRect) {
+        activeZoomPopover?.performClose(nil)
+
+        let thumbnail = thumbnailImage(atSeconds: (segment.startTime + segment.endTime) / 2)
+                     ?? NSImage(size: NSSize(width: 300, height: 169))
+
+        let controller = VideoCensorSegmentPopoverController(
+            segment: segment,
+            thumbnail: thumbnail,
+            onChange: { [weak self] in
+                self?.savedURL = nil
+                self?.applyZoomTransformForCurrentTime()
+                self?.needsDisplay = true
+            },
+            onDelete: { [weak self] in
+                guard let self = self else { return }
+                self.censorSegments.removeAll { $0.id == segment.id }
+                self.selectedSegmentID = nil
+                self.savedURL = nil
+                self.applyZoomTransformForCurrentTime()
+                self.needsDisplay = true
+                self.activeZoomPopover?.performClose(nil)
+            }
+        )
+
+        let popover = NSPopover()
+        popover.contentViewController = controller
+        popover.behavior = .transient
+        popover.appearance = NSAppearance(named: .darkAqua)
+        popover.show(relativeTo: anchorRect, of: self, preferredEdge: .minY)
+        activeZoomPopover = popover
+    }
 
     private func presentZoomSettingsPopover(for segment: VideoZoomSegment, anchorRect: NSRect) {
         activeZoomPopover?.performClose(nil)
@@ -2101,17 +2447,17 @@ private final class VideoEditorView: NSView {
     }
 
     /// Rebuild the AVPlayerItem's videoComposition so live playback reflects
-    /// the current zoom segments. Also used when editing segments during
-    /// playback — AVPlayer picks up composition changes on the next frame.
+    /// the current zoom + censor segments. Also used when editing segments
+    /// during playback — AVPlayer picks up composition changes on the next frame.
     fileprivate func applyZoomTransformForCurrentTime() {
         guard let player = player, let item = player.currentItem, let asset = asset else { return }
-        if zoomSegments.isEmpty {
+        if zoomSegments.isEmpty && censorSegments.isEmpty {
             item.videoComposition = nil
             return
         }
         // Preview runs against the original asset, so segments are in asset clock
         // already and there's no time shift.
-        item.videoComposition = buildZoomVideoComposition(
+        item.videoComposition = buildEffectsVideoComposition(
             for: asset,
             videoTrack: asset.tracks(withMediaType: .video).first,
             renderSize: nil,
@@ -2120,9 +2466,10 @@ private final class VideoEditorView: NSView {
         )
     }
 
-    /// Build an `AVMutableVideoComposition` that applies zoom segments as
-    /// per-frame affine transforms. Ease-in-out ramps are split into N linear
-    /// `setTransformRamp` slices to approximate the curve.
+    /// Build an `AVMutableVideoComposition` driven by `EffectsVideoCompositor`.
+    /// The compositor renders zoom + censor segments per frame via Core Image,
+    /// so motion is smooth and blur/pixelate can coexist with zoom in a single
+    /// pass.
     ///
     /// - Parameters:
     ///   - asset: Asset whose tracks are referenced (may be a composition).
@@ -2130,12 +2477,37 @@ private final class VideoEditorView: NSView {
     ///     If nil, picks the first video track.
     ///   - renderSize: Output size. Pass nil to use the video track's natural
     ///     (orientation-applied) size.
-    ///   - timeShift: Seconds to subtract from zoom segment asset times to
-    ///     put them on the composition's clock. Export sets this to `trimStart`
-    ///     so segments land in the right place after the clip is trimmed.
+    ///   - timeShift: Seconds to subtract from segment times to put them on
+    ///     the composition's clock. Export sets this to `trimStart`.
     ///   - timeRangeDuration: Total composition length in seconds (composition
     ///     clock). Used for the instruction timeRange.
-    private func buildZoomVideoComposition(for asset: AVAsset, videoTrack: AVAssetTrack?, renderSize: CGSize?, timeShift: Double, timeRangeDuration: Double) -> AVMutableVideoComposition? {
+    /// Simple composition for the scale-only export path (no zoom, no censor).
+    /// Applies preferredTransform + uniform scale via setTransform — cheap, no
+    /// custom compositor cost.
+    private func buildScaleOnlyComposition(videoTrack: AVAssetTrack, renderSize: CGSize, totalDuration: Double) -> AVMutableVideoComposition {
+        let natSize = videoTrack.naturalSize.applying(videoTrack.preferredTransform)
+        let scaleX = renderSize.width / abs(natSize.width)
+        let scaleY = renderSize.height / abs(natSize.height)
+        let transform = videoTrack.preferredTransform
+            .concatenating(CGAffineTransform(scaleX: scaleX, y: scaleY))
+
+        let instruction = AVMutableVideoCompositionInstruction()
+        instruction.timeRange = CMTimeRange(start: .zero, duration: CMTime(seconds: totalDuration, preferredTimescale: 600))
+        instruction.backgroundColor = NSColor.black.cgColor
+
+        let layer = AVMutableVideoCompositionLayerInstruction(assetTrack: videoTrack)
+        layer.setTransform(transform, at: .zero)
+        instruction.layerInstructions = [layer]
+
+        let composition = AVMutableVideoComposition()
+        composition.instructions = [instruction]
+        composition.renderSize = renderSize
+        let fps = videoTrack.nominalFrameRate > 0 ? videoTrack.nominalFrameRate : 30
+        composition.frameDuration = CMTime(value: 1, timescale: CMTimeScale(fps))
+        return composition
+    }
+
+    private func buildEffectsVideoComposition(for asset: AVAsset, videoTrack: AVAssetTrack?, renderSize: CGSize?, timeShift: Double, timeRangeDuration: Double) -> AVMutableVideoComposition? {
         let track = videoTrack ?? asset.tracks(withMediaType: .video).first
         guard let videoTrack = track else { return nil }
         let natSize = videoTrack.naturalSize.applying(videoTrack.preferredTransform)
@@ -2143,125 +2515,50 @@ private final class VideoEditorView: NSView {
         let naturalH = abs(natSize.height)
         let renderW = renderSize?.width ?? naturalW
         let renderH = renderSize?.height ?? naturalH
-        let videoSize = CGSize(width: naturalW, height: naturalH)
 
-        // Segments in ascending order, clipped to the composition range
-        let segments: [(VideoZoomSegment, Double, Double)] = zoomSegments
-            .filter { $0.endTime > $0.startTime }
-            .sorted { $0.startTime < $1.startTime }
-            .compactMap { s in
-                let cs = max(0, s.startTime - timeShift)
-                let ce = min(timeRangeDuration, s.endTime - timeShift)
-                guard ce - cs >= 0.05 else { return nil }
-                return (s, cs, ce)
-            }
+        // Skip composition entirely when there's nothing to render — callers
+        // should already guard on this, but being explicit avoids shipping a
+        // custom compositor through the pipeline unnecessarily.
+        guard !zoomSegments.isEmpty || !censorSegments.isEmpty else {
+            return nil
+        }
 
+        // Bake orientation + scale into one transform. The compositor applies
+        // it to the raw source buffer to produce a render-space CIImage.
         let scaleX = renderW / naturalW
         let scaleY = renderH / naturalH
         let baseTransform = videoTrack.preferredTransform
             .concatenating(CGAffineTransform(scaleX: scaleX, y: scaleY))
 
-        // Build the per-frame transform for a given composition-clock time.
-        // Internally maps back to asset-clock to read the segment curve.
-        func transform(atCompTime ct: Double, for segment: VideoZoomSegment) -> CGAffineTransform {
-            let at = ct + timeShift
-            let z = segment.zoomLevel(at: at)
-            let tr = segment.translation(zoom: z, videoSize: videoSize)
-            let renderCx = renderW / 2
-            let renderCy = renderH / 2
-            var t = baseTransform
-            t = t.concatenating(CGAffineTransform(translationX: -renderCx, y: -renderCy))
-            t = t.concatenating(CGAffineTransform(scaleX: z, y: z))
-            t = t.concatenating(CGAffineTransform(translationX: renderCx + tr.x * scaleX * z, y: renderCy + tr.y * scaleY * z))
-            return t
-        }
+        // Snapshot segments *by value* into plain arrays. The compositor runs
+        // on background queues; we must not share main-actor state with it.
+        // VideoZoomSegment and VideoCensorSegment are reference types, but
+        // their mutation funnels through the main actor, and by the time the
+        // compositor reads them they've been copied into the instruction
+        // (which AVFoundation copies again internally).
+        let zoomSnapshot = zoomSegments
+            .filter { $0.endTime > $0.startTime }
+            .sorted { $0.startTime < $1.startTime }
+        let censorSnapshot = censorSegments
+            .filter { $0.endTime > $0.startTime }
+            .sorted { $0.startTime < $1.startTime }
 
-        let instruction = AVMutableVideoCompositionInstruction()
-        instruction.timeRange = CMTimeRange(start: .zero, duration: CMTime(seconds: timeRangeDuration, preferredTimescale: 600))
-        instruction.backgroundColor = NSColor.black.cgColor
-
-        let layer = AVMutableVideoCompositionLayerInstruction(assetTrack: videoTrack)
-        layer.setTransform(baseTransform, at: .zero)
-
-        let stepsPerFade = 12
-        let epsilon = 0.003  // time-gap threshold for "touching" segments
-        for (idx, tuple) in segments.enumerated() {
-            let (segment, cs, ce) = tuple
-            let fadeIn = segment.effectiveFadeIn
-            let fadeOut = segment.effectiveFadeOut
-            let plateauStart = cs + fadeIn
-            let plateauEnd = ce - fadeOut
-
-            // Previous/next segment boundaries drive the "touching" checks:
-            // if a neighbour is back-to-back we skip the baseline snap so we
-            // don't overwrite its fade-in/out transforms at the boundary.
-            let prevEnd: Double? = idx > 0 ? segments[idx - 1].2 : nil
-            let nextStart: Double? = idx + 1 < segments.count ? segments[idx + 1].1 : nil
-            let touchesPrev = (prevEnd.map { cs - $0 < epsilon } ?? false)
-            let touchesNext = (nextStart.map { $0 - ce < epsilon } ?? false)
-
-            if !touchesPrev {
-                let justBefore = max(0, cs - 0.002)
-                layer.setTransform(baseTransform, at: CMTime(seconds: justBefore, preferredTimescale: 600))
-            }
-
-            if fadeIn > 0 {
-                var t0 = cs
-                // Start from the segment's real zoom value (not identity) when
-                // we're touching the previous segment, so the composition is
-                // continuous at the boundary.
-                var xf0 = touchesPrev ? transform(atCompTime: cs, for: segment) : baseTransform
-                for i in 1...stepsPerFade {
-                    let t1 = cs + fadeIn * Double(i) / Double(stepsPerFade)
-                    let xf1 = transform(atCompTime: t1, for: segment)
-                    layer.setTransformRamp(
-                        fromStart: xf0,
-                        toEnd: xf1,
-                        timeRange: CMTimeRange(
-                            start: CMTime(seconds: t0, preferredTimescale: 600),
-                            end: CMTime(seconds: t1, preferredTimescale: 600)
-                        )
-                    )
-                    t0 = t1
-                    xf0 = xf1
-                }
-            } else {
-                layer.setTransform(transform(atCompTime: cs, for: segment), at: CMTime(seconds: cs, preferredTimescale: 600))
-            }
-
-            if plateauEnd > plateauStart {
-                let full = transform(atCompTime: (plateauStart + plateauEnd) / 2, for: segment)
-                layer.setTransform(full, at: CMTime(seconds: plateauStart, preferredTimescale: 600))
-            }
-
-            if fadeOut > 0 {
-                var t0 = plateauEnd
-                var xf0 = transform(atCompTime: plateauEnd, for: segment)
-                for i in 1...stepsPerFade {
-                    let t1 = plateauEnd + fadeOut * Double(i) / Double(stepsPerFade)
-                    let xf1 = transform(atCompTime: t1, for: segment)
-                    layer.setTransformRamp(
-                        fromStart: xf0,
-                        toEnd: xf1,
-                        timeRange: CMTimeRange(
-                            start: CMTime(seconds: t0, preferredTimescale: 600),
-                            end: CMTime(seconds: t1, preferredTimescale: 600)
-                        )
-                    )
-                    t0 = t1
-                    xf0 = xf1
-                }
-            }
-
-            if !touchesNext {
-                let justAfter = min(timeRangeDuration, ce + 0.002)
-                layer.setTransform(baseTransform, at: CMTime(seconds: justAfter, preferredTimescale: 600))
-            }
-        }
-
-        instruction.layerInstructions = [layer]
+        let instruction = EffectsCompositionInstruction(
+            timeRange: CMTimeRange(
+                start: .zero,
+                duration: CMTime(seconds: timeRangeDuration, preferredTimescale: 600)
+            ),
+            videoTrackID: videoTrack.trackID,
+            naturalSize: CGSize(width: naturalW, height: naturalH),
+            renderSize: CGSize(width: renderW, height: renderH),
+            baseTransform: baseTransform,
+            timeShift: timeShift,
+            zoomSegments: zoomSnapshot,
+            censorSegments: censorSnapshot
+        )
 
         let composition = AVMutableVideoComposition()
+        composition.customVideoCompositorClass = EffectsVideoCompositor.self
         composition.instructions = [instruction]
         composition.renderSize = CGSize(width: renderW, height: renderH)
         let fps = videoTrack.nominalFrameRate > 0 ? videoTrack.nominalFrameRate : 30
