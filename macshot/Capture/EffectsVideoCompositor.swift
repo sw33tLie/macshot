@@ -85,12 +85,17 @@ final class EffectsVideoCompositor: NSObject, AVVideoCompositing {
     private let contextQueue = DispatchQueue(label: "macshot.effects.context")
     private let renderQueue = DispatchQueue(label: "macshot.effects.render", qos: .userInitiated)
     private lazy var ciContext: CIContext = {
-        // Use the default Metal device; CIContext picks GPU automatically.
-        // We pass a working color space so blurred/pixelated regions don't
-        // shift hue vs the untouched source.
+        // Blur/pixelate filters do per-pixel math and must happen in a linear
+        // color space to avoid gamma shifts (sRGB working space "washes out"
+        // the whole frame because filters convert to and from the working
+        // space even for untouched pixels in the composite).
+        //
+        // We leave the output color space unset so CIImage metadata from the
+        // source pixel buffer passes through unchanged on the untouched parts
+        // of the frame. The explicit render(colorSpace:) below picks the
+        // final tag used when writing into the output CVPixelBuffer.
         let options: [CIContextOption: Any] = [
-            .workingColorSpace: CGColorSpace(name: CGColorSpace.sRGB) as Any,
-            .outputColorSpace: CGColorSpace(name: CGColorSpace.sRGB) as Any,
+            .workingColorSpace: CGColorSpace(name: CGColorSpace.linearSRGB) as Any,
             .cacheIntermediates: true,
         ]
         return CIContext(options: options)
@@ -200,9 +205,15 @@ final class EffectsVideoCompositor: NSObject, AVVideoCompositing {
                                 fullRenderRect: renderRect)
         }
 
-        // 5. Render into the output pixel buffer.
-        let outputColorSpace = CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
-        ciContext.render(image, to: outBuf, bounds: renderRect, colorSpace: outputColorSpace)
+        // 5. Render into the output pixel buffer. Tag with the SOURCE buffer's
+        // color space when available so untouched pixels round-trip to the
+        // same bytes they came in as — preventing the "washed out" look that
+        // happens when blur causes Core Image to pipe everything through a
+        // working space then re-tag the output differently.
+        let sourceColorSpace = CVImageBufferGetColorSpace(sourceBuffer)?.takeUnretainedValue()
+            ?? CGColorSpace(name: CGColorSpace.sRGB)
+            ?? CGColorSpaceCreateDeviceRGB()
+        ciContext.render(image, to: outBuf, bounds: renderRect, colorSpace: sourceColorSpace)
         request.finish(withComposedVideoFrame: outBuf)
     }
 
