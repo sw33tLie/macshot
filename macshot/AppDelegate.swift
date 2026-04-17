@@ -63,6 +63,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // Offer to move to /Applications if running from a DMG or translocated path
         promptToMoveToApplicationsIfNeeded()
 
+        migrateFilenameTemplateIfNeeded()
+
         updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: self, userDriverDelegate: nil)
         setupMainMenu()
         setupStatusBar()
@@ -136,6 +138,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
     func setMenuBarIconVisible(_ visible: Bool) {
         statusItem.isVisible = visible
+    }
+
+    /// One-shot migration from the legacy `useWindowTitleInFilename` checkbox
+    /// to the new `filenameTemplate` string. Runs once — seeds the template
+    /// from the old bool then clears the legacy key.
+    private func migrateFilenameTemplateIfNeeded() {
+        let d = UserDefaults.standard
+        guard d.object(forKey: FilenameFormatter.userDefaultsKey) == nil else { return }
+        let hadWindowTitle = d.bool(forKey: "useWindowTitleInFilename")
+        let template = hadWindowTitle
+            ? "Screenshot {date} at {time} — {window}"
+            : FilenameFormatter.defaultTemplate
+        d.set(template, forKey: FilenameFormatter.userDefaultsKey)
+        d.removeObject(forKey: "useWindowTitleInFilename")
     }
 
     /// If the app is running from a DMG volume or a translocated path,
@@ -868,14 +884,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
         panel.begin { [weak self] response in
             guard response == .OK, let dirURL = panel.url else { return }
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd 'at' HH.mm.ss"
+            let rawTemplate = UserDefaults.standard.string(forKey: FilenameFormatter.userDefaultsKey) ?? FilenameFormatter.defaultTemplate
+            // Ensure batch writes don't collide when the template lacks {index}.
+            let template = rawTemplate.contains("{index}") ? rawTemplate : "\(rawTemplate)-{index}"
+            let batchDate = Date()
 
             DispatchQueue.global(qos: .userInitiated).async {
                 for (i, image) in images.enumerated() {
                     guard let data = ImageEncoder.encode(image) else { continue }
-                    let timestamp = formatter.string(from: Date())
-                    let filename = "Screenshot \(timestamp)-\(i + 1).\(ImageEncoder.fileExtension)"
+                    let base = FilenameFormatter.format(template: template, index: i + 1, date: batchDate)
+                    let filename = "\(base).\(ImageEncoder.fileExtension)"
                     let fileURL = dirURL.appendingPathComponent(filename)
                     try? data.write(to: fileURL)
                 }
@@ -919,7 +937,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         guard let imageData = ImageEncoder.encode(image) else { return }
         let savePanel = NSSavePanel()
         savePanel.allowedContentTypes = [ImageEncoder.utType]
-        savePanel.nameFieldStringValue = "macshot_\(OverlayWindowController.formattedTimestamp()).\(ImageEncoder.fileExtension)"
+        savePanel.nameFieldStringValue = FilenameFormatter.defaultImageFilename()
         savePanel.directoryURL = SaveDirectoryAccess.directoryHint()
         savePanel.begin { response in
             if response == .OK, let url = savePanel.url {

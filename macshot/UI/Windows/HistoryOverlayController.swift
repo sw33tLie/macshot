@@ -212,11 +212,14 @@ final class HistoryOverlayController: NSObject, QLPreviewPanelDataSource, QLPrev
     func saveToFile(index: Int) {
         let entries = ScreenshotHistory.shared.entries
         guard index >= 0, index < entries.count else { return }
-        guard let image = ScreenshotHistory.shared.loadImage(for: entries[index]) else { return }
+        let entry = entries[index]
+        guard let image = ScreenshotHistory.shared.loadImage(for: entry) else { return }
         guard let imageData = ImageEncoder.encode(image) else { return }
 
+        let template = UserDefaults.standard.string(forKey: FilenameFormatter.userDefaultsKey) ?? FilenameFormatter.defaultTemplate
+        let base = FilenameFormatter.format(template: template, date: entry.timestamp)
         let panel = NSSavePanel()
-        panel.nameFieldStringValue = "Screenshot.\(ImageEncoder.fileExtension)"
+        panel.nameFieldStringValue = "\(base).\(ImageEncoder.fileExtension)"
         panel.level = .floating
         panel.begin { response in
             guard response == .OK, let url = panel.url else { return }

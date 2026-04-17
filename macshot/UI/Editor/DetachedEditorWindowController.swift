@@ -328,7 +328,7 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
         guard let imageData = ImageEncoder.encode(image) else { return }
         let savePanel = NSSavePanel()
         savePanel.allowedContentTypes = [ImageEncoder.utType]
-        savePanel.nameFieldStringValue = "macshot_\(OverlayWindowController.formattedTimestamp()).\(ImageEncoder.fileExtension)"
+        savePanel.nameFieldStringValue = FilenameFormatter.defaultImageFilename()
         savePanel.directoryURL = SaveDirectoryAccess.directoryHint()
         savePanel.beginSheetModal(for: window!) { [weak self] response in
             if response == .OK, let url = savePanel.url {
@@ -449,7 +449,7 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
         let image = applyPostProcessing(raw)
         guard let imageData = ImageEncoder.encode(image) else { return }
         let tempURL = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("macshot_\(OverlayWindowController.formattedTimestamp()).\(ImageEncoder.fileExtension)")
+            .appendingPathComponent(FilenameFormatter.defaultImageFilename())
         try? imageData.write(to: tempURL)
 
         let picker = NSSharingServicePicker(items: [tempURL])

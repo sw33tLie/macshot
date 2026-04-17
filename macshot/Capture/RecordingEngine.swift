@@ -461,8 +461,9 @@ final class RecordingEngine: NSObject {
         // Save to temp directory — always writable in sandbox.
         // The video editor handles final export to the user's chosen location.
         let dir = FileManager.default.temporaryDirectory
-        let name = "Recording \(OverlayWindowController.formattedTimestamp()).mp4"
-        return dir.appendingPathComponent(name)
+        let template = UserDefaults.standard.string(forKey: FilenameFormatter.recordingUserDefaultsKey) ?? FilenameFormatter.defaultRecordingTemplate
+        let base = FilenameFormatter.format(template: template, fallback: FilenameFormatter.defaultRecordingTemplate)
+        return dir.appendingPathComponent("\(base).mp4")
     }
 
     // MARK: - Helpers

@@ -181,7 +181,7 @@ class FloatingThumbnailController: NSObject, NSDraggingSource {
         guard let encodedData = ImageEncoder.encode(image) else { return }
 
         let tempURL = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("macshot_\(OverlayWindowController.formattedTimestamp()).\(ImageEncoder.fileExtension)")
+            .appendingPathComponent(FilenameFormatter.defaultImageFilename())
         do { try encodedData.write(to: tempURL) } catch { return }
 
         let draggingItem = NSDraggingItem(pasteboardWriter: tempURL as NSURL)

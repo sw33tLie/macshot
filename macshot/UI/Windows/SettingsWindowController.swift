@@ -61,7 +61,10 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var historySizeStepper: NSStepper!
     private var snapGuidesCheckbox: NSButton!
     private var captureCursorCheckbox: NSButton!
-    private var windowTitleCheckbox: NSButton!
+    private var filenameTemplateField: NSTextField!
+    private var filenameTemplatePreview: NSTextField!
+    private var recordingFilenameTemplateField: NSTextField!
+    private var recordingFilenameTemplatePreview: NSTextField!
     private var autoUpdateCheckbox: NSButton!
     private var betaUpdateCheckbox: NSButton!
     private var accentColorWell: NSColorWell!
@@ -514,7 +517,19 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         thumbnailCheckbox = NSButton(checkboxWithTitle: L("Show floating thumbnail after capture"), target: self, action: #selector(thumbnailChanged(_:)))
         snapGuidesCheckbox = NSButton(checkboxWithTitle: L("Show snap alignment guides"), target: self, action: #selector(snapGuidesChanged(_:)))
         captureCursorCheckbox = NSButton(checkboxWithTitle: L("Capture mouse cursor in screenshot"), target: self, action: #selector(captureCursorChanged(_:)))
-        windowTitleCheckbox = NSButton(checkboxWithTitle: L("Use window title in saved filename"), target: self, action: #selector(windowTitleChanged(_:)))
+        filenameTemplateField = NSTextField()
+        filenameTemplateField.placeholderString = FilenameFormatter.defaultTemplate
+        filenameTemplateField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        filenameTemplateField.stringValue = UserDefaults.standard.string(forKey: FilenameFormatter.userDefaultsKey) ?? FilenameFormatter.defaultTemplate
+        filenameTemplateField.target = self
+        filenameTemplateField.action = #selector(filenameTemplateCommitted(_:))
+        filenameTemplateField.delegate = self
+        filenameTemplateField.widthAnchor.constraint(greaterThanOrEqualToConstant: 260).isActive = true
+
+        filenameTemplatePreview = NSTextField(labelWithString: "")
+        filenameTemplatePreview.font = NSFont.systemFont(ofSize: 10)
+        filenameTemplatePreview.textColor = .secondaryLabelColor
+        filenameTemplatePreview.lineBreakMode = .byTruncatingMiddle
 
         for cb in [copySoundCheckbox!, rememberToolCheckbox!, thumbnailCheckbox!] {
             stack.addArrangedSubview(indented(cb))
@@ -565,9 +580,6 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
         stack.addArrangedSubview(indented(captureCursorCheckbox))
-        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
-
-        stack.addArrangedSubview(indented(windowTitleCheckbox))
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // ── Output ───────────────────────────────────────────
@@ -585,6 +597,25 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
         stack.addArrangedSubview(labeledRow(L("Save folder:"), controls: [savePathField, browseBtn]))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        // Filename template
+        let filenameResetBtn = NSButton(title: L("Reset"), target: self, action: #selector(filenameTemplateReset(_:)))
+        filenameResetBtn.bezelStyle = .rounded
+
+        let filenameInfoIcon = HoverPopoverIconView(
+            image: NSImage(systemSymbolName: "info.circle", accessibilityDescription: L("Filename tokens")),
+            tintColor: .secondaryLabelColor,
+            toolTip: L("Show available filename tokens")
+        )
+        filenameInfoIcon.onHover = { [weak self] sourceView, shown in
+            if shown { self?.showFilenameTemplateInfoPopover(near: sourceView) }
+        }
+
+        stack.addArrangedSubview(labeledRow(L("Filename:"), controls: [filenameTemplateField, filenameInfoIcon, filenameResetBtn]))
+        stack.setCustomSpacing(2, after: stack.arrangedSubviews.last!)
+        stack.addArrangedSubview(indented(filenameTemplatePreview))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+        updateFilenamePreview()
 
         // Image format
         imageFormatPopup = NSPopUpButton()
@@ -1094,7 +1125,40 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         recClearBtn.bezelStyle = .rounded
 
         stack.addArrangedSubview(labeledRow(L("Save folder:"), controls: [recSavePathField, recBrowseBtn, recClearBtn]))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        // Recording filename template
+        recordingFilenameTemplateField = NSTextField()
+        recordingFilenameTemplateField.placeholderString = FilenameFormatter.defaultRecordingTemplate
+        recordingFilenameTemplateField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        recordingFilenameTemplateField.stringValue = UserDefaults.standard.string(forKey: FilenameFormatter.recordingUserDefaultsKey) ?? FilenameFormatter.defaultRecordingTemplate
+        recordingFilenameTemplateField.target = self
+        recordingFilenameTemplateField.action = #selector(recordingFilenameTemplateCommitted(_:))
+        recordingFilenameTemplateField.delegate = self
+        recordingFilenameTemplateField.widthAnchor.constraint(greaterThanOrEqualToConstant: 260).isActive = true
+
+        recordingFilenameTemplatePreview = NSTextField(labelWithString: "")
+        recordingFilenameTemplatePreview.font = NSFont.systemFont(ofSize: 10)
+        recordingFilenameTemplatePreview.textColor = .secondaryLabelColor
+        recordingFilenameTemplatePreview.lineBreakMode = .byTruncatingMiddle
+
+        let recFilenameResetBtn = NSButton(title: L("Reset"), target: self, action: #selector(recordingFilenameTemplateReset(_:)))
+        recFilenameResetBtn.bezelStyle = .rounded
+
+        let recFilenameInfoIcon = HoverPopoverIconView(
+            image: NSImage(systemSymbolName: "info.circle", accessibilityDescription: L("Filename tokens")),
+            tintColor: .secondaryLabelColor,
+            toolTip: L("Show available filename tokens")
+        )
+        recFilenameInfoIcon.onHover = { [weak self] sourceView, shown in
+            if shown { self?.showFilenameTemplateInfoPopover(near: sourceView) }
+        }
+
+        stack.addArrangedSubview(labeledRow(L("Filename:"), controls: [recordingFilenameTemplateField, recFilenameInfoIcon, recFilenameResetBtn]))
+        stack.setCustomSpacing(2, after: stack.arrangedSubviews.last!)
+        stack.addArrangedSubview(indented(recordingFilenameTemplatePreview))
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
+        updateRecordingFilenamePreview()
 
         // ── Behavior ──────────────────────────────────────────
         stack.addArrangedSubview(sectionHeader(L("Behavior")))
@@ -1869,7 +1933,10 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         snapGuidesCheckbox.state = snapGuides ? .on : .off
 
         captureCursorCheckbox.state = UserDefaults.standard.bool(forKey: "captureCursor") ? .on : .off
-        windowTitleCheckbox.state = UserDefaults.standard.bool(forKey: "useWindowTitleInFilename") ? .on : .off
+        filenameTemplateField.stringValue = UserDefaults.standard.string(forKey: FilenameFormatter.userDefaultsKey) ?? FilenameFormatter.defaultTemplate
+        updateFilenamePreview()
+        recordingFilenameTemplateField.stringValue = UserDefaults.standard.string(forKey: FilenameFormatter.recordingUserDefaultsKey) ?? FilenameFormatter.defaultRecordingTemplate
+        updateRecordingFilenamePreview()
 
         let autoUpdate = UserDefaults.standard.object(forKey: "SUEnableAutomaticChecks") as? Bool ?? true
         autoUpdateCheckbox.state = autoUpdate ? .on : .off
@@ -2263,8 +2330,64 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     @objc private func captureCursorChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "captureCursor")
     }
-    @objc private func windowTitleChanged(_ sender: NSButton) {
-        UserDefaults.standard.set(sender.state == .on, forKey: "useWindowTitleInFilename")
+    @objc private func filenameTemplateCommitted(_ sender: NSTextField) {
+        let trimmed = sender.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        let value = trimmed.isEmpty ? FilenameFormatter.defaultTemplate : sender.stringValue
+        if trimmed.isEmpty {
+            sender.stringValue = FilenameFormatter.defaultTemplate
+        }
+        UserDefaults.standard.set(value, forKey: FilenameFormatter.userDefaultsKey)
+        updateFilenamePreview()
+    }
+
+    @objc private func filenameTemplateReset(_ sender: NSButton) {
+        filenameTemplateField.stringValue = FilenameFormatter.defaultTemplate
+        UserDefaults.standard.set(FilenameFormatter.defaultTemplate, forKey: FilenameFormatter.userDefaultsKey)
+        updateFilenamePreview()
+    }
+
+    fileprivate func updateFilenamePreview() {
+        guard let field = filenameTemplateField, let preview = filenameTemplatePreview else { return }
+        let raw = field.stringValue
+        let template = raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? FilenameFormatter.defaultTemplate : raw
+        let sampleDate = sampleFilenameDate()
+        let sampleWindow = template.contains("{window}") ? "Example Window" : nil
+        let sampleIndex = template.contains("{index}") ? 1 : nil
+        let base = FilenameFormatter.format(template: template, windowTitle: sampleWindow, index: sampleIndex, date: sampleDate)
+        preview.stringValue = "\(L("Preview:")) \(base).\(ImageEncoder.fileExtension)"
+    }
+
+    @objc private func recordingFilenameTemplateCommitted(_ sender: NSTextField) {
+        let trimmed = sender.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        let value = trimmed.isEmpty ? FilenameFormatter.defaultRecordingTemplate : sender.stringValue
+        if trimmed.isEmpty {
+            sender.stringValue = FilenameFormatter.defaultRecordingTemplate
+        }
+        UserDefaults.standard.set(value, forKey: FilenameFormatter.recordingUserDefaultsKey)
+        updateRecordingFilenamePreview()
+    }
+
+    @objc private func recordingFilenameTemplateReset(_ sender: NSButton) {
+        recordingFilenameTemplateField.stringValue = FilenameFormatter.defaultRecordingTemplate
+        UserDefaults.standard.set(FilenameFormatter.defaultRecordingTemplate, forKey: FilenameFormatter.recordingUserDefaultsKey)
+        updateRecordingFilenamePreview()
+    }
+
+    fileprivate func updateRecordingFilenamePreview() {
+        guard let field = recordingFilenameTemplateField, let preview = recordingFilenameTemplatePreview else { return }
+        let raw = field.stringValue
+        let template = raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? FilenameFormatter.defaultRecordingTemplate : raw
+        let sampleDate = sampleFilenameDate()
+        let sampleIndex = template.contains("{index}") ? 1 : nil
+        let base = FilenameFormatter.format(template: template, windowTitle: nil, index: sampleIndex, date: sampleDate, fallback: FilenameFormatter.defaultRecordingTemplate)
+        preview.stringValue = "\(L("Preview:")) \(base).mp4"
+    }
+
+    private func sampleFilenameDate() -> Date {
+        var comps = DateComponents()
+        comps.year = 2026; comps.month = 4; comps.day = 17
+        comps.hour = 14; comps.minute = 22; comps.second = 5
+        return Calendar(identifier: .gregorian).date(from: comps) ?? Date()
     }
     @objc private func launchAtLoginChanged(_ sender: NSButton) {
         let enabled = sender.state == .on
@@ -2286,6 +2409,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     }
 
     fileprivate var urlSchemeInfoPopover: NSPopover?
+    fileprivate var filenameTemplateInfoPopover: NSPopover?
 
     fileprivate func showURLSchemeInfoPopover(near sourceView: NSView) {
         if let existing = urlSchemeInfoPopover, existing.isShown { return }
@@ -2409,5 +2533,99 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
     func windowWillClose(_ notification: Notification) {
         (NSApp.delegate as? AppDelegate)?.returnFocusIfNeeded()
+    }
+}
+
+// MARK: - NSTextFieldDelegate (live filename preview)
+
+extension SettingsWindowController: NSTextFieldDelegate {
+    func controlTextDidChange(_ obj: Notification) {
+        guard let field = obj.object as? NSTextField else { return }
+        if field === filenameTemplateField {
+            updateFilenamePreview()
+        } else if field === recordingFilenameTemplateField {
+            updateRecordingFilenamePreview()
+        }
+    }
+}
+
+// MARK: - Filename template info popover
+
+extension SettingsWindowController {
+    fileprivate func showFilenameTemplateInfoPopover(near sourceView: NSView) {
+        if let existing = filenameTemplateInfoPopover, existing.isShown { return }
+
+        let tokens: [(String, String)] = [
+            ("{date}",      "2026-04-17"),
+            ("{time}",      "14-22-05"),
+            ("{timestamp}", "2026-04-17_14-22-05"),
+            ("{unix}",      "1745592125"),
+            ("{window}",    L("Screenshots only — captured window title (blank otherwise)")),
+            ("{index}",     L("Counter for multi-screen captures")),
+        ]
+
+        let title = NSTextField(labelWithString: L("Filename Template Tokens"))
+        title.font = NSFont.systemFont(ofSize: 13, weight: .semibold)
+        title.translatesAutoresizingMaskIntoConstraints = false
+
+        let subtitle = NSTextField(wrappingLabelWithString: L("The file extension is appended automatically. Slashes and colons in {window} become dashes."))
+        subtitle.font = NSFont.systemFont(ofSize: 11)
+        subtitle.textColor = .secondaryLabelColor
+        subtitle.preferredMaxLayoutWidth = 380
+        subtitle.translatesAutoresizingMaskIntoConstraints = false
+
+        let grid = NSGridView(numberOfColumns: 2, rows: tokens.count)
+        grid.translatesAutoresizingMaskIntoConstraints = false
+        grid.rowSpacing = 4
+        grid.columnSpacing = 16
+        grid.column(at: 0).xPlacement = .leading
+        grid.column(at: 1).xPlacement = .leading
+
+        for (i, entry) in tokens.enumerated() {
+            let tok = NSTextField(labelWithString: entry.0)
+            tok.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+            tok.textColor = .labelColor
+            tok.isSelectable = true
+
+            let desc = NSTextField(labelWithString: entry.1)
+            desc.font = NSFont.systemFont(ofSize: 11)
+            desc.textColor = .secondaryLabelColor
+
+            grid.cell(atColumnIndex: 0, rowIndex: i).contentView = tok
+            grid.cell(atColumnIndex: 1, rowIndex: i).contentView = desc
+        }
+
+        let container = NSView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(title)
+        container.addSubview(subtitle)
+        container.addSubview(grid)
+
+        let pad: CGFloat = 14
+        NSLayoutConstraint.activate([
+            title.topAnchor.constraint(equalTo: container.topAnchor, constant: pad),
+            title.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: pad),
+            title.trailingAnchor.constraint(lessThanOrEqualTo: container.trailingAnchor, constant: -pad),
+
+            subtitle.topAnchor.constraint(equalTo: title.bottomAnchor, constant: 4),
+            subtitle.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: pad),
+            subtitle.trailingAnchor.constraint(lessThanOrEqualTo: container.trailingAnchor, constant: -pad),
+
+            grid.topAnchor.constraint(equalTo: subtitle.bottomAnchor, constant: 12),
+            grid.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: pad),
+            grid.trailingAnchor.constraint(lessThanOrEqualTo: container.trailingAnchor, constant: -pad),
+            grid.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -pad),
+        ])
+
+        let vc = NSViewController()
+        vc.view = container
+        container.layoutSubtreeIfNeeded()
+        vc.preferredContentSize = container.fittingSize
+
+        let popover = NSPopover()
+        popover.contentViewController = vc
+        popover.behavior = .transient
+        popover.show(relativeTo: sourceView.bounds, of: sourceView, preferredEdge: .maxY)
+        filenameTemplateInfoPopover = popover
     }
 }
