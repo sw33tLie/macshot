@@ -34,7 +34,7 @@
 
 **Homebrew:**
 ```bash
-brew install sw33tlie/macshot/macshot
+brew install --cask macshot
 ```
 
 **Manual:** Download the latest `.dmg` from [Releases](https://github.com/sw33tLie/macshot/releases), open it, drag to `/Applications`.
