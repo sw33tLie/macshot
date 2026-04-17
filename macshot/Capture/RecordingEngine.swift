@@ -331,20 +331,12 @@ final class RecordingEngine: NSObject {
     private func setupAssetWriter(url: URL, width: Int, height: Int) throws {
         let writer = try AVAssetWriter(outputURL: url, fileType: .mp4)
 
-        let settings: [String: Any] = [
-            AVVideoCodecKey: AVVideoCodecType.h264,
-            AVVideoWidthKey: width,
-            AVVideoHeightKey: height,
-            AVVideoColorPropertiesKey: [
-                AVVideoColorPrimariesKey: AVVideoColorPrimaries_ITU_R_709_2,
-                AVVideoTransferFunctionKey: AVVideoTransferFunction_ITU_R_709_2,
-                AVVideoYCbCrMatrixKey: AVVideoYCbCrMatrix_ITU_R_709_2,
-            ],
-            AVVideoCompressionPropertiesKey: [
-                AVVideoAverageBitRateKey: width * height * fps / 8,
-                AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel,
-            ]
-        ]
+        // Record at the highest tier — export re-encodes if the user picks a
+        // smaller preset. Losing bits at record time is irreversible.
+        let settings = VideoEncodingSettings.outputSettings(
+            width: width, height: height, fps: fps,
+            codec: .h264, quality: .high
+        )
 
         let input = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
         input.expectsMediaDataInRealTime = true

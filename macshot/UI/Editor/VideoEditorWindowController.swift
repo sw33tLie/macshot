@@ -23,7 +23,7 @@ final class VideoEditorWindowController: NSObject, NSWindowDelegate {
         guard let screen = NSScreen.main else { return }
 
         // Size window to fit content, capped at 60% of screen
-        let controlsH: CGFloat = 140
+        let controlsH: CGFloat = 172
         let maxW = screen.frame.width * 0.6
         let maxH = screen.frame.height * 0.6
         var contentW: CGFloat = 800
@@ -123,6 +123,20 @@ private final class VideoEditorView: NSView {
     private var exportScale: CGFloat = 1.0  // 1.0 = original, 0.5 = 50%, etc.
     private var dimensionsBtnRect: NSRect = .zero
 
+    // Export quality (controls bitrate when re-encoding for MP4 export)
+    private var exportQuality: VideoQuality = .high
+    private var qualityBtnRect: NSRect = .zero
+
+    // Zoom segments: user-authored regions that zoom into the video during
+    // that portion of playback and during export.
+    private var zoomSegments: [VideoZoomSegment] = []
+    private var selectedSegmentID: UUID?
+    // Drag state: segment being dragged, which edge/body, pixels-from-anchor
+    private enum SegmentDragKind { case move, resizeStart, resizeEnd }
+    private var draggingSegmentID: UUID?
+    private var draggingSegmentKind: SegmentDragKind?
+    private var draggingSegmentAnchor: Double = 0  // time-offset from drag origin
+
     // Button rects
     private var playBtnRect: NSRect = .zero
     private var saveBtnRect: NSRect = .zero
@@ -139,8 +153,11 @@ private final class VideoEditorView: NSView {
     private var statusTimer: Timer?
 
     // Layout
-    private let controlsH: CGFloat = 140
+    private let controlsH: CGFloat = 172  // grown to fit the slim Zooms row above the buttons
     private let timelinePad: CGFloat = 20
+    private let zoomsRowH: CGFloat = 22
+    private var zoomsTrackRect: NSRect = .zero // track portion (same x-range as timeline)
+    private var zoomsAddRects: [(NSRect, Double, Double)] = []  // [(rect, gapStartTime, gapEndTime)]
 
     init(frame: NSRect, videoURL: URL) {
         self.videoURL = videoURL
@@ -359,6 +376,7 @@ private final class VideoEditorView: NSView {
         guard duration > 0 else { return }
 
         drawTimeline()
+        drawZoomsRow()
         drawButtons()
         drawTimeLabels()
         if let msg = statusMessage { drawStatus(msg) }
@@ -367,7 +385,8 @@ private final class VideoEditorView: NSView {
     private func drawTimeline() {
         let tlX = timelinePad
         let tlW = bounds.width - timelinePad * 2
-        let tlY: CGFloat = 55
+        // Timeline sits above the slim Zooms row; buttons at y=12, zooms at y=50, timeline at y=82.
+        let tlY: CGFloat = 82
         let tlH: CGFloat = 36
         timelineRect = NSRect(x: tlX, y: tlY, width: tlW, height: tlH)
 
@@ -445,6 +464,201 @@ private final class VideoEditorView: NSView {
         }
     }
 
+    /// Pill rect for a segment on the Zooms row, aligned with the timeline.
+    private func zoomPillRect(for segment: VideoZoomSegment) -> NSRect {
+        guard duration > 0, zoomsTrackRect.width > 0 else { return .zero }
+        let x0 = zoomsTrackRect.minX + CGFloat(segment.startTime / duration) * zoomsTrackRect.width
+        let x1 = zoomsTrackRect.minX + CGFloat(segment.endTime / duration) * zoomsTrackRect.width
+        return NSRect(x: x0, y: zoomsTrackRect.minY, width: max(2, x1 - x0), height: zoomsTrackRect.height)
+    }
+
+    /// Draws the slim Zooms row under the main timeline. The track uses the
+    /// full timeline width; segments render as full-height pills and the
+    /// remaining time is covered by a "Click to zoom" dashed placeholder.
+    private func drawZoomsRow() {
+        let rowY: CGFloat = 50
+        zoomsTrackRect = NSRect(x: timelineRect.minX, y: rowY,
+                                 width: timelineRect.width, height: zoomsRowH)
+
+        // Persistent track background so there's always a visible bar beneath
+        // segments and gaps, matching the style of the main timeline track.
+        let bgPath = NSBezierPath(roundedRect: zoomsTrackRect, xRadius: 5, yRadius: 5)
+        ToolbarLayout.iconColor.withAlphaComponent(0.06).setFill()
+        bgPath.fill()
+
+        // Draw each segment as a blue pill. Selected gets a white border.
+        for segment in zoomSegments {
+            let rect = zoomPillRect(for: segment)
+            guard rect.width > 0 else { continue }
+            let isSelected = segment.id == selectedSegmentID
+            let baseFill = NSColor(calibratedRed: 0.25, green: 0.55, blue: 1.0, alpha: isSelected ? 1.0 : 0.88)
+            let path = NSBezierPath(roundedRect: rect, xRadius: 6, yRadius: 6)
+            baseFill.setFill()
+            path.fill()
+
+            // Subtle darker strips on fade regions to visualize the ramp
+            let fadeColor = NSColor.black.withAlphaComponent(0.18)
+            let fadeInW = CGFloat(segment.effectiveFadeIn / max(segment.duration, 0.001)) * rect.width
+            let fadeOutW = CGFloat(segment.effectiveFadeOut / max(segment.duration, 0.001)) * rect.width
+            NSGraphicsContext.saveGraphicsState()
+            path.addClip()
+            fadeColor.setFill()
+            if fadeInW > 1 {
+                NSBezierPath(rect: NSRect(x: rect.minX, y: rect.minY, width: fadeInW, height: rect.height)).fill()
+            }
+            if fadeOutW > 1 {
+                NSBezierPath(rect: NSRect(x: rect.maxX - fadeOutW, y: rect.minY, width: fadeOutW, height: rect.height)).fill()
+            }
+            NSGraphicsContext.restoreGraphicsState()
+
+            // Centered label: magnifier icon + "Nx"
+            let zoomLabel = formatZoom(segment.zoomLevel) as NSString
+            let zoomAttrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .semibold),
+                .foregroundColor: NSColor.white,
+            ]
+            let zoomSize = zoomLabel.size(withAttributes: zoomAttrs)
+            let labelIconSize: CGFloat = 11
+            let contentW = labelIconSize + 4 + zoomSize.width
+            if rect.width > contentW + 6 {
+                let startX = rect.midX - contentW / 2
+                if let icon = NSImage(systemSymbolName: "plus.magnifyingglass", accessibilityDescription: nil)?
+                        .withSymbolConfiguration(.init(pointSize: labelIconSize, weight: .semibold)) {
+                    let tinted = NSImage(size: icon.size, flipped: false) { r in
+                        icon.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1)
+                        NSColor.white.setFill()
+                        r.fill(using: .sourceAtop)
+                        return true
+                    }
+                    tinted.draw(in: NSRect(x: startX,
+                                            y: rect.midY - icon.size.height / 2,
+                                            width: icon.size.width, height: icon.size.height))
+                }
+                zoomLabel.draw(at: NSPoint(x: startX + labelIconSize + 4,
+                                            y: rect.midY - zoomSize.height / 2),
+                                withAttributes: zoomAttrs)
+            }
+
+            if isSelected {
+                NSColor.white.withAlphaComponent(0.95).setStroke()
+                let border = NSBezierPath(roundedRect: rect.insetBy(dx: 0.75, dy: 0.75), xRadius: 6, yRadius: 6)
+                border.lineWidth = 1.5
+                border.stroke()
+            }
+
+            // Resize handles at each edge — styled like the trim bar's handles
+            // so users recognise they're draggable. A slimmer profile because
+            // the zooms row is narrower than the main timeline.
+            let handleW: CGFloat = 6
+            let handleH: CGFloat = rect.height + 6
+            let handleY = rect.minY - 3
+            let handleAlpha: CGFloat = isSelected ? 1.0 : 0.9
+            let handleColor = NSColor.white.withAlphaComponent(handleAlpha)
+
+            // Left handle
+            let leftHandle = NSRect(x: rect.minX - handleW / 2 + 1, y: handleY,
+                                     width: handleW, height: handleH)
+            handleColor.setFill()
+            NSBezierPath(roundedRect: leftHandle, xRadius: 2, yRadius: 2).fill()
+            drawZoomHandleGrip(in: leftHandle)
+
+            // Right handle
+            let rightHandle = NSRect(x: rect.maxX - handleW / 2 - 1, y: handleY,
+                                      width: handleW, height: handleH)
+            handleColor.setFill()
+            NSBezierPath(roundedRect: rightHandle, xRadius: 2, yRadius: 2).fill()
+            drawZoomHandleGrip(in: rightHandle)
+        }
+
+        // Dashed "Click to zoom" placeholders fill every free gap in the row.
+        // Each gap stores its time range so clicking a specific position inside
+        // the placeholder places the new segment exactly where the cursor is.
+        zoomsAddRects.removeAll(keepingCapacity: true)
+        guard duration > 0 && zoomsTrackRect.width > 20 else { return }
+
+        let sorted = zoomSegments.sorted { $0.startTime < $1.startTime }
+        // Build the list of free time intervals [(gapStart, gapEnd)]
+        var intervals: [(Double, Double)] = []
+        var cursor: Double = 0
+        for seg in sorted {
+            if seg.startTime > cursor + 0.001 {
+                intervals.append((cursor, seg.startTime))
+            }
+            cursor = max(cursor, seg.endTime)
+        }
+        if cursor < duration - 0.001 {
+            intervals.append((cursor, duration))
+        }
+
+        for (gapStart, gapEnd) in intervals {
+            // Allow any gap that can fit the minimum segment duration so there's
+            // always a visible "Click to zoom" slot between adjacent segments.
+            guard gapEnd - gapStart >= VideoZoomSegment.minDuration else { continue }
+            let leftPad: CGFloat = gapStart > 0.001 ? 2 : 0
+            let rightPad: CGFloat = gapEnd < duration - 0.001 ? 2 : 0
+            let x0 = zoomsTrackRect.minX + CGFloat(gapStart / duration) * zoomsTrackRect.width + leftPad
+            let x1 = zoomsTrackRect.minX + CGFloat(gapEnd / duration) * zoomsTrackRect.width - rightPad
+            let w = x1 - x0
+            guard w >= 10 else { continue }
+            let rect = NSRect(x: x0, y: zoomsTrackRect.minY, width: w, height: zoomsTrackRect.height)
+            zoomsAddRects.append((rect, gapStart, gapEnd))
+
+            let dash = NSBezierPath(roundedRect: rect.insetBy(dx: 0.5, dy: 0.5), xRadius: 5, yRadius: 5)
+            dash.lineWidth = 1
+            dash.setLineDash([4, 3], count: 2, phase: 0)
+            NSColor(calibratedRed: 0.25, green: 0.55, blue: 1.0, alpha: 0.55).setStroke()
+            dash.stroke()
+
+            let addStr = L("Click to zoom") as NSString
+            let addAttrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 10, weight: .medium),
+                .foregroundColor: NSColor(calibratedRed: 0.5, green: 0.75, blue: 1.0, alpha: 1.0),
+            ]
+            let addSize = addStr.size(withAttributes: addAttrs)
+            let addIconSize: CGFloat = 10
+            let addContentW = addIconSize + 4 + addSize.width
+            if w > addContentW + 8 {
+                let sx = rect.midX - addContentW / 2
+                if let icon = NSImage(systemSymbolName: "plus.circle.fill", accessibilityDescription: nil)?
+                        .withSymbolConfiguration(.init(pointSize: addIconSize, weight: .semibold)) {
+                    let tinted = NSImage(size: icon.size, flipped: false) { r in
+                        icon.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1)
+                        NSColor(calibratedRed: 0.5, green: 0.75, blue: 1.0, alpha: 1.0).setFill()
+                        r.fill(using: .sourceAtop)
+                        return true
+                    }
+                    tinted.draw(in: NSRect(x: sx, y: rect.midY - icon.size.height / 2,
+                                            width: icon.size.width, height: icon.size.height))
+                }
+                addStr.draw(at: NSPoint(x: sx + addIconSize + 4,
+                                         y: rect.midY - addSize.height / 2),
+                             withAttributes: addAttrs)
+            } else if w > addIconSize + 4 {
+                // Narrow gap — just the icon
+                if let icon = NSImage(systemSymbolName: "plus.circle.fill", accessibilityDescription: nil)?
+                        .withSymbolConfiguration(.init(pointSize: addIconSize, weight: .semibold)) {
+                    let tinted = NSImage(size: icon.size, flipped: false) { r in
+                        icon.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1)
+                        NSColor(calibratedRed: 0.5, green: 0.75, blue: 1.0, alpha: 1.0).setFill()
+                        r.fill(using: .sourceAtop)
+                        return true
+                    }
+                    tinted.draw(in: NSRect(x: rect.midX - icon.size.width / 2,
+                                            y: rect.midY - icon.size.height / 2,
+                                            width: icon.size.width, height: icon.size.height))
+                }
+            }
+        }
+    }
+
+    private func formatZoom(_ level: CGFloat) -> String {
+        // "2x" for integers, "1.5x" otherwise
+        if abs(level.rounded() - level) < 0.01 {
+            return "\(Int(level.rounded()))x"
+        }
+        return String(format: "%.1fx", level)
+    }
+
     private func drawHandleGrip(in rect: NSRect) {
         ToolbarLayout.iconColor.withAlphaComponent(0.5).setStroke()
         let path = NSBezierPath()
@@ -453,6 +667,20 @@ private final class VideoEditorView: NSView {
         for dy in stride(from: -3 as CGFloat, through: 3, by: 3) {
             path.move(to: NSPoint(x: rect.midX - 2, y: midY + dy))
             path.line(to: NSPoint(x: rect.midX + 2, y: midY + dy))
+        }
+        path.stroke()
+    }
+
+    /// Grip for the narrower zoom-pill handles. Uses darker lines against the
+    /// white handle fill so the grip is visible on the segment's edge.
+    private func drawZoomHandleGrip(in rect: NSRect) {
+        NSColor(calibratedRed: 0.18, green: 0.45, blue: 0.85, alpha: 0.85).setStroke()
+        let path = NSBezierPath()
+        path.lineWidth = 1
+        let midY = rect.midY
+        for dy in stride(from: -2.5 as CGFloat, through: 2.5, by: 2.5) {
+            path.move(to: NSPoint(x: rect.midX - 1.2, y: midY + dy))
+            path.line(to: NSPoint(x: rect.midX + 1.2, y: midY + dy))
         }
         path.stroke()
     }
@@ -564,17 +792,42 @@ private final class VideoEditorView: NSView {
                 }
             }
 
-            // Estimated export size — show when trim, scale, or format change would affect output
+            // Quality dropdown (only meaningful when exporting as MP4)
+            qualityBtnRect = .zero
+            if !exportAsGIF && x < maxLeftX {
+                let qualAttrs: [NSAttributedString.Key: Any] = [
+                    .font: NSFont.systemFont(ofSize: 10, weight: .medium),
+                    .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(exportQuality != .high ? 0.7 : 0.4),
+                ]
+                let qualStr = "  ·  \(exportQuality.displayName) ▼" as NSString
+                let qualSize = qualStr.size(withAttributes: qualAttrs)
+                let qualBtnW = qualSize.width + 8
+                if x + qualBtnW < maxLeftX {
+                    qualityBtnRect = NSRect(x: x, y: btnY, width: qualBtnW, height: btnH)
+                    qualStr.draw(at: NSPoint(x: x + 4, y: btnY + (btnH - qualSize.height) / 2), withAttributes: qualAttrs)
+                    x += qualBtnW
+                }
+            }
+
+            // Estimated export size — show when trim, scale, quality, or format change would affect output
             let trimRatio = duration > 0 ? (trimEnd - trimStart) / duration : 1.0
             let scaleRatio = exportScale * exportScale  // pixels scale quadratically
-            let willChange = trimRatio < 0.99 || scaleRatio < 0.99 || exportAsGIF
+            // Quality multiplier on output bitrate (low ~0.33, medium ~0.62, high ~1.0)
+            let qualityRatio: Double = {
+                switch exportQuality {
+                case .low:    return 0.33
+                case .medium: return 0.62
+                case .high:   return 1.0
+                }
+            }()
+            let willChange = trimRatio < 0.99 || scaleRatio < 0.99 || qualityRatio < 0.99 || exportAsGIF
             if willChange && sourceFileSize > 0 && x < maxLeftX {
                 let estimated: Int64
                 if exportAsGIF {
                     let gifFPSRatio = min(15.0, fpsValue) / max(fpsValue, 1.0)
                     estimated = Int64(Double(sourceFileSize) * trimRatio * scaleRatio * 3.0 * Double(gifFPSRatio))
                 } else {
-                    estimated = Int64(Double(sourceFileSize) * trimRatio * scaleRatio)
+                    estimated = Int64(Double(sourceFileSize) * trimRatio * scaleRatio * qualityRatio)
                 }
                 let estStr = "  ·  ~\(ByteCountFormatter.string(fromByteCount: estimated, countStyle: .file))" as NSString
                 let estAttrs: [NSAttributedString.Key: Any] = [
@@ -803,7 +1056,7 @@ private final class VideoEditorView: NSView {
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
 
-        // Trim handles
+        // Trim handles (higher priority than zoom segments)
         let handleHitW: CGFloat = 16
         let startX = timelineRect.minX + CGFloat(trimStart / duration) * timelineRect.width
         let endX = timelineRect.minX + CGFloat(trimEnd / duration) * timelineRect.width
@@ -815,11 +1068,71 @@ private final class VideoEditorView: NSView {
             isDraggingEnd = true; return
         }
 
-        // Scrub timeline
+        // Zooms row: segment hit-testing — edges first, then body. Iterate
+        // reverse so the most recently added segment wins on overlap.
+        // Handles stick ~3px above and below the track and ~3px outside each
+        // edge, so extend the hit zone slightly above/below the pill rect.
+        let zoomsHitRect = zoomsTrackRect.insetBy(dx: -5, dy: -5)
+        if duration > 0 && zoomsHitRect.contains(point) {
+            let edgeHitW: CGFloat = 9
+            for segment in zoomSegments.reversed() {
+                let pill = zoomPillRect(for: segment)
+                if pill.insetBy(dx: -edgeHitW, dy: -5).contains(point) {
+                    let wasSelected = (selectedSegmentID == segment.id)
+                    selectedSegmentID = segment.id
+                    draggingSegmentID = segment.id
+                    let clickTime = Double((point.x - zoomsTrackRect.minX) / zoomsTrackRect.width) * duration
+                    if abs(point.x - pill.minX) < edgeHitW {
+                        draggingSegmentKind = .resizeStart
+                        draggingSegmentAnchor = clickTime - segment.startTime
+                    } else if abs(point.x - pill.maxX) < edgeHitW {
+                        draggingSegmentKind = .resizeEnd
+                        draggingSegmentAnchor = clickTime - segment.endTime
+                    } else {
+                        draggingSegmentKind = .move
+                        draggingSegmentAnchor = clickTime - segment.startTime
+                        // Second click on an already-selected segment body opens
+                        // the center/zoom picker popover.
+                        if wasSelected && event.clickCount == 1 {
+                            showZoomSegmentPopover(for: segment, at: pill)
+                        }
+                    }
+                    savedURL = nil
+                    needsDisplay = true
+                    return
+                }
+            }
+            // Click-to-zoom placeholder: add a segment AT the click position
+            for (rect, gapStart, gapEnd) in zoomsAddRects where rect.contains(point) {
+                let clickTime = Double((point.x - zoomsTrackRect.minX) / zoomsTrackRect.width) * duration
+                addZoomSegment(clickTime: clickTime, gapStart: gapStart, gapEnd: gapEnd)
+                return
+            }
+            // Empty area of the Zooms row — deselect
+            if selectedSegmentID != nil {
+                selectedSegmentID = nil
+                needsDisplay = true
+            }
+            return
+        }
+
+        // Scrub timeline (lowest priority within the timeline region so segments
+        // and handles get first crack)
         if timelineRect.insetBy(dx: 0, dy: -10).contains(point) {
+            // Clicking empty timeline area deselects any zoom segment
+            if selectedSegmentID != nil {
+                selectedSegmentID = nil
+                needsDisplay = true
+            }
             isDraggingScrubber = true
             scrubTo(point: point)
             return
+        }
+
+        // Clicking outside the timeline also deselects
+        if selectedSegmentID != nil {
+            selectedSegmentID = nil
+            needsDisplay = true
         }
 
         // Format toggle
@@ -833,6 +1146,11 @@ private final class VideoEditorView: NSView {
         // Dimensions dropdown
         if dimensionsBtnRect.contains(point) && originalWidth > 0 {
             showDimensionsMenu(); return
+        }
+
+        // Quality dropdown
+        if qualityBtnRect.contains(point) {
+            showQualityMenu(); return
         }
 
         // Buttons
@@ -851,25 +1169,82 @@ private final class VideoEditorView: NSView {
 
     override func mouseDragged(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
-        let t = max(0, min(duration, Double((point.x - timelineRect.minX) / timelineRect.width) * duration))
 
         if isDraggingStart {
+            let t = max(0, min(duration, Double((point.x - timelineRect.minX) / timelineRect.width) * duration))
             trimStart = min(t, trimEnd - 0.1)
             player?.seek(to: CMTime(seconds: trimStart, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero)
             needsDisplay = true
         } else if isDraggingEnd {
+            let t = max(0, min(duration, Double((point.x - timelineRect.minX) / timelineRect.width) * duration))
             trimEnd = max(t, trimStart + 0.1)
             player?.seek(to: CMTime(seconds: trimEnd, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero)
             needsDisplay = true
+        } else if let segID = draggingSegmentID,
+                  let kind = draggingSegmentKind,
+                  let segment = zoomSegments.first(where: { $0.id == segID }) {
+            // Segment drags are in the Zooms row's x-range
+            let t = max(0, min(duration, Double((point.x - zoomsTrackRect.minX) / zoomsTrackRect.width) * duration))
+            dragSegment(segment, kind: kind, time: t)
         } else if isDraggingScrubber {
             scrubTo(point: point)
         }
     }
 
+    private func dragSegment(_ segment: VideoZoomSegment, kind: SegmentDragKind, time t: Double) {
+        switch kind {
+        case .move:
+            let segDuration = segment.duration
+            var newStart = t - draggingSegmentAnchor
+            newStart = max(0, min(duration - segDuration, newStart))
+            var newEnd = newStart + segDuration
+            // Collision avoidance: don't push into neighbours
+            let others = zoomSegments.filter { $0.id != segment.id }.sorted { $0.startTime < $1.startTime }
+            for other in others {
+                if newStart < other.endTime && newEnd > other.startTime {
+                    // Collision: push to the side we came from based on current position
+                    if segment.startTime < other.startTime {
+                        newEnd = other.startTime
+                        newStart = newEnd - segDuration
+                    } else {
+                        newStart = other.endTime
+                        newEnd = newStart + segDuration
+                    }
+                }
+            }
+            segment.startTime = max(0, newStart)
+            segment.endTime = min(duration, newEnd)
+        case .resizeStart:
+            let minEnd = segment.endTime - VideoZoomSegment.minDuration
+            let newStart = max(0, min(minEnd, t - draggingSegmentAnchor))
+            // Don't cross neighbour end
+            let leftNeighbours = zoomSegments.filter { $0.id != segment.id && $0.endTime <= segment.endTime }
+            let lowerBound = leftNeighbours.map { $0.endTime }.max() ?? 0
+            segment.startTime = max(lowerBound, newStart)
+        case .resizeEnd:
+            let minStart = segment.startTime + VideoZoomSegment.minDuration
+            let newEnd = max(minStart, min(duration, t - draggingSegmentAnchor))
+            // Don't cross neighbour start
+            let rightNeighbours = zoomSegments.filter { $0.id != segment.id && $0.startTime >= segment.startTime }
+            let upperBound = rightNeighbours.map { $0.startTime }.min() ?? duration
+            segment.endTime = min(upperBound, newEnd)
+        }
+        savedURL = nil
+        // Rebuild the video composition on mouseUp, not on every drag frame —
+        // setting AVPlayerItem.videoComposition invalidates the decoder pipeline.
+        needsDisplay = true
+    }
+
     override func mouseUp(with event: NSEvent) {
+        let wasDraggingSegment = draggingSegmentID != nil
         isDraggingStart = false
         isDraggingEnd = false
         isDraggingScrubber = false
+        draggingSegmentID = nil
+        draggingSegmentKind = nil
+        if wasDraggingSegment {
+            applyZoomTransformForCurrentTime()
+        }
     }
 
     private func scrubTo(point: NSPoint) {
@@ -976,14 +1351,13 @@ private final class VideoEditorView: NSView {
 
     private func exportSession(asset: AVAsset, timeRange: CMTimeRange, outputURL: URL) -> AVAssetExportSession? {
         let needsScale = exportScale < 0.999
+        let hasZoom = !zoomSegments.isEmpty
 
-        // Build a composition when we need to strip audio or scale
         let composition = AVMutableComposition()
         guard let videoTrack = asset.tracks(withMediaType: .video).first,
               let compositionVideoTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid) else { return nil }
         try? compositionVideoTrack.insertTimeRange(timeRange, of: videoTrack, at: .zero)
 
-        // Include audio unless muted
         if !isMuted {
             for audioTrack in asset.tracks(withMediaType: .audio) {
                 if let compAudio = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid) {
@@ -992,35 +1366,23 @@ private final class VideoEditorView: NSView {
             }
         }
 
-        let presetName = needsScale ? AVAssetExportPresetHighestQuality : AVAssetExportPresetHighestQuality
-        guard let session = AVAssetExportSession(asset: composition, presetName: presetName) else { return nil }
+        guard let session = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetHighestQuality) else { return nil }
         session.outputURL = outputURL
         session.outputFileType = .mp4
 
-        // Apply scale via video composition
-        if needsScale {
+        if needsScale || hasZoom {
             let naturalSize = videoTrack.naturalSize.applying(videoTrack.preferredTransform)
-            let w = abs(naturalSize.width)
-            let h = abs(naturalSize.height)
-            // Round to even for codec compatibility
-            let scaledW = CGFloat((Int(w * exportScale) / 2) * 2)
-            let scaledH = CGFloat((Int(h * exportScale) / 2) * 2)
-
-            let instruction = AVMutableVideoCompositionInstruction()
-            instruction.timeRange = CMTimeRange(start: .zero, duration: composition.duration)
-            let layerInstruction = AVMutableVideoCompositionLayerInstruction(assetTrack: compositionVideoTrack)
-
-            // Apply the original transform (handles rotation) scaled down
-            var transform = videoTrack.preferredTransform
-            transform = transform.concatenating(CGAffineTransform(scaleX: exportScale, y: exportScale))
-            layerInstruction.setTransform(transform, at: .zero)
-            instruction.layerInstructions = [layerInstruction]
-
-            let videoComposition = AVMutableVideoComposition()
-            videoComposition.instructions = [instruction]
-            videoComposition.renderSize = CGSize(width: scaledW, height: scaledH)
-            videoComposition.frameDuration = CMTime(value: 1, timescale: CMTimeScale(videoTrack.nominalFrameRate))
-            session.videoComposition = videoComposition
+            let (scaledW, scaledH) = VideoEncodingSettings.evenDimensions(
+                width: abs(naturalSize.width) * exportScale,
+                height: abs(naturalSize.height) * exportScale
+            )
+            session.videoComposition = buildZoomVideoComposition(
+                for: composition,
+                videoTrack: compositionVideoTrack,
+                renderSize: CGSize(width: scaledW, height: scaledH),
+                timeShift: CMTimeGetSeconds(timeRange.start),
+                timeRangeDuration: CMTimeGetSeconds(composition.duration)
+            )
         }
 
         return session
@@ -1107,6 +1469,32 @@ private final class VideoEditorView: NSView {
         needsDisplay = true
     }
 
+    private func showQualityMenu() {
+        let menu = NSMenu()
+        let options: [(VideoQuality, String)] = [
+            (.high,   L("High")),
+            (.medium, L("Medium")),
+            (.low,    L("Low")),
+        ]
+        for (q, label) in options {
+            let item = NSMenuItem(title: label, action: #selector(qualitySelected(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = q.rawValue
+            item.state = (q == exportQuality) ? .on : .off
+            menu.addItem(item)
+        }
+        let pos = NSPoint(x: qualityBtnRect.minX, y: qualityBtnRect.maxY)
+        menu.popUp(positioning: nil, at: pos, in: self)
+    }
+
+    @objc private func qualitySelected(_ sender: NSMenuItem) {
+        if let raw = sender.representedObject as? String, let q = VideoQuality(rawValue: raw) {
+            exportQuality = q
+            savedURL = nil
+            needsDisplay = true
+        }
+    }
+
     private func convertToGIF(destURL: URL, completion: ((Bool) -> Void)? = nil) {
         guard let asset = asset else { completion?(false); return }
         showStatus(L("Processing GIF…"), persist: true)
@@ -1117,15 +1505,44 @@ private final class VideoEditorView: NSView {
         // GIF capped at 15fps
         let gifFPS = min(15, asset.tracks(withMediaType: .video).first.map { Int($0.nominalFrameRate.rounded()) } ?? 15)
         let scale = exportScale
+        let hasZoom = !zoomSegments.isEmpty
 
-        // Use GCD background queue instead of Swift concurrency Task.detached.
-        // Swift's cooperative thread pool shares threads with the main actor,
-        // so CPU-bound GIF encoding can starve the UI. A GCD .background queue
-        // gets its own kernel thread that macOS properly deprioritizes.
+        // Build the zoom-composition pipeline on the main thread before jumping
+        // to background so the video composition builder sees our current state.
+        var readerAsset: AVAsset = asset
+        var readerVideoTrackOpt: AVAssetTrack? = asset.tracks(withMediaType: .video).first
+        var readerTimeRange: CMTimeRange = timeRange
+        var readerVideoComposition: AVMutableVideoComposition?
+        var readerOutW = 0
+        var readerOutH = 0
+        if hasZoom, let vt = readerVideoTrackOpt {
+            let comp = AVMutableComposition()
+            if let cvt = comp.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid) {
+                try? cvt.insertTimeRange(timeRange, of: vt, at: .zero)
+                let natSize = vt.naturalSize.applying(vt.preferredTransform)
+                let (outW, outH) = VideoEncodingSettings.evenDimensions(
+                    width: abs(natSize.width) * scale,
+                    height: abs(natSize.height) * scale
+                )
+                readerOutW = outW
+                readerOutH = outH
+                readerAsset = comp
+                readerVideoTrackOpt = cvt
+                readerTimeRange = CMTimeRange(start: .zero, duration: timeRange.duration)
+                readerVideoComposition = buildZoomVideoComposition(
+                    for: comp,
+                    videoTrack: cvt,
+                    renderSize: CGSize(width: outW, height: outH),
+                    timeShift: CMTimeGetSeconds(timeRange.start),
+                    timeRangeDuration: CMTimeGetSeconds(comp.duration)
+                )
+            }
+        }
+
         DispatchQueue.global(qos: .background).async { [weak self] in
             do {
-                let reader = try AVAssetReader(asset: asset)
-                guard let videoTrack = asset.tracks(withMediaType: .video).first else {
+                let reader = try AVAssetReader(asset: readerAsset)
+                guard let videoTrack = readerVideoTrackOpt else {
                     DispatchQueue.main.async {
                         self?.showStatus(L("No video track found"), isError: true)
                         completion?(false)
@@ -1133,37 +1550,50 @@ private final class VideoEditorView: NSView {
                     return
                 }
 
-                // If scaling, request scaled output directly from AVAssetReaderTrackOutput
-                var outputSettings: [String: Any] = [
-                    kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
-                ]
-                if scale < 0.999 {
-                    let natSize = videoTrack.naturalSize.applying(videoTrack.preferredTransform)
-                    let w = Int(abs(natSize.width) * scale) / 2 * 2
-                    let h = Int(abs(natSize.height) * scale) / 2 * 2
-                    outputSettings[kCVPixelBufferWidthKey as String] = w
-                    outputSettings[kCVPixelBufferHeightKey as String] = h
+                let readerOutput: AVAssetReaderOutput
+                if let comp = readerVideoComposition {
+                    let cOut = AVAssetReaderVideoCompositionOutput(
+                        videoTracks: [videoTrack],
+                        videoSettings: [
+                            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+                            kCVPixelBufferWidthKey as String: readerOutW,
+                            kCVPixelBufferHeightKey as String: readerOutH,
+                        ]
+                    )
+                    cOut.videoComposition = comp
+                    cOut.alwaysCopiesSampleData = false
+                    readerOutput = cOut
+                } else {
+                    var outputSettings: [String: Any] = [
+                        kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+                    ]
+                    if scale < 0.999 {
+                        let natSize = videoTrack.naturalSize.applying(videoTrack.preferredTransform)
+                        let w = Int(abs(natSize.width) * scale) / 2 * 2
+                        let h = Int(abs(natSize.height) * scale) / 2 * 2
+                        outputSettings[kCVPixelBufferWidthKey as String] = w
+                        outputSettings[kCVPixelBufferHeightKey as String] = h
+                    }
+                    let tOut = AVAssetReaderTrackOutput(track: videoTrack, outputSettings: outputSettings)
+                    tOut.alwaysCopiesSampleData = false
+                    readerOutput = tOut
                 }
-
-                let trackOutput = AVAssetReaderTrackOutput(track: videoTrack, outputSettings: outputSettings)
-                trackOutput.alwaysCopiesSampleData = false
-                reader.timeRange = timeRange
-                reader.add(trackOutput)
+                reader.timeRange = readerTimeRange
+                reader.add(readerOutput)
 
                 let tmpURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".gif")
                 let sourceFPS = Int(videoTrack.nominalFrameRate.rounded())
                 let encoder = GIFEncoder(url: tmpURL, fps: gifFPS, sourceFPS: max(sourceFPS, gifFPS))
                 reader.startReading()
 
-                // Estimate total frames for progress reporting
-                let durationSec = CMTimeGetSeconds(timeRange.duration)
+                let durationSec = CMTimeGetSeconds(readerTimeRange.duration)
                 let estimatedFrames = max(1, Int(durationSec * Double(sourceFPS)))
                 var framesRead = 0
                 var lastReportedPct = -1
 
                 while reader.status == .reading {
                     autoreleasepool {
-                        if let sampleBuffer = trackOutput.copyNextSampleBuffer(),
+                        if let sampleBuffer = readerOutput.copyNextSampleBuffer(),
                            let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
                             encoder.addFrame(pixelBuffer)
                             framesRead += 1
@@ -1209,7 +1639,9 @@ private final class VideoEditorView: NSView {
     private func saveToDestination(_ destURL: URL, dirURL: URL?) {
         let needsTrim = trimStart > 0.01 || (duration - trimEnd) > 0.01
         let needsScale = exportScale < 0.999
-        let needsExport = needsTrim || isMuted || needsScale
+        let needsRecompress = exportQuality != .high
+        let needsZoom = !zoomSegments.isEmpty
+        let needsExport = needsTrim || isMuted || needsScale || needsRecompress || needsZoom
 
         if !needsExport {
             // No processing needed — copy temp file to destination
@@ -1234,35 +1666,233 @@ private final class VideoEditorView: NSView {
         guard let asset = asset else { return }
         showStatus(L("Exporting..."))
 
-        // Export to a temp file first, then move to destination
         let tmpURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".\(videoURL.pathExtension)")
         let startTime = CMTime(seconds: trimStart, preferredTimescale: 600)
         let endTime = CMTime(seconds: trimEnd, preferredTimescale: 600)
         let timeRange = CMTimeRange(start: startTime, end: endTime)
 
-        guard let session = exportSession(asset: asset, timeRange: timeRange, outputURL: tmpURL) else {
-            showStatus(L("Export failed"), isError: true)
+        let onCompletion: (Bool) -> Void = { [weak self] success in
+            guard let self = self else { return }
+            if success {
+                try? FileManager.default.removeItem(at: destURL)
+                do {
+                    try FileManager.default.moveItem(at: tmpURL, to: destURL)
+                    self.savedURL = destURL
+                    if let dirURL = dirURL { SaveDirectoryAccess.stopAccessing(url: dirURL) }
+                    self.showStatus(String(format: L("Saved to %@"), destURL.lastPathComponent))
+                    self.needsDisplay = true
+                } catch {
+                    self.showStatus(L("Save failed"), isError: true)
+                }
+            } else {
+                self.showStatus(L("Export failed"), isError: true)
+                try? FileManager.default.removeItem(at: tmpURL)
+            }
+        }
+
+        if needsRecompress {
+            reencodeExport(asset: asset, timeRange: timeRange, outputURL: tmpURL, completion: onCompletion)
+        } else {
+            guard let session = exportSession(asset: asset, timeRange: timeRange, outputURL: tmpURL) else {
+                showStatus(L("Export failed"), isError: true)
+                return
+            }
+            Task {
+                await session.export()
+                await MainActor.run { onCompletion(session.status == .completed) }
+            }
+        }
+    }
+
+    /// Re-encode pipeline with explicit bitrate control via AVAssetReader/Writer.
+    /// Used when the user selects a non-High quality preset so the bitrate
+    /// actually takes effect (AVAssetExportSession presets hardcode bitrate).
+    private func reencodeExport(asset: AVAsset, timeRange: CMTimeRange, outputURL: URL, completion: @escaping (Bool) -> Void) {
+        guard let videoTrack = asset.tracks(withMediaType: .video).first else {
+            completion(false)
             return
         }
 
-        Task {
-            await session.export()
-            await MainActor.run {
-                if session.status == .completed {
-                    try? FileManager.default.removeItem(at: destURL)
-                    do {
-                        try FileManager.default.moveItem(at: tmpURL, to: destURL)
-                        self.savedURL = destURL
-                        if let dirURL = dirURL { SaveDirectoryAccess.stopAccessing(url: dirURL) }
-                        self.showStatus(String(format: L("Saved to %@"), destURL.lastPathComponent))
-                        self.needsDisplay = true
-                    } catch {
-                        self.showStatus(L("Save failed"), isError: true)
-                    }
-                } else {
-                    self.showStatus(L("Export failed"), isError: true)
-                    try? FileManager.default.removeItem(at: tmpURL)
+        let natSize = videoTrack.naturalSize.applying(videoTrack.preferredTransform)
+        let srcW = abs(natSize.width)
+        let srcH = abs(natSize.height)
+        let (outW, outH) = VideoEncodingSettings.evenDimensions(width: srcW * exportScale, height: srcH * exportScale)
+        let srcFPS = Int(videoTrack.nominalFrameRate.rounded())
+        let fps = max(srcFPS, 1)
+
+        let includeAudio = !isMuted
+        let audioTracks = asset.tracks(withMediaType: .audio)
+        let hasZoom = !zoomSegments.isEmpty
+
+        // When zoom segments exist we must route the read side through a video
+        // composition so the compositor applies zoom transforms. Otherwise we
+        // read raw scaled frames directly from the track.
+        let readerAsset: AVAsset
+        let readerVideoTrack: AVAssetTrack
+        let readerTimeRange: CMTimeRange
+        let readerComposition: AVMutableVideoComposition?
+        if hasZoom {
+            let comp = AVMutableComposition()
+            guard let cvt = comp.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid) else {
+                completion(false); return
+            }
+            try? cvt.insertTimeRange(timeRange, of: videoTrack, at: .zero)
+            readerAsset = comp
+            readerVideoTrack = cvt
+            readerTimeRange = CMTimeRange(start: .zero, duration: timeRange.duration)
+            readerComposition = buildZoomVideoComposition(
+                for: comp,
+                videoTrack: cvt,
+                renderSize: CGSize(width: outW, height: outH),
+                timeShift: CMTimeGetSeconds(timeRange.start),
+                timeRangeDuration: CMTimeGetSeconds(comp.duration)
+            )
+        } else {
+            readerAsset = asset
+            readerVideoTrack = videoTrack
+            readerTimeRange = timeRange
+            readerComposition = nil
+        }
+
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { completion(false); return }
+            do {
+                try? FileManager.default.removeItem(at: outputURL)
+                let writer = try AVAssetWriter(outputURL: outputURL, fileType: .mp4)
+                let videoSettings = VideoEncodingSettings.outputSettings(
+                    width: outW, height: outH, fps: fps,
+                    codec: .h264, quality: self.exportQuality
+                )
+                let videoInput = AVAssetWriterInput(mediaType: .video, outputSettings: videoSettings)
+                videoInput.expectsMediaDataInRealTime = false
+                // Orientation: the video composition path already produces upright
+                // render-size frames, so don't re-apply preferredTransform.
+                if !hasZoom {
+                    videoInput.transform = videoTrack.preferredTransform
                 }
+                guard writer.canAdd(videoInput) else { completion(false); return }
+                writer.add(videoInput)
+
+                let reader = try AVAssetReader(asset: readerAsset)
+                reader.timeRange = readerTimeRange
+
+                // Video output: either composition output (zoom path) or direct
+                // track output (scale-only path).
+                let videoOutput: AVAssetReaderOutput
+                if let comp = readerComposition {
+                    let cOut = AVAssetReaderVideoCompositionOutput(
+                        videoTracks: [readerVideoTrack],
+                        videoSettings: [
+                            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+                        ]
+                    )
+                    cOut.videoComposition = comp
+                    cOut.alwaysCopiesSampleData = false
+                    videoOutput = cOut
+                } else {
+                    var readerOutputSettings: [String: Any] = [
+                        kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+                    ]
+                    if self.exportScale < 0.999 {
+                        readerOutputSettings[kCVPixelBufferWidthKey as String] = outW
+                        readerOutputSettings[kCVPixelBufferHeightKey as String] = outH
+                    }
+                    let tOut = AVAssetReaderTrackOutput(track: readerVideoTrack, outputSettings: readerOutputSettings)
+                    tOut.alwaysCopiesSampleData = false
+                    videoOutput = tOut
+                }
+                guard reader.canAdd(videoOutput) else { completion(false); return }
+                reader.add(videoOutput)
+
+                var audioInputs: [AVAssetWriterInput] = []
+                var audioOutputs: [AVAssetReaderTrackOutput] = []
+                if includeAudio {
+                    for track in audioTracks {
+                        let audioSettings: [String: Any] = [
+                            AVFormatIDKey: kAudioFormatMPEG4AAC,
+                            AVSampleRateKey: 48000,
+                            AVNumberOfChannelsKey: 2,
+                            AVEncoderBitRateKey: 128_000,
+                        ]
+                        let input = AVAssetWriterInput(mediaType: .audio, outputSettings: audioSettings)
+                        input.expectsMediaDataInRealTime = false
+                        if writer.canAdd(input) { writer.add(input); audioInputs.append(input) }
+
+                        let output = AVAssetReaderTrackOutput(track: track, outputSettings: [
+                            AVFormatIDKey: kAudioFormatLinearPCM,
+                            AVLinearPCMBitDepthKey: 16,
+                            AVLinearPCMIsFloatKey: false,
+                            AVLinearPCMIsBigEndianKey: false,
+                            AVLinearPCMIsNonInterleaved: false,
+                        ])
+                        output.alwaysCopiesSampleData = false
+                        if reader.canAdd(output) { reader.add(output); audioOutputs.append(output) }
+                    }
+                }
+
+                guard reader.startReading() else { completion(false); return }
+                guard writer.startWriting() else { completion(false); return }
+                writer.startSession(atSourceTime: .zero)
+
+                let group = DispatchGroup()
+                let videoQueue = DispatchQueue(label: "macshot.export.video")
+                let audioQueue = DispatchQueue(label: "macshot.export.audio")
+
+                // Pump video
+                group.enter()
+                videoInput.requestMediaDataWhenReady(on: videoQueue) {
+                    while videoInput.isReadyForMoreMediaData {
+                        guard reader.status == .reading,
+                              let sample = videoOutput.copyNextSampleBuffer() else {
+                            videoInput.markAsFinished()
+                            group.leave()
+                            return
+                        }
+                        // Shift PTS so the output starts at t=0
+                        let pts = CMSampleBufferGetPresentationTimeStamp(sample)
+                        let shifted = CMTimeSubtract(pts, timeRange.start)
+                        if let retimed = sample.retimed(presentationTime: shifted) {
+                            if !videoInput.append(retimed) {
+                                videoInput.markAsFinished()
+                                group.leave()
+                                return
+                            }
+                        }
+                    }
+                }
+
+                // Pump audio (each track independently)
+                for (input, output) in zip(audioInputs, audioOutputs) {
+                    group.enter()
+                    input.requestMediaDataWhenReady(on: audioQueue) {
+                        while input.isReadyForMoreMediaData {
+                            guard reader.status == .reading,
+                                  let sample = output.copyNextSampleBuffer() else {
+                                input.markAsFinished()
+                                group.leave()
+                                return
+                            }
+                            let pts = CMSampleBufferGetPresentationTimeStamp(sample)
+                            let shifted = CMTimeSubtract(pts, timeRange.start)
+                            if let retimed = sample.retimed(presentationTime: shifted) {
+                                if !input.append(retimed) {
+                                    input.markAsFinished()
+                                    group.leave()
+                                    return
+                                }
+                            }
+                        }
+                    }
+                }
+
+                group.notify(queue: .global(qos: .userInitiated)) {
+                    writer.finishWriting {
+                        let ok = (writer.status == .completed) && (reader.status != .failed)
+                        DispatchQueue.main.async { completion(ok) }
+                    }
+                }
+            } catch {
+                DispatchQueue.main.async { completion(false) }
             }
         }
     }
@@ -1316,7 +1946,8 @@ private final class VideoEditorView: NSView {
         }
 
         let needsTrim = trimStart > 0.01 || (duration - trimEnd) > 0.01
-        let needsExport = needsTrim || isMuted
+        let needsZoom = !zoomSegments.isEmpty
+        let needsExport = needsTrim || isMuted || needsZoom
 
         if !needsExport {
             uploadFileURL(videoURL, false)
@@ -1354,9 +1985,289 @@ private final class VideoEditorView: NSView {
             stepFrame(forward: false)
         case 124: // Right arrow — step forward one frame
             stepFrame(forward: true)
+        case 51, 117: // Delete / Forward-Delete
+            if let id = selectedSegmentID {
+                zoomSegments.removeAll { $0.id == id }
+                selectedSegmentID = nil
+                savedURL = nil
+                applyZoomTransformForCurrentTime()
+                needsDisplay = true
+            } else {
+                super.keyDown(with: event)
+            }
+        case 24: // '=' / '+' — grow zoom level of selected segment
+            if let id = selectedSegmentID, let seg = zoomSegments.first(where: { $0.id == id }) {
+                seg.zoomLevel = min(VideoZoomSegment.maxZoom, seg.zoomLevel + 0.25)
+                savedURL = nil
+                applyZoomTransformForCurrentTime()
+                needsDisplay = true
+            } else {
+                super.keyDown(with: event)
+            }
+        case 27: // '-' — shrink zoom level
+            if let id = selectedSegmentID, let seg = zoomSegments.first(where: { $0.id == id }) {
+                seg.zoomLevel = max(VideoZoomSegment.minZoom, seg.zoomLevel - 0.25)
+                savedURL = nil
+                applyZoomTransformForCurrentTime()
+                needsDisplay = true
+            } else {
+                super.keyDown(with: event)
+            }
         default:
             super.keyDown(with: event)
         }
+    }
+
+    /// Add a new zoom segment inside a specific free gap, centered on the
+    /// clicked time so the pill grows symmetrically around the cursor (but
+    /// stays fully inside the gap).
+    private func addZoomSegment(clickTime: Double, gapStart: Double, gapEnd: Double) {
+        guard duration > 0 else { return }
+        let gapDuration = gapEnd - gapStart
+        guard gapDuration >= VideoZoomSegment.minDuration else {
+            showStatus(L("Not enough room for a zoom segment here"), isError: true)
+            return
+        }
+        let preferred = 2.0
+        let segDuration = min(preferred, gapDuration)
+        // Center on click, but slide fully inside [gapStart, gapEnd]
+        var start = clickTime - segDuration / 2
+        start = max(gapStart, min(gapEnd - segDuration, start))
+        let seg = VideoZoomSegment(
+            startTime: start,
+            endTime: start + segDuration,
+            zoomLevel: 2.0,
+            center: CGPoint(x: 0.5, y: 0.5)
+        )
+        zoomSegments.append(seg)
+        selectedSegmentID = seg.id
+        savedURL = nil
+        applyZoomTransformForCurrentTime()
+        needsDisplay = true
+    }
+
+    /// Show the zoom-center picker popover for a segment.
+    fileprivate func showZoomSegmentPopover(for segment: VideoZoomSegment, at anchorRect: NSRect) {
+        presentZoomSettingsPopover(for: segment, anchorRect: anchorRect)
+    }
+
+    private var activeZoomPopover: NSPopover?
+
+    private func presentZoomSettingsPopover(for segment: VideoZoomSegment, anchorRect: NSRect) {
+        activeZoomPopover?.performClose(nil)
+
+        let thumbnail = thumbnailImage(atSeconds: (segment.startTime + segment.endTime) / 2)
+                     ?? NSImage(size: NSSize(width: 260, height: 146))
+
+        let controller = VideoZoomSegmentPopoverController(
+            segment: segment,
+            thumbnail: thumbnail,
+            onChange: { [weak self] in
+                self?.savedURL = nil
+                self?.applyZoomTransformForCurrentTime()
+                self?.needsDisplay = true
+            },
+            onDelete: { [weak self] in
+                guard let self = self else { return }
+                self.zoomSegments.removeAll { $0.id == segment.id }
+                self.selectedSegmentID = nil
+                self.savedURL = nil
+                self.applyZoomTransformForCurrentTime()
+                self.needsDisplay = true
+                self.activeZoomPopover?.performClose(nil)
+            }
+        )
+
+        let popover = NSPopover()
+        popover.contentViewController = controller
+        popover.behavior = .transient
+        popover.appearance = NSAppearance(named: .darkAqua)
+        popover.show(relativeTo: anchorRect, of: self, preferredEdge: .minY)
+        activeZoomPopover = popover
+    }
+
+    /// Single-frame thumbnail used by the popover. Uses the same generator as
+    /// the timeline thumbnails.
+    private func thumbnailImage(atSeconds t: Double) -> NSImage? {
+        guard let asset = asset else { return nil }
+        let gen = AVAssetImageGenerator(asset: asset)
+        gen.appliesPreferredTrackTransform = true
+        gen.maximumSize = CGSize(width: 520, height: 520)  // popover at 2x
+        gen.requestedTimeToleranceBefore = CMTime(seconds: 0.5, preferredTimescale: 600)
+        gen.requestedTimeToleranceAfter = CMTime(seconds: 0.5, preferredTimescale: 600)
+        let time = CMTime(seconds: max(0, min(duration - 0.05, t)), preferredTimescale: 600)
+        guard let cg = try? gen.copyCGImage(at: time, actualTime: nil) else { return nil }
+        return NSImage(cgImage: cg, size: NSSize(width: cg.width, height: cg.height))
+    }
+
+    /// Rebuild the AVPlayerItem's videoComposition so live playback reflects
+    /// the current zoom segments. Also used when editing segments during
+    /// playback — AVPlayer picks up composition changes on the next frame.
+    fileprivate func applyZoomTransformForCurrentTime() {
+        guard let player = player, let item = player.currentItem, let asset = asset else { return }
+        if zoomSegments.isEmpty {
+            item.videoComposition = nil
+            return
+        }
+        // Preview runs against the original asset, so segments are in asset clock
+        // already and there's no time shift.
+        item.videoComposition = buildZoomVideoComposition(
+            for: asset,
+            videoTrack: asset.tracks(withMediaType: .video).first,
+            renderSize: nil,
+            timeShift: 0,
+            timeRangeDuration: CMTimeGetSeconds(asset.duration)
+        )
+    }
+
+    /// Build an `AVMutableVideoComposition` that applies zoom segments as
+    /// per-frame affine transforms. Ease-in-out ramps are split into N linear
+    /// `setTransformRamp` slices to approximate the curve.
+    ///
+    /// - Parameters:
+    ///   - asset: Asset whose tracks are referenced (may be a composition).
+    ///   - videoTrack: Specific track to instrument. Must belong to `asset`.
+    ///     If nil, picks the first video track.
+    ///   - renderSize: Output size. Pass nil to use the video track's natural
+    ///     (orientation-applied) size.
+    ///   - timeShift: Seconds to subtract from zoom segment asset times to
+    ///     put them on the composition's clock. Export sets this to `trimStart`
+    ///     so segments land in the right place after the clip is trimmed.
+    ///   - timeRangeDuration: Total composition length in seconds (composition
+    ///     clock). Used for the instruction timeRange.
+    private func buildZoomVideoComposition(for asset: AVAsset, videoTrack: AVAssetTrack?, renderSize: CGSize?, timeShift: Double, timeRangeDuration: Double) -> AVMutableVideoComposition? {
+        let track = videoTrack ?? asset.tracks(withMediaType: .video).first
+        guard let videoTrack = track else { return nil }
+        let natSize = videoTrack.naturalSize.applying(videoTrack.preferredTransform)
+        let naturalW = abs(natSize.width)
+        let naturalH = abs(natSize.height)
+        let renderW = renderSize?.width ?? naturalW
+        let renderH = renderSize?.height ?? naturalH
+        let videoSize = CGSize(width: naturalW, height: naturalH)
+
+        // Segments in ascending order, clipped to the composition range
+        let segments: [(VideoZoomSegment, Double, Double)] = zoomSegments
+            .filter { $0.endTime > $0.startTime }
+            .sorted { $0.startTime < $1.startTime }
+            .compactMap { s in
+                let cs = max(0, s.startTime - timeShift)
+                let ce = min(timeRangeDuration, s.endTime - timeShift)
+                guard ce - cs >= 0.05 else { return nil }
+                return (s, cs, ce)
+            }
+
+        let scaleX = renderW / naturalW
+        let scaleY = renderH / naturalH
+        let baseTransform = videoTrack.preferredTransform
+            .concatenating(CGAffineTransform(scaleX: scaleX, y: scaleY))
+
+        // Build the per-frame transform for a given composition-clock time.
+        // Internally maps back to asset-clock to read the segment curve.
+        func transform(atCompTime ct: Double, for segment: VideoZoomSegment) -> CGAffineTransform {
+            let at = ct + timeShift
+            let z = segment.zoomLevel(at: at)
+            let tr = segment.translation(zoom: z, videoSize: videoSize)
+            let renderCx = renderW / 2
+            let renderCy = renderH / 2
+            var t = baseTransform
+            t = t.concatenating(CGAffineTransform(translationX: -renderCx, y: -renderCy))
+            t = t.concatenating(CGAffineTransform(scaleX: z, y: z))
+            t = t.concatenating(CGAffineTransform(translationX: renderCx + tr.x * scaleX * z, y: renderCy + tr.y * scaleY * z))
+            return t
+        }
+
+        let instruction = AVMutableVideoCompositionInstruction()
+        instruction.timeRange = CMTimeRange(start: .zero, duration: CMTime(seconds: timeRangeDuration, preferredTimescale: 600))
+        instruction.backgroundColor = NSColor.black.cgColor
+
+        let layer = AVMutableVideoCompositionLayerInstruction(assetTrack: videoTrack)
+        layer.setTransform(baseTransform, at: .zero)
+
+        let stepsPerFade = 12
+        let epsilon = 0.003  // time-gap threshold for "touching" segments
+        for (idx, tuple) in segments.enumerated() {
+            let (segment, cs, ce) = tuple
+            let fadeIn = segment.effectiveFadeIn
+            let fadeOut = segment.effectiveFadeOut
+            let plateauStart = cs + fadeIn
+            let plateauEnd = ce - fadeOut
+
+            // Previous/next segment boundaries drive the "touching" checks:
+            // if a neighbour is back-to-back we skip the baseline snap so we
+            // don't overwrite its fade-in/out transforms at the boundary.
+            let prevEnd: Double? = idx > 0 ? segments[idx - 1].2 : nil
+            let nextStart: Double? = idx + 1 < segments.count ? segments[idx + 1].1 : nil
+            let touchesPrev = (prevEnd.map { cs - $0 < epsilon } ?? false)
+            let touchesNext = (nextStart.map { $0 - ce < epsilon } ?? false)
+
+            if !touchesPrev {
+                let justBefore = max(0, cs - 0.002)
+                layer.setTransform(baseTransform, at: CMTime(seconds: justBefore, preferredTimescale: 600))
+            }
+
+            if fadeIn > 0 {
+                var t0 = cs
+                // Start from the segment's real zoom value (not identity) when
+                // we're touching the previous segment, so the composition is
+                // continuous at the boundary.
+                var xf0 = touchesPrev ? transform(atCompTime: cs, for: segment) : baseTransform
+                for i in 1...stepsPerFade {
+                    let t1 = cs + fadeIn * Double(i) / Double(stepsPerFade)
+                    let xf1 = transform(atCompTime: t1, for: segment)
+                    layer.setTransformRamp(
+                        fromStart: xf0,
+                        toEnd: xf1,
+                        timeRange: CMTimeRange(
+                            start: CMTime(seconds: t0, preferredTimescale: 600),
+                            end: CMTime(seconds: t1, preferredTimescale: 600)
+                        )
+                    )
+                    t0 = t1
+                    xf0 = xf1
+                }
+            } else {
+                layer.setTransform(transform(atCompTime: cs, for: segment), at: CMTime(seconds: cs, preferredTimescale: 600))
+            }
+
+            if plateauEnd > plateauStart {
+                let full = transform(atCompTime: (plateauStart + plateauEnd) / 2, for: segment)
+                layer.setTransform(full, at: CMTime(seconds: plateauStart, preferredTimescale: 600))
+            }
+
+            if fadeOut > 0 {
+                var t0 = plateauEnd
+                var xf0 = transform(atCompTime: plateauEnd, for: segment)
+                for i in 1...stepsPerFade {
+                    let t1 = plateauEnd + fadeOut * Double(i) / Double(stepsPerFade)
+                    let xf1 = transform(atCompTime: t1, for: segment)
+                    layer.setTransformRamp(
+                        fromStart: xf0,
+                        toEnd: xf1,
+                        timeRange: CMTimeRange(
+                            start: CMTime(seconds: t0, preferredTimescale: 600),
+                            end: CMTime(seconds: t1, preferredTimescale: 600)
+                        )
+                    )
+                    t0 = t1
+                    xf0 = xf1
+                }
+            }
+
+            if !touchesNext {
+                let justAfter = min(timeRangeDuration, ce + 0.002)
+                layer.setTransform(baseTransform, at: CMTime(seconds: justAfter, preferredTimescale: 600))
+            }
+        }
+
+        instruction.layerInstructions = [layer]
+
+        let composition = AVMutableVideoComposition()
+        composition.instructions = [instruction]
+        composition.renderSize = CGSize(width: renderW, height: renderH)
+        let fps = videoTrack.nominalFrameRate > 0 ? videoTrack.nominalFrameRate : 30
+        composition.frameDuration = CMTime(value: 1, timescale: CMTimeScale(fps))
+
+        return composition
     }
 
     private func stepFrame(forward: Bool) {
@@ -1373,5 +2284,25 @@ private final class VideoEditorView: NSView {
         player.seek(to: CMTime(seconds: target, preferredTimescale: 600),
                      toleranceBefore: .zero, toleranceAfter: .zero)
         needsDisplay = true
+    }
+}
+
+private extension CMSampleBuffer {
+    /// Returns a copy with a new presentation timestamp. Duration is preserved.
+    func retimed(presentationTime: CMTime) -> CMSampleBuffer? {
+        var timing = CMSampleTimingInfo(
+            duration: CMSampleBufferGetDuration(self),
+            presentationTimeStamp: presentationTime,
+            decodeTimeStamp: .invalid
+        )
+        var out: CMSampleBuffer?
+        let status = CMSampleBufferCreateCopyWithNewTiming(
+            allocator: nil,
+            sampleBuffer: self,
+            sampleTimingEntryCount: 1,
+            sampleTimingArray: &timing,
+            sampleBufferOut: &out
+        )
+        return status == noErr ? out : nil
     }
 }
