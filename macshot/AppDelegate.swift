@@ -857,6 +857,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             ScreenshotHistory.shared.add(image: image)
             self.showUploadProgress(image: image)
         }
+        controller.onDelete = {
+            if let id = historyEntryID {
+                ScreenshotHistory.shared.removeEntry(id: id)
+            }
+        }
         controller.onCloseAll = { [weak self] in
             guard let self = self else { return }
             let all = self.thumbnailControllers

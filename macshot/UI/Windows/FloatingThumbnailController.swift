@@ -20,6 +20,7 @@ class FloatingThumbnailController: NSObject, NSDraggingSource {
     var onPin:      (() -> Void)?
     var onEdit:     (() -> Void)?
     var onUpload:   (() -> Void)?
+    var onDelete:   (() -> Void)?
     var onCloseAll: (() -> Void)?
     var onSaveAll:  (() -> Void)?
 
@@ -76,6 +77,7 @@ class FloatingThumbnailController: NSObject, NSDraggingSource {
         view.onPin      = { [weak self] in self?.onPin?();      self?.dismiss() }
         view.onEdit     = { [weak self] in self?.onEdit?();     self?.dismiss() }
         view.onUpload   = { [weak self] in self?.onUpload?();   self?.dismiss() }
+        view.onDelete   = { [weak self] in self?.onDelete?();   self?.dismiss() }
         view.onCloseAll = { [weak self] in self?.onCloseAll?() }
         view.onSaveAll  = { [weak self] in self?.onSaveAll?() }
         view.onHoverEnter = { [weak self] in self?.pauseAutoDismiss() }
@@ -205,6 +207,7 @@ private class ThumbnailView: NSView {
     var onPin:      (() -> Void)?
     var onEdit:     (() -> Void)?
     var onUpload:   (() -> Void)?
+    var onDelete:   (() -> Void)?
     var onCloseAll: (() -> Void)?
     var onSaveAll:  (() -> Void)?
     var onHoverEnter: (() -> Void)?
@@ -443,6 +446,10 @@ private class ThumbnailView: NSView {
 
     override func rightMouseDown(with event: NSEvent) {
         let menu = NSMenu()
+        let deleteItem = NSMenuItem(title: L("Delete"), action: #selector(deleteAction), keyEquivalent: "\u{8}")
+        deleteItem.target = self
+        menu.addItem(deleteItem)
+        menu.addItem(NSMenuItem.separator())
         let closeAll = NSMenuItem(title: L("Close All"), action: #selector(closeAllAction), keyEquivalent: "")
         closeAll.target = self
         let saveAll = NSMenuItem(title: L("Save All to Folder…"), action: #selector(saveAllAction), keyEquivalent: "")
@@ -452,6 +459,7 @@ private class ThumbnailView: NSView {
         NSMenu.popUpContextMenu(menu, with: event, for: self)
     }
 
+    @objc private func deleteAction()   { onDelete?() }
     @objc private func closeAllAction() { onCloseAll?() }
     @objc private func saveAllAction()  { onSaveAll?() }
 }
