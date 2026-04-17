@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.1.0-beta.1] - 2026-04-17
+
+### Added
+- **Video export quality presets** — Low / Medium / High dropdown in the video editor. Non-High presets re-encode via a custom AVAssetReader → AVAssetWriter pipeline so the chosen bitrate is actually applied (AVAssetExportSession presets hardcode bitrate). Estimated output size in the editor factors in the chosen preset. Recording still writes at High so quality loss only happens at export time.
+- **Timeline zoom segments in the video editor** — dedicated Zooms track below the trim timeline. Dashed "Click to zoom" placeholders fill every free gap in the row; clicking places a new 2x zoom segment at the cursor. Pills have visible resize handles (styled like the trim handles) and can be dragged or resized without overlapping.
+- **Zoom segment settings popover** — click a selected pill to open a popover with a thumbnail preview, a 3×3 snap grid overlaid directly on the thumbnail for quick center selection, freeform drag for fine positioning, a zoom-level slider (1.2×–5×), and a Delete zoom button. Fades auto-scale so the plateau stays dominant on short segments.
+- **Delete from floating thumbnail** — right-click menu on the post-capture thumbnail now includes a Delete option that removes the entry from screenshot history.
+
 ## [4.0.5-beta.22] - 2026-04-17
 
 ### Changed
