@@ -2184,7 +2184,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
                         icon:   .white,
                         bg:     NSColor(calibratedRed: 0.08, green: 0.14, blue: 0.10, alpha: 1.0)),
             ThemePreset(name: "Mono",
-                        accent: NSColor(white: 0.85, alpha: 1.0),
+                        accent: NSColor(white: 0.30, alpha: 1.0),
                         icon:   .white,
                         bg:     NSColor(white: 0.10, alpha: 1.0)),
         ]
