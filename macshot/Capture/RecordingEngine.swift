@@ -170,6 +170,14 @@ final class RecordingEngine: NSObject {
             config.sourceRect = cropRect
             config.pixelFormat = kCVPixelFormatType_32BGRA
             config.scalesToFit = false
+            // Force sRGB at capture time. Without this ScreenCaptureKit delivers
+            // frames in the display's native color space (often Display P3),
+            // but AVAssetWriter tags the file as bt709 below — a mismatch that
+            // makes AVPlayer render back the video with washed-out colors on
+            // P3 displays.
+            if #available(macOS 14.0, *) {
+                config.colorSpaceName = CGColorSpace.sRGB
+            }
 
             // System audio capture (off by default, macOS 13+)
             if #available(macOS 13.0, *) {
