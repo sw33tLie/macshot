@@ -5,8 +5,8 @@
 </p>
 
 <p align="center">
-  <b>Free, open-source screenshot & screen recording tool for macOS.</b><br>
-  Native Swift + AppKit. No Electron. No bloat.
+  <b>The most feature-rich open-source screenshot tool on macOS.</b><br>
+  18+ annotation tools, screen recording with a full video editor (cuts, speed, freeze, zoom), OCR + translation, auto-redact PII, scroll capture, beautify — all native, all free.
 </p>
 
 <p align="center">
