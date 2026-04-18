@@ -60,19 +60,15 @@ final class VideoCensorSegment: Codable {
         return min(defaultFade, capByDuration)
     }
 
-    /// Effective fade durations — auto-scaled so the plateau stays dominant on
-    /// short segments. Mirrors `VideoZoomSegment.effectiveFadeIn/Out`.
+    /// Effective fade durations — honors the user's fadeIn/fadeOut, clamped
+    /// to half the segment so there's always a plateau frame between ramps.
     var effectiveFadeIn: Double {
-        let auto = Self.autoFade(for: duration)
-        let target = min(fadeIn, auto)
         let cap = max(0, duration / 2 - 0.001)
-        return min(max(target, 0), cap)
+        return min(max(fadeIn, 0), cap)
     }
     var effectiveFadeOut: Double {
-        let auto = Self.autoFade(for: duration)
-        let target = min(fadeOut, auto)
         let cap = max(0, duration / 2 - 0.001)
-        return min(max(target, 0), cap)
+        return min(max(fadeOut, 0), cap)
     }
 
     /// Opacity of the censor effect at time `t` (source-asset clock).

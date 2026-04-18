@@ -54,20 +54,16 @@ final class VideoZoomSegment: Codable {
 
     var duration: Double { max(0, endTime - startTime) }
 
-    /// Effective fade duration — auto-scales to keep the plateau dominant
-    /// when segments are short. If the caller has explicitly shortened `fadeIn`
-    /// below the auto-fade, that explicit value wins (user intent is preserved).
+    /// Effective fade duration — honors the user's fadeIn/fadeOut but always
+    /// clamps to half the segment so there's at least one plateau frame.
+    /// Never exceeds duration/2 (otherwise in+out would overlap).
     var effectiveFadeIn: Double {
-        let auto = Self.autoFade(for: duration)
-        let target = min(fadeIn, auto)
         let cap = max(0, duration / 2 - 0.001)
-        return min(max(target, 0), cap)
+        return min(max(fadeIn, 0), cap)
     }
     var effectiveFadeOut: Double {
-        let auto = Self.autoFade(for: duration)
-        let target = min(fadeOut, auto)
         let cap = max(0, duration / 2 - 0.001)
-        return min(max(target, 0), cap)
+        return min(max(fadeOut, 0), cap)
     }
 
     /// Interpolated zoom level at time `t` (in seconds, source-asset clock).
