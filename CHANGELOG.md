@@ -1,5 +1,23 @@
 # Changelog
 
+## [4.1.0-beta.4] - 2026-04-18
+
+### Added
+- **Freeze-frame effect in the video editor** — hold a single source frame for a chosen duration (0.25s, 0.5s, 1s, 2s, 3s, 5s presets, 0.1–30s range). Shown on the effects band as a violet snowflake pill anchored at the source moment. Works alongside cuts and speeds: a freeze inside a speed segment splits it, a freeze inside a cut is silently dropped. Audio goes silent during the hold, matching what viewers expect.
+
+### Changed
+- **Zoom effect now zooms into the area you actually drew** — previously the rect was vertically mirrored at render time because the overlay coordinates (y-down) and CIImage transforms (y-up) hadn't been reconciled.
+- **"Open in Finder" on recording stop reveals the file in your configured recording directory** (or screenshot save dir, or via a Save panel) — not the sandbox tmp folder. Files become something you can actually find and keep.
+- **Clipboard copy uses a nicely named file** (`Screenshot 2026-04-18 at 18-33.png` inside `tmp/macshot-clipboard/`) overwritten on each copy. Finder paste no longer nags "A newer item named 'macshot-clipboard.png' already exists."
+- **Video editor time labels now sit above the trim bar** with 4pt breathing room, so the "Copied to clipboard!" status banner doesn't crowd the effects band below.
+- **Video editor playback is ~17% lighter on the main thread** — timeline thumbnails are pre-composited into a single cached strip, and the 30Hz playhead observer now invalidates only the trim-bar stripe so the bottom button row stays off the per-frame draw path.
+- **Settings window widened 560 → 620pt, label column 140 → 180pt, checkbox titles wrap gracefully** so Polish, German, Dutch, and other long translations fit without clipping.
+
+### Fixed
+- **Settings window clipping in Polish and other long-string locales** — "Szybkie przechwycenie:" was losing its trailing colon, "Automatycznie zamazuj dane wrażliwe" was being truncated. Closes #130.
+- **Tmp-file accumulation** — clipboard intermediates, share-sheet temps, cancelled recordings, and sandbox write-quarantine stubs all accumulated in the sandbox tmp folder indefinitely. A new `LaunchCleanup` framework now sweeps these: fixed-path overwrites for the clipboard and recording-clipboard files, a dedicated `tmp/macshot-share/` subfolder with a 5-minute TTL, and a pattern-based sweep with a 24-hour TTL for everything else. One tester reported 1.2 GB of leftovers before this fix; now it stays at a few hundred KB steady state. Closes #128.
+- **History panel orphan files** — past builds sometimes wrote `_preview.png` alongside a history entry without cleaning it up on delete. `ScreenshotHistory` now prunes these on launch by diffing the history dir against `index.json`.
+
 ## [4.1.0-beta.3] - 2026-04-18
 
 ### Added
