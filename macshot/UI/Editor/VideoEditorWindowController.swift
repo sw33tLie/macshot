@@ -10,16 +10,23 @@ final class VideoEditorWindowController: NSObject, NSWindowDelegate {
     private var editorView: VideoEditorView?
     private static var activeControllers: [VideoEditorWindowController] = []
 
-    static func open(url: URL) {
+    /// Open a video in the editor.
+    /// - Parameters:
+    ///   - url: File URL to the video.
+    ///   - deleteOnClose: If true (default) the editor deletes the file when
+    ///     the window closes — appropriate for temporary recordings. Pass
+    ///     `false` when opening a user-owned file so we don't delete their
+    ///     source.
+    static func open(url: URL, deleteOnClose: Bool = true) {
         let controller = VideoEditorWindowController()
-        controller.show(url: url)
+        controller.show(url: url, deleteOnClose: deleteOnClose)
         activeControllers.append(controller)
         if activeControllers.count == 1 {
             NSApp.setActivationPolicy(.regular)
         }
     }
 
-    private func show(url: URL) {
+    private func show(url: URL, deleteOnClose: Bool = true) {
         guard let screen = NSScreen.main else { return }
 
         // Size window to fit content, capped at 60% of screen
@@ -60,7 +67,9 @@ final class VideoEditorWindowController: NSObject, NSWindowDelegate {
         win.collectionBehavior = [.fullScreenAuxiliary]
         win.backgroundColor = ToolbarLayout.bgColor
 
-        let view = VideoEditorView(frame: NSRect(x: 0, y: 0, width: winW, height: winH), videoURL: url)
+        let view = VideoEditorView(frame: NSRect(x: 0, y: 0, width: winW, height: winH),
+                                    videoURL: url,
+                                    deleteOnClose: deleteOnClose)
         win.contentView = view
 
         win.makeKeyAndOrderFront(nil)
@@ -87,6 +96,9 @@ final class VideoEditorWindowController: NSObject, NSWindowDelegate {
 private final class VideoEditorView: NSView {
 
     private let videoURL: URL
+    /// If true, the underlying file is deleted on close (recording tmp path).
+    /// Set to false when opening a user-owned source file via "Open Video...".
+    private let deleteOnClose: Bool
     private let isGIF: Bool
     private var player: AVPlayer?
     private var playerView: AVPlayerView?
@@ -193,8 +205,9 @@ private final class VideoEditorView: NSView {
     /// Live row count; the delegate callback updates it and triggers layout.
     private var currentEffectRowCount: Int = 1
 
-    init(frame: NSRect, videoURL: URL) {
+    init(frame: NSRect, videoURL: URL, deleteOnClose: Bool = true) {
         self.videoURL = videoURL
+        self.deleteOnClose = deleteOnClose
         self.isGIF = videoURL.pathExtension.lowercased() == "gif"
         super.init(frame: frame)
 
@@ -448,8 +461,11 @@ private final class VideoEditorView: NSView {
         playerView?.player = nil
         gifPlaybackTimer?.invalidate()
         gifPlaybackTimer = nil
-        // Clean up temp recording file
-        try? FileManager.default.removeItem(at: videoURL)
+        // Delete only if the file was a temporary recording we own. User-
+        // opened files must never be deleted — that would be data loss.
+        if deleteOnClose {
+            try? FileManager.default.removeItem(at: videoURL)
+        }
     }
 
     private var currentPlaybackTime: Double {

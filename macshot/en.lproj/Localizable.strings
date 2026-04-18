@@ -493,3 +493,58 @@
 "Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly.";
 
 "Pressure" = "Pressure";
+
+/* Added for v4.1.0-beta.3 — video editor, effects, open-video, shortcuts help */
+"Open Video..." = "Open Video...";
+"Choose a video to open in macshot editor" = "Choose a video to open in macshot editor";
+"Click to add effects" = "Click to add effects";
+"Add Zoom" = "Add Zoom";
+"Add Censor" = "Add Censor";
+"Delete Zoom" = "Delete Zoom";
+"Delete Censor" = "Delete Censor";
+"Add effect" = "Add effect";
+"Fade" = "Fade";
+"High" = "High";
+"Low" = "Low";
+"Not enough room here" = "Not enough room here";
+"Copied!" = "Copied!";
+"Converting to GIF…" = "Converting to GIF…";
+"GIF conversion failed" = "GIF conversion failed";
+"No video track found" = "No video track found";
+"Preview:" = "Preview:";
+"Copy Screen Info" = "Copy Screen Info";
+"Copies display and capture diagnostics to clipboard" = "Copies display and capture diagnostics to clipboard";
+
+/* Appearance / Settings */
+"Accent" = "Accent";
+"Icon" = "Icon";
+"Background" = "Background";
+"Custom" = "Custom";
+"Theme:" = "Theme:";
+
+/* Settings — shortcuts help text */
+"Application" = "Application";
+"Capture area and extract text" = "Capture area and extract text";
+"Capture the full screen" = "Capture the full screen";
+"Counter for multi-screen captures" = "Counter for multi-screen captures";
+"Filename Template Tokens" = "Filename Template Tokens";
+"Filename tokens" = "Filename tokens";
+"Filename:" = "Filename:";
+"Open an image file in the editor" = "Open an image file in the editor";
+"Open the recent captures overlay" = "Open the recent captures overlay";
+"Open this settings window" = "Open this settings window";
+"Quick capture (uses your Enter action)" = "Quick capture (uses your Enter action)";
+"Re-capture the last selected area" = "Re-capture the last selected area";
+"Screenshots only — captured window title (blank otherwise)" = "Screenshots only — captured window title (blank otherwise)";
+"Show available filename tokens" = "Show available filename tokens";
+"Show supported URL scheme commands" = "Show supported URL scheme commands";
+"Start area capture" = "Start area capture";
+"Start area recording" = "Start area recording";
+"Start full-screen recording" = "Start full-screen recording";
+"Start scroll capture" = "Start scroll capture";
+"Stop the current recording" = "Stop the current recording";
+"Supported URL Scheme Commands" = "Supported URL Scheme Commands";
+"The file extension is appended automatically. Slashes and colons in {window} become dashes." = "The file extension is appended automatically. Slashes and colons in {window} become dashes.";
+"Trigger macshot from Raycast, Alfred, Shortcuts, or any tool that opens URLs." = "Trigger macshot from Raycast, Alfred, Shortcuts, or any tool that opens URLs.";
+"URL scheme info" = "URL scheme info";
+"sec (0 = never)" = "sec (0 = never)";

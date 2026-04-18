@@ -368,6 +368,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         openImageItem.image = NSImage(systemSymbolName: "photo.on.rectangle.angled", accessibilityDescription: nil)
         menu.addItem(openImageItem)
 
+        let openVideoItem = NSMenuItem(title: L("Open Video..."), action: #selector(openVideoFromMenu), keyEquivalent: "")
+        openVideoItem.target = self
+        openVideoItem.image = NSImage(systemSymbolName: "film", accessibilityDescription: nil)
+        menu.addItem(openVideoItem)
+
         let pasteImageItem = NSMenuItem(title: L("Open from Clipboard"), action: #selector(openImageFromClipboard), keyEquivalent: "")
         pasteImageItem.target = self
         pasteImageItem.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: nil)
@@ -1093,8 +1098,38 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         DetachedEditorWindowController.open(image: image)
     }
 
+    // MARK: - Open Video
+
+    @objc private func openVideoFromMenu() {
+        openVideoWithPanel()
+    }
+
+    private func openVideoWithPanel() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = true
+        panel.allowedContentTypes = [.mpeg4Movie, .quickTimeMovie, .movie, .video, .gif]
+        panel.message = L("Choose a video to open in macshot editor")
+
+        NSApp.activate(ignoringOtherApps: true)
+        panel.begin { response in
+            guard response == .OK else { return }
+            for url in panel.urls {
+                self.openVideoFile(url: url)
+            }
+        }
+    }
+
+    private func openVideoFile(url: URL) {
+        // Never let the editor delete the user's source file on close.
+        VideoEditorWindowController.open(url: url, deleteOnClose: false)
+    }
+
     /// Handle files opened via Finder "Open With", drag-to-dock, or command line.
     func application(_ application: NSApplication, open urls: [URL]) {
+        let imageExtensions: Set<String> = ["png", "jpg", "jpeg", "tiff", "tif", "bmp", "gif", "heic", "heif", "webp", "icns"]
+        let videoExtensions: Set<String> = ["mp4", "mov", "m4v"]
         for url in urls {
             if url.scheme == "macshot" {
                 let urlSchemeEnabled = UserDefaults.standard.object(forKey: "urlSchemeEnabled") as? Bool ?? true
@@ -1102,10 +1137,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                 handleURLSchemeAction(url)
                 continue
             }
-            let imageExtensions: Set<String> = ["png", "jpg", "jpeg", "tiff", "tif", "bmp", "gif", "heic", "heif", "webp", "icns"]
             let ext = url.pathExtension.lowercased()
-            guard imageExtensions.contains(ext) else { continue }
-            openImageFile(url: url)
+            // GIFs can be opened in either the image editor or the video
+            // editor. Default to image editor (matches prior behavior) — users
+            // wanting to trim a GIF use "Open Video..." explicitly.
+            if imageExtensions.contains(ext) {
+                openImageFile(url: url)
+            } else if videoExtensions.contains(ext) {
+                openVideoFile(url: url)
+            }
         }
     }
 
