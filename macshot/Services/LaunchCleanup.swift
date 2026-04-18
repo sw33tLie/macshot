@@ -86,6 +86,7 @@ enum LaunchCleanup {
     static let all: [LaunchCleaner] = [
         TmpFileCleaner(),
         ScratchDirectoryCleaner(),
+        ClipboardDirectoryCleaner(),
     ]
 
     /// Run every cleaner off the main thread. Safe to call from
@@ -129,12 +130,20 @@ private struct TmpFileCleaner: LaunchCleaner {
     /// prefix here is intentional to catch the *legacy* UUID-named form
     /// from pre-fix builds; the current single-file `macshot-clipboard.png`
     /// is explicitly preserved in the filter below.
+    ///
+    /// "Recording " is included now that every `recordingOnStop` branch
+    /// either moves the file out of tmp (editor save / finder reveal) or
+    /// replaces it at a fixed path (clipboard). Any `Recording *` still
+    /// in tmp after 24 hours was definitely abandoned — e.g. the user
+    /// cancelled the Save panel on the finder path, or the app crashed
+    /// mid-editor-session before `deleteOnClose` fired.
     private let stalePrefixes: [String] = [
         "macshot-clipboard-",
         "macshot_upload_",
         "macshot_mic_",
         "macshot_cursor_debug",
         "macshot_",
+        "Recording ",
     ]
 
     /// Extensions that, when paired with a UUID basename, are our scratch
@@ -190,6 +199,27 @@ private struct ScratchDirectoryCleaner: LaunchCleaner {
     func sweep() -> DirectorySweeper.Result {
         return DirectorySweeper.sweep(
             directory: TmpScratchDirectory.url,
+            olderThan: ttl,
+            shouldDelete: { _ in true }
+        )
+    }
+}
+
+/// Sweeps everything in `tmp/macshot-clipboard/` older than 24 hours.
+///
+/// `ImageEncoder.copyToClipboard` writes a date-stamped PNG here and
+/// deletes the previous one on the next copy — at most one file ever
+/// lives here during normal use. This sweeper is a backstop for the
+/// case where macshot crashed or force-quit between writes, leaving an
+/// orphan. 24h TTL so we never race with a file that's currently
+/// referenced on the pasteboard.
+private struct ClipboardDirectoryCleaner: LaunchCleaner {
+    let name = "ClipboardDirectoryCleaner"
+    private let ttl: TimeInterval = 24 * 60 * 60
+
+    func sweep() -> DirectorySweeper.Result {
+        return DirectorySweeper.sweep(
+            directory: ImageEncoder.clipboardTmpDirectory,
             olderThan: ttl,
             shouldDelete: { _ in true }
         )
