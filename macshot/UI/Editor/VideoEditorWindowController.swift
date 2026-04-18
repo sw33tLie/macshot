@@ -1112,11 +1112,13 @@ private final class VideoEditorView: NSView {
         // and speed on the final export. Falls back to raw trim span when
         // neither is present (same value, cheaper to compute).
         let trimDuration: Double = {
-            if cutSegments.isEmpty && speedSegments.isEmpty {
+            if cutSegments.isEmpty && speedSegments.isEmpty && freezeSegments.isEmpty {
                 return trimEnd - trimStart
             }
             let kept = VideoCuts.keptRanges(trimStart: trimStart, trimEnd: trimEnd, cuts: cutSegments)
-            let pieces = VideoSpeeds.pieces(keptRanges: kept, speeds: speedSegments)
+            let pieces = VideoSpeeds.pieces(keptRanges: kept,
+                                              speeds: speedSegments,
+                                              freezes: freezeSegments)
             return VideoSpeeds.totalCompositionDuration(pieces)
         }()
 
@@ -1741,7 +1743,8 @@ private final class VideoEditorView: NSView {
         let needsEffects = !zoomSegments.isEmpty || !censorSegments.isEmpty
         let needsCuts = !cutSegments.isEmpty
         let needsSpeed = !speedSegments.isEmpty
-        let needsExport = needsTrim || isMuted || needsScale || needsRecompress || needsEffects || needsCuts || needsSpeed
+        let needsFreeze = !freezeSegments.isEmpty
+        let needsExport = needsTrim || isMuted || needsScale || needsRecompress || needsEffects || needsCuts || needsSpeed || needsFreeze
 
         if !needsExport {
             // No processing needed — copy temp file to destination
@@ -1825,18 +1828,19 @@ private final class VideoEditorView: NSView {
         let hasEffects = !zoomSegments.isEmpty || !censorSegments.isEmpty
         let hasCuts = !cutSegments.isEmpty
         let hasSpeed = !speedSegments.isEmpty
+        let hasFreeze = !freezeSegments.isEmpty
 
-        // When effects OR cuts OR speed exist we must route through a
-        // composition so cuts skip frames, speed scales the clock, and the
-        // compositor applies zoom + censor. Otherwise we read raw scaled
-        // frames directly from the source track and pull audio straight
-        // from the original asset.
+        // When effects OR cuts OR speed OR freeze exist we must route
+        // through a composition so cuts skip frames, speed/freeze scale
+        // the clock, and the compositor applies zoom + censor. Otherwise
+        // we read raw scaled frames directly from the source track and
+        // pull audio straight from the original asset.
         let readerAsset: AVAsset
         let readerVideoTrack: AVAssetTrack
         let readerAudioTracks: [AVAssetTrack]
         let readerTimeRange: CMTimeRange
         let readerComposition: AVMutableVideoComposition?
-        if hasEffects || hasCuts || hasSpeed {
+        if hasEffects || hasCuts || hasSpeed || hasFreeze {
             guard let processed = buildProcessedComposition(
                 srcAsset: asset,
                 trimStartSec: CMTimeGetSeconds(timeRange.start),
@@ -2063,7 +2067,8 @@ private final class VideoEditorView: NSView {
         let needsEffects = !zoomSegments.isEmpty || !censorSegments.isEmpty
         let needsCuts = !cutSegments.isEmpty
         let needsSpeed = !speedSegments.isEmpty
-        let needsExport = needsTrim || isMuted || needsEffects || needsCuts || needsSpeed
+        let needsFreeze = !freezeSegments.isEmpty
+        let needsExport = needsTrim || isMuted || needsEffects || needsCuts || needsSpeed || needsFreeze
 
         if !needsExport {
             uploadFileURL(videoURL, false)
@@ -2130,11 +2135,12 @@ private final class VideoEditorView: NSView {
 
         let hasCuts = !cutSegments.isEmpty
         let hasSpeed = !speedSegments.isEmpty
+        let hasFreeze = !freezeSegments.isEmpty
         let hasEffects = !zoomSegments.isEmpty || !censorSegments.isEmpty
-        let needsComposition = hasCuts || hasSpeed
-        // Fingerprint of the full timeline topology (cuts + speeds). When
-        // unchanged we can keep the existing composition-backed player item
-        // and only refresh its videoComposition.
+        let needsComposition = hasCuts || hasSpeed || hasFreeze
+        // Fingerprint of the full timeline topology (cuts + speeds +
+        // freezes). When unchanged we can keep the existing composition-
+        // backed player item and only refresh its videoComposition.
         let topoFingerprint = timelineTopologyFingerprint()
 
         // Fast path: nothing to apply. Fall back to the original asset with
@@ -2180,7 +2186,9 @@ private final class VideoEditorView: NSView {
                 // still has accurate comp→source mapping even after trim
                 // edits (topology fingerprint is invariant to trim).
                 let kept = VideoCuts.keptRanges(trimStart: 0, trimEnd: duration, cuts: cutSegments)
-                let pieces = VideoSpeeds.pieces(keptRanges: kept, speeds: speedSegments)
+                let pieces = VideoSpeeds.pieces(keptRanges: kept,
+                                                  speeds: speedSegments,
+                                                  freezes: freezeSegments)
                 currentItem.videoComposition = buildEffectsVideoComposition(
                     for: compAsset,
                     videoTrack: cvt,
@@ -2260,13 +2268,19 @@ private final class VideoEditorView: NSView {
     }
 
     /// Convert a preview composition-clock time to source-asset time using
-    /// the current cuts and speed segments.
+    /// the current cuts, speeds and freezes.
     ///
     /// Formula: for the piece covering `compTime`,
     ///     `sourceTime = piece.srcStart + (compTime - piece.compStart) * factor`.
+    /// Freeze pieces have a tiny source slice and a factor close to zero,
+    /// so the result stays inside `[srcStart, srcStart + slice]` throughout
+    /// the hold — perfect for mapping the playhead back to "the frame
+    /// that's frozen."
     private func previewCompTimeToSource(_ compTime: Double) -> Double {
         let kept = VideoCuts.keptRanges(trimStart: 0, trimEnd: duration, cuts: cutSegments)
-        let pieces = VideoSpeeds.pieces(keptRanges: kept, speeds: speedSegments)
+        let pieces = VideoSpeeds.pieces(keptRanges: kept,
+                                          speeds: speedSegments,
+                                          freezes: freezeSegments)
         var cursor: Double = 0
         for piece in pieces {
             let compDur = piece.compositionDuration
@@ -2284,10 +2298,16 @@ private final class VideoEditorView: NSView {
     }
 
     /// Inverse of `previewCompTimeToSource`. Clamps to the nearest piece
-    /// when `sourceTime` falls inside a cut (no piece covers it).
+    /// when `sourceTime` falls inside a cut (no piece covers it). For
+    /// freeze pieces the mapping is ambiguous — any compTime inside the
+    /// hold maps to the same sourceTime. We pick the start of the hold
+    /// when the caller asks for that exact frame, which gives seek /
+    /// scrub behaviour that feels natural.
     private func previewSourceTimeToComp(_ sourceTime: Double, against asset: AVAsset) -> Double {
         let kept = VideoCuts.keptRanges(trimStart: 0, trimEnd: duration, cuts: cutSegments)
-        let pieces = VideoSpeeds.pieces(keptRanges: kept, speeds: speedSegments)
+        let pieces = VideoSpeeds.pieces(keptRanges: kept,
+                                          speeds: speedSegments,
+                                          freezes: freezeSegments)
         var cursor: Double = 0
         for piece in pieces {
             if sourceTime < piece.srcStart {
@@ -2433,7 +2453,9 @@ private final class VideoEditorView: NSView {
             trimEnd: trimEnd,
             cuts: cutSegments
         )
-        let pieces = VideoSpeeds.pieces(keptRanges: kept, speeds: speedSegments)
+        let pieces = VideoSpeeds.pieces(keptRanges: kept,
+                                          speeds: speedSegments,
+                                          freezes: freezeSegments)
         let entries = piecesToTimeMap(pieces: pieces)
         if entries.isEmpty {
             // Fall back to a passthrough single-entry map (should not happen
@@ -2468,6 +2490,9 @@ private final class VideoEditorView: NSView {
     /// The full set of speed segments currently owned by the effects band.
     /// Mirror of `cutSegments` / `zoomSegments` but for speed.
     private var speedSegments: [VideoSpeedSegment] { effectsBand?.speedSegments ?? [] }
+
+    /// Freeze segments — point-in-time pauses. See `VideoFreezeSegment`.
+    private var freezeSegments: [VideoFreezeSegment] { effectsBand?.freezeSegments ?? [] }
 
     /// Result of `buildProcessedComposition` — the composition plus the
     /// matching time-map and the video/audio comp tracks so callers can
@@ -2514,7 +2539,9 @@ private final class VideoEditorView: NSView {
             trimEnd: trimEndSec,
             cuts: cutSegments
         )
-        let pieces = VideoSpeeds.pieces(keptRanges: kept, speeds: speedSegments)
+        let pieces = VideoSpeeds.pieces(keptRanges: kept,
+                                          speeds: speedSegments,
+                                          freezes: freezeSegments)
         guard !pieces.isEmpty else { return nil }
 
         var cursor = CMTime.zero
@@ -2525,19 +2552,34 @@ private final class VideoEditorView: NSView {
             )
             let compDur = CMTime(seconds: piece.compositionDuration, preferredTimescale: 600)
             let insertStart = cursor
-            // Video
+
+            // Video — insert the source range, then (for non-1x pieces)
+            // scale it to the piece's target composition duration. This
+            // covers both speed and freeze: a freeze is just a very
+            // tight slice scaled up a lot.
             try? cvt.insertTimeRange(srcRange, of: srcVideoTrack, at: insertStart)
-            // Audio — mirror the video insert on every track.
-            for (src, dst) in zip(srcAudio, compAudio) {
-                try? dst.insertTimeRange(srcRange, of: src, at: insertStart)
+
+            // Audio — mirror the video insert EXCEPT on freezes. A
+            // freeze scaled up from a 1/600s slice would produce a
+            // ~2-sample-long chirp stretched over a second — awful.
+            // Skipping audio leaves a silent gap, which is what users
+            // expect when a frame is paused.
+            if piece.kind != .freeze {
+                for (src, dst) in zip(srcAudio, compAudio) {
+                    try? dst.insertTimeRange(srcRange, of: src, at: insertStart)
+                }
             }
-            // Apply speed scaling after the insert. scaleTimeRange is a no-op
-            // when factor == 1 but we skip anyway to avoid rounding drift.
+
+            // Apply time scaling after the inserts. `factor == 1` is a
+            // no-op at the math level but we skip the call to dodge any
+            // float-precision drift AVFoundation might introduce.
             if piece.factor != 1.0 {
                 let inserted = CMTimeRange(start: insertStart, duration: srcRange.duration)
                 cvt.scaleTimeRange(inserted, toDuration: compDur)
-                for dst in compAudio {
-                    dst.scaleTimeRange(inserted, toDuration: compDur)
+                if piece.kind != .freeze {
+                    for dst in compAudio {
+                        dst.scaleTimeRange(inserted, toDuration: compDur)
+                    }
                 }
             }
             cursor = CMTimeAdd(cursor, compDur)
@@ -2552,9 +2594,10 @@ private final class VideoEditorView: NSView {
         )
     }
 
-    /// Fingerprint of the current cut+speed topology — used by the preview
-    /// path to decide whether a player-item swap is needed. Changes to
-    /// zoom/censor *rects* don't affect this, so those edits stay cheap.
+    /// Fingerprint of the current cut+speed+freeze topology — used by the
+    /// preview path to decide whether a player-item swap is needed.
+    /// Changes to zoom/censor *rects* don't affect this, so those edits
+    /// stay cheap.
     fileprivate func timelineTopologyFingerprint() -> String {
         let cuts = cutSegments
             .map { String(format: "c:%.4f-%.4f", $0.startTime, $0.endTime) }
@@ -2562,7 +2605,10 @@ private final class VideoEditorView: NSView {
         let speeds = speedSegments
             .map { String(format: "s:%.4f-%.4f@%.3f", $0.startTime, $0.endTime, $0.speedFactor) }
             .sorted()
-        return (cuts + speeds).joined(separator: "|")
+        let freezes = freezeSegments
+            .map { String(format: "f:%.4f@%.3f", $0.atTime, $0.holdDuration) }
+            .sorted()
+        return (cuts + speeds + freezes).joined(separator: "|")
     }
 
     private func stepFrame(forward: Bool) {

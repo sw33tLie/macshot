@@ -502,10 +502,12 @@
 "Add Censor" = "Add Censor";
 "Add Cut" = "Add Cut";
 "Add Speed" = "Add Speed";
+"Add Freeze" = "Add Freeze";
 "Delete Zoom" = "Delete Zoom";
 "Delete Censor" = "Delete Censor";
 "Delete Cut" = "Delete Cut";
 "Delete Speed" = "Delete Speed";
+"Delete Freeze" = "Delete Freeze";
 "Untitled" = "Untitled";
 "Add effect" = "Add effect";
 "Fade" = "Fade";
