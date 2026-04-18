@@ -1,5 +1,22 @@
 # Changelog
 
+## [4.1.0-beta.2] - 2026-04-18
+
+### Added
+- **Video censor segments** — a new effect type alongside zoom. Define a rectangular region on the video that's obscured for a given time window, with three styles: solid black, pixelate, or gaussian blur. Two censors can overlap to blur different regions simultaneously.
+- **Direct-manipulation effect rectangles** — when a zoom or censor segment is selected, drag/resize the rect directly on the video preview. For zoom, the rect defines the zoom target (zoom level is derived from rect size, clamped 1.2×–5×). For censor, the rect defines the region to hide. Replaces the earlier mini-thumbnail popover.
+- **Multi-row effects band** — overlapping zooms and censors stack into separate rows automatically. Up to 4 rows visible; beyond that the effects band scrolls vertically. Row separators keep stacked pills readable.
+- **Cursor-follow "+" affordance** — hover the effects band to see a "+" follow your cursor, click to open the Add Effect menu at that position. Right-click any empty spot or existing pill also opens a context menu.
+- **Fade submenu on pills** — right-click a zoom or censor pill to pick a fade duration (None / 0.15 / 0.35 / 0.50 / 1.00 s). Applies to both fade-in and fade-out.
+
+### Changed
+- **Custom AVVideoCompositing** for zoom + censor rendering. Per-frame Core Image pipeline replaces `setTransformRamp` stepping — smooth motion, filter-based effects (blur/pixelate) alongside transform-based zoom, single render path shared by live preview, MP4 export (both AVAssetExportSession and quality-preset reencode), and GIF export.
+- **Recording selection border color** now respects the current theme's accent color instead of hardcoded purple.
+- **Recording color space** is now forced to sRGB at capture time (macOS 14+), fixing washed-out playback when recording on Display P3 screens.
+
+### Fixed
+- Blur and pixelate filters no longer wash out the untouched portions of the frame — compositor now uses a linear working color space and tags the output buffer with the source color space.
+
 ## [4.1.0-beta.1] - 2026-04-17
 
 ### Added
