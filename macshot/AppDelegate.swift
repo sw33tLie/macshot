@@ -65,6 +65,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
         migrateFilenameTemplateIfNeeded()
 
+        // Touch the clipboard tmp dir early so it adopts any leftover file
+        // BEFORE the sweep runs — otherwise the sweeper might delete the
+        // leftover while the adoption code was about to claim it, and we'd
+        // end up with a stale `currentClipboardFileURL` pointing at nothing.
+        _ = ImageEncoder.clipboardTmpDirectory
+
         // Reclaim disk from stale tmp leftovers (cancelled recordings,
         // legacy clipboard PNGs, share-sheet scratch). Runs off the main
         // thread so it can't delay launch.
@@ -1628,7 +1634,13 @@ extension AppDelegate: OverlayWindowControllerDelegate {
                     let onStop = onStopOverride ?? UserDefaults.standard.string(forKey: "recordingOnStop") ?? "editor"
                     switch onStop {
                     case "finder":
-                        NSWorkspace.shared.activateFileViewerSelecting([finalURL])
+                        // Move the recording out of our sandbox tmp to a
+                        // user-visible directory before revealing. Otherwise
+                        // Finder would open inside the sandbox container
+                        // (confusing to navigate, and our launch sweep can't
+                        // safely clean tmp Recordings since they look
+                        // user-managed).
+                        self.revealRecordingInFinder(tmpURL: finalURL)
                     case "clipboard":
                         self.copyRecordingToClipboard(url: finalURL)
                     default:
@@ -1788,6 +1800,85 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         if menuBarIconWasHidden {
             setMenuBarIconVisible(false)
             menuBarIconWasHidden = false
+        }
+    }
+
+    /// Move a recording out of our sandbox tmp to a user-visible directory
+    /// and reveal it in Finder. Used by the `recordingOnStop = "finder"`
+    /// flow so the user doesn't end up staring at a deep sandbox path.
+    ///
+    /// Resolution order:
+    ///   1. Recording save directory (if configured + bookmark still valid)
+    ///   2. Same as screenshots (if configured + bookmark still valid)
+    ///   3. Save panel — user picks a location explicitly
+    ///
+    /// On a collision at the destination, we append " (N)" to the filename
+    /// so nothing gets silently overwritten.
+    private func revealRecordingInFinder(tmpURL: URL) {
+        // Try the configured recording dir first.
+        if let recDir = SaveDirectoryAccess.resolveRecordingDirectoryIfAccessible() {
+            defer { SaveDirectoryAccess.stopAccessing(url: recDir) }
+            if let moved = moveRecording(from: tmpURL, intoDirectory: recDir) {
+                NSWorkspace.shared.activateFileViewerSelecting([moved])
+                return
+            }
+        }
+        // Fall back to the general screenshot save directory if THAT has a
+        // valid bookmark. (SaveDirectoryAccess.resolve() always returns
+        // something, but without a bookmark we have no sandbox write access.)
+        if UserDefaults.standard.data(forKey: "saveDirectoryBookmark") != nil {
+            let screenshotDir = SaveDirectoryAccess.resolve()
+            defer { SaveDirectoryAccess.stopAccessing(url: screenshotDir) }
+            if let moved = moveRecording(from: tmpURL, intoDirectory: screenshotDir) {
+                NSWorkspace.shared.activateFileViewerSelecting([moved])
+                return
+            }
+        }
+        // No usable saved location — prompt the user via NSSavePanel.
+        promptToSaveRecording(tmpURL: tmpURL)
+    }
+
+    /// Move `src` into `dir`, renaming on collision, returning the new URL.
+    /// Returns nil if the move fails (bad permissions, disk full, etc.).
+    private func moveRecording(from src: URL, intoDirectory dir: URL) -> URL? {
+        let fm = FileManager.default
+        let name = src.lastPathComponent
+        let base = (name as NSString).deletingPathExtension
+        let ext = (name as NSString).pathExtension
+
+        var dest = dir.appendingPathComponent(name)
+        var counter = 2
+        while fm.fileExists(atPath: dest.path) {
+            let newName = ext.isEmpty ? "\(base) (\(counter))" : "\(base) (\(counter)).\(ext)"
+            dest = dir.appendingPathComponent(newName)
+            counter += 1
+            if counter > 1000 { return nil }  // sanity cap
+        }
+        do {
+            try fm.moveItem(at: src, to: dest)
+            return dest
+        } catch {
+            return nil
+        }
+    }
+
+    /// Last-resort: the user has no configured save dir, so ask them where
+    /// to put the recording. On cancel we leave the tmp file in place —
+    /// the launch sweep won't touch it (Recording prefix is preserved)
+    /// but the user can still deal with it manually if they want.
+    private func promptToSaveRecording(tmpURL: URL) {
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = tmpURL.lastPathComponent
+        panel.title = L("Save Recording")
+        panel.prompt = L("Save")
+        panel.canCreateDirectories = true
+        panel.isExtensionHidden = false
+        panel.begin { response in
+            guard response == .OK, let dest = panel.url else { return }
+            try? FileManager.default.removeItem(at: dest)
+            if (try? FileManager.default.moveItem(at: tmpURL, to: dest)) != nil {
+                NSWorkspace.shared.activateFileViewerSelecting([dest])
+            }
         }
     }
 
