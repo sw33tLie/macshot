@@ -335,12 +335,14 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
     private var previews: [String: NSImage] = [:]
     private var cardRects: [NSRect] = []
     /// Filtered-index of the card the mouse is currently over, or -1.
-    /// Drives the darkened overlay + "Click to copy" hint.
+    /// Only drives the darkened overlay + "Click to copy" hint now — the
+    /// accent outline comes from `selectedIndex` so hover and keyboard
+    /// navigation never fight over which card is highlighted.
     private var hoveredIndex: Int = -1
-    /// Filtered-index of the card currently selected via keyboard. Drawn with
-    /// the same accent outline as hover, but without the dim/hint overlay so
-    /// the user can still see the content clearly while navigating with arrows.
-    /// -1 until loadEntries lands a default (0 = leftmost).
+    /// Unified selection: updated by arrow keys AND by mouse hover. The
+    /// outlined card is always `selectedIndex`, so arrow keys always step
+    /// from whatever the mouse is pointing at. Hint overlay is keyed off
+    /// `hoveredIndex` separately. -1 until loadEntries lands a default.
     private var selectedIndex: Int = -1
     private var activeFilter: HistoryFilter = .all
     private var filterTabRects: [NSRect] = []
@@ -466,10 +468,11 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
 
             let entry = entries[globalIndex]
             let isHovered = (fi == hoveredIndex)
-            // Only show keyboard selection when the mouse isn't already on a
-            // card, so hover and arrow navigation don't paint two borders at
-            // once.
-            let isSelected = (fi == selectedIndex) && hoveredIndex == -1
+            // Hover and keyboard selection share one outline: `selectedIndex`
+            // always follows the hovered card, so there's never a flicker
+            // when the mouse moves over a different card than the arrow-key
+            // selection.
+            let isSelected = (fi == selectedIndex)
             drawCard(entry: entry, rect: rect, isHovered: isHovered, isSelected: isSelected)
         }
 
@@ -712,7 +715,12 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
 
         if newHovered != hoveredIndex {
             hoveredIndex = newHovered
+            // Keep keyboard selection in sync with the hovered card so arrow
+            // keys step from wherever the mouse last pointed. When the mouse
+            // leaves all cards we keep the prior selection — otherwise arrow
+            // nav would reset to -1 every time the cursor drifted off.
             if newHovered >= 0 {
+                selectedIndex = newHovered
                 NSCursor.pointingHand.set()
             } else {
                 NSCursor.arrow.set()
