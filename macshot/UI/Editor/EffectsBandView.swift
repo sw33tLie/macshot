@@ -42,6 +42,11 @@ final class EffectsBandView: NSView {
     /// other (enforced at drag time). Shown as a teal pill with the
     /// factor text (e.g. "2×").
     private(set) var speedSegments: [VideoSpeedSegment] = []
+    /// Freeze segments — point-in-time pauses. Each occupies a single
+    /// source instant and spans `holdDuration` composition seconds. On
+    /// the band they render as a narrow violet pill anchored at `atTime`
+    /// with a snowflake icon. See `VideoFreezeSegment`.
+    private(set) var freezeSegments: [VideoFreezeSegment] = []
     private(set) var selectedSegmentID: UUID? {
         didSet {
             if oldValue != selectedSegmentID {
@@ -88,11 +93,13 @@ final class EffectsBandView: NSView {
     func setSegments(zoom: [VideoZoomSegment],
                      censor: [VideoCensorSegment],
                      cut: [VideoCutSegment] = [],
-                     speed: [VideoSpeedSegment] = []) {
+                     speed: [VideoSpeedSegment] = [],
+                     freeze: [VideoFreezeSegment] = []) {
         self.zoomSegments = zoom
         self.censorSegments = censor
         self.cutSegments = cut
         self.speedSegments = speed
+        self.freezeSegments = freeze
         relayoutAndNotify()
     }
 
@@ -102,6 +109,7 @@ final class EffectsBandView: NSView {
         censorSegments.removeAll { $0.id == id }
         cutSegments.removeAll { $0.id == id }
         speedSegments.removeAll { $0.id == id }
+        freezeSegments.removeAll { $0.id == id }
         if selectedSegmentID == id { selectedSegmentID = nil }
         relayoutAndNotify()
     }
@@ -160,6 +168,27 @@ final class EffectsBandView: NSView {
         pillRect(id: segment.id, startTime: segment.startTime, endTime: segment.endTime)
     }
 
+    /// Width of a freeze pill. Freezes are a single source instant, so
+    /// there's no natural range to map to a pill width — we pick a fixed
+    /// size that's wide enough to show the "❄ 1.0s" label without
+    /// dominating the band.
+    private static let freezePillWidth: CGFloat = 62
+
+    /// Freeze pill rect — centered on the freeze's source time. Rows
+    /// assigned by `layoutRows` just like other pill types; hit-testing
+    /// uses the rect's full bounds.
+    private func freezePillRect(for segment: VideoFreezeSegment) -> NSRect {
+        let row0 = row0Rect
+        guard duration > 0, row0.width > 0 else { return .zero }
+        let row = effectRowAssignment[segment.id] ?? 0
+        let y = row0.minY + CGFloat(row) * rowStride
+        let cx = row0.minX + CGFloat(segment.atTime / duration) * row0.width
+        let w = EffectsBandView.freezePillWidth
+        // Clamp so the pill never slides off the band on either side.
+        let x = max(row0.minX, min(row0.maxX - w, cx - w / 2))
+        return NSRect(x: x, y: y, width: w, height: row0.height)
+    }
+
     // MARK: - Layout
 
     /// The band's natural height, driven by the current row count. The
@@ -193,6 +222,20 @@ final class EffectsBandView: NSView {
         }
         for s in speedSegments where s.endTime > s.startTime {
             items.append(Item(id: s.id, start: s.startTime, end: s.endTime))
+        }
+        // Freezes are a single source instant; give them a synthetic
+        // span equal to their pill's width mapped to source time so the
+        // row-packer places them on their own row when they'd otherwise
+        // overlap a zoom/censor/speed rectangle visually.
+        if duration > 0, row0Rect.width > 0 {
+            let pillPx = EffectsBandView.freezePillWidth
+            let srcSpan = Double(pillPx / row0Rect.width) * duration
+            for f in freezeSegments {
+                let half = srcSpan / 2
+                items.append(Item(id: f.id,
+                                   start: max(0, f.atTime - half),
+                                   end: min(duration, f.atTime + half)))
+            }
         }
         items.sort { $0.start < $1.start }
 
@@ -334,9 +377,24 @@ final class EffectsBandView: NSView {
                          isSelected: seg.id == selectedSegmentID,
                          label: formatCutLabel(duration: seg.duration))
         }
+        // Freezes — violet pill with snowflake icon + hold duration.
+        for seg in freezeSegments {
+            let rect = freezePillRect(for: seg)
+            guard rect.width > 0 else { continue }
+            drawEffectPill(
+                rect: rect,
+                isSelected: seg.id == selectedSegmentID,
+                baseFillColor: NSColor(calibratedRed: 0.55, green: 0.35, blue: 0.85, alpha: 1.0),
+                fadeInFrac: 0,
+                fadeOutFrac: 0,
+                iconSymbol: "snowflake",
+                label: formatFreezeLabel(seg.holdDuration),
+                iconLabelGap: 6
+            )
+        }
 
         // Empty-state hint.
-        if zoomSegments.isEmpty && censorSegments.isEmpty && cutSegments.isEmpty && speedSegments.isEmpty {
+        if zoomSegments.isEmpty && censorSegments.isEmpty && cutSegments.isEmpty && speedSegments.isEmpty && freezeSegments.isEmpty {
             let hint = L("Click to add effects") as NSString
             let attrs: [NSAttributedString.Key: Any] = [
                 .font: NSFont.systemFont(ofSize: 11, weight: .medium),
@@ -562,6 +620,13 @@ final class EffectsBandView: NSView {
         return String(format: "%g×", rounded)
     }
 
+    private func formatFreezeLabel(_ seconds: Double) -> String {
+        if abs(seconds - seconds.rounded()) < 0.01 {
+            return "\(Int(seconds.rounded()))s"
+        }
+        return String(format: "%.1fs", seconds)
+    }
+
     private func drawHandleGrip(in rect: NSRect) {
         NSColor(calibratedRed: 0.18, green: 0.45, blue: 0.85, alpha: 0.85).setStroke()
         let path = NSBezierPath()
@@ -595,6 +660,9 @@ final class EffectsBandView: NSView {
         for seg in speedSegments {
             if speedPillRect(for: seg).insetBy(dx: -slop, dy: -5).contains(p) { return true }
         }
+        for seg in freezeSegments {
+            if freezePillRect(for: seg).insetBy(dx: -slop, dy: -5).contains(p) { return true }
+        }
         return false
     }
 
@@ -616,7 +684,24 @@ final class EffectsBandView: NSView {
         let edgeHitW: CGFloat = 9
         let clickTime = Double((p.x - row0Rect.minX) / max(row0Rect.width, 1)) * duration
 
-        // Cuts first so they remain clickable even when visually stacked on
+        // Freezes first — they're narrow point markers and easy to miss
+        // if a wider pill underneath steals the click.
+        for seg in freezeSegments.reversed() {
+            let pill = freezePillRect(for: seg)
+            if pill.insetBy(dx: -edgeHitW, dy: -5).contains(p) {
+                // Freezes are move-only (no resize — a moment in time
+                // has no width to stretch). `segStart == segEnd == atTime`
+                // gives the existing drag machinery something to subtract
+                // from when computing the anchor offset.
+                beginSegmentDrag(id: seg.id,
+                                  edge: .move,
+                                  clickTime: clickTime,
+                                  segStart: seg.atTime,
+                                  segEnd: seg.atTime)
+                return
+            }
+        }
+        // Cuts next so they remain clickable even when visually stacked on
         // top of zoom/censor pills that share their time range.
         for seg in cutSegments.reversed() {
             let pill = cutPillRect(for: seg)
@@ -698,6 +783,8 @@ final class EffectsBandView: NSView {
             dragCutSegment(seg, kind: kind, time: t)
         } else if let seg = speedSegments.first(where: { $0.id == id }) {
             dragSpeedSegment(seg, kind: kind, time: t)
+        } else if let seg = freezeSegments.first(where: { $0.id == id }) {
+            dragFreezeSegment(seg, time: t)
         }
     }
 
@@ -765,6 +852,16 @@ final class EffectsBandView: NSView {
         needsDisplay = true
     }
 
+    /// Move a freeze segment's `atTime` to follow the cursor. No resize —
+    /// a freeze has no width in source time. Clamped to [0, duration] so
+    /// it always stays over the timeline.
+    private func dragFreezeSegment(_ seg: VideoFreezeSegment, time t: Double) {
+        let newAt = max(0, min(duration, t - draggingSegmentAnchor))
+        seg.atTime = newAt
+        layoutRows()
+        needsDisplay = true
+    }
+
     private func dragCutSegment(_ seg: VideoCutSegment, kind: SegmentDragKind, time t: Double) {
         // Cuts can overlap freely — the export pipeline merges overlapping
         // cut ranges, so no need for neighbour-based clamping.
@@ -828,6 +925,16 @@ final class EffectsBandView: NSView {
     override func rightMouseDown(with event: NSEvent) {
         let p = convert(event.locationInWindow, from: nil)
         let edgeSlop: CGFloat = 6
+        // Freezes first — narrow markers, hardest to hit accidentally.
+        for seg in freezeSegments.reversed() {
+            let pill = freezePillRect(for: seg)
+            if pill.insetBy(dx: -edgeSlop, dy: -5).contains(p) {
+                selectedSegmentID = seg.id
+                needsDisplay = true
+                showFreezePillContextMenu(for: seg, at: event)
+                return
+            }
+        }
         for seg in cutSegments.reversed() {
             let pill = cutPillRect(for: seg)
             if pill.insetBy(dx: -edgeSlop, dy: -5).contains(p) {
@@ -873,6 +980,29 @@ final class EffectsBandView: NSView {
         attachAddEffectSubmenu(to: menu, event: event)
         menu.addItem(.separator())
         let del = NSMenuItem(title: L("Delete Cut"),
+                              action: #selector(handleDeleteSelectedFromMenu),
+                              keyEquivalent: "")
+        del.target = self
+        menu.addItem(del)
+        NSMenu.popUpContextMenu(menu, with: event, for: self)
+    }
+
+    private func showFreezePillContextMenu(for seg: VideoFreezeSegment, at event: NSEvent) {
+        let menu = NSMenu()
+        // Duration presets — quick way to change how long the freeze holds.
+        for preset in VideoFreezeSegment.presetDurations {
+            let item = NSMenuItem(title: formatFreezeLabel(preset),
+                                  action: #selector(handleSetFreezeDurationFromMenu(_:)),
+                                  keyEquivalent: "")
+            item.target = self
+            item.representedObject = FreezeDurationMenuContext(segmentID: seg.id, seconds: preset)
+            item.state = (abs(seg.holdDuration - preset) < 0.01) ? .on : .off
+            menu.addItem(item)
+        }
+        menu.addItem(.separator())
+        attachAddEffectSubmenu(to: menu, event: event)
+        menu.addItem(.separator())
+        let del = NSMenuItem(title: L("Delete Freeze"),
                               action: #selector(handleDeleteSelectedFromMenu),
                               keyEquivalent: "")
         del.target = self
@@ -1015,6 +1145,14 @@ final class EffectsBandView: NSView {
         }
         menu.addItem(speedItem)
 
+        let freezeItem = NSMenuItem(title: L("Add Freeze"),
+                                     action: #selector(handleAddFreezeFromMenu(_:)),
+                                     keyEquivalent: "")
+        freezeItem.image = NSImage(systemSymbolName: "snowflake", accessibilityDescription: nil)
+        freezeItem.target = self
+        freezeItem.representedObject = AddEffectContext(clickTime: clickTime, gapStart: 0, gapEnd: duration)
+        menu.addItem(freezeItem)
+
         menu.popUp(positioning: nil, at: point, in: self)
     }
 
@@ -1058,6 +1196,12 @@ final class EffectsBandView: NSView {
             speedItem.isEnabled = false
         }
         sub.addItem(speedItem)
+        let freezeItem = NSMenuItem(title: L("Add Freeze"),
+                                     action: #selector(handleAddFreezeFromMenu(_:)),
+                                     keyEquivalent: "")
+        freezeItem.target = self
+        freezeItem.representedObject = AddEffectContext(clickTime: clickTime, gapStart: 0, gapEnd: duration)
+        sub.addItem(freezeItem)
         parent.submenu = sub
         menu.addItem(parent)
     }
@@ -1161,6 +1305,19 @@ final class EffectsBandView: NSView {
         addSpeedSegment(clickTime: ctx.clickTime, gapStart: ctx.gapStart, gapEnd: ctx.gapEnd)
     }
 
+    @objc private func handleAddFreezeFromMenu(_ sender: NSMenuItem) {
+        guard let ctx = sender.representedObject as? AddEffectContext else { return }
+        addFreezeSegment(atTime: ctx.clickTime)
+    }
+
+    @objc private func handleSetFreezeDurationFromMenu(_ sender: NSMenuItem) {
+        guard let ctx = sender.representedObject as? FreezeDurationMenuContext,
+              let seg = freezeSegments.first(where: { $0.id == ctx.segmentID }) else { return }
+        seg.holdDuration = VideoFreezeSegment.clampDuration(ctx.seconds)
+        delegate?.effectsBandDidMutate(self)
+        needsDisplay = true
+    }
+
     @objc private func handleSetSpeedFactorFromMenu(_ sender: NSMenuItem) {
         guard let ctx = sender.representedObject as? SpeedFactorMenuContext,
               let seg = speedSegments.first(where: { $0.id == ctx.segmentID }) else { return }
@@ -1236,6 +1393,20 @@ final class EffectsBandView: NSView {
         relayoutAndNotify()
     }
 
+    private func addFreezeSegment(atTime clickTime: Double) {
+        guard duration > 0 else { return }
+        // Clamp a hair away from the edges so a freeze right at t=0 or
+        // t=duration still lands inside a kept range (VideoCuts treats
+        // exact boundaries as outside, which would cause the freeze to
+        // be silently dropped at export).
+        let eps = 0.001
+        let t = max(eps, min(duration - eps, clickTime))
+        let seg = VideoFreezeSegment(atTime: t)
+        freezeSegments.append(seg)
+        selectedSegmentID = seg.id
+        relayoutAndNotify()
+    }
+
     // MARK: - Keyboard
 
     override func keyDown(with event: NSEvent) {
@@ -1288,6 +1459,15 @@ final class EffectsBandView: NSView {
         init(segmentID: UUID, factor: Double) {
             self.segmentID = segmentID
             self.factor = factor
+        }
+    }
+
+    private final class FreezeDurationMenuContext: NSObject {
+        let segmentID: UUID
+        let seconds: Double
+        init(segmentID: UUID, seconds: Double) {
+            self.segmentID = segmentID
+            self.seconds = seconds
         }
     }
 }
