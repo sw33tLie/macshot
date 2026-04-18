@@ -19,6 +19,10 @@
   <img src="assets/preview.png" alt="macshot demo" width="700"/>
 </p>
 
+<p align="center">
+  <img src="assets/preview-editor.png" alt="macshot video editor — timeline with cut, speed, freeze, zoom and censor effects" width="700"/>
+</p>
+
 ---
 
 ### Why macshot?
