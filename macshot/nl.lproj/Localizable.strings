@@ -504,10 +504,12 @@
 "Add Censor" = "Censuur toevoegen";
 "Add Cut" = "Knip toevoegen";
 "Add Speed" = "Snelheid toevoegen";
+"Add Freeze" = "Stilstaand beeld toevoegen";
 "Delete Zoom" = "Zoom verwijderen";
 "Delete Censor" = "Censuur verwijderen";
 "Delete Cut" = "Knip verwijderen";
 "Delete Speed" = "Snelheid verwijderen";
+"Delete Freeze" = "Stilstaand beeld verwijderen";
 "Untitled" = "Naamloos";
 "Add effect" = "Effect toevoegen";
 "Fade" = "Vervagen";

@@ -506,10 +506,12 @@
 "Add Censor" = "Додај цензуру";
 "Add Cut" = "Додај рез";
 "Add Speed" = "Додај брзину";
+"Add Freeze" = "Додај стоп-кадар";
 "Delete Zoom" = "Обриши зум";
 "Delete Censor" = "Обриши цензуру";
 "Delete Cut" = "Обриши рез";
 "Delete Speed" = "Обриши брзину";
+"Delete Freeze" = "Обриши стоп-кадар";
 "Untitled" = "Без наслова";
 "Add effect" = "Додај ефекат";
 "Fade" = "Утапање";

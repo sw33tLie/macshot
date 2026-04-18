@@ -506,10 +506,12 @@
 "Add Censor" = "Lägg till censur";
 "Add Cut" = "Lägg till klipp";
 "Add Speed" = "Lägg till hastighet";
+"Add Freeze" = "Lägg till frysning";
 "Delete Zoom" = "Ta bort zoom";
 "Delete Censor" = "Ta bort censur";
 "Delete Cut" = "Ta bort klipp";
 "Delete Speed" = "Ta bort hastighet";
+"Delete Freeze" = "Ta bort frysning";
 "Untitled" = "Namnlös";
 "Add effect" = "Lägg till effekt";
 "Fade" = "Toning";

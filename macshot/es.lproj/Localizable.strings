@@ -504,10 +504,12 @@
 "Add Censor" = "Añadir censura";
 "Add Cut" = "Añadir corte";
 "Add Speed" = "Añadir velocidad";
+"Add Freeze" = "Añadir congelado";
 "Delete Zoom" = "Eliminar zoom";
 "Delete Censor" = "Eliminar censura";
 "Delete Cut" = "Eliminar corte";
 "Delete Speed" = "Eliminar velocidad";
+"Delete Freeze" = "Eliminar congelado";
 "Untitled" = "Sin título";
 "Add effect" = "Añadir efecto";
 "Fade" = "Fundido";

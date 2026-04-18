@@ -506,10 +506,12 @@
 "Add Censor" = "הוסף צנזור";
 "Add Cut" = "הוסף חיתוך";
 "Add Speed" = "הוסף מהירות";
+"Add Freeze" = "הוסף הקפאה";
 "Delete Zoom" = "מחק זום";
 "Delete Censor" = "מחק צנזור";
 "Delete Cut" = "מחק חיתוך";
 "Delete Speed" = "מחק מהירות";
+"Delete Freeze" = "מחק הקפאה";
 "Untitled" = "ללא שם";
 "Add effect" = "הוסף אפקט";
 "Fade" = "עמעום";

@@ -504,10 +504,12 @@
 "Add Censor" = "Dodaj cenzuru";
 "Add Cut" = "Dodaj rez";
 "Add Speed" = "Dodaj brzinu";
+"Add Freeze" = "Dodaj zamrznuti kadar";
 "Delete Zoom" = "Obriši zumiranje";
 "Delete Censor" = "Obriši cenzuru";
 "Delete Cut" = "Obriši rez";
 "Delete Speed" = "Obriši brzinu";
+"Delete Freeze" = "Obriši zamrznuti kadar";
 "Untitled" = "Bez naslova";
 "Add effect" = "Dodaj efekt";
 "Fade" = "Prijelaz";

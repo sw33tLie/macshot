@@ -506,10 +506,12 @@
 "Add Censor" = "Tilf\U00F8j censur";
 "Add Cut" = "Tilf\U00F8j klip";
 "Add Speed" = "Tilf\U00F8j hastighed";
+"Add Freeze" = "Tilf\U00F8j frys";
 "Delete Zoom" = "Slet zoom";
 "Delete Censor" = "Slet censur";
 "Delete Cut" = "Slet klip";
 "Delete Speed" = "Slet hastighed";
+"Delete Freeze" = "Slet frys";
 "Untitled" = "Uden titel";
 "Add effect" = "Tilf\U00F8j effekt";
 "Fade" = "Fade";

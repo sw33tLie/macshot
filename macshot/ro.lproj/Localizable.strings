@@ -504,10 +504,12 @@
 "Add Censor" = "Adauga cenzura";
 "Add Cut" = "Adauga taietura";
 "Add Speed" = "Adauga viteza";
+"Add Freeze" = "Adauga inghetare";
 "Delete Zoom" = "Sterge zoom-ul";
 "Delete Censor" = "Sterge cenzura";
 "Delete Cut" = "Sterge taietura";
 "Delete Speed" = "Sterge viteza";
+"Delete Freeze" = "Sterge inghetarea";
 "Untitled" = "Fara titlu";
 "Add effect" = "Adauga efect";
 "Fade" = "Estompare";

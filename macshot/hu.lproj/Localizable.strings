@@ -504,10 +504,12 @@
 "Add Censor" = "Cenzúra hozzáadása";
 "Add Cut" = "Vágás hozzáadása";
 "Add Speed" = "Sebesség hozzáadása";
+"Add Freeze" = "Kimerevítés hozzáadása";
 "Delete Zoom" = "Nagyítás törlése";
 "Delete Censor" = "Cenzúra törlése";
 "Delete Cut" = "Vágás törlése";
 "Delete Speed" = "Sebesség törlése";
+"Delete Freeze" = "Kimerevítés törlése";
 "Untitled" = "Névtelen";
 "Add effect" = "Effektus hozzáadása";
 "Fade" = "Áttűnés";

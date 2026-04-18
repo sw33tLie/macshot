@@ -504,10 +504,12 @@
 "Add Censor" = "Tambah Sensor";
 "Add Cut" = "Tambah Potongan";
 "Add Speed" = "Tambah Kecepatan";
+"Add Freeze" = "Tambah Bekukan";
 "Delete Zoom" = "Hapus Zoom";
 "Delete Censor" = "Hapus Sensor";
 "Delete Cut" = "Hapus Potongan";
 "Delete Speed" = "Hapus Kecepatan";
+"Delete Freeze" = "Hapus Bekukan";
 "Untitled" = "Tanpa Judul";
 "Add effect" = "Tambah efek";
 "Fade" = "Pudar";

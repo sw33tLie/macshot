@@ -506,10 +506,12 @@
 "Add Censor" = "إضافة تمويه";
 "Add Cut" = "إضافة قطع";
 "Add Speed" = "إضافة سرعة";
+"Add Freeze" = "إضافة تجميد";
 "Delete Zoom" = "حذف التكبير";
 "Delete Censor" = "حذف التمويه";
 "Delete Cut" = "حذف القطع";
 "Delete Speed" = "حذف السرعة";
+"Delete Freeze" = "حذف التجميد";
 "Untitled" = "بدون عنوان";
 "Add effect" = "إضافة تأثير";
 "Fade" = "تلاشي";

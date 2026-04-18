@@ -504,10 +504,12 @@
 "Add Censor" = "เพิ่มการปิดบัง";
 "Add Cut" = "เพิ่มการตัด";
 "Add Speed" = "เพิ่มความเร็ว";
+"Add Freeze" = "เพิ่มการหยุดภาพ";
 "Delete Zoom" = "ลบการซูม";
 "Delete Censor" = "ลบการปิดบัง";
 "Delete Cut" = "ลบการตัด";
 "Delete Speed" = "ลบความเร็ว";
+"Delete Freeze" = "ลบการหยุดภาพ";
 "Untitled" = "ไม่มีชื่อ";
 "Add effect" = "เพิ่มเอฟเฟกต์";
 "Fade" = "เฟด";

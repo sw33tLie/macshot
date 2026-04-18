@@ -506,10 +506,12 @@
 "Add Censor" = "검열 추가";
 "Add Cut" = "컷 추가";
 "Add Speed" = "속도 추가";
+"Add Freeze" = "정지 추가";
 "Delete Zoom" = "줌 삭제";
 "Delete Censor" = "검열 삭제";
 "Delete Cut" = "컷 삭제";
 "Delete Speed" = "속도 삭제";
+"Delete Freeze" = "정지 삭제";
 "Untitled" = "제목 없음";
 "Add effect" = "효과 추가";
 "Fade" = "페이드";

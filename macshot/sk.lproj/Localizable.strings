@@ -504,10 +504,12 @@
 "Add Censor" = "Pridať cenzúru";
 "Add Cut" = "Pridať strih";
 "Add Speed" = "Pridať rýchlosť";
+"Add Freeze" = "Pridať zastavený snímok";
 "Delete Zoom" = "Odstrániť priblíženie";
 "Delete Censor" = "Odstrániť cenzúru";
 "Delete Cut" = "Odstrániť strih";
 "Delete Speed" = "Odstrániť rýchlosť";
+"Delete Freeze" = "Odstrániť zastavený snímok";
 "Untitled" = "Bez názvu";
 "Add effect" = "Pridať efekt";
 "Fade" = "Prelínanie";

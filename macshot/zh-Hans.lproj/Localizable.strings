@@ -506,10 +506,12 @@
 "Add Censor" = "添加遮挡";
 "Add Cut" = "添加剪切";
 "Add Speed" = "添加速度";
+"Add Freeze" = "添加冻结";
 "Delete Zoom" = "删除缩放";
 "Delete Censor" = "删除遮挡";
 "Delete Cut" = "删除剪切";
 "Delete Speed" = "删除速度";
+"Delete Freeze" = "删除冻结";
 "Untitled" = "未命名";
 "Add effect" = "添加效果";
 "Fade" = "淡入淡出";

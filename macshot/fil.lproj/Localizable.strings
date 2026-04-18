@@ -506,10 +506,12 @@
 "Add Censor" = "Magdagdag ng Sensura";
 "Add Cut" = "Magdagdag ng Putol";
 "Add Speed" = "Magdagdag ng Bilis";
+"Add Freeze" = "Magdagdag ng Freeze";
 "Delete Zoom" = "Tanggalin ang Zoom";
 "Delete Censor" = "Tanggalin ang Sensura";
 "Delete Cut" = "Tanggalin ang Putol";
 "Delete Speed" = "Tanggalin ang Bilis";
+"Delete Freeze" = "Tanggalin ang Freeze";
 "Untitled" = "Walang Pamagat";
 "Add effect" = "Magdagdag ng effect";
 "Fade" = "Fade";

@@ -487,10 +487,12 @@
 "Add Censor" = "Aggiungi Censura";
 "Add Cut" = "Aggiungi Taglio";
 "Add Speed" = "Aggiungi Velocità";
+"Add Freeze" = "Aggiungi Fermo immagine";
 "Delete Zoom" = "Elimina Zoom";
 "Delete Censor" = "Elimina Censura";
 "Delete Cut" = "Elimina Taglio";
 "Delete Speed" = "Elimina Velocità";
+"Delete Freeze" = "Elimina Fermo immagine";
 "Untitled" = "Senza titolo";
 "Add effect" = "Aggiungi effetto";
 "Fade" = "Dissolvenza";

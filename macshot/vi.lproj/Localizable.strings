@@ -504,10 +504,12 @@
 "Add Censor" = "Thêm che mờ";
 "Add Cut" = "Thêm cắt";
 "Add Speed" = "Thêm tốc độ";
+"Add Freeze" = "Thêm đóng băng";
 "Delete Zoom" = "Xóa thu phóng";
 "Delete Censor" = "Xóa che mờ";
 "Delete Cut" = "Xóa cắt";
 "Delete Speed" = "Xóa tốc độ";
+"Delete Freeze" = "Xóa đóng băng";
 "Untitled" = "Không có tiêu đề";
 "Add effect" = "Thêm hiệu ứng";
 "Fade" = "Làm mờ dần";
