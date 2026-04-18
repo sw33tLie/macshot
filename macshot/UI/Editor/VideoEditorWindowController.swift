@@ -185,14 +185,21 @@ private final class VideoEditorView: NSView {
     //   [buttons 12→40]          fixed 48pt
     //   [effects scroll view]    variable (rowCount × rowStride - 2, capped)
     //   [gap 8pt]                8
-    //   [time labels]            18
     //   [trim timeline]          36
+    //   [time labels]            18
     //   [top pad]                12
+    //
+    // Time labels sit ABOVE the trim bar so they don't collide with the
+    // effects band's "Click to add effects" hint that sits directly
+    // above the bottom buttons row.
     private let buttonsAreaH: CGFloat = 48
     private let labelsRowH: CGFloat = 18
     private let trimBarH: CGFloat = 36
     private let topPadH: CGFloat = 12
-    private let scrollToLabelsGap: CGFloat = 8
+    /// Gap between the effects scroll view (top) and the trim bar (bottom).
+    /// Sized to fit the playhead circle which sits below the trim bar in
+    /// this layout (circle is 8pt diameter with 2pt breathing room).
+    private let scrollToLabelsGap: CGFloat = 14
 
     /// Total height of the controls band at the bottom of the editor,
     /// dynamic because the effects scroll view grows with row count.
@@ -515,7 +522,10 @@ private final class VideoEditorView: NSView {
         // scroll view grows to show more rows.
         let tlH: CGFloat = trimBarH
         let scrollH = effectsScrollViewHeight(forRowCount: currentEffectRowCount)
-        let tlY: CGFloat = buttonsAreaH + scrollH + scrollToLabelsGap + labelsRowH
+        // Trim bar sits directly above the effects scroll view (with just
+        // the `scrollToLabelsGap` for breathing room). Time labels now sit
+        // ABOVE the trim bar — see `timeLabelY`.
+        let tlY: CGFloat = buttonsAreaH + scrollH + scrollToLabelsGap
         timelineRect = NSRect(x: tlX, y: tlY, width: tlW, height: tlH)
 
         // Regenerate thumbnails if width changed significantly
@@ -611,8 +621,11 @@ private final class VideoEditorView: NSView {
         NSBezierPath(roundedRect: endHandleRect, xRadius: 3, yRadius: 3).fill()
         drawHandleGrip(in: endHandleRect)
 
-        // Playhead — line spans the full trim timeline, circle sits above it
-        // in the gap between the timeline top and the time labels.
+        // Playhead — line spans the full trim timeline. Circle sits BELOW
+        // the trim bar in the gap between it and the effects scroll view.
+        // (Previously the circle sat above, but the time-labels row lives
+        // there now — a circle at x = timelinePad would collide with the
+        // current-time label at t = 0.)
         if player != nil || isGIF {
             let currentTime = currentPlaybackTime
             let playheadX = max(tlX, min(tlX + tlW, tlX + CGFloat(currentTime / duration) * tlW))
@@ -623,11 +636,10 @@ private final class VideoEditorView: NSView {
             NSBezierPath(roundedRect: playheadRect, xRadius: 1, yRadius: 1).fill()
 
             let circleR: CGFloat = 4
-            // Share the same x as the line so the two are always visually
-            // joined — even at t=0 the circle overhangs past the track edge
-            // rather than snapping a few px inward and breaking alignment.
             let circleX = playheadX
-            let circleY = tlY + tlH + 2  // just above the trim top edge
+            // Circle sits centered in the gap below the trim bar, so it's
+            // visually "stuck to" the trim bar's bottom edge.
+            let circleY = tlY - circleR * 2 - 2
             ToolbarLayout.iconColor.setFill()
             NSBezierPath(ovalIn: NSRect(x: circleX - circleR,
                                           y: circleY,
@@ -975,16 +987,19 @@ private final class VideoEditorView: NSView {
         str.draw(at: NSPoint(x: startX + iconSize + iconGap, y: rect.midY - textSize.height / 2), withAttributes: attrs)
     }
 
-    /// Time labels sit BELOW the trim bar (AppKit y=down), in the labelsRowH
-    /// gap between the trim bar and the effects scroll view.
+    /// Time labels sit ABOVE the trim bar (AppKit y=up), so the status
+    /// banner "Copied to clipboard!" and the left/right time readouts
+    /// don't collide with the effects band's cursor-follow "+" hint or
+    /// the "Click to add effects" empty-state that sits just above the
+    /// bottom buttons.
     private var timeLabelY: CGFloat {
         let attrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium),
         ]
         let sampleHeight = ("0" as NSString).size(withAttributes: attrs).height
-        // Center within labelsRowH (18pt) between the scroll view top and trim bottom.
         let scrollH = effectsScrollViewHeight(forRowCount: currentEffectRowCount)
-        let labelsRowBottom = buttonsAreaH + scrollH + scrollToLabelsGap
+        // Bottom of the labels row sits at the top of the trim bar.
+        let labelsRowBottom = buttonsAreaH + scrollH + scrollToLabelsGap + trimBarH
         return labelsRowBottom + (labelsRowH - sampleHeight) / 2
     }
 
