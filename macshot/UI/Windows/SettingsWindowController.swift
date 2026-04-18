@@ -2542,8 +2542,29 @@ extension SettingsWindowController: NSTextFieldDelegate {
     func controlTextDidChange(_ obj: Notification) {
         guard let field = obj.object as? NSTextField else { return }
         if field === filenameTemplateField {
+            // Save on every keystroke so closing the window without pressing
+            // Enter doesn't silently lose the edit. Empty value resets to
+            // the default template at commit time (see controlTextDidEndEditing).
+            UserDefaults.standard.set(field.stringValue, forKey: FilenameFormatter.userDefaultsKey)
             updateFilenamePreview()
         } else if field === recordingFilenameTemplateField {
+            UserDefaults.standard.set(field.stringValue, forKey: FilenameFormatter.recordingUserDefaultsKey)
+            updateRecordingFilenamePreview()
+        }
+    }
+
+    func controlTextDidEndEditing(_ obj: Notification) {
+        // On commit, replace empty/whitespace-only values with the default so
+        // the user never ends up with a blank template saved.
+        guard let field = obj.object as? NSTextField else { return }
+        let trimmed = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        if field === filenameTemplateField, trimmed.isEmpty {
+            field.stringValue = FilenameFormatter.defaultTemplate
+            UserDefaults.standard.set(FilenameFormatter.defaultTemplate, forKey: FilenameFormatter.userDefaultsKey)
+            updateFilenamePreview()
+        } else if field === recordingFilenameTemplateField, trimmed.isEmpty {
+            field.stringValue = FilenameFormatter.defaultRecordingTemplate
+            UserDefaults.standard.set(FilenameFormatter.defaultRecordingTemplate, forKey: FilenameFormatter.recordingUserDefaultsKey)
             updateRecordingFilenamePreview()
         }
     }

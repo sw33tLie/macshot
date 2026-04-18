@@ -912,10 +912,22 @@ private final class VideoEditorView: NSView {
         str.draw(at: NSPoint(x: startX + iconSize + iconGap, y: rect.midY - textSize.height / 2), withAttributes: attrs)
     }
 
+    /// Time labels sit BELOW the trim bar (AppKit y=down), in the labelsRowH
+    /// gap between the trim bar and the effects scroll view.
+    private var timeLabelY: CGFloat {
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium),
+        ]
+        let sampleHeight = ("0" as NSString).size(withAttributes: attrs).height
+        // Center within labelsRowH (18pt) between the scroll view top and trim bottom.
+        let scrollH = effectsScrollViewHeight(forRowCount: currentEffectRowCount)
+        let labelsRowBottom = buttonsAreaH + scrollH + scrollToLabelsGap
+        return labelsRowBottom + (labelsRowH - sampleHeight) / 2
+    }
+
     private func drawTimeLabels() {
         let currentTime = currentPlaybackTime
         let trimDuration = trimEnd - trimStart
-        let labelY = timelineRect.maxY + 14
 
         let leftStr = formatTime(currentTime) as NSString
         let rightStr = String(format: L("%@ selected"), formatTime(trimDuration)) as NSString
@@ -924,10 +936,10 @@ private final class VideoEditorView: NSView {
             .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(0.5),
         ]
 
-        leftStr.draw(at: NSPoint(x: timelinePad, y: labelY), withAttributes: attrs)
+        leftStr.draw(at: NSPoint(x: timelinePad, y: timeLabelY), withAttributes: attrs)
 
         let rightSize = rightStr.size(withAttributes: attrs)
-        rightStr.draw(at: NSPoint(x: bounds.width - timelinePad - rightSize.width, y: labelY), withAttributes: attrs)
+        rightStr.draw(at: NSPoint(x: bounds.width - timelinePad - rightSize.width, y: timeLabelY), withAttributes: attrs)
     }
 
     private func drawStatus(_ message: String) {
@@ -938,8 +950,7 @@ private final class VideoEditorView: NSView {
         ]
         let str = message as NSString
         let size = str.size(withAttributes: attrs)
-        let labelY = timelineRect.maxY + 14
-        str.draw(at: NSPoint(x: bounds.midX - size.width / 2, y: labelY), withAttributes: attrs)
+        str.draw(at: NSPoint(x: bounds.midX - size.width / 2, y: timeLabelY), withAttributes: attrs)
     }
 
     private func formatTime(_ seconds: Double) -> String {
