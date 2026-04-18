@@ -38,6 +38,10 @@ final class EffectsBandView: NSView {
     /// Cuts are temporal — frames in their range never reach the output.
     /// They render as a dimmed "deleted film" pill distinct from zoom/censor.
     private(set) var cutSegments: [VideoCutSegment] = []
+    /// Speed segments retime a source range. Non-overlapping with each
+    /// other (enforced at drag time). Shown as a teal pill with the
+    /// factor text (e.g. "2×").
+    private(set) var speedSegments: [VideoSpeedSegment] = []
     private(set) var selectedSegmentID: UUID? {
         didSet {
             if oldValue != selectedSegmentID {
@@ -81,10 +85,14 @@ final class EffectsBandView: NSView {
     // MARK: - Public API for mutation from the parent
 
     /// Replace all segments. Used at init time.
-    func setSegments(zoom: [VideoZoomSegment], censor: [VideoCensorSegment], cut: [VideoCutSegment] = []) {
+    func setSegments(zoom: [VideoZoomSegment],
+                     censor: [VideoCensorSegment],
+                     cut: [VideoCutSegment] = [],
+                     speed: [VideoSpeedSegment] = []) {
         self.zoomSegments = zoom
         self.censorSegments = censor
         self.cutSegments = cut
+        self.speedSegments = speed
         relayoutAndNotify()
     }
 
@@ -93,6 +101,7 @@ final class EffectsBandView: NSView {
         zoomSegments.removeAll { $0.id == id }
         censorSegments.removeAll { $0.id == id }
         cutSegments.removeAll { $0.id == id }
+        speedSegments.removeAll { $0.id == id }
         if selectedSegmentID == id { selectedSegmentID = nil }
         relayoutAndNotify()
     }
@@ -147,6 +156,10 @@ final class EffectsBandView: NSView {
         pillRect(id: segment.id, startTime: segment.startTime, endTime: segment.endTime)
     }
 
+    private func speedPillRect(for segment: VideoSpeedSegment) -> NSRect {
+        pillRect(id: segment.id, startTime: segment.startTime, endTime: segment.endTime)
+    }
+
     // MARK: - Layout
 
     /// The band's natural height, driven by the current row count. The
@@ -177,6 +190,9 @@ final class EffectsBandView: NSView {
         }
         for k in cutSegments where k.endTime > k.startTime {
             items.append(Item(id: k.id, start: k.startTime, end: k.endTime))
+        }
+        for s in speedSegments where s.endTime > s.startTime {
+            items.append(Item(id: s.id, start: s.startTime, end: s.endTime))
         }
         items.sort { $0.start < $1.start }
 
@@ -289,6 +305,25 @@ final class EffectsBandView: NSView {
                 label: styleLabel
             )
         }
+        // Speed — drawn before cuts but after zoom/censor. Teal pill with
+        // factor text.
+        for seg in speedSegments {
+            let rect = speedPillRect(for: seg)
+            guard rect.width > 0 else { continue }
+            drawEffectPill(
+                rect: rect,
+                isSelected: seg.id == selectedSegmentID,
+                baseFillColor: NSColor(calibratedRed: 0.20, green: 0.65, blue: 0.60, alpha: 1.0),
+                fadeInFrac: 0,
+                fadeOutFrac: 0,
+                iconSymbol: seg.speedFactor >= 1.0 ? "forward.fill" : "tortoise.fill",
+                label: formatSpeedLabel(seg.speedFactor),
+                // forward.fill / tortoise.fill have wider visual bounds than
+                // the default symbols — bump the gap so the glyph and the
+                // factor text don't kiss.
+                iconLabelGap: 8
+            )
+        }
         // Cuts — drawn last so they sit visually above other pills in their
         // row. Distinct striped/dark look signals that the range is removed.
         for seg in cutSegments {
@@ -300,7 +335,7 @@ final class EffectsBandView: NSView {
         }
 
         // Empty-state hint.
-        if zoomSegments.isEmpty && censorSegments.isEmpty && cutSegments.isEmpty {
+        if zoomSegments.isEmpty && censorSegments.isEmpty && cutSegments.isEmpty && speedSegments.isEmpty {
             let hint = L("Click to add effects") as NSString
             let attrs: [NSAttributedString.Key: Any] = [
                 .font: NSFont.systemFont(ofSize: 11, weight: .medium),
@@ -347,7 +382,8 @@ final class EffectsBandView: NSView {
                                  fadeInFrac: Double,
                                  fadeOutFrac: Double,
                                  iconSymbol: String,
-                                 label: String) {
+                                 label: String,
+                                 iconLabelGap: CGFloat = 4) {
         let fillColor = baseFillColor.withAlphaComponent(isSelected ? 1.0 : 0.88)
         let path = NSBezierPath(roundedRect: rect, xRadius: 6, yRadius: 6)
         fillColor.setFill()
@@ -374,7 +410,7 @@ final class EffectsBandView: NSView {
         let labelNS = label as NSString
         let labelSize = labelNS.size(withAttributes: labelAttrs)
         let iconSize: CGFloat = 11
-        let contentW = iconSize + 4 + labelSize.width
+        let contentW = iconSize + iconLabelGap + labelSize.width
         if rect.width > contentW + 6 {
             let startX = rect.midX - contentW / 2
             if let icon = NSImage(systemSymbolName: iconSymbol, accessibilityDescription: nil)?
@@ -388,7 +424,7 @@ final class EffectsBandView: NSView {
                 tinted.draw(in: NSRect(x: startX, y: rect.midY - icon.size.height / 2,
                                         width: icon.size.width, height: icon.size.height))
             }
-            labelNS.draw(at: NSPoint(x: startX + iconSize + 4, y: rect.midY - labelSize.height / 2),
+            labelNS.draw(at: NSPoint(x: startX + iconSize + iconLabelGap, y: rect.midY - labelSize.height / 2),
                           withAttributes: labelAttrs)
         } else if rect.width > iconSize + 4 {
             if let icon = NSImage(systemSymbolName: iconSymbol, accessibilityDescription: nil)?
@@ -516,6 +552,15 @@ final class EffectsBandView: NSView {
         return String(format: "%.1fs", duration)
     }
 
+    private func formatSpeedLabel(_ factor: Double) -> String {
+        // Round to 2 decimals but drop trailing zeros ("2×" not "2.00×").
+        let rounded = (factor * 100).rounded() / 100
+        if abs(rounded - rounded.rounded()) < 0.01 {
+            return "\(Int(rounded.rounded()))×"
+        }
+        return String(format: "%g×", rounded)
+    }
+
     private func drawHandleGrip(in rect: NSRect) {
         NSColor(calibratedRed: 0.18, green: 0.45, blue: 0.85, alpha: 0.85).setStroke()
         let path = NSBezierPath()
@@ -546,6 +591,9 @@ final class EffectsBandView: NSView {
         for seg in cutSegments {
             if cutPillRect(for: seg).insetBy(dx: -slop, dy: -5).contains(p) { return true }
         }
+        for seg in speedSegments {
+            if speedPillRect(for: seg).insetBy(dx: -slop, dy: -5).contains(p) { return true }
+        }
         return false
     }
 
@@ -571,6 +619,17 @@ final class EffectsBandView: NSView {
         // top of zoom/censor pills that share their time range.
         for seg in cutSegments.reversed() {
             let pill = cutPillRect(for: seg)
+            if pill.insetBy(dx: -edgeHitW, dy: -5).contains(p) {
+                beginSegmentDrag(id: seg.id,
+                                  edge: edgeHitForX(p.x, pill: pill, hitW: edgeHitW),
+                                  clickTime: clickTime,
+                                  segStart: seg.startTime,
+                                  segEnd: seg.endTime)
+                return
+            }
+        }
+        for seg in speedSegments.reversed() {
+            let pill = speedPillRect(for: seg)
             if pill.insetBy(dx: -edgeHitW, dy: -5).contains(p) {
                 beginSegmentDrag(id: seg.id,
                                   edge: edgeHitForX(p.x, pill: pill, hitW: edgeHitW),
@@ -636,6 +695,8 @@ final class EffectsBandView: NSView {
             dragCensorSegment(seg, kind: kind, time: t)
         } else if let seg = cutSegments.first(where: { $0.id == id }) {
             dragCutSegment(seg, kind: kind, time: t)
+        } else if let seg = speedSegments.first(where: { $0.id == id }) {
+            dragSpeedSegment(seg, kind: kind, time: t)
         }
     }
 
@@ -664,6 +725,36 @@ final class EffectsBandView: NSView {
             seg.startTime = newStart
         case .resizeEnd:
             let minStart = seg.startTime + VideoZoomSegment.minDuration
+            var newEnd = max(minStart, min(duration, t - draggingSegmentAnchor))
+            let upperBound = others.filter { $0.start >= seg.startTime }.map(\.start).min() ?? duration
+            newEnd = min(upperBound, newEnd)
+            seg.endTime = newEnd
+        }
+        layoutRows()
+        needsDisplay = true
+    }
+
+    private func dragSpeedSegment(_ seg: VideoSpeedSegment, kind: SegmentDragKind, time t: Double) {
+        // Speed segments can't overlap each other — enforce via neighbour
+        // clamping. They're allowed to overlap cuts (they'll be silently
+        // clipped to the kept range on export).
+        let others = speedSegments.filter { $0.id != seg.id }.map { (start: $0.startTime, end: $0.endTime) }
+        // Min source duration so composition duration stays >= minCompDuration.
+        let minSrcDuration = VideoSpeedSegment.minCompDuration * seg.speedFactor
+        switch kind {
+        case .move:
+            let (newStart, newEnd) = resolveMove(segment: (seg.startTime, seg.endTime),
+                                                  to: t - draggingSegmentAnchor,
+                                                  others: others)
+            seg.startTime = max(0, newStart); seg.endTime = min(duration, newEnd)
+        case .resizeStart:
+            let minEnd = seg.endTime - minSrcDuration
+            var newStart = max(0, min(minEnd, t - draggingSegmentAnchor))
+            let lowerBound = others.filter { $0.end <= seg.endTime }.map(\.end).max() ?? 0
+            newStart = max(lowerBound, newStart)
+            seg.startTime = newStart
+        case .resizeEnd:
+            let minStart = seg.startTime + minSrcDuration
             var newEnd = max(minStart, min(duration, t - draggingSegmentAnchor))
             let upperBound = others.filter { $0.start >= seg.startTime }.map(\.start).min() ?? duration
             newEnd = min(upperBound, newEnd)
@@ -745,6 +836,15 @@ final class EffectsBandView: NSView {
                 return
             }
         }
+        for seg in speedSegments.reversed() {
+            let pill = speedPillRect(for: seg)
+            if pill.insetBy(dx: -edgeSlop, dy: -5).contains(p) {
+                selectedSegmentID = seg.id
+                needsDisplay = true
+                showSpeedPillContextMenu(for: seg, at: event)
+                return
+            }
+        }
         for seg in zoomSegments.reversed() {
             let pill = zoomPillRect(for: seg)
             if pill.insetBy(dx: -edgeSlop, dy: -5).contains(p) {
@@ -772,6 +872,28 @@ final class EffectsBandView: NSView {
         attachAddEffectSubmenu(to: menu, event: event)
         menu.addItem(.separator())
         let del = NSMenuItem(title: L("Delete Cut"),
+                              action: #selector(handleDeleteSelectedFromMenu),
+                              keyEquivalent: "")
+        del.target = self
+        menu.addItem(del)
+        NSMenu.popUpContextMenu(menu, with: event, for: self)
+    }
+
+    private func showSpeedPillContextMenu(for seg: VideoSpeedSegment, at event: NSEvent) {
+        let menu = NSMenu()
+        for factor in VideoSpeedSegment.presetFactors {
+            let item = NSMenuItem(title: "\(formatSpeedLabel(factor))",
+                                  action: #selector(handleSetSpeedFactorFromMenu(_:)),
+                                  keyEquivalent: "")
+            item.target = self
+            item.representedObject = SpeedFactorMenuContext(segmentID: seg.id, factor: factor)
+            item.state = (abs(seg.speedFactor - factor) < 0.001) ? .on : .off
+            menu.addItem(item)
+        }
+        menu.addItem(.separator())
+        attachAddEffectSubmenu(to: menu, event: event)
+        menu.addItem(.separator())
+        let del = NSMenuItem(title: L("Delete Speed"),
                               action: #selector(handleDeleteSelectedFromMenu),
                               keyEquivalent: "")
         del.target = self
@@ -879,6 +1001,19 @@ final class EffectsBandView: NSView {
         cutItem.representedObject = AddEffectContext(clickTime: clickTime, gapStart: 0, gapEnd: duration)
         menu.addItem(cutItem)
 
+        let speedItem = NSMenuItem(title: L("Add Speed"),
+                                    action: #selector(handleAddSpeedFromMenu(_:)),
+                                    keyEquivalent: "")
+        speedItem.image = NSImage(systemSymbolName: "forward.fill", accessibilityDescription: nil)
+        speedItem.target = self
+        if let g = speedGapAtClickTime(clickTime) {
+            speedItem.representedObject = AddEffectContext(clickTime: clickTime, gapStart: g.0, gapEnd: g.1)
+            speedItem.isEnabled = true
+        } else {
+            speedItem.isEnabled = false
+        }
+        menu.addItem(speedItem)
+
         menu.popUp(positioning: nil, at: point, in: self)
     }
 
@@ -911,8 +1046,44 @@ final class EffectsBandView: NSView {
         cutItem.target = self
         cutItem.representedObject = AddEffectContext(clickTime: clickTime, gapStart: 0, gapEnd: duration)
         sub.addItem(cutItem)
+        let speedItem = NSMenuItem(title: L("Add Speed"),
+                                    action: #selector(handleAddSpeedFromMenu(_:)),
+                                    keyEquivalent: "")
+        speedItem.target = self
+        if let g = speedGapAtClickTime(clickTime) {
+            speedItem.representedObject = AddEffectContext(clickTime: clickTime, gapStart: g.0, gapEnd: g.1)
+            speedItem.isEnabled = true
+        } else {
+            speedItem.isEnabled = false
+        }
+        sub.addItem(speedItem)
         parent.submenu = sub
         menu.addItem(parent)
+    }
+
+    /// Returns the (start, end) of the speed-free interval containing `t`,
+    /// or nil if `t` is inside an existing speed segment. Same logic as
+    /// `zoomGapAtClickTime` so the UI refuses to place overlapping speeds.
+    private func speedGapAtClickTime(_ t: Double) -> (Double, Double)? {
+        guard duration > 0 else { return nil }
+        let speeds = speedSegments
+            .filter { $0.endTime > $0.startTime }
+            .sorted { $0.startTime < $1.startTime }
+        var cursor: Double = 0
+        for s in speeds {
+            if s.startTime > cursor + 0.001 {
+                if t >= cursor && t <= s.startTime
+                    && (s.startTime - cursor) >= 0.3 {
+                    return (cursor, s.startTime)
+                }
+            }
+            cursor = max(cursor, s.endTime)
+        }
+        if cursor < duration - 0.001 && t >= cursor && t <= duration
+            && (duration - cursor) >= 0.3 {
+            return (cursor, duration)
+        }
+        return nil
     }
 
     /// Returns the (start, end) of the zoom-free interval containing `t`, or
@@ -984,6 +1155,27 @@ final class EffectsBandView: NSView {
         addCutSegment(clickTime: ctx.clickTime)
     }
 
+    @objc private func handleAddSpeedFromMenu(_ sender: NSMenuItem) {
+        guard let ctx = sender.representedObject as? AddEffectContext else { return }
+        addSpeedSegment(clickTime: ctx.clickTime, gapStart: ctx.gapStart, gapEnd: ctx.gapEnd)
+    }
+
+    @objc private func handleSetSpeedFactorFromMenu(_ sender: NSMenuItem) {
+        guard let ctx = sender.representedObject as? SpeedFactorMenuContext,
+              let seg = speedSegments.first(where: { $0.id == ctx.segmentID }) else { return }
+        let newFactor = VideoSpeedSegment.clampFactor(ctx.factor)
+        // Respect the composition-duration floor. If the new factor would
+        // shrink the piece below min, shorten the source range so comp
+        // duration stays at the floor.
+        let minSrcDur = VideoSpeedSegment.minCompDuration * newFactor
+        if seg.sourceDuration < minSrcDur {
+            seg.endTime = min(duration, seg.startTime + minSrcDur)
+        }
+        seg.speedFactor = newFactor
+        delegate?.effectsBandDidMutate(self)
+        needsDisplay = true
+    }
+
     private func addZoomSegment(clickTime: Double, gapStart: Double, gapEnd: Double) {
         guard duration > 0 else { return }
         let gapDuration = gapEnd - gapStart
@@ -1019,6 +1211,26 @@ final class EffectsBandView: NSView {
         start = max(0, min(duration - segDuration, start))
         let seg = VideoCutSegment(startTime: start, endTime: start + segDuration)
         cutSegments.append(seg)
+        selectedSegmentID = seg.id
+        relayoutAndNotify()
+    }
+
+    private func addSpeedSegment(clickTime: Double, gapStart: Double, gapEnd: Double) {
+        guard duration > 0 else { return }
+        let gapDuration = gapEnd - gapStart
+        let defaultFactor: Double = 2.0
+        let minSrcDur = VideoSpeedSegment.minCompDuration * defaultFactor
+        guard gapDuration >= minSrcDur else {
+            delegate?.effectsBand(self, showStatus: L("Not enough room here"), isError: true)
+            return
+        }
+        // Default: 2s of source at 2× (so the pill takes up 2s visually on
+        // the timeline but plays in 1s). Clamp to gap.
+        let segDuration = min(2.0, gapDuration)
+        var start = clickTime - segDuration / 2
+        start = max(gapStart, min(gapEnd - segDuration, start))
+        let seg = VideoSpeedSegment(startTime: start, endTime: start + segDuration, speedFactor: defaultFactor)
+        speedSegments.append(seg)
         selectedSegmentID = seg.id
         relayoutAndNotify()
     }
@@ -1066,6 +1278,15 @@ final class EffectsBandView: NSView {
         init(segmentID: UUID, seconds: Double) {
             self.segmentID = segmentID
             self.seconds = seconds
+        }
+    }
+
+    private final class SpeedFactorMenuContext: NSObject {
+        let segmentID: UUID
+        let factor: Double
+        init(segmentID: UUID, factor: Double) {
+            self.segmentID = segmentID
+            self.factor = factor
         }
     }
 }

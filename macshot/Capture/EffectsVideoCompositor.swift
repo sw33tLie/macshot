@@ -14,13 +14,29 @@ final class EffectsCompositionInstruction: NSObject, AVVideoCompositionInstructi
 
     /// One contiguous mapping from composition-clock time back to source-asset
     /// time. The compositor picks the entry covering the current frame's
-    /// `compositionTime` and computes `sourceTime = compTime + sourceOffset`.
-    /// For a simple composition with no cuts this is a single entry spanning
-    /// the whole composition; with cuts, one entry per kept range.
+    /// `compositionTime` and computes
+    ///     `sourceTime = sourceStart + (compTime - compStart) * factor`.
+    ///
+    /// For a simple composition with no cuts/speed this is a single entry
+    /// spanning the whole composition with `factor == 1`. Cuts produce one
+    /// entry per kept range (still factor 1, but `sourceStart != compStart`).
+    /// Speed segments split a kept range into multiple entries with
+    /// `factor != 1` for the sped-up pieces.
     struct TimeMapEntry {
+        /// Start of this piece on the composition clock (seconds).
         let compStart: Double
+        /// End of this piece on the composition clock (seconds).
         let compEnd: Double
-        let sourceOffset: Double
+        /// Source-asset time corresponding to `compStart`.
+        let sourceStart: Double
+        /// Ratio `sourceDuration / compDuration` for the piece. 1.0 is
+        /// pass-through. 2.0 means the range plays at 2× (2s of source
+        /// in 1s of composition); 0.5 means half speed.
+        let factor: Double
+
+        /// Convenience for call sites that still think in terms of a
+        /// scalar offset (used for pure cuts where factor == 1).
+        var sourceOffset: Double { sourceStart - compStart }
     }
 
     // MARK: Protocol requirements
@@ -162,15 +178,17 @@ final class EffectsVideoCompositor: NSObject, AVVideoCompositing {
                          outBuf: CVPixelBuffer) {
         let compTime = CMTimeGetSeconds(request.compositionTime)
         // Map composition time → source-asset time via the segmented time map.
+        // `sourceTime = entry.sourceStart + (compTime - entry.compStart) * factor`.
         // Falls back to `compTime` unchanged if no entry matches (shouldn't
         // happen in practice, but keeps rendering sensible instead of black).
         let assetTime: Double = {
             for entry in instruction.timeMap where compTime >= entry.compStart && compTime < entry.compEnd {
-                return compTime + entry.sourceOffset
+                return entry.sourceStart + (compTime - entry.compStart) * entry.factor
             }
-            // Clamp to last entry's offset if we're past its end by a tiny epsilon.
+            // Clamp to last entry if we're past its end by a tiny epsilon so
+            // zoom/censor ramps at the tail don't suddenly snap back to 0.
             if let last = instruction.timeMap.last, compTime >= last.compEnd {
-                return compTime + last.sourceOffset
+                return last.sourceStart + (last.compEnd - last.compStart) * last.factor
             }
             return compTime
         }()
