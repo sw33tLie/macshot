@@ -140,6 +140,45 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         statusItem.isVisible = visible
     }
 
+    /// Dock menu shown on right-click of the Dock icon.
+    ///
+    /// macOS only auto-populates the Dock menu's window list for document-based
+    /// apps (apps using `NSDocumentController`). Our editor windows aren't
+    /// documents, so we build the list ourselves: each visible titled window
+    /// gets an entry that brings that specific window forward when clicked.
+    /// Without this users only see "Show All Windows" and can't jump directly
+    /// to a particular editor session.
+    func applicationDockMenu(_ sender: NSApplication) -> NSMenu? {
+        let windows = NSApp.windows.filter {
+            $0.styleMask.contains(.titled) && ($0.isVisible || $0.isMiniaturized)
+        }
+        guard !windows.isEmpty else { return nil }
+        let menu = NSMenu()
+        // Sort by title so the menu order is stable across dock-menu openings.
+        for window in windows.sorted(by: { $0.title < $1.title }) {
+            let item = NSMenuItem(
+                title: window.title.isEmpty ? L("Untitled") : window.title,
+                action: #selector(activateWindowFromDockMenu(_:)),
+                keyEquivalent: ""
+            )
+            item.target = self
+            item.representedObject = window
+            if window.isMiniaturized {
+                // Visual cue so users know clicking will also de-minimize.
+                item.state = .mixed
+            }
+            menu.addItem(item)
+        }
+        return menu
+    }
+
+    @objc private func activateWindowFromDockMenu(_ sender: NSMenuItem) {
+        guard let window = sender.representedObject as? NSWindow else { return }
+        if window.isMiniaturized { window.deminiaturize(nil) }
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
     /// One-shot migration from the legacy `useWindowTitleInFilename` checkbox
     /// to the new `filenameTemplate` string. Runs once — seeds the template
     /// from the old bool then clears the legacy key.
@@ -449,6 +488,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     /// The app that was active before macshot showed its overlay.
     private var previousApp: NSRunningApplication?
 
+    /// Titled macshot windows (editors, preferences, Sparkle, etc.) that were
+    /// visible when capture started. We `orderOut` them so `NSApp.activate`
+    /// during capture can't drag them in front of the user's frontmost app,
+    /// then `orderFront` them when the overlay dismisses. Kept in the order
+    /// they appeared so restoring preserves relative z-order.
+    private var stashedBackgroundWindows: [NSWindow] = []
+
     /// True when floating thumbnails or pin windows are visible.
     var hasVisibleFloatingPanels: Bool {
         !thumbnailControllers.isEmpty || !pinControllers.isEmpty
@@ -465,7 +511,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             // and selection border are non-titled panels that would be killed.
             if self?.recordingEngine != nil { return }
             let hasVisibleWindows = NSApp.windows.contains { $0.isVisible && $0.styleMask.contains(.titled) }
-            guard !hasVisibleWindows else { return }
+            // Windows we hid for the screenshot count as "visible" for
+            // activation-policy purposes — they're coming back as soon as
+            // the previous app regains focus, so we mustn't downgrade.
+            let hasStashedWindows = !(self?.stashedBackgroundWindows.isEmpty ?? true)
+            guard !hasVisibleWindows, !hasStashedWindows else { return }
             NSApp.setActivationPolicy(.accessory)
             if let prev = appToActivate, !prev.isTerminated,
                prev.bundleIdentifier != Bundle.main.bundleIdentifier {
@@ -592,6 +642,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
         // Clean up stale overlays without consuming previousApp — we just set it.
         dismissOverlays(refocusPreviousApp: false)
+
+        // Hide any non-overlay titled windows (editors, preferences, Sparkle
+        // dialogs). Without this, `NSApp.activate` inside performCapture drags
+        // every visible app-owned window in front of the user's frontmost app
+        // and those windows end up in the screenshot. Restored in
+        // dismissOverlays once capture is over.
+        stashBackgroundWindows()
 
         // Hide floating thumbnails so they don't visually flash on the overlay.
         // They're also excluded via ScreenCaptureKit's excludingWindows filter
@@ -801,8 +858,81 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // Restore hidden thumbnails
         for tc in thumbnailControllers { tc.showWindow() }
         if refocusPreviousApp {
+            // Restore AFTER another app takes focus so the stashed windows
+            // come back behind it instead of on top. See
+            // `scheduleBackgroundWindowRestore` for the timing logic.
+            scheduleBackgroundWindowRestore()
             returnFocusIfNeeded()
+        } else {
+            // No focus switch coming — just bring them back immediately.
+            restoreBackgroundWindowsNow()
         }
+    }
+
+    /// Hide non-overlay titled macshot windows so they can't be dragged in
+    /// front of the user's frontmost app when the overlay activates.
+    ///
+    /// We only stash when another app was frontmost — that means the user is
+    /// trying to screenshot something *other than* macshot, and any macshot
+    /// windows still on screen are unintended background clutter. When
+    /// macshot itself is frontmost the user presumably wants to capture one
+    /// of its own windows, so we leave everything alone.
+    private func stashBackgroundWindows() {
+        stashedBackgroundWindows.removeAll()
+        let ourBundleID = Bundle.main.bundleIdentifier
+        let macshotWasFrontmost = previousApp?.bundleIdentifier == ourBundleID
+        guard !macshotWasFrontmost else { return }
+        for window in NSApp.windows where window.isVisible && window.styleMask.contains(.titled) {
+            stashedBackgroundWindows.append(window)
+            window.orderOut(nil)
+        }
+    }
+
+    /// Wait until another app becomes frontmost, then restore the stashed
+    /// windows. If we restore before the user's previous app regains focus,
+    /// the windows come back on top and clobber whatever was frontmost.
+    ///
+    /// Uses NSWorkspace's activation notification as the trigger, with a
+    /// short timer fallback in case activation never completes (e.g. the
+    /// previous app terminated during capture).
+    private func scheduleBackgroundWindowRestore() {
+        guard !stashedBackgroundWindows.isEmpty else { return }
+        let ws = NSWorkspace.shared.notificationCenter
+        var token: NSObjectProtocol?
+        token = ws.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] note in
+            guard let self = self else { return }
+            if let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
+               app.bundleIdentifier != Bundle.main.bundleIdentifier {
+                if let token = token { ws.removeObserver(token) }
+                self.restoreBackgroundWindowsNow()
+            }
+        }
+        // Fallback — if no other app ever activates in the next 1s just
+        // restore anyway. Otherwise the windows would stay invisible.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            guard let self = self else { return }
+            if !self.stashedBackgroundWindows.isEmpty {
+                if let token = token { ws.removeObserver(token) }
+                self.restoreBackgroundWindowsNow()
+            }
+        }
+    }
+
+    /// Reverse of `stashBackgroundWindows`. Uses `orderBack` instead of
+    /// `orderFront` so the restored windows land behind every other
+    /// app's windows rather than on top of them. (`orderFront` still
+    /// raises windows in the global z-stack even when the owning app
+    /// isn't frontmost, which is what was causing the editor to pop
+    /// visible right after a screenshot.)
+    private func restoreBackgroundWindowsNow() {
+        for window in stashedBackgroundWindows {
+            window.orderBack(nil)
+        }
+        stashedBackgroundWindows.removeAll()
     }
 
     func showFloatingThumbnail(image: NSImage, annotationData: CaptureAnnotationData? = nil, historyEntryID: String? = nil) {
