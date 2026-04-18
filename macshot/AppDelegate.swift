@@ -66,10 +66,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         migrateFilenameTemplateIfNeeded()
 
         // Reclaim disk from stale tmp leftovers (cancelled recordings,
-        // legacy clipboard PNGs, etc.). Runs off the main thread so it
-        // can't delay launch.
-        TmpDirectoryCleaner.sweep()
-        TmpScratchDirectory.sweep()
+        // legacy clipboard PNGs, share-sheet scratch). Runs off the main
+        // thread so it can't delay launch.
+        LaunchCleanup.runAll()
 
         // Force-init the history singleton so its launch-time orphan
         // prune runs even if the user doesn't take a screenshot this
