@@ -502,8 +502,13 @@
 "Click to add effects" = "Clique para adicionar efeitos";
 "Add Zoom" = "Adicionar Zoom";
 "Add Censor" = "Adicionar Censura";
+"Add Cut" = "Adicionar Corte";
+"Add Speed" = "Adicionar Velocidade";
 "Delete Zoom" = "Excluir Zoom";
 "Delete Censor" = "Excluir Censura";
+"Delete Cut" = "Excluir Corte";
+"Delete Speed" = "Excluir Velocidade";
+"Untitled" = "Sem título";
 "Add effect" = "Adicionar efeito";
 "Fade" = "Esmaecer";
 "High" = "Alto";

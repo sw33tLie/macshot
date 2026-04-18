@@ -504,8 +504,13 @@
 "Click to add effects" = "Klikk for å legge til effekter";
 "Add Zoom" = "Legg til zoom";
 "Add Censor" = "Legg til sensur";
+"Add Cut" = "Legg til klipp";
+"Add Speed" = "Legg til hastighet";
 "Delete Zoom" = "Slett zoom";
 "Delete Censor" = "Slett sensur";
+"Delete Cut" = "Slett klipp";
+"Delete Speed" = "Slett hastighet";
+"Untitled" = "Uten navn";
 "Add effect" = "Legg til effekt";
 "Fade" = "Uttoning";
 "High" = "Høy";

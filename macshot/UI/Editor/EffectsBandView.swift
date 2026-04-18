@@ -310,18 +310,19 @@ final class EffectsBandView: NSView {
         for seg in speedSegments {
             let rect = speedPillRect(for: seg)
             guard rect.width > 0 else { continue }
+            // tortoise.fill is wider + has more trailing whitespace than
+            // forward.fill, so it needs an even bigger gap to not kiss the
+            // factor text.
+            let isSlow = seg.speedFactor < 1.0
             drawEffectPill(
                 rect: rect,
                 isSelected: seg.id == selectedSegmentID,
                 baseFillColor: NSColor(calibratedRed: 0.20, green: 0.65, blue: 0.60, alpha: 1.0),
                 fadeInFrac: 0,
                 fadeOutFrac: 0,
-                iconSymbol: seg.speedFactor >= 1.0 ? "forward.fill" : "tortoise.fill",
+                iconSymbol: isSlow ? "tortoise.fill" : "forward.fill",
                 label: formatSpeedLabel(seg.speedFactor),
-                // forward.fill / tortoise.fill have wider visual bounds than
-                // the default symbols — bump the gap so the glyph and the
-                // factor text don't kiss.
-                iconLabelGap: 8
+                iconLabelGap: isSlow ? 11 : 8
             )
         }
         // Cuts — drawn last so they sit visually above other pills in their

@@ -502,8 +502,13 @@
 "Click to add effects" = "Kliknite za dodavanje efekata";
 "Add Zoom" = "Dodaj zumiranje";
 "Add Censor" = "Dodaj cenzuru";
+"Add Cut" = "Dodaj rez";
+"Add Speed" = "Dodaj brzinu";
 "Delete Zoom" = "Obriši zumiranje";
 "Delete Censor" = "Obriši cenzuru";
+"Delete Cut" = "Obriši rez";
+"Delete Speed" = "Obriši brzinu";
+"Untitled" = "Bez naslova";
 "Add effect" = "Dodaj efekt";
 "Fade" = "Prijelaz";
 "High" = "Visoko";

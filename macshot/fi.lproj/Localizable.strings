@@ -504,8 +504,13 @@
 "Click to add effects" = "Napsauta lisätäksesi tehosteita";
 "Add Zoom" = "Lisää zoomaus";
 "Add Censor" = "Lisää sensurointi";
+"Add Cut" = "Lisää leikkaus";
+"Add Speed" = "Lisää nopeus";
 "Delete Zoom" = "Poista zoomaus";
 "Delete Censor" = "Poista sensurointi";
+"Delete Cut" = "Poista leikkaus";
+"Delete Speed" = "Poista nopeus";
+"Untitled" = "Nimetön";
 "Add effect" = "Lisää tehoste";
 "Fade" = "Häivytys";
 "High" = "Korkea";

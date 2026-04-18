@@ -405,7 +405,7 @@
 "Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Klik op \"Opnemen\" en druk op een toetsencombinatie met ten minste een modifier (⌘, ⌥, ⌃, ⇧) om een sneltoets in te stellen.";
 
 /* Recording — GIF Processing */
-"Processing GIF\U2026" = "GIF verwerken\U2026";
+"Processing GIF…" = "GIF verwerken…";
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Invoerbewaking vereist";
@@ -502,8 +502,13 @@
 "Click to add effects" = "Klik om effecten toe te voegen";
 "Add Zoom" = "Zoom toevoegen";
 "Add Censor" = "Censuur toevoegen";
+"Add Cut" = "Knip toevoegen";
+"Add Speed" = "Snelheid toevoegen";
 "Delete Zoom" = "Zoom verwijderen";
 "Delete Censor" = "Censuur verwijderen";
+"Delete Cut" = "Knip verwijderen";
+"Delete Speed" = "Snelheid verwijderen";
+"Untitled" = "Naamloos";
 "Add effect" = "Effect toevoegen";
 "Fade" = "Vervagen";
 "High" = "Hoog";

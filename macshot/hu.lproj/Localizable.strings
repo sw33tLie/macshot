@@ -502,8 +502,13 @@
 "Click to add effects" = "Kattints effektusok hozzáadásához";
 "Add Zoom" = "Nagyítás hozzáadása";
 "Add Censor" = "Cenzúra hozzáadása";
+"Add Cut" = "Vágás hozzáadása";
+"Add Speed" = "Sebesség hozzáadása";
 "Delete Zoom" = "Nagyítás törlése";
 "Delete Censor" = "Cenzúra törlése";
+"Delete Cut" = "Vágás törlése";
+"Delete Speed" = "Sebesség törlése";
+"Untitled" = "Névtelen";
 "Add effect" = "Effektus hozzáadása";
 "Fade" = "Áttűnés";
 "High" = "Magas";

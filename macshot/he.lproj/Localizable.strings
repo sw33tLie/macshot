@@ -504,8 +504,13 @@
 "Click to add effects" = "לחץ להוספת אפקטים";
 "Add Zoom" = "הוסף זום";
 "Add Censor" = "הוסף צנזור";
+"Add Cut" = "הוסף חיתוך";
+"Add Speed" = "הוסף מהירות";
 "Delete Zoom" = "מחק זום";
 "Delete Censor" = "מחק צנזור";
+"Delete Cut" = "מחק חיתוך";
+"Delete Speed" = "מחק מהירות";
+"Untitled" = "ללא שם";
 "Add effect" = "הוסף אפקט";
 "Fade" = "עמעום";
 "High" = "גבוה";

@@ -504,8 +504,13 @@
 "Click to add effects" = "Klik untuk menambah kesan";
 "Add Zoom" = "Tambah Zum";
 "Add Censor" = "Tambah Sensor";
+"Add Cut" = "Tambah Potongan";
+"Add Speed" = "Tambah Kelajuan";
 "Delete Zoom" = "Padam Zum";
 "Delete Censor" = "Padam Sensor";
+"Delete Cut" = "Padam Potongan";
+"Delete Speed" = "Padam Kelajuan";
+"Untitled" = "Tanpa Tajuk";
 "Add effect" = "Tambah kesan";
 "Fade" = "Pudar";
 "High" = "Tinggi";

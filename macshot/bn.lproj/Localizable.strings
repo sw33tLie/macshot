@@ -504,8 +504,13 @@
 "Click to add effects" = "ইফেক্ট যোগ করতে ক্লিক করুন";
 "Add Zoom" = "জুম যোগ করুন";
 "Add Censor" = "সেন্সর যোগ করুন";
+"Add Cut" = "কাট যোগ করুন";
+"Add Speed" = "গতি যোগ করুন";
 "Delete Zoom" = "জুম মুছুন";
 "Delete Censor" = "সেন্সর মুছুন";
+"Delete Cut" = "কাট মুছুন";
+"Delete Speed" = "গতি মুছুন";
+"Untitled" = "শিরোনামহীন";
 "Add effect" = "ইফেক্ট যোগ করুন";
 "Fade" = "ফেড";
 "High" = "উচ্চ";

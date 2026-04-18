@@ -405,7 +405,7 @@
 "Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Clique em \"Gravar\" e prima uma combinacao de teclas com pelo menos um modificador (⌘, ⌥, ⌃, ⇧) para definir um atalho.";
 
 /* Recording — GIF Processing */
-"Processing GIF\U2026" = "A processar GIF\U2026";
+"Processing GIF…" = "A processar GIF…";
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Monitorizacao de Entrada Necessaria";
@@ -502,8 +502,13 @@
 "Click to add effects" = "Clique para adicionar efeitos";
 "Add Zoom" = "Adicionar Zoom";
 "Add Censor" = "Adicionar Censura";
+"Add Cut" = "Adicionar Corte";
+"Add Speed" = "Adicionar Velocidade";
 "Delete Zoom" = "Eliminar Zoom";
 "Delete Censor" = "Eliminar Censura";
+"Delete Cut" = "Eliminar Corte";
+"Delete Speed" = "Eliminar Velocidade";
+"Untitled" = "Sem título";
 "Add effect" = "Adicionar efeito";
 "Fade" = "Desvanecer";
 "High" = "Alto";

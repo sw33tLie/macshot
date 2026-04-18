@@ -504,8 +504,13 @@
 "Click to add effects" = "प्रभाव जोड़ने के लिए क्लिक करें";
 "Add Zoom" = "ज़ूम जोड़ें";
 "Add Censor" = "सेंसर जोड़ें";
+"Add Cut" = "कट जोड़ें";
+"Add Speed" = "गति जोड़ें";
 "Delete Zoom" = "ज़ूम हटाएँ";
 "Delete Censor" = "सेंसर हटाएँ";
+"Delete Cut" = "कट हटाएँ";
+"Delete Speed" = "गति हटाएँ";
+"Untitled" = "बिना शीर्षक";
 "Add effect" = "प्रभाव जोड़ें";
 "Fade" = "फ़ेड";
 "High" = "उच्च";

@@ -502,8 +502,13 @@
 "Click to add effects" = "クリックしてエフェクトを追加";
 "Add Zoom" = "ズームを追加";
 "Add Censor" = "モザイクを追加";
+"Add Cut" = "カットを追加";
+"Add Speed" = "速度を追加";
 "Delete Zoom" = "ズームを削除";
 "Delete Censor" = "モザイクを削除";
+"Delete Cut" = "カットを削除";
+"Delete Speed" = "速度を削除";
+"Untitled" = "無題";
 "Add effect" = "エフェクトを追加";
 "Fade" = "フェード";
 "High" = "高";

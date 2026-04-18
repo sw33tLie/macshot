@@ -504,8 +504,13 @@
 "Click to add effects" = "انقر لإضافة تأثيرات";
 "Add Zoom" = "إضافة تكبير";
 "Add Censor" = "إضافة تمويه";
+"Add Cut" = "إضافة قطع";
+"Add Speed" = "إضافة سرعة";
 "Delete Zoom" = "حذف التكبير";
 "Delete Censor" = "حذف التمويه";
+"Delete Cut" = "حذف القطع";
+"Delete Speed" = "حذف السرعة";
+"Untitled" = "بدون عنوان";
 "Add effect" = "إضافة تأثير";
 "Fade" = "تلاشي";
 "High" = "عالي";

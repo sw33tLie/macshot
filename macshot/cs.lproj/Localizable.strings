@@ -502,8 +502,13 @@
 "Click to add effects" = "Kliknutím přidejte efekty";
 "Add Zoom" = "Přidat přiblížení";
 "Add Censor" = "Přidat cenzuru";
+"Add Cut" = "Přidat střih";
+"Add Speed" = "Přidat rychlost";
 "Delete Zoom" = "Odstranit přiblížení";
 "Delete Censor" = "Odstranit cenzuru";
+"Delete Cut" = "Odstranit střih";
+"Delete Speed" = "Odstranit rychlost";
+"Untitled" = "Bez názvu";
 "Add effect" = "Přidat efekt";
 "Fade" = "Prolínání";
 "High" = "Vysoká";

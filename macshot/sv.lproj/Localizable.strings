@@ -342,7 +342,7 @@
 "Text Recognition" = "Textigenk\U00E4nning";
 "Translate to:" = "\U00D6vers\U00E4tt till:";
 "%d chars \U00B7 %d words" = "%d tecken \U00B7 %d ord";
-"Copy  \u2318\u21A9" = "Kopiera  \u2318\u21A9";
+"Copy  \U2318\U21A9" = "Kopiera  \U2318\U21A9";
 "AI Search" = "AI-s\U00F6kning";
 "Show Original" = "Visa original";
 "Translation Failed" = "\U00D6vers\U00E4ttning misslyckades";
@@ -359,7 +359,7 @@
 
 /* Recording Toast */
 "Recording saved" = "Inspelning sparad";
-"%@ \u2022 Recording saved" = "%@ \u2022 Inspelning sparad";
+"%@ \U2022 Recording saved" = "%@ \U2022 Inspelning sparad";
 "Copy Path" = "Kopiera s\U00F6kv\U00E4g";
 "Path copied!" = "S\U00F6kv\U00E4g kopierad!";
 
@@ -402,7 +402,7 @@
 "History" = "Historik";
 
 /* Preferences - Shortcuts note */
-"Click \"Record\" and press a key combination with at least one modifier (\u2318, \u2325, \u2303, \u21E7) to set a shortcut." = "Klicka p\U00E5 \"Record\" och tryck p\U00E5 en tangentkombination med minst en modifierare (\u2318, \u2325, \u2303, \u21E7) f\U00F6r att st\U00E4lla in en genv\U00E4g.";
+"Click \"Record\" and press a key combination with at least one modifier (\U2318, \U2325, \U2303, \U21E7) to set a shortcut." = "Klicka p\U00E5 \"Record\" och tryck p\U00E5 en tangentkombination med minst en modifierare (\U2318, \U2325, \U2303, \U21E7) f\U00F6r att st\U00E4lla in en genv\U00E4g.";
 
 /* Recording \U2014 GIF Processing */
 "Processing GIF\U2026" = "Bearbetar GIF\U2026";
@@ -504,8 +504,13 @@
 "Click to add effects" = "Klicka för att lägga till effekter";
 "Add Zoom" = "Lägg till zoom";
 "Add Censor" = "Lägg till censur";
+"Add Cut" = "Lägg till klipp";
+"Add Speed" = "Lägg till hastighet";
 "Delete Zoom" = "Ta bort zoom";
 "Delete Censor" = "Ta bort censur";
+"Delete Cut" = "Ta bort klipp";
+"Delete Speed" = "Ta bort hastighet";
+"Untitled" = "Namnlös";
 "Add effect" = "Lägg till effekt";
 "Fade" = "Toning";
 "High" = "Hög";

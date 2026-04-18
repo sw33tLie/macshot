@@ -504,8 +504,13 @@
 "Click to add effects" = "برای افزودن افکت کلیک کنید";
 "Add Zoom" = "افزودن زوم";
 "Add Censor" = "افزودن سانسور";
+"Add Cut" = "افزودن برش";
+"Add Speed" = "افزودن سرعت";
 "Delete Zoom" = "حذف زوم";
 "Delete Censor" = "حذف سانسور";
+"Delete Cut" = "حذف برش";
+"Delete Speed" = "حذف سرعت";
+"Untitled" = "بدون عنوان";
 "Add effect" = "افزودن افکت";
 "Fade" = "محو";
 "High" = "زیاد";

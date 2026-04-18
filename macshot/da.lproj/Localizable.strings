@@ -504,8 +504,13 @@
 "Click to add effects" = "Klik for at tilf\U00F8je effekter";
 "Add Zoom" = "Tilf\U00F8j zoom";
 "Add Censor" = "Tilf\U00F8j censur";
+"Add Cut" = "Tilf\U00F8j klip";
+"Add Speed" = "Tilf\U00F8j hastighed";
 "Delete Zoom" = "Slet zoom";
 "Delete Censor" = "Slet censur";
+"Delete Cut" = "Slet klip";
+"Delete Speed" = "Slet hastighed";
+"Untitled" = "Uden titel";
 "Add effect" = "Tilf\U00F8j effekt";
 "Fade" = "Fade";
 "High" = "H\U00F8j";

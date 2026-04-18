@@ -504,8 +504,13 @@
 "Click to add effects" = "Efekt eklemek için tıklayın";
 "Add Zoom" = "Yakınlaştırma Ekle";
 "Add Censor" = "Sansür Ekle";
+"Add Cut" = "Kesim Ekle";
+"Add Speed" = "Hız Ekle";
 "Delete Zoom" = "Yakınlaştırmayı Sil";
 "Delete Censor" = "Sansürü Sil";
+"Delete Cut" = "Kesimi Sil";
+"Delete Speed" = "Hızı Sil";
+"Untitled" = "Adsız";
 "Add effect" = "Efekt ekle";
 "Fade" = "Solma";
 "High" = "Yüksek";

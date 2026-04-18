@@ -47,9 +47,9 @@ enum VideoQuality: String {
 
     var displayName: String {
         switch self {
-        case .low:    return "Low"
-        case .medium: return "Medium"
-        case .high:   return "High"
+        case .low:    return L("Low")
+        case .medium: return L("Medium")
+        case .high:   return L("High")
         }
     }
 }

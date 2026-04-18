@@ -502,8 +502,13 @@
 "Click to add effects" = "Nhấp để thêm hiệu ứng";
 "Add Zoom" = "Thêm thu phóng";
 "Add Censor" = "Thêm che mờ";
+"Add Cut" = "Thêm cắt";
+"Add Speed" = "Thêm tốc độ";
 "Delete Zoom" = "Xóa thu phóng";
 "Delete Censor" = "Xóa che mờ";
+"Delete Cut" = "Xóa cắt";
+"Delete Speed" = "Xóa tốc độ";
+"Untitled" = "Không có tiêu đề";
 "Add effect" = "Thêm hiệu ứng";
 "Fade" = "Làm mờ dần";
 "High" = "Cao";

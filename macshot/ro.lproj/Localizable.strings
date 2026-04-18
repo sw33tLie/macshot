@@ -502,8 +502,13 @@
 "Click to add effects" = "Clic pentru a adauga efecte";
 "Add Zoom" = "Adauga zoom";
 "Add Censor" = "Adauga cenzura";
+"Add Cut" = "Adauga taietura";
+"Add Speed" = "Adauga viteza";
 "Delete Zoom" = "Sterge zoom-ul";
 "Delete Censor" = "Sterge cenzura";
+"Delete Cut" = "Sterge taietura";
+"Delete Speed" = "Sterge viteza";
+"Untitled" = "Fara titlu";
 "Add effect" = "Adauga efect";
 "Fade" = "Estompare";
 "High" = "Ridicat";

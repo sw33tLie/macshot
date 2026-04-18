@@ -504,8 +504,13 @@
 "Click to add effects" = "點按以加入效果";
 "Add Zoom" = "加入縮放";
 "Add Censor" = "加入遮蔽";
+"Add Cut" = "加入剪輯";
+"Add Speed" = "加入速度";
 "Delete Zoom" = "刪除縮放";
 "Delete Censor" = "刪除遮蔽";
+"Delete Cut" = "刪除剪輯";
+"Delete Speed" = "刪除速度";
+"Untitled" = "未命名";
 "Add effect" = "加入效果";
 "Fade" = "淡化";
 "High" = "高";

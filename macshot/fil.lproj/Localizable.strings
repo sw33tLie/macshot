@@ -504,8 +504,13 @@
 "Click to add effects" = "I-click upang magdagdag ng mga effect";
 "Add Zoom" = "Magdagdag ng Zoom";
 "Add Censor" = "Magdagdag ng Sensura";
+"Add Cut" = "Magdagdag ng Putol";
+"Add Speed" = "Magdagdag ng Bilis";
 "Delete Zoom" = "Tanggalin ang Zoom";
 "Delete Censor" = "Tanggalin ang Sensura";
+"Delete Cut" = "Tanggalin ang Putol";
+"Delete Speed" = "Tanggalin ang Bilis";
+"Untitled" = "Walang Pamagat";
 "Add effect" = "Magdagdag ng effect";
 "Fade" = "Fade";
 "High" = "Mataas";
