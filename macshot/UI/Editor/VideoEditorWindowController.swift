@@ -219,8 +219,9 @@ private final class VideoEditorView: NSView {
         return buttonsAreaH
              + effectsScrollViewHeight(forRowCount: currentEffectRowCount)
              + scrollToLabelsGap
-             + labelsRowH
              + trimBarH
+             + labelsAboveTrimGap
+             + labelsRowH
              + topPadH
     }
 
@@ -724,8 +725,8 @@ private final class VideoEditorView: NSView {
         // path — that was eating ~1s/10s on the main thread.
         let scrollH = effectsScrollViewHeight(forRowCount: currentEffectRowCount)
         let tlY = buttonsAreaH + scrollH + scrollToLabelsGap
-        let playheadBandMinY = tlY - 12                         // below trim bar (circle + padding)
-        let playheadBandMaxY = tlY + trimBarH + labelsRowH + 2  // through label row
+        let playheadBandMinY = tlY - 12                                              // below trim bar (circle + padding)
+        let playheadBandMaxY = tlY + trimBarH + labelsAboveTrimGap + labelsRowH + 2  // through label row
 
         // 1) The playhead stripe (line + circle + trim bar content around it).
         //    Generous padding so the 8pt circle and 2pt line land fully inside.
@@ -1087,14 +1088,21 @@ private final class VideoEditorView: NSView {
     /// don't collide with the effects band's cursor-follow "+" hint or
     /// the "Click to add effects" empty-state that sits just above the
     /// bottom buttons.
+    /// Extra vertical gap between the trim bar top and the time labels,
+    /// purely for visual breathing room. Without it the labels hug the
+    /// top edge of the trim rectangle and look cramped.
+    private let labelsAboveTrimGap: CGFloat = 4
+
     private var timeLabelY: CGFloat {
         let attrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium),
         ]
         let sampleHeight = ("0" as NSString).size(withAttributes: attrs).height
         let scrollH = effectsScrollViewHeight(forRowCount: currentEffectRowCount)
-        // Bottom of the labels row sits at the top of the trim bar.
-        let labelsRowBottom = buttonsAreaH + scrollH + scrollToLabelsGap + trimBarH
+        // Bottom of the labels row sits slightly above the top of the
+        // trim bar — `labelsAboveTrimGap` gives the text a little
+        // breathing room so it doesn't look pasted onto the bar.
+        let labelsRowBottom = buttonsAreaH + scrollH + scrollToLabelsGap + trimBarH + labelsAboveTrimGap
         return labelsRowBottom + (labelsRowH - sampleHeight) / 2
     }
 
