@@ -42,8 +42,9 @@ private class SelectionBorderView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         guard selectionRect.width > 0, selectionRect.height > 0 else { return }
 
-        let borderColor = NSColor(calibratedRed: 0.55, green: 0.30, blue: 0.85, alpha: 0.8)
-        borderColor.setStroke()
+        // Match the pre-recording selection chrome: use the user's configured
+        // accent color at the same alpha the hardcoded purple used.
+        ToolbarLayout.accentColor.withAlphaComponent(0.8).setStroke()
         // Inset by -lineWidth so the stroke is entirely OUTSIDE the selection rect.
         // This prevents the border from appearing in the recording even if the
         // overlay window is captured (SCStream crops to the selection rect).
