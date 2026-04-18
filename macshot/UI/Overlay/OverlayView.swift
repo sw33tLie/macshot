@@ -133,6 +133,13 @@ class OverlayView: NSView {
     private var remoteResizeHandle: ResizeHandle = .none
     private var remoteResizeAnchor: NSPoint = .zero  // the fixed corner during remote resize
     private var selectionStart: NSPoint = .zero
+    /// Trackpad/mouse QoL: when the user right-clicks in the empty overlay
+    /// (state == .idle), we anchor a selection at that point and let the
+    /// cursor resize it with no button held. A subsequent left-click
+    /// finalizes, ESC cancels. This mirrors the drag flow but removes the
+    /// need to keep pressing — big usability win for large selections on
+    /// trackpads.
+    private var isAnchoredSelecting: Bool = false
     private var isDraggingSelection: Bool = false
     private var isResizingSelection: Bool = false
     private var resizeHandle: ResizeHandle = .none
@@ -880,6 +887,16 @@ class OverlayView: NSView {
 
     override func mouseMoved(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
+
+        // Anchored selection (right-click in idle → track cursor without
+        // holding a button). Shares all modifier behaviour with drag-based
+        // selection via `updateAnchoredSelection` so Shift-constrain and
+        // the snap fallback in mouseUp still apply when the user commits.
+        if isAnchoredSelecting {
+            updateAnchoredSelection(to: point, event: event)
+            updateCursorForPoint(point)
+            return
+        }
 
         // Sticky color wheel: track hover with mouse movement
         if colorWheel.isVisible && colorWheel.isSticky {
@@ -4463,6 +4480,17 @@ class OverlayView: NSView {
 
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
+
+        // Anchored selection commit: a left-click while the right-click-
+        // anchored tracker is live finalizes the selection and returns to
+        // the standard flow. Do this BEFORE any other mouseDown handling so
+        // we don't accidentally restart the selection from the click point.
+        if isAnchoredSelecting {
+            updateSelectionRect(to: point, shiftHeld: event.modifierFlags.contains(.shift))
+            commitAnchoredSelection()
+            return
+        }
+
         // Update pressure for tablet/Sidecar (0.0 for non-tablet events → treat as 1.0)
         let p = event.pressure
         #if PRESSURE_EMULATION
@@ -4836,24 +4864,7 @@ class OverlayView: NSView {
 
         switch state {
         case .selecting:
-            if spaceRepositioning {
-                // Space held: move the origin without changing size
-                let dx = point.x - spaceRepositionLast.x
-                let dy = point.y - spaceRepositionLast.y
-                selectionStart.x += dx
-                selectionStart.y += dy
-                spaceRepositionLast = point
-            }
-            let rawW = abs(point.x - selectionStart.x)
-            let rawH = abs(point.y - selectionStart.y)
-            let shiftHeld = event.modifierFlags.contains(.shift)
-            let w = max(1, shiftHeld ? min(rawW, rawH) : rawW)
-            let h = max(1, shiftHeld ? min(rawW, rawH) : rawH)
-            let x = selectionStart.x < point.x ? selectionStart.x : selectionStart.x - w
-            let y = selectionStart.y < point.y ? selectionStart.y : selectionStart.y - h
-            selectionRect = NSRect(x: x, y: y, width: w, height: h)
-            overlayDelegate?.overlayViewSelectionDidChange(selectionRect)
-            needsDisplay = true
+            updateSelectionRect(to: point, shiftHeld: event.modifierFlags.contains(.shift))
 
         case .selected:
             // Convert to canvas space for annotation interactions (accounts for zoom)
@@ -5314,12 +5325,122 @@ class OverlayView: NSView {
         }
     }
 
+    /// Update `selectionRect` from the anchor at `selectionStart` to the
+    /// current cursor point. Honors Shift (constrain to square) and Space
+    /// (reposition anchor). Shared between drag-to-select (mouseDragged)
+    /// and right-click-anchored select (mouseMoved) so both flows produce
+    /// identical geometry.
+    private func updateSelectionRect(to point: NSPoint, shiftHeld: Bool) {
+        if spaceRepositioning {
+            let dx = point.x - spaceRepositionLast.x
+            let dy = point.y - spaceRepositionLast.y
+            selectionStart.x += dx
+            selectionStart.y += dy
+            spaceRepositionLast = point
+        }
+        let rawW = abs(point.x - selectionStart.x)
+        let rawH = abs(point.y - selectionStart.y)
+        let w = max(1, shiftHeld ? min(rawW, rawH) : rawW)
+        let h = max(1, shiftHeld ? min(rawW, rawH) : rawH)
+        let x = selectionStart.x < point.x ? selectionStart.x : selectionStart.x - w
+        let y = selectionStart.y < point.y ? selectionStart.y : selectionStart.y - h
+        selectionRect = NSRect(x: x, y: y, width: w, height: h)
+        overlayDelegate?.overlayViewSelectionDidChange(selectionRect)
+        needsDisplay = true
+    }
+
+    /// mouseMoved entry point when the right-click-anchored mode is active.
+    /// Kept separate from the drag path so cross-screen tracking and other
+    /// mouseDragged-only features don't get accidentally invoked.
+    private func updateAnchoredSelection(to point: NSPoint, event: NSEvent) {
+        updateSelectionRect(to: point, shiftHeld: event.modifierFlags.contains(.shift))
+    }
+
+    /// Commit an anchored selection — matches the branch in mouseUp that
+    /// fires after a drag-to-select, so the same snap-to-window /
+    /// fallback-to-fullscreen logic applies when the user confirms with a
+    /// tiny (no-move) rectangle.
+    private func commitAnchoredSelection() {
+        isAnchoredSelecting = false
+        if selectionRect.width > 5 || selectionRect.height > 5 {
+            state = .selected
+            if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode {
+                showToolbars = true
+            }
+            overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
+        } else if windowSnapEnabled, let snapRect = hoveredWindowRect, !snapRect.isEmpty {
+            selectionRect = snapRect
+            selectionIsWindowSnap = true
+            snappedWindowID = hoveredWindowID
+            if let wid = hoveredWindowID, let screen = window?.screen {
+                Task {
+                    if let cgImage = await ScreenCaptureManager.captureWindow(windowID: wid, screen: screen) {
+                        self.snappedWindowImage = NSImage(
+                            cgImage: cgImage,
+                            size: NSSize(
+                                width: CGFloat(cgImage.width) / screen.backingScaleFactor,
+                                height: CGFloat(cgImage.height) / screen.backingScaleFactor))
+                        self.needsDisplay = true
+                    }
+                }
+            }
+            state = .selected
+            if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode {
+                showToolbars = true
+            }
+            overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
+        } else {
+            selectionRect = bounds
+            state = .selected
+            if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode {
+                showToolbars = true
+            }
+            overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
+        }
+        hoveredWindowRect = nil
+        if let win = window {
+            updateCursorForPoint(convert(win.mouseLocationOutsideOfEventStream, from: nil))
+        }
+        scheduleBarcodeDetection()
+        needsDisplay = true
+    }
+
+    /// Cancel anchored-selection mode (ESC). Resets back to idle without
+    /// leaving a tiny selection behind.
+    private func cancelAnchoredSelection() {
+        guard isAnchoredSelecting else { return }
+        isAnchoredSelecting = false
+        selectionRect = .zero
+        state = .idle
+        overlayDelegate?.overlayViewSelectionDidChange(.zero)
+        needsDisplay = true
+    }
+
     override func rightMouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
 
         // Text Fill/Outline color picking handled by ToolOptionsRowView
 
         // Toolbar right-clicks handled by ToolbarButtonView.onRightClick → handleToolbarButtonRightClick
+
+        // Anchored selection toggle: right-click in idle starts no-hold
+        // tracking from that point; a second right-click while tracking
+        // commits. Left-click during tracking also commits (handled in
+        // mouseDown). ESC cancels. Locked during recording and editor mode.
+        if isAnchoredSelecting {
+            updateSelectionRect(to: point, shiftHeld: event.modifierFlags.contains(.shift))
+            commitAnchoredSelection()
+            return
+        }
+        if state == .idle && shouldAllowNewSelection() {
+            selectionStart = point
+            selectionRect = NSRect(origin: point, size: .zero)
+            state = .selecting
+            isAnchoredSelecting = true
+            overlayDelegate?.overlayViewDidBeginSelection()
+            needsDisplay = true
+            return
+        }
 
         // Right-click on a line/arrow/measure: add anchor point.
         // Auto-selects the annotation if it isn't selected yet.
@@ -6960,6 +7081,10 @@ class OverlayView: NSView {
         case 53:  // Escape
             if isScrollCapturing {
                 overlayDelegate?.overlayViewDidRequestStopScrollCapture()
+                return
+            }
+            if isAnchoredSelecting {
+                cancelAnchoredSelection()
                 return
             }
             if colorWheel.isVisible && colorWheel.isSticky {
