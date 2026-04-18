@@ -2051,11 +2051,21 @@ private final class VideoEditorView: NSView {
     /// pass-through). When there are cuts the preview plays off a composition
     /// whose video+audio tracks contain only the kept ranges — that way cut
     /// ranges are physically skipped during playback.
+    ///
+    /// **Important:** swapping the player item causes a black flash while
+    /// AVPlayer re-initializes its rendering pipeline, so we only do it when
+    /// the cut *topology* changes (adding/removing cuts, or dragging a cut's
+    /// boundaries). Rect edits on existing zoom/censor segments just update
+    /// the videoComposition on the current item — cheap and flicker-free.
     fileprivate func applyZoomTransformForCurrentTime() {
         guard let player = player, let asset = asset else { return }
 
         let hasCuts = !cutSegments.isEmpty
         let hasEffects = !zoomSegments.isEmpty || !censorSegments.isEmpty
+        // Fingerprint of the current cut set. When it hasn't changed we can
+        // keep the existing composition-backed player item and only refresh
+        // its videoComposition.
+        let cutFingerprint = cutSegmentsFingerprint()
 
         // Fast path: nothing to apply, fall back to the original asset with
         // no videoComposition. Only swap items if we're currently on a
@@ -2064,6 +2074,7 @@ private final class VideoEditorView: NSView {
             if previewUsesComposition {
                 swapPreviewPlayerItem(asset: asset, videoComposition: nil)
                 previewUsesComposition = false
+                previewCompositionCutFingerprint = ""
             } else {
                 player.currentItem?.videoComposition = nil
             }
@@ -2076,6 +2087,7 @@ private final class VideoEditorView: NSView {
             if previewUsesComposition {
                 swapPreviewPlayerItem(asset: asset, videoComposition: nil)
                 previewUsesComposition = false
+                previewCompositionCutFingerprint = ""
             }
             if hasEffects {
                 player.currentItem?.videoComposition = buildEffectsVideoComposition(
@@ -2091,11 +2103,38 @@ private final class VideoEditorView: NSView {
             return
         }
 
-        // Cuts exist — build a composition that only contains the kept
-        // ranges across the *full* asset duration (not just the trim range,
-        // so trim-bar scrubbing still works against source-asset time).
-        // A trim-start/end that falls inside a cut is naturally handled by
-        // seek clamping elsewhere in the editor.
+        // Cuts exist. If we're already on a cut-backed composition whose
+        // cut topology matches what we want, just refresh the effects
+        // videoComposition on the existing item — no player-item swap
+        // means no black flash.
+        if previewUsesComposition,
+           previewCompositionCutFingerprint == cutFingerprint,
+           let currentItem = player.currentItem,
+           let compAsset = currentItem.asset as? AVMutableComposition,
+           let cvt = compAsset.tracks(withMediaType: .video).first {
+            if hasEffects {
+                let kept = VideoCuts.keptRanges(trimStart: 0, trimEnd: duration, cuts: cutSegments)
+                let timeMapEntries = VideoCuts.timeMap(for: kept).map { entry in
+                    EffectsCompositionInstruction.TimeMapEntry(
+                        compStart: entry.0, compEnd: entry.1, sourceOffset: entry.2
+                    )
+                }
+                currentItem.videoComposition = buildEffectsVideoComposition(
+                    for: compAsset,
+                    videoTrack: cvt,
+                    renderSize: nil,
+                    timeMap: timeMapEntries,
+                    timeRangeDuration: CMTimeGetSeconds(compAsset.duration)
+                )
+            } else {
+                currentItem.videoComposition = nil
+            }
+            return
+        }
+
+        // Cut topology actually changed — rebuild the composition-backed
+        // player item. Also covers the first transition from original-asset
+        // preview into cut-preview.
         let comp = AVMutableComposition()
         guard let vt = asset.tracks(withMediaType: .video).first,
               let cvt = comp.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid) else {
@@ -2144,7 +2183,25 @@ private final class VideoEditorView: NSView {
         }
         swapPreviewPlayerItem(asset: comp, videoComposition: videoComp)
         previewUsesComposition = true
+        previewCompositionCutFingerprint = cutFingerprint
     }
+
+    /// Stable identifier for the current cut set — order-independent string
+    /// summarizing each cut's `[start, end]`. Rect/style edits on zoom or
+    /// censor segments don't affect this, so they won't trigger a player
+    /// item rebuild.
+    private func cutSegmentsFingerprint() -> String {
+        guard !cutSegments.isEmpty else { return "" }
+        return cutSegments
+            .map { String(format: "%.4f-%.4f", $0.startTime, $0.endTime) }
+            .sorted()
+            .joined(separator: "|")
+    }
+
+    /// Snapshot of the cut topology used to build `player.currentItem` when
+    /// that item is a cut-stripped composition. Compared against the current
+    /// fingerprint to decide whether a player-item swap is needed.
+    private var previewCompositionCutFingerprint = ""
 
     /// Replace the player's current item with a new one backed by `asset`,
     /// preserving playback position and rate. Preview seeks target the source
