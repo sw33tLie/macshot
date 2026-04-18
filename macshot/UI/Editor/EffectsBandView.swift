@@ -35,6 +35,9 @@ final class EffectsBandView: NSView {
 
     private(set) var zoomSegments: [VideoZoomSegment] = []
     private(set) var censorSegments: [VideoCensorSegment] = []
+    /// Cuts are temporal — frames in their range never reach the output.
+    /// They render as a dimmed "deleted film" pill distinct from zoom/censor.
+    private(set) var cutSegments: [VideoCutSegment] = []
     private(set) var selectedSegmentID: UUID? {
         didSet {
             if oldValue != selectedSegmentID {
@@ -78,9 +81,10 @@ final class EffectsBandView: NSView {
     // MARK: - Public API for mutation from the parent
 
     /// Replace all segments. Used at init time.
-    func setSegments(zoom: [VideoZoomSegment], censor: [VideoCensorSegment]) {
+    func setSegments(zoom: [VideoZoomSegment], censor: [VideoCensorSegment], cut: [VideoCutSegment] = []) {
         self.zoomSegments = zoom
         self.censorSegments = censor
+        self.cutSegments = cut
         relayoutAndNotify()
     }
 
@@ -88,6 +92,7 @@ final class EffectsBandView: NSView {
     func removeSegment(id: UUID) {
         zoomSegments.removeAll { $0.id == id }
         censorSegments.removeAll { $0.id == id }
+        cutSegments.removeAll { $0.id == id }
         if selectedSegmentID == id { selectedSegmentID = nil }
         relayoutAndNotify()
     }
@@ -138,6 +143,10 @@ final class EffectsBandView: NSView {
         pillRect(id: segment.id, startTime: segment.startTime, endTime: segment.endTime)
     }
 
+    private func cutPillRect(for segment: VideoCutSegment) -> NSRect {
+        pillRect(id: segment.id, startTime: segment.startTime, endTime: segment.endTime)
+    }
+
     // MARK: - Layout
 
     /// The band's natural height, driven by the current row count. The
@@ -165,6 +174,9 @@ final class EffectsBandView: NSView {
         }
         for c in censorSegments where c.endTime > c.startTime {
             items.append(Item(id: c.id, start: c.startTime, end: c.endTime))
+        }
+        for k in cutSegments where k.endTime > k.startTime {
+            items.append(Item(id: k.id, start: k.startTime, end: k.endTime))
         }
         items.sort { $0.start < $1.start }
 
@@ -277,9 +289,18 @@ final class EffectsBandView: NSView {
                 label: styleLabel
             )
         }
+        // Cuts — drawn last so they sit visually above other pills in their
+        // row. Distinct striped/dark look signals that the range is removed.
+        for seg in cutSegments {
+            let rect = cutPillRect(for: seg)
+            guard rect.width > 0 else { continue }
+            drawCutPill(rect: rect,
+                         isSelected: seg.id == selectedSegmentID,
+                         label: formatCutLabel(duration: seg.duration))
+        }
 
         // Empty-state hint.
-        if zoomSegments.isEmpty && censorSegments.isEmpty {
+        if zoomSegments.isEmpty && censorSegments.isEmpty && cutSegments.isEmpty {
             let hint = L("Click to add effects") as NSString
             let attrs: [NSAttributedString.Key: Any] = [
                 .font: NSFont.systemFont(ofSize: 11, weight: .medium),
@@ -405,6 +426,96 @@ final class EffectsBandView: NSView {
         drawHandleGrip(in: right)
     }
 
+    /// Draw a cut pill. Distinct visual from zoom/censor: dark-red base with
+    /// diagonal hatching to signal "this span is being removed."
+    private func drawCutPill(rect: NSRect, isSelected: Bool, label: String) {
+        let base = NSColor(calibratedRed: 0.35, green: 0.08, blue: 0.10, alpha: isSelected ? 1.0 : 0.95)
+        let path = NSBezierPath(roundedRect: rect, xRadius: 6, yRadius: 6)
+        base.setFill()
+        path.fill()
+
+        // Diagonal stripes inside the pill — film-strip deletion cue.
+        NSGraphicsContext.saveGraphicsState()
+        path.addClip()
+        NSColor.white.withAlphaComponent(0.10).setStroke()
+        let stripe = NSBezierPath()
+        stripe.lineWidth = 1
+        let step: CGFloat = 6
+        var x = rect.minX - rect.height
+        while x < rect.maxX + rect.height {
+            stripe.move(to: NSPoint(x: x, y: rect.minY))
+            stripe.line(to: NSPoint(x: x + rect.height, y: rect.maxY))
+            x += step
+        }
+        stripe.stroke()
+        NSGraphicsContext.restoreGraphicsState()
+
+        let labelAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .semibold),
+            .foregroundColor: NSColor.white,
+        ]
+        let labelNS = label as NSString
+        let labelSize = labelNS.size(withAttributes: labelAttrs)
+        let iconSize: CGFloat = 11
+        // Scissors glyph is narrower than "+" / drop / square so its trailing
+        // whitespace looks smaller against the label — bump the gap explicitly.
+        let iconLabelGap: CGFloat = 7
+        let contentW = iconSize + iconLabelGap + labelSize.width
+        if rect.width > contentW + 6,
+           let icon = NSImage(systemSymbolName: "scissors", accessibilityDescription: nil)?
+                .withSymbolConfiguration(.init(pointSize: iconSize, weight: .semibold)) {
+            let startX = rect.midX - contentW / 2
+            let tinted = NSImage(size: icon.size, flipped: false) { r in
+                icon.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1)
+                NSColor.white.setFill()
+                r.fill(using: .sourceAtop)
+                return true
+            }
+            tinted.draw(in: NSRect(x: startX, y: rect.midY - icon.size.height / 2,
+                                    width: icon.size.width, height: icon.size.height))
+            labelNS.draw(at: NSPoint(x: startX + iconSize + iconLabelGap, y: rect.midY - labelSize.height / 2),
+                          withAttributes: labelAttrs)
+        } else if rect.width > iconSize + 4,
+                  let icon = NSImage(systemSymbolName: "scissors", accessibilityDescription: nil)?
+                    .withSymbolConfiguration(.init(pointSize: iconSize, weight: .semibold)) {
+            let tinted = NSImage(size: icon.size, flipped: false) { r in
+                icon.draw(in: r, from: .zero, operation: .sourceOver, fraction: 1)
+                NSColor.white.setFill()
+                r.fill(using: .sourceAtop)
+                return true
+            }
+            tinted.draw(in: NSRect(x: rect.midX - icon.size.width / 2,
+                                    y: rect.midY - icon.size.height / 2,
+                                    width: icon.size.width, height: icon.size.height))
+        }
+
+        if isSelected {
+            NSColor.white.withAlphaComponent(0.95).setStroke()
+            let border = NSBezierPath(roundedRect: rect.insetBy(dx: 0.75, dy: 0.75), xRadius: 6, yRadius: 6)
+            border.lineWidth = 1.5
+            border.stroke()
+        }
+
+        // Same grab handles as other pills so drag-to-resize feels uniform.
+        let handleW: CGFloat = 6
+        let handleH: CGFloat = rect.height + 6
+        let handleY = rect.minY - 3
+        let handleColor = NSColor.white.withAlphaComponent(isSelected ? 1.0 : 0.9)
+        let left = NSRect(x: rect.minX - handleW / 2 + 1, y: handleY, width: handleW, height: handleH)
+        handleColor.setFill()
+        NSBezierPath(roundedRect: left, xRadius: 2, yRadius: 2).fill()
+        drawHandleGrip(in: left)
+        let right = NSRect(x: rect.maxX - handleW / 2 - 1, y: handleY, width: handleW, height: handleH)
+        handleColor.setFill()
+        NSBezierPath(roundedRect: right, xRadius: 2, yRadius: 2).fill()
+        drawHandleGrip(in: right)
+    }
+
+    private func formatCutLabel(duration: Double) -> String {
+        if duration < 1 { return String(format: "%.1fs", duration) }
+        return String(format: "%.1fs", duration)
+    }
+
     private func drawHandleGrip(in rect: NSRect) {
         NSColor(calibratedRed: 0.18, green: 0.45, blue: 0.85, alpha: 0.85).setStroke()
         let path = NSBezierPath()
@@ -432,6 +543,9 @@ final class EffectsBandView: NSView {
         for seg in censorSegments {
             if censorPillRect(for: seg).insetBy(dx: -slop, dy: -5).contains(p) { return true }
         }
+        for seg in cutSegments {
+            if cutPillRect(for: seg).insetBy(dx: -slop, dy: -5).contains(p) { return true }
+        }
         return false
     }
 
@@ -453,7 +567,20 @@ final class EffectsBandView: NSView {
         let edgeHitW: CGFloat = 9
         let clickTime = Double((p.x - row0Rect.minX) / max(row0Rect.width, 1)) * duration
 
-        // Zooms first (iterate reverse so the latest-drawn wins on overlap).
+        // Cuts first so they remain clickable even when visually stacked on
+        // top of zoom/censor pills that share their time range.
+        for seg in cutSegments.reversed() {
+            let pill = cutPillRect(for: seg)
+            if pill.insetBy(dx: -edgeHitW, dy: -5).contains(p) {
+                beginSegmentDrag(id: seg.id,
+                                  edge: edgeHitForX(p.x, pill: pill, hitW: edgeHitW),
+                                  clickTime: clickTime,
+                                  segStart: seg.startTime,
+                                  segEnd: seg.endTime)
+                return
+            }
+        }
+        // Zooms (iterate reverse so the latest-drawn wins on overlap).
         for seg in zoomSegments.reversed() {
             let pill = zoomPillRect(for: seg)
             if pill.insetBy(dx: -edgeHitW, dy: -5).contains(p) {
@@ -507,6 +634,8 @@ final class EffectsBandView: NSView {
             dragZoomSegment(seg, kind: kind, time: t)
         } else if let seg = censorSegments.first(where: { $0.id == id }) {
             dragCensorSegment(seg, kind: kind, time: t)
+        } else if let seg = cutSegments.first(where: { $0.id == id }) {
+            dragCutSegment(seg, kind: kind, time: t)
         }
     }
 
@@ -539,6 +668,26 @@ final class EffectsBandView: NSView {
             let upperBound = others.filter { $0.start >= seg.startTime }.map(\.start).min() ?? duration
             newEnd = min(upperBound, newEnd)
             seg.endTime = newEnd
+        }
+        layoutRows()
+        needsDisplay = true
+    }
+
+    private func dragCutSegment(_ seg: VideoCutSegment, kind: SegmentDragKind, time t: Double) {
+        // Cuts can overlap freely — the export pipeline merges overlapping
+        // cut ranges, so no need for neighbour-based clamping.
+        switch kind {
+        case .move:
+            let (newStart, newEnd) = resolveMove(segment: (seg.startTime, seg.endTime),
+                                                  to: t - draggingSegmentAnchor,
+                                                  others: [])
+            seg.startTime = max(0, newStart); seg.endTime = min(duration, newEnd)
+        case .resizeStart:
+            let minEnd = seg.endTime - VideoCutSegment.minDuration
+            seg.startTime = max(0, min(minEnd, t - draggingSegmentAnchor))
+        case .resizeEnd:
+            let minStart = seg.startTime + VideoCutSegment.minDuration
+            seg.endTime = max(minStart, min(duration, t - draggingSegmentAnchor))
         }
         layoutRows()
         needsDisplay = true
@@ -587,6 +736,15 @@ final class EffectsBandView: NSView {
     override func rightMouseDown(with event: NSEvent) {
         let p = convert(event.locationInWindow, from: nil)
         let edgeSlop: CGFloat = 6
+        for seg in cutSegments.reversed() {
+            let pill = cutPillRect(for: seg)
+            if pill.insetBy(dx: -edgeSlop, dy: -5).contains(p) {
+                selectedSegmentID = seg.id
+                needsDisplay = true
+                showCutPillContextMenu(for: seg, at: event)
+                return
+            }
+        }
         for seg in zoomSegments.reversed() {
             let pill = zoomPillRect(for: seg)
             if pill.insetBy(dx: -edgeSlop, dy: -5).contains(p) {
@@ -607,6 +765,18 @@ final class EffectsBandView: NSView {
         }
         let clickTime = Double((p.x - row0Rect.minX) / max(row0Rect.width, 1)) * duration
         showAddEffectMenu(at: p, clickTime: clickTime)
+    }
+
+    private func showCutPillContextMenu(for seg: VideoCutSegment, at event: NSEvent) {
+        let menu = NSMenu()
+        attachAddEffectSubmenu(to: menu, event: event)
+        menu.addItem(.separator())
+        let del = NSMenuItem(title: L("Delete Cut"),
+                              action: #selector(handleDeleteSelectedFromMenu),
+                              keyEquivalent: "")
+        del.target = self
+        menu.addItem(del)
+        NSMenu.popUpContextMenu(menu, with: event, for: self)
     }
 
     private func showZoomPillContextMenu(for seg: VideoZoomSegment, at event: NSEvent) {
@@ -701,6 +871,14 @@ final class EffectsBandView: NSView {
         censorItem.representedObject = AddEffectContext(clickTime: clickTime, gapStart: 0, gapEnd: duration)
         menu.addItem(censorItem)
 
+        let cutItem = NSMenuItem(title: L("Add Cut"),
+                                 action: #selector(handleAddCutFromMenu(_:)),
+                                 keyEquivalent: "")
+        cutItem.image = NSImage(systemSymbolName: "scissors", accessibilityDescription: nil)
+        cutItem.target = self
+        cutItem.representedObject = AddEffectContext(clickTime: clickTime, gapStart: 0, gapEnd: duration)
+        menu.addItem(cutItem)
+
         menu.popUp(positioning: nil, at: point, in: self)
     }
 
@@ -727,6 +905,12 @@ final class EffectsBandView: NSView {
         censorItem.target = self
         censorItem.representedObject = AddEffectContext(clickTime: clickTime, gapStart: 0, gapEnd: duration)
         sub.addItem(censorItem)
+        let cutItem = NSMenuItem(title: L("Add Cut"),
+                                 action: #selector(handleAddCutFromMenu(_:)),
+                                 keyEquivalent: "")
+        cutItem.target = self
+        cutItem.representedObject = AddEffectContext(clickTime: clickTime, gapStart: 0, gapEnd: duration)
+        sub.addItem(cutItem)
         parent.submenu = sub
         menu.addItem(parent)
     }
@@ -795,6 +979,11 @@ final class EffectsBandView: NSView {
         addCensorSegment(clickTime: ctx.clickTime)
     }
 
+    @objc private func handleAddCutFromMenu(_ sender: NSMenuItem) {
+        guard let ctx = sender.representedObject as? AddEffectContext else { return }
+        addCutSegment(clickTime: ctx.clickTime)
+    }
+
     private func addZoomSegment(clickTime: Double, gapStart: Double, gapEnd: Double) {
         guard duration > 0 else { return }
         let gapDuration = gapEnd - gapStart
@@ -819,6 +1008,17 @@ final class EffectsBandView: NSView {
         start = max(0, min(duration - segDuration, start))
         let seg = VideoCensorSegment(startTime: start, endTime: start + segDuration, style: .blur)
         censorSegments.append(seg)
+        selectedSegmentID = seg.id
+        relayoutAndNotify()
+    }
+
+    private func addCutSegment(clickTime: Double) {
+        guard duration > 0 else { return }
+        let segDuration = min(1.0, max(VideoCutSegment.minDuration, duration))
+        var start = clickTime - segDuration / 2
+        start = max(0, min(duration - segDuration, start))
+        let seg = VideoCutSegment(startTime: start, endTime: start + segDuration)
+        cutSegments.append(seg)
         selectedSegmentID = seg.id
         relayoutAndNotify()
     }

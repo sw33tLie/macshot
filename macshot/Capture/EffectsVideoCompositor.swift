@@ -12,6 +12,17 @@ import CoreVideo
 /// payload fields. Conforming to the protocol directly avoids that round-trip.
 final class EffectsCompositionInstruction: NSObject, AVVideoCompositionInstructionProtocol {
 
+    /// One contiguous mapping from composition-clock time back to source-asset
+    /// time. The compositor picks the entry covering the current frame's
+    /// `compositionTime` and computes `sourceTime = compTime + sourceOffset`.
+    /// For a simple composition with no cuts this is a single entry spanning
+    /// the whole composition; with cuts, one entry per kept range.
+    struct TimeMapEntry {
+        let compStart: Double
+        let compEnd: Double
+        let sourceOffset: Double
+    }
+
     // MARK: Protocol requirements
     let timeRange: CMTimeRange
     let enablePostProcessing: Bool = false
@@ -24,7 +35,7 @@ final class EffectsCompositionInstruction: NSObject, AVVideoCompositionInstructi
     let naturalSize: CGSize
     let renderSize: CGSize
     let baseTransform: CGAffineTransform
-    let timeShift: Double
+    let timeMap: [TimeMapEntry]
     let zoomSegments: [VideoZoomSegment]
     let censorSegments: [VideoCensorSegment]
 
@@ -33,7 +44,7 @@ final class EffectsCompositionInstruction: NSObject, AVVideoCompositionInstructi
          naturalSize: CGSize,
          renderSize: CGSize,
          baseTransform: CGAffineTransform,
-         timeShift: Double,
+         timeMap: [TimeMapEntry],
          zoomSegments: [VideoZoomSegment],
          censorSegments: [VideoCensorSegment]) {
         self.timeRange = timeRange
@@ -41,7 +52,7 @@ final class EffectsCompositionInstruction: NSObject, AVVideoCompositionInstructi
         self.naturalSize = naturalSize
         self.renderSize = renderSize
         self.baseTransform = baseTransform
-        self.timeShift = timeShift
+        self.timeMap = timeMap
         self.zoomSegments = zoomSegments
         self.censorSegments = censorSegments
         self.requiredSourceTrackIDs = [NSNumber(value: Int(videoTrackID))]
@@ -150,7 +161,19 @@ final class EffectsVideoCompositor: NSObject, AVVideoCompositing {
                          sourceBuffer: CVPixelBuffer,
                          outBuf: CVPixelBuffer) {
         let compTime = CMTimeGetSeconds(request.compositionTime)
-        let assetTime = compTime + instruction.timeShift
+        // Map composition time → source-asset time via the segmented time map.
+        // Falls back to `compTime` unchanged if no entry matches (shouldn't
+        // happen in practice, but keeps rendering sensible instead of black).
+        let assetTime: Double = {
+            for entry in instruction.timeMap where compTime >= entry.compStart && compTime < entry.compEnd {
+                return compTime + entry.sourceOffset
+            }
+            // Clamp to last entry's offset if we're past its end by a tiny epsilon.
+            if let last = instruction.timeMap.last, compTime >= last.compEnd {
+                return compTime + last.sourceOffset
+            }
+            return compTime
+        }()
         let renderSize = instruction.renderSize
         let naturalSize = instruction.naturalSize
 

@@ -152,6 +152,7 @@ private final class VideoEditorView: NSView {
     // Convenience accessors so call sites don't have to guard the optional.
     private var zoomSegments: [VideoZoomSegment] { effectsBand?.zoomSegments ?? [] }
     private var censorSegments: [VideoCensorSegment] { effectsBand?.censorSegments ?? [] }
+    private var cutSegments: [VideoCutSegment] { effectsBand?.cutSegments ?? [] }
     private var selectedSegmentID: UUID? { effectsBand?.selectedSegmentID }
 
     // Button rects
@@ -399,10 +400,14 @@ private final class VideoEditorView: NSView {
         // Observe playback position
         timeObserver = player.addPeriodicTimeObserver(forInterval: CMTime(value: 1, timescale: 30), queue: .main) { [weak self] time in
             guard let self = self, !self.isDraggingScrubber else { return }
-            let t = CMTimeGetSeconds(time)
+            // The player's clock may be the cut-stripped composition clock;
+            // map it back to the source asset clock before comparing with
+            // trim markers (which are in source time).
+            let t = self.mapPreviewClockToSourceTime(CMTimeGetSeconds(time))
             if t >= self.trimEnd {
                 self.player?.pause()
-                self.player?.seek(to: CMTime(seconds: self.trimStart, preferredTimescale: 600),
+                let target = self.mapSourceTimeToPreviewClock(self.trimStart)
+                self.player?.seek(to: CMTime(seconds: target, preferredTimescale: 600),
                                   toleranceBefore: .zero, toleranceAfter: .zero)
             }
             self.needsDisplay = true
@@ -472,7 +477,10 @@ private final class VideoEditorView: NSView {
         if isGIF {
             return gifPlaybackTime
         } else {
-            return CMTimeGetSeconds(player?.currentTime() ?? .zero)
+            // Always report in source-asset time so the playhead, thumbnails
+            // and trim UI agree regardless of whether the preview is
+            // composition-backed (cuts present) or not.
+            return mapPreviewClockToSourceTime(CMTimeGetSeconds(player?.currentTime() ?? .zero))
         }
     }
 
@@ -540,6 +548,33 @@ private final class VideoEditorView: NSView {
         }
         if endX < tlX + tlW {
             NSRect(x: endX, y: tlY, width: tlX + tlW - endX, height: tlH).fill()
+        }
+
+        // Draw striped cut overlays inside the trim region — they signal
+        // ranges that will be removed on export. Clipped by the track path so
+        // overlays never leak past the rounded edges.
+        for cut in cutSegments where cut.endTime > cut.startTime {
+            let cx0 = tlX + CGFloat(max(0, min(duration, cut.startTime)) / duration) * tlW
+            let cx1 = tlX + CGFloat(max(0, min(duration, cut.endTime)) / duration) * tlW
+            let cutRect = NSRect(x: cx0, y: tlY, width: max(1, cx1 - cx0), height: tlH)
+            // Dark-red tint over the thumbnails.
+            NSColor(calibratedRed: 0.50, green: 0.05, blue: 0.08, alpha: 0.55).setFill()
+            cutRect.fill()
+            // Diagonal hatching.
+            NSGraphicsContext.saveGraphicsState()
+            NSBezierPath(rect: cutRect).addClip()
+            NSColor.white.withAlphaComponent(0.22).setStroke()
+            let stripes = NSBezierPath()
+            stripes.lineWidth = 1
+            let step: CGFloat = 6
+            var x = cutRect.minX - cutRect.height
+            while x < cutRect.maxX + cutRect.height {
+                stripes.move(to: NSPoint(x: x, y: cutRect.minY))
+                stripes.line(to: NSPoint(x: x + cutRect.height, y: cutRect.maxY))
+                x += step
+            }
+            stripes.stroke()
+            NSGraphicsContext.restoreGraphicsState()
         }
 
         // Trim border highlight
@@ -1016,8 +1051,25 @@ private final class VideoEditorView: NSView {
     private func seekPreview(to t: Double) {
         guard let player = player else { return }
         if player.rate > 0 { player.pause() }
-        player.seek(to: CMTime(seconds: t, preferredTimescale: 600),
+        let target = mapSourceTimeToPreviewClock(t)
+        player.seek(to: CMTime(seconds: target, preferredTimescale: 600),
                      toleranceBefore: .zero, toleranceAfter: .zero)
+    }
+
+    /// Translate a source-asset time to the current player item's clock.
+    /// When preview is composition-backed (cuts present) this collapses the
+    /// cut ranges; otherwise it's a pass-through.
+    fileprivate func mapSourceTimeToPreviewClock(_ sourceTime: Double) -> Double {
+        guard previewUsesComposition else { return sourceTime }
+        return previewSourceTimeToComp(sourceTime, against: player?.currentItem?.asset ?? asset ?? AVAsset(url: videoURL))
+    }
+
+    /// Inverse of `mapSourceTimeToPreviewClock`. Callers that read the
+    /// current player time but want it in source-asset terms (e.g. to draw
+    /// the playhead) should go through this.
+    fileprivate func mapPreviewClockToSourceTime(_ previewTime: Double) -> Double {
+        guard previewUsesComposition else { return previewTime }
+        return previewCompTimeToSource(previewTime)
     }
 
     /// Representation of a zoom segment as a normalized rect. Shape is always
@@ -1121,12 +1173,14 @@ private final class VideoEditorView: NSView {
         if isDraggingStart {
             let t = max(0, min(duration, Double((point.x - timelineRect.minX) / timelineRect.width) * duration))
             trimStart = min(t, trimEnd - 0.1)
-            player?.seek(to: CMTime(seconds: trimStart, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero)
+            let target = mapSourceTimeToPreviewClock(trimStart)
+            player?.seek(to: CMTime(seconds: target, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero)
             needsDisplay = true
         } else if isDraggingEnd {
             let t = max(0, min(duration, Double((point.x - timelineRect.minX) / timelineRect.width) * duration))
             trimEnd = max(t, trimStart + 0.1)
-            player?.seek(to: CMTime(seconds: trimEnd, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero)
+            let target = mapSourceTimeToPreviewClock(trimEnd)
+            player?.seek(to: CMTime(seconds: target, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero)
             needsDisplay = true
         } else if isDraggingScrubber {
             scrubTo(point: point)
@@ -1141,7 +1195,8 @@ private final class VideoEditorView: NSView {
 
     private func scrubTo(point: NSPoint) {
         let t = max(trimStart, min(trimEnd, Double((point.x - timelineRect.minX) / timelineRect.width) * duration))
-        player?.seek(to: CMTime(seconds: t, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero)
+        let target = mapSourceTimeToPreviewClock(t)
+        player?.seek(to: CMTime(seconds: target, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero)
         needsDisplay = true
     }
 
@@ -1167,9 +1222,10 @@ private final class VideoEditorView: NSView {
         if player.rate > 0 {
             player.pause()
         } else {
-            let current = CMTimeGetSeconds(player.currentTime())
+            let current = mapPreviewClockToSourceTime(CMTimeGetSeconds(player.currentTime()))
             if current < trimStart || current >= trimEnd - 0.1 {
-                player.seek(to: CMTime(seconds: trimStart, preferredTimescale: 600))
+                let target = mapSourceTimeToPreviewClock(trimStart)
+                player.seek(to: CMTime(seconds: target, preferredTimescale: 600))
             }
             player.play()
         }
@@ -1248,14 +1304,35 @@ private final class VideoEditorView: NSView {
         let composition = AVMutableComposition()
         guard let videoTrack = asset.tracks(withMediaType: .video).first,
               let compositionVideoTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid) else { return nil }
-        try? compositionVideoTrack.insertTimeRange(timeRange, of: videoTrack, at: .zero)
 
+        // Insert the kept source ranges (trim minus cuts) sequentially. Audio
+        // tracks mirror the video inserts so audio and video stay in sync
+        // across cuts.
+        let keptRanges = VideoCuts.keptRanges(
+            trimStart: CMTimeGetSeconds(timeRange.start),
+            trimEnd: CMTimeGetSeconds(timeRange.end),
+            cuts: cutSegments
+        )
+        let audioTracks = asset.tracks(withMediaType: .audio)
+        var audioCompTracks: [AVMutableCompositionTrack] = []
         if !isMuted {
-            for audioTrack in asset.tracks(withMediaType: .audio) {
+            for _ in audioTracks {
                 if let compAudio = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid) {
-                    try? compAudio.insertTimeRange(timeRange, of: audioTrack, at: .zero)
+                    audioCompTracks.append(compAudio)
                 }
             }
+        }
+        var cursor = CMTime.zero
+        for (srcStart, srcEnd) in keptRanges {
+            let range = CMTimeRange(
+                start: CMTime(seconds: srcStart, preferredTimescale: 600),
+                end: CMTime(seconds: srcEnd, preferredTimescale: 600)
+            )
+            try? compositionVideoTrack.insertTimeRange(range, of: videoTrack, at: cursor)
+            for (audioSrc, audioDst) in zip(audioTracks, audioCompTracks) {
+                try? audioDst.insertTimeRange(range, of: audioSrc, at: cursor)
+            }
+            cursor = CMTimeAdd(cursor, range.duration)
         }
 
         guard let session = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetHighestQuality) else { return nil }
@@ -1269,14 +1346,14 @@ private final class VideoEditorView: NSView {
                 height: abs(naturalSize.height) * exportScale
             )
             let renderSize = CGSize(width: scaledW, height: scaledH)
-            let timeShift = CMTimeGetSeconds(timeRange.start)
             let totalDuration = CMTimeGetSeconds(composition.duration)
+            let timeMap = timeMapForExport(compositionDuration: totalDuration)
             if hasEffects {
                 session.videoComposition = buildEffectsVideoComposition(
                     for: composition,
                     videoTrack: compositionVideoTrack,
                     renderSize: renderSize,
-                    timeShift: timeShift,
+                    timeMap: timeMap,
                     timeRangeDuration: totalDuration
                 )
             } else {
@@ -1423,7 +1500,23 @@ private final class VideoEditorView: NSView {
         if hasEffects, let vt = readerVideoTrackOpt {
             let comp = AVMutableComposition()
             if let cvt = comp.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid) {
-                try? cvt.insertTimeRange(timeRange, of: vt, at: .zero)
+                // Insert each kept source range sequentially at the growing
+                // composition end. Without cuts this is a single insert equal
+                // to [trimStart, trimEnd].
+                let kept = VideoCuts.keptRanges(
+                    trimStart: CMTimeGetSeconds(timeRange.start),
+                    trimEnd: CMTimeGetSeconds(timeRange.end),
+                    cuts: cutSegments
+                )
+                var compCursor = CMTime.zero
+                for (srcStart, srcEnd) in kept {
+                    let range = CMTimeRange(
+                        start: CMTime(seconds: srcStart, preferredTimescale: 600),
+                        end: CMTime(seconds: srcEnd, preferredTimescale: 600)
+                    )
+                    try? cvt.insertTimeRange(range, of: vt, at: compCursor)
+                    compCursor = CMTimeAdd(compCursor, range.duration)
+                }
                 let natSize = vt.naturalSize.applying(vt.preferredTransform)
                 let (outW, outH) = VideoEncodingSettings.evenDimensions(
                     width: abs(natSize.width) * scale,
@@ -1433,12 +1526,17 @@ private final class VideoEditorView: NSView {
                 readerOutH = outH
                 readerAsset = comp
                 readerVideoTrackOpt = cvt
-                readerTimeRange = CMTimeRange(start: .zero, duration: timeRange.duration)
+                readerTimeRange = CMTimeRange(start: .zero, duration: comp.duration)
+                let timeMapEntries = VideoCuts.timeMap(for: kept).map { entry in
+                    EffectsCompositionInstruction.TimeMapEntry(
+                        compStart: entry.0, compEnd: entry.1, sourceOffset: entry.2
+                    )
+                }
                 readerVideoComposition = buildEffectsVideoComposition(
                     for: comp,
                     videoTrack: cvt,
                     renderSize: CGSize(width: outW, height: outH),
-                    timeShift: CMTimeGetSeconds(timeRange.start),
+                    timeMap: timeMapEntries,
                     timeRangeDuration: CMTimeGetSeconds(comp.duration)
                 )
             }
@@ -1546,7 +1644,8 @@ private final class VideoEditorView: NSView {
         let needsScale = exportScale < 0.999
         let needsRecompress = exportQuality != .high
         let needsEffects = !zoomSegments.isEmpty || !censorSegments.isEmpty
-        let needsExport = needsTrim || isMuted || needsScale || needsRecompress || needsEffects
+        let needsCuts = !cutSegments.isEmpty
+        let needsExport = needsTrim || isMuted || needsScale || needsRecompress || needsEffects || needsCuts
 
         if !needsExport {
             // No processing needed — copy temp file to destination
@@ -1626,35 +1725,79 @@ private final class VideoEditorView: NSView {
         let fps = max(srcFPS, 1)
 
         let includeAudio = !isMuted
-        let audioTracks = asset.tracks(withMediaType: .audio)
+        let srcAudioTracks = asset.tracks(withMediaType: .audio)
         let hasEffects = !zoomSegments.isEmpty || !censorSegments.isEmpty
+        let hasCuts = !cutSegments.isEmpty
 
-        // When effects exist we must route the read side through a video
-        // composition so the compositor applies zoom + censor transforms.
-        // Otherwise we read raw scaled frames directly from the track.
+        // When effects OR cuts exist we must route through a composition so
+        // cuts actually skip frames and the compositor applies zoom + censor.
+        // Otherwise we read raw scaled frames directly from the source track
+        // and pull audio straight from the original asset.
         let readerAsset: AVAsset
         let readerVideoTrack: AVAssetTrack
+        let readerAudioTracks: [AVAssetTrack]
         let readerTimeRange: CMTimeRange
         let readerComposition: AVMutableVideoComposition?
-        if hasEffects {
+        if hasEffects || hasCuts {
             let comp = AVMutableComposition()
             guard let cvt = comp.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid) else {
                 completion(false); return
             }
-            try? cvt.insertTimeRange(timeRange, of: videoTrack, at: .zero)
+
+            // Build audio comp-tracks mirroring the source. They're filled in
+            // parallel with the video inserts below so audio stays in sync.
+            var compAudioTracks: [AVMutableCompositionTrack] = []
+            if includeAudio {
+                for _ in srcAudioTracks {
+                    if let ca = comp.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid) {
+                        compAudioTracks.append(ca)
+                    }
+                }
+            }
+
+            // Insert kept source ranges (trim minus cuts) sequentially.
+            let kept = VideoCuts.keptRanges(
+                trimStart: CMTimeGetSeconds(timeRange.start),
+                trimEnd: CMTimeGetSeconds(timeRange.end),
+                cuts: cutSegments
+            )
+            var compCursor = CMTime.zero
+            for (srcStart, srcEnd) in kept {
+                let range = CMTimeRange(
+                    start: CMTime(seconds: srcStart, preferredTimescale: 600),
+                    end: CMTime(seconds: srcEnd, preferredTimescale: 600)
+                )
+                try? cvt.insertTimeRange(range, of: videoTrack, at: compCursor)
+                for (srcAT, dstAT) in zip(srcAudioTracks, compAudioTracks) {
+                    try? dstAT.insertTimeRange(range, of: srcAT, at: compCursor)
+                }
+                compCursor = CMTimeAdd(compCursor, range.duration)
+            }
+
             readerAsset = comp
             readerVideoTrack = cvt
-            readerTimeRange = CMTimeRange(start: .zero, duration: timeRange.duration)
-            readerComposition = buildEffectsVideoComposition(
-                for: comp,
-                videoTrack: cvt,
-                renderSize: CGSize(width: outW, height: outH),
-                timeShift: CMTimeGetSeconds(timeRange.start),
-                timeRangeDuration: CMTimeGetSeconds(comp.duration)
-            )
+            readerAudioTracks = compAudioTracks
+            readerTimeRange = CMTimeRange(start: .zero, duration: comp.duration)
+            if hasEffects {
+                let timeMapEntries = VideoCuts.timeMap(for: kept).map { entry in
+                    EffectsCompositionInstruction.TimeMapEntry(
+                        compStart: entry.0, compEnd: entry.1, sourceOffset: entry.2
+                    )
+                }
+                readerComposition = buildEffectsVideoComposition(
+                    for: comp,
+                    videoTrack: cvt,
+                    renderSize: CGSize(width: outW, height: outH),
+                    timeMap: timeMapEntries,
+                    timeRangeDuration: CMTimeGetSeconds(comp.duration)
+                )
+            } else {
+                readerComposition = nil
+            }
         } else {
             readerAsset = asset
             readerVideoTrack = videoTrack
+            readerAudioTracks = srcAudioTracks
             readerTimeRange = timeRange
             readerComposition = nil
         }
@@ -1712,7 +1855,7 @@ private final class VideoEditorView: NSView {
                 var audioInputs: [AVAssetWriterInput] = []
                 var audioOutputs: [AVAssetReaderTrackOutput] = []
                 if includeAudio {
-                    for track in audioTracks {
+                    for track in readerAudioTracks {
                         let audioSettings: [String: Any] = [
                             AVFormatIDKey: kAudioFormatMPEG4AAC,
                             AVSampleRateKey: 48000,
@@ -1755,7 +1898,7 @@ private final class VideoEditorView: NSView {
                         }
                         // Shift PTS so the output starts at t=0
                         let pts = CMSampleBufferGetPresentationTimeStamp(sample)
-                        let shifted = CMTimeSubtract(pts, timeRange.start)
+                        let shifted = CMTimeSubtract(pts, readerTimeRange.start)
                         if let retimed = sample.retimed(presentationTime: shifted) {
                             if !videoInput.append(retimed) {
                                 videoInput.markAsFinished()
@@ -1778,7 +1921,7 @@ private final class VideoEditorView: NSView {
                                 return
                             }
                             let pts = CMSampleBufferGetPresentationTimeStamp(sample)
-                            let shifted = CMTimeSubtract(pts, timeRange.start)
+                            let shifted = CMTimeSubtract(pts, readerTimeRange.start)
                             if let retimed = sample.retimed(presentationTime: shifted) {
                                 if !input.append(retimed) {
                                     input.markAsFinished()
@@ -1852,7 +1995,8 @@ private final class VideoEditorView: NSView {
 
         let needsTrim = trimStart > 0.01 || (duration - trimEnd) > 0.01
         let needsEffects = !zoomSegments.isEmpty || !censorSegments.isEmpty
-        let needsExport = needsTrim || isMuted || needsEffects
+        let needsCuts = !cutSegments.isEmpty
+        let needsExport = needsTrim || isMuted || needsEffects || needsCuts
 
         if !needsExport {
             uploadFileURL(videoURL, false)
@@ -1901,22 +2045,175 @@ private final class VideoEditorView: NSView {
     /// Rebuild the AVPlayerItem's videoComposition so live playback reflects
     /// the current zoom + censor segments. Also used when editing segments
     /// during playback — AVPlayer picks up composition changes on the next frame.
+    ///
+    /// When there are no cuts the preview plays directly off the original
+    /// asset (segment times align with the asset clock so `timeMap` is a
+    /// pass-through). When there are cuts the preview plays off a composition
+    /// whose video+audio tracks contain only the kept ranges — that way cut
+    /// ranges are physically skipped during playback.
     fileprivate func applyZoomTransformForCurrentTime() {
-        guard let player = player, let item = player.currentItem, let asset = asset else { return }
-        if zoomSegments.isEmpty && censorSegments.isEmpty {
-            item.videoComposition = nil
+        guard let player = player, let asset = asset else { return }
+
+        let hasCuts = !cutSegments.isEmpty
+        let hasEffects = !zoomSegments.isEmpty || !censorSegments.isEmpty
+
+        // Fast path: nothing to apply, fall back to the original asset with
+        // no videoComposition. Only swap items if we're currently on a
+        // composition-backed item.
+        if !hasCuts && !hasEffects {
+            if previewUsesComposition {
+                swapPreviewPlayerItem(asset: asset, videoComposition: nil)
+                previewUsesComposition = false
+            } else {
+                player.currentItem?.videoComposition = nil
+            }
             return
         }
-        // Preview runs against the original asset, so segments are in asset clock
-        // already and there's no time shift.
-        item.videoComposition = buildEffectsVideoComposition(
-            for: asset,
-            videoTrack: asset.tracks(withMediaType: .video).first,
-            renderSize: nil,
-            timeShift: 0,
-            timeRangeDuration: CMTimeGetSeconds(asset.duration)
+
+        // No cuts: stay on the original asset and only attach the effects
+        // composition — much cheaper than rebuilding the player item.
+        if !hasCuts {
+            if previewUsesComposition {
+                swapPreviewPlayerItem(asset: asset, videoComposition: nil)
+                previewUsesComposition = false
+            }
+            if hasEffects {
+                player.currentItem?.videoComposition = buildEffectsVideoComposition(
+                    for: asset,
+                    videoTrack: asset.tracks(withMediaType: .video).first,
+                    renderSize: nil,
+                    timeMap: singleShiftTimeMap(shift: 0, duration: CMTimeGetSeconds(asset.duration)),
+                    timeRangeDuration: CMTimeGetSeconds(asset.duration)
+                )
+            } else {
+                player.currentItem?.videoComposition = nil
+            }
+            return
+        }
+
+        // Cuts exist — build a composition that only contains the kept
+        // ranges across the *full* asset duration (not just the trim range,
+        // so trim-bar scrubbing still works against source-asset time).
+        // A trim-start/end that falls inside a cut is naturally handled by
+        // seek clamping elsewhere in the editor.
+        let comp = AVMutableComposition()
+        guard let vt = asset.tracks(withMediaType: .video).first,
+              let cvt = comp.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid) else {
+            return
+        }
+        var compAudioTracks: [AVMutableCompositionTrack] = []
+        for _ in asset.tracks(withMediaType: .audio) {
+            if let ca = comp.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid) {
+                compAudioTracks.append(ca)
+            }
+        }
+        // Use the full asset duration as the "trim" here so preview cuts
+        // apply globally, independent of the trim markers.
+        let kept = VideoCuts.keptRanges(
+            trimStart: 0,
+            trimEnd: duration,
+            cuts: cutSegments
         )
+        var cursor = CMTime.zero
+        for (srcStart, srcEnd) in kept {
+            let range = CMTimeRange(
+                start: CMTime(seconds: srcStart, preferredTimescale: 600),
+                end: CMTime(seconds: srcEnd, preferredTimescale: 600)
+            )
+            try? cvt.insertTimeRange(range, of: vt, at: cursor)
+            for (srcAT, dstAT) in zip(asset.tracks(withMediaType: .audio), compAudioTracks) {
+                try? dstAT.insertTimeRange(range, of: srcAT, at: cursor)
+            }
+            cursor = CMTimeAdd(cursor, range.duration)
+        }
+
+        var videoComp: AVMutableVideoComposition?
+        if hasEffects {
+            let timeMapEntries = VideoCuts.timeMap(for: kept).map { entry in
+                EffectsCompositionInstruction.TimeMapEntry(
+                    compStart: entry.0, compEnd: entry.1, sourceOffset: entry.2
+                )
+            }
+            videoComp = buildEffectsVideoComposition(
+                for: comp,
+                videoTrack: cvt,
+                renderSize: nil,
+                timeMap: timeMapEntries,
+                timeRangeDuration: CMTimeGetSeconds(comp.duration)
+            )
+        }
+        swapPreviewPlayerItem(asset: comp, videoComposition: videoComp)
+        previewUsesComposition = true
     }
+
+    /// Replace the player's current item with a new one backed by `asset`,
+    /// preserving playback position and rate. Preview seeks target the source
+    /// asset clock, so we map the current time through the cut-aware time
+    /// map before resuming.
+    private func swapPreviewPlayerItem(asset: AVAsset, videoComposition: AVMutableVideoComposition?) {
+        guard let player = player else { return }
+        let wasPlaying = player.rate != 0
+        let prevRate = player.rate
+        let prevSourceTime: Double = {
+            if let current = player.currentItem {
+                let t = CMTimeGetSeconds(current.currentTime())
+                return previewUsesComposition ? previewCompTimeToSource(t) : t
+            }
+            return trimStart
+        }()
+
+        let newItem = AVPlayerItem(asset: asset)
+        newItem.videoComposition = videoComposition
+        player.replaceCurrentItem(with: newItem)
+
+        // Map source time → target item's clock. The comp item's clock is
+        // "kept-ranges concatenated from 0". Outside of preview-comp mode
+        // (straight asset), source == comp time.
+        let targetT: Double
+        if videoComposition != nil || asset is AVMutableComposition {
+            targetT = previewSourceTimeToComp(prevSourceTime, against: asset)
+        } else {
+            targetT = prevSourceTime
+        }
+        player.seek(to: CMTime(seconds: targetT, preferredTimescale: 600),
+                    toleranceBefore: .zero, toleranceAfter: .zero)
+        if wasPlaying { player.rate = prevRate }
+    }
+
+    /// Convert a preview composition-clock time to source-asset time using
+    /// the current cuts.
+    private func previewCompTimeToSource(_ compTime: Double) -> Double {
+        let kept = VideoCuts.keptRanges(trimStart: 0, trimEnd: duration, cuts: cutSegments)
+        let entries = VideoCuts.timeMap(for: kept)
+        for (compStart, compEnd, offset) in entries where compTime >= compStart && compTime < compEnd {
+            return compTime + offset
+        }
+        if let last = entries.last, compTime >= last.1 {
+            return compTime + last.2
+        }
+        return compTime
+    }
+
+    /// Inverse of `previewCompTimeToSource`. Clamps to the nearest kept
+    /// range when `sourceTime` falls inside a cut.
+    private func previewSourceTimeToComp(_ sourceTime: Double, against asset: AVAsset) -> Double {
+        let kept = VideoCuts.keptRanges(trimStart: 0, trimEnd: duration, cuts: cutSegments)
+        var cursor: Double = 0
+        for (srcStart, srcEnd) in kept {
+            if sourceTime < srcStart {
+                return cursor
+            }
+            if sourceTime <= srcEnd {
+                return cursor + (sourceTime - srcStart)
+            }
+            cursor += srcEnd - srcStart
+        }
+        return cursor
+    }
+
+    /// True when the player's current item is a cut-stripped composition
+    /// (so its clock no longer matches the source asset).
+    private var previewUsesComposition = false
 
     /// Build an `AVMutableVideoComposition` driven by `EffectsVideoCompositor`.
     /// The compositor renders zoom + censor segments per frame via Core Image,
@@ -1959,7 +2256,19 @@ private final class VideoEditorView: NSView {
         return composition
     }
 
-    private func buildEffectsVideoComposition(for asset: AVAsset, videoTrack: AVAssetTrack?, renderSize: CGSize?, timeShift: Double, timeRangeDuration: Double) -> AVMutableVideoComposition? {
+    /// Build an AVMutableVideoComposition backed by the custom effects
+    /// compositor.
+    ///
+    /// - Parameters:
+    ///   - asset: the asset (often an AVMutableComposition) whose track we
+    ///     read. Its track IDs must match `videoTrack`.
+    ///   - videoTrack: the specific track to read from.
+    ///   - renderSize: nil means "use natural-size rendering."
+    ///   - timeMap: composition-time → source-asset-time mapping. Callers
+    ///     without cuts pass a single entry spanning the whole composition.
+    ///   - timeRangeDuration: total length (in composition time) of the
+    ///     instruction's timeRange.
+    private func buildEffectsVideoComposition(for asset: AVAsset, videoTrack: AVAssetTrack?, renderSize: CGSize?, timeMap: [EffectsCompositionInstruction.TimeMapEntry], timeRangeDuration: Double) -> AVMutableVideoComposition? {
         let track = videoTrack ?? asset.tracks(withMediaType: .video).first
         guard let videoTrack = track else { return nil }
         let natSize = videoTrack.naturalSize.applying(videoTrack.preferredTransform)
@@ -1984,10 +2293,6 @@ private final class VideoEditorView: NSView {
 
         // Snapshot segments *by value* into plain arrays. The compositor runs
         // on background queues; we must not share main-actor state with it.
-        // VideoZoomSegment and VideoCensorSegment are reference types, but
-        // their mutation funnels through the main actor, and by the time the
-        // compositor reads them they've been copied into the instruction
-        // (which AVFoundation copies again internally).
         let zoomSnapshot = zoomSegments
             .filter { $0.endTime > $0.startTime }
             .sorted { $0.startTime < $1.startTime }
@@ -2004,7 +2309,7 @@ private final class VideoEditorView: NSView {
             naturalSize: CGSize(width: naturalW, height: naturalH),
             renderSize: CGSize(width: renderW, height: renderH),
             baseTransform: baseTransform,
-            timeShift: timeShift,
+            timeMap: timeMap,
             zoomSegments: zoomSnapshot,
             censorSegments: censorSnapshot
         )
@@ -2019,6 +2324,32 @@ private final class VideoEditorView: NSView {
         return composition
     }
 
+    /// Convenience: build a single-entry time map from a scalar shift. All
+    /// existing non-cut callers use this.
+    private func singleShiftTimeMap(shift: Double, duration: Double) -> [EffectsCompositionInstruction.TimeMapEntry] {
+        return [.init(compStart: 0, compEnd: duration, sourceOffset: shift)]
+    }
+
+    /// Map composition-time → source-asset-time for the standard export path
+    /// (trim + cuts). `compositionDuration` is the composition's actual
+    /// duration (already shortened by cuts).
+    private func timeMapForExport(compositionDuration: Double) -> [EffectsCompositionInstruction.TimeMapEntry] {
+        let kept = VideoCuts.keptRanges(
+            trimStart: trimStart,
+            trimEnd: trimEnd,
+            cuts: cutSegments
+        )
+        let entries = VideoCuts.timeMap(for: kept)
+        if entries.isEmpty {
+            // Fall back to a passthrough single-entry map (should not happen
+            // when the caller already has a non-zero composition duration).
+            return singleShiftTimeMap(shift: trimStart, duration: compositionDuration)
+        }
+        return entries.map {
+            EffectsCompositionInstruction.TimeMapEntry(compStart: $0.0, compEnd: $0.1, sourceOffset: $0.2)
+        }
+    }
+
     private func stepFrame(forward: Bool) {
         guard let player = player else { return }
         // Pause if playing
@@ -2026,10 +2357,11 @@ private final class VideoEditorView: NSView {
 
         let fps = asset?.tracks(withMediaType: .video).first?.nominalFrameRate ?? 30
         let frameDuration = 1.0 / Double(fps)
-        let current = CMTimeGetSeconds(player.currentTime())
-        let target = forward
-            ? min(current + frameDuration, trimEnd)
-            : max(current - frameDuration, trimStart)
+        let currentSource = mapPreviewClockToSourceTime(CMTimeGetSeconds(player.currentTime()))
+        let targetSource = forward
+            ? min(currentSource + frameDuration, trimEnd)
+            : max(currentSource - frameDuration, trimStart)
+        let target = mapSourceTimeToPreviewClock(targetSource)
         player.seek(to: CMTime(seconds: target, preferredTimescale: 600),
                      toleranceBefore: .zero, toleranceAfter: .zero)
         needsDisplay = true
