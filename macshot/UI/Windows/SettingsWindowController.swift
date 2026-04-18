@@ -152,7 +152,14 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         toolbar.selectedItemIdentifier = NSToolbarItem.Identifier("general")
         // Re-apply content size after toolbar install, since NSToolbar can
         // resize the window to fit its items.
-        window.setContentSize(NSSize(width: 560, height: 520))
+        //
+        // Width went from 560 → 620 to accommodate longer translated
+        // strings (issue #130 — Polish "Szybkie przechwycenie:" + the
+        // "Automatycznie zamazuj dane wrażliwe" checkbox both overflowed
+        // the old layout). The extra 60pt flows evenly across the two
+        // toggle-grid columns so Polish/German/Dutch labels fit on one
+        // line instead of wrapping.
+        window.setContentSize(NSSize(width: 620, height: 520))
 
         // Build all tab content views up front (preserves existing behavior — nothing lazy-created)
         tabContentViews["general"]   = makeGeneralTabView()
@@ -1794,13 +1801,20 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         return lbl
     }
 
+    /// Width of the right-aligned label column for `labeledRow`. Wide
+    /// enough to fit the longest localized string in practice — Polish's
+    /// "Szybkie przechwycenie:" (issue #130) used to get clipped at the
+    /// old 140pt column. 180pt covers every shipping locale with a bit
+    /// of headroom.
+    private static let labelColumnWidth: CGFloat = 180
+
     /// A horizontal row: right-aligned label on the left, controls on the right.
     private func labeledRow(_ labelText: String, controls: [NSView]) -> NSView {
         let lbl = NSTextField(labelWithString: labelText)
         lbl.font = NSFont.systemFont(ofSize: 13)
         lbl.alignment = .right
         lbl.translatesAutoresizingMaskIntoConstraints = false
-        lbl.widthAnchor.constraint(equalToConstant: 140).isActive = true
+        lbl.widthAnchor.constraint(equalToConstant: Self.labelColumnWidth).isActive = true
 
         let row = NSStackView(views: [lbl] + controls)
         row.orientation = .horizontal
@@ -1814,7 +1828,8 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private func indented(_ view: NSView) -> NSView {
         let spacer = NSView()
         spacer.translatesAutoresizingMaskIntoConstraints = false
-        spacer.widthAnchor.constraint(equalToConstant: 148).isActive = true  // 140 label + 8 spacing
+        // Label column + row spacing (8pt).
+        spacer.widthAnchor.constraint(equalToConstant: Self.labelColumnWidth + 8).isActive = true
 
         let row = NSStackView(views: [spacer, view])
         row.orientation = .horizontal
@@ -1861,7 +1876,11 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
             hStack.distribution = .fillEqually
             hStack.spacing = 0
             hStack.translatesAutoresizingMaskIntoConstraints = false
-            hStack.heightAnchor.constraint(equalToConstant: 28).isActive = true
+            // Row must be AT LEAST 28pt so single-line checkboxes still look
+            // consistent, but can grow if a translated label wraps to two
+            // lines. Without this relaxation, long locale strings get
+            // horizontally clipped (issue #130).
+            hStack.heightAnchor.constraint(greaterThanOrEqualToConstant: 28).isActive = true
 
             for col in 0..<cols {
                 let idx = row * cols + col
@@ -1873,6 +1892,16 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
                     cb.tag = item.tag
                     cb.identifier = NSUserInterfaceItemIdentifier(defaultsKey)
                     cb.translatesAutoresizingMaskIntoConstraints = false
+                    // Let the title wrap when it doesn't fit the column —
+                    // the native NSButton checkbox truncates by default.
+                    // Word-wrap is graceful; the cell takes a second line
+                    // of text when needed instead of swallowing characters.
+                    cb.cell?.wraps = true
+                    cb.cell?.isScrollable = false
+                    cb.cell?.lineBreakMode = .byWordWrapping
+                    if let cell = cb.cell as? NSButtonCell {
+                        cell.usesSingleLineMode = false
+                    }
                     hStack.addArrangedSubview(cb)
                 } else {
                     let filler = NSView()
