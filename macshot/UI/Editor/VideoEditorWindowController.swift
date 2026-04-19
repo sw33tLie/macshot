@@ -1447,6 +1447,10 @@ private final class VideoEditorView: NSView {
     private func exportSession(asset: AVAsset, timeRange: CMTimeRange, outputURL: URL) -> AVAssetExportSession? {
         let needsScale = exportScale < 0.999
         let hasEffects = !zoomSegments.isEmpty || !censorSegments.isEmpty
+        // Freezes force the custom compositor on — AVAssetExportSession fails
+        // on the extreme scaleTimeRange a freeze bakes into the composition
+        // track (1/600s source slice stretched to ~1s = 600× scale).
+        let hasFreeze = !freezeSegments.isEmpty
 
         guard let processed = buildProcessedComposition(
             srcAsset: asset,
@@ -1459,7 +1463,7 @@ private final class VideoEditorView: NSView {
         session.outputURL = outputURL
         session.outputFileType = .mp4
 
-        if needsScale || hasEffects {
+        if needsScale || hasEffects || hasFreeze {
             guard let srcVideoTrack = asset.tracks(withMediaType: .video).first else { return session }
             let naturalSize = srcVideoTrack.naturalSize.applying(srcVideoTrack.preferredTransform)
             let (scaledW, scaledH) = VideoEncodingSettings.evenDimensions(
@@ -1467,7 +1471,7 @@ private final class VideoEditorView: NSView {
                 height: abs(naturalSize.height) * exportScale
             )
             let renderSize = CGSize(width: scaledW, height: scaledH)
-            if hasEffects {
+            if hasEffects || hasFreeze {
                 session.videoComposition = buildEffectsVideoComposition(
                     for: processed.composition,
                     videoTrack: processed.videoTrack,
@@ -1840,6 +1844,11 @@ private final class VideoEditorView: NSView {
         // the clock, and the compositor applies zoom + censor. Otherwise
         // we read raw scaled frames directly from the source track and
         // pull audio straight from the original asset.
+        //
+        // Freezes additionally require the custom compositor: the reader's
+        // native handling of extreme scaleTimeRange (1/600s slice → 1s)
+        // doesn't reliably duplicate frames across the stretched window,
+        // so we drive frame generation via the compositor's time map.
         let readerAsset: AVAsset
         let readerVideoTrack: AVAssetTrack
         let readerAudioTracks: [AVAssetTrack]
@@ -1858,7 +1867,7 @@ private final class VideoEditorView: NSView {
             readerVideoTrack = processed.videoTrack
             readerAudioTracks = processed.audioTracks
             readerTimeRange = CMTimeRange(start: .zero, duration: processed.composition.duration)
-            if hasEffects {
+            if hasEffects || hasFreeze {
                 readerComposition = buildEffectsVideoComposition(
                     for: processed.composition,
                     videoTrack: processed.videoTrack,
@@ -1890,7 +1899,7 @@ private final class VideoEditorView: NSView {
                 videoInput.expectsMediaDataInRealTime = false
                 // Orientation: the video composition path already produces upright
                 // render-size frames, so don't re-apply preferredTransform.
-                if !hasEffects {
+                if readerComposition == nil {
                     videoInput.transform = videoTrack.preferredTransform
                 }
                 guard writer.canAdd(videoInput) else { completion(false); return }
@@ -2398,7 +2407,13 @@ private final class VideoEditorView: NSView {
         // Skip composition entirely when there's nothing to render — callers
         // should already guard on this, but being explicit avoids shipping a
         // custom compositor through the pipeline unnecessarily.
-        guard !zoomSegments.isEmpty || !censorSegments.isEmpty else {
+        //
+        // Freezes also force the compositor on: their time-map entries scale
+        // a 1/600s source slice to holdDuration seconds (factor ≈ 1/600),
+        // which AVAssetExportSession can't handle via bare scaleTimeRange.
+        // Routing through our compositor lets the time-map resolve comp time
+        // back to source time frame-by-frame, producing a clean frame hold.
+        guard !zoomSegments.isEmpty || !censorSegments.isEmpty || !freezeSegments.isEmpty else {
             return nil
         }
 
