@@ -406,8 +406,13 @@ private final class VideoEditorView: NSView {
         let heightC = scrollView.heightAnchor.constraint(equalToConstant: scrollHeight)
         heightC.priority = .required
         NSLayoutConstraint.activate([
-            scrollView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: timelinePad),
-            scrollView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -timelinePad),
+            // Inset 4pt less than the trim timeline so effect-pill handles
+            // that poke past the pill edge (at startTime=0 or
+            // endTime=duration) still have room to render fully. The
+            // band itself re-inserts a matching 4pt horizontalInset so
+            // pills visually align with the thumbnails above.
+            scrollView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: timelinePad - 4),
+            scrollView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -(timelinePad - 4)),
             // Scroll view sits directly above the buttons row (y=48 from parent bottom).
             scrollView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -buttonsAreaH),
             heightC,

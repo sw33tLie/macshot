@@ -61,10 +61,14 @@ final class EffectsBandView: NSView {
     private let rowH: CGFloat = 22
     private let rowGap: CGFloat = 2
     private var rowStride: CGFloat { rowH + rowGap }
-    /// The enclosing scroll view is already inset horizontally to match the
-    /// trim timeline above — don't double-inset here, otherwise our pills
-    /// would be narrower than the thumbnails above them.
-    private let horizontalInset: CGFloat = 0
+    /// Horizontal padding inside the band. Pills are laid out within the
+    /// inset rect, so they visually align with the trim timeline above;
+    /// the inset itself gives the 6pt-wide handles room to poke over
+    /// the pill edge without being clipped when a pill sits at
+    /// startTime = 0 or endTime = duration. The enclosing scroll view
+    /// extends 4pt past `timelinePad` on each side to match, so the
+    /// overhanging handles actually render.
+    private let horizontalInset: CGFloat = 4
     /// Vertical padding around the stack so the topmost row's upper handle
     /// (and bottommost row's lower handle) don't get clipped by the scroll
     /// view's content bounds.
@@ -682,7 +686,14 @@ final class EffectsBandView: NSView {
     override func mouseDown(with event: NSEvent) {
         let p = convert(event.locationInWindow, from: nil)
         let edgeHitW: CGFloat = 9
-        let clickTime = Double((p.x - row0Rect.minX) / max(row0Rect.width, 1)) * duration
+        // Clamp to [0, duration] so a click in the handle-overhang zone
+        // (the 4pt gap between row0Rect and the band's edges, which
+        // exists so edge-pill handles render fully) doesn't produce a
+        // click-time slightly outside the timeline. Without this clamp
+        // the drag anchor gets a sub-duration offset, causing dragged
+        // pills to stop just short of 0 / duration.
+        let clickTime = max(0, min(duration,
+            Double((p.x - row0Rect.minX) / max(row0Rect.width, 1)) * duration))
 
         // Freezes first — they're narrow point markers and easy to miss
         // if a wider pill underneath steals the click.
@@ -971,7 +982,14 @@ final class EffectsBandView: NSView {
                 return
             }
         }
-        let clickTime = Double((p.x - row0Rect.minX) / max(row0Rect.width, 1)) * duration
+        // Clamp to [0, duration] so a click in the handle-overhang zone
+        // (the 4pt gap between row0Rect and the band's edges, which
+        // exists so edge-pill handles render fully) doesn't produce a
+        // click-time slightly outside the timeline. Without this clamp
+        // the drag anchor gets a sub-duration offset, causing dragged
+        // pills to stop just short of 0 / duration.
+        let clickTime = max(0, min(duration,
+            Double((p.x - row0Rect.minX) / max(row0Rect.width, 1)) * duration))
         showAddEffectMenu(at: p, clickTime: clickTime)
     }
 
@@ -1158,7 +1176,14 @@ final class EffectsBandView: NSView {
 
     private func attachAddEffectSubmenu(to menu: NSMenu, event: NSEvent) {
         let p = convert(event.locationInWindow, from: nil)
-        let clickTime = Double((p.x - row0Rect.minX) / max(row0Rect.width, 1)) * duration
+        // Clamp to [0, duration] so a click in the handle-overhang zone
+        // (the 4pt gap between row0Rect and the band's edges, which
+        // exists so edge-pill handles render fully) doesn't produce a
+        // click-time slightly outside the timeline. Without this clamp
+        // the drag anchor gets a sub-duration offset, causing dragged
+        // pills to stop just short of 0 / duration.
+        let clickTime = max(0, min(duration,
+            Double((p.x - row0Rect.minX) / max(row0Rect.width, 1)) * duration))
         let parent = NSMenuItem(title: L("Add effect"), action: nil, keyEquivalent: "")
         let sub = NSMenu()
         let zoomGap = zoomGapAtClickTime(clickTime)
