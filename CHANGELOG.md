@@ -1,5 +1,10 @@
 # Changelog
 
+## [4.1.0-beta.5] - 2026-04-19
+
+### Fixed
+- **Video editor export with freeze frames** — saving or uploading a video that contained a freeze failed with "Export failed" because `AVAssetExportSession` choked on the 600× `scaleTimeRange` a freeze bakes into the composition track. Freezes now route through the custom video compositor, which uses its time map to serve the same source frame for every composition time during the hold — matching how preview already renders them.
+
 ## [4.1.0-beta.4] - 2026-04-18
 
 ### Added
