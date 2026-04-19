@@ -24,10 +24,10 @@
     <enclosure url="https://github.com/sw33tLie/macshot/releases/download/v4.0.4/MacShot.dmg" length="5940423" type="application/octet-stream" sparkle:edSignature="Bcj1UKJt6ByGyOk28g/M7CFxKiId+FvNsHSxUXlcv0BiHEBmpSSJ4/S3yPCIcLQpOhZzLZ9ADN9OsV4Q2qgRBw==" />
 </item>
 <item>
-    <title>v4.1.0-beta.4</title>
-    <pubDate>Sat, 18 Apr 2026 20:59:41 +0000</pubDate>
-    <sparkle:version>68</sparkle:version>
-    <sparkle:shortVersionString>4.1.0-beta.4</sparkle:shortVersionString>
+    <title>v4.1.0-beta.5</title>
+    <pubDate>Sun, 19 Apr 2026 01:56:29 +0000</pubDate>
+    <sparkle:version>69</sparkle:version>
+    <sparkle:shortVersionString>4.1.0-beta.5</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
     <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
@@ -38,13 +38,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Added</h3><ul> <li><b>Freeze-frame effect in the video editor</b> — hold a single source frame for a chosen duration (0.25s, 0.5s, 1s, 2s, 3s, 5s presets, 0.1–30s range). Shown on the effects band as a violet snowflake pill anchored at the source moment. Works alongside cuts and speeds: a freeze inside a speed segment splits it, a freeze inside a cut is silently dropped. Audio goes silent during the hold, matching what viewers expect.</li>  </ul><h3>Changed</h3><ul> <li><b>Zoom effect now zooms into the area you actually drew</b> — previously the rect was vertically mirrored at render time because the overlay coordinates (y-down) and CIImage transforms (y-up) hadn't been reconciled.</li> <li><b>"Open in Finder" on recording stop reveals the file in your configured recording directory</b> (or screenshot save dir, or via a Save panel) — not the sandbox tmp folder. Files become something you can actually find and keep.</li> <li><b>Clipboard copy uses a nicely named file</b> (`Screenshot 2026-04-18 at 18-33.png` inside `tmp/macshot-clipboard/`) overwritten on each copy. Finder paste no longer nags "A newer item named 'macshot-clipboard.png' already exists."</li> <li><b>Video editor time labels now sit above the trim bar</b> with 4pt breathing room, so the "Copied to clipboard!" status banner doesn't crowd the effects band below.</li> <li><b>Video editor playback is ~17% lighter on the main thread</b> — timeline thumbnails are pre-composited into a single cached strip, and the 30Hz playhead observer now invalidates only the trim-bar stripe so the bottom button row stays off the per-frame draw path.</li> <li><b>Settings window widened 560 → 620pt, label column 140 → 180pt, checkbox titles wrap gracefully</b> so Polish, German, Dutch, and other long translations fit without clipping.</li>  </ul><h3>Fixed</h3><ul> <li><b>Settings window clipping in Polish and other long-string locales</b> — "Szybkie przechwycenie:" was losing its trailing colon, "Automatycznie zamazuj dane wrażliwe" was being truncated. Closes #130.</li> <li><b>Tmp-file accumulation</b> — clipboard intermediates, share-sheet temps, cancelled recordings, and sandbox write-quarantine stubs all accumulated in the sandbox tmp folder indefinitely. A new `LaunchCleanup` framework now sweeps these: fixed-path overwrites for the clipboard and recording-clipboard files, a dedicated `tmp/macshot-share/` subfolder with a 5-minute TTL, and a pattern-based sweep with a 24-hour TTL for everything else. One tester reported 1.2 GB of leftovers before this fix; now it stays at a few hundred KB steady state. Closes #128.</li> <li><b>History panel orphan files</b> — past builds sometimes wrote `_preview.png` alongside a history entry without cleaning it up on delete. `ScreenshotHistory` now prunes these on launch by diffing the history dir against `index.json`.</li></ul>
+      <h3>Fixed</h3><ul> <li><b>Video editor export with freeze frames</b> — saving or uploading a video that contained a freeze failed with "Export failed" because `AVAssetExportSession` choked on the 600× `scaleTimeRange` a freeze bakes into the composition track. Freezes now route through the custom video compositor, which uses its time map to serve the same source frame for every composition time during the hold — matching how preview already renders them.</li></ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v4.1.0-beta.4/MacShot.dmg"
-        length="5838297"
+        url="https://github.com/sw33tLie/macshot/releases/download/v4.1.0-beta.5/MacShot.dmg"
+        length="5849481"
         type="application/octet-stream"
-        sparkle:edSignature="POFMBxBfMAVYsBcyCo7y2VadY7BNqMcicFg7TlJ2wE5cxOUcDzlIlU/b0ZGYBait1j9xEEZ2WmXcuZkmnWxPCg=="
+        sparkle:edSignature="vxoeBoaoyeblTDtQR2429s8Xw7TGZPHuajtt5iO7ssLx/zGdno17kDIZitvWok3bKYwENiSNn2TUrk/2VJzUCg=="
     />
 </item>
     </channel>
