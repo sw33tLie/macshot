@@ -1227,9 +1227,10 @@ class ToolOptionsRowView: NSView {
             ensureSnapshot()
             ann.strokeWidth = val
             ov.cachedCompositedImage = nil
-        } else {
-            if let tool = currentTool { ov.setActiveStrokeWidth(val, for: tool) }
         }
+        // Always update the global default so the last-picked stroke sticks
+        // for the next capture, whether or not an annotation was being edited.
+        if let tool = currentTool { ov.setActiveStrokeWidth(val, for: tool) }
         if let label = viewWithTag(997) as? NSTextField {
             label.stringValue = currentTool == .loupe ? "\(Int(val))" : "\(Int(val))px"
         }
@@ -1243,10 +1244,9 @@ class ToolOptionsRowView: NSView {
                 ensureSnapshot()
                 ann.lineStyle = style
                 ov.cachedCompositedImage = nil
-            } else {
-                ov.currentLineStyle = style
-                UserDefaults.standard.set(style.rawValue, forKey: "currentLineStyle")
             }
+            ov.currentLineStyle = style
+            UserDefaults.standard.set(style.rawValue, forKey: "currentLineStyle")
             ov.needsDisplay = true
         }
     }
@@ -1258,10 +1258,9 @@ class ToolOptionsRowView: NSView {
                 ensureSnapshot()
                 ann.arrowStyle = style
                 ov.cachedCompositedImage = nil
-            } else {
-                ov.currentArrowStyle = style
-                UserDefaults.standard.set(style.rawValue, forKey: "currentArrowStyle")
             }
+            ov.currentArrowStyle = style
+            UserDefaults.standard.set(style.rawValue, forKey: "currentArrowStyle")
             ov.needsDisplay = true
         }
     }
@@ -1273,10 +1272,9 @@ class ToolOptionsRowView: NSView {
                 ensureSnapshot()
                 ann.rectFillStyle = style
                 ov.cachedCompositedImage = nil
-            } else {
-                ov.currentRectFillStyle = style
-                UserDefaults.standard.set(style.rawValue, forKey: "currentRectFillStyle")
             }
+            ov.currentRectFillStyle = style
+            UserDefaults.standard.set(style.rawValue, forKey: "currentRectFillStyle")
             ov.needsDisplay = true
         }
     }
@@ -1288,10 +1286,9 @@ class ToolOptionsRowView: NSView {
             ensureSnapshot()
             ann.rectCornerRadius = val
             ov.cachedCompositedImage = nil
-        } else {
-            ov.currentRectCornerRadius = val
-            UserDefaults.standard.set(sender.doubleValue, forKey: "currentRectCornerRadius")
         }
+        ov.currentRectCornerRadius = val
+        UserDefaults.standard.set(sender.doubleValue, forKey: "currentRectCornerRadius")
         if let label = viewWithTag(996) as? NSTextField {
             label.stringValue = "\(Int(val))px"
         }
