@@ -535,6 +535,7 @@
 "Capture area and extract text" = "捕获区域并提取文字";
 "Capture the full screen" = "捕获整个屏幕";
 "Counter for multi-screen captures" = "多屏幕捕获计数器";
+"8-character random string (e.g. k3j7x9q2)" = "8 位随机字符串（例如 k3j7x9q2）";
 "Filename Template Tokens" = "文件名模板标记";
 "Filename tokens" = "文件名标记";
 "Filename:" = "文件名:";

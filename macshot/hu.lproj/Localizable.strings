@@ -533,6 +533,7 @@
 "Capture area and extract text" = "Terület rögzítése és szöveg kinyerése";
 "Capture the full screen" = "Teljes képernyő rögzítése";
 "Counter for multi-screen captures" = "Számláló többképernyős rögzítésekhez";
+"8-character random string (e.g. k3j7x9q2)" = "8 karakteres véletlen karakterlánc (pl. k3j7x9q2)";
 "Filename Template Tokens" = "Fájlnév sablon tokenek";
 "Filename tokens" = "Fájlnév tokenek";
 "Filename:" = "Fájlnév:";

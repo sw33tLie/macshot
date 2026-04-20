@@ -535,6 +535,7 @@
 "Capture area and extract text" = "Fånga område och extrahera text";
 "Capture the full screen" = "Fånga hela skärmen";
 "Counter for multi-screen captures" = "Räknare för fångster över flera skärmar";
+"8-character random string (e.g. k3j7x9q2)" = "8-teckens slumpmässig sträng (t.ex. k3j7x9q2)";
 "Filename Template Tokens" = "Filnamnsmalltoken";
 "Filename tokens" = "Filnamnstoken";
 "Filename:" = "Filnamn:";

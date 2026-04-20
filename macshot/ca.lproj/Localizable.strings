@@ -535,6 +535,7 @@
 "Capture area and extract text" = "Capturar àrea i extreure text";
 "Capture the full screen" = "Capturar la pantalla completa";
 "Counter for multi-screen captures" = "Comptador per a captures multipantalla";
+"8-character random string (e.g. k3j7x9q2)" = "Cadena aleatòria de 8 caràcters (p. ex. k3j7x9q2)";
 "Filename Template Tokens" = "Testimonis de plantilla de nom de fitxer";
 "Filename tokens" = "Testimonis de nom de fitxer";
 "Filename:" = "Nom de fitxer:";

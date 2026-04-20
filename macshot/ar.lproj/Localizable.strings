@@ -535,6 +535,7 @@
 "Capture area and extract text" = "التقاط منطقة واستخراج النص";
 "Capture the full screen" = "التقاط الشاشة بالكامل";
 "Counter for multi-screen captures" = "عدّاد لالتقاطات الشاشات المتعددة";
+"8-character random string (e.g. k3j7x9q2)" = "سلسلة عشوائية من 8 أحرف (مثل k3j7x9q2)";
 "Filename Template Tokens" = "رموز قالب اسم الملف";
 "Filename tokens" = "رموز اسم الملف";
 "Filename:" = "اسم الملف:";

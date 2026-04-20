@@ -536,6 +536,7 @@
 "Capture area and extract text" = "Capture area and extract text";
 "Capture the full screen" = "Capture the full screen";
 "Counter for multi-screen captures" = "Counter for multi-screen captures";
+"8-character random string (e.g. k3j7x9q2)" = "8-character random string (e.g. k3j7x9q2)";
 "Filename Template Tokens" = "Filename Template Tokens";
 "Filename tokens" = "Filename tokens";
 "Filename:" = "Filename:";

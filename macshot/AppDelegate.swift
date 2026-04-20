@@ -2233,9 +2233,14 @@ extension AppDelegate: NSMenuDelegate {
 
     @objc private func copyHistoryEntry(_ sender: NSMenuItem) {
         let index = sender.tag
-        ScreenshotHistory.shared.copyEntry(at: index)
+        let entries = ScreenshotHistory.shared.entries
+        guard index >= 0, index < entries.count else { return }
+        let entry = entries[index]
+        guard let image = ScreenshotHistory.shared.loadImage(for: entry) else { return }
 
-        // Play copy sound
+        ImageEncoder.copyToClipboard(image)
+        showFloatingThumbnail(image: image, historyEntryID: entry.id)
+
         let soundEnabled = UserDefaults.standard.object(forKey: "playCopySound") as? Bool ?? true
         if soundEnabled {
             Self.captureSound?.stop()

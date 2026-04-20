@@ -533,6 +533,7 @@
 "Capture area and extract text" = "Capturer une zone et extraire le texte";
 "Capture the full screen" = "Capturer l'écran entier";
 "Counter for multi-screen captures" = "Compteur pour les captures multi-écrans";
+"8-character random string (e.g. k3j7x9q2)" = "Chaîne aléatoire de 8 caractères (ex. k3j7x9q2)";
 "Filename Template Tokens" = "Jetons du modèle de nom de fichier";
 "Filename tokens" = "Jetons de nom de fichier";
 "Filename:" = "Nom de fichier :";

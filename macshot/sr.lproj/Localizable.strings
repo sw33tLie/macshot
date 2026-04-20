@@ -535,6 +535,7 @@
 "Capture area and extract text" = "Сними област и издвоји текст";
 "Capture the full screen" = "Сними цео екран";
 "Counter for multi-screen captures" = "Бројач за снимања са више екрана";
+"8-character random string (e.g. k3j7x9q2)" = "Насумични низ од 8 знакова (нпр. k3j7x9q2)";
 "Filename Template Tokens" = "Ознаке шаблона имена датотеке";
 "Filename tokens" = "Ознаке имена датотеке";
 "Filename:" = "Име датотеке:";

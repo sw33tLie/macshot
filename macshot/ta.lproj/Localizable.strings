@@ -535,6 +535,7 @@
 "Capture area and extract text" = "பகுதியைப் பிடித்து உரையைப் பிரித்தெடு";
 "Capture the full screen" = "முழுத் திரையையும் பிடி";
 "Counter for multi-screen captures" = "பல-திரை பிடிப்புகளுக்கான எண்ணி";
+"8-character random string (e.g. k3j7x9q2)" = "8-எழுத்து சீரற்ற சரம் (எ.கா. k3j7x9q2)";
 "Filename Template Tokens" = "கோப்புப்பெயர் வார்ப்புரு டோக்கன்கள்";
 "Filename tokens" = "கோப்புப்பெயர் டோக்கன்கள்";
 "Filename:" = "கோப்புப்பெயர்:";

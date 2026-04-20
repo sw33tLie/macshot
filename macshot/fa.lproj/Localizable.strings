@@ -535,6 +535,7 @@
 "Capture area and extract text" = "ضبط ناحیه و استخراج متن";
 "Capture the full screen" = "ضبط تمام صفحه";
 "Counter for multi-screen captures" = "شمارنده برای ضبط‌های چند صفحه‌ای";
+"8-character random string (e.g. k3j7x9q2)" = "رشته تصادفی ۸ کاراکتری (مثلاً k3j7x9q2)";
 "Filename Template Tokens" = "توکن‌های قالب نام فایل";
 "Filename tokens" = "توکن‌های نام فایل";
 "Filename:" = "نام فایل:";

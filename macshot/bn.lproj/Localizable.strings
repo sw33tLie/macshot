@@ -535,6 +535,7 @@
 "Capture area and extract text" = "এলাকা ক্যাপচার করুন এবং টেক্সট বের করুন";
 "Capture the full screen" = "পূর্ণ স্ক্রিন ক্যাপচার করুন";
 "Counter for multi-screen captures" = "মাল্টি-স্ক্রিন ক্যাপচারের জন্য কাউন্টার";
+"8-character random string (e.g. k3j7x9q2)" = "৮-অক্ষরের র‍্যান্ডম স্ট্রিং (যেমন k3j7x9q2)";
 "Filename Template Tokens" = "ফাইলনাম টেমপ্লেট টোকেন";
 "Filename tokens" = "ফাইলনাম টোকেন";
 "Filename:" = "ফাইলনাম:";

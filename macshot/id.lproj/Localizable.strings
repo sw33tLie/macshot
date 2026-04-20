@@ -533,6 +533,7 @@
 "Capture area and extract text" = "Tangkap area dan ekstrak teks";
 "Capture the full screen" = "Tangkap seluruh layar";
 "Counter for multi-screen captures" = "Penghitung untuk tangkapan multi-layar";
+"8-character random string (e.g. k3j7x9q2)" = "String acak 8 karakter (mis. k3j7x9q2)";
 "Filename Template Tokens" = "Token Template Nama File";
 "Filename tokens" = "Token nama file";
 "Filename:" = "Nama file:";

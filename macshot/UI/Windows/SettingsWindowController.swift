@@ -2612,6 +2612,7 @@ extension SettingsWindowController {
             ("{unix}",      "1745592125"),
             ("{window}",    L("Screenshots only — captured window title (blank otherwise)")),
             ("{index}",     L("Counter for multi-screen captures")),
+            ("{random}",    L("8-character random string (e.g. k3j7x9q2)")),
         ]
 
         let title = NSTextField(labelWithString: L("Filename Template Tokens"))

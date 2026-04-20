@@ -533,6 +533,7 @@
 "Capture area and extract text" = "จับภาพพื้นที่และดึงข้อความ";
 "Capture the full screen" = "จับภาพเต็มหน้าจอ";
 "Counter for multi-screen captures" = "ตัวนับสำหรับการจับภาพหลายหน้าจอ";
+"8-character random string (e.g. k3j7x9q2)" = "สตริงสุ่ม 8 อักขระ (เช่น k3j7x9q2)";
 "Filename Template Tokens" = "โทเคนเทมเพลตชื่อไฟล์";
 "Filename tokens" = "โทเคนชื่อไฟล์";
 "Filename:" = "ชื่อไฟล์:";

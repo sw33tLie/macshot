@@ -535,6 +535,7 @@
 "Capture area and extract text" = "לכוד אזור וחלץ טקסט";
 "Capture the full screen" = "לכוד את המסך המלא";
 "Counter for multi-screen captures" = "מונה ללכידות מרובות-מסך";
+"8-character random string (e.g. k3j7x9q2)" = "מחרוזת אקראית בת 8 תווים (למשל k3j7x9q2)";
 "Filename Template Tokens" = "אסימוני תבנית שם קובץ";
 "Filename tokens" = "אסימוני שם קובץ";
 "Filename:" = "שם קובץ:";

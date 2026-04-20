@@ -16,6 +16,7 @@ enum FilenameFormatter {
     ///   {unix}       epoch seconds
     ///   {window}     sanitized window title, or "" when nil/empty
     ///   {index}      1, 2, …; "" when nil
+    ///   {random}     8-char lowercase base36 (0-9a-z), fresh per call
     ///
     /// Unknown tokens are left verbatim so typos are visible.
     /// The result is sanitized for macOS filesystems (strips `/`, `:`, NUL,
@@ -55,7 +56,22 @@ enum FilenameFormatter {
         for (token, value) in values {
             out = out.replacingOccurrences(of: token, with: value)
         }
+        // {random} is substituted per-occurrence so multiple tokens in one
+        // template (rare but cheap to support) produce distinct values.
+        while let range = out.range(of: "{random}") {
+            out.replaceSubrange(range, with: randomToken())
+        }
         return out
+    }
+
+    private static let randomAlphabet: [Character] = Array("0123456789abcdefghijklmnopqrstuvwxyz")
+    private static func randomToken(length: Int = 8) -> String {
+        var s = ""
+        s.reserveCapacity(length)
+        for _ in 0..<length {
+            s.append(randomAlphabet[Int.random(in: 0..<randomAlphabet.count)])
+        }
+        return s
     }
 
     private static func sanitizeWindowTitle(_ title: String?) -> String {

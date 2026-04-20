@@ -535,6 +535,7 @@
 "Capture area and extract text" = "Kaappaa alue ja poimi teksti";
 "Capture the full screen" = "Kaappaa koko ruutu";
 "Counter for multi-screen captures" = "Laskuri monen näytön kaappauksille";
+"8-character random string (e.g. k3j7x9q2)" = "8-merkkinen satunnainen merkkijono (esim. k3j7x9q2)";
 "Filename Template Tokens" = "Tiedostonimen mallin tunnukset";
 "Filename tokens" = "Tiedostonimen tunnukset";
 "Filename:" = "Tiedostonimi:";

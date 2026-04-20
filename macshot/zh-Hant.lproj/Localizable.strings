@@ -535,6 +535,7 @@
 "Capture area and extract text" = "擷取區域並提取文字";
 "Capture the full screen" = "擷取全螢幕";
 "Counter for multi-screen captures" = "多螢幕擷取計數器";
+"8-character random string (e.g. k3j7x9q2)" = "8 位隨機字串（例如 k3j7x9q2）";
 "Filename Template Tokens" = "檔案名稱範本代碼";
 "Filename tokens" = "檔案名稱代碼";
 "Filename:" = "檔案名稱：";

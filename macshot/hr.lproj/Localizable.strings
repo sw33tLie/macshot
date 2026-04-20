@@ -533,6 +533,7 @@
 "Capture area and extract text" = "Snimi područje i izdvoji tekst";
 "Capture the full screen" = "Snimi cijeli zaslon";
 "Counter for multi-screen captures" = "Brojač za snimanja s više zaslona";
+"8-character random string (e.g. k3j7x9q2)" = "Nasumični niz od 8 znakova (npr. k3j7x9q2)";
 "Filename Template Tokens" = "Oznake predloška naziva datoteke";
 "Filename tokens" = "Oznake naziva datoteke";
 "Filename:" = "Naziv datoteke:";

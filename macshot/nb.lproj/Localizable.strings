@@ -535,6 +535,7 @@
 "Capture area and extract text" = "Ta opp område og trekk ut tekst";
 "Capture the full screen" = "Ta bilde av hele skjermen";
 "Counter for multi-screen captures" = "Teller for flerskjermsopptak";
+"8-character random string (e.g. k3j7x9q2)" = "8-tegns tilfeldig streng (f.eks. k3j7x9q2)";
 "Filename Template Tokens" = "Tegn for filnavnmal";
 "Filename tokens" = "Filnavntegn";
 "Filename:" = "Filnavn:";

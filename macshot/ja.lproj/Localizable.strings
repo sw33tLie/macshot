@@ -533,6 +533,7 @@
 "Capture area and extract text" = "エリアをキャプチャしてテキストを抽出";
 "Capture the full screen" = "フルスクリーンをキャプチャ";
 "Counter for multi-screen captures" = "マルチスクリーンキャプチャのカウンター";
+"8-character random string (e.g. k3j7x9q2)" = "8文字のランダムな文字列（例: k3j7x9q2）";
 "Filename Template Tokens" = "ファイル名テンプレートトークン";
 "Filename tokens" = "ファイル名トークン";
 "Filename:" = "ファイル名:";

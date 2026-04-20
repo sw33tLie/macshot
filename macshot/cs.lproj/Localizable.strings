@@ -533,6 +533,7 @@
 "Capture area and extract text" = "Zachytit oblast a extrahovat text";
 "Capture the full screen" = "Zachytit celou obrazovku";
 "Counter for multi-screen captures" = "Počítadlo pro snímky z více obrazovek";
+"8-character random string (e.g. k3j7x9q2)" = "8znakový náhodný řetězec (např. k3j7x9q2)";
 "Filename Template Tokens" = "Tokeny šablony názvu souboru";
 "Filename tokens" = "Tokeny názvu souboru";
 "Filename:" = "Název souboru:";

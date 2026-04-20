@@ -535,6 +535,7 @@
 "Capture area and extract text" = "Λήψη περιοχής και εξαγωγή κειμένου";
 "Capture the full screen" = "Λήψη πλήρους οθόνης";
 "Counter for multi-screen captures" = "Μετρητής για λήψεις πολλαπλών οθονών";
+"8-character random string (e.g. k3j7x9q2)" = "Τυχαία συμβολοσειρά 8 χαρακτήρων (π.χ. k3j7x9q2)";
 "Filename Template Tokens" = "Διακριτικά προτύπου ονόματος αρχείου";
 "Filename tokens" = "Διακριτικά ονόματος αρχείου";
 "Filename:" = "Όνομα αρχείου:";

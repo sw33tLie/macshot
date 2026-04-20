@@ -533,6 +533,7 @@
 "Capture area and extract text" = "Захват области и извлечение текста";
 "Capture the full screen" = "Захватить весь экран";
 "Counter for multi-screen captures" = "Счётчик для захвата нескольких экранов";
+"8-character random string (e.g. k3j7x9q2)" = "8-символьная случайная строка (например, k3j7x9q2)";
 "Filename Template Tokens" = "Токены шаблона имени файла";
 "Filename tokens" = "Токены имени файла";
 "Filename:" = "Имя файла:";

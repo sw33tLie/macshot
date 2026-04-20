@@ -535,6 +535,7 @@
 "Capture area and extract text" = "Optag omr\U00E5de og udtr\U00E6k tekst";
 "Capture the full screen" = "Optag hele sk\U00E6rmen";
 "Counter for multi-screen captures" = "T\U00E6ller til optagelser p\U00E5 flere sk\U00E6rme";
+"8-character random string (e.g. k3j7x9q2)" = "8-tegns tilf\U00E6ldig streng (f.eks. k3j7x9q2)";
 "Filename Template Tokens" = "Filnavnsskabelon-tokens";
 "Filename tokens" = "Filnavns-tokens";
 "Filename:" = "Filnavn:";

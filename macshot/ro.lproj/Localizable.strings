@@ -533,6 +533,7 @@
 "Capture area and extract text" = "Captura zona si extrage textul";
 "Capture the full screen" = "Captura ecranul complet";
 "Counter for multi-screen captures" = "Contor pentru capturi multi-ecran";
+"8-character random string (e.g. k3j7x9q2)" = "Sir aleatoriu de 8 caractere (ex. k3j7x9q2)";
 "Filename Template Tokens" = "Jetoane pentru sablonul numelui de fisier";
 "Filename tokens" = "Jetoane nume fisier";
 "Filename:" = "Nume fisier:";

@@ -533,6 +533,7 @@
 "Capture area and extract text" = "Chụp vùng chọn và trích xuất văn bản";
 "Capture the full screen" = "Chụp toàn bộ màn hình";
 "Counter for multi-screen captures" = "Bộ đếm cho ảnh chụp nhiều màn hình";
+"8-character random string (e.g. k3j7x9q2)" = "Chuỗi ngẫu nhiên 8 ký tự (ví dụ: k3j7x9q2)";
 "Filename Template Tokens" = "Token mẫu tên tệp";
 "Filename tokens" = "Token tên tệp";
 "Filename:" = "Tên tệp:";

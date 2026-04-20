@@ -535,6 +535,7 @@
 "Capture area and extract text" = "영역 캡처 및 텍스트 추출";
 "Capture the full screen" = "전체 화면 캡처";
 "Counter for multi-screen captures" = "다중 화면 캡처용 카운터";
+"8-character random string (e.g. k3j7x9q2)" = "8자리 무작위 문자열 (예: k3j7x9q2)";
 "Filename Template Tokens" = "파일명 템플릿 토큰";
 "Filename tokens" = "파일명 토큰";
 "Filename:" = "파일명:";

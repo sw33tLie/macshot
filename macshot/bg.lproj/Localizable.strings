@@ -533,6 +533,7 @@
 "Capture area and extract text" = "Заснемане на област и извличане на текст";
 "Capture the full screen" = "Заснемане на целия екран";
 "Counter for multi-screen captures" = "Брояч за заснемания на няколко екрана";
+"8-character random string (e.g. k3j7x9q2)" = "Случаен низ от 8 знака (напр. k3j7x9q2)";
 "Filename Template Tokens" = "Шаблонни токени за име на файл";
 "Filename tokens" = "Токени за име на файл";
 "Filename:" = "Име на файл:";

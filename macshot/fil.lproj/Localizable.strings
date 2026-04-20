@@ -535,6 +535,7 @@
 "Capture area and extract text" = "Kumuha ng lugar at kunin ang teksto";
 "Capture the full screen" = "Kunan ang buong screen";
 "Counter for multi-screen captures" = "Counter para sa mga pagkuha ng maraming screen";
+"8-character random string (e.g. k3j7x9q2)" = "8-karakter na random na string (hal. k3j7x9q2)";
 "Filename Template Tokens" = "Mga Token ng Filename Template";
 "Filename tokens" = "Mga token ng filename";
 "Filename:" = "Filename:";

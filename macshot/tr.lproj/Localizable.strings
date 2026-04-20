@@ -535,6 +535,7 @@
 "Capture area and extract text" = "Alan yakala ve metin çıkar";
 "Capture the full screen" = "Tam ekranı yakala";
 "Counter for multi-screen captures" = "Çok ekranlı yakalamalar için sayaç";
+"8-character random string (e.g. k3j7x9q2)" = "8 karakterlik rastgele dize (örn. k3j7x9q2)";
 "Filename Template Tokens" = "Dosya Adı Şablon Belirteçleri";
 "Filename tokens" = "Dosya adı belirteçleri";
 "Filename:" = "Dosya adı:";

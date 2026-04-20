@@ -535,6 +535,7 @@
 "Capture area and extract text" = "Tangkap kawasan dan ekstrak teks";
 "Capture the full screen" = "Tangkap skrin penuh";
 "Counter for multi-screen captures" = "Pembilang untuk tangkapan berbilang skrin";
+"8-character random string (e.g. k3j7x9q2)" = "Rentetan rawak 8 aksara (cth. k3j7x9q2)";
 "Filename Template Tokens" = "Token Templat Nama Fail";
 "Filename tokens" = "Token nama fail";
 "Filename:" = "Nama fail:";

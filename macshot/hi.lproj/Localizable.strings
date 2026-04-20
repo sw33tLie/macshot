@@ -535,6 +535,7 @@
 "Capture area and extract text" = "क्षेत्र कैप्चर करें और पाठ निकालें";
 "Capture the full screen" = "पूरी स्क्रीन कैप्चर करें";
 "Counter for multi-screen captures" = "मल्टी-स्क्रीन कैप्चर के लिए काउंटर";
+"8-character random string (e.g. k3j7x9q2)" = "8-अक्षर की रैंडम स्ट्रिंग (उदा. k3j7x9q2)";
 "Filename Template Tokens" = "फ़ाइलनाम टेम्पलेट टोकन";
 "Filename tokens" = "फ़ाइलनाम टोकन";
 "Filename:" = "फ़ाइलनाम:";
