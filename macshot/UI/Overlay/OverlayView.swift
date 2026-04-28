@@ -7162,9 +7162,12 @@ class OverlayView: NSView {
             {
                 if let char = event.charactersIgnoringModifiers?.lowercased(),
                    let action = ToolShortcutManager.lookupAction(for: char) {
-                    if case .detach = action {
+                    switch action {
+                    case .detach:
                         if shouldAllowDetach() { handleToolbarAction(.detach) }
-                    } else {
+                    case .pin, .scrollCapture:
+                        if !isEditorMode { handleToolbarAction(action) }
+                    default:
                         handleToolbarAction(action)
                     }
                     return

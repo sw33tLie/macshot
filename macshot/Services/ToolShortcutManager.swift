@@ -21,6 +21,18 @@ enum ToolShortcutManager {
         case measure
         case loupe
         case openInEditor
+        case pin
+        case upload
+        case copy
+        case save
+        case ocr
+        case scrollCapture
+        case beautify
+        case invertColors
+        case removeBackground
+        case translate
+        case undo
+        case redo
 
         var label: String {
             switch self {
@@ -38,6 +50,18 @@ enum ToolShortcutManager {
             case .measure: return L("Measure")
             case .loupe: return L("Loupe")
             case .openInEditor: return L("Open in Editor")
+            case .pin: return L("Pin")
+            case .upload: return L("Upload")
+            case .copy: return L("Copy")
+            case .save: return L("Save")
+            case .ocr: return L("OCR Text")
+            case .scrollCapture: return L("Scroll Capture")
+            case .beautify: return L("Beautify")
+            case .invertColors: return L("Invert Colors")
+            case .removeBackground: return L("Remove Background")
+            case .translate: return L("Translate")
+            case .undo: return L("Undo")
+            case .redo: return L("Redo")
             }
         }
 
@@ -57,6 +81,18 @@ enum ToolShortcutManager {
             case .measure: return ""
             case .loupe: return ""
             case .openInEditor: return "e"
+            case .pin: return "f"
+            case .upload: return "u"
+            case .copy: return ""
+            case .save: return ""
+            case .ocr: return ""
+            case .scrollCapture: return ""
+            case .beautify: return ""
+            case .invertColors: return ""
+            case .removeBackground: return ""
+            case .translate: return ""
+            case .undo: return ""
+            case .redo: return ""
             }
         }
     }
@@ -110,6 +146,18 @@ enum ToolShortcutManager {
             case .measure: lookup[k] = .tool(.measure)
             case .loupe: lookup[k] = .tool(.loupe)
             case .openInEditor: lookup[k] = .detach
+            case .pin: lookup[k] = .pin
+            case .upload: lookup[k] = .upload
+            case .copy: lookup[k] = .copy
+            case .save: lookup[k] = .save
+            case .ocr: lookup[k] = .ocr
+            case .scrollCapture: lookup[k] = .scrollCapture
+            case .beautify: lookup[k] = .beautify
+            case .invertColors: lookup[k] = .invertColors
+            case .removeBackground: lookup[k] = .removeBackground
+            case .translate: lookup[k] = .translate
+            case .undo: lookup[k] = .undo
+            case .redo: lookup[k] = .redo
             }
         }
         _cachedLookup = lookup
