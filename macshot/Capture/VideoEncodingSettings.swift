@@ -5,27 +5,30 @@ import VideoToolbox
 /// Video encoding quality tiers for both live recording and post-recording export.
 ///
 /// Each tier targets a "bits per pixel per frame" ratio (bppf) rather than a fixed
-/// bitrate. At `bitsPerPixelPerFrame = 0.15`, a 1920x1080 60fps stream gets
-/// ~18.7 Mbit/s. Screen-recorded content is largely low-entropy (flat UI, fonts,
-/// solid color regions) so these tiers run lighter than equivalent camera tiers.
-/// The min/max bounds prevent pathological results on very small or very large
-/// frames.
+/// bitrate. Screen content with sharp text and any motion needs camera-equivalent
+/// bitrates — H.264's psy-tuned DCT softens high-contrast edges below ~0.30 bppf,
+/// so "low entropy UI" assumptions bite hard the moment scrolling or animation
+/// enters the frame. Targets are tuned for screen recording at common resolutions:
+///   .high @ 1440p30 → ~40 Mbit/s (industry-normal for sharp text)
+///   .high @ 1080p60 → ~52 Mbit/s
+///   .high @ 4K30    → ~64 Mbit/s (with built-in 4K+ taper applied)
+/// Min/max bounds prevent pathological results on very small or very large frames.
 enum VideoQuality: String {
     case low, medium, high
 
     var bitsPerPixelPerFrame: Double {
         switch self {
-        case .low:    return 0.07
-        case .medium: return 0.13
-        case .high:   return 0.21
+        case .low:    return 0.12
+        case .medium: return 0.22
+        case .high:   return 0.40
         }
     }
 
     var minBitrate: Int {
         switch self {
-        case .low:    return 600_000
-        case .medium: return 1_500_000
-        case .high:   return 3_000_000
+        case .low:    return 1_000_000
+        case .medium: return 4_000_000
+        case .high:   return 10_000_000
         }
     }
 
@@ -130,12 +133,17 @@ enum VideoEncodingSettings {
     }
 
     /// AVAssetWriter output settings for a video input.
+    ///
+    /// Tuned for screen content: B-frames disabled (they buy little for
+    /// low-motion screen content and complicate live encode), CABAC entropy
+    /// for H.264, one keyframe per second for reasonable seek granularity.
     static func outputSettings(width: Int, height: Int, fps: Int, codec: VideoCodec, quality: VideoQuality) -> [String: Any] {
         let bps = bitrate(width: width, height: height, fps: fps, codec: codec, quality: quality)
         var compression: [String: Any] = [
             AVVideoAverageBitRateKey: bps,
             AVVideoExpectedSourceFrameRateKey: fps,
             AVVideoMaxKeyFrameIntervalKey: max(fps, 1),   // one keyframe per second
+            AVVideoAllowFrameReorderingKey: false,         // no B-frames: lower latency, marginal cost
         ]
         if codec == .h264 {
             compression[AVVideoProfileLevelKey] = quality.h264ProfileLevel
