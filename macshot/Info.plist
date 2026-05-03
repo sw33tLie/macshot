@@ -54,7 +54,7 @@
 	<key>SUPublicEDKey</key>
 	<string>+5RTT9lGyoeOYAYuNfCdPhxugmruYvRDyFXgk6VPY1c=</string>
 	<key>SUScheduledCheckInterval</key>
-	<integer>1800</integer>
+	<integer>86400</integer>
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
 	<key>SUEnableInstallerLauncherService</key>
