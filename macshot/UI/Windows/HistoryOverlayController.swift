@@ -332,7 +332,26 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
 
     private var entries: [HistoryEntry] = []
     private var filteredIndices: [Int] = []
+    /// Bounded preview cache. Eager-loading every entry's preview was hammering
+    /// memory for users with hundreds of history items (#mem-audit). Now we
+    /// load only what's drawn, evict oldest beyond `previewCacheLimit`, and
+    /// drop the whole thing on dismiss when the view is released.
     private var previews: [String: NSImage] = [:]
+    /// Preview ids in MRU order — most recent at the end. Lookups bump the id
+    /// to the end; eviction pops the front. Bounded so memory stays roughly
+    /// constant regardless of total history size.
+    private var previewLRU: [String] = []
+    /// In-flight load ids — guards against duplicate work when a card is
+    /// drawn multiple times before the load resolves.
+    private var previewLoadsInFlight: Set<String> = []
+    /// Soft cap on cached previews. Three screens of cards (~50 each) leaves
+    /// headroom for fast back-scrolling without re-loading from disk, while
+    /// keeping peak footprint bounded (~75 MB worst case at typical preview
+    /// dimensions, but usually much less because previews are tiny PNGs).
+    private static let previewCacheLimit = 150
+    /// How many cards to lookahead in the scroll direction to pre-fetch so
+    /// scrolling doesn't show empty cards before the load resolves.
+    private static let previewPrefetchLookahead = 12
     private var cardRects: [NSRect] = []
     /// Filtered-index of the card the mouse is currently over, or -1.
     /// Only drives the darkened overlay + "Click to copy" hint now — the
@@ -389,18 +408,111 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
     func loadEntries() {
         entries = ScreenshotHistory.shared.entries
         applyFilter()
+        // Previews are loaded lazily as cards become visible — see
+        // requestPreviewIfNeeded(for:) and prefetchPreviewsAroundVisible().
+        // Kick off prefetch for the first screenful so the panel doesn't
+        // open with empty placeholders.
+        prefetchPreviewsAroundVisible()
+    }
 
-        let entriesToLoad = entries
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            var loaded: [String: NSImage] = [:]
-            for entry in entriesToLoad {
-                if let preview = ScreenshotHistory.shared.loadPreview(for: entry) {
-                    loaded[entry.id] = preview
-                }
+    // MARK: - Lazy Preview Loading
+
+    /// Return the cached preview for `entry`, or trigger an async load and
+    /// return nil. Keeps the cache bounded by evicting the oldest non-visible
+    /// entry when over the soft cap.
+    private func cachedPreview(for entry: HistoryEntry) -> NSImage? {
+        if let img = previews[entry.id] {
+            // Bump to MRU
+            if let pos = previewLRU.firstIndex(of: entry.id) {
+                previewLRU.remove(at: pos)
             }
+            previewLRU.append(entry.id)
+            return img
+        }
+        requestPreviewIfNeeded(for: entry)
+        return nil
+    }
+
+    private func requestPreviewIfNeeded(for entry: HistoryEntry) {
+        let id = entry.id
+        guard previews[id] == nil, !previewLoadsInFlight.contains(id) else { return }
+        previewLoadsInFlight.insert(id)
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let preview = ScreenshotHistory.shared.loadPreview(for: entry)
             DispatchQueue.main.async {
-                self?.previews = loaded
-                self?.needsDisplay = true
+                guard let self = self else { return }
+                self.previewLoadsInFlight.remove(id)
+                guard let preview = preview else { return }
+                self.previews[id] = preview
+                self.previewLRU.append(id)
+                self.evictPreviewsIfNeeded()
+                self.needsDisplay = true
+            }
+        }
+    }
+
+    /// Pop oldest preview ids until cache is within `previewCacheLimit`.
+    /// Visible-region ids are protected — we walk the LRU front-to-back and
+    /// skip any id that's currently on screen (or within the lookahead zone)
+    /// so we don't immediately re-load what we just evicted.
+    private func evictPreviewsIfNeeded() {
+        guard previewLRU.count > Self.previewCacheLimit else { return }
+        let visibleIDs = currentVisibleAndPrefetchIDs()
+        var i = 0
+        while i < previewLRU.count && previews.count > Self.previewCacheLimit {
+            let id = previewLRU[i]
+            if visibleIDs.contains(id) { i += 1; continue }
+            previews.removeValue(forKey: id)
+            previewLRU.remove(at: i)
+        }
+    }
+
+    /// Set of entry ids currently drawn on screen plus the lookahead window
+    /// in either scroll direction. Used both to protect from eviction and to
+    /// drive prefetch.
+    private func currentVisibleAndPrefetchIDs() -> Set<String> {
+        guard !filteredIndices.isEmpty else { return [] }
+        var ids: Set<String> = []
+        let look = Self.previewPrefetchLookahead
+        // Find first/last visible filtered index.
+        var firstVisible = -1
+        var lastVisible = -1
+        for (fi, _) in filteredIndices.enumerated() {
+            guard fi < cardRects.count else { break }
+            var rect = cardRects[fi]
+            rect.origin.x -= scrollOffset
+            if rect.maxX > 0 && rect.origin.x < bounds.width {
+                if firstVisible == -1 { firstVisible = fi }
+                lastVisible = fi
+            }
+        }
+        if firstVisible == -1 {
+            // Nothing visible yet (panel just opened, layout not done) —
+            // seed with the first screenful.
+            firstVisible = 0
+            lastVisible = min(filteredIndices.count - 1, look * 2)
+        }
+        let lo = max(0, firstVisible - look)
+        let hi = min(filteredIndices.count - 1, lastVisible + look)
+        for fi in lo...hi {
+            let globalIndex = filteredIndices[fi]
+            if globalIndex < entries.count {
+                ids.insert(entries[globalIndex].id)
+            }
+        }
+        return ids
+    }
+
+    /// Kick off async loads for visible + lookahead-window entries. Cheap to
+    /// call repeatedly — `requestPreviewIfNeeded` no-ops on cache hits and
+    /// in-flight ids.
+    private func prefetchPreviewsAroundVisible() {
+        let ids = currentVisibleAndPrefetchIDs()
+        guard !ids.isEmpty else { return }
+        let entriesByID = Dictionary(uniqueKeysWithValues: entries.map { ($0.id, $0) })
+        for id in ids {
+            if let entry = entriesByID[id] {
+                requestPreviewIfNeeded(for: entry)
             }
         }
     }
@@ -414,6 +526,7 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
         // can immediately arrow/Enter without moving the mouse.
         selectedIndex = filteredIndices.isEmpty ? -1 : 0
         layoutCards()
+        prefetchPreviewsAroundVisible()
         needsDisplay = true
     }
 
@@ -591,7 +704,7 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
             width: rect.width - imgPad * 2,
             height: rect.height - labelH - imgPad)
 
-        if let img = previews[entry.id] {
+        if let img = cachedPreview(for: entry) {
             let aspect = img.size.width / max(img.size.height, 1)
             var drawRect: NSRect
             if aspect > imgArea.width / imgArea.height {
@@ -699,6 +812,7 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
         } else {
             scrollOffset = max(0, min(maxScroll, scrollOffset - delta * 8))
         }
+        prefetchPreviewsAroundVisible()
         needsDisplay = true
     }
 
@@ -891,6 +1005,7 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
         guard next != current else { return }
         selectedIndex = next
         scrollSelectedCardIntoView()
+        prefetchPreviewsAroundVisible()
         needsDisplay = true
     }
 
