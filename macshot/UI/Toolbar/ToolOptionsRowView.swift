@@ -413,7 +413,12 @@ class ToolOptionsRowView: NSView {
             seg.setLabel(mode.label, forSegment: i)
             seg.setWidth(0, forSegment: i)
         }
-        let currentMode = CensorMode(rawValue: UserDefaults.standard.integer(forKey: "censorMode")) ?? .pixelate
+        let currentMode: CensorMode
+        if let ann = editingAnnotation, ann.tool == .pixelate || ann.tool == .blur {
+            currentMode = ann.censorMode
+        } else {
+            currentMode = CensorMode(rawValue: UserDefaults.standard.integer(forKey: "censorMode")) ?? .pixelate
+        }
         seg.selectedSegment = currentMode.rawValue
         seg.sizeToFit()
         seg.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: seg.frame.width, height: 22)
@@ -1331,6 +1336,15 @@ class ToolOptionsRowView: NSView {
     @objc private func censorModeChanged(_ sender: NSSegmentedControl) {
         guard let mode = CensorMode(rawValue: sender.selectedSegment) else { return }
         UserDefaults.standard.set(mode.rawValue, forKey: "censorMode")
+        if let ann = editingAnnotation, ann.tool == .pixelate || ann.tool == .blur {
+            ensureSnapshot()
+            ann.censorMode = mode
+            // Clear the baked image so bakePixelate re-runs with the new mode.
+            ann.bakedBlurNSImage = nil
+            ann.bakePixelate()
+            overlayView?.cachedCompositedImage = nil
+            overlayView?.needsDisplay = true
+        }
     }
 
     @objc private func numberFormatChanged(_ sender: NSSegmentedControl) {
