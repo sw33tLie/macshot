@@ -24,10 +24,10 @@
     <enclosure url="https://github.com/sw33tLie/macshot/releases/download/v4.0.4/MacShot.dmg" length="5940423" type="application/octet-stream" sparkle:edSignature="Bcj1UKJt6ByGyOk28g/M7CFxKiId+FvNsHSxUXlcv0BiHEBmpSSJ4/S3yPCIcLQpOhZzLZ9ADN9OsV4Q2qgRBw==" />
 </item>
 <item>
-    <title>v4.1.0-beta.6</title>
-    <pubDate>Mon, 20 Apr 2026 23:32:00 +0000</pubDate>
-    <sparkle:version>70</sparkle:version>
-    <sparkle:shortVersionString>4.1.0-beta.6</sparkle:shortVersionString>
+    <title>v4.1.0-beta.7</title>
+    <pubDate>Sun, 03 May 2026 01:26:00 +0000</pubDate>
+    <sparkle:version>71</sparkle:version>
+    <sparkle:shortVersionString>4.1.0-beta.7</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
     <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
@@ -38,13 +38,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Added</h3><ul> <li><b>`{random}` filename token</b> — screenshot and recording filename templates now support a `{random}` placeholder that renders a fresh 8-character lowercase base36 string per file. Closes #136.</li>  </ul><h3>Changed</h3><ul> <li><b>Clicking a history entry in the menu bar now shows the floating thumbnail</b> for visual confirmation, instead of silently copying to clipboard with no feedback. The thumbnail's Edit action opens the original history entry. Closes #133.</li>  </ul><h3>Fixed</h3><ul> <li><b>Stroke width, line style, arrow style, shape fill, corner radius, and arrow Flip now persist globally even when an annotation is selected.</b> Changing these while editing an existing annotation only mutated that annotation — the UserDefaults write was in an `else` branch that never ran in edit mode — so the next capture reverted to whatever was last persisted (stroke defaulted to 3). Refs #58.</li> <li><b>"Enable macshot:// URL scheme" checkbox was not localized</b> (raw string literal, not wrapped in `L()`). Also added the missing `"Save Recording"` key that was referenced in `AppDelegate` but absent from every `.strings` file. Closes #134.</li></ul>
+      <h3>Added</h3><ul> <li><b>Per-glyph Stroke control for the text tool</b> — alongside the existing Fill and Outline toggles, a third "Stroke" swatch+toggle draws a stroke around each character via `NSAttributedString` `.strokeColor` / `.strokeWidth`. Persists across captures, propagates to selected text annotations, and is preserved through clone/codable for undo and history reload.</li>  </ul><h3>Changed</h3><ul> <li><b>Recording bitrate increased so screen content stays crisp.</b> The bppf-based model assumed screen recordings are low-entropy, but H.264 softens sharp text edges below ~0.30 bppf the moment any motion enters the frame. Defaults (.high, 1440p30) were producing ~21 Mbit/s vs. the ~40 Mbit/s industry-standard. New tiers target ~12 / ~22 / ~40 Mbit/s at 1440p30 for low/medium/high. B-frames disabled (standard tuning for screen content). File sizes for `.high` roughly double — the right tradeoff for a tier explicitly named "High". Closes #140.</li> <li><b>Sparkle update check interval reduced from 30 minutes to 24 hours</b> so update prompts don't reappear constantly during release windows.</li>  </ul><h3>Fixed</h3><ul> <li><b>Editor fits large images to the window on open.</b> Opening a multi-megapixel image (e.g. a 24MP photo via Photos.app "Edit in macshot") presented only the top-left corner because the EditorView document was sized to full image dimensions while the scroll view stayed at 1× magnification. The fit-to-viewport magnification is now computed on open and applied when < 1.0; small images keep 1× so they aren't upscaled. Closes #161.</li> <li><b>Clicking outside the selection no longer wipes annotation progress.</b> Once a selection rect is committed, clicking in the dimmed area outside the rect previously dropped all annotations and started a new selection from that point — a recurring source of lost work. Treat outside clicks as a no-op when a selection already exists; ESC still cancels deliberately. Closes #154.</li> <li><b>Video editor effects no longer silently no-op</b> when the AVAsset's tracks haven't finished parsing. The synchronous `asset.tracks(withMediaType:)` accessor on a freshly-finalized recording could return an empty array before the moov atom was parsed; the effects composition then cached a stale trackID and `sourceFrame(byTrackID:)` returned nil. Switched to async `load(.tracks)` and built dimensions, duration, player item, and compositor state from the resolved track.</li> <li><b>S3 and Google Drive image uploads ignored the filename template.</b> Both uploaders hardcoded `"Screenshot {YYYY-MM-DD_HH-mm-ss}.png"`, so user templates (`{unix}`, `{random}`, `{window}`, etc.) didn't apply. Image uploads now read the same `filenameTemplate` UserDefault that local saves use, matching the convention video uploads already follow. imgbb intentionally unchanged — its API doesn't accept a filename. Closes #147.</li> <li><b>Changing the censor mode on a selected censor rect now updates it.</b> The mode segment in the censor tool's options bar wrote to UserDefaults but ignored the selected annotation; reading was symmetric (always showed the global default, never the annotation's actual mode). Selected censor rects now re-bake on mode change and the segment shows the annotation's current mode while it's selected.</li></ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v4.1.0-beta.6/MacShot.dmg"
-        length="5846786"
+        url="https://github.com/sw33tLie/macshot/releases/download/v4.1.0-beta.7/MacShot.dmg"
+        length="5873231"
         type="application/octet-stream"
-        sparkle:edSignature="NrAC7IM6RPlc7DKtwORKoLpJ5BBqrDYlMmbf8DkG0WnyGglzNU+eacYyVJGHN+QJVTXFw7YFp6nln3zd5JV7Cw=="
+        sparkle:edSignature="IYeZdtw7+FyDgS6+DfQm+o4VNLM0t5qyafb4mODia3SZlUHWy6sk92cwnbney5BXh3DV0mLIXIVXCsEnTRtnBQ=="
     />
 </item>
     </channel>
