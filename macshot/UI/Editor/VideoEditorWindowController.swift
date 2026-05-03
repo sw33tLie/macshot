@@ -253,24 +253,38 @@ private final class VideoEditorView: NSView {
         let asset = AVAsset(url: videoURL)
         self.asset = asset
 
-        // Store original pixel dimensions
-        if let track = asset.tracks(withMediaType: .video).first {
-            let size = track.naturalSize.applying(track.preferredTransform)
-            originalWidth = Int(abs(size.width))
-            originalHeight = Int(abs(size.height))
-        }
-
+        // AVAsset for a freshly-finalized recording can return an empty
+        // `tracks` array from the synchronous accessor before the moov atom
+        // has been parsed. Build everything (dimensions, duration, player,
+        // effects-composition trackID) only after `.tracks` is loaded —
+        // otherwise the live-preview compositor caches a stale trackID and
+        // `sourceFrame(byTrackID:)` returns nil → effects silently no-op.
         Task {
-            // Use video track duration (asset duration can be wrong when audio track is present)
+            let videoTrack: AVAssetTrack? = await {
+                if let tracks = try? await asset.load(.tracks) {
+                    return tracks.first(where: { $0.mediaType == .video })
+                }
+                return asset.tracks(withMediaType: .video).first
+            }()
+
             let seconds: Double
-            if let videoTrack = asset.tracks(withMediaType: .video).first {
+            if let videoTrack = videoTrack {
                 seconds = CMTimeGetSeconds(videoTrack.timeRange.duration)
             } else if let dur = try? await asset.load(.duration) {
                 seconds = CMTimeGetSeconds(dur)
             } else {
                 seconds = 0
             }
+
+            let pixelSize: CGSize? = videoTrack.map {
+                $0.naturalSize.applying($0.preferredTransform)
+            }
+
             await MainActor.run {
+                if let size = pixelSize {
+                    self.originalWidth = Int(abs(size.width))
+                    self.originalHeight = Int(abs(size.height))
+                }
                 self.duration = max(seconds, 0.1)
                 self.trimEnd = self.duration
                 self.buildPlayerView()
