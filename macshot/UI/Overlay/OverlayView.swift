@@ -4728,20 +4728,12 @@ class OverlayView: NSView {
                 return
             }
 
-            // Outside everything - start new selection (locked during recording or editor mode)
-            guard shouldAllowNewSelection() else { return }
-            showToolbars = false
-            annotations.removeAll()
-            undoStack.removeAll()
-            redoStack.removeAll()
-            numberCounter = 0
-            resetZoom()
-            zoomLabelOpacity = 0.0
-            zoomFadeTimer?.invalidate()
-            selectionStart = point
-            selectionRect = NSRect(origin: point, size: .zero)
-            state = .selecting
-            overlayDelegate?.overlayViewDidBeginSelection()
+            // Outside the selection — historically this reset everything to
+            // start a new selection, but accidental clicks outside an
+            // established selection were destroying in-progress annotation
+            // work (#154). Treat outside clicks as a no-op once we have a
+            // committed selection; ESC still cancels deliberately.
+            return
             needsDisplay = true
 
         case .selecting:
