@@ -71,6 +71,10 @@ class ToolOptionsRowView: NSView {
         if let swatch = viewWithTag(976) {
             swatch.layer?.backgroundColor = ov.textEditor.outlineColor.cgColor
         }
+        // Text glyph-stroke swatch (tag 977)
+        if let swatch = viewWithTag(977) {
+            swatch.layer?.backgroundColor = ov.textEditor.glyphStrokeColor.cgColor
+        }
         // Annotation outline swatch (tag 978)
         if let swatch = viewWithTag(978) {
             let col = editingAnnotation?.outlineColor ?? Self.savedOutlineColor
@@ -898,6 +902,36 @@ class ToolOptionsRowView: NSView {
         outlineSwatch.target = self
         outlineSwatch.action = #selector(textOutlineColorClicked(_:))
         addSubview(outlineSwatch)
+        curX += fillSwatchSize + 6
+
+        // Stroke (per-glyph): clickable label (toggles on/off) + color swatch
+        let strokeLabelBtn = NSButton(title: L("Stroke"), target: self, action: #selector(textGlyphStrokeToggled(_:)))
+        strokeLabelBtn.bezelStyle = .recessed
+        strokeLabelBtn.setButtonType(.toggle)
+        strokeLabelBtn.state = ov.textEditor.glyphStrokeEnabled ? .on : .off
+        strokeLabelBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
+        strokeLabelBtn.attributedTitle = NSAttributedString(string: L("Stroke"), attributes: [
+            .font: NSFont.systemFont(ofSize: 10, weight: .medium),
+            .baselineOffset: 0.5,
+        ])
+        strokeLabelBtn.sizeToFit()
+        strokeLabelBtn.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: max(46, strokeLabelBtn.frame.width), height: 22)
+        addSubview(strokeLabelBtn)
+        curX += strokeLabelBtn.frame.width + 2
+
+        let strokeSwatch = NSButton(frame: NSRect(x: curX, y: (rowHeight - fillSwatchSize) / 2, width: fillSwatchSize, height: fillSwatchSize))
+        strokeSwatch.title = ""
+        strokeSwatch.isBordered = false
+        strokeSwatch.wantsLayer = true
+        strokeSwatch.layer?.backgroundColor = ov.textEditor.glyphStrokeColor.cgColor
+        strokeSwatch.layer?.cornerRadius = 3
+        strokeSwatch.layer?.borderWidth = 1.5
+        strokeSwatch.layer?.borderColor = ToolbarLayout.iconColor.withAlphaComponent(0.4).cgColor
+        strokeSwatch.layer?.opacity = ov.textEditor.glyphStrokeEnabled ? 1.0 : 0.3
+        strokeSwatch.tag = 977
+        strokeSwatch.target = self
+        strokeSwatch.action = #selector(textGlyphStrokeColorClicked(_:))
+        addSubview(strokeSwatch)
         curX += fillSwatchSize
 
         // Cancel / Confirm — only when actively editing text, right-aligned
@@ -1485,6 +1519,22 @@ class ToolOptionsRowView: NSView {
         if PopoverHelper.isVisible { PopoverHelper.dismiss(); return }
         guard let ov = overlayView else { return }
         ov.showColorPickerPopover(target: .textOutline, anchorView: sender)
+    }
+
+    @objc private func textGlyphStrokeToggled(_ sender: NSButton) {
+        guard let ov = overlayView else { return }
+        ov.textEditor.glyphStrokeEnabled = sender.state == .on
+        UserDefaults.standard.set(ov.textEditor.glyphStrokeEnabled, forKey: "textGlyphStrokeEnabled")
+        if let swatch = viewWithTag(977) { swatch.layer?.opacity = ov.textEditor.glyphStrokeEnabled ? 1.0 : 0.3 }
+        ov.applyGlyphStrokeToLiveTextView()
+        ov.applyTextBgOutlineToSelectedAnnotations()
+        ov.needsDisplay = true
+    }
+
+    @objc private func textGlyphStrokeColorClicked(_ sender: NSButton) {
+        if PopoverHelper.isVisible { PopoverHelper.dismiss(); return }
+        guard let ov = overlayView else { return }
+        ov.showColorPickerPopover(target: .textGlyphStroke, anchorView: sender)
     }
 
     // MARK: - Annotation outline

@@ -444,7 +444,7 @@ class OverlayView: NSView {
     var cachedEffectsScreenshot: NSImage?
 
     // Color picker target
-    enum ColorPickerTarget { case drawColor, textBg, textOutline, annotationOutline }
+    enum ColorPickerTarget { case drawColor, textBg, textOutline, textGlyphStroke, annotationOutline }
     private var colorPickerTarget: ColorPickerTarget = .drawColor
 
     // Beautify toolbar animation
@@ -6372,6 +6372,29 @@ class OverlayView: NSView {
         }
     }
 
+    /// Apply current glyph-stroke state to the live NSTextView (if open).
+    /// Touches existing text + future typing so the change is visible immediately.
+    func applyGlyphStrokeToLiveTextView() {
+        guard let tv = textEditor.textView, let storage = tv.textStorage else { return }
+        let range = NSRange(location: 0, length: storage.length)
+        if textEditor.glyphStrokeEnabled {
+            if range.length > 0 {
+                storage.addAttribute(.strokeColor, value: textEditor.glyphStrokeColor, range: range)
+                storage.addAttribute(.strokeWidth, value: -6.0, range: range)
+            }
+            tv.typingAttributes[.strokeColor] = textEditor.glyphStrokeColor
+            tv.typingAttributes[.strokeWidth] = -6.0
+        } else {
+            if range.length > 0 {
+                storage.removeAttribute(.strokeColor, range: range)
+                storage.removeAttribute(.strokeWidth, range: range)
+            }
+            tv.typingAttributes.removeValue(forKey: .strokeColor)
+            tv.typingAttributes.removeValue(forKey: .strokeWidth)
+        }
+        tv.needsDisplay = true
+    }
+
     /// Apply text background/outline toggle to selected text annotations.
     func applyTextBgOutlineToSelectedAnnotations() {
         guard textEditor.textView == nil else { return }
@@ -6379,6 +6402,8 @@ class OverlayView: NSView {
         for ann in selectedAnnotations where ann.tool == .text {
             ann.textBgColor = textEditor.bgEnabled ? textEditor.bgColor : nil
             ann.textOutlineColor = textEditor.outlineEnabled ? textEditor.outlineColor : nil
+            ann.textGlyphStrokeColor = textEditor.glyphStrokeEnabled ? textEditor.glyphStrokeColor : nil
+            ann.reRenderTextImage()
             changed = true
         }
         if changed {
@@ -7726,6 +7751,7 @@ class OverlayView: NSView {
         case .drawColor: initialColor = currentColor
         case .textBg: initialColor = textEditor.bgColor
         case .textOutline: initialColor = textEditor.outlineColor
+        case .textGlyphStroke: initialColor = textEditor.glyphStrokeColor
         case .annotationOutline:
             if let data = UserDefaults.standard.data(forKey: "annotationOutlineColor"),
                let c = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data) {
@@ -7788,6 +7814,13 @@ class OverlayView: NSView {
             if let data = try? NSKeyedArchiver.archivedData(withRootObject: color, requiringSecureCoding: false) {
                 UserDefaults.standard.set(data, forKey: "textOutlineColor")
             }
+        case .textGlyphStroke:
+            textEditor.glyphStrokeColor = color
+            if let data = try? NSKeyedArchiver.archivedData(withRootObject: color, requiringSecureCoding: false) {
+                UserDefaults.standard.set(data, forKey: "textGlyphStrokeColor")
+            }
+            applyGlyphStrokeToLiveTextView()
+            applyTextBgOutlineToSelectedAnnotations()
         case .annotationOutline:
             if let data = try? NSKeyedArchiver.archivedData(withRootObject: color, requiringSecureCoding: false) {
                 UserDefaults.standard.set(data, forKey: "annotationOutlineColor")

@@ -29,6 +29,7 @@ class TextEditingController {
     var fontFamily: String = UserDefaults.standard.string(forKey: "textFontFamily") ?? "System"
     var bgEnabled: Bool = UserDefaults.standard.bool(forKey: "textBgEnabled")
     var outlineEnabled: Bool = UserDefaults.standard.bool(forKey: "textOutlineEnabled")
+    var glyphStrokeEnabled: Bool = UserDefaults.standard.bool(forKey: "textGlyphStrokeEnabled")
 
     var bgColor: NSColor = {
         if let data = UserDefaults.standard.data(forKey: "textBgColor"),
@@ -38,6 +39,12 @@ class TextEditingController {
 
     var outlineColor: NSColor = {
         if let data = UserDefaults.standard.data(forKey: "textOutlineColor"),
+           let color = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data) { return color }
+        return NSColor.white
+    }()
+
+    var glyphStrokeColor: NSColor = {
+        if let data = UserDefaults.standard.data(forKey: "textGlyphStrokeColor"),
            let color = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data) { return color }
         return NSColor.white
     }()
@@ -302,6 +309,10 @@ class TextEditingController {
         if strikethrough {
             attrs[.strikethroughStyle] = NSUnderlineStyle.single.rawValue
         }
+        if glyphStrokeEnabled {
+            attrs[.strokeColor] = glyphStrokeColor
+            attrs[.strokeWidth] = -6.0
+        }
         tv.typingAttributes = attrs
         tv.alignment = alignment
 
@@ -309,6 +320,13 @@ class TextEditingController {
         let range = NSRange(location: 0, length: tv.textStorage?.length ?? 0)
         if range.length > 0 {
             tv.textStorage?.addAttribute(.paragraphStyle, value: paraStyle, range: range)
+            if glyphStrokeEnabled {
+                tv.textStorage?.addAttribute(.strokeColor, value: glyphStrokeColor, range: range)
+                tv.textStorage?.addAttribute(.strokeWidth, value: -6.0, range: range)
+            } else {
+                tv.textStorage?.removeAttribute(.strokeColor, range: range)
+                tv.textStorage?.removeAttribute(.strokeWidth, range: range)
+            }
         }
 
         sv.documentView = tv
@@ -388,6 +406,7 @@ class TextEditingController {
             annotation.fontFamilyName = fontFamily == "System" ? nil : fontFamily
             annotation.textBgColor = bgEnabled ? bgColor : nil
             annotation.textOutlineColor = outlineEnabled ? outlineColor : nil
+            annotation.textGlyphStrokeColor = glyphStrokeEnabled ? glyphStrokeColor : nil
             annotation.textAlignment = alignment
             annotation.textImage = img
             annotation.textDrawRect = canvasFrame
@@ -450,6 +469,8 @@ class TextEditingController {
         if let bg = annotation.textBgColor { bgColor = bg }
         outlineEnabled = annotation.textOutlineColor != nil
         if let ol = annotation.textOutlineColor { outlineColor = ol }
+        glyphStrokeEnabled = annotation.textGlyphStrokeColor != nil
+        if let gs = annotation.textGlyphStrokeColor { glyphStrokeColor = gs }
     }
 
 }

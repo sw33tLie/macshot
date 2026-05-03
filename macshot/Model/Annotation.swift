@@ -198,6 +198,7 @@ class Annotation {
     var censorMode: CensorMode = .pixelate
     var textBgColor: NSColor?         // background pill color (nil = no background)
     var textOutlineColor: NSColor?    // text outline/stroke color (nil = no outline)
+    var textGlyphStrokeColor: NSColor? // per-glyph stroke color drawn around each character (nil = none)
     var textAlignment: NSTextAlignment = .left // text alignment within the box
     var fontFamilyName: String?       // font family for text (nil = system default)
     var outlineColor: NSColor?        // shape/arrow/line outline color (nil = no outline)
@@ -243,6 +244,7 @@ class Annotation {
         c.censorMode = censorMode
         c.textBgColor = textBgColor
         c.textOutlineColor = textOutlineColor
+        c.textGlyphStrokeColor = textGlyphStrokeColor
         c.textAlignment = textAlignment
         c.fontFamilyName = fontFamilyName
         c.outlineColor = outlineColor
@@ -265,6 +267,7 @@ class Annotation {
         isStrikethrough = src.isStrikethrough
         textBgColor = src.textBgColor
         textOutlineColor = src.textOutlineColor
+        textGlyphStrokeColor = src.textGlyphStrokeColor
         textAlignment = src.textAlignment
         fontFamilyName = src.fontFamilyName
         numberFormat = src.numberFormat
@@ -1400,6 +1403,17 @@ class Annotation {
         let paraStyle = NSMutableParagraphStyle()
         paraStyle.alignment = textAlignment
         mutable.addAttribute(.paragraphStyle, value: paraStyle, range: range)
+
+        // Per-glyph stroke. NSAttributedString's .strokeWidth is a percentage
+        // of font point size; negative means "fill AND stroke" (positive
+        // would skip the fill, leaving just an outline).
+        if let glyphStroke = textGlyphStrokeColor {
+            mutable.addAttribute(.strokeColor, value: glyphStroke, range: range)
+            mutable.addAttribute(.strokeWidth, value: -6.0, range: range)
+        } else {
+            mutable.removeAttribute(.strokeColor, range: range)
+            mutable.removeAttribute(.strokeWidth, range: range)
+        }
 
         attributedText = mutable
 

@@ -25,6 +25,7 @@ struct CodableAnnotation: Codable {
     var textDrawRect: [CGFloat]?  // [x, y, w, h]
     var textBgColorRGBA: [CGFloat]?
     var textOutlineColorRGBA: [CGFloat]?
+    var textGlyphStrokeColorRGBA: [CGFloat]?
     var textAlignment: Int = 0  // NSTextAlignment.rawValue
     var fontFamilyName: String?
     var textImagePNG: Data?
@@ -92,6 +93,7 @@ extension Annotation {
         }
         if let bg = textBgColor { c.textBgColorRGBA = Self.encodeColor(bg) }
         if let outline = textOutlineColor { c.textOutlineColorRGBA = Self.encodeColor(outline) }
+        if let glyph = textGlyphStrokeColor { c.textGlyphStrokeColorRGBA = Self.encodeColor(glyph) }
         c.textAlignment = textAlignment.rawValue
         c.fontFamilyName = fontFamilyName
         if let img = textImage { c.textImagePNG = Self.encodeImage(img) }
@@ -161,6 +163,7 @@ extension Annotation {
         }
         if let rgba = c.textBgColorRGBA { ann.textBgColor = decodeColor(rgba) }
         if let rgba = c.textOutlineColorRGBA { ann.textOutlineColor = decodeColor(rgba) }
+        if let rgba = c.textGlyphStrokeColorRGBA { ann.textGlyphStrokeColor = decodeColor(rgba) }
         ann.textAlignment = NSTextAlignment(rawValue: c.textAlignment) ?? .left
         ann.fontFamilyName = c.fontFamilyName
         if let data = c.textImagePNG { ann.textImage = NSImage(data: data) }
