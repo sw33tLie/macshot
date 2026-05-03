@@ -1,5 +1,10 @@
 # Changelog
 
+## [4.1.0-beta.8] - 2026-05-03
+
+### Fixed
+- **Quick Capture's "Also open in Editor" was resetting last-used tool and stroke width.** `DetachedEditorWindowController.open(...)` had `tool: .arrow` / `strokeWidth: 3` as parameter defaults and unconditionally wrote them to the new EditorView on every open, which triggered the `currentTool` didSet that persists globally — so opening the editor (Quick Capture, History → Open in Editor, Pin → Edit) silently overwrote `lastUsedTool` and `currentStrokeWidth` for the entire app. Parameters are now optional with `nil` default; the editor only overrides when a caller explicitly passes a value, otherwise the EditorView's own UserDefaults-backed initializers are honored. Refs #58.
+
 ## [4.1.0-beta.7] - 2026-05-03
 
 ### Added
