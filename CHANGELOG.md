@@ -1,5 +1,21 @@
 # Changelog
 
+## [4.1.0-beta.7] - 2026-05-03
+
+### Added
+- **Per-glyph Stroke control for the text tool** — alongside the existing Fill and Outline toggles, a third "Stroke" swatch+toggle draws a stroke around each character via `NSAttributedString` `.strokeColor` / `.strokeWidth`. Persists across captures, propagates to selected text annotations, and is preserved through clone/codable for undo and history reload.
+
+### Changed
+- **Recording bitrate increased so screen content stays crisp.** The bppf-based model assumed screen recordings are low-entropy, but H.264 softens sharp text edges below ~0.30 bppf the moment any motion enters the frame. Defaults (.high, 1440p30) were producing ~21 Mbit/s vs. the ~40 Mbit/s industry-standard. New tiers target ~12 / ~22 / ~40 Mbit/s at 1440p30 for low/medium/high. B-frames disabled (standard tuning for screen content). File sizes for `.high` roughly double — the right tradeoff for a tier explicitly named "High". Closes #140.
+- **Sparkle update check interval reduced from 30 minutes to 24 hours** so update prompts don't reappear constantly during release windows.
+
+### Fixed
+- **Editor fits large images to the window on open.** Opening a multi-megapixel image (e.g. a 24MP photo via Photos.app "Edit in macshot") presented only the top-left corner because the EditorView document was sized to full image dimensions while the scroll view stayed at 1× magnification. The fit-to-viewport magnification is now computed on open and applied when < 1.0; small images keep 1× so they aren't upscaled. Closes #161.
+- **Clicking outside the selection no longer wipes annotation progress.** Once a selection rect is committed, clicking in the dimmed area outside the rect previously dropped all annotations and started a new selection from that point — a recurring source of lost work. Treat outside clicks as a no-op when a selection already exists; ESC still cancels deliberately. Closes #154.
+- **Video editor effects no longer silently no-op** when the AVAsset's tracks haven't finished parsing. The synchronous `asset.tracks(withMediaType:)` accessor on a freshly-finalized recording could return an empty array before the moov atom was parsed; the effects composition then cached a stale trackID and `sourceFrame(byTrackID:)` returned nil. Switched to async `load(.tracks)` and built dimensions, duration, player item, and compositor state from the resolved track.
+- **S3 and Google Drive image uploads ignored the filename template.** Both uploaders hardcoded `"Screenshot {YYYY-MM-DD_HH-mm-ss}.png"`, so user templates (`{unix}`, `{random}`, `{window}`, etc.) didn't apply. Image uploads now read the same `filenameTemplate` UserDefault that local saves use, matching the convention video uploads already follow. imgbb intentionally unchanged — its API doesn't accept a filename. Closes #147.
+- **Changing the censor mode on a selected censor rect now updates it.** The mode segment in the censor tool's options bar wrote to UserDefaults but ignored the selected annotation; reading was symmetric (always showed the global default, never the annotation's actual mode). Selected censor rects now re-bake on mode change and the segment shows the annotation's current mode while it's selected.
+
 ## [4.1.0-beta.6] - 2026-04-21
 
 ### Added
