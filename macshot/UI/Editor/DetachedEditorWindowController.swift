@@ -41,7 +41,15 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
     /// Open an editor window with the given image (typically from captureSelectedRegion).
     /// When `disableBeautify` is true, beautify starts off regardless of UserDefaults
     /// (used when the image already has beautify baked in).
-    static func open(image: NSImage, tool: AnnotationTool = .arrow, color: NSColor = .systemRed, strokeWidth: CGFloat = 3, annotations: [Annotation] = [], historyEntryID: String? = nil, fromCapture: Bool = false, disableBeautify: Bool = false) {
+    ///
+    /// `tool`, `color`, and `strokeWidth` are nil by default — when nil, the new
+    /// EditorView keeps whatever its property initializers loaded from
+    /// UserDefaults (the user's last-used choices). Pass explicit values only
+    /// when a caller needs to force a specific state. Don't restore defaults
+    /// here: writing `view.currentTool = .arrow` triggers the didSet that
+    /// persists "arrow" globally, wiping the user's last-tool memory across
+    /// the whole app.
+    static func open(image: NSImage, tool: AnnotationTool? = nil, color: NSColor? = nil, strokeWidth: CGFloat? = nil, annotations: [Annotation] = [], historyEntryID: String? = nil, fromCapture: Bool = false, disableBeautify: Bool = false) {
         let controller = DetachedEditorWindowController()
         controller.historyEntryID = historyEntryID
         controller.disableBeautifyOnOpen = disableBeautify
@@ -54,7 +62,7 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         }
     }
 
-    private func show(image: NSImage, tool: AnnotationTool, color: NSColor, strokeWidth: CGFloat, annotations: [Annotation]) {
+    private func show(image: NSImage, tool: AnnotationTool?, color: NSColor?, strokeWidth: CGFloat?, annotations: [Annotation]) {
         let imgSize = image.size
         let screen = NSScreen.main ?? NSScreen.screens.first!
         let screenFrame = screen.visibleFrame
@@ -94,9 +102,12 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         view.autoresizingMask = []  // fixed size — scroll view handles viewport
         view.screenshotImage = image
         view.overlayDelegate = self
-        view.currentTool = tool
-        view.currentColor = color
-        view.currentStrokeWidth = strokeWidth
+        // Only override the EditorView's own initializers when the caller
+        // explicitly passed values — otherwise the user's persisted choices
+        // (loaded from UserDefaults during EditorView init) survive intact.
+        if let tool = tool { view.currentTool = tool }
+        if let color = color { view.currentColor = color }
+        if let strokeWidth = strokeWidth { view.currentStrokeWidth = strokeWidth }
         if disableBeautifyOnOpen {
             view.beautifyEnabled = false
         }
