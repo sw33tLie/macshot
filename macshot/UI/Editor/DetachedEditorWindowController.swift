@@ -176,8 +176,31 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         win.makeFirstResponder(view)
         NSApp.activate(ignoringOtherApps: true)
 
-        // Scroll to top so tall images start at the top, not the bottom
-        if let docView = scrollView.documentView {
+        // Fit-to-window for large images: compute the magnification that makes
+        // the image just fit the visible scroll viewport, capped at 1.0 so we
+        // never zoom small images up. Without this, opening (e.g.) a 4284x5712
+        // photo on a typical screen shows only the top-left corner at 1x (#161).
+        // The scrollView's contentView bounds are valid after layout, which
+        // happens during makeKeyAndOrderFront. clipView.bounds reflects the
+        // inset-aware visible area.
+        scrollView.layoutSubtreeIfNeeded()
+        let visible = scrollView.contentView.bounds.size
+        if imgSize.width > 0, imgSize.height > 0, visible.width > 0, visible.height > 0 {
+            let fitMag = min(visible.width / imgSize.width, visible.height / imgSize.height)
+            // Only scale down — leave small images at 1x.
+            let initialMag = min(1.0, fitMag)
+            // Clamp into the scroll view's allowed range.
+            let clamped = max(scrollView.minMagnification, min(scrollView.maxMagnification, initialMag))
+            if clamped < 0.999 {
+                scrollView.magnification = clamped
+                topBar.updateZoom(clamped)
+            }
+        }
+
+        // Scroll to top so tall images start at the top, not the bottom.
+        // Skipped when we fit-to-window because the centering clip view
+        // already presents the whole image in view.
+        if let docView = scrollView.documentView, scrollView.magnification >= 0.999 {
             docView.scroll(NSPoint(x: 0, y: docView.frame.maxY))
         }
 
