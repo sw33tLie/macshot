@@ -225,6 +225,17 @@ final class HistoryOverlayController: NSObject, QLPreviewPanelDataSource, QLPrev
             guard response == .OK, let url = panel.url else { return }
             try? imageData.write(to: url)
         }
+        dismiss()
+    }
+
+    func uploadEntry(index: Int) {
+        let entries = ScreenshotHistory.shared.entries
+        guard index >= 0, index < entries.count else { return }
+        guard let image = ScreenshotHistory.shared.loadImage(for: entries[index]) else { return }
+        dismiss()
+        MainActor.assumeIsolated {
+            (NSApp.delegate as? AppDelegate)?.uploadImage(image)
+        }
     }
 
     // MARK: - Context Menu
@@ -256,6 +267,11 @@ final class HistoryOverlayController: NSObject, QLPreviewPanelDataSource, QLPrev
         pinItem.tag = globalIndex
         menu.addItem(pinItem)
 
+        let uploadItem = NSMenuItem(title: L("Upload"), action: #selector(contextUpload(_:)), keyEquivalent: "")
+        uploadItem.target = self
+        uploadItem.tag = globalIndex
+        menu.addItem(uploadItem)
+
         let qlItem = NSMenuItem(title: L("Quick Look"), action: #selector(contextQuickLook(_:)), keyEquivalent: " ")
         qlItem.target = self
         qlItem.tag = globalIndex
@@ -275,6 +291,7 @@ final class HistoryOverlayController: NSObject, QLPreviewPanelDataSource, QLPrev
     @objc private func contextSave(_ sender: NSMenuItem) { saveToFile(index: sender.tag) }
     @objc private func contextOpenEditor(_ sender: NSMenuItem) { openInEditor(index: sender.tag) }
     @objc private func contextPin(_ sender: NSMenuItem) { pinToScreen(index: sender.tag) }
+    @objc private func contextUpload(_ sender: NSMenuItem) { uploadEntry(index: sender.tag) }
     @objc private func contextQuickLook(_ sender: NSMenuItem) { quickLook(index: sender.tag) }
     @objc private func contextDelete(_ sender: NSMenuItem) { deleteEntry(index: sender.tag) }
 
@@ -324,6 +341,15 @@ private enum HistoryFilter: String, CaseIterable {
     }
 }
 
+private enum HistoryCardAction: Equatable {
+    case delete
+    case pin
+    case edit
+    case upload
+    case copy
+    case save
+}
+
 // MARK: - History Panel View
 
 private final class HistoryPanelView: NSView, NSDraggingSource {
@@ -339,6 +365,7 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
     /// accent outline comes from `selectedIndex` so hover and keyboard
     /// navigation never fight over which card is highlighted.
     private var hoveredIndex: Int = -1
+    private var hoveredAction: HistoryCardAction?
     /// Unified selection: updated by arrow keys AND by mouse hover. The
     /// outlined card is always `selectedIndex`, so arrow keys always step
     /// from whatever the mouse is pointing at. Hint overlay is keyed off
@@ -354,6 +381,7 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
     // Drag state: track mouseDown origin to distinguish click vs drag
     private var mouseDownPoint: NSPoint = .zero
     private var mouseDownCardIndex: Int = -1 // filtered index
+    private var mouseDownAction: HistoryCardAction?
     private var isDragging = false
     private static let dragThreshold: CGFloat = 4
 
@@ -410,6 +438,7 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
             activeFilter.matches(entry) ? i : nil
         }
         scrollOffset = 0
+        hoveredAction = nil
         // Default keyboard focus to the leftmost (most recent) card so the user
         // can immediately arrow/Enter without moving the mouse.
         selectedIndex = filteredIndices.isEmpty ? -1 : 0
@@ -612,21 +641,9 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
                      hints: [.interpolation: NSNumber(value: NSImageInterpolation.high.rawValue)])
             NSGraphicsContext.current?.restoreGraphicsState()
 
-            // Dim overlay + hint on hover
+            // Dim overlay + quick actions on hover
             if isHovered {
-                NSColor.black.withAlphaComponent(0.35).setFill()
-                clipPath.fill()
-
-                // Hint text
-                let hint = L("Click to copy · Drag to app") as NSString
-                let hintAttrs: [NSAttributedString.Key: Any] = [
-                    .font: NSFont.systemFont(ofSize: 10, weight: .semibold),
-                    .foregroundColor: NSColor.white.withAlphaComponent(0.9),
-                ]
-                let hintSize = hint.size(withAttributes: hintAttrs)
-                hint.draw(at: NSPoint(x: drawRect.midX - hintSize.width / 2,
-                                      y: drawRect.midY - hintSize.height / 2),
-                          withAttributes: hintAttrs)
+                drawHoverActions(in: imgArea)
             }
         } else {
             // Loading placeholder
@@ -645,6 +662,126 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
             at: NSPoint(x: rect.midX - labelSize.width / 2,
                         y: rect.maxY - labelH + (labelH - labelSize.height) / 2),
             withAttributes: labelAttrs)
+    }
+
+    private func actionRects(in rect: NSRect) -> [(HistoryCardAction, NSRect)] {
+        let cornerR: CGFloat = 28
+        let pad: CGFloat = 10
+        let centerBtnW: CGFloat = min(110, max(88, rect.width - 40))
+        let centerBtnH: CGFloat = 32
+        let centerGap: CGFloat = 8
+        let totalH = centerBtnH * 2 + centerGap
+        let btnsY = rect.midY - totalH / 2
+
+        return [
+            (.delete, NSRect(
+                x: rect.minX + pad,
+                y: rect.minY + pad,
+                width: cornerR, height: cornerR)),
+            (.pin, NSRect(
+                x: rect.maxX - pad - cornerR,
+                y: rect.minY + pad,
+                width: cornerR, height: cornerR)),
+            (.edit, NSRect(
+                x: rect.minX + pad,
+                y: rect.maxY - pad - cornerR,
+                width: cornerR, height: cornerR)),
+            (.upload, NSRect(
+                x: rect.maxX - pad - cornerR,
+                y: rect.maxY - pad - cornerR,
+                width: cornerR, height: cornerR)),
+            (.copy, NSRect(
+                x: rect.midX - centerBtnW / 2,
+                y: btnsY,
+                width: centerBtnW, height: centerBtnH)),
+            (.save, NSRect(
+                x: rect.midX - centerBtnW / 2,
+                y: btnsY + centerBtnH + centerGap,
+                width: centerBtnW, height: centerBtnH)),
+        ]
+    }
+
+    private func drawHoverActions(in rect: NSRect) {
+        NSColor.black.withAlphaComponent(0.45).setFill()
+        NSBezierPath(roundedRect: rect, xRadius: 6, yRadius: 6).fill()
+
+        for (action, actionRect) in actionRects(in: rect) {
+            switch action {
+            case .delete:
+                drawCornerAction(symbol: "trash", in: actionRect, action: action)
+            case .pin:
+                drawCornerAction(symbol: "pin.fill", in: actionRect, action: action)
+            case .edit:
+                drawCornerAction(symbol: "pencil", in: actionRect, action: action)
+            case .upload:
+                drawCornerAction(symbol: "icloud.and.arrow.up", in: actionRect, action: action)
+            case .copy:
+                drawCenterAction(title: L("Copy"), in: actionRect, action: action)
+            case .save:
+                drawCenterAction(title: L("Save"), in: actionRect, action: action)
+            }
+        }
+    }
+
+    private func drawCornerAction(symbol: String, in rect: NSRect, action: HistoryCardAction) {
+        let isHit = hoveredAction == action
+        let circlePath = NSBezierPath(ovalIn: rect)
+        (isHit ? NSColor.white.withAlphaComponent(0.35) : NSColor.white.withAlphaComponent(0.18)).setFill()
+        circlePath.fill()
+        NSColor.white.withAlphaComponent(0.5).setStroke()
+        circlePath.lineWidth = 1
+        circlePath.stroke()
+
+        if let sym = NSImage(systemSymbolName: symbol, accessibilityDescription: nil) {
+            let cfg = NSImage.SymbolConfiguration(pointSize: 11, weight: .semibold)
+            let configured = sym.withSymbolConfiguration(cfg) ?? sym
+            let tinted = tintedWhite(configured)
+            let iconSize = NSSize(width: 13, height: 13)
+            let iconRect = NSRect(
+                x: rect.midX - iconSize.width / 2,
+                y: rect.midY - iconSize.height / 2,
+                width: iconSize.width,
+                height: iconSize.height)
+            drawUnflippedImage(tinted, in: iconRect)
+        }
+    }
+
+    private func drawCenterAction(title: String, in rect: NSRect, action: HistoryCardAction) {
+        let isHit = hoveredAction == action
+        let bg = NSBezierPath(roundedRect: rect, xRadius: rect.height / 2, yRadius: rect.height / 2)
+        (isHit ? NSColor.white.withAlphaComponent(0.95) : NSColor.white.withAlphaComponent(0.85)).setFill()
+        bg.fill()
+
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 13, weight: .medium),
+            .foregroundColor: isHit ? NSColor.black : NSColor(white: 0.1, alpha: 1),
+        ]
+        let str = title as NSString
+        let strSize = str.size(withAttributes: attrs)
+        str.draw(
+            at: NSPoint(x: rect.midX - strSize.width / 2,
+                        y: rect.midY - strSize.height / 2),
+            withAttributes: attrs)
+    }
+
+    private func tintedWhite(_ img: NSImage) -> NSImage {
+        NSImage(size: img.size, flipped: false) { rect in
+            NSColor.white.setFill()
+            rect.fill()
+            img.draw(in: rect, from: .zero, operation: .destinationIn, fraction: 1.0)
+            return true
+        }
+    }
+
+    private func drawUnflippedImage(_ image: NSImage, in rect: NSRect) {
+        NSGraphicsContext.saveGraphicsState()
+        let xform = NSAffineTransform()
+        xform.translateX(by: rect.midX, yBy: rect.midY)
+        xform.scaleX(by: 1, yBy: -1)
+        xform.translateX(by: -rect.midX, yBy: -rect.midY)
+        xform.concat()
+        image.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1.0)
+        NSGraphicsContext.restoreGraphicsState()
     }
 
     private func drawScrollFades(in clipRect: NSRect) {
@@ -712,9 +849,11 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
             rect.origin.x -= scrollOffset
             return rect.contains(point)
         }) ?? -1
+        let newAction = actionAt(point: point, filterIndex: newHovered)
 
-        if newHovered != hoveredIndex {
+        if newHovered != hoveredIndex || newAction != hoveredAction {
             hoveredIndex = newHovered
+            hoveredAction = newAction
             // Keep keyboard selection in sync with the hovered card so arrow
             // keys step from wherever the mouse last pointed. When the mouse
             // leaves all cards we keep the prior selection — otherwise arrow
@@ -730,11 +869,30 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
     }
 
     override func mouseExited(with event: NSEvent) {
-        if hoveredIndex != -1 {
+        if hoveredIndex != -1 || hoveredAction != nil {
             hoveredIndex = -1
+            hoveredAction = nil
             NSCursor.arrow.set()
             needsDisplay = true
         }
+    }
+
+    private func actionAt(point: NSPoint, filterIndex: Int) -> HistoryCardAction? {
+        guard filterIndex >= 0, filterIndex < cardRects.count else { return nil }
+        let actionArea = actionAreaRect(for: filterIndex)
+        return actionRects(in: actionArea).first { _, rect in rect.contains(point) }?.0
+    }
+
+    private func actionAreaRect(for filterIndex: Int) -> NSRect {
+        var rect = cardRects[filterIndex]
+        rect.origin.x -= scrollOffset
+        let imgPad: CGFloat = 8
+        let labelH: CGFloat = 28
+        return NSRect(
+            x: rect.minX + imgPad,
+            y: rect.minY + imgPad,
+            width: rect.width - imgPad * 2,
+            height: rect.height - labelH - imgPad)
     }
 
     // MARK: - NSDraggingSource
@@ -779,6 +937,7 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
         isDragging = false
+        mouseDownAction = nil
 
         // Filter tabs — immediate action, no drag
         for (i, tabRect) in filterTabRects.enumerated() {
@@ -808,6 +967,9 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
             rect.origin.x -= scrollOffset
             return rect.contains(point)
         }) ?? -1
+        mouseDownAction = mouseDownCardIndex == hoveredIndex
+            ? actionAt(point: point, filterIndex: mouseDownCardIndex)
+            : nil
 
         // If clicked outside any card, dismiss immediately
         if mouseDownCardIndex < 0 {
@@ -816,7 +978,7 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
     }
 
     override func mouseDragged(with event: NSEvent) {
-        guard mouseDownCardIndex >= 0, !isDragging else { return }
+        guard mouseDownAction == nil, mouseDownCardIndex >= 0, !isDragging else { return }
         let point = convert(event.locationInWindow, from: nil)
         let dx = point.x - mouseDownPoint.x
         let dy = point.y - mouseDownPoint.y
@@ -827,9 +989,21 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
     }
 
     override func mouseUp(with event: NSEvent) {
-        defer { mouseDownCardIndex = -1 }
+        defer {
+            mouseDownCardIndex = -1
+            mouseDownAction = nil
+        }
         guard !isDragging, mouseDownCardIndex >= 0,
               mouseDownCardIndex < filteredIndices.count else { return }
+
+        if let action = mouseDownAction {
+            let point = convert(event.locationInWindow, from: nil)
+            if actionAt(point: point, filterIndex: mouseDownCardIndex) == action {
+                let globalIndex = filteredIndices[mouseDownCardIndex]
+                perform(action, globalIndex: globalIndex)
+            }
+            return
+        }
 
         // Click — copy to clipboard
         let globalIndex = filteredIndices[mouseDownCardIndex]
@@ -935,5 +1109,22 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
         // loadEntries (called from deleteEntry) resets selectedIndex via
         // applyFilter → 0, so arrows keep working after a deletion.
         controller?.deleteEntry(index: idx)
+    }
+
+    private func perform(_ action: HistoryCardAction, globalIndex: Int) {
+        switch action {
+        case .delete:
+            controller?.deleteEntry(index: globalIndex)
+        case .pin:
+            controller?.pinToScreen(index: globalIndex)
+        case .edit:
+            controller?.openInEditor(index: globalIndex)
+        case .upload:
+            controller?.uploadEntry(index: globalIndex)
+        case .copy:
+            controller?.copyAndDismiss(index: globalIndex)
+        case .save:
+            controller?.saveToFile(index: globalIndex)
+        }
     }
 }
