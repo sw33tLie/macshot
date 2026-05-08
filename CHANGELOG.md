@@ -1,5 +1,57 @@
 # Changelog
 
+## [4.1.0] - 2026-05-08
+
+The big release in 4.1.0 is a full **video editor effects suite**: zoom, censor, cut, speed, freeze, and text segments rendered through a custom Core Image compositor. Recording quality, color reproduction across external monitors, and capture-flow ergonomics also got significant attention.
+
+### Added
+
+- **Video editor effects suite** — six segment types you can stack on the timeline:
+    - **Zoom** segments with direct-manipulation rect on the preview, fade in/out, 1.2×–5× range.
+    - **Censor** segments — solid / pixelate / blur a rectangular region for a time range. Two censors can overlap.
+    - **Cut** segments — physically remove a range of frames from the export.
+    - **Speed** segments — retime a range at 0.25×–10×, audio stays in sync.
+    - **Freeze** segments — hold a single source frame for a chosen duration.
+    - **Text** segments — overlay styled text (size, bold/italic, color, background pill, alignment, fade) anywhere on the video, with double-click to edit in place.
+- **Multi-row effects band** — overlapping segments stack into separate rows; up to 4 rows visible, scrolls vertically beyond that.
+- **Custom video compositor** — single Core Image render path shared by live preview, MP4 export, and GIF export. Smooth motion, filter-based effects (blur/pixelate) alongside transform-based zoom.
+- **Video export quality presets** (Low / Medium / High) and **export dimensions dropdown** (Original, 75%, 50%, 33%, 25%) with estimated output size.
+- **Right-click to anchor capture rect** — right-click an empty overlay to start a selection, then move the cursor without holding any button.
+- **Capture Last Area** — re-capture the previous selection on demand from the menu bar, hotkey, or `macshot://capture-last`.
+- **URL scheme for external tools** — `macshot://capture`, `macshot://ocr`, `macshot://record`, etc. Trigger from Raycast, Alfred, BetterTouchTool, Shortcuts.
+- **Customizable toolbar background color** with adaptive light/dark appearance.
+- **`{random}` filename token** — 8-character base36 string per file in screenshot/recording filename templates.
+- **Per-glyph Stroke control** for the text tool, alongside Fill and Outline.
+- **11 new configurable overlay shortcuts** — Pin (defaults to F), Upload (U), Copy, Save, OCR, Scroll Capture, Beautify, Invert Colors, Remove Background, Translate, Undo, Redo. Configurable in Settings → Shortcuts.
+- **Keyboard navigation in the history overlay** — arrows, Enter/Cmd+C to copy, Cmd+E to open in editor, Space for Quick Look, Delete to remove.
+- **Dock right-click shows each window individually** — editor, video editor, and preferences windows each appear as their own menu item.
+- **"Open Video…" menu entry** — open a user-owned video in the editor for trimming, effects, and export without touching the source.
+- **Copy Screen Info** in Settings → About — copies display and capture diagnostics for bug reports.
+- **DMG drag-to-install layout** with arrow background, plus a "Move to Applications" prompt when launched from a translocated path.
+
+### Changed
+
+- **Recording bitrate increased** so screen content stays crisp. New tiers target ~12 / ~22 / ~40 Mbit/s at 1440p30 for low/medium/high. B-frames disabled (standard tuning for screen content). Closes #140.
+- **Recording color space** is now forced to sRGB at capture time (macOS 14+), fixing washed-out playback on Display P3 screens.
+- **Faster first capture** — Core Animation/Metal pipeline pre-warmed at app launch; ScreenCaptureKit content cache no longer bypassed on every capture; instant transparent overlay while screenshots load in the background.
+- **Background windows no longer jump forward when triggering a capture** — editor/preferences/Sparkle windows stay behind the user's frontmost app.
+- **Clicking a history entry shows the floating thumbnail** for visual confirmation, instead of silently copying with no feedback. Closes #133.
+- **Sparkle update check interval reduced from 30 minutes to 24 hours** so update prompts don't reappear constantly during release windows.
+
+### Fixed
+
+- **Wrong colors on external monitors** (editor + saved files) — captured screenshots are now normalized to sRGB at capture time. Some external monitors (e.g. ViewSonic VX4380) have ICC profiles that don't round-trip correctly through AppKit's rendering pipeline.
+- **Editor fits large images to the window on open.** Multi-megapixel images (e.g. 24MP photos via Photos.app "Edit in macshot") previously showed only the top-left corner. Closes #161.
+- **Clicking outside the selection no longer wipes annotation progress.** A recurring source of lost work — outside clicks are now a no-op when a selection already exists; ESC still cancels deliberately. Closes #154.
+- **Stroke width, line style, arrow style, shape fill, corner radius, and arrow Flip now persist globally** even when an annotation is selected. Refs #58.
+- **Tmp-file accumulation** — clipboard intermediates, share-sheet temps, cancelled recordings, and sandbox quarantine stubs all accumulated indefinitely. A new launch-time sweep keeps tmp at a few hundred KB steady state (was up to 1.2 GB). Closes #128.
+- **Settings window clipping** in Polish, German, Dutch, and other long-string locales. Closes #130.
+- **GIF export crash on longer recordings**, **GIF export freezes the UI**, and **GIF export shows no progress** — switched to a real background thread, fixed a use-after-free in finalize, added a percentage indicator.
+- **S3 and Google Drive image uploads ignored the filename template** — both now read the same `filenameTemplate` UserDefault that local saves use. Closes #147.
+- **Last used tool not persisted across app restarts** — selected annotation tool now survives via UserDefaults.
+- **Focus not returning to previous app** after capture, and **window snap highlight race condition** on the pre-screenshot transparent overlay.
+- **Color dithering in pinned images and editor window** — disabled `AutomaticAppKit` layer content format in favor of explicit `RGBA8` for pixel-perfect color reproduction.
+
 ## [4.1.0-beta.8] - 2026-05-03
 
 ### Fixed
