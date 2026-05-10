@@ -20,24 +20,28 @@ enum SaveDirectoryAccess {
 
     /// Resolve the save directory URL and start sandbox-scoped access.
     /// Caller **must** call `stopAccessing(url:)` when done writing.
-    static func resolve() -> URL {
-        if let bookmarkData = UserDefaults.standard.data(forKey: bookmarkKey) {
-            var isStale = false
-            if let url = try? URL(resolvingBookmarkData: bookmarkData,
-                                   options: .withSecurityScope,
-                                   relativeTo: nil,
-                                   bookmarkDataIsStale: &isStale) {
-                if isStale {
-                    if let fresh = try? url.bookmarkData(options: .withSecurityScope,
-                                                          includingResourceValuesForKeys: nil,
-                                                          relativeTo: nil) {
-                        UserDefaults.standard.set(fresh, forKey: bookmarkKey)
-                    }
-                }
-                _ = url.startAccessingSecurityScopedResource()
-                return url
+    static func resolveIfAccessible() -> URL? {
+        guard let bookmarkData = UserDefaults.standard.data(forKey: bookmarkKey) else { return nil }
+        var isStale = false
+        guard let url = try? URL(resolvingBookmarkData: bookmarkData,
+                                  options: .withSecurityScope,
+                                  relativeTo: nil,
+                                  bookmarkDataIsStale: &isStale) else { return nil }
+        if isStale {
+            if let fresh = try? url.bookmarkData(options: .withSecurityScope,
+                                                  includingResourceValuesForKeys: nil,
+                                                  relativeTo: nil) {
+                UserDefaults.standard.set(fresh, forKey: bookmarkKey)
             }
         }
+        guard url.startAccessingSecurityScopedResource() else { return nil }
+        return url
+    }
+
+    /// Resolve the configured save directory, falling back to a display-only hint.
+    /// Prefer `resolveIfAccessible()` for writes that must work in the sandbox.
+    static func resolve() -> URL {
+        if let url = resolveIfAccessible() { return url }
         if let path = UserDefaults.standard.string(forKey: pathKey) {
             return URL(fileURLWithPath: path)
         }

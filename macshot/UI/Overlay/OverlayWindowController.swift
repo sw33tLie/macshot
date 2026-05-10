@@ -793,17 +793,68 @@ extension OverlayWindowController: OverlayViewDelegate {
     }
 
     private func saveImageToDirectory(_ image: NSImage) {
-        let dirURL = SaveDirectoryAccess.resolve()
+        guard let dirURL = SaveDirectoryAccess.resolveIfAccessible() else {
+            let windowTitle = capturedWindowTitle
+            requestSaveDirectoryAccess { dirURL, securityScoped in
+                defer {
+                    if securityScoped {
+                        SaveDirectoryAccess.stopAccessing(url: dirURL)
+                    }
+                }
+                Self.writeImage(image, toDirectory: dirURL, windowTitle: windowTitle)
+            }
+            return
+        }
+        let windowTitle = capturedWindowTitle
+        saveImage(image, toDirectory: dirURL, securityScoped: true, windowTitle: windowTitle)
+    }
 
+    private func saveImage(_ image: NSImage, toDirectory dirURL: URL, securityScoped: Bool, windowTitle: String?) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            defer {
+                if securityScoped {
+                    SaveDirectoryAccess.stopAccessing(url: dirURL)
+                }
+            }
+            Self.writeImage(image, toDirectory: dirURL, windowTitle: windowTitle)
+        }
+    }
+
+    private static func writeImage(_ image: NSImage, toDirectory dirURL: URL, windowTitle: String?) {
         let template = UserDefaults.standard.string(forKey: FilenameFormatter.userDefaultsKey) ?? FilenameFormatter.defaultTemplate
-        let base = FilenameFormatter.format(template: template, windowTitle: capturedWindowTitle)
+        let base = FilenameFormatter.format(template: template, windowTitle: windowTitle)
         let filename = "\(base).\(ImageEncoder.fileExtension)"
         let fileURL = dirURL.appendingPathComponent(filename)
+        guard let imageData = ImageEncoder.encode(image) else { return }
+        do {
+            try imageData.write(to: fileURL)
+        } catch {
+            #if DEBUG
+            NSLog("macshot: failed to save image to \(fileURL.path): \(error.localizedDescription)")
+            #endif
+        }
+    }
 
-        DispatchQueue.global(qos: .userInitiated).async {
-            guard let imageData = ImageEncoder.encode(image) else { return }
-            try? imageData.write(to: fileURL)
-            SaveDirectoryAccess.stopAccessing(url: dirURL)
+    private func requestSaveDirectoryAccess(completion: @escaping (URL, Bool) -> Void) {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = false
+        panel.prompt = L("Choose a folder")
+        panel.directoryURL = SaveDirectoryAccess.directoryHint()
+        panel.begin { response in
+            guard response == .OK, let url = panel.url else { return }
+            SaveDirectoryAccess.save(url: url)
+
+            // Prefer reopening through the freshly saved bookmark so first-save
+            // behavior matches all later saves in sandbox mode.
+            if let scopedURL = SaveDirectoryAccess.resolveIfAccessible() {
+                completion(scopedURL, true)
+                return
+            }
+
+            let securityScoped = url.startAccessingSecurityScopedResource()
+            completion(url, securityScoped)
         }
     }
 
