@@ -717,6 +717,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
         let delay = UserDefaults.standard.integer(forKey: "captureDelaySeconds")
         if !fromMenu && delay == 0 {
+            // The zero-delay hotkey path snapshots before overlay activation so
+            // transient UI stays visible. Hide our thumbnails before that
+            // snapshot; ScreenCaptureKit exclusions only apply to the later
+            // async fallback path.
+            for tc in thumbnailControllers { tc.hideWindow() }
             let context = ScreenCaptureManager.makeImmediateCaptureContext()
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
                 let captures = ScreenCaptureManager.captureAllScreensImmediately(context: context)
