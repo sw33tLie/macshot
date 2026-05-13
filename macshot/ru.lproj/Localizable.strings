@@ -435,6 +435,9 @@
 "Top Left" = "Вверху слева";
 "Small" = "Маленький";
 "Large" = "Большой";
+"Webcam Size Small" = "Маленький";
+"Webcam Size Medium" = "Средний";
+"Webcam Size Large" = "Большой";
 "Circle" = "Круг";
 "Rounded Rectangle" = "Скруглённый прямоугольник";
 "Cam pos:" = "Поз. камеры:";

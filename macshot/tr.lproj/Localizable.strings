@@ -435,6 +435,9 @@
 "Top Left" = "Sol Üst";
 "Small" = "Küçük";
 "Large" = "Büyük";
+"Webcam Size Small" = "Küçük";
+"Webcam Size Medium" = "Orta";
+"Webcam Size Large" = "Büyük";
 "Circle" = "Daire";
 "Rounded Rectangle" = "Yuvarlatılmış Dikdörtgen";
 "Cam pos:" = "Kam. konum:";

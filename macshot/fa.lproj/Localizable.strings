@@ -435,6 +435,9 @@
 "Top Left" = "بالا چپ";
 "Small" = "کوچک";
 "Large" = "بزرگ";
+"Webcam Size Small" = "کوچک";
+"Webcam Size Medium" = "متوسط";
+"Webcam Size Large" = "بزرگ";
 "Circle" = "دایره";
 "Rounded Rectangle" = "مستطیل گردشده";
 "Cam pos:" = "موقعیت دوربین:";

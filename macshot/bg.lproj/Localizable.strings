@@ -435,6 +435,9 @@
 "Top Left" = "Горе вляво";
 "Small" = "Малък";
 "Large" = "Голям";
+"Webcam Size Small" = "Малък";
+"Webcam Size Medium" = "Среден";
+"Webcam Size Large" = "Голям";
 "Circle" = "Кръг";
 "Rounded Rectangle" = "Заоблен правоъгълник";
 "Cam pos:" = "Поз. камера:";

@@ -435,6 +435,9 @@
 "Top Left" = "ऊपर बाएँ";
 "Small" = "छोटा";
 "Large" = "बड़ा";
+"Webcam Size Small" = "छोटा";
+"Webcam Size Medium" = "मध्यम";
+"Webcam Size Large" = "बड़ा";
 "Circle" = "वृत्त";
 "Rounded Rectangle" = "गोलाकार आयत";
 "Cam pos:" = "कैम स्थिति:";

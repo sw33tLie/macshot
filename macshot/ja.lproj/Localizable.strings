@@ -435,6 +435,9 @@
 "Top Left" = "左上";
 "Small" = "小";
 "Large" = "大";
+"Webcam Size Small" = "小";
+"Webcam Size Medium" = "中";
+"Webcam Size Large" = "大";
 "Circle" = "円形";
 "Rounded Rectangle" = "角丸四角形";
 "Cam pos:" = "カメラ位置:";

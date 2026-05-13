@@ -435,6 +435,9 @@
 "Top Left" = "Πάνω αριστερά";
 "Small" = "Μικρό";
 "Large" = "Μεγάλο";
+"Webcam Size Small" = "Μικρό";
+"Webcam Size Medium" = "Μεσαίο";
+"Webcam Size Large" = "Μεγάλο";
 "Circle" = "Κύκλος";
 "Rounded Rectangle" = "Στρογγυλεμένο ορθογώνιο";
 "Cam pos:" = "Θέση κάμ.:";

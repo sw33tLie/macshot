@@ -435,6 +435,9 @@
 "Top Left" = "왼쪽 상단";
 "Small" = "작게";
 "Large" = "크게";
+"Webcam Size Small" = "작게";
+"Webcam Size Medium" = "보통";
+"Webcam Size Large" = "크게";
 "Circle" = "원형";
 "Rounded Rectangle" = "둥근 사각형";
 "Cam pos:" = "캠 위치:";

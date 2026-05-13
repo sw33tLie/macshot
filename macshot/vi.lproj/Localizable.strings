@@ -435,6 +435,9 @@
 "Top Left" = "Trên trái";
 "Small" = "Nhỏ";
 "Large" = "Lớn";
+"Webcam Size Small" = "Nhỏ";
+"Webcam Size Medium" = "Trung bình";
+"Webcam Size Large" = "Lớn";
 "Circle" = "Hình tròn";
 "Rounded Rectangle" = "Hình chữ nhật bo góc";
 "Cam pos:" = "Vị trí cam:";

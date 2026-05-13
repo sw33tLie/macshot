@@ -435,6 +435,9 @@
 "Top Left" = "Kiri Atas";
 "Small" = "Kecil";
 "Large" = "Besar";
+"Webcam Size Small" = "Kecil";
+"Webcam Size Medium" = "Sedang";
+"Webcam Size Large" = "Besar";
 "Circle" = "Lingkaran";
 "Rounded Rectangle" = "Persegi Panjang Bulat";
 "Cam pos:" = "Pos. kam:";

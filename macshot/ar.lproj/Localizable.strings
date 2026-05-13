@@ -435,6 +435,9 @@
 "Top Left" = "أعلى اليسار";
 "Small" = "صغير";
 "Large" = "كبير";
+"Webcam Size Small" = "صغير";
+"Webcam Size Medium" = "متوسط";
+"Webcam Size Large" = "كبير";
 "Circle" = "دائرة";
 "Rounded Rectangle" = "مستطيل مستدير";
 "Cam pos:" = "موضع الكام:";

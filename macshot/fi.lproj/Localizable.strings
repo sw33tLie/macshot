@@ -435,6 +435,9 @@
 "Top Left" = "Vasen ylakulma";
 "Small" = "Pieni";
 "Large" = "Suuri";
+"Webcam Size Small" = "Pieni";
+"Webcam Size Medium" = "Keskitaso";
+"Webcam Size Large" = "Suuri";
 "Circle" = "Ympyra";
 "Rounded Rectangle" = "Pyoristetty suorakulmio";
 "Cam pos:" = "Kameran sijainti:";

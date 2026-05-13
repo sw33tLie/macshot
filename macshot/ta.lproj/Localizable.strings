@@ -435,6 +435,9 @@
 "Top Left" = "மேல் இடது";
 "Small" = "சிறியது";
 "Large" = "பெரியது";
+"Webcam Size Small" = "சிறியது";
+"Webcam Size Medium" = "நடுத்தரம்";
+"Webcam Size Large" = "பெரியது";
 "Circle" = "வட்டம்";
 "Rounded Rectangle" = "வட்டமான செவ்வகம்";
 "Cam pos:" = "கேம் நிலை:";

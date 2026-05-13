@@ -435,6 +435,9 @@
 "Top Left" = "\U00D6vre v\U00E4nster";
 "Small" = "Liten";
 "Large" = "Stor";
+"Webcam Size Small" = "Liten";
+"Webcam Size Medium" = "Medel";
+"Webcam Size Large" = "Stor";
 "Circle" = "Cirkel";
 "Rounded Rectangle" = "Rundad rektangel";
 "Cam pos:" = "Kam. pos.:";

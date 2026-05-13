@@ -435,6 +435,9 @@
 "Top Left" = "บนซ้าย";
 "Small" = "เล็ก";
 "Large" = "ใหญ่";
+"Webcam Size Small" = "เล็ก";
+"Webcam Size Medium" = "ปานกลาง";
+"Webcam Size Large" = "ใหญ่";
 "Circle" = "วงกลม";
 "Rounded Rectangle" = "สี่เหลี่ยมมุมมน";
 "Cam pos:" = "ตำแหน่งกล้อง:";

@@ -435,6 +435,9 @@
 "Top Left" = "Vlavo hore";
 "Small" = "Male";
 "Large" = "Velke";
+"Webcam Size Small" = "Male";
+"Webcam Size Medium" = "Stredné";
+"Webcam Size Large" = "Velke";
 "Circle" = "Kruh";
 "Rounded Rectangle" = "Zaobleny obdlznik";
 "Cam pos:" = "Poz. kam.:";

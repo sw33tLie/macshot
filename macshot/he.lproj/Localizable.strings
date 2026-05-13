@@ -435,6 +435,9 @@
 "Top Left" = "למעלה משמאל";
 "Small" = "קטן";
 "Large" = "גדול";
+"Webcam Size Small" = "קטן";
+"Webcam Size Medium" = "בינוני";
+"Webcam Size Large" = "גדול";
 "Circle" = "עיגול";
 "Rounded Rectangle" = "מלבן מעוגל";
 "Cam pos:" = "מיקום מצלמה:";

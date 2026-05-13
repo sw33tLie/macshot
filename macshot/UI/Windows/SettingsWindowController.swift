@@ -1200,7 +1200,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         webcamSizePopup = NSPopUpButton()
-        webcamSizePopup.addItems(withTitles: [L("Small"), L("Medium"), L("Large")])
+        webcamSizePopup.addItems(withTitles: [L("Webcam Size Small"), L("Webcam Size Medium"), L("Webcam Size Large")])
         webcamSizePopup.target = self
         webcamSizePopup.action = #selector(webcamSizeChanged(_:))
         stack.addArrangedSubview(labeledRow(L("Size:"), controls: [webcamSizePopup]))

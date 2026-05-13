@@ -435,6 +435,9 @@
 "Top Left" = "Stanga sus";
 "Small" = "Mic";
 "Large" = "Mare";
+"Webcam Size Small" = "Mic";
+"Webcam Size Medium" = "Mediu";
+"Webcam Size Large" = "Mare";
 "Circle" = "Cerc";
 "Rounded Rectangle" = "Dreptunghi rotunjit";
 "Cam pos:" = "Poz. cam.:";

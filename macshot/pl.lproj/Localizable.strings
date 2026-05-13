@@ -435,6 +435,9 @@
 "Top Left" = "Lewy górny";
 "Small" = "Mały";
 "Large" = "Duży";
+"Webcam Size Small" = "Mały";
+"Webcam Size Medium" = "Średni";
+"Webcam Size Large" = "Duży";
 "Circle" = "Koło";
 "Rounded Rectangle" = "Zaokrąglony prostokąt";
 "Cam pos:" = "Poz. kamery:";

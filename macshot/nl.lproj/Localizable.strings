@@ -435,6 +435,9 @@
 "Top Left" = "Linksboven";
 "Small" = "Klein";
 "Large" = "Groot";
+"Webcam Size Small" = "Klein";
+"Webcam Size Medium" = "Gemiddeld";
+"Webcam Size Large" = "Groot";
 "Circle" = "Cirkel";
 "Rounded Rectangle" = "Afgeronde rechthoek";
 "Cam pos:" = "Cam pos.:";

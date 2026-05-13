@@ -435,6 +435,9 @@
 "Top Left" = "\U00D8verst til venstre";
 "Small" = "Lille";
 "Large" = "Stor";
+"Webcam Size Small" = "Lille";
+"Webcam Size Medium" = "Mellem";
+"Webcam Size Large" = "Stor";
 "Circle" = "Cirkel";
 "Rounded Rectangle" = "Afrundet rektangel";
 "Cam pos:" = "Kam. pos.:";
