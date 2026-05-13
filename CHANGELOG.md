@@ -1,5 +1,27 @@
 # Changelog
 
+## [4.1.1-beta.1] - 2026-05-13
+
+### Added
+
+- **Capture menu ordering** — reorder the capture actions shown in the menu bar menu from Settings.
+- **Missing webcam size localization keys** — added the camera overlay size string to all bundled languages.
+
+### Changed
+
+- **Faster cold screenshot overlay** — pre-capture the screen before activation, keep the WindowServer capture path warm while idle, and avoid blocking the overlay on full redraw work.
+- **Preview actions scale with preview size** — Copy and Save controls now resize with the screenshot preview size setting.
+
+### Fixed
+
+- **Transient UI capture** — hotkey captures now preserve disappearing UI such as Raycast, Alfred, app menus, and the Apple menu.
+- **Previous app focus restore** — completing or cancelling a capture returns focus to the app that was active before macshot opened the overlay.
+- **Floating thumbnails no longer leak into the next capture** while preserving fast capture startup.
+- **Preview Save panel activation** — Save now brings its dialog to the front on the first click.
+- **Preview Copy and Pin sounds** — these actions no longer replay the capture sound.
+- **Video text editing style** — double-click editing keeps alignment and background styling stable instead of switching to an ugly editing style.
+- **OCR fallback** — if accurate recognition fails, macshot retries quickly with fast recognition.
+
 ## [4.1.0] - 2026-05-08
 
 The big release in 4.1.0 is a full **video editor effects suite**: zoom, censor, cut, speed, freeze, and text segments rendered through a custom Core Image compositor. Recording quality, color reproduction across external monitors, and capture-flow ergonomics also got significant attention.
