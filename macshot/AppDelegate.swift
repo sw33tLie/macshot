@@ -80,6 +80,71 @@ enum CaptureMenuItemID: String, CaseIterable {
     }
 }
 
+private final class CaptureTimingTrace: @unchecked Sendable {
+    private struct Entry {
+        let label: String
+        let elapsed: TimeInterval
+        let delta: TimeInterval
+        let thread: String
+    }
+
+    private let lock = NSLock()
+    private let startTime = CFAbsoluteTimeGetCurrent()
+    private var lastTime: CFAbsoluteTime
+    private var entries: [Entry] = []
+
+    init() {
+        lastTime = startTime
+    }
+
+    func mark(_ label: String) {
+        let now = CFAbsoluteTimeGetCurrent()
+        lock.lock()
+        entries.append(Entry(
+            label: label,
+            elapsed: now - startTime,
+            delta: now - lastTime,
+            thread: Thread.isMainThread ? "main" : "bg"))
+        lastTime = now
+        lock.unlock()
+    }
+
+    func measure<T>(_ label: String, _ work: () -> T) -> T {
+        mark("\(label) begin")
+        let result = work()
+        mark("\(label) end")
+        return result
+    }
+
+    func report(finalLabel: String) -> String {
+        mark(finalLabel)
+
+        lock.lock()
+        let snapshot = entries
+        lock.unlock()
+
+        let total = snapshot.last?.elapsed ?? 0
+        var lines: [String] = []
+        lines.append("Total: \(Self.format(total))")
+        lines.append("")
+        lines.append(" elapsed    delta  thread  event")
+        lines.append("-----------------------------------------------")
+        for entry in snapshot {
+            lines.append(String(
+                format: "%8.1f  %7.1f  %-6@  %@",
+                entry.elapsed * 1000,
+                entry.delta * 1000,
+                entry.thread as NSString,
+                entry.label as NSString))
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    private static func format(_ interval: TimeInterval) -> String {
+        String(format: "%.1f ms", interval * 1000)
+    }
+}
+
 @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
@@ -115,6 +180,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     private var scrollCapturePreviewPanel: ScrollCapturePreviewPanel?
     private var statusBarMenu: NSMenu?
     private var captureSessionID: UInt = 0
+    private var captureTimingTrace: CaptureTimingTrace?
+    private var capturePrewarmTimer: Timer?
 
     /// Shared capture sound — loaded once, reused everywhere.
     static let captureSound: NSSound? = {
@@ -221,6 +288,35 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     private func prewarmCapturePath() {
         ScreenCaptureManager.prewarmImmediateCapture()
         OverlayWindowController.prewarmForCapture()
+        startCapturePrewarmTimer()
+    }
+
+    private func startCapturePrewarmTimer() {
+        guard capturePrewarmTimer == nil else { return }
+        let timer = Timer(timeInterval: 120, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            guard !self.isCapturing, self.recordingEngine == nil else { return }
+            ScreenCaptureManager.prewarmImmediateCapture()
+            OverlayWindowController.prewarmForCapture()
+        }
+        timer.tolerance = 30
+        RunLoop.main.add(timer, forMode: .common)
+        capturePrewarmTimer = timer
+    }
+
+    private func makeCaptureTimingTrace() -> CaptureTimingTrace? {
+        #if DEBUG
+        return CaptureTimingTrace()
+        #else
+        return nil
+        #endif
+    }
+
+    private func measureCaptureTiming<T>(_ label: String, _ work: () -> T) -> T {
+        if let trace = captureTimingTrace {
+            return trace.measure(label, work)
+        }
+        return work()
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -341,6 +437,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
+        capturePrewarmTimer?.invalidate()
         HotkeyManager.shared.unregister()
     }
 
@@ -591,6 +688,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     /// switches to accessory activation policy and returns focus to
     /// the previous app (or the next regular app in line).
     func returnFocusIfNeeded() {
+        captureTimingTrace?.mark("returnFocusIfNeeded entered")
         let appToActivate = previousApp
         previousApp = nil
         DispatchQueue.main.async { [weak self] in
@@ -608,11 +706,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             }
             if let prev = appToActivate, !prev.isTerminated,
                prev.bundleIdentifier != Bundle.main.bundleIdentifier {
+                self?.captureTimingTrace?.mark("activate previous app")
                 Self.activateApp(prev)
             } else {
                 // No known previous app — yield focus to whatever is frontmost.
                 // Avoid NSApp.hide(nil) which can suspend the Carbon event loop
                 // and break global hotkeys until the app is reactivated.
+                self?.captureTimingTrace?.mark("activate fallback app")
                 Self.activateApp(
                     NSWorkspace.shared.runningApplications.first {
                         $0.isActive && $0.bundleIdentifier != Bundle.main.bundleIdentifier
@@ -771,24 +871,56 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         guard !isCapturing else { return }
         // Don't allow captures while recording
         guard recordingEngine == nil else { return }
+        let trace = makeCaptureTimingTrace()
+        captureTimingTrace = trace
+        trace?.mark("startCapture entered fromMenu=\(fromMenu)")
         isCapturing = true
         captureSessionID &+= 1
         let sessionID = captureSessionID
+        trace?.mark("capture session created id=\(sessionID)")
         previousApp = NSWorkspace.shared.frontmostApplication
+        trace?.mark("frontmost application captured")
         capturedWindowTitle = nil
         let focusedWindowPID = previousApp?.processIdentifier
 
         let delay = UserDefaults.standard.integer(forKey: "captureDelaySeconds")
+        trace?.mark("capture delay read delay=\(delay)")
         if !fromMenu && delay == 0 {
             // The zero-delay hotkey path snapshots before overlay activation so
             // transient UI stays visible. Hide our thumbnails before that
             // snapshot; ScreenCaptureKit exclusions only apply to the later
             // async fallback path.
-            for tc in thumbnailControllers { tc.hideWindow() }
-            let context = ScreenCaptureManager.makeImmediateCaptureContext()
+            if let trace {
+                trace.measure("hide thumbnails before immediate capture") {
+                    for tc in thumbnailControllers { tc.hideWindow() }
+                }
+            } else {
+                for tc in thumbnailControllers { tc.hideWindow() }
+            }
+            let context: ScreenCaptureManager.ImmediateCaptureContext
+            if let trace {
+                context = trace.measure("makeImmediateCaptureContext") {
+                    ScreenCaptureManager.makeImmediateCaptureContext { label in
+                        trace.mark(label)
+                    }
+                }
+            } else {
+                context = ScreenCaptureManager.makeImmediateCaptureContext()
+            }
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-                let captures = ScreenCaptureManager.captureAllScreensImmediately(context: context)
+                trace?.mark("immediate capture background block entered")
+                let captures: [ScreenCapture]
+                if let trace {
+                    captures = trace.measure("captureAllScreensImmediately") {
+                        ScreenCaptureManager.captureAllScreensImmediately(context: context) { label in
+                            trace.mark(label)
+                        }
+                    }
+                } else {
+                    captures = ScreenCaptureManager.captureAllScreensImmediately(context: context)
+                }
                 DispatchQueue.main.async {
+                    trace?.mark("immediate capture returned to main captures=\(captures.count)")
                     self?.resolveFocusedWindowTitleAsync(for: focusedWindowPID, sessionID: sessionID)
                     self?.continueStartCapture(
                         fromMenu: fromMenu,
@@ -799,6 +931,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             return
         }
 
+        trace?.mark("using non-immediate capture path")
         resolveFocusedWindowTitleAsync(for: focusedWindowPID, sessionID: sessionID)
         continueStartCapture(fromMenu: fromMenu, delay: delay, immediateCaptures: nil)
     }
@@ -809,6 +942,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         immediateCaptures: [ScreenCapture]?
     ) {
         guard isCapturing else { return }
+        captureTimingTrace?.mark("continueStartCapture entered immediateCaptures=\(immediateCaptures?.count ?? -1)")
         // When "remember last tool" is off, clear persisted effects/beautify
         // so new OverlayView instances start clean
         let rememberTool = UserDefaults.standard.object(forKey: "rememberLastTool") as? Bool ?? true
@@ -822,7 +956,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         }
 
         // Clean up stale overlays without consuming previousApp — we just set it.
-        dismissOverlays(refocusPreviousApp: false)
+        measureCaptureTiming("dismiss stale overlays") {
+            dismissOverlays(refocusPreviousApp: false)
+        }
         isCapturing = true
 
         // Hide any non-overlay titled windows (editors, preferences, Sparkle
@@ -830,22 +966,30 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // every visible app-owned window in front of the user's frontmost app
         // and those windows end up in the screenshot. Restored in
         // dismissOverlays once capture is over.
-        stashBackgroundWindows()
+        measureCaptureTiming("stash background windows") {
+            stashBackgroundWindows()
+        }
 
         // Hide floating thumbnails so they don't visually flash on the overlay.
         // They're also excluded via ScreenCaptureKit's excludingWindows filter
         // in performCapture() so they never appear in the captured image.
-        for tc in thumbnailControllers { tc.hideWindow() }
+        measureCaptureTiming("hide thumbnails before overlay") {
+            for tc in thumbnailControllers { tc.hideWindow() }
+        }
 
         // Kick off SCShareableContent enumeration early for paths that still
         // need the async capture after the overlay appears.
         if immediateCaptures == nil || immediateCaptures?.isEmpty == true {
-            ScreenCaptureManager.prewarm()
+            measureCaptureTiming("ScreenCaptureManager.prewarm") {
+                ScreenCaptureManager.prewarm()
+            }
         }
 
         if delay > 0 {
+            captureTimingTrace?.mark("showPreCaptureCountdown requested")
             showPreCaptureCountdown(seconds: delay)
         } else {
+            captureTimingTrace?.mark("performCapture scheduled on main")
             DispatchQueue.main.async { [weak self] in
                 self?.performCapture(preCaptured: immediateCaptures)
             }
@@ -929,28 +1073,51 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func performCapture(preCaptured: [ScreenCapture]? = nil) {
-        let screens = NSScreen.screens
-        let mouseScreen = screens.first { $0.frame.contains(NSEvent.mouseLocation) }
-        let preCapturedByScreen = Dictionary(
-            uniqueKeysWithValues: (preCaptured ?? []).map { ($0.screen, $0.image) })
+        captureTimingTrace?.mark("performCapture entered preCaptured=\(preCaptured?.count ?? -1)")
+        let screens = measureCaptureTiming("NSScreen.screens") {
+            NSScreen.screens
+        }
+        let mouseLocation = NSEvent.mouseLocation
+        let mouseScreen = screens.first { $0.frame.contains(mouseLocation) }
+        let preCapturedByScreen = measureCaptureTiming("map preCaptured images") {
+            Dictionary(uniqueKeysWithValues: (preCaptured ?? []).map { ($0.screen, $0.image) })
+        }
 
         for screen in screens {
             let controller: OverlayWindowController
             if let image = preCapturedByScreen[screen] {
-                controller = OverlayWindowController(capture: ScreenCapture(screen: screen, image: image))
+                controller = measureCaptureTiming("create overlay with preCaptured image") {
+                    let controller = OverlayWindowController(screen: screen)
+                    controller.setCaptureSource(image)
+                    return controller
+                }
             } else {
-                controller = OverlayWindowController(screen: screen)
+                controller = measureCaptureTiming("create overlay without image") {
+                    OverlayWindowController(screen: screen)
+                }
             }
             controller.overlayDelegate = self
+            if let trace = captureTimingTrace {
+                controller.timingMark = { label in
+                    trace.mark(label)
+                }
+            }
             controller.capturedWindowTitle = capturedWindowTitle
             if pendingRecordMode { controller.setAutoRecordMode() }
             if pendingOCRMode { controller.setAutoOCRMode() }
             if pendingQuickCaptureMode { controller.setAutoQuickSaveMode() }
             if pendingScrollCaptureMode { controller.setAutoScrollCaptureMode() }
-            controller.showOverlay()
+            measureCaptureTiming("show overlay") {
+                controller.showOverlay()
+            }
+            if let image = preCapturedByScreen[screen] {
+                attachDisplayPreview(image, to: controller)
+            }
             let isMouseScreen = (screen == mouseScreen) || (mouseScreen == nil && screen == NSScreen.main)
             if (pendingFullScreen || pendingFullScreenRecord) && isMouseScreen {
-                controller.applyFullScreenSelection()
+                measureCaptureTiming("apply full screen selection") {
+                    controller.applyFullScreenSelection()
+                }
             }
             if pendingFullScreenRecord && isMouseScreen {
                 controller.enterRecordingMode()
@@ -961,8 +1128,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             overlayControllers.append(controller)
         }
 
-        CATransaction.flush()
-        NSApp.activate(ignoringOtherApps: true)
+        if preCaptured?.isEmpty == false {
+            captureTimingTrace?.mark("CATransaction.flush skipped for immediate capture")
+        } else {
+            measureCaptureTiming("CATransaction.flush") {
+                CATransaction.flush()
+            }
+        }
+        measureCaptureTiming("NSApp.activate") {
+            NSApp.activate(ignoringOtherApps: true)
+        }
 
         pendingRecordMode = false
         pendingFullScreenRecordAutoStart = false
@@ -973,6 +1148,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         pendingFullScreenRecord = false
 
         if let preCaptured = preCaptured, !preCaptured.isEmpty {
+            captureTimingTrace?.mark("overlay ready using immediate captures")
+            let trace = captureTimingTrace
+            DispatchQueue.main.async {
+                trace?.mark("main queue tick after overlay ready")
+            }
             applyPendingRestoredSelectionIfNeeded()
             return
         }
@@ -980,8 +1160,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // Capture screenshots in background — exclude overlay windows + thumbnails.
         let excludeIDs = thumbnailControllers.compactMap { $0.windowNumber }
             + overlayControllers.compactMap { $0.windowNumber }
-        ScreenCaptureManager.captureAllScreens(excludingWindowNumbers: excludeIDs) { [weak self] captures in
+        captureTimingTrace?.mark("async captureAllScreens requested exclusions=\(excludeIDs.count)")
+        let trace = captureTimingTrace
+        ScreenCaptureManager.captureAllScreens(
+            excludingWindowNumbers: excludeIDs,
+            timing: { label in trace?.mark(label) }
+        ) { [weak self] captures in
             guard let self = self else { return }
+            self.captureTimingTrace?.mark("async captureAllScreens completed captures=\(captures.count)")
 
             if captures.isEmpty {
                 self.dismissOverlays(refocusPreviousApp: true)
@@ -991,11 +1177,29 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
             for capture in captures {
                 if let controller = self.overlayControllers.first(where: { $0.screen == capture.screen }) {
-                    controller.setScreenshot(capture.image)
+                    self.measureCaptureTiming("set overlay screenshot source") {
+                        controller.setCaptureSource(capture.image)
+                    }
+                    self.attachDisplayPreview(capture.image, to: controller)
                 }
             }
 
+            self.captureTimingTrace?.mark("overlay ready after async screenshots")
             self.applyPendingRestoredSelectionIfNeeded()
+        }
+    }
+
+    private func attachDisplayPreview(
+        _ image: CGImage,
+        to controller: OverlayWindowController
+    ) {
+        let trace = captureTimingTrace
+        DispatchQueue.main.async { [weak controller] in
+            trace?.mark("set full-resolution overlay display preview requested pixels=\(image.width)x\(image.height)")
+            guard let controller = controller else { return }
+            self.measureCaptureTiming("set overlay display preview") {
+                controller.setScreenshotPreview(image)
+            }
         }
     }
 
@@ -1059,25 +1263,32 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func dismissOverlays(refocusPreviousApp: Bool = true) {
+        captureTimingTrace?.mark("dismissOverlays entered refocus=\(refocusPreviousApp)")
         autoreleasepool {
             for controller in overlayControllers {
                 controller.dismiss()
             }
             overlayControllers.removeAll()
         }
+        captureTimingTrace?.mark("overlay controllers dismissed")
         isCapturing = false
         // Restore hidden thumbnails
-        for tc in thumbnailControllers { tc.showWindow() }
+        measureCaptureTiming("restore thumbnails") {
+            for tc in thumbnailControllers { tc.showWindow() }
+        }
         if refocusPreviousApp {
             // Restore AFTER another app takes focus so the stashed windows
             // come back behind it instead of on top. See
             // `scheduleBackgroundWindowRestore` for the timing logic.
+            captureTimingTrace?.mark("schedule focus restore")
             scheduleBackgroundWindowRestore()
             returnFocusIfNeeded()
         } else {
             // No focus switch coming — just bring them back immediately.
+            captureTimingTrace?.mark("restore background windows immediately")
             restoreBackgroundWindowsNow()
         }
+        captureTimingTrace?.mark("dismissOverlays completed")
     }
 
     /// Hide non-overlay titled macshot windows so they can't be dragged in
@@ -1144,6 +1355,51 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             window.orderBack(nil)
         }
         stashedBackgroundWindows.removeAll()
+    }
+
+    private func finishCaptureTimingReport(_ finalLabel: String) -> String? {
+        #if DEBUG
+        guard let trace = captureTimingTrace else { return nil }
+        let report = trace.report(finalLabel: finalLabel)
+        captureTimingTrace = nil
+        return report
+        #else
+        captureTimingTrace = nil
+        return nil
+        #endif
+    }
+
+    private func showCaptureTimingDialog(_ report: String) {
+        NSApp.activate(ignoringOtherApps: true)
+
+        let alert = NSAlert()
+        alert.messageText = "Capture Timing"
+        alert.informativeText = "Timing for the last screenshot capture."
+        alert.addButton(withTitle: "OK")
+
+        let scrollView = NSScrollView(frame: NSRect(x: 0, y: 0, width: 620, height: 360))
+        scrollView.hasVerticalScroller = true
+        scrollView.hasHorizontalScroller = true
+        scrollView.autohidesScrollers = false
+
+        let textView = NSTextView(frame: scrollView.bounds)
+        textView.isEditable = false
+        textView.isSelectable = true
+        textView.drawsBackground = true
+        textView.backgroundColor = .textBackgroundColor
+        textView.textColor = .textColor
+        textView.font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
+        textView.string = report
+        textView.minSize = NSSize(width: 0, height: scrollView.contentSize.height)
+        textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+        textView.isVerticallyResizable = true
+        textView.isHorizontallyResizable = true
+        textView.textContainer?.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+        textView.textContainer?.widthTracksTextView = false
+
+        scrollView.documentView = textView
+        alert.accessoryView = scrollView
+        alert.runModal()
     }
 
     func showFloatingThumbnail(image: NSImage, annotationData: CaptureAnnotationData? = nil, historyEntryID: String? = nil) {
@@ -1567,12 +1823,15 @@ extension AppDelegate: OverlayWindowControllerDelegate {
     }
 
     func overlayDidConfirm(_ controller: OverlayWindowController, capturedImage: NSImage?, annotationData: CaptureAnnotationData?) {
+        captureTimingTrace?.mark("overlayDidConfirm entered image=\(capturedImage != nil)")
         dismissOverlays()
+        captureTimingTrace?.mark("overlayDidConfirm after dismissOverlays")
         if let image = capturedImage {
             ScreenshotHistory.shared.add(
                 image: image,
                 rawImage: annotationData?.rawImage,
                 annotations: annotationData?.annotations)
+            captureTimingTrace?.mark("screenshot added to history")
             // The entry just added is at index 0
             let entryID = ScreenshotHistory.shared.entries.first?.id
             // Defer thumbnail to next runloop cycle so overlay teardown completes first
@@ -1588,6 +1847,12 @@ extension AppDelegate: OverlayWindowControllerDelegate {
                     DetachedEditorWindowController.open(image: data.rawImage, annotations: data.annotations, historyEntryID: entryID)
                 } else {
                     DetachedEditorWindowController.open(image: image, historyEntryID: entryID, disableBeautify: true)
+                }
+            }
+
+            if let report = finishCaptureTimingReport("timing report generated") {
+                DispatchQueue.main.async { [weak self] in
+                    self?.showCaptureTimingDialog(report)
                 }
             }
         }
@@ -2280,6 +2545,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
     }
 
     func overlayDidBeginSelection(_ controller: OverlayWindowController) {
+        captureTimingTrace?.mark("user began selection")
         for other in overlayControllers where other !== controller {
             other.clearSelection()
             other.setRemoteSelection(.zero)

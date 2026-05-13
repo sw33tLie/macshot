@@ -40,6 +40,11 @@ class OverlayWindowController {
 
     weak var overlayDelegate: OverlayWindowControllerDelegate?
     var capturedWindowTitle: String?
+    var timingMark: ((String) -> Void)? {
+        didSet {
+            overlayView?.timingMark = timingMark
+        }
+    }
 
     private var overlayView: OverlayView?
     private var overlayWindow: OverlayWindow?
@@ -58,17 +63,83 @@ class OverlayWindowController {
     var sessionRecordingOnStop: String? { overlayView?.sessionRecordingOnStop }
     var sessionRecordingDelay: Int? { overlayView?.sessionRecordingDelay }
     var sessionHideRecordingHUD: Bool? { overlayView?.sessionHideRecordingHUD }
+    private static var isPrewarmingCaptureOverlay = false
+    private static var lastCaptureOverlayPrewarmDate: Date = .distantPast
+    private static let captureOverlayPrewarmMinimumInterval: TimeInterval = 90
 
     static func prewarmForCapture() {
-        let view = OverlayView(frame: NSRect(x: 0, y: 0, width: 16, height: 16))
-        view.displayIfNeeded()
+        guard !isPrewarmingCaptureOverlay else { return }
+        guard Date().timeIntervalSince(lastCaptureOverlayPrewarmDate) >= captureOverlayPrewarmMinimumInterval else { return }
+        isPrewarmingCaptureOverlay = true
+        lastCaptureOverlayPrewarmDate = Date()
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            let screens = NSScreen.screens
+            guard !screens.isEmpty else {
+                isPrewarmingCaptureOverlay = false
+                return
+            }
+            let dummyImage = Self.makePrewarmImage()
+            var windows: [NSWindow] = []
+
+            for screen in screens {
+                let window = OverlayWindow(
+                    contentRect: screen.frame,
+                    styleMask: [.borderless],
+                    backing: .buffered,
+                    defer: false)
+                window.level = NSWindow.Level(257)
+                window.isOpaque = true
+                window.backgroundColor = .black
+                window.hasShadow = false
+                window.ignoresMouseEvents = true
+                window.acceptsMouseMovedEvents = false
+                window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+                window.isReleasedWhenClosed = false
+                window.alphaValue = 0
+
+                let view = OverlayView(frame: NSRect(origin: .zero, size: screen.frame.size))
+                view.screenshotImage = NSImage(cgImage: dummyImage, size: screen.frame.size)
+                window.contentView = view
+                window.orderFront(nil)
+                view.displayIfNeeded()
+                windows.append(window)
+            }
+
+            CATransaction.flush()
+            DispatchQueue.main.async {
+                for window in windows {
+                    window.orderOut(nil)
+                    window.contentView = nil
+                    window.close()
+                }
+                isPrewarmingCaptureOverlay = false
+            }
+        }
+    }
+
+    private static func makePrewarmImage() -> CGImage {
+        let colorSpace = CGColorSpace(name: CGColorSpace.sRGB)!
+        let context = CGContext(
+            data: nil,
+            width: 1,
+            height: 1,
+            bitsPerComponent: 8,
+            bytesPerRow: 0,
+            space: colorSpace,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        context.setFillColor(NSColor.black.cgColor)
+        context.fill(CGRect(x: 0, y: 0, width: 1, height: 1))
+        return context.makeImage()!
     }
 
     init(capture: ScreenCapture) {
         let screen = capture.screen
         self.screen = screen
         setupWindow(screen: screen)
+        setOpaqueForScreenshotBackedOverlay()
         let nsImage = NSImage(cgImage: capture.image, size: screen.frame.size)
+        overlayView?.captureSourceImage = nsImage
         overlayView?.screenshotImage = nsImage
     }
 
@@ -99,17 +170,44 @@ class OverlayWindowController {
         view.frame = NSRect(origin: .zero, size: screen.frame.size)
         view.autoresizingMask = [.width, .height]
         view.overlayDelegate = self
+        view.timingMark = timingMark
 
         window.contentView = view
         self.overlayWindow = window
         self.overlayView = view
     }
 
+    private func setOpaqueForScreenshotBackedOverlay() {
+        overlayWindow?.isOpaque = true
+        overlayWindow?.backgroundColor = .black
+    }
+
     /// Set the screenshot after the overlay is visible.
     func setScreenshot(_ image: CGImage) {
+        setCaptureSource(image)
+        setOpaqueForScreenshotBackedOverlay()
         let nsImage = NSImage(cgImage: image, size: screen.frame.size)
         overlayView?.screenshotImage = nsImage
         // Enable interaction now that the screenshot is ready.
+        overlayWindow?.ignoresMouseEvents = false
+        overlayWindow?.makeKeyAndOrderFront(nil)
+        if let view = overlayView {
+            overlayWindow?.makeFirstResponder(view)
+        }
+    }
+
+    /// Set the full-resolution image used for final output without forcing it
+    /// into the visible overlay surface.
+    func setCaptureSource(_ image: CGImage) {
+        overlayView?.captureSourceImage = NSImage(cgImage: image, size: screen.frame.size)
+    }
+
+    /// Set a display-only preview image. The full-resolution source remains
+    /// in `captureSourceImage` so copy/save/editor output stays native quality.
+    func setScreenshotPreview(_ image: CGImage) {
+        setOpaqueForScreenshotBackedOverlay()
+        let nsImage = NSImage(cgImage: image, size: screen.frame.size)
+        overlayView?.screenshotImage = nsImage
         overlayWindow?.ignoresMouseEvents = false
         overlayWindow?.makeKeyAndOrderFront(nil)
         if let view = overlayView {
@@ -125,9 +223,16 @@ class OverlayWindowController {
             window.makeKeyAndOrderFront(nil)
             if let view = overlayView { window.makeFirstResponder(view) }
         } else {
-            // Async path — show transparent but block input until screenshot arrives.
-            window.ignoresMouseEvents = true
-            window.orderFront(nil)
+            // Async path: if we already have a capture source, the visible
+            // screenshot preview can arrive later while selection stays live.
+            let canInteractBeforePreview = overlayView?.captureSourceImage != nil
+            window.ignoresMouseEvents = !canInteractBeforePreview
+            if canInteractBeforePreview {
+                window.makeKeyAndOrderFront(nil)
+                if let view = overlayView { window.makeFirstResponder(view) }
+            } else {
+                window.orderFront(nil)
+            }
         }
     }
 

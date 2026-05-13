@@ -80,6 +80,11 @@ class OverlayView: NSView {
     // MARK: - Properties
 
     weak var overlayDelegate: OverlayViewDelegate?
+    var timingMark: ((String) -> Void)?
+
+    override var isOpaque: Bool {
+        screenshotImage != nil && !isScrollCapturing && !isRecording && !isEditorMode
+    }
 
     /// When true, hides overlay-only toolbar buttons (record, delay, cancel, move, scroll capture).
     /// Override point for subclasses. EditorView returns true.
@@ -101,6 +106,7 @@ class OverlayView: NSView {
             }
         }
     }
+    var captureSourceImage: NSImage?
 
     // State
     enum State {
@@ -1349,6 +1355,10 @@ class OverlayView: NSView {
     // MARK: - Drawing
 
     override func draw(_ dirtyRect: NSRect) {
+        timingMark?("OverlayView.draw begin state=\(state) screenshot=\(screenshotImage != nil) dirty=\(Int(dirtyRect.width))x\(Int(dirtyRect.height)) opaque=\(isOpaque)")
+        defer {
+            timingMark?("OverlayView.draw end")
+        }
         super.draw(dirtyRect)
 
         guard let context = NSGraphicsContext.current else { return }
@@ -7505,7 +7515,7 @@ class OverlayView: NSView {
     /// Used as source for pixelate/blur so they operate on the composited result.
     func compositedImage() -> NSImage? {
         if let cached = cachedCompositedImage { return cached }
-        guard let screenshot = screenshotImage else { return nil }
+        guard let screenshot = captureSourceImage ?? screenshotImage else { return nil }
         if annotations.isEmpty { return screenshot }
 
         let drawRect = captureDrawRect
@@ -7556,7 +7566,7 @@ class OverlayView: NSView {
         // prevents interpolation-upscaling when a 1x external monitor is
         // captured while a Retina display is also connected.
         let scale: CGFloat
-        if let screenshot = screenshotImage,
+        if let screenshot = captureSourceImage ?? screenshotImage,
             let cg = screenshot.cgImage(forProposedRect: nil, context: nil, hints: nil)
         {
             scale = CGFloat(cg.width) / screenshot.size.width
@@ -7580,7 +7590,7 @@ class OverlayView: NSView {
         // Use the source image's color space to avoid expensive color conversion on render.
         // Fall back to sRGB if unavailable.
         let cs: CGColorSpace
-        if let screenshot = screenshotImage,
+        if let screenshot = captureSourceImage ?? screenshotImage,
            let cg = screenshot.cgImage(forProposedRect: nil, context: nil, hints: nil),
            let srcCS = cg.colorSpace {
             cs = srcCS
@@ -7610,7 +7620,7 @@ class OverlayView: NSView {
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.current = nsContext
 
-        if let screenshot = screenshotImage {
+        if let screenshot = captureSourceImage ?? screenshotImage {
             // In editor mode the image is at selectionRect (natural size);
             // in overlay mode it fills bounds (full screen).
             let drawRect = captureDrawRect
@@ -7846,6 +7856,7 @@ class OverlayView: NSView {
         PopoverHelper.dismiss()
         editorTooltipView?.removeFromSuperview()
         editorTooltipView = nil
+        captureSourceImage = nil
         isTranslating = false
         translateEnabled = false
         autoMeasurePreview = nil
@@ -8000,4 +8011,3 @@ private class TooltipBackgroundView: NSView {
         (text as NSString).draw(at: NSPoint(x: pad, y: pad / 2), withAttributes: attrs)
     }
 }
-
