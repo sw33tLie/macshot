@@ -9,6 +9,47 @@ struct CaptureAnnotationData {
     let annotations: [Annotation]
 }
 
+private final class ScreenshotOverlayRootView: NSView {
+    private let previewLayer = CALayer()
+    let overlayView: OverlayView
+
+    init(frame: NSRect, overlayView: OverlayView) {
+        self.overlayView = overlayView
+        super.init(frame: frame)
+        wantsLayer = true
+        layer?.backgroundColor = NSColor.black.cgColor
+        layer?.masksToBounds = true
+        previewLayer.contentsGravity = .resize
+        previewLayer.masksToBounds = true
+        layer?.addSublayer(previewLayer)
+        overlayView.frame = bounds
+        overlayView.autoresizingMask = [.width, .height]
+        addSubview(overlayView)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        nil
+    }
+
+    override func layout() {
+        super.layout()
+        previewLayer.frame = bounds
+    }
+
+    func setScreenshotPreviewImage(_ cgImage: CGImage) {
+        previewLayer.frame = bounds
+        previewLayer.contentsScale = window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2
+        previewLayer.contents = cgImage
+        overlayView.usesExternalScreenshotPreview = true
+    }
+
+    func clearScreenshotPreview() {
+        previewLayer.contents = nil
+        overlayView.usesExternalScreenshotPreview = false
+    }
+}
+
 @MainActor
 protocol OverlayWindowControllerDelegate: AnyObject {
     func overlayDidCancel(_ controller: OverlayWindowController)
@@ -47,6 +88,7 @@ class OverlayWindowController {
     }
 
     private var overlayView: OverlayView?
+    private var rootView: ScreenshotOverlayRootView?
     private var overlayWindow: OverlayWindow?
     private var shareDelegate: SharePickerDelegate?
     private var shareDismissTime: Date = .distantPast
@@ -100,7 +142,11 @@ class OverlayWindowController {
 
                 let view = OverlayView(frame: NSRect(origin: .zero, size: screen.frame.size))
                 view.screenshotImage = NSImage(cgImage: dummyImage, size: screen.frame.size)
-                window.contentView = view
+                let rootView = ScreenshotOverlayRootView(
+                    frame: NSRect(origin: .zero, size: screen.frame.size),
+                    overlayView: view)
+                rootView.setScreenshotPreviewImage(dummyImage)
+                window.contentView = rootView
                 window.orderFront(nil)
                 view.displayIfNeeded()
                 windows.append(window)
@@ -141,6 +187,7 @@ class OverlayWindowController {
         let nsImage = NSImage(cgImage: capture.image, size: screen.frame.size)
         overlayView?.captureSourceImage = nsImage
         overlayView?.screenshotImage = nsImage
+        rootView?.setScreenshotPreviewImage(capture.image)
     }
 
     /// Create an overlay without a screenshot — shows instantly as transparent.
@@ -172,8 +219,13 @@ class OverlayWindowController {
         view.overlayDelegate = self
         view.timingMark = timingMark
 
-        window.contentView = view
+        let rootView = ScreenshotOverlayRootView(
+            frame: NSRect(origin: .zero, size: screen.frame.size),
+            overlayView: view)
+
+        window.contentView = rootView
         self.overlayWindow = window
+        self.rootView = rootView
         self.overlayView = view
     }
 
@@ -186,14 +238,15 @@ class OverlayWindowController {
     func setScreenshot(_ image: CGImage) {
         setCaptureSource(image)
         setOpaqueForScreenshotBackedOverlay()
-        let nsImage = NSImage(cgImage: image, size: screen.frame.size)
-        overlayView?.screenshotImage = nsImage
+        overlayView?.screenshotImage = NSImage(cgImage: image, size: screen.frame.size)
+        rootView?.setScreenshotPreviewImage(image)
         // Enable interaction now that the screenshot is ready.
         overlayWindow?.ignoresMouseEvents = false
         overlayWindow?.makeKeyAndOrderFront(nil)
         if let view = overlayView {
             overlayWindow?.makeFirstResponder(view)
         }
+        NSCursor.crosshair.set()
     }
 
     /// Set the full-resolution image used for final output without forcing it
@@ -206,13 +259,14 @@ class OverlayWindowController {
     /// in `captureSourceImage` so copy/save/editor output stays native quality.
     func setScreenshotPreview(_ image: CGImage) {
         setOpaqueForScreenshotBackedOverlay()
-        let nsImage = NSImage(cgImage: image, size: screen.frame.size)
-        overlayView?.screenshotImage = nsImage
+        overlayView?.screenshotImage = NSImage(cgImage: image, size: screen.frame.size)
+        rootView?.setScreenshotPreviewImage(image)
         overlayWindow?.ignoresMouseEvents = false
         overlayWindow?.makeKeyAndOrderFront(nil)
         if let view = overlayView {
             overlayWindow?.makeFirstResponder(view)
         }
+        NSCursor.crosshair.set()
     }
 
     func showOverlay() {
@@ -222,6 +276,7 @@ class OverlayWindowController {
             if let view = overlayView { view.displayIfNeeded() }
             window.makeKeyAndOrderFront(nil)
             if let view = overlayView { window.makeFirstResponder(view) }
+            NSCursor.crosshair.set()
         } else {
             // Async path: if we already have a capture source, the visible
             // screenshot preview can arrive later while selection stays live.
@@ -230,6 +285,7 @@ class OverlayWindowController {
             if canInteractBeforePreview {
                 window.makeKeyAndOrderFront(nil)
                 if let view = overlayView { window.makeFirstResponder(view) }
+                NSCursor.crosshair.set()
             } else {
                 window.orderFront(nil)
             }
@@ -333,8 +389,10 @@ class OverlayWindowController {
         saveSelectionIfNeeded()
         overlayView?.reset()
         overlayView?.screenshotImage = nil
+        rootView?.clearScreenshotPreview()
         overlayView?.overlayDelegate = nil
         overlayWindow?.contentView = nil
+        rootView = nil
         overlayView = nil
         overlayWindow?.orderOut(nil)
         overlayWindow?.close()

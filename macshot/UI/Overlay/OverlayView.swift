@@ -83,7 +83,7 @@ class OverlayView: NSView {
     var timingMark: ((String) -> Void)?
 
     override var isOpaque: Bool {
-        screenshotImage != nil && !isScrollCapturing && !isRecording && !isEditorMode
+        !usesExternalScreenshotPreview && screenshotImage != nil && !isScrollCapturing && !isRecording && !isEditorMode
     }
 
     /// When true, hides overlay-only toolbar buttons (record, delay, cancel, move, scroll capture).
@@ -107,6 +107,9 @@ class OverlayView: NSView {
         }
     }
     var captureSourceImage: NSImage?
+    var usesExternalScreenshotPreview = false {
+        didSet { needsDisplay = true }
+    }
 
     // State
     enum State {
@@ -1374,7 +1377,9 @@ class OverlayView: NSView {
         } else if !isRecording {
             if let image = screenshotImage {
                 // Screenshot ready — draw it with dark overlay
-                image.draw(in: bounds, from: .zero, operation: .copy, fraction: 1.0)
+                if !usesExternalScreenshotPreview {
+                    image.draw(in: bounds, from: .zero, operation: .copy, fraction: 1.0)
+                }
                 NSColor.black.withAlphaComponent(0.45).setFill()
                 NSBezierPath(rect: bounds).fill()
             } else {
@@ -1401,7 +1406,10 @@ class OverlayView: NSView {
             if shouldClipSelectionImage() {
                 context.saveGraphicsState()
                 NSBezierPath(rect: remoteSelectionRect).setClip()
-                if let image = screenshotImage {
+                if usesExternalScreenshotPreview && zoomLevel == 1 {
+                    context.cgContext.setBlendMode(.clear)
+                    NSBezierPath(rect: remoteSelectionRect).fill()
+                } else if let image = screenshotImage {
                     image.draw(in: bounds, from: .zero, operation: .copy, fraction: 1.0)
                 }
                 context.restoreGraphicsState()
@@ -1431,8 +1439,11 @@ class OverlayView: NSView {
             if shouldClipSelectionImage() {
                 context.saveGraphicsState()
                 NSBezierPath(rect: selectionRect).setClip()
-                applyZoomTransform(to: context)
-                if !isScrollCapturing, !isRecording, let image = screenshotImage {
+                if !isScrollCapturing, !isRecording, usesExternalScreenshotPreview, zoomLevel == 1 {
+                    context.cgContext.setBlendMode(.clear)
+                    NSBezierPath(rect: selectionRect).fill()
+                } else if !isScrollCapturing, !isRecording, let image = screenshotImage {
+                    applyZoomTransform(to: context)
                     image.draw(in: bounds, from: .zero, operation: .copy, fraction: 1.0)
                 }
                 context.restoreGraphicsState()
