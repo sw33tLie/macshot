@@ -1083,10 +1083,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             self?.thumbnailControllers.removeAll { $0 === controller }
             self?.reflowThumbnails()
         }
-        controller.onCopy = { [weak self] in
-            guard let self = self else { return }
+        controller.onCopy = {
             ImageEncoder.copyToClipboard(image)
-            self.playCopySound()
         }
         controller.onSave = { [weak self] in
             guard let self = self else { return }
