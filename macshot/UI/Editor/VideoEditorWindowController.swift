@@ -2744,6 +2744,10 @@ private final class VideoEditorView: NSView {
         var liveIDs = Set<UUID>()
 
         for seg in textSegments where seg.endTime > seg.startTime {
+            if seg.id == inlineTextEditingSegmentID {
+                liveIDs.insert(seg.id)
+                continue
+            }
             // Pixel size of the segment's rect at the render resolution.
             // The rasterizer uses this to size the canvas; the per-frame
             // composite scales it 1:1 into render-space.
@@ -2806,6 +2810,16 @@ private final class VideoEditorView: NSView {
         // place the field as a sibling of the player view.
         let frame = hostView.convert(viewRect, to: self)
 
+        let displayedVideoHeight = frame.height / max(seg.rect.height, 0.0001)
+        var editorFontSize = max(8, seg.fontSize * displayedVideoHeight / 1080)
+        editorFontSize = min(editorFontSize, max(8, frame.height * 0.78))
+
+        let font = inlineTextFont(for: seg, size: editorFontSize)
+        let textColor = nsColor(seg.textColor)
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = nsTextAlignment(for: seg.alignment)
+        paragraph.lineBreakMode = .byTruncatingTail
+
         // Borderless scrollable text view sized to the segment rect. We use
         // NSTextView (not NSTextField) so multiline edits and large fonts
         // render predictably.
@@ -2813,37 +2827,52 @@ private final class VideoEditorView: NSView {
         scroll.hasVerticalScroller = false
         scroll.hasHorizontalScroller = false
         scroll.borderType = .noBorder
-        scroll.drawsBackground = true
-        scroll.backgroundColor = NSColor.black.withAlphaComponent(0.5)
+        scroll.drawsBackground = false
         scroll.wantsLayer = true
-        scroll.layer?.cornerRadius = 6
+        scroll.layer?.backgroundColor = inlineTextBackgroundColor(for: seg)?.cgColor
+        scroll.layer?.cornerRadius = inlineTextBackgroundRadius(for: seg, frame: frame)
+        scroll.layer?.masksToBounds = true
         scroll.layer?.borderColor = NSColor(calibratedRed: 1.0, green: 0.78, blue: 0.30, alpha: 1.0).cgColor
         scroll.layer?.borderWidth = 1.5
         scroll.autoresizingMask = []
+        scroll.contentView.drawsBackground = false
 
-        let tv = NSTextView(frame: NSRect(origin: .zero, size: frame.size))
+        let tv = InlineVideoTextView(frame: NSRect(origin: .zero, size: frame.size))
         tv.isRichText = false
         tv.allowsUndo = true
-        tv.isVerticallyResizable = true
+        tv.isVerticallyResizable = false
         tv.isHorizontallyResizable = false
-        tv.textContainerInset = NSSize(width: 8, height: 6)
+        tv.textContainer?.lineFragmentPadding = 0
+        tv.textContainer?.widthTracksTextView = true
+        tv.textContainer?.heightTracksTextView = false
+        tv.horizontalTextInset = max(2, editorFontSize * 0.18)
         tv.drawsBackground = false
-        tv.font = NSFont.systemFont(ofSize: max(14, min(28, frame.height * 0.55)),
-                                       weight: seg.bold ? .bold : .regular)
-        tv.textColor = NSColor.white
+        tv.font = font
+        tv.textColor = textColor
+        tv.alignment = paragraph.alignment
+        tv.defaultParagraphStyle = paragraph
+        tv.typingAttributes = [
+            .font: font,
+            .foregroundColor: textColor,
+            .paragraphStyle: paragraph,
+        ]
         tv.insertionPointColor = NSColor(calibratedRed: 1.0, green: 0.78, blue: 0.30, alpha: 1.0)
         tv.string = seg.text
-        // Select all so typing replaces the placeholder ("Text") immediately.
-        tv.selectAll(nil)
+        if let storage = tv.textStorage, storage.length > 0 {
+            storage.addAttributes(tv.typingAttributes, range: NSRange(location: 0, length: storage.length))
+        }
+        tv.centerTextVertically()
+        tv.setSelectedRange(NSRange(location: (tv.string as NSString).length, length: 0))
         tv.delegate = self
 
         scroll.documentView = tv
         addSubview(scroll)
-        window?.makeFirstResponder(tv)
 
         inlineTextEditor = tv
         inlineTextEditorScrollView = scroll
         inlineTextEditingSegmentID = segmentID
+        applyZoomTransformForCurrentTime()
+        window?.makeFirstResponder(tv)
     }
 
     fileprivate func commitInlineTextEdit() {
@@ -2854,16 +2883,18 @@ private final class VideoEditorView: NSView {
             return
         }
         let newText = tv.string
-        if newText != seg.text {
+        let changed = newText != seg.text
+        if changed {
             seg.text = newText
             // Drop the cache for this segment so the next composition
             // rebuild re-rasterizes with the new text.
             textRasterCache.removeValue(forKey: id)
             savedURL = nil
-            applyZoomTransformForCurrentTime()
-            effectsBand?.refreshAfterParentEdit()
         }
         cancelInlineTextEdit(commit: false)
+        if changed {
+            effectsBand?.refreshAfterParentEdit()
+        }
     }
 
     fileprivate func cancelInlineTextEdit(commit: Bool) {
@@ -2871,6 +2902,7 @@ private final class VideoEditorView: NSView {
             commitInlineTextEdit()
             return
         }
+        let wasEditing = inlineTextEditingSegmentID != nil
         inlineTextEditorScrollView?.removeFromSuperview()
         inlineTextEditor = nil
         inlineTextEditorScrollView = nil
@@ -2879,7 +2911,56 @@ private final class VideoEditorView: NSView {
             pausedForTextEdit = false
         }
         window?.makeFirstResponder(self)
+        if wasEditing {
+            applyZoomTransformForCurrentTime()
+        }
         needsDisplay = true
+    }
+
+    private func nsColor(_ rgba: VideoTextSegment.RGBA) -> NSColor {
+        NSColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
+    }
+
+    private func nsTextAlignment(for alignment: VideoTextSegment.Alignment) -> NSTextAlignment {
+        switch alignment {
+        case .left: return .left
+        case .center: return .center
+        case .right: return .right
+        }
+    }
+
+    private func inlineTextFont(for seg: VideoTextSegment, size: CGFloat) -> NSFont {
+        var traits: NSFontDescriptor.SymbolicTraits = []
+        if seg.bold { traits.insert(.bold) }
+        if seg.italic { traits.insert(.italic) }
+
+        let base = NSFont.systemFont(ofSize: size, weight: seg.bold ? .bold : .regular)
+        if !traits.isEmpty {
+            let descriptor = base.fontDescriptor.withSymbolicTraits(traits)
+            if let font = NSFont(descriptor: descriptor, size: size) {
+                return font
+            }
+        }
+        return base
+    }
+
+    private func inlineTextBackgroundColor(for seg: VideoTextSegment) -> NSColor? {
+        switch seg.bgStyle {
+        case .none:
+            return nil
+        case .solid, .rounded:
+            return nsColor(seg.bgColor)
+        }
+    }
+
+    private func inlineTextBackgroundRadius(for seg: VideoTextSegment, frame: NSRect) -> CGFloat {
+        switch seg.bgStyle {
+        case .none, .solid:
+            return 0
+        case .rounded:
+            let shortSide = min(frame.width, frame.height)
+            return min(shortSide * 0.25, frame.height * 0.30)
+        }
     }
 
     // MARK: - Custom color picker
@@ -2992,6 +3073,33 @@ extension VideoEditorView: NSTextViewDelegate {
     func textDidEndEditing(_ notification: Notification) {
         // Lost focus → commit. Matches Finder rename behavior.
         commitInlineTextEdit()
+    }
+}
+
+private final class InlineVideoTextView: NSTextView {
+    var horizontalTextInset: CGFloat = 0 {
+        didSet { centerTextVertically() }
+    }
+
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        centerTextVertically()
+    }
+
+    override func didChangeText() {
+        super.didChangeText()
+        centerTextVertically()
+    }
+
+    func centerTextVertically() {
+        guard let container = textContainer, let manager = layoutManager else {
+            textContainerInset = NSSize(width: horizontalTextInset, height: 0)
+            return
+        }
+        manager.ensureLayout(for: container)
+        let usedHeight = manager.usedRect(for: container).height
+        let verticalInset = max(0, floor((bounds.height - usedHeight) / 2))
+        textContainerInset = NSSize(width: horizontalTextInset, height: verticalInset)
     }
 }
 
