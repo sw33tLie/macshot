@@ -461,34 +461,34 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     private func registerHotkey() {
         HotkeyManager.shared.registerAll(
             captureArea: { [weak self] in
-                DispatchQueue.main.async { self?.startCapture(fromMenu: false) }
+                self?.perform(#selector(AppDelegate.captureScreenFromHotkey))
             },
             captureFullScreen: { [weak self] in
-                DispatchQueue.main.async { self?.captureFullScreen() }
+                self?.perform(#selector(AppDelegate.captureFullScreenFromHotkey))
             },
             recordArea: { [weak self] in
-                DispatchQueue.main.async { self?.recordArea() }
+                self?.perform(#selector(AppDelegate.recordAreaFromHotkey))
             },
             recordScreen: { [weak self] in
-                DispatchQueue.main.async { self?.recordFullScreen() }
+                self?.perform(#selector(AppDelegate.recordFullScreenFromHotkey))
             },
             historyOverlay: { [weak self] in
                 DispatchQueue.main.async { self?.showHistoryOverlay() }
             },
             captureOCR: { [weak self] in
-                DispatchQueue.main.async { self?.captureOCR() }
+                self?.perform(#selector(AppDelegate.captureOCRFromHotkey))
             },
             quickCapture: { [weak self] in
-                DispatchQueue.main.async { self?.quickCapture() }
+                self?.perform(#selector(AppDelegate.quickCaptureFromHotkey))
             },
             scrollCapture: { [weak self] in
-                DispatchQueue.main.async { self?.scrollCapture() }
+                self?.perform(#selector(AppDelegate.scrollCaptureFromHotkey))
             },
             openFromClipboard: { [weak self] in
                 DispatchQueue.main.async { self?.openImageFromClipboard() }
             },
             captureLastArea: { [weak self] in
-                DispatchQueue.main.async { self?.captureLastArea() }
+                self?.perform(#selector(AppDelegate.captureLastAreaFromHotkey))
             }
         )
     }
@@ -563,12 +563,28 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     // MARK: - Capture
 
     @objc private func captureScreen() {
-        startCapture(fromMenu: true)
+        beginCaptureArea(fromMenu: true)
+    }
+
+    @objc private func captureScreenFromHotkey() {
+        beginCaptureArea(fromMenu: false)
+    }
+
+    private func beginCaptureArea(fromMenu: Bool) {
+        startCapture(fromMenu: fromMenu)
     }
 
     @objc private func captureFullScreen() {
+        beginCaptureFullScreen(fromMenu: true)
+    }
+
+    @objc private func captureFullScreenFromHotkey() {
+        beginCaptureFullScreen(fromMenu: false)
+    }
+
+    private func beginCaptureFullScreen(fromMenu: Bool) {
         pendingFullScreen = true
-        startCapture(fromMenu: true)
+        startCapture(fromMenu: fromMenu)
     }
 
     @objc private func showHistoryOverlay() {
@@ -586,39 +602,87 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     @objc private func captureOCR() {
+        beginCaptureOCR(fromMenu: true)
+    }
+
+    @objc private func captureOCRFromHotkey() {
+        beginCaptureOCR(fromMenu: false)
+    }
+
+    private func beginCaptureOCR(fromMenu: Bool) {
         pendingOCRMode = true
-        startCapture(fromMenu: true)
+        startCapture(fromMenu: fromMenu)
     }
 
     @objc private func quickCapture() {
+        beginQuickCapture(fromMenu: true)
+    }
+
+    @objc private func quickCaptureFromHotkey() {
+        beginQuickCapture(fromMenu: false)
+    }
+
+    private func beginQuickCapture(fromMenu: Bool) {
         pendingQuickCaptureMode = true
-        startCapture(fromMenu: true)
+        startCapture(fromMenu: fromMenu)
     }
 
     @objc private func scrollCapture() {
+        beginScrollCapture(fromMenu: true)
+    }
+
+    @objc private func scrollCaptureFromHotkey() {
+        beginScrollCapture(fromMenu: false)
+    }
+
+    private func beginScrollCapture(fromMenu: Bool) {
         pendingScrollCaptureMode = true
-        startCapture(fromMenu: true)
+        startCapture(fromMenu: fromMenu)
     }
 
     /// Open the capture overlay with the last selection area pre-applied.
     /// If no previous selection exists, falls back to a normal capture.
     @objc private func captureLastArea() {
+        beginCaptureLastArea(fromMenu: true)
+    }
+
+    @objc private func captureLastAreaFromHotkey() {
+        beginCaptureLastArea(fromMenu: false)
+    }
+
+    private func beginCaptureLastArea(fromMenu: Bool) {
         pendingRestoreLastArea = true
-        startCapture(fromMenu: true)
+        startCapture(fromMenu: fromMenu)
     }
     private var pendingRestoreLastArea: Bool = false
 
     @objc private func recordArea() {
+        beginRecordArea(fromMenu: true)
+    }
+
+    @objc private func recordAreaFromHotkey() {
+        beginRecordArea(fromMenu: false)
+    }
+
+    private func beginRecordArea(fromMenu: Bool) {
         pendingRecordMode = true
-        startCapture(fromMenu: true)
+        startCapture(fromMenu: fromMenu)
     }
 
     @objc private func recordFullScreen() {
+        beginRecordFullScreen(fromMenu: true)
+    }
+
+    @objc private func recordFullScreenFromHotkey() {
+        beginRecordFullScreen(fromMenu: false)
+    }
+
+    private func beginRecordFullScreen(fromMenu: Bool) {
         pendingFullScreenRecord = true
         if UserDefaults.standard.integer(forKey: "captureDelaySeconds") > 0 {
             pendingFullScreenRecordAutoStart = true
         }
-        startCapture(fromMenu: true)
+        startCapture(fromMenu: fromMenu)
     }
 
     @objc private func setDelaySeconds(_ sender: NSMenuItem) {
@@ -637,10 +701,30 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         guard recordingEngine == nil else { return }
         isCapturing = true
 
-        // Kick off SCShareableContent enumeration early — the cache will be ready
-        // by the time performCapture() needs it (covers hotkey path where menu wasn't opened)
-        ScreenCaptureManager.prewarm()
+        let delay = UserDefaults.standard.integer(forKey: "captureDelaySeconds")
+        if !fromMenu && delay == 0 {
+            let context = ScreenCaptureManager.makeImmediateCaptureContext()
+            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                let captures = ScreenCaptureManager.captureAllScreensImmediately(context: context)
+                DispatchQueue.main.async {
+                    self?.continueStartCapture(
+                        fromMenu: fromMenu,
+                        delay: delay,
+                        immediateCaptures: captures)
+                }
+            }
+            return
+        }
 
+        continueStartCapture(fromMenu: fromMenu, delay: delay, immediateCaptures: nil)
+    }
+
+    private func continueStartCapture(
+        fromMenu: Bool,
+        delay: Int,
+        immediateCaptures: [ScreenCapture]?
+    ) {
+        guard isCapturing else { return }
         // When "remember last tool" is off, clear persisted effects/beautify
         // so new OverlayView instances start clean
         let rememberTool = UserDefaults.standard.object(forKey: "rememberLastTool") as? Bool ?? true
@@ -659,6 +743,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
         // Clean up stale overlays without consuming previousApp — we just set it.
         dismissOverlays(refocusPreviousApp: false)
+        isCapturing = true
 
         // Hide any non-overlay titled windows (editors, preferences, Sparkle
         // dialogs). Without this, `NSApp.activate` inside performCapture drags
@@ -672,12 +757,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // in performCapture() so they never appear in the captured image.
         for tc in thumbnailControllers { tc.hideWindow() }
 
-        let delay = UserDefaults.standard.integer(forKey: "captureDelaySeconds")
+        // Kick off SCShareableContent enumeration early for paths that still
+        // need the async capture after the overlay appears.
+        if immediateCaptures == nil || immediateCaptures?.isEmpty == true {
+            ScreenCaptureManager.prewarm()
+        }
+
         if delay > 0 {
             showPreCaptureCountdown(seconds: delay)
         } else {
             DispatchQueue.main.async { [weak self] in
-                self?.performCapture()
+                self?.performCapture(preCaptured: immediateCaptures)
             }
         }
     }
@@ -755,17 +845,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         pendingOCRMode = false
         pendingQuickCaptureMode = false
         pendingScrollCaptureMode = false
+        pendingRestoreLastArea = false
     }
 
-    private func performCapture() {
-        // Show transparent overlays instantly — zero delay.
-        // The user sees the live desktop through the overlay and can start
-        // selecting immediately. The screenshot captures in the background
-        // and is set on the overlay when ready.
+    private func performCapture(preCaptured: [ScreenCapture]? = nil) {
         let screens = NSScreen.screens
         let mouseScreen = screens.first { $0.frame.contains(NSEvent.mouseLocation) }
+        let preCapturedByScreen = Dictionary(
+            uniqueKeysWithValues: (preCaptured ?? []).map { ($0.screen, $0.image) })
+
         for screen in screens {
-            let controller = OverlayWindowController(screen: screen)
+            let controller: OverlayWindowController
+            if let image = preCapturedByScreen[screen] {
+                controller = OverlayWindowController(capture: ScreenCapture(screen: screen, image: image))
+            } else {
+                controller = OverlayWindowController(screen: screen)
+            }
             controller.overlayDelegate = self
             controller.capturedWindowTitle = capturedWindowTitle
             if pendingRecordMode { controller.setAutoRecordMode() }
@@ -797,6 +892,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         pendingFullScreen = false
         pendingFullScreenRecord = false
 
+        if let preCaptured = preCaptured, !preCaptured.isEmpty {
+            applyPendingRestoredSelectionIfNeeded()
+            return
+        }
+
         // Capture screenshots in background — exclude overlay windows + thumbnails.
         let excludeIDs = thumbnailControllers.compactMap { $0.windowNumber }
             + overlayControllers.compactMap { $0.windowNumber }
@@ -815,12 +915,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                 }
             }
 
-            // Apply last selection area if "Capture Last Area" was triggered
-            if self.pendingRestoreLastArea {
-                self.pendingRestoreLastArea = false
-                self.restoreLastSelection(controllers: self.overlayControllers)
-            }
+            self.applyPendingRestoredSelectionIfNeeded()
         }
+    }
+
+    private func applyPendingRestoredSelectionIfNeeded() {
+        guard pendingRestoreLastArea else { return }
+        pendingRestoreLastArea = false
+        restoreLastSelection(controllers: overlayControllers)
     }
 
     /// Apply the stored last selection rect to the matching overlay controller.

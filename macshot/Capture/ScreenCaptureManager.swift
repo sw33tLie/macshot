@@ -8,6 +8,19 @@ struct ScreenCapture {
 
 class ScreenCaptureManager {
 
+    struct ImmediateCaptureContext {
+        let screens: [NSScreen]
+        let mainHeight: CGFloat
+        let mouseLocation: NSPoint
+        let cursor: CursorCapture?
+    }
+
+    struct CursorCapture {
+        let image: CGImage
+        let size: NSSize
+        let hotSpot: NSPoint
+    }
+
     // MARK: - SCShareableContent cache
 
     /// Cached shareable content to avoid repeated (slow) enumeration.
@@ -35,6 +48,94 @@ class ScreenCaptureManager {
         Task {
             _ = try? await shareableContent()
         }
+    }
+
+    /// Synchronous WindowServer snapshot used by global hotkeys before macshot
+    /// activates. This preserves transient UI such as menu extras, app menus,
+    /// Raycast/Spotlight-style panels, and other windows that disappear as soon
+    /// as focus changes.
+    static func makeImmediateCaptureContext() -> ImmediateCaptureContext {
+        let screens = NSScreen.screens
+        let mainHeight = screens.first?.frame.height ?? 0
+        let mouseLocation = NSEvent.mouseLocation
+        let includeCursor = UserDefaults.standard.bool(forKey: "captureCursor")
+        let cursor: CursorCapture?
+        if includeCursor {
+            let current = NSCursor.current
+            let image = current.image
+            if let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+                cursor = CursorCapture(image: cgImage, size: image.size, hotSpot: current.hotSpot)
+            } else {
+                cursor = nil
+            }
+        } else {
+            cursor = nil
+        }
+
+        return ImmediateCaptureContext(
+            screens: screens,
+            mainHeight: mainHeight,
+            mouseLocation: mouseLocation,
+            cursor: cursor)
+    }
+
+    static func captureAllScreensImmediately(context: ImmediateCaptureContext) -> [ScreenCapture] {
+        return context.screens.compactMap { screen in
+            let cgRect = CGRect(
+                x: screen.frame.origin.x,
+                y: context.mainHeight - screen.frame.origin.y - screen.frame.height,
+                width: screen.frame.width,
+                height: screen.frame.height)
+            guard
+                let image = CGWindowListCreateImage(
+                    cgRect, .optionAll, kCGNullWindowID, .bestResolution
+                )
+            else { return nil }
+            let finalImage: CGImage
+            if let cursor = context.cursor {
+                finalImage = imageByDrawingCursor(
+                    cursor, onto: image, screen: screen, mouseLocation: context.mouseLocation)
+            } else {
+                finalImage = image
+            }
+            return ScreenCapture(screen: screen, image: finalImage)
+        }
+    }
+
+    private static func imageByDrawingCursor(
+        _ cursor: CursorCapture, onto image: CGImage, screen: NSScreen, mouseLocation: NSPoint
+    ) -> CGImage {
+        guard screen.frame.contains(mouseLocation) else { return image }
+
+        guard
+            let colorSpace = image.colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB),
+            let context = CGContext(
+                data: nil,
+                width: image.width,
+                height: image.height,
+                bitsPerComponent: 8,
+                bytesPerRow: 0,
+                space: colorSpace,
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return image }
+
+        let imageRect = CGRect(x: 0, y: 0, width: image.width, height: image.height)
+        context.draw(image, in: imageRect)
+
+        let scaleX = CGFloat(image.width) / screen.frame.width
+        let scaleY = CGFloat(image.height) / screen.frame.height
+
+        let localMouse = NSPoint(
+            x: mouseLocation.x - screen.frame.minX,
+            y: mouseLocation.y - screen.frame.minY)
+        let cursorRect = CGRect(
+            x: (localMouse.x - cursor.hotSpot.x) * scaleX,
+            y: (localMouse.y - cursor.hotSpot.y) * scaleY,
+            width: cursor.size.width * scaleX,
+            height: cursor.size.height * scaleY)
+        context.draw(cursor.image, in: cursorRect)
+
+        return context.makeImage() ?? image
     }
 
     static func captureAllScreens(
