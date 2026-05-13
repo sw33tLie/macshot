@@ -251,6 +251,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             self, selector: #selector(spaceDidChange),
             name: NSWorkspace.activeSpaceDidChangeNotification, object: nil
         )
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self, selector: #selector(systemDidWake),
+            name: NSWorkspace.didWakeNotification, object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(screenParametersDidChange),
+            name: NSApplication.didChangeScreenParametersNotification, object: nil
+        )
 
         // Pin from history panel
         NotificationCenter.default.addObserver(
@@ -293,15 +301,25 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
     private func startCapturePrewarmTimer() {
         guard capturePrewarmTimer == nil else { return }
-        let timer = Timer(timeInterval: 120, repeats: true) { [weak self] _ in
+        let timer = Timer(timeInterval: 45, repeats: true) { [weak self] _ in
             guard let self = self else { return }
             guard !self.isCapturing, self.recordingEngine == nil else { return }
             ScreenCaptureManager.prewarmImmediateCapture()
             OverlayWindowController.prewarmForCapture()
         }
-        timer.tolerance = 30
+        timer.tolerance = 10
         RunLoop.main.add(timer, forMode: .common)
         capturePrewarmTimer = timer
+    }
+
+    @objc private func systemDidWake() {
+        guard !isCapturing, recordingEngine == nil else { return }
+        prewarmCapturePath()
+    }
+
+    @objc private func screenParametersDidChange() {
+        guard !isCapturing, recordingEngine == nil else { return }
+        prewarmCapturePath()
     }
 
     private func makeCaptureTimingTrace() -> CaptureTimingTrace? {
