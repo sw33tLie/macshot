@@ -520,24 +520,6 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.addArrangedSubview(labeledRow(L("OCR Capture:"), controls: [ocrActionPopup]))
         stack.setCustomSpacing(12, after: stack.arrangedSubviews.last!)
 
-        stack.addArrangedSubview(sectionHeader(L("Menu Bar Order")))
-        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
-
-        let menuOrderNote = NSTextField(wrappingLabelWithString: L("Choose the order of capture actions in the macshot menu bar menu."))
-        menuOrderNote.font = NSFont.systemFont(ofSize: 10)
-        menuOrderNote.textColor = .secondaryLabelColor
-        stack.addArrangedSubview(indented(menuOrderNote))
-        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
-
-        captureMenuOrder = CaptureMenuItemID.orderedItems()
-        stack.addArrangedSubview(indented(makeCaptureMenuOrderView()))
-        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
-
-        let resetMenuOrderButton = NSButton(title: L("Reset to default"), target: self, action: #selector(resetCaptureMenuOrder(_:)))
-        resetMenuOrderButton.bezelStyle = .rounded
-        stack.addArrangedSubview(indented(resetMenuOrderButton))
-        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
-
         // Checkboxes
         copySoundCheckbox = NSButton(checkboxWithTitle: L("Play sound on capture"), target: self, action: #selector(copySoundChanged(_:)))
         rememberToolCheckbox = NSButton(checkboxWithTitle: L("Remember last selected tool"), target: self, action: #selector(rememberToolChanged(_:)))
@@ -747,6 +729,25 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
             stack.addArrangedSubview(indented(downloadLink))
             stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
         }
+
+        // ── Menu Bar Order ──────────────────────────────────
+        stack.addArrangedSubview(sectionHeader(L("Menu Bar Order")))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        let menuOrderNote = NSTextField(wrappingLabelWithString: L("Choose the order of capture actions in the macshot menu bar menu."))
+        menuOrderNote.font = NSFont.systemFont(ofSize: 10)
+        menuOrderNote.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(indented(menuOrderNote))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+
+        captureMenuOrder = CaptureMenuItemID.orderedItems()
+        stack.addArrangedSubview(indented(makeCaptureMenuOrderView()))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        let resetMenuOrderButton = NSButton(title: L("Reset to default"), target: self, action: #selector(resetCaptureMenuOrder(_:)))
+        resetMenuOrderButton.bezelStyle = .rounded
+        stack.addArrangedSubview(indented(resetMenuOrderButton))
+        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         finalizeSettingsStack(scroll: scroll, stack: stack)
         return scroll
