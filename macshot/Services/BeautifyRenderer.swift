@@ -490,6 +490,57 @@ class BeautifyRenderer {
         }
     }
 
+    static func shadowAlpha(for radius: CGFloat) -> CGFloat {
+        guard radius > 0 else { return 0 }
+        let t = min(max(radius / 100, 0), 1)
+        return 0.42 + t * 0.38
+    }
+
+    static func contactShadowAlpha(for radius: CGFloat) -> CGFloat {
+        guard radius > 0 else { return 0 }
+        let t = min(max(radius / 100, 0), 1)
+        return 0.20 + t * 0.30
+    }
+
+    static func shadowOffset(for radius: CGFloat) -> CGFloat {
+        guard radius > 0 else { return 0 }
+        return min(4 + radius * 0.35, 18)
+    }
+
+    static func contactShadowOffset(for radius: CGFloat) -> CGFloat {
+        guard radius > 0 else { return 0 }
+        return min(2 + radius * 0.12, 10)
+    }
+
+    static func contactShadowBlur(for radius: CGFloat) -> CGFloat {
+        guard radius > 0 else { return 0 }
+        return min(4 + radius * 0.18, 16)
+    }
+
+    static func drawShadowedPath(_ path: NSBezierPath, radius: CGFloat) {
+        guard radius > 0 else { return }
+
+        NSGraphicsContext.saveGraphicsState()
+        let contact = NSShadow()
+        contact.shadowColor = NSColor.black.withAlphaComponent(contactShadowAlpha(for: radius))
+        contact.shadowBlurRadius = contactShadowBlur(for: radius)
+        contact.shadowOffset = NSSize(width: 0, height: -contactShadowOffset(for: radius))
+        contact.set()
+        NSColor.white.setFill()
+        path.fill()
+        NSGraphicsContext.restoreGraphicsState()
+
+        NSGraphicsContext.saveGraphicsState()
+        let ambient = NSShadow()
+        ambient.shadowColor = NSColor.black.withAlphaComponent(shadowAlpha(for: radius))
+        ambient.shadowBlurRadius = radius
+        ambient.shadowOffset = NSSize(width: 0, height: -shadowOffset(for: radius))
+        ambient.set()
+        NSColor.white.setFill()
+        path.fill()
+        NSGraphicsContext.restoreGraphicsState()
+    }
+
     /// Pre-render the mesh gradient for a given size (call before entering NSImage drawing handlers
     /// to avoid calling @MainActor-isolated SwiftUI ImageRenderer from a non-isolated closure).
     static func prerenderBackground(config: BeautifyConfig, width: Int, height: Int) -> CGImage? {
@@ -637,7 +688,6 @@ class BeautifyRenderer {
         let padding = config.padding
         let windowCornerRadius = config.cornerRadius
         let shadowRadius = config.shadowRadius
-        let shadowOffset = min(shadowRadius * 0.3, 8)
         let titleBarHeight: CGFloat = 28
 
         let windowWidth = imgSize.width
@@ -667,15 +717,9 @@ class BeautifyRenderer {
 
             // Drop shadow
             if shadowRadius > 0 {
-                let shadow = NSShadow()
-                shadow.shadowColor = NSColor.black.withAlphaComponent(0.35)
-                shadow.shadowBlurRadius = shadowRadius
-                shadow.shadowOffset = NSSize(width: 0, height: -shadowOffset)
-                NSGraphicsContext.saveGraphicsState()
-                shadow.set()
                 let windowRect = NSRect(x: windowX, y: windowY, width: windowWidth, height: windowHeight)
-                NSBezierPath(roundedRect: windowRect, xRadius: windowCornerRadius, yRadius: windowCornerRadius).fill()
-                NSGraphicsContext.restoreGraphicsState()
+                let shadowPath = NSBezierPath(roundedRect: windowRect, xRadius: windowCornerRadius, yRadius: windowCornerRadius)
+                drawShadowedPath(shadowPath, radius: shadowRadius)
             }
 
             // Draw window background clipped
@@ -747,7 +791,6 @@ class BeautifyRenderer {
         let imgSize = image.size
         let padding = config.padding
         let shadowRadius = config.shadowRadius
-        let shadowOffset = min(shadowRadius * 0.3, 8)
         // macOS window corner radius is 10pt
         let nativeCornerRadius: CGFloat = 10
 
@@ -772,11 +815,21 @@ class BeautifyRenderer {
             // Draw the window image with shadow on top of the gradient.
             // The image has transparent corners, so the gradient shows through naturally.
             if shadowRadius > 0 {
-                let shadow = NSShadow()
-                shadow.shadowColor = NSColor.black.withAlphaComponent(0.35)
-                shadow.shadowBlurRadius = shadowRadius
-                shadow.shadowOffset = NSSize(width: 0, height: -shadowOffset)
-                shadow.set()
+                context.saveGState()
+                context.setShadow(
+                    offset: CGSize(width: 0, height: -contactShadowOffset(for: shadowRadius)),
+                    blur: contactShadowBlur(for: shadowRadius),
+                    color: NSColor.black.withAlphaComponent(contactShadowAlpha(for: shadowRadius)).cgColor)
+                image.draw(in: imageRect, from: .zero, operation: .sourceOver, fraction: 1.0)
+                context.restoreGState()
+
+                context.saveGState()
+                context.setShadow(
+                    offset: CGSize(width: 0, height: -shadowOffset(for: shadowRadius)),
+                    blur: shadowRadius,
+                    color: NSColor.black.withAlphaComponent(shadowAlpha(for: shadowRadius)).cgColor)
+                image.draw(in: imageRect, from: .zero, operation: .sourceOver, fraction: 1.0)
+                context.restoreGState()
             }
             image.draw(in: imageRect, from: .zero, operation: .sourceOver, fraction: 1.0)
 
@@ -796,7 +849,6 @@ class BeautifyRenderer {
         let padding = config.padding
         let cornerRadius = config.cornerRadius
         let shadowRadius = config.shadowRadius
-        let shadowOffset = min(shadowRadius * 0.3, 8)
 
         let totalWidth = imgSize.width + padding * 2
         let totalHeight = imgSize.height + padding * 2
@@ -818,18 +870,14 @@ class BeautifyRenderer {
 
             let imageRect = NSRect(x: padding, y: padding, width: imgSize.width, height: imgSize.height)
 
-            // Draw image with rounded corners + shadow in one pass
-            context.saveGState()
             if shadowRadius > 0 {
-                context.setShadow(offset: CGSize(width: 0, height: -shadowOffset),
-                                  blur: shadowRadius,
-                                  color: NSColor.black.withAlphaComponent(0.35).cgColor)
+                let shadowPath = NSBezierPath(roundedRect: imageRect, xRadius: cornerRadius, yRadius: cornerRadius)
+                drawShadowedPath(shadowPath, radius: shadowRadius)
             }
-            // Begin a transparency layer so the shadow is cast by the clipped image shape
-            context.beginTransparencyLayer(auxiliaryInfo: nil)
+
+            context.saveGState()
             NSBezierPath(roundedRect: imageRect, xRadius: cornerRadius, yRadius: cornerRadius).addClip()
             image.draw(in: imageRect, from: .zero, operation: .sourceOver, fraction: 1.0)
-            context.endTransparencyLayer()
             context.restoreGState()
 
             success = true

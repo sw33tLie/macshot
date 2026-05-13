@@ -2236,7 +2236,7 @@ class OverlayView: NSView {
         let pad = config.padding
         let cornerRadius = config.isWindowSnap ? 10 : config.cornerRadius  // native macOS corner radius for snapped windows
         let shadowRadius = config.shadowRadius
-        let shadowOffset = min(shadowRadius * 0.4, 10)
+        let shadowOffset = BeautifyRenderer.shadowOffset(for: shadowRadius)
 
         // Compute the expanded frame around the selection.
         // Shadow extends downward (negative Y in AppKit), so expand the origin down.
@@ -2330,16 +2330,9 @@ class OverlayView: NSView {
 
         // Drop shadow (not for snapped windows — handled via transparency layer below)
         if shadowRadius > 0 && !config.isWindowSnap {
-            NSGraphicsContext.saveGraphicsState()
-            let shadow = NSShadow()
-            shadow.shadowColor = NSColor.black.withAlphaComponent(0.35)
-            shadow.shadowBlurRadius = shadowRadius
-            shadow.shadowOffset = NSSize(width: 0, height: -shadowOffset)
-            shadow.set()
-            NSColor.white.setFill()
-            NSBezierPath(roundedRect: windowRect, xRadius: cornerRadius, yRadius: cornerRadius)
-                .fill()
-            NSGraphicsContext.restoreGraphicsState()
+            let shadowPath = NSBezierPath(
+                roundedRect: windowRect, xRadius: cornerRadius, yRadius: cornerRadius)
+            BeautifyRenderer.drawShadowedPath(shadowPath, radius: shadowRadius)
         }
 
         if config.isWindowSnap {
@@ -2349,11 +2342,37 @@ class OverlayView: NSView {
 
             // Drop shadow from the window shape
             if shadowRadius > 0 {
-                let shadow = NSShadow()
-                shadow.shadowColor = NSColor.black.withAlphaComponent(0.35)
-                shadow.shadowBlurRadius = shadowRadius
-                shadow.shadowOffset = NSSize(width: 0, height: -shadowOffset)
-                shadow.set()
+                context.cgContext.saveGState()
+                context.cgContext.setShadow(
+                    offset: CGSize(
+                        width: 0,
+                        height: -BeautifyRenderer.contactShadowOffset(for: shadowRadius)),
+                    blur: BeautifyRenderer.contactShadowBlur(for: shadowRadius),
+                    color: NSColor.black.withAlphaComponent(
+                        BeautifyRenderer.contactShadowAlpha(for: shadowRadius)).cgColor)
+                if let windowImg = snappedWindowImage {
+                    windowImg.draw(in: imageRect, from: .zero, operation: .sourceOver, fraction: 1.0)
+                } else if let image = screenshotImage {
+                    let drawImage = effectsActive ? effectsProcessedScreenshot(image) : image
+                    drawImage.draw(
+                        in: imageRect, from: selectionRect, operation: .sourceOver, fraction: 1.0)
+                }
+                context.cgContext.restoreGState()
+
+                context.cgContext.saveGState()
+                context.cgContext.setShadow(
+                    offset: CGSize(width: 0, height: -shadowOffset),
+                    blur: shadowRadius,
+                    color: NSColor.black.withAlphaComponent(
+                        BeautifyRenderer.shadowAlpha(for: shadowRadius)).cgColor)
+                if let windowImg = snappedWindowImage {
+                    windowImg.draw(in: imageRect, from: .zero, operation: .sourceOver, fraction: 1.0)
+                } else if let image = screenshotImage {
+                    let drawImage = effectsActive ? effectsProcessedScreenshot(image) : image
+                    drawImage.draw(
+                        in: imageRect, from: selectionRect, operation: .sourceOver, fraction: 1.0)
+                }
+                context.cgContext.restoreGState()
             }
 
             if let windowImg = snappedWindowImage {
