@@ -100,7 +100,8 @@ class OverlayView: NSView {
             // Screenshot just arrived (async capture) — enable snap queries now.
             if screenshotImage != nil && windowSnapCooldown {
                 windowSnapCooldown = false
-                if state == .idle && windowSnapEnabled && !windowSnapQueryInFlight {
+                if window?.isVisible == true,
+                   state == .idle && windowSnapEnabled && !windowSnapQueryInFlight {
                     queryWindowSnap(at: NSEvent.mouseLocation)
                 }
             }

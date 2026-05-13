@@ -31,7 +31,7 @@ class ScreenCaptureManager {
     private static let cacheTTL: TimeInterval = 2.0
     private static let immediatePrewarmQueue = DispatchQueue(label: "macshot.immediate-capture-prewarm", qos: .utility)
     private static var lastImmediatePrewarmDate: Date = .distantPast
-    private static let immediatePrewarmMinimumInterval: TimeInterval = 25
+    private static let immediatePrewarmMinimumInterval: TimeInterval = 12
 
     /// Fetch shareable content, using a short-lived cache to avoid redundant enumeration.
     private static func shareableContent() async throws -> SCShareableContent {

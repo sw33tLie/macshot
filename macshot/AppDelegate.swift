@@ -295,19 +295,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
     private func prewarmCapturePath() {
         ScreenCaptureManager.prewarmImmediateCapture()
-        OverlayWindowController.prewarmForCapture()
         startCapturePrewarmTimer()
     }
 
     private func startCapturePrewarmTimer() {
         guard capturePrewarmTimer == nil else { return }
-        let timer = Timer(timeInterval: 45, repeats: true) { [weak self] _ in
+        let timer = Timer(timeInterval: 20, repeats: true) { [weak self] _ in
             guard let self = self else { return }
             guard !self.isCapturing, self.recordingEngine == nil else { return }
             ScreenCaptureManager.prewarmImmediateCapture()
-            OverlayWindowController.prewarmForCapture()
         }
-        timer.tolerance = 10
+        timer.tolerance = 3
         RunLoop.main.add(timer, forMode: .common)
         capturePrewarmTimer = timer
     }
@@ -1007,10 +1005,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             captureTimingTrace?.mark("showPreCaptureCountdown requested")
             showPreCaptureCountdown(seconds: delay)
         } else {
-            captureTimingTrace?.mark("performCapture scheduled on main")
-            DispatchQueue.main.async { [weak self] in
-                self?.performCapture(preCaptured: immediateCaptures)
-            }
+            captureTimingTrace?.mark("performCapture starting on main")
+            performCapture(preCaptured: immediateCaptures)
         }
     }
 
@@ -1103,11 +1099,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
         for screen in screens {
             let controller: OverlayWindowController
-            if let image = preCapturedByScreen[screen] {
-                controller = measureCaptureTiming("create overlay with preCaptured image") {
-                    let controller = OverlayWindowController(screen: screen)
-                    controller.setCaptureSource(image)
-                    return controller
+            if preCapturedByScreen[screen] != nil {
+                controller = measureCaptureTiming("create overlay for preCaptured image") {
+                    OverlayWindowController(screen: screen)
                 }
             } else {
                 controller = measureCaptureTiming("create overlay without image") {
@@ -1125,11 +1119,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             if pendingOCRMode { controller.setAutoOCRMode() }
             if pendingQuickCaptureMode { controller.setAutoQuickSaveMode() }
             if pendingScrollCaptureMode { controller.setAutoScrollCaptureMode() }
+            if let image = preCapturedByScreen[screen] {
+                measureCaptureTiming("install preCaptured screenshot") {
+                    controller.prepareScreenshot(image)
+                }
+            }
             measureCaptureTiming("show overlay") {
                 controller.showOverlay()
-            }
-            if let image = preCapturedByScreen[screen] {
-                attachDisplayPreview(image, to: controller)
             }
             let isMouseScreen = (screen == mouseScreen) || (mouseScreen == nil && screen == NSScreen.main)
             if (pendingFullScreen || pendingFullScreenRecord) && isMouseScreen {
@@ -1211,13 +1207,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         _ image: CGImage,
         to controller: OverlayWindowController
     ) {
-        let trace = captureTimingTrace
-        DispatchQueue.main.async { [weak controller] in
-            trace?.mark("set full-resolution overlay display preview requested pixels=\(image.width)x\(image.height)")
-            guard let controller = controller else { return }
-            self.measureCaptureTiming("set overlay display preview") {
-                controller.setScreenshotPreview(image)
-            }
+        captureTimingTrace?.mark("set full-resolution overlay display preview pixels=\(image.width)x\(image.height)")
+        measureCaptureTiming("set overlay display preview") {
+            controller.setScreenshotPreview(image)
         }
     }
 

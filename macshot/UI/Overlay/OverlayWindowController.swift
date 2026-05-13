@@ -17,7 +17,7 @@ private final class ScreenshotOverlayRootView: NSView {
         self.overlayView = overlayView
         super.init(frame: frame)
         wantsLayer = true
-        layer?.backgroundColor = NSColor.black.cgColor
+        layer?.backgroundColor = NSColor.clear.cgColor
         layer?.masksToBounds = true
         previewLayer.contentsGravity = .resize
         previewLayer.masksToBounds = true
@@ -38,9 +38,12 @@ private final class ScreenshotOverlayRootView: NSView {
     }
 
     func setScreenshotPreviewImage(_ cgImage: CGImage) {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
         previewLayer.frame = bounds
         previewLayer.contentsScale = window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2
         previewLayer.contents = cgImage
+        CATransaction.commit()
         overlayView.usesExternalScreenshotPreview = true
     }
 
@@ -105,89 +108,11 @@ class OverlayWindowController {
     var sessionRecordingOnStop: String? { overlayView?.sessionRecordingOnStop }
     var sessionRecordingDelay: Int? { overlayView?.sessionRecordingDelay }
     var sessionHideRecordingHUD: Bool? { overlayView?.sessionHideRecordingHUD }
-    private static var isPrewarmingCaptureOverlay = false
-    private static var lastCaptureOverlayPrewarmDate: Date = .distantPast
-    private static let captureOverlayPrewarmMinimumInterval: TimeInterval = 90
-
-    static func prewarmForCapture() {
-        guard !isPrewarmingCaptureOverlay else { return }
-        guard Date().timeIntervalSince(lastCaptureOverlayPrewarmDate) >= captureOverlayPrewarmMinimumInterval else { return }
-        isPrewarmingCaptureOverlay = true
-        lastCaptureOverlayPrewarmDate = Date()
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            let screens = NSScreen.screens
-            guard !screens.isEmpty else {
-                isPrewarmingCaptureOverlay = false
-                return
-            }
-            let dummyImage = Self.makePrewarmImage()
-            var windows: [NSWindow] = []
-
-            for screen in screens {
-                let window = OverlayWindow(
-                    contentRect: screen.frame,
-                    styleMask: [.borderless],
-                    backing: .buffered,
-                    defer: false)
-                window.level = NSWindow.Level(257)
-                window.isOpaque = true
-                window.backgroundColor = .black
-                window.hasShadow = false
-                window.ignoresMouseEvents = true
-                window.acceptsMouseMovedEvents = false
-                window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-                window.isReleasedWhenClosed = false
-                window.alphaValue = 0
-
-                let view = OverlayView(frame: NSRect(origin: .zero, size: screen.frame.size))
-                view.screenshotImage = NSImage(cgImage: dummyImage, size: screen.frame.size)
-                let rootView = ScreenshotOverlayRootView(
-                    frame: NSRect(origin: .zero, size: screen.frame.size),
-                    overlayView: view)
-                rootView.setScreenshotPreviewImage(dummyImage)
-                window.contentView = rootView
-                window.orderFront(nil)
-                view.displayIfNeeded()
-                windows.append(window)
-            }
-
-            CATransaction.flush()
-            DispatchQueue.main.async {
-                for window in windows {
-                    window.orderOut(nil)
-                    window.contentView = nil
-                    window.close()
-                }
-                isPrewarmingCaptureOverlay = false
-            }
-        }
-    }
-
-    private static func makePrewarmImage() -> CGImage {
-        let colorSpace = CGColorSpace(name: CGColorSpace.sRGB)!
-        let context = CGContext(
-            data: nil,
-            width: 1,
-            height: 1,
-            bitsPerComponent: 8,
-            bytesPerRow: 0,
-            space: colorSpace,
-            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
-        context.setFillColor(NSColor.black.cgColor)
-        context.fill(CGRect(x: 0, y: 0, width: 1, height: 1))
-        return context.makeImage()!
-    }
-
     init(capture: ScreenCapture) {
         let screen = capture.screen
         self.screen = screen
         setupWindow(screen: screen)
-        setOpaqueForScreenshotBackedOverlay()
-        let nsImage = NSImage(cgImage: capture.image, size: screen.frame.size)
-        overlayView?.captureSourceImage = nsImage
-        overlayView?.screenshotImage = nsImage
-        rootView?.setScreenshotPreviewImage(capture.image)
+        prepareScreenshot(capture.image)
     }
 
     /// Create an overlay without a screenshot — shows instantly as transparent.
@@ -234,19 +159,29 @@ class OverlayWindowController {
         overlayWindow?.backgroundColor = .black
     }
 
+    /// Install a full-resolution screenshot before the overlay is shown.
+    /// This keeps the fast hotkey path deterministic: the first visible frame is
+    /// already screenshot-backed, not a temporary black/transparent backing view.
+    func prepareScreenshot(_ image: CGImage) {
+        installScreenshot(image, updateCaptureSource: true)
+    }
+
+    private func installScreenshot(_ image: CGImage, updateCaptureSource: Bool) {
+        let nsImage = NSImage(cgImage: image, size: screen.frame.size)
+        if updateCaptureSource || overlayView?.captureSourceImage == nil {
+            overlayView?.captureSourceImage = nsImage
+        }
+        overlayView?.screenshotImage = nsImage
+        rootView?.setScreenshotPreviewImage(image)
+        setOpaqueForScreenshotBackedOverlay()
+        overlayWindow?.ignoresMouseEvents = false
+    }
+
     /// Set the screenshot after the overlay is visible.
     func setScreenshot(_ image: CGImage) {
-        setCaptureSource(image)
-        setOpaqueForScreenshotBackedOverlay()
-        overlayView?.screenshotImage = NSImage(cgImage: image, size: screen.frame.size)
-        rootView?.setScreenshotPreviewImage(image)
+        prepareScreenshot(image)
         // Enable interaction now that the screenshot is ready.
-        overlayWindow?.ignoresMouseEvents = false
-        overlayWindow?.makeKeyAndOrderFront(nil)
-        if let view = overlayView {
-            overlayWindow?.makeFirstResponder(view)
-        }
-        NSCursor.crosshair.set()
+        focusOverlayWindow()
     }
 
     /// Set the full-resolution image used for final output without forcing it
@@ -258,13 +193,15 @@ class OverlayWindowController {
     /// Set a display-only preview image. The full-resolution source remains
     /// in `captureSourceImage` so copy/save/editor output stays native quality.
     func setScreenshotPreview(_ image: CGImage) {
-        setOpaqueForScreenshotBackedOverlay()
-        overlayView?.screenshotImage = NSImage(cgImage: image, size: screen.frame.size)
-        rootView?.setScreenshotPreviewImage(image)
-        overlayWindow?.ignoresMouseEvents = false
-        overlayWindow?.makeKeyAndOrderFront(nil)
+        installScreenshot(image, updateCaptureSource: false)
+        focusOverlayWindow()
+    }
+
+    private func focusOverlayWindow() {
+        guard let window = overlayWindow else { return }
+        window.makeKeyAndOrderFront(nil)
         if let view = overlayView {
-            overlayWindow?.makeFirstResponder(view)
+            window.makeFirstResponder(view)
         }
         NSCursor.crosshair.set()
     }
@@ -273,22 +210,16 @@ class OverlayWindowController {
         guard let window = overlayWindow else { return }
         if overlayView?.screenshotImage != nil {
             // Screenshot already set (sync init path) — interactive immediately.
-            if let view = overlayView { view.displayIfNeeded() }
-            window.makeKeyAndOrderFront(nil)
-            if let view = overlayView { window.makeFirstResponder(view) }
-            NSCursor.crosshair.set()
-        } else {
-            // Async path: if we already have a capture source, the visible
-            // screenshot preview can arrive later while selection stays live.
-            let canInteractBeforePreview = overlayView?.captureSourceImage != nil
-            window.ignoresMouseEvents = !canInteractBeforePreview
-            if canInteractBeforePreview {
-                window.makeKeyAndOrderFront(nil)
-                if let view = overlayView { window.makeFirstResponder(view) }
-                NSCursor.crosshair.set()
-            } else {
-                window.orderFront(nil)
+            rootView?.layoutSubtreeIfNeeded()
+            if let view = overlayView {
+                view.displayIfNeeded()
             }
+            focusOverlayWindow()
+        } else {
+            // Fallback/delay path: show no black backing while the async
+            // screenshot capture finishes, then setScreenshot(_:) makes it live.
+            window.ignoresMouseEvents = true
+            window.orderFront(nil)
         }
     }
 
