@@ -1141,26 +1141,29 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         panel.message = "Choose a folder to save \(images.count) screenshot\(images.count == 1 ? "" : "s")"
         panel.level = .floating
 
-        panel.begin { [weak self] response in
-            guard response == .OK, let dirURL = panel.url else { return }
-            let rawTemplate = UserDefaults.standard.string(forKey: FilenameFormatter.userDefaultsKey) ?? FilenameFormatter.defaultTemplate
-            // Ensure batch writes don't collide when the template lacks {index}.
-            let template = rawTemplate.contains("{index}") ? rawTemplate : "\(rawTemplate)-{index}"
-            let batchDate = Date()
+        NSApp.activate(ignoringOtherApps: true)
+        DispatchQueue.main.async {
+            panel.begin { [weak self] response in
+                guard response == .OK, let dirURL = panel.url else { return }
+                let rawTemplate = UserDefaults.standard.string(forKey: FilenameFormatter.userDefaultsKey) ?? FilenameFormatter.defaultTemplate
+                // Ensure batch writes don't collide when the template lacks {index}.
+                let template = rawTemplate.contains("{index}") ? rawTemplate : "\(rawTemplate)-{index}"
+                let batchDate = Date()
 
-            DispatchQueue.global(qos: .userInitiated).async {
-                for (i, image) in images.enumerated() {
-                    guard let data = ImageEncoder.encode(image) else { continue }
-                    let base = FilenameFormatter.format(template: template, index: i + 1, date: batchDate)
-                    let filename = "\(base).\(ImageEncoder.fileExtension)"
-                    let fileURL = dirURL.appendingPathComponent(filename)
-                    try? data.write(to: fileURL)
-                }
-                DispatchQueue.main.async {
-                    self?.playCopySound()
-                    let all = self?.thumbnailControllers ?? []
-                    self?.thumbnailControllers.removeAll()
-                    for c in all { c.dismiss() }
+                DispatchQueue.global(qos: .userInitiated).async {
+                    for (i, image) in images.enumerated() {
+                        guard let data = ImageEncoder.encode(image) else { continue }
+                        let base = FilenameFormatter.format(template: template, index: i + 1, date: batchDate)
+                        let filename = "\(base).\(ImageEncoder.fileExtension)"
+                        let fileURL = dirURL.appendingPathComponent(filename)
+                        try? data.write(to: fileURL)
+                    }
+                    DispatchQueue.main.async {
+                        self?.playCopySound()
+                        let all = self?.thumbnailControllers ?? []
+                        self?.thumbnailControllers.removeAll()
+                        for c in all { c.dismiss() }
+                    }
                 }
             }
         }
@@ -1198,10 +1201,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         savePanel.allowedContentTypes = [ImageEncoder.utType]
         savePanel.nameFieldStringValue = FilenameFormatter.defaultImageFilename()
         savePanel.directoryURL = SaveDirectoryAccess.directoryHint()
-        savePanel.begin { response in
-            if response == .OK, let url = savePanel.url {
-                try? imageData.write(to: url)
-                SaveDirectoryAccess.save(url: url.deletingLastPathComponent())
+        savePanel.level = .floating
+
+        NSApp.activate(ignoringOtherApps: true)
+        DispatchQueue.main.async {
+            savePanel.begin { response in
+                if response == .OK, let url = savePanel.url {
+                    try? imageData.write(to: url)
+                    SaveDirectoryAccess.save(url: url.deletingLastPathComponent())
+                }
             }
         }
     }
