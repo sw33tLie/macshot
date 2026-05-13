@@ -59,6 +59,11 @@ class OverlayWindowController {
     var sessionRecordingDelay: Int? { overlayView?.sessionRecordingDelay }
     var sessionHideRecordingHUD: Bool? { overlayView?.sessionHideRecordingHUD }
 
+    static func prewarmForCapture() {
+        let view = OverlayView(frame: NSRect(x: 0, y: 0, width: 16, height: 16))
+        view.displayIfNeeded()
+    }
+
     init(capture: ScreenCapture) {
         let screen = capture.screen
         self.screen = screen

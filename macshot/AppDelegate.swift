@@ -39,6 +39,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     private var scrollCaptureOverlayController: OverlayWindowController?
     private var scrollCapturePreviewPanel: ScrollCapturePreviewPanel?
     private var statusBarMenu: NSMenu?
+    private var captureSessionID: UInt = 0
 
     /// Shared capture sound — loaded once, reused everywhere.
     static let captureSound: NSSound? = {
@@ -119,7 +120,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // custom onboarding window instead of letting macOS throw its own dialogs.
         PermissionOnboardingController.checkPermissionSync { [weak self] granted in
             guard let self = self else { return }
-            if !granted {
+            if granted {
+                self.prewarmCapturePath()
+            } else {
                 self.showOnboarding()
             }
         }
@@ -134,9 +137,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         let oc = PermissionOnboardingController()
         oc.onPermissionGranted = { [weak self] in
             self?.onboardingController = nil
+            self?.prewarmCapturePath()
         }
         onboardingController = oc
         oc.show()
+    }
+
+    private func prewarmCapturePath() {
+        ScreenCaptureManager.prewarmImmediateCapture()
+        OverlayWindowController.prewarmForCapture()
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -700,6 +709,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // Don't allow captures while recording
         guard recordingEngine == nil else { return }
         isCapturing = true
+        captureSessionID &+= 1
+        let sessionID = captureSessionID
+        previousApp = NSWorkspace.shared.frontmostApplication
+        capturedWindowTitle = nil
+        let focusedWindowPID = previousApp?.processIdentifier
 
         let delay = UserDefaults.standard.integer(forKey: "captureDelaySeconds")
         if !fromMenu && delay == 0 {
@@ -707,6 +721,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
                 let captures = ScreenCaptureManager.captureAllScreensImmediately(context: context)
                 DispatchQueue.main.async {
+                    self?.resolveFocusedWindowTitleAsync(for: focusedWindowPID, sessionID: sessionID)
                     self?.continueStartCapture(
                         fromMenu: fromMenu,
                         delay: delay,
@@ -716,6 +731,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             return
         }
 
+        resolveFocusedWindowTitleAsync(for: focusedWindowPID, sessionID: sessionID)
         continueStartCapture(fromMenu: fromMenu, delay: delay, immediateCaptures: nil)
     }
 
@@ -736,10 +752,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             UserDefaults.standard.removeObject(forKey: "effectsSharpness")
             UserDefaults.standard.set(false, forKey: "beautifyEnabled")
         }
-
-        // Grab focused app and window title before overlay steals focus
-        previousApp = NSWorkspace.shared.frontmostApplication
-        capturedWindowTitle = Self.focusedWindowTitle()
 
         // Clean up stale overlays without consuming previousApp — we just set it.
         dismissOverlays(refocusPreviousApp: false)
@@ -939,9 +951,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     /// Returns the title of the frontmost window via CGWindowList (requires Screen Recording permission).
-    private static func focusedWindowTitle() -> String? {
-        guard let app = NSWorkspace.shared.frontmostApplication else { return nil }
-        let pid = app.processIdentifier
+    nonisolated private static func focusedWindowTitle(forPID pid: pid_t) -> String? {
         guard let windowList = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else { return nil }
         for info in windowList {
             guard let layer = info[kCGWindowLayer as String] as? Int, layer == 0,
@@ -950,6 +960,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             return name
         }
         return nil
+    }
+
+    private func resolveFocusedWindowTitleAsync(for pid: pid_t?, sessionID: UInt) {
+        guard let pid = pid else { return }
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            let title = Self.focusedWindowTitle(forPID: pid)
+            DispatchQueue.main.async {
+                guard let self = self, self.isCapturing, self.captureSessionID == sessionID else { return }
+                self.capturedWindowTitle = title
+                for controller in self.overlayControllers {
+                    controller.capturedWindowTitle = title
+                }
+            }
+        }
     }
 
 
