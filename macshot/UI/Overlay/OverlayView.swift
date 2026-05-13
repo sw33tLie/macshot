@@ -96,7 +96,8 @@ class OverlayView: NSView {
             if screenshotImage != nil && windowSnapCooldown {
                 windowSnapCooldown = false
                 if state == .idle && windowSnapEnabled && !windowSnapQueryInFlight {
-                    queryWindowSnap(at: NSEvent.mouseLocation)
+                    pendingWindowSnapScreenPoint = NSEvent.mouseLocation
+                    scheduleWindowSnapEnumeration(after: 0.25)
                 }
             }
         }
@@ -768,37 +769,72 @@ class OverlayView: NSView {
     /// Independently captured window image (with transparent corners) for beautify snap mode.
     var snappedWindowImage: NSImage? = nil
     private var windowSnapQueryInFlight: Bool = false
+    private var windowSnapWindows: [WindowSnapWindow] = []
+    private var windowSnapWindowsReady: Bool = false
+    private var pendingWindowSnapScreenPoint: NSPoint?
+    private var lastWindowSnapRefresh: TimeInterval = 0
+    private let windowSnapRefreshInterval: TimeInterval = 1.0
 
     /// Perform a window snap query at the given screen point (AppKit screen coordinates).
     private func queryWindowSnap(at screenPoint: NSPoint) {
+        guard state == .idle && windowSnapEnabled,
+            !(remoteSelectionRect.width >= 1 && remoteSelectionRect.height >= 1),
+            window != nil
+        else { return }
+        pendingWindowSnapScreenPoint = screenPoint
+        if windowSnapWindowsReady {
+            applyWindowSnap(at: screenPoint)
+        }
+
+        let now = Date.timeIntervalSinceReferenceDate
+        if !windowSnapQueryInFlight
+            && (!windowSnapWindowsReady || now - lastWindowSnapRefresh > windowSnapRefreshInterval)
+        {
+            scheduleWindowSnapEnumeration(after: windowSnapWindowsReady ? 0 : 0.25)
+        }
+    }
+
+    private func scheduleWindowSnapEnumeration(after delay: TimeInterval) {
         guard !windowSnapQueryInFlight,
             state == .idle && windowSnapEnabled,
             !(remoteSelectionRect.width >= 1 && remoteSelectionRect.height >= 1),
             let viewWindow = window
         else { return }
         let overlayWindowNumber = viewWindow.windowNumber
-        let windowOrigin = viewWindow.frame.origin
-        let viewBounds = bounds
         let screenH = NSScreen.screens.first?.frame.height ?? NSScreen.main?.frame.height ?? 0
         windowSnapQueryInFlight = true
-        DispatchQueue.global(qos: .userInteractive).async { [weak self] in
-            let result = Self.windowRectOnBackground(
-                screenPoint: screenPoint,
+        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + delay) { [weak self] in
+            let windows = Self.enumerateSnapWindows(
                 overlayWindowNumber: overlayWindowNumber,
-                windowOrigin: windowOrigin,
-                viewBounds: viewBounds,
-                screenH: screenH
-            )
+                screenH: screenH)
             DispatchQueue.main.async {
                 guard let self = self else { return }
                 self.windowSnapQueryInFlight = false
-                let newRect = result?.rect
-                if newRect != self.hoveredWindowRect {
-                    self.hoveredWindowRect = newRect
-                    self.hoveredWindowID = result?.windowID
-                    self.needsDisplay = true
+                self.windowSnapWindows = windows
+                self.windowSnapWindowsReady = true
+                self.lastWindowSnapRefresh = Date.timeIntervalSinceReferenceDate
+                guard self.state == .idle && self.windowSnapEnabled,
+                    !(self.remoteSelectionRect.width >= 1 && self.remoteSelectionRect.height >= 1)
+                else { return }
+                if let point = self.pendingWindowSnapScreenPoint {
+                    self.applyWindowSnap(at: point)
                 }
             }
+        }
+    }
+
+    private func applyWindowSnap(at screenPoint: NSPoint) {
+        guard let viewWindow = window else { return }
+        let result = Self.windowSnapResult(
+            at: screenPoint,
+            windows: windowSnapWindows,
+            windowOrigin: viewWindow.frame.origin,
+            viewBounds: bounds)
+        let newRect = result?.rect
+        if newRect != hoveredWindowRect {
+            hoveredWindowRect = newRect
+            hoveredWindowID = result?.windowID
+            needsDisplay = true
         }
     }
 
@@ -933,11 +969,8 @@ class OverlayView: NSView {
             updateAutoMeasurePreview()
         }
 
-        // Window snap: highlight hovered window in idle state.
-        // CGWindowListCopyWindowInfo is expensive — run it on a background thread,
-        // skipping new queries while one is already in flight.
-        // Delay window snap queries briefly after overlay appears so the overlay
-        // renders without competing with CGWindowListCopyWindowInfo for the window server
+        // Window snap: highlight hovered window in idle state. WindowServer enumeration
+        // is cached and refreshed in the background so drag selection can start immediately.
         if windowSnapCooldown { return }
         if state == .idle && windowSnapEnabled && !windowSnapQueryInFlight
             && !(remoteSelectionRect.width >= 1 && remoteSelectionRect.height >= 1)
@@ -8000,4 +8033,3 @@ private class TooltipBackgroundView: NSView {
         (text as NSString).draw(at: NSPoint(x: pad, y: pad / 2), withAttributes: attrs)
     }
 }
-

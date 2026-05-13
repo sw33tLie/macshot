@@ -8,6 +8,11 @@ extension OverlayView {
         let windowID: CGWindowID
     }
 
+    struct WindowSnapWindow {
+        let appKitRect: NSRect
+        let windowID: CGWindowID
+    }
+
     /// Returns the frontmost visible window rect (in view coordinates) that contains `screenPoint`.
     /// `screenPoint` is in AppKit screen coordinates (origin bottom-left of main screen).
     static func windowRectOnBackground(
@@ -17,11 +22,26 @@ extension OverlayView {
         viewBounds: NSRect,
         screenH: CGFloat
     ) -> WindowSnapResult? {
+        let windows = enumerateSnapWindows(
+            overlayWindowNumber: overlayWindowNumber,
+            screenH: screenH)
+        return windowSnapResult(
+            at: screenPoint,
+            windows: windows,
+            windowOrigin: windowOrigin,
+            viewBounds: viewBounds)
+    }
+
+    static func enumerateSnapWindows(
+        overlayWindowNumber: Int,
+        screenH: CGFloat
+    ) -> [WindowSnapWindow] {
         guard
             let windowList = CGWindowListCopyWindowInfo(
                 [.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]]
-        else { return nil }
+        else { return [] }
 
+        var windows: [WindowSnapWindow] = []
         for info in windowList {
             guard let layer = info[kCGWindowLayer as String] as? Int, layer == 0,
                 let boundsDict = info[kCGWindowBounds as String] as? [String: CGFloat],
@@ -36,16 +56,28 @@ extension OverlayView {
             guard cgW > 10 && cgH > 10 else { continue }
 
             let appKitRect = NSRect(x: cgX, y: screenH - cgY - cgH, width: cgW, height: cgH)
-            if appKitRect.contains(screenPoint) {
+            windows.append(WindowSnapWindow(appKitRect: appKitRect, windowID: CGWindowID(winNum)))
+        }
+        return windows
+    }
+
+    static func windowSnapResult(
+        at screenPoint: NSPoint,
+        windows: [WindowSnapWindow],
+        windowOrigin: NSPoint,
+        viewBounds: NSRect
+    ) -> WindowSnapResult? {
+        for window in windows {
+            if window.appKitRect.contains(screenPoint) {
                 let viewRect = NSRect(
-                    x: appKitRect.origin.x - windowOrigin.x,
-                    y: appKitRect.origin.y - windowOrigin.y,
-                    width: appKitRect.width,
-                    height: appKitRect.height
+                    x: window.appKitRect.origin.x - windowOrigin.x,
+                    y: window.appKitRect.origin.y - windowOrigin.y,
+                    width: window.appKitRect.width,
+                    height: window.appKitRect.height
                 )
                 return WindowSnapResult(
                     rect: viewRect.intersection(viewBounds),
-                    windowID: CGWindowID(winNum)
+                    windowID: window.windowID
                 )
             }
         }
