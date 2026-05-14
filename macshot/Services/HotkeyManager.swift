@@ -93,6 +93,26 @@ class HotkeyManager {
     private var hotKeyRefs: [HotkeySlot: EventHotKeyRef] = [:]
     private var callbacks: [HotkeySlot: () -> Void] = [:]
     private var eventHandlerRef: EventHandlerRef?
+    private var eventTap: CFMachPort?
+    private var eventTapRunLoopSource: CFRunLoopSource?
+    private var eventTapHotkeys: [HotkeySlot: (keyCode: UInt32, modifiers: UInt32)] = [:]
+    private var consumedEventTapKeyCodes: Set<UInt32> = []
+    private var nextTriggerID: UInt64 = 0
+    private var lastTriggeredHotkey: TriggeredHotkey?
+
+    enum TriggerSource: String {
+        case carbon
+        case eventTap
+    }
+
+    struct TriggeredHotkey {
+        let id: UInt64
+        let slot: HotkeySlot
+        let keyCode: UInt32
+        let modifiers: UInt32
+        let source: TriggerSource
+        let triggeredAt: TimeInterval
+    }
 
     private init() {}
 
@@ -108,6 +128,11 @@ class HotkeyManager {
 
         let (keyCode, modifiers) = Self.readHotkey(for: slot)
         guard modifiers != 0 || Self.isFunctionKey(keyCode) else { return }  // no modifiers = disabled (unless function key)
+
+        if installEventTapIfNeeded() {
+            eventTapHotkeys[slot] = (keyCode, modifiers)
+            return
+        }
 
         installEventHandler()
         var ref: EventHotKeyRef?
@@ -153,13 +178,7 @@ class HotkeyManager {
                                   nil, MemoryLayout<EventHotKeyID>.size, nil, &hotkeyID)
 
                 if let slot = HotkeySlot(rawValue: Int(hotkeyID.id)), let callback = mgr.callbacks[slot] {
-                    if NSApp.modalWindow != nil {
-                        NSApp.stopModal()
-                        NSApp.modalWindow?.close()
-                        DispatchQueue.main.async { callback() }
-                    } else {
-                        callback()
-                    }
+                    mgr.dispatchHotkey(slot: slot, source: .carbon, callback: callback)
                 }
                 return noErr
             },
@@ -167,11 +186,136 @@ class HotkeyManager {
         )
     }
 
+    private func installEventTapIfNeeded() -> Bool {
+        if eventTap != nil { return true }
+
+        let selfPtr = Unmanaged.passUnretained(self).toOpaque()
+        let mask =
+            (1 << CGEventType.keyDown.rawValue) |
+            (1 << CGEventType.keyUp.rawValue) |
+            (1 << CGEventType.tapDisabledByTimeout.rawValue) |
+            (1 << CGEventType.tapDisabledByUserInput.rawValue)
+
+        guard let tap = CGEvent.tapCreate(
+            tap: .cgSessionEventTap,
+            place: .headInsertEventTap,
+            options: .defaultTap,
+            eventsOfInterest: CGEventMask(mask),
+            callback: HotkeyManager.eventTapCallback,
+            userInfo: selfPtr
+        ) else {
+            return false
+        }
+
+        guard let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0) else {
+            CFMachPortInvalidate(tap)
+            return false
+        }
+
+        eventTap = tap
+        eventTapRunLoopSource = source
+        CFRunLoopAddSource(CFRunLoopGetMain(), source, CFRunLoopMode.commonModes)
+        CGEvent.tapEnable(tap: tap, enable: true)
+        return true
+    }
+
+    private static let eventTapCallback: CGEventTapCallBack = { _, type, event, userInfo in
+        guard let userInfo else { return Unmanaged.passUnretained(event) }
+        let mgr = Unmanaged<HotkeyManager>.fromOpaque(userInfo).takeUnretainedValue()
+
+        if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
+            if let tap = mgr.eventTap {
+                CGEvent.tapEnable(tap: tap, enable: true)
+            }
+            return Unmanaged.passUnretained(event)
+        }
+
+        let keyCode = UInt32(event.getIntegerValueField(.keyboardEventKeycode))
+        if type == .keyUp {
+            if mgr.consumedEventTapKeyCodes.remove(keyCode) != nil {
+                return nil
+            }
+            return Unmanaged.passUnretained(event)
+        }
+
+        guard type == .keyDown else {
+            return Unmanaged.passUnretained(event)
+        }
+
+        guard let slot = mgr.matchingEventTapHotkey(keyCode: keyCode, flags: event.flags),
+              let callback = mgr.callbacks[slot] else {
+            return Unmanaged.passUnretained(event)
+        }
+
+        mgr.consumedEventTapKeyCodes.insert(keyCode)
+        let isRepeat = event.getIntegerValueField(.keyboardEventAutorepeat) != 0
+        if !isRepeat {
+            mgr.dispatchHotkey(slot: slot, source: .eventTap, callback: callback)
+        }
+        return nil
+    }
+
+    private func matchingEventTapHotkey(keyCode: UInt32, flags: CGEventFlags) -> HotkeySlot? {
+        let activeModifiers = HotkeyManager.carbonModifiers(from: flags)
+        for slot in HotkeySlot.allCases {
+            guard let hotkey = eventTapHotkeys[slot] else { continue }
+            if hotkey.keyCode == keyCode && hotkey.modifiers == activeModifiers {
+                return slot
+            }
+        }
+        return nil
+    }
+
+    private static func carbonModifiers(from flags: CGEventFlags) -> UInt32 {
+        var modifiers: UInt32 = 0
+        if flags.contains(.maskControl) { modifiers |= UInt32(controlKey) }
+        if flags.contains(.maskAlternate) { modifiers |= UInt32(optionKey) }
+        if flags.contains(.maskShift) { modifiers |= UInt32(shiftKey) }
+        if flags.contains(.maskCommand) { modifiers |= UInt32(cmdKey) }
+        return modifiers
+    }
+
+    private func dispatchHotkey(
+        slot: HotkeySlot,
+        source: TriggerSource,
+        callback: @escaping () -> Void
+    ) {
+        let (keyCode, modifiers) = HotkeyManager.readHotkey(for: slot)
+        nextTriggerID &+= 1
+        lastTriggeredHotkey = TriggeredHotkey(
+            id: nextTriggerID,
+            slot: slot,
+            keyCode: keyCode,
+            modifiers: modifiers,
+            source: source,
+            triggeredAt: ProcessInfo.processInfo.systemUptime
+        )
+
+        if NSApp.modalWindow != nil {
+            NSApp.stopModal()
+            NSApp.modalWindow?.close()
+        }
+        DispatchQueue.main.async {
+            callback()
+        }
+        CFRunLoopWakeUp(CFRunLoopGetMain())
+    }
+
     func unregisterAll() {
         for (slot, ref) in hotKeyRefs {
             UnregisterEventHotKey(ref)
         }
         hotKeyRefs.removeAll()
+        eventTapHotkeys.removeAll()
+        consumedEventTapKeyCodes.removeAll()
+        if let source = eventTapRunLoopSource {
+            CFRunLoopRemoveSource(CFRunLoopGetMain(), source, CFRunLoopMode.commonModes)
+            eventTapRunLoopSource = nil
+        }
+        if let tap = eventTap {
+            CFMachPortInvalidate(tap)
+            eventTap = nil
+        }
         if let handler = eventHandlerRef {
             RemoveEventHandler(handler)
             eventHandlerRef = nil
@@ -182,6 +326,64 @@ class HotkeyManager {
     func unregister() { unregisterAll() }
 
     deinit { unregisterAll() }
+
+    func recentTriggeredHotkey(maxAge: TimeInterval = 2.0) -> TriggeredHotkey? {
+        guard let trigger = lastTriggeredHotkey else { return nil }
+        let age = ProcessInfo.processInfo.systemUptime - trigger.triggeredAt
+        return age <= maxAge ? trigger : nil
+    }
+
+    func performAfterTriggeredHotkeyReleased(
+        _ trigger: TriggeredHotkey,
+        timeout: TimeInterval = 0.75,
+        pollInterval: TimeInterval = 0.006,
+        completion: @escaping (_ timedOut: Bool) -> Void
+    ) {
+        let deadline = ProcessInfo.processInfo.systemUptime + timeout
+
+        func poll() {
+            let pressed = Self.isTriggeredHotkeyPressed(trigger)
+            let timedOut = ProcessInfo.processInfo.systemUptime >= deadline
+            if !pressed || timedOut {
+                completion(timedOut)
+                return
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + pollInterval) {
+                poll()
+            }
+        }
+
+        poll()
+    }
+
+    private static func isTriggeredHotkeyPressed(_ trigger: TriggeredHotkey) -> Bool {
+        if CGEventSource.keyState(.combinedSessionState, key: CGKeyCode(trigger.keyCode)) {
+            return true
+        }
+        if trigger.modifiers & UInt32(cmdKey) != 0,
+           anyKeyPressed([UInt32(kVK_Command), UInt32(kVK_RightCommand)]) {
+            return true
+        }
+        if trigger.modifiers & UInt32(shiftKey) != 0,
+           anyKeyPressed([UInt32(kVK_Shift), UInt32(kVK_RightShift)]) {
+            return true
+        }
+        if trigger.modifiers & UInt32(optionKey) != 0,
+           anyKeyPressed([UInt32(kVK_Option), UInt32(kVK_RightOption)]) {
+            return true
+        }
+        if trigger.modifiers & UInt32(controlKey) != 0,
+           anyKeyPressed([UInt32(kVK_Control), UInt32(kVK_RightControl)]) {
+            return true
+        }
+        return false
+    }
+
+    private static func anyKeyPressed(_ keyCodes: [UInt32]) -> Bool {
+        keyCodes.contains { keyCode in
+            CGEventSource.keyState(.combinedSessionState, key: CGKeyCode(keyCode))
+        }
+    }
 
     // MARK: - UserDefaults Helpers
 

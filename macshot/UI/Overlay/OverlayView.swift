@@ -846,6 +846,14 @@ class OverlayView: NSView {
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
     override var isFlipped: Bool { false }
 
+    func primeCaptureCursor() {
+        guard !isEditorMode && !isScrollCapturing && !isRecording else { return }
+        window?.invalidateCursorRects(for: self)
+        if state == .idle || state == .selecting {
+            NSCursor.crosshair.set()
+        }
+    }
+
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         window?.makeFirstResponder(self)
@@ -1055,7 +1063,10 @@ class OverlayView: NSView {
     }
 
     override func resetCursorRects() {
-        // Handled imperatively in mouseMoved
+        super.resetCursorRects()
+        if !isEditorMode && !isScrollCapturing && !isRecording && (state == .idle || state == .selecting) {
+            addCursorRect(bounds, cursor: .crosshair)
+        }
     }
 
     /// Imperative cursor management. Called from mouseMoved and a 30fps timer.
@@ -4519,6 +4530,31 @@ class OverlayView: NSView {
 
     // MARK: - Mouse Events
 
+    func beginExternalSelection(at point: NSPoint, modifiers: NSEvent.ModifierFlags = []) -> Bool {
+        guard state == .idle, remoteSelectionRect.width < 1, remoteSelectionRect.height < 1 else {
+            return false
+        }
+        selectionStart = point
+        selectionRect = NSRect(origin: point, size: .zero)
+        state = .selecting
+        overlayDelegate?.overlayViewDidBeginSelection()
+        needsDisplay = true
+        return true
+    }
+
+    func updateExternalSelection(to point: NSPoint, modifiers: NSEvent.ModifierFlags = []) -> Bool {
+        guard state == .selecting else { return false }
+        updateSelectionRect(to: point, shiftHeld: modifiers.contains(.shift))
+        return true
+    }
+
+    func finishExternalSelection(at point: NSPoint, modifiers: NSEvent.ModifierFlags = []) -> Bool {
+        guard state == .selecting else { return false }
+        updateSelectionRect(to: point, shiftHeld: modifiers.contains(.shift))
+        finishSelection()
+        return true
+    }
+
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
 
@@ -5235,70 +5271,7 @@ class OverlayView: NSView {
         lastDragPoint = nil
         switch state {
         case .selecting:
-            if selectionRect.width > 5 || selectionRect.height > 5 {
-                // Real drag — use drawn rect as-is
-                state = .selected
-                if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode { showToolbars = true }
-                overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
-            } else if windowSnapEnabled, let snapRect = hoveredWindowRect, !snapRect.isEmpty {
-                // Click (no drag) with snap on — snap to hovered window
-                selectionRect = snapRect
-                selectionIsWindowSnap = true
-                snappedWindowID = hoveredWindowID
-                // Capture the window independently for beautify (transparent corners)
-                if let wid = hoveredWindowID, let screen = window?.screen {
-                    Task {
-                        if let cgImage = await ScreenCaptureManager.captureWindow(windowID: wid, screen: screen) {
-                            self.snappedWindowImage = NSImage(cgImage: cgImage,
-                                size: NSSize(width: CGFloat(cgImage.width) / screen.backingScaleFactor,
-                                             height: CGFloat(cgImage.height) / screen.backingScaleFactor))
-                            self.needsDisplay = true
-                        }
-                    }
-                }
-                state = .selected
-                if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode { showToolbars = true }
-                overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
-            } else {
-                // Click (no drag), snap off — expand to full screen
-                selectionRect = bounds
-                state = .selected
-                if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode { showToolbars = true }
-                overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
-            }
-            hoveredWindowRect = nil
-            // Update cursor to match the selected tool (replaces resize cursor from dragging)
-            if let win = window {
-                let point = convert(win.mouseLocationOutsideOfEventStream, from: nil)
-                updateCursorForPoint(point)
-            }
-            scheduleBarcodeDetection()
-            // Auto-enter recording mode if triggered from "Record Screen"
-            if autoEnterRecordingMode {
-                autoEnterRecordingMode = false
-                overlayDelegate?.overlayViewDidRequestEnterRecordingMode()
-            }
-            // Auto-trigger OCR if triggered from "Capture OCR"
-            if autoOCRMode {
-                autoOCRMode = false
-                overlayDelegate?.overlayViewDidRequestOCR()
-            }
-            // Auto-trigger quick save if triggered from "Quick Capture"
-            if autoQuickSaveMode {
-                autoQuickSaveMode = false
-                overlayDelegate?.overlayViewDidRequestQuickSave()
-            }
-            // Auto-trigger scroll capture if triggered from "Scroll Capture"
-            if autoScrollCaptureMode {
-                autoScrollCaptureMode = false
-                overlayDelegate?.overlayViewDidRequestScrollCapture(rect: selectionRect)
-            }
-            // Auto-confirm for "Add Capture" — just confirm selection, no save/copy
-            if autoConfirmMode {
-                autoConfirmMode = false
-                overlayDelegate?.overlayViewDidConfirm()
-            }
-            needsDisplay = true
+            finishSelection()
 
         case .selected:
             if isLassoSelecting {
@@ -5356,6 +5329,73 @@ class OverlayView: NSView {
         default:
             break
         }
+    }
+
+    private func finishSelection() {
+        if selectionRect.width > 5 || selectionRect.height > 5 {
+            // Real drag — use drawn rect as-is
+            state = .selected
+            if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode { showToolbars = true }
+            overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
+        } else if windowSnapEnabled, let snapRect = hoveredWindowRect, !snapRect.isEmpty {
+            // Click (no drag) with snap on — snap to hovered window
+            selectionRect = snapRect
+            selectionIsWindowSnap = true
+            snappedWindowID = hoveredWindowID
+            // Capture the window independently for beautify (transparent corners)
+            if let wid = hoveredWindowID, let screen = window?.screen {
+                Task {
+                    if let cgImage = await ScreenCaptureManager.captureWindow(windowID: wid, screen: screen) {
+                        self.snappedWindowImage = NSImage(cgImage: cgImage,
+                            size: NSSize(width: CGFloat(cgImage.width) / screen.backingScaleFactor,
+                                         height: CGFloat(cgImage.height) / screen.backingScaleFactor))
+                        self.needsDisplay = true
+                    }
+                }
+            }
+            state = .selected
+            if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode { showToolbars = true }
+            overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
+        } else {
+            // Click (no drag), snap off — expand to full screen
+            selectionRect = bounds
+            state = .selected
+            if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode { showToolbars = true }
+            overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
+        }
+        hoveredWindowRect = nil
+        // Update cursor to match the selected tool (replaces resize cursor from dragging)
+        if let win = window {
+            let point = convert(win.mouseLocationOutsideOfEventStream, from: nil)
+            updateCursorForPoint(point)
+        }
+        scheduleBarcodeDetection()
+        // Auto-enter recording mode if triggered from "Record Screen"
+        if autoEnterRecordingMode {
+            autoEnterRecordingMode = false
+            overlayDelegate?.overlayViewDidRequestEnterRecordingMode()
+        }
+        // Auto-trigger OCR if triggered from "Capture OCR"
+        if autoOCRMode {
+            autoOCRMode = false
+            overlayDelegate?.overlayViewDidRequestOCR()
+        }
+        // Auto-trigger quick save if triggered from "Quick Capture"
+        if autoQuickSaveMode {
+            autoQuickSaveMode = false
+            overlayDelegate?.overlayViewDidRequestQuickSave()
+        }
+        // Auto-trigger scroll capture if triggered from "Scroll Capture"
+        if autoScrollCaptureMode {
+            autoScrollCaptureMode = false
+            overlayDelegate?.overlayViewDidRequestScrollCapture(rect: selectionRect)
+        }
+        // Auto-confirm for "Add Capture" — just confirm selection, no save/copy
+        if autoConfirmMode {
+            autoConfirmMode = false
+            overlayDelegate?.overlayViewDidConfirm()
+        }
+        needsDisplay = true
     }
 
     /// Update `selectionRect` from the anchor at `selectionStart` to the

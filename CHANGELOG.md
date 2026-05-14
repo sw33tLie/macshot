@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.1.1-beta.2] - 2026-05-14
+
+### Changed
+
+- **Hotkey capture overlay startup** — global-hotkey captures now show an interactive overlay immediately, even after a cold launch or several idle minutes.
+- **Immediate capture rendering** — the overlay can accept selection input before the full preview surface finishes installing, while still using the full-resolution screenshot for copy, save, editor, and upload output.
+
+### Fixed
+
+- **First drag delay after hotkey capture** — added an early mouse-input path for the capture overlay so macOS/AppKit input lag after Carbon hotkeys no longer blocks starting the selection.
+- **Spinner/old cursor during capture startup** — the capture cursor is now asserted while the overlay is coming up.
+
 ## [4.1.1-beta.1] - 2026-05-13
 
 ### Added
