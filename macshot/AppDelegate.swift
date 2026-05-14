@@ -890,6 +890,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         let trace = makeCaptureTimingTrace()
         captureTimingTrace = trace
         trace?.mark("startCapture entered fromMenu=\(fromMenu)")
+        if let trigger = HotkeyManager.shared.recentTriggeredHotkey() {
+            trace?.mark("hotkey trigger source=\(trigger.source.rawValue) slot=\(trigger.slot.rawValue)")
+        }
         isCapturing = true
         captureSessionID &+= 1
         let sessionID = captureSessionID
@@ -1096,11 +1099,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         let preCapturedByScreen = measureCaptureTiming("map preCaptured images") {
             Dictionary(uniqueKeysWithValues: (preCaptured ?? []).map { ($0.screen, $0.image) })
         }
+        let hasImmediateCaptures = !preCapturedByScreen.isEmpty
+        var deferredPreviewInstalls: [(controller: OverlayWindowController, image: CGImage)] = []
 
         for screen in screens {
             let controller: OverlayWindowController
             if preCapturedByScreen[screen] != nil {
-                controller = measureCaptureTiming("create overlay for preCaptured image") {
+                controller = measureCaptureTiming("create transparent overlay for preCaptured image") {
                     OverlayWindowController(screen: screen)
                 }
             } else {
@@ -1120,12 +1125,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             if pendingQuickCaptureMode { controller.setAutoQuickSaveMode() }
             if pendingScrollCaptureMode { controller.setAutoScrollCaptureMode() }
             if let image = preCapturedByScreen[screen] {
-                measureCaptureTiming("install preCaptured screenshot") {
-                    controller.prepareScreenshot(image)
+                measureCaptureTiming("install preCaptured capture source") {
+                    controller.setCaptureSource(image)
                 }
+                deferredPreviewInstalls.append((controller, image))
             }
             measureCaptureTiming("show overlay") {
-                controller.showOverlay()
+                controller.showOverlay(allowInteractionBeforeScreenshot: preCapturedByScreen[screen] != nil)
             }
             let isMouseScreen = (screen == mouseScreen) || (mouseScreen == nil && screen == NSScreen.main)
             if (pendingFullScreen || pendingFullScreenRecord) && isMouseScreen {
@@ -1149,8 +1155,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                 CATransaction.flush()
             }
         }
-        measureCaptureTiming("NSApp.activate") {
-            NSApp.activate(ignoringOtherApps: true)
+        if !hasImmediateCaptures {
+            measureCaptureTiming("NSApp.activate") {
+                NSApp.activate(ignoringOtherApps: true)
+            }
         }
 
         pendingRecordMode = false
@@ -1166,6 +1174,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             let trace = captureTimingTrace
             DispatchQueue.main.async {
                 trace?.mark("main queue tick after overlay ready")
+            }
+            if !deferredPreviewInstalls.isEmpty {
+                captureTimingTrace?.mark("schedule preCaptured preview install")
+                let installs = deferredPreviewInstalls
+                DispatchQueue.main.async { [weak self] in
+                    guard let self, self.isCapturing else { return }
+                    for install in installs {
+                        self.measureCaptureTiming("install preCaptured screenshot preview") {
+                            install.controller.setScreenshotPreview(install.image)
+                        }
+                    }
+                    self.captureTimingTrace?.mark("preCaptured screenshot preview installed")
+                }
             }
             applyPendingRestoredSelectionIfNeeded()
             return
