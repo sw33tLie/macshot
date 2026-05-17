@@ -24,10 +24,10 @@
     <enclosure url="https://github.com/sw33tLie/macshot/releases/download/v4.1.0/MacShot.dmg" length="5982790" type="application/octet-stream" sparkle:edSignature="3QqBso/j3tkFA41++NGFHfajPzpiy9SAkNvxQZiyrwVgQHWJUGdydhOigjCSNtv5OD/76iw1opdyHPMvFwCnAw==" />
 </item>
 <item>
-    <title>v4.1.1-beta.2</title>
-    <pubDate>Thu, 14 May 2026 11:06:26 +0000</pubDate>
-    <sparkle:version>75</sparkle:version>
-    <sparkle:shortVersionString>4.1.1-beta.2</sparkle:shortVersionString>
+    <title>v4.1.1-beta.3</title>
+    <pubDate>Sun, 17 May 2026 18:46:24 +0000</pubDate>
+    <sparkle:version>76</sparkle:version>
+    <sparkle:shortVersionString>4.1.1-beta.3</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
     <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
@@ -38,13 +38,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Changed</h3><ul>  <li><b>Hotkey capture overlay startup</b> — global-hotkey captures now show an interactive overlay immediately, even after a cold launch or several idle minutes.</li> <li><b>Immediate capture rendering</b> — the overlay can accept selection input before the full preview surface finishes installing, while still using the full-resolution screenshot for copy, save, editor, and upload output.</li>  </ul><h3>Fixed</h3><ul>  <li><b>First drag delay after hotkey capture</b> — added an early mouse-input path for the capture overlay so macOS/AppKit input lag after Carbon hotkeys no longer blocks starting the selection.</li> <li><b>Spinner/old cursor during capture startup</b> — the capture cursor is now asserted while the overlay is coming up.</li></ul>
+      <h3>Fixed</h3><ul>  <li><b>Phantom "Macshot: Screen Recording" notifications</b> — the periodic capture-path prewarm introduced in 4.1.1-beta.1 was triggering the macOS Sequoia Screen Recording usage indicator every 20 seconds even when no capture was active. The prewarm has been removed; macshot now only reads the screen when you actually trigger a capture.</li>  </ul><h3>Changed</h3><ul>  <li><b>Capture pipeline simplification</b> — window creation and screenshot capture now run in parallel from the hotkey, replacing the layered cold-start workarounds added in earlier 4.1.1 betas. Cold-start latency is improved without any background work between captures.</li></ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v4.1.1-beta.2/MacShot.dmg"
-        length="6096116"
+        url="https://github.com/sw33tLie/macshot/releases/download/v4.1.1-beta.3/MacShot.dmg"
+        length="6060356"
         type="application/octet-stream"
-        sparkle:edSignature="k9aGCa8vcPu3wnE/zq8wipRMpoKeFtj+ppbsfSHPNvIMknYQ0t4+q4wKTENEZWW9rBoyOkPtLVwmIqQ+9ER4Ag=="
+        sparkle:edSignature="pQA0jRaGi84CAee/o+Rz3RERRDuDYtAwc9jh4f0afb8f6LGEIwgOGPFOGWOhrSr7jgkudHsYsb2zIoZdlcbgCg=="
     />
 </item>
     </channel>
