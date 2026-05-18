@@ -175,12 +175,17 @@ class OverlayWindowController {
     /// for setScreenshot() to install one.
     func showOverlay() {
         guard let window = overlayWindow else { return }
+        timingMark?("showOverlay begin appActive=\(NSApp.isActive)")
         rootView?.layoutSubtreeIfNeeded()
+        timingMark?("after layoutSubtreeIfNeeded")
         overlayView?.displayIfNeeded()
+        timingMark?("after displayIfNeeded")
         window.makeKeyAndOrderFront(nil)
+        timingMark?("after makeKeyAndOrderFront isVisible=\(window.isVisible) isKey=\(window.isKeyWindow)")
         if let view = overlayView {
             window.makeFirstResponder(view)
         }
+        timingMark?("after makeFirstResponder")
         // Window is now key — resetCursorRects (called by AppKit on key change)
         // installs the crosshair rect. No need to NSCursor.set() imperatively.
     }

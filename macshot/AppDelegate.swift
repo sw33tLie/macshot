@@ -80,6 +80,10 @@ enum CaptureMenuItemID: String, CaseIterable {
     }
 }
 
+import os.log
+
+private let timingLog = OSLog(subsystem: "com.sw33tlie.macshot.macshot", category: "capture-timing")
+
 private final class CaptureTimingTrace: @unchecked Sendable {
     private struct Entry {
         let label: String
@@ -89,24 +93,30 @@ private final class CaptureTimingTrace: @unchecked Sendable {
     }
 
     private let lock = NSLock()
-    private let startTime = CFAbsoluteTimeGetCurrent()
+    private let startTime: CFAbsoluteTime
     private var lastTime: CFAbsoluteTime
     private var entries: [Entry] = []
 
-    init() {
-        lastTime = startTime
+    init(startAbsoluteTime: CFAbsoluteTime = CFAbsoluteTimeGetCurrent()) {
+        self.startTime = startAbsoluteTime
+        self.lastTime = startAbsoluteTime
+        os_log("=== TRACE START ===", log: timingLog, type: .info)
     }
 
     func mark(_ label: String) {
         let now = CFAbsoluteTimeGetCurrent()
         lock.lock()
-        entries.append(Entry(
+        let entry = Entry(
             label: label,
             elapsed: now - startTime,
             delta: now - lastTime,
-            thread: Thread.isMainThread ? "main" : "bg"))
+            thread: Thread.isMainThread ? "main" : "bg")
+        entries.append(entry)
         lastTime = now
         lock.unlock()
+        os_log("%{public}.1fms (+%{public}.1f) [%{public}@] %{public}@",
+               log: timingLog, type: .info,
+               entry.elapsed * 1000, entry.delta * 1000, entry.thread, label)
     }
 
     func measure<T>(_ label: String, _ work: () -> T) -> T {
@@ -125,7 +135,7 @@ private final class CaptureTimingTrace: @unchecked Sendable {
 
         let total = snapshot.last?.elapsed ?? 0
         var lines: [String] = []
-        lines.append("Total: \(Self.format(total))")
+        lines.append("macshot capture timing — total: \(Self.format(total))")
         lines.append("")
         lines.append(" elapsed    delta  thread  event")
         lines.append("-----------------------------------------------")
@@ -181,6 +191,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     private var statusBarMenu: NSMenu?
     private var captureSessionID: UInt = 0
     private var captureTimingTrace: CaptureTimingTrace?
+    /// App Nap suppression assertion. Held for the app's lifetime so global
+    /// hotkeys respond instantly instead of paying a 1-2s wake-up penalty
+    /// when macshot has been idle. `.userInitiatedAllowingIdleSystemSleep`
+    /// keeps the process awake but lets the system sleep if the user is idle.
+    private var appNapAssertion: NSObjectProtocol?
 
     /// Shared capture sound — loaded once, reused everywhere.
     static let captureSound: NSSound? = {
@@ -201,6 +216,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             NSApp.terminate(nil)
             return
         }
+
+        // Disable App Nap. macshot is LSUIElement with no visible windows
+        // when idle, so macOS aggressively sleeps it — which adds 1-2s of
+        // wake-up latency to global hotkey captures. We hold this assertion
+        // for the app's lifetime. `userInitiatedAllowingIdleSystemSleep`
+        // keeps the process awake but lets the system sleep when the user
+        // is idle, so this doesn't drain battery on a closed laptop.
+        appNapAssertion = ProcessInfo.processInfo.beginActivity(
+            options: [.userInitiatedAllowingIdleSystemSleep],
+            reason: "Global hotkey responsiveness")
 
         // Offer to move to /Applications if running from a DMG or translocated path
         promptToMoveToApplicationsIfNeeded()
@@ -293,11 +318,53 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func prewarmCapturePath() {
-        // Warm the SCShareableContent cache (cheap, async). The overlay/window
-        // creation path is no longer prewarmed — the new pipeline runs window
-        // setup and screenshot capture in parallel from the hotkey, so the
-        // periodic 1×1 capture / invisible window churn isn't needed.
+        // Warm the SCShareableContent cache (cheap, async).
         ScreenCaptureManager.prewarm()
+        // One-shot prewarm: briefly show a screen-sized invisible borderless
+        // panel so WindowServer pays its "first screen-covering window" cost
+        // BEFORE the user fires the hotkey. Without this the first capture
+        // after app launch eats a ~500ms WindowServer fault-in.
+        prewarmOverlayWindowServerPath()
+    }
+
+    private func prewarmOverlayWindowServerPath() {
+        guard let screen = NSScreen.main ?? NSScreen.screens.first else { return }
+        let panel = NSPanel(
+            contentRect: screen.frame,
+            styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered,
+            defer: false)
+        panel.level = NSWindow.Level(257)
+        // Critical: NOT alpha=0. WindowServer treats fully-transparent windows
+        // as no-op and skips composition, defeating the prewarm. Use a barely-
+        // visible alpha so the path is exercised end-to-end.
+        panel.isOpaque = false
+        panel.backgroundColor = NSColor(white: 0, alpha: 0.001)
+        panel.alphaValue = 0.001
+        panel.hasShadow = false
+        panel.ignoresMouseEvents = true
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient, .ignoresCycle]
+        panel.hidesOnDeactivate = false
+        panel.isReleasedWhenClosed = false
+        let view = NSView(frame: NSRect(origin: .zero, size: screen.frame.size))
+        view.wantsLayer = true
+        view.layer?.backgroundColor = NSColor(white: 0, alpha: 0.001).cgColor
+        panel.contentView = view
+        // Order front + makeKey so WindowServer pays the SAME cost path as
+        // the real overlay (key window IPC, screen-covering composition).
+        panel.orderFrontRegardless()
+        panel.makeKey()
+        view.layoutSubtreeIfNeeded()
+        view.displayIfNeeded()
+        // Force a synchronous composite — this is the work the real overlay
+        // pays at hotkey time. We pay it once here, while invisible.
+        CATransaction.flush()
+        // Hold the panel onscreen for one more runloop tick so AppKit's
+        // post-display work completes before we tear it down.
+        DispatchQueue.main.async {
+            panel.orderOut(nil)
+            panel.contentView = nil
+        }
     }
 
     @objc private func systemDidWake() {
@@ -310,12 +377,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         prewarmCapturePath()
     }
 
+    /// Captured at the very start of every hotkey callback (before main thread
+    /// dispatch hop). Lets the trace include runloop wake-up delay that
+    /// happens BEFORE startCapture runs.
+    var pendingCaptureEntryTime: CFAbsoluteTime?
+
     private func makeCaptureTimingTrace() -> CaptureTimingTrace? {
-        #if DEBUG
-        return CaptureTimingTrace()
-        #else
-        return nil
-        #endif
+        let start = pendingCaptureEntryTime ?? CFAbsoluteTimeGetCurrent()
+        pendingCaptureEntryTime = nil
+        // Always-on while we hunt the cold-hotkey latency bug.
+        return CaptureTimingTrace(startAbsoluteTime: start)
     }
 
     private func measureCaptureTiming<T>(_ label: String, _ work: () -> T) -> T {
@@ -631,35 +702,50 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     // MARK: - Hotkey
 
     private func registerHotkey() {
+        // Stamp entry time at the very FIRST instruction of each callback so
+        // any runloop wake-up cost before startCapture is attributed.
+        let stamp: () -> Void = { [weak self] in
+            let now = CFAbsoluteTimeGetCurrent()
+            self?.pendingCaptureEntryTime = now
+            os_log("HOTKEY CALLBACK FIRED at abs=%{public}.6f", log: timingLog, type: .info, now)
+        }
         HotkeyManager.shared.registerAll(
             captureArea: { [weak self] in
+                stamp()
                 self?.perform(#selector(AppDelegate.captureScreenFromHotkey))
             },
             captureFullScreen: { [weak self] in
+                stamp()
                 self?.perform(#selector(AppDelegate.captureFullScreenFromHotkey))
             },
             recordArea: { [weak self] in
+                stamp()
                 self?.perform(#selector(AppDelegate.recordAreaFromHotkey))
             },
             recordScreen: { [weak self] in
+                stamp()
                 self?.perform(#selector(AppDelegate.recordFullScreenFromHotkey))
             },
             historyOverlay: { [weak self] in
                 DispatchQueue.main.async { self?.showHistoryOverlay() }
             },
             captureOCR: { [weak self] in
+                stamp()
                 self?.perform(#selector(AppDelegate.captureOCRFromHotkey))
             },
             quickCapture: { [weak self] in
+                stamp()
                 self?.perform(#selector(AppDelegate.quickCaptureFromHotkey))
             },
             scrollCapture: { [weak self] in
+                stamp()
                 self?.perform(#selector(AppDelegate.scrollCaptureFromHotkey))
             },
             openFromClipboard: { [weak self] in
                 DispatchQueue.main.async { self?.openImageFromClipboard() }
             },
             captureLastArea: { [weak self] in
+                stamp()
                 self?.perform(#selector(AppDelegate.captureLastAreaFromHotkey))
             }
         )
@@ -1125,8 +1211,37 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             }
         }
 
-        captureTimingTrace?.mark("overlays installed and shown")
+        captureTimingTrace?.mark("overlays installed and shown — INTERACTIVE")
+        // Beacon: schedule periodic main-runloop marks so we can see if the
+        // runloop is alive between INTERACTIVE and the first user event.
+        // Fires every 50ms for 3 seconds, then auto-cancels.
+        if let trace = captureTimingTrace {
+            let report = trace.report(finalLabel: "INTERACTIVE-checkpoint")
+            os_log("=== TRACE @ INTERACTIVE ===\n%{public}@", log: timingLog, type: .info, report)
+            startRunloopBeacon()
+        }
         applyPendingRestoredSelectionIfNeeded()
+    }
+
+    private var runloopBeaconTimer: Timer?
+    private func startRunloopBeacon() {
+        stopRunloopBeacon()
+        var ticks = 0
+        let timer = Timer(timeInterval: 0.05, repeats: true) { [weak self] t in
+            ticks += 1
+            self?.captureTimingTrace?.mark("BEACON tick=\(ticks)")
+            if ticks >= 60 {  // 3 seconds
+                t.invalidate()
+                self?.runloopBeaconTimer = nil
+            }
+        }
+        timer.tolerance = 0.005
+        RunLoop.main.add(timer, forMode: .common)
+        runloopBeaconTimer = timer
+    }
+    private func stopRunloopBeacon() {
+        runloopBeaconTimer?.invalidate()
+        runloopBeaconTimer = nil
     }
 
     private func applyPendingRestoredSelectionIfNeeded() {
@@ -1215,6 +1330,46 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             restoreBackgroundWindowsNow()
         }
         captureTimingTrace?.mark("dismissOverlays completed")
+        if refocusPreviousApp, let trace = captureTimingTrace {
+            let report = trace.report(finalLabel: "OVERLAY DISMISSED")
+            os_log("=== FINAL TRACE ===\n%{public}@", log: timingLog, type: .info, report)
+            Self.appendTimingReport(report)
+            captureTimingTrace = nil
+        }
+    }
+
+    /// Path to the rolling timing log inside the sandbox container.
+    /// Real path on disk:
+    ///   ~/Library/Containers/com.sw33tlie.macshot.macshot/Data/Library/Application Support/macshot/timing.log
+    static let timingLogURL: URL = {
+        let fm = FileManager.default
+        let support = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let dir = support.appendingPathComponent("macshot", isDirectory: true)
+        try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir.appendingPathComponent("timing.log")
+    }()
+
+    /// Append a timing report to the rolling log file. Each entry is prefixed
+    /// with a wall-clock timestamp so cold vs warm runs are easy to compare.
+    /// Runs synchronously on whatever queue calls it — file writes are fast.
+    static func appendTimingReport(_ report: String) {
+        let ts = ISO8601DateFormatter().string(from: Date())
+        let entry = "\n========== \(ts) ==========\n\(report)\n"
+        let url = timingLogURL
+        do {
+            if FileManager.default.fileExists(atPath: url.path) {
+                let handle = try FileHandle(forWritingTo: url)
+                handle.seekToEndOfFile()
+                if let data = entry.data(using: .utf8) {
+                    handle.write(data)
+                }
+                try? handle.close()
+            } else {
+                try entry.write(to: url, atomically: true, encoding: .utf8)
+            }
+        } catch {
+            os_log("appendTimingReport failed: %{public}@", log: timingLog, type: .error, "\(error)")
+        }
     }
 
     /// Hide non-overlay titled macshot windows so they can't be dragged in
