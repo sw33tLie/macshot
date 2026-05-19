@@ -207,6 +207,28 @@ class OverlayWindowController {
         }
     }
 
+    /// One-shot warmup: briefly order the (currently empty) panel front so
+    /// WindowServer allocates its surface and composes one frame. We
+    /// immediately order it out — but the CGSWindow stays alive and so does
+    /// WindowServer's per-window composition cache. Next real `showOverlay()`
+    /// hits the warm path. Pair with the overlay controller pool that keeps
+    /// the panel alive across capture sessions.
+    func warmPanel() {
+        guard let panel = overlayWindow else { return }
+        // Use a barely-visible alpha so WindowServer doesn't optimize the
+        // window away as a transparent no-op. Restore after we order out.
+        let savedAlpha = panel.alphaValue
+        panel.alphaValue = 0.001
+        panel.orderFrontRegardless()
+        rootView?.layoutSubtreeIfNeeded()
+        overlayView?.displayIfNeeded()
+        CATransaction.flush()
+        DispatchQueue.main.async {
+            panel.orderOut(nil)
+            panel.alphaValue = savedAlpha
+        }
+    }
+
     func applySelection(_ rect: NSRect) {
         overlayView?.applySelection(rect)
     }
@@ -293,11 +315,33 @@ class OverlayWindowController {
         overlayView?.needsDisplay = true
     }
 
+    /// End the current capture session. The window/view/panel are KEPT ALIVE
+    /// and returned to a clean idle state, so the next session can reuse this
+    /// same controller (and crucially, the same NSPanel CGSWindow — which is
+    /// what makes the next capture instant, since WindowServer's per-window
+    /// composition cache survives `orderOut`).
     func dismiss() {
         saveSelectionIfNeeded()
         overlayView?.reset()
         overlayView?.screenshotImage = nil
+        overlayView?.captureSourceImage = nil
         rootView?.clearScreenshotPreview()
+        // Restore the window's transparent state so the next session starts
+        // with the same defaults as a fresh install.
+        overlayWindow?.isOpaque = false
+        overlayWindow?.backgroundColor = .clear
+        overlayWindow?.orderOut(nil)
+        NSCursor.arrow.set()
+        // Note: overlayDelegate is intentionally NOT cleared here; the
+        // controller-pool owner re-assigns it before each session.
+        // overlayWindow/rootView/overlayView remain alive for the next session.
+    }
+
+    /// Fully tear down the controller. Used when the screen config changes
+    /// (display added/removed), or app shutdown. After this the controller is
+    /// dead and a new one must be constructed.
+    func tearDown() {
+        overlayView?.reset()
         overlayView?.overlayDelegate = nil
         overlayWindow?.contentView = nil
         rootView = nil
@@ -305,7 +349,6 @@ class OverlayWindowController {
         overlayWindow?.orderOut(nil)
         overlayWindow?.close()
         overlayWindow = nil
-        NSCursor.arrow.set()
     }
 
     private func saveSelectionIfNeeded() {

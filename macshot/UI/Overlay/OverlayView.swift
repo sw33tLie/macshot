@@ -7941,6 +7941,18 @@ class OverlayView: NSView {
         barcodeDetector.cancel()
         hoveredWindowRect = nil
         isRecording = false
+        // Webcam setup preview (if any) — clear so a reused overlay doesn't
+        // show a stale camera feed on the next session.
+        webcamSetupPreview?.stopPreview()
+        webcamSetupPreview?.close()
+        webcamSetupPreview = nil
+        // Auto-mode flags — these are set per-session by the controller and
+        // must NOT leak into the next session.
+        autoEnterRecordingMode = false
+        autoOCRMode = false
+        autoQuickSaveMode = false
+        autoScrollCaptureMode = false
+        autoConfirmMode = false
         needsDisplay = true
     }
 }

@@ -320,51 +320,43 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     private func prewarmCapturePath() {
         // Warm the SCShareableContent cache (cheap, async).
         ScreenCaptureManager.prewarm()
-        // One-shot prewarm: briefly show a screen-sized invisible borderless
-        // panel so WindowServer pays its "first screen-covering window" cost
-        // BEFORE the user fires the hotkey. Without this the first capture
-        // after app launch eats a ~500ms WindowServer fault-in.
-        prewarmOverlayWindowServerPath()
+        // Build (or rebuild) the per-screen overlay controller pool. Each
+        // controller owns a permanent NSPanel; on hotkey we reuse it rather
+        // than creating fresh. This is what keeps captures fast — WindowServer
+        // caches composition state per-window, and reused windows stay hot.
+        rebuildOverlayPool()
     }
 
-    private func prewarmOverlayWindowServerPath() {
-        guard let screen = NSScreen.main ?? NSScreen.screens.first else { return }
-        let panel = NSPanel(
-            contentRect: screen.frame,
-            styleMask: [.borderless, .nonactivatingPanel],
-            backing: .buffered,
-            defer: false)
-        panel.level = NSWindow.Level(257)
-        // Critical: NOT alpha=0. WindowServer treats fully-transparent windows
-        // as no-op and skips composition, defeating the prewarm. Use a barely-
-        // visible alpha so the path is exercised end-to-end.
-        panel.isOpaque = false
-        panel.backgroundColor = NSColor(white: 0, alpha: 0.001)
-        panel.alphaValue = 0.001
-        panel.hasShadow = false
-        panel.ignoresMouseEvents = true
-        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient, .ignoresCycle]
-        panel.hidesOnDeactivate = false
-        panel.isReleasedWhenClosed = false
-        let view = NSView(frame: NSRect(origin: .zero, size: screen.frame.size))
-        view.wantsLayer = true
-        view.layer?.backgroundColor = NSColor(white: 0, alpha: 0.001).cgColor
-        panel.contentView = view
-        // Order front + makeKey so WindowServer pays the SAME cost path as
-        // the real overlay (key window IPC, screen-covering composition).
-        panel.orderFrontRegardless()
-        panel.makeKey()
-        view.layoutSubtreeIfNeeded()
-        view.displayIfNeeded()
-        // Force a synchronous composite — this is the work the real overlay
-        // pays at hotkey time. We pay it once here, while invisible.
-        CATransaction.flush()
-        // Hold the panel onscreen for one more runloop tick so AppKit's
-        // post-display work completes before we tear it down.
-        DispatchQueue.main.async {
-            panel.orderOut(nil)
-            panel.contentView = nil
+    /// Persistent per-screen overlay controller pool. Held for the app's
+    /// lifetime so each panel's CGSWindow stays alive in WindowServer.
+    /// Rebuilt on screen-config change.
+    private var overlayControllerPool: [ObjectIdentifier: OverlayWindowController] = [:]
+
+    private func rebuildOverlayPool() {
+        // Tear down stale controllers (screens removed, etc.) before rebuilding.
+        for (_, controller) in overlayControllerPool {
+            controller.tearDown()
         }
+        overlayControllerPool.removeAll()
+        for screen in NSScreen.screens {
+            let controller = OverlayWindowController(screen: screen)
+            overlayControllerPool[ObjectIdentifier(screen)] = controller
+            // Warm the panel: brief invisible orderFront so WindowServer
+            // allocates the surface + composes one frame. This is what the
+            // first real capture would otherwise pay.
+            controller.warmPanel()
+        }
+    }
+
+    private func pooledController(for screen: NSScreen) -> OverlayWindowController {
+        if let existing = overlayControllerPool[ObjectIdentifier(screen)] {
+            return existing
+        }
+        // New screen showed up between prewarms — create on demand.
+        let controller = OverlayWindowController(screen: screen)
+        overlayControllerPool[ObjectIdentifier(screen)] = controller
+        controller.warmPanel()
+        return controller
     }
 
     @objc private func systemDidWake() {
@@ -514,6 +506,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
+        for (_, controller) in overlayControllerPool {
+            controller.tearDown()
+        }
+        overlayControllerPool.removeAll()
         HotkeyManager.shared.unregister()
     }
 
@@ -1112,13 +1108,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         let trace = captureTimingTrace
         let sessionID = captureSessionID
 
-        // Build (but don't yet order-front) overlay windows on main. This pays
-        // the AppKit window-creation + CALayer backing-store cost concurrently
-        // with the screenshot capture above.
+        // Pull (don't construct) overlay controllers from the persistent pool.
+        // Each controller's NSPanel was created and warmed at launch / pool
+        // rebuild, so WindowServer's per-window cache is already hot.
         var controllers: [OverlayWindowController] = []
         for screen in screens {
-            let controller = measureCaptureTiming("create overlay") {
-                OverlayWindowController(screen: screen)
+            let controller = measureCaptureTiming("acquire pooled overlay") {
+                pooledController(for: screen)
             }
             controller.overlayDelegate = self
             if let trace = captureTimingTrace {
