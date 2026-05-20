@@ -129,7 +129,9 @@ class ScrollCaptureHUDPanel: NSPanel {
         isOpaque = false
         backgroundColor = .clear
         hasShadow = false
-        level = .statusBar + 2  // above the overlay window
+        // Above the overlay window (which sits at NSWindow.Level(257)).
+        // Must stay above 257 or the HUD gets hidden behind the overlay.
+        level = NSWindow.Level(258)
         isMovableByWindowBackground = false
         hidesOnDeactivate = false
 

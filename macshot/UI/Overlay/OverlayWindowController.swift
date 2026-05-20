@@ -297,9 +297,28 @@ class OverlayWindowController {
                                maxHeight: Int = 0) {
         overlayView?.scrollCaptureMaxHeight = maxHeight
         if isActive {
+            // Make the overlay window fully transparent + pass-through so the
+            // user sees AND interacts with the live app underneath. We must:
+            //   1) Clear the rootView's previewLayer (which holds the frozen
+            //      screenshot independent of OverlayView's drawing).
+            //   2) Mark the window non-opaque + clear background so AppKit
+            //      doesn't paint a solid backing behind the layer.
+            //   3) ignoresMouseEvents = true so scroll/click events fall
+            //      through to the app beneath (the HUD has its own panel).
+            rootView?.clearScreenshotPreview()
+            overlayWindow?.isOpaque = false
+            overlayWindow?.backgroundColor = .clear
             overlayView?.startScrollCaptureMode()
         } else {
             overlayView?.stopScrollCaptureMode()
+            // Restore the screenshot-backed opaque overlay so the next
+            // action (selection adjustment, confirm, etc.) sees the screenshot.
+            if let img = overlayView?.captureSourceImage,
+               let cg = img.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+                rootView?.setScreenshotPreviewImage(cg)
+                overlayWindow?.isOpaque = true
+                overlayWindow?.backgroundColor = .black
+            }
         }
         overlayView?.scrollCaptureStripCount = stripCount
         overlayView?.scrollCapturePixelSize = pixelSize
