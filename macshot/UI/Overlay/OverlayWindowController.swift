@@ -959,7 +959,6 @@ extension OverlayWindowController: OverlayViewDelegate {
             guard let self = self else { return }
             if response == .OK, let url = savePanel.url {
                 try? imageData.write(to: url)
-                SaveDirectoryAccess.save(url: url.deletingLastPathComponent())
                 self.playCopySound()
                 self.dismiss()
                 self.overlayDelegate?.overlayDidConfirm(self, capturedImage: nil, annotationData: nil)

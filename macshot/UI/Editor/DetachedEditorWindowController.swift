@@ -371,7 +371,6 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
         savePanel.beginSheetModal(for: window!) { [weak self] response in
             if response == .OK, let url = savePanel.url {
                 try? imageData.write(to: url)
-                SaveDirectoryAccess.save(url: url.deletingLastPathComponent())
                 self?.playCopySound()
                 self?.autoSaveToHistoryIfNeeded(compositedImage: image)
             }

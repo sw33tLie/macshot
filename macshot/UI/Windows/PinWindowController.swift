@@ -320,7 +320,6 @@ private class PinView: NSView {
         savePanel.begin { response in
             if response == .OK, let url = savePanel.url {
                 try? imageData.write(to: url)
-                SaveDirectoryAccess.save(url: url.deletingLastPathComponent())
             }
         }
     }
