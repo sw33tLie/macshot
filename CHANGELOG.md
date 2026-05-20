@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.1.1-beta.4] - 2026-05-20
+
+### Added
+
+- **Sketchy arrow style** — a new hand-drawn-looking arrow option in the arrow style picker, rendered from a real hand-drawn SVG so it actually looks handmade.
+
+### Fixed
+
+- **Scroll capture** — the HUD has been hidden behind the overlay since v3.4.5 and the overlay was capturing scroll events instead of passing them through, making scroll capture unusable. Both fixed.
+- **Save As no longer hijacks the default screenshots folder** — picking a one-off location with Save As used to permanently replace the configured default. It is now treated as a one-time choice; the default is only changed from Settings. (Reported in #168.)
+- **Cold-start hotkey lag** — fixed in two layers: macshot now disables App Nap so it stays responsive after long idle, and the overlay window is now a persistent per-screen NSPanel so WindowServer's composition cache stays warm across captures.
+
 ## [4.1.1-beta.3] - 2026-05-17
 
 ### Fixed
