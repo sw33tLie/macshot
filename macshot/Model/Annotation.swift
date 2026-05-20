@@ -1149,141 +1149,134 @@ class Annotation {
         path.fill()
     }
 
-    /// Hand-drawn / sketchy arrow style. Uniform-width shaft (straight, bent,
-    /// or multi-anchor — respects whatever the user drew) capped by a single
-    /// continuous hook arrowhead that swings around past 180°. Per-instance
-    /// variation (hook tightness, hook direction) is driven by `randomSeed`.
+    // MARK: - Sketchy arrow template (from arrow-12-svgrepo-com.svg)
+
+    /// The template is a closed filled shape representing a hand-drawn arrow.
+    /// In template space: TIP is on the LEFT (around x ≈ 5, y ≈ 28), TAIL is
+    /// on the RIGHT (x = 253, y = 42). The shape is rendered by walking each
+    /// bezier point, converting it to (u, v) = (position along template axis,
+    /// perpendicular offset), then mapping (u, v) to the user's actual arrow
+    /// path. The arrowhead curl (u < curlBoundary) is rendered around the
+    /// tip's tangent direction; the shaft (u >= curlBoundary) follows the
+    /// user's bend/multi-anchor path.
+    private static let sketchyTemplateStart = NSPoint(x: 44.0843, y: 40.9472)
+    private static let sketchyTemplateSegments: [(cp1: NSPoint, cp2: NSPoint, end: NSPoint)] = [
+        (NSPoint(x: 52.1114, y: 45.6391), NSPoint(x: 58.2373, y: 49.2646), NSPoint(x: 64.152, y: 52.6768)),
+        (NSPoint(x: 66.2644, y: 53.9564), NSPoint(x: 68.3768, y: 55.0228), NSPoint(x: 70.278, y: 56.5156)),
+        (NSPoint(x: 73.0241, y: 58.435), NSPoint(x: 76.8264, y: 60.5677), NSPoint(x: 74.714, y: 64.6198)),
+        (NSPoint(x: 72.6016, y: 68.4586), NSPoint(x: 68.5881, y: 66.7525), NSPoint(x: 65.6307, y: 65.6861)),
+        (NSPoint(x: 62.4621, y: 64.8331), NSPoint(x: 59.2935, y: 63.1269), NSPoint(x: 56.3362, y: 61.634)),
+        (NSPoint(x: 42.6056, y: 55.0228), NSPoint(x: 28.8751, y: 48.1982), NSPoint(x: 15.3557, y: 41.3737)),
+        (NSPoint(x: 11.7647, y: 39.4543), NSPoint(x: 7.96236, y: 37.7482), NSPoint(x: 4.79377, y: 35.189)),
+        (NSPoint(x: -1.96589, y: 30.0706), NSPoint(x: -1.54341, y: 24.9522), NSPoint(x: 5.84997, y: 21.1134)),
+        (NSPoint(x: 15.7782, y: 15.995), NSPoint(x: 25.9177, y: 11.3031), NSPoint(x: 36.0572, y: 6.61127)),
+        (NSPoint(x: 40.282, y: 4.47861), NSPoint(x: 44.718, y: 2.34595), NSPoint(x: 49.154, y: 0.853085)),
+        (NSPoint(x: 51.6889, y: 0.0), NSPoint(x: 54.6462, y: 0.213266), NSPoint(x: 57.3924, y: 0.0)),
+        (NSPoint(x: 58.2373, y: 5.97146), NSPoint(x: 54.8575, y: 7.25107), NSPoint(x: 51.9001, y: 8.74394)),
+        (NSPoint(x: 44.5068, y: 12.796), NSPoint(x: 36.9021, y: 16.6348), NSPoint(x: 29.5088, y: 20.6869)),
+        (NSPoint(x: 26.9739, y: 22.1797), NSPoint(x: 24.2278, y: 23.6726), NSPoint(x: 21.6929, y: 27.0849)),
+        (NSPoint(x: 25.4952, y: 27.5114), NSPoint(x: 29.0863, y: 28.1512), NSPoint(x: 32.8886, y: 28.3644)),
+        (NSPoint(x: 61.4059, y: 29.8573), NSPoint(x: 89.712, y: 31.3502), NSPoint(x: 118.229, y: 32.8431)),
+        (NSPoint(x: 159.632, y: 34.9757), NSPoint(x: 200.824, y: 37.1084), NSPoint(x: 242.227, y: 39.4543)),
+        (NSPoint(x: 245.607, y: 39.6676), NSPoint(x: 248.986, y: 40.9472), NSPoint(x: 253.0, y: 42.0135)),
+        (NSPoint(x: 249.198, y: 47.7717), NSPoint(x: 244.762, y: 46.4921), NSPoint(x: 241.171, y: 46.2789)),
+        (NSPoint(x: 220.892, y: 45.8523), NSPoint(x: 200.401, y: 44.9992), NSPoint(x: 180.122, y: 44.3594)),
+        (NSPoint(x: 136.396, y: 42.8666), NSPoint(x: 92.6693, y: 41.3737), NSPoint(x: 48.9428, y: 39.8809)),
+        (NSPoint(x: 47.8866, y: 40.0941), NSPoint(x: 47.2529, y: 40.3074), NSPoint(x: 44.0843, y: 40.9472)),
+    ]
+    /// Template space x-axis runs from `templateTipX` (left, arrow tip) to
+    /// `templateTailX` (right, shaft end). The centerline y is `templateCenterY`.
+    private static let templateTipX: CGFloat = 0      // leftmost extent (curl tip)
+    private static let templateTailX: CGFloat = 253   // rightmost extent (shaft end)
+    private static let templateCenterY: CGFloat = 32  // visual centerline of the stroke
+    /// Where the arrowhead curl ends and the straight shaft begins (in template x).
+    /// Below this, points follow the tip tangent. Above, points follow the user's path.
+    private static let templateCurlBoundary: CGFloat = 50
+
+    /// Hand-drawn / sketchy arrow style. Renders the SVG template as a single
+    /// rigid filled shape, scaled + rotated to fit the user's drawn arrow.
+    /// Bend / multi-anchor are ignored for this style — the shape is rigid.
     private func drawSketchyArrow() {
         let pts = arrowReversed ? waypoints.reversed() : waypoints
         guard pts.count >= 2 else { return }
         let firstPt = pts.first!
         let lastPt = pts.last!
 
-        let totalLen = hypot(lastPt.x - firstPt.x, lastPt.y - firstPt.y)
+        let arrowDX = lastPt.x - firstPt.x
+        let arrowDY = lastPt.y - firstPt.y
+        let totalLen = hypot(arrowDX, arrowDY)
         guard totalLen > 1 else { return }
 
-        // Seeded PRNG for stable per-instance variation.
-        var rng = Self.SketchyRNG(seed: randomSeed == 0 ? 1 : randomSeed)
+        // Template orientation: tip is at the LEFT (around x ≈ 5), tail at
+        // the RIGHT (x = 253). So the template's natural "forward" direction
+        // is from right (tail) → left (tip), i.e. -x in template space.
+        //
+        // To map the template onto the user's arrow:
+        // 1) Place template tip-reference point at user's lastPt.
+        // 2) Rotate so the template's +x axis (tail direction) aligns with
+        //    user's tail direction (firstPt - lastPt).
+        // 3) Scale x to fit the user's arrow length.
+        // 4) FLIP y (SVG is Y-down, AppKit overlay is Y-up).
+        // 5) Scale y proportionally to strokeWidth so thickness obeys the slider.
 
-        // --- Shaft path (respects bend / multi-anchor like other arrow styles) ---
-        let shaftPath: NSBezierPath
-        let tipTangent: NSPoint
-        if hasMultiAnchor {
-            shaftPath = Self.smoothPath(through: pts)
-            // Tangent at the tip = direction from second-to-last to last anchor.
-            let preLast = pts[pts.count - 2]
-            let dx = lastPt.x - preLast.x
-            let dy = lastPt.y - preLast.y
-            let len = max(hypot(dx, dy), 0.0001)
-            tipTangent = NSPoint(x: dx / len, y: dy / len)
-        } else if let cp = controlPoint {
-            shaftPath = NSBezierPath()
-            shaftPath.move(to: firstPt)
-            shaftPath.curve(to: lastPt, controlPoint1: cp, controlPoint2: cp)
-            // Tangent at tip on a quadratic-as-cubic (cp1 == cp2 == cp):
-            // B'(1) is proportional to (lastPt - cp).
-            let dx = lastPt.x - cp.x
-            let dy = lastPt.y - cp.y
-            let len = max(hypot(dx, dy), 0.0001)
-            tipTangent = NSPoint(x: dx / len, y: dy / len)
-        } else {
-            shaftPath = NSBezierPath()
-            shaftPath.move(to: firstPt)
-            shaftPath.line(to: lastPt)
-            let dx = lastPt.x - firstPt.x
-            let dy = lastPt.y - firstPt.y
-            let len = max(hypot(dx, dy), 0.0001)
-            tipTangent = NSPoint(x: dx / len, y: dy / len)
+        // Tip reference point in template space (leftmost extent of the curl).
+        // Looking at the path, the visual tip is around (~5, 21-35). We pick
+        // x = 5 (leftmost actually used by curl), y = 30 (center of curl height).
+        let templateTipX: CGFloat = 5
+        let templateTipY: CGFloat = 30
+        let templateTailX: CGFloat = 253
+        let templateLen = templateTailX - templateTipX  // 248
+
+        let xScale = totalLen / templateLen
+        // Thickness: SVG's stroke spans about ±20 template units around center.
+        // User's strokeWidth maps to that range. Match feels right at xScale.
+        // Use the same scale for x and y so the shape doesn't distort; that
+        // means thicker arrows naturally get thicker. Optionally clamp.
+        let yScale = -xScale  // negative to flip Y (SVG y-down → AppKit y-up)
+
+        // Tail-from-tip direction in user space, normalized.
+        let dirX = (firstPt.x - lastPt.x) / totalLen  // points from tip toward tail
+        let dirY = (firstPt.y - lastPt.y) / totalLen
+
+        // The transform maps (templateX, templateY) → user space:
+        //   relX = (templateX - templateTipX) * xScale   // distance along arrow
+        //   relY = (templateY - templateTipY) * yScale   // perpendicular offset
+        //   userX = lastPt.x + dirX * relX + (-dirY) * relY
+        //   userY = lastPt.y + dirY * relX + ( dirX) * relY
+        func mapPoint(_ p: NSPoint) -> NSPoint {
+            let relX = (p.x - templateTipX) * xScale
+            let relY = (p.y - templateTipY) * yScale
+            return NSPoint(
+                x: lastPt.x + dirX * relX + (-dirY) * relY,
+                y: lastPt.y + dirY * relX + ( dirX) * relY)
         }
-        shaftPath.lineWidth = strokeWidth
-        shaftPath.lineCapStyle = .round
-        shaftPath.lineJoinStyle = .round
-        if lineStyle != .solid {
-            let length = hasMultiAnchor ? Self.smoothPathLength(pts)
-                : (controlPoint != nil
-                    ? Annotation.approxBezierLength(from: firstPt, cp1: controlPoint!, cp2: controlPoint!, to: lastPt)
-                    : totalLen)
-            lineStyle.applyFitted(to: shaftPath, pathLength: length)
+
+        // Build the filled path from the template.
+        let path = NSBezierPath()
+        path.move(to: mapPoint(Self.sketchyTemplateStart))
+        for seg in Self.sketchyTemplateSegments {
+            path.curve(
+                to: mapPoint(seg.end),
+                controlPoint1: mapPoint(seg.cp1),
+                controlPoint2: mapPoint(seg.cp2))
         }
+        path.close()
 
-        // --- Arrowhead (hand-drawn check-mark style hook) ---
-        // The hook is two short curved strokes meeting at the tip: one going
-        // back-left, one going back-right. Slightly asymmetric — one leg is a
-        // bit longer or more curved than the other to look hand-drawn, but
-        // both stay BEHIND the tip relative to the shaft direction (not above
-        // it, not wrapping past 180°).
-        let tip = lastPt
-        let headLen: CGFloat = min(max(16, strokeWidth * 5.5), totalLen * 0.30)
-
-        // Direction the shaft points.
-        let forwardAngle = atan2(tipTangent.y, tipTangent.x)
-        let backAngle = forwardAngle + .pi
-        // Asymmetry direction (which leg is "dominant"). Still per-instance.
-        let asymSign: CGFloat = rng.bool() ? 1 : -1
-
-        // Half-angle of the chevron (wider = more open V). ~28-40°.
-        let halfOpen: CGFloat = rng.cgFloat(in: 0.50...0.70)
-        // One leg slightly tighter / more open than the other.
-        let leftHalf = halfOpen + asymSign * rng.cgFloat(in: 0.05...0.15)
-        let rightHalf = halfOpen - asymSign * rng.cgFloat(in: 0.05...0.15)
-        // Lengths: one leg slightly longer.
-        let leftLen = headLen * (1 + asymSign * rng.cgFloat(in: 0.05...0.18))
-        let rightLen = headLen * (1 - asymSign * rng.cgFloat(in: 0.05...0.18))
-
-        let leftEnd = NSPoint(
-            x: tip.x + cos(backAngle - leftHalf) * leftLen,
-            y: tip.y + sin(backAngle - leftHalf) * leftLen)
-        let rightEnd = NSPoint(
-            x: tip.x + cos(backAngle + rightHalf) * rightLen,
-            y: tip.y + sin(backAngle + rightHalf) * rightLen)
-
-        // Each leg has a single Bézier midpoint biased outward (away from the
-        // shaft direction) to make it curl slightly — like a hand drawing
-        // through a stroke, not a perfectly straight pen line.
-        // The bias direction is perpendicular to the leg, pointing AWAY from
-        // the bisector of the chevron (i.e. outward).
-        let leftLegAngle = backAngle - leftHalf
-        let leftCurl = leftLen * rng.cgFloat(in: 0.10...0.18)
-        // Outward = perpendicular to leg, pointing further from the shaft axis.
-        let leftPerpX = -sin(leftLegAngle)
-        let leftPerpY = cos(leftLegAngle)
-        let leftCp = NSPoint(
-            x: (tip.x + leftEnd.x) / 2 + leftPerpX * leftCurl * -1,
-            y: (tip.y + leftEnd.y) / 2 + leftPerpY * leftCurl * -1)
-
-        let rightLegAngle = backAngle + rightHalf
-        let rightCurl = rightLen * rng.cgFloat(in: 0.10...0.18)
-        let rightPerpX = -sin(rightLegAngle)
-        let rightPerpY = cos(rightLegAngle)
-        let rightCp = NSPoint(
-            x: (tip.x + rightEnd.x) / 2 + rightPerpX * rightCurl,
-            y: (tip.y + rightEnd.y) / 2 + rightPerpY * rightCurl)
-
-        let hookPath = NSBezierPath()
-        hookPath.move(to: leftEnd)
-        hookPath.curve(to: tip, controlPoint1: leftCp, controlPoint2: leftCp)
-        hookPath.curve(to: rightEnd, controlPoint1: rightCp, controlPoint2: rightCp)
-        hookPath.lineWidth = strokeWidth
-        hookPath.lineCapStyle = .round
-        hookPath.lineJoinStyle = .round
-
-        // --- Outline pass (drawn behind, wider) ---
-        let outlineW: CGFloat = 3
+        // Outline pass (drawn behind, wider).
         if let oc = outlineColor {
+            let outlinePath = path.copy() as! NSBezierPath
+            outlinePath.lineWidth = 6
+            outlinePath.lineJoinStyle = .round
+            outlinePath.lineCapStyle = .round
             oc.setStroke()
-            for p in [shaftPath, hookPath] {
-                let outlinePath = p.copy() as! NSBezierPath
-                outlinePath.lineWidth = p.lineWidth + outlineW * 2
-                outlinePath.lineCapStyle = .round
-                outlinePath.lineJoinStyle = .round
-                outlinePath.stroke()
-            }
+            oc.setFill()
+            outlinePath.stroke()
+            outlinePath.fill()
         }
 
-        // --- Main color pass ---
-        color.setStroke()
-        shaftPath.stroke()
-        hookPath.stroke()
+        // Main color pass.
+        color.setFill()
+        path.fill()
     }
 
     /// Tiny deterministic PRNG (xorshift32) so sketchy arrows look the same
