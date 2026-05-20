@@ -1205,13 +1205,13 @@ class Annotation {
         let wobblePhaseA = rng.cgFloat(in: 0...(2 * .pi))
         let wobblePhaseB = rng.cgFloat(in: 0...(2 * .pi))
         let pressurePhase = rng.cgFloat(in: 0...(2 * .pi))
-        let wobbleAmp = min(max(strokeWidth * 0.42, 0.7), 2.8)
+        let wobbleAmp = min(max(strokeWidth * 0.18, 0.45), 1.8)
         let baseWidth = max(1.2, strokeWidth)
-        let headLen = min(max(baseWidth * 5.0, 14), totalLen * 0.33)
-        let headGap = min(max(baseWidth * 1.35, 4), max(4, totalLen * 0.08))
+        let headLen = min(max(baseWidth * 4.3, 13), totalLen * 0.27)
+        let headGap = min(max(baseWidth * 0.28, 1.5), max(2, totalLen * 0.025))
         let shaftEndLen = max(0, totalLen - headLen - headGap)
         let headBaseLen = max(0, totalLen - headLen)
-        let steps = max(10, min(120, Int(totalLen / 7)))
+        let steps = max(12, min(140, Int(totalLen / 6)))
 
         func point(atDistance distance: CGFloat) -> (point: NSPoint, tangent: CGVector) {
             sampleBase(at: totalLen > 0 ? distance / totalLen : 0)
@@ -1223,10 +1223,10 @@ class Annotation {
             let nx = -sampled.tangent.dy / tangentLen
             let ny = sampled.tangent.dx / tangentLen
             let progress = totalLen > 0 ? distance / totalLen : 0
-            let taper = sin(progress * .pi)
+            let taper = pow(sin(progress * .pi), 0.85)
             let wobble =
-                sin(progress * 11.7 + wobblePhaseA + CGFloat(pass) * 0.63) * wobbleAmp +
-                sin(progress * 27.0 + wobblePhaseB + CGFloat(pass) * 1.19) * wobbleAmp * 0.33
+                sin(progress * 8.5 + wobblePhaseA + CGFloat(pass) * 0.63) * wobbleAmp +
+                sin(progress * 19.0 + wobblePhaseB + CGFloat(pass) * 1.19) * wobbleAmp * 0.24
             return NSPoint(
                 x: sampled.point.x + nx * wobble * taper,
                 y: sampled.point.y + ny * wobble * taper)
@@ -1240,7 +1240,8 @@ class Annotation {
                 let progress = CGFloat(i) / CGFloat(steps)
                 let distance = shaftEndLen * progress
                 let cur = sketchPoint(distance: distance, pass: pass)
-                let widthVariation = 0.84 + 0.26 * sin(progress * 2.4 * .pi + pressurePhase)
+                let endTaper = 0.92 + 0.08 * sin(progress * .pi)
+                let widthVariation = endTaper * (0.91 + 0.16 * sin(progress * 2.15 * .pi + pressurePhase))
                 let segment = NSBezierPath()
                 segment.lineWidth = baseWidth * widthVariation + extraWidth
                 segment.lineCapStyle = .round
@@ -1261,34 +1262,47 @@ class Annotation {
         let tangentLen = max(hypot(headBaseSample.tangent.dx, headBaseSample.tangent.dy), 0.001)
         let dir = CGVector(dx: headBaseSample.tangent.dx / tangentLen, dy: headBaseSample.tangent.dy / tangentLen)
         let normal = CGVector(dx: -dir.dy, dy: dir.dx)
-        let spread = min(max(baseWidth * 3.0, 8), headLen * 0.72)
+        let spread = min(max(baseWidth * 2.85, 8), headLen * 0.66)
         let headBase = headBaseSample.point
-        let leftBase = NSPoint(x: headBase.x + normal.dx * spread, y: headBase.y + normal.dy * spread)
-        let rightBase = NSPoint(x: headBase.x - normal.dx * spread * 0.92, y: headBase.y - normal.dy * spread * 0.92)
+        let leftBase = NSPoint(
+            x: headBase.x + normal.dx * spread - dir.dx * rng.cgFloat(in: 0...(baseWidth * 0.22)),
+            y: headBase.y + normal.dy * spread - dir.dy * rng.cgFloat(in: 0...(baseWidth * 0.22)))
+        let rightBase = NSPoint(
+            x: headBase.x - normal.dx * spread * 0.94 - dir.dx * rng.cgFloat(in: 0...(baseWidth * 0.38)),
+            y: headBase.y - normal.dy * spread * 0.94 - dir.dy * rng.cgFloat(in: 0...(baseWidth * 0.38)))
         let tipJitter = rng.cgFloat(in: -wobbleAmp...wobbleAmp)
-        let tip = NSPoint(x: lastPt.x + normal.dx * tipJitter, y: lastPt.y + normal.dy * tipJitter)
+        let nose = NSPoint(
+            x: lastPt.x + normal.dx * tipJitter - dir.dx * rng.cgFloat(in: 0...(baseWidth * 0.25)),
+            y: lastPt.y + normal.dy * tipJitter - dir.dy * rng.cgFloat(in: 0...(baseWidth * 0.25)))
 
-        func drawHeadStroke(from base: NSPoint, bow: CGFloat, width: CGFloat) {
-            let mid = NSPoint(
-                x: (base.x + tip.x) / 2 + normal.dx * bow - dir.dx * baseWidth * 0.5,
-                y: (base.y + tip.y) / 2 + normal.dy * bow - dir.dy * baseWidth * 0.5)
+        func drawHeadArc(color strokeColor: NSColor, width: CGFloat) {
+            let topControl = NSPoint(
+                x: leftBase.x + dir.dx * headLen * 0.62 + normal.dx * (spread * 0.16 + wobbleAmp * 0.18),
+                y: leftBase.y + dir.dy * headLen * 0.62 + normal.dy * (spread * 0.16 + wobbleAmp * 0.18))
+            let noseControlTop = NSPoint(
+                x: nose.x - dir.dx * headLen * 0.10 + normal.dx * (spread * 0.20 + wobbleAmp * 0.16),
+                y: nose.y - dir.dy * headLen * 0.10 + normal.dy * (spread * 0.20 + wobbleAmp * 0.16))
+            let noseControlBottom = NSPoint(
+                x: nose.x - dir.dx * headLen * 0.10 - normal.dx * (spread * 0.18 + wobbleAmp * 0.14),
+                y: nose.y - dir.dy * headLen * 0.10 - normal.dy * (spread * 0.18 + wobbleAmp * 0.14))
+            let bottomControl = NSPoint(
+                x: rightBase.x + dir.dx * headLen * 0.56 - normal.dx * (spread * 0.12 + wobbleAmp * 0.2),
+                y: rightBase.y + dir.dy * headLen * 0.56 - normal.dy * (spread * 0.12 + wobbleAmp * 0.2))
             let path = NSBezierPath()
             path.lineWidth = width
             path.lineCapStyle = .round
             path.lineJoinStyle = .round
-            path.move(to: base)
-            path.curve(to: tip, controlPoint1: mid, controlPoint2: mid)
+            path.move(to: leftBase)
+            path.curve(to: nose, controlPoint1: topControl, controlPoint2: noseControlTop)
+            path.curve(to: rightBase, controlPoint1: noseControlBottom, controlPoint2: bottomControl)
+            strokeColor.setStroke()
             path.stroke()
         }
 
         if let oc = outlineColor {
-            oc.setStroke()
-            drawHeadStroke(from: leftBase, bow: wobbleAmp * 0.6, width: baseWidth * 0.98 + 6)
-            drawHeadStroke(from: rightBase, bow: -wobbleAmp * 0.45, width: baseWidth * 0.88 + 6)
+            drawHeadArc(color: oc, width: baseWidth * 0.96 + 6)
         }
-        color.setStroke()
-        drawHeadStroke(from: leftBase, bow: wobbleAmp * 0.6, width: baseWidth * 0.98)
-        drawHeadStroke(from: rightBase, bow: -wobbleAmp * 0.45, width: baseWidth * 0.88)
+        drawHeadArc(color: color, width: baseWidth * 0.96)
     }
 
     /// Tiny deterministic PRNG (xorshift32) so sketchy arrows look the same

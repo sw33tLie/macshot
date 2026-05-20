@@ -576,9 +576,9 @@ class ToolOptionsRowView: NSView {
                 shaft.lineJoinStyle = .round
                 shaft.move(to: NSPoint(x: from.x, y: mid - 0.5))
                 shaft.curve(
-                    to: NSPoint(x: to.x - 9, y: mid + 0.5),
-                    controlPoint1: NSPoint(x: from.x + 5, y: mid - 2.5),
-                    controlPoint2: NSPoint(x: to.x - 13, y: mid + 2.5))
+                    to: NSPoint(x: to.x - 7.5, y: mid + 0.35),
+                    controlPoint1: NSPoint(x: from.x + 5, y: mid - 1.8),
+                    controlPoint2: NSPoint(x: to.x - 12, y: mid + 1.8))
                 shaft.stroke()
                 let pressure = NSBezierPath()
                 pressure.lineWidth = 1.0
@@ -590,10 +590,15 @@ class ToolOptionsRowView: NSView {
                 head.lineWidth = 1.6
                 head.lineCapStyle = .round
                 head.lineJoinStyle = .round
-                head.move(to: NSPoint(x: to.x - 6, y: mid + 4))
-                head.line(to: to)
-                head.move(to: NSPoint(x: to.x - 7, y: mid - 3.5))
-                head.line(to: to)
+                head.move(to: NSPoint(x: to.x - 7.0, y: mid + 4))
+                head.curve(
+                    to: NSPoint(x: to.x - 0.8, y: mid + 0.35),
+                    controlPoint1: NSPoint(x: to.x - 1.8, y: mid + 4.1),
+                    controlPoint2: NSPoint(x: to.x + 0.2, y: mid + 2.0))
+                head.curve(
+                    to: NSPoint(x: to.x - 7.5, y: mid - 3.7),
+                    controlPoint1: NSPoint(x: to.x + 0.4, y: mid - 1.8),
+                    controlPoint2: NSPoint(x: to.x - 2.9, y: mid - 4.0))
                 head.stroke()
             }
             return true
