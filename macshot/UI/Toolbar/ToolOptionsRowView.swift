@@ -569,24 +569,31 @@ class ToolOptionsRowView: NSView {
                 head.close()
                 head.fill()
             case .sketchy:
-                // Wavy shaft + open chevron, no fill — communicates "hand-drawn"
+                // Wobbly shaft with a separated open head.
                 let shaft = NSBezierPath()
-                shaft.lineWidth = 1.5
+                shaft.lineWidth = 1.6
                 shaft.lineCapStyle = .round
                 shaft.lineJoinStyle = .round
-                shaft.move(to: from)
+                shaft.move(to: NSPoint(x: from.x, y: mid - 0.5))
                 shaft.curve(
-                    to: NSPoint(x: to.x - 4, y: mid),
-                    controlPoint1: NSPoint(x: from.x + 5, y: mid - 2),
-                    controlPoint2: NSPoint(x: to.x - 9, y: mid + 2))
+                    to: NSPoint(x: to.x - 9, y: mid + 0.5),
+                    controlPoint1: NSPoint(x: from.x + 5, y: mid - 2.5),
+                    controlPoint2: NSPoint(x: to.x - 13, y: mid + 2.5))
                 shaft.stroke()
+                let pressure = NSBezierPath()
+                pressure.lineWidth = 1.0
+                pressure.lineCapStyle = .round
+                pressure.move(to: NSPoint(x: from.x + 8, y: mid - 0.9))
+                pressure.line(to: NSPoint(x: from.x + 13, y: mid + 0.2))
+                pressure.stroke()
                 let head = NSBezierPath()
-                head.lineWidth = 1.5
+                head.lineWidth = 1.6
                 head.lineCapStyle = .round
                 head.lineJoinStyle = .round
-                head.move(to: NSPoint(x: to.x - 5, y: mid + 4))
+                head.move(to: NSPoint(x: to.x - 6, y: mid + 4))
                 head.line(to: to)
-                head.line(to: NSPoint(x: to.x - 6, y: mid - 3))
+                head.move(to: NSPoint(x: to.x - 7, y: mid - 3.5))
+                head.line(to: to)
                 head.stroke()
             }
             return true
