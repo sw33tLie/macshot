@@ -189,6 +189,7 @@
 "Launch at login" = "Iniciar ao arrancar";
 "Show snap alignment guides" = "Mostrar guias de alinhamento";
 "Capture mouse cursor in screenshot" = "Capturar cursor do rato na captura de ecra";
+"Double-click selection to copy" = "Duplo clique na selecao para copiar";
 "Use window title in saved filename" = "Usar titulo da janela no nome do ficheiro";
 "Hide menu bar icon" = "Ocultar icone da barra de menus";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Os atalhos continuam a funcionar. Para mostrar o icone novamente, reinicie o macshot.";
@@ -200,6 +201,11 @@
 "  Multiple previews:" = "  Varias pre-visualizacoes:";
 "Stack (keep all)" = "Empilhar (manter todas)";
 "Replace (show only latest)" = "Substituir (mostrar apenas a mais recente)";
+"  Position:" = "  Posicao:";
+"Menu Bar Order" = "Ordem da barra de menus";
+"Choose the order of capture actions in the macshot menu bar menu." = "Escolha a ordem das acoes de captura no menu da barra de menus do macshot.";
+"Move up" = "Mover para cima";
+"Move down" = "Mover para baixo";
 "Output" = "Saida";
 "Image format:" = "Formato de imagem:";
 "Quality:" = "Qualidade:";
@@ -438,6 +444,7 @@
 "Webcam Size Small" = "Pequeno";
 "Webcam Size Medium" = "Medio";
 "Webcam Size Large" = "Grande";
+"Webcam Size Extra Large" = "Muito grande";
 "Circle" = "Circulo";
 "Rounded Rectangle" = "Retangulo Arredondado";
 "Cam pos:" = "Pos. cam.:";

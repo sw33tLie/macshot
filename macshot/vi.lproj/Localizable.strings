@@ -189,9 +189,14 @@
 "Launch at login" = "Khởi chạy khi đăng nhập";
 "Show snap alignment guides" = "Hiển thị đường căn chỉnh bắt dính";
 "Capture mouse cursor in screenshot" = "Chụp con trỏ chuột trong ảnh";
+"Double-click selection to copy" = "Nhấp đúp vào vùng chọn để sao chép";
 "Use window title in saved filename" = "Dùng tiêu đề cửa sổ trong tên tệp";
 "Hide menu bar icon" = "Ẩn biểu tượng thanh menu";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Phím tắt vẫn hoạt động. Để hiện lại biểu tượng, hãy khởi chạy lại macshot.";
+"Menu Bar Order" = "Thứ tự thanh menu";
+"Choose the order of capture actions in the macshot menu bar menu." = "Chọn thứ tự các hành động chụp trong menu thanh menu của macshot.";
+"Move up" = "Di chuyển lên";
+"Move down" = "Di chuyển xuống";
 "Check for updates automatically" = "Tự động kiểm tra cập nhật";
 "Check for beta updates" = "Kiểm tra bản cập nhật beta";
 "Thumbnail" = "Ảnh thu nhỏ";
@@ -438,6 +443,7 @@
 "Webcam Size Small" = "Nhỏ";
 "Webcam Size Medium" = "Trung bình";
 "Webcam Size Large" = "Lớn";
+"Webcam Size Extra Large" = "Rất lớn";
 "Circle" = "Hình tròn";
 "Rounded Rectangle" = "Hình chữ nhật bo góc";
 "Cam pos:" = "Vị trí cam:";
@@ -486,6 +492,7 @@
 "Configure S3 in Settings" = "Cấu hình S3 trong Cài đặt";
 "Sign in to Google Drive in Settings" = "Đăng nhập Google Drive trong Cài đặt";
 "Position:" = "Vị trí:";
+"  Position:" = "  Vị trí:";
 "Size:" = "Kích thước:";
 "Shape:" = "Hình dạng:";
 

@@ -189,9 +189,14 @@
 "Launch at login" = "Buksan kapag nag-login";
 "Show snap alignment guides" = "Ipakita ang mga gabay sa pagkakahanay";
 "Capture mouse cursor in screenshot" = "Isama ang cursor ng mouse sa screenshot";
+"Double-click selection to copy" = "I-double-click ang pinili upang kopyahin";
 "Use window title in saved filename" = "Gamitin ang pamagat ng window sa na-save na filename";
 "Hide menu bar icon" = "Itago ang icon sa menu bar";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Gumagana pa rin ang mga hotkey. Upang ipakita muli ang icon, i-restart ang macshot.";
+"Menu Bar Order" = "Pagkakasunod-sunod ng Menu Bar";
+"Choose the order of capture actions in the macshot menu bar menu." = "Piliin ang pagkakasunod-sunod ng mga aksyon sa pagkuha sa menu ng menu bar ng macshot.";
+"Move up" = "Ilipat pataas";
+"Move down" = "Ilipat pababa";
 "Check for updates automatically" = "Awtomatikong tingnan ang mga update";
 "Check for beta updates" = "Tingnan ang mga beta update";
 "Thumbnail" = "Thumbnail";
@@ -438,6 +443,7 @@
 "Webcam Size Small" = "Maliit";
 "Webcam Size Medium" = "Katamtaman";
 "Webcam Size Large" = "Malaki";
+"Webcam Size Extra Large" = "Napakalaki";
 "Circle" = "Bilog";
 "Rounded Rectangle" = "Bilugang Parihaba";
 "Cam pos:" = "Pos. ng cam:";
@@ -488,6 +494,7 @@
 "Configure S3 in Settings" = "I-configure ang S3 sa Mga Setting";
 "Sign in to Google Drive in Settings" = "Mag-sign in sa Google Drive sa Mga Setting";
 "Position:" = "Posisyon:";
+"  Position:" = "  Posisyon:";
 "Size:" = "Laki:";
 "Shape:" = "Hugis:";
 

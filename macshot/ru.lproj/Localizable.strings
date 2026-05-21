@@ -111,6 +111,10 @@
 "Translate" = "Перевести";
 "Auto-Redact sensitive data" = "Авто-скрытие конфиденциальных данных";
 "Move Selection" = "Переместить выделение";
+"Move up" = "Переместить вверх";
+"Move down" = "Переместить вниз";
+"Menu Bar Order" = "Порядок в строке меню";
+"Choose the order of capture actions in the macshot menu bar menu." = "Выберите порядок действий захвата в меню macshot в строке меню.";
 
 /* Toolbar - Recording */
 "Start Recording" = "Начать запись";
@@ -189,6 +193,7 @@
 "Launch at login" = "Запускать при входе в систему";
 "Show snap alignment guides" = "Показывать направляющие привязки";
 "Capture mouse cursor in screenshot" = "Захватывать курсор мыши на снимке экрана";
+"Double-click selection to copy" = "Копировать двойным щелчком по выделению";
 "Use window title in saved filename" = "Использовать заголовок окна в имени файла";
 "Hide menu bar icon" = "Скрыть значок в строке меню";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Горячие клавиши по-прежнему работают. Чтобы вернуть значок, перезапустите macshot.";
@@ -438,6 +443,7 @@
 "Webcam Size Small" = "Маленький";
 "Webcam Size Medium" = "Средний";
 "Webcam Size Large" = "Большой";
+"Webcam Size Extra Large" = "Очень большой";
 "Circle" = "Круг";
 "Rounded Rectangle" = "Скруглённый прямоугольник";
 "Cam pos:" = "Поз. камеры:";
@@ -486,6 +492,7 @@
 "Configure S3 in Settings" = "Настройте S3 в Настройках";
 "Sign in to Google Drive in Settings" = "Войдите в Google Drive в Настройках";
 "Position:" = "Позиция:";
+"  Position:" = "  Позиция:";
 "Size:" = "Размер:";
 "Shape:" = "Форма:";
 

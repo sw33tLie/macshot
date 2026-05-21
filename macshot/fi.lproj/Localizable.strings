@@ -189,6 +189,7 @@
 "Launch at login" = "Kaynnista kirjautumisen yhteydessa";
 "Show snap alignment guides" = "Nayta kohdistusoppaat";
 "Capture mouse cursor in screenshot" = "Kaappaa hiiren osoitin kuvakaappaukseen";
+"Double-click selection to copy" = "Kopioi kaksoisnapsauttamalla valintaa";
 "Use window title in saved filename" = "Kayta ikkunan otsikkoa tiedostonimessa";
 "Hide menu bar icon" = "Piilota valikkopalkin kuvake";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Pikanappaimet toimivat edelleen. Nayta kuvake uudelleen kaynnistamalla macshot.";
@@ -239,6 +240,10 @@
 "Annotation Tools" = "Merkintasotyokalut";
 "Hidden tools are removed from the bottom toolbar." = "Piilotetut tyokalut poistetaan alapalkilta.";
 "Capture Actions" = "Kaappaustoiminnot";
+"Menu Bar Order" = "Valikkopalkin j\U00E4rjestys";
+"Choose the order of capture actions in the macshot menu bar menu." = "Valitse kaappaustoimintojen j\U00E4rjestys macshot-valikkopalkkivalikossa.";
+"Move up" = "Siirr\U00E4 yl\U00F6s";
+"Move down" = "Siirr\U00E4 alas";
 "Bottom Toolbar Actions" = "Alapalkin toiminnot";
 "Hidden actions are removed from the bottom toolbar." = "Piilotetut toiminnot poistetaan alapalkilta.";
 "Editor Actions" = "Editorin toiminnot";
@@ -438,11 +443,13 @@
 "Webcam Size Small" = "Pieni";
 "Webcam Size Medium" = "Keskitaso";
 "Webcam Size Large" = "Suuri";
+"Webcam Size Extra Large" = "Erittain suuri";
 "Circle" = "Ympyra";
 "Rounded Rectangle" = "Pyoristetty suorakulmio";
 "Cam pos:" = "Kameran sijainti:";
 "Cam size:" = "Kameran koko:";
 "Cam shape:" = "Kameran muoto:";
+"  Position:" = "  Sijainti:";
 
 /* New Strings */
 "Settings..." = "Asetukset...";

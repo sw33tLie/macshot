@@ -189,6 +189,7 @@
 "Launch at login" = "Indítás bejelentkezéskor";
 "Show snap alignment guides" = "Illesztési segédvonalak megjelenítése";
 "Capture mouse cursor in screenshot" = "Egérmutató rögzítése a képernyőképen";
+"Double-click selection to copy" = "Dupla kattintás a kijelölésre a másoláshoz";
 "Use window title in saved filename" = "Ablakcím használata a mentett fájlnévben";
 "Hide menu bar icon" = "Menüsor ikon elrejtése";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "A gyorsbillentyűk továbbra is működnek. Az ikon újbóli megjelenítéséhez indítsd újra a macshot-ot.";
@@ -198,8 +199,13 @@
 "  Dismiss after:" = "  Eltüntetés ennyi idő után:";
 "seconds before auto-dismiss (0 = never)" = "másodperc az automatikus eltüntetés előtt (0 = soha)";
 "  Multiple previews:" = "  Több előnézet:";
+"  Position:" = "  Pozíció:";
 "Stack (keep all)" = "Halmozás (összes megtartása)";
 "Replace (show only latest)" = "Csere (csak a legutolsó megjelenítése)";
+"Menu Bar Order" = "Menüsor sorrendje";
+"Choose the order of capture actions in the macshot menu bar menu." = "Válaszd ki a rögzítési műveletek sorrendjét a macshot menüsorának menüjében.";
+"Move up" = "Mozgatás felfelé";
+"Move down" = "Mozgatás lefelé";
 "Output" = "Kimenet";
 "Image format:" = "Képformátum:";
 "Quality:" = "Minőség:";
@@ -438,6 +444,7 @@
 "Webcam Size Small" = "Kicsi";
 "Webcam Size Medium" = "Közepes";
 "Webcam Size Large" = "Nagy";
+"Webcam Size Extra Large" = "Nagyon nagy";
 "Circle" = "Kör";
 "Rounded Rectangle" = "Lekerekített téglalap";
 "Cam pos:" = "Kam. poz.:";

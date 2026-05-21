@@ -189,6 +189,7 @@
 "Launch at login" = "உள்நுழையும்போது தொடங்கு";
 "Show snap alignment guides" = "ஒட்டு சீரமைப்பு வழிகாட்டிகளைக் காட்டு";
 "Capture mouse cursor in screenshot" = "திரைப்பிடிப்பில் சுட்டியைப் பிடி";
+"Double-click selection to copy" = "நகலெடுக்க தேர்வில் இருமுறை கிளிக் செய்க";
 "Use window title in saved filename" = "சேமிக்கும் கோப்புப் பெயரில் சாளரத் தலைப்பைப் பயன்படுத்து";
 "Hide menu bar icon" = "பட்டிப்பட்டை ஐகானை மறை";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "விரைவு விசைகள் செயல்படும். ஐகானை மீண்டும் காட்ட, macshot-ஐ மறுதொடக்கம் செய்யுங்கள்.";
@@ -198,8 +199,13 @@
 "  Dismiss after:" = "  பிறகு மறை:";
 "seconds before auto-dismiss (0 = never)" = "தானாக மறைவதற்கு முன் வினாடிகள் (0 = ஒருபோதும் இல்லை)";
 "  Multiple previews:" = "  பல முன்னோட்டங்கள்:";
+"  Position:" = "  நிலை:";
 "Stack (keep all)" = "அடுக்கு (அனைத்தையும் வை)";
 "Replace (show only latest)" = "மாற்று (சமீபத்தியதை மட்டும் காட்டு)";
+"Menu Bar Order" = "மெனு பட்டி வரிசை";
+"Choose the order of capture actions in the macshot menu bar menu." = "macshot மெனு பட்டி மெனுவில் படமெடுப்பு செயல்களின் வரிசையைத் தேர்வு செய்க.";
+"Move up" = "மேலே நகர்த்து";
+"Move down" = "கீழே நகர்த்து";
 "Output" = "வெளியீடு";
 "Image format:" = "பட வடிவம்:";
 "Quality:" = "தரம்:";
@@ -438,6 +444,7 @@
 "Webcam Size Small" = "சிறியது";
 "Webcam Size Medium" = "நடுத்தரம்";
 "Webcam Size Large" = "பெரியது";
+"Webcam Size Extra Large" = "மிகப் பெரியது";
 "Circle" = "வட்டம்";
 "Rounded Rectangle" = "வட்டமான செவ்வகம்";
 "Cam pos:" = "கேம் நிலை:";

@@ -111,6 +111,10 @@
 "Translate" = "Prevedi";
 "Auto-Redact sensitive data" = "Automatski cenzuriraj osjetljive podatke";
 "Move Selection" = "Pomakni odabir";
+"Move up" = "Pomakni gore";
+"Move down" = "Pomakni dolje";
+"Menu Bar Order" = "Redoslijed u traci izbornika";
+"Choose the order of capture actions in the macshot menu bar menu." = "Odaberite redoslijed radnji snimanja u izborniku macshot u traci izbornika.";
 
 /* Toolbar - Recording */
 "Start Recording" = "Pocni snimanje";
@@ -189,6 +193,7 @@
 "Launch at login" = "Pokreni pri prijavi";
 "Show snap alignment guides" = "Prikazi vodilice za poravnanje";
 "Capture mouse cursor in screenshot" = "Snimi kursor misa na snimci zaslona";
+"Double-click selection to copy" = "Kopiraj dvostrukim klikom na odabir";
 "Use window title in saved filename" = "Koristi naslov prozora u nazivu datoteke";
 "Hide menu bar icon" = "Sakrij ikonu u traci izbornika";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Tipkovni precaci i dalje rade. Za ponovni prikaz ikone ponovno pokrenite macshot.";
@@ -438,6 +443,7 @@
 "Webcam Size Small" = "Malo";
 "Webcam Size Medium" = "Srednje";
 "Webcam Size Large" = "Veliko";
+"Webcam Size Extra Large" = "Izuzetno veliko";
 "Circle" = "Krug";
 "Rounded Rectangle" = "Zaobljeni pravokutnik";
 "Cam pos:" = "Poz. kamere:";
@@ -486,6 +492,7 @@
 "Configure S3 in Settings" = "Konfigurirajte S3 u Postavkama";
 "Sign in to Google Drive in Settings" = "Prijavite se na Google Drive u Postavkama";
 "Position:" = "Pozicija:";
+"  Position:" = "  Pozicija:";
 "Size:" = "Velicina:";
 "Shape:" = "Oblik:";
 

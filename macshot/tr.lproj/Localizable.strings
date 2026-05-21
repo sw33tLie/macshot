@@ -189,6 +189,7 @@
 "Launch at login" = "Oturum açılışında başlat";
 "Show snap alignment guides" = "Hizalama kılavuzlarını göster";
 "Capture mouse cursor in screenshot" = "Ekran görüntüsünde fare imlecini yakala";
+"Double-click selection to copy" = "Kopyalamak için seçime çift tıkla";
 "Use window title in saved filename" = "Kaydedilen dosya adında pencere başlığını kullan";
 "Hide menu bar icon" = "Menü çubuğu simgesini gizle";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Kısayol tuşları çalışmaya devam eder. Simgeyi tekrar göstermek için macshot'u yeniden başlatın.";
@@ -198,8 +199,13 @@
 "  Dismiss after:" = "  Kapatma süresi:";
 "seconds before auto-dismiss (0 = never)" = "saniye sonra otomatik kapat (0 = asla)";
 "  Multiple previews:" = "  Birden fazla önizleme:";
+"  Position:" = "  Konum:";
 "Stack (keep all)" = "Yığınla (tümünü tut)";
 "Replace (show only latest)" = "Değiştir (yalnızca son)";
+"Menu Bar Order" = "Menü Çubuğu Sırası";
+"Choose the order of capture actions in the macshot menu bar menu." = "macshot menü çubuğu menüsündeki yakalama eylemlerinin sırasını seçin.";
+"Move up" = "Yukarı taşı";
+"Move down" = "Aşağı taşı";
 "Output" = "Çıktı";
 "Image format:" = "Görsel biçimi:";
 "Quality:" = "Kalite:";
@@ -438,6 +444,7 @@
 "Webcam Size Small" = "Küçük";
 "Webcam Size Medium" = "Orta";
 "Webcam Size Large" = "Büyük";
+"Webcam Size Extra Large" = "Çok Büyük";
 "Circle" = "Daire";
 "Rounded Rectangle" = "Yuvarlatılmış Dikdörtgen";
 "Cam pos:" = "Kam. konum:";

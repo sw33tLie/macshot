@@ -111,6 +111,10 @@
 "Translate" = "Превод";
 "Auto-Redact sensitive data" = "Авто-заличаване на чувствителни данни";
 "Move Selection" = "Преместване на селекцията";
+"Move up" = "Преместване нагоре";
+"Move down" = "Преместване надолу";
+"Menu Bar Order" = "Ред в лентата с менюта";
+"Choose the order of capture actions in the macshot menu bar menu." = "Изберете реда на действията за заснемане в менюто на macshot в лентата с менюта.";
 
 /* Toolbar - Recording */
 "Start Recording" = "Начало на записа";
@@ -189,6 +193,7 @@
 "Launch at login" = "Стартиране при вход";
 "Show snap alignment guides" = "Показване на водачи за подравняване";
 "Capture mouse cursor in screenshot" = "Заснемане на курсора в екранната снимка";
+"Double-click selection to copy" = "Копиране с двойно щракване върху селекцията";
 "Use window title in saved filename" = "Използване на заглавието на прозореца в името на файла";
 "Hide menu bar icon" = "Скриване на иконата в лентата с менюта";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Бързите клавиши продължават да работят. За да покажете иконата отново, рестартирайте macshot.";
@@ -438,6 +443,7 @@
 "Webcam Size Small" = "Малък";
 "Webcam Size Medium" = "Среден";
 "Webcam Size Large" = "Голям";
+"Webcam Size Extra Large" = "Изключително голям";
 "Circle" = "Кръг";
 "Rounded Rectangle" = "Заоблен правоъгълник";
 "Cam pos:" = "Поз. камера:";
@@ -486,6 +492,7 @@
 "Configure S3 in Settings" = "Конфигурирайте S3 в Настройки";
 "Sign in to Google Drive in Settings" = "Влезте в Google Drive от Настройки";
 "Position:" = "Позиция:";
+"  Position:" = "  Позиция:";
 "Size:" = "Размер:";
 "Shape:" = "Форма:";
 

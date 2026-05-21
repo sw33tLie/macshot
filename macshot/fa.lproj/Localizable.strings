@@ -189,6 +189,7 @@
 "Launch at login" = "اجرا هنگام ورود";
 "Show snap alignment guides" = "نمایش خطوط راهنمای تراز";
 "Capture mouse cursor in screenshot" = "ضبط نشانگر موس در تصویر صفحه";
+"Double-click selection to copy" = "دوبار کلیک روی انتخاب برای کپی";
 "Use window title in saved filename" = "استفاده از عنوان پنجره در نام فایل ذخیره‌شده";
 "Hide menu bar icon" = "پنهان کردن آیکون نوار منو";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "کلیدهای میانبر همچنان کار می‌کنند. برای نمایش مجدد آیکون، macshot را دوباره اجرا کنید.";
@@ -198,8 +199,13 @@
 "  Dismiss after:" = "  بستن بعد از:";
 "seconds before auto-dismiss (0 = never)" = "ثانیه قبل از بستن خودکار (0 = هرگز)";
 "  Multiple previews:" = "  پیش‌نمایش‌های متعدد:";
+"  Position:" = "  موقعیت:";
 "Stack (keep all)" = "روی هم (نگه‌داشتن همه)";
 "Replace (show only latest)" = "جایگزینی (فقط نمایش آخرین)";
+"Menu Bar Order" = "ترتیب نوار منو";
+"Choose the order of capture actions in the macshot menu bar menu." = "ترتیب اقدامات ضبط را در منوی نوار منوی macshot انتخاب کنید.";
+"Move up" = "انتقال به بالا";
+"Move down" = "انتقال به پایین";
 "Output" = "خروجی";
 "Image format:" = "فرمت تصویر:";
 "Quality:" = "کیفیت:";
@@ -438,6 +444,7 @@
 "Webcam Size Small" = "کوچک";
 "Webcam Size Medium" = "متوسط";
 "Webcam Size Large" = "بزرگ";
+"Webcam Size Extra Large" = "خیلی بزرگ";
 "Circle" = "دایره";
 "Rounded Rectangle" = "مستطیل گردشده";
 "Cam pos:" = "موقعیت دوربین:";

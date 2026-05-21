@@ -111,6 +111,10 @@
 "Translate" = "Перекласти";
 "Auto-Redact sensitive data" = "Автоприховання конфіденційних даних";
 "Move Selection" = "Перемістити виділення";
+"Move up" = "Перемістити вгору";
+"Move down" = "Перемістити вниз";
+"Menu Bar Order" = "Порядок у рядку меню";
+"Choose the order of capture actions in the macshot menu bar menu." = "Виберіть порядок дій захоплення в меню macshot у рядку меню.";
 
 /* Toolbar - Recording */
 "Start Recording" = "Почати запис";
@@ -189,6 +193,7 @@
 "Launch at login" = "Запускати при вході в систему";
 "Show snap alignment guides" = "Показувати напрямні вирівнювання";
 "Capture mouse cursor in screenshot" = "Захоплювати курсор миші на знімку екрана";
+"Double-click selection to copy" = "Копіювати подвійним клацанням по виділенню";
 "Use window title in saved filename" = "Використовувати заголовок вікна у назві файлу";
 "Hide menu bar icon" = "Сховати іконку в смузі меню";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Гарячі клавіші продовжують працювати. Щоб знову показати іконку, перезапустіть macshot.";
@@ -438,6 +443,7 @@
 "Webcam Size Small" = "Малий";
 "Webcam Size Medium" = "Середній";
 "Webcam Size Large" = "Великий";
+"Webcam Size Extra Large" = "Дуже великий";
 "Circle" = "Коло";
 "Rounded Rectangle" = "Заокруглений прямокутник";
 "Cam pos:" = "Поз. камери:";
@@ -486,6 +492,7 @@
 "Configure S3 in Settings" = "Налаштуйте S3 у Налаштуваннях";
 "Sign in to Google Drive in Settings" = "Увійдіть до Google Drive у Налаштуваннях";
 "Position:" = "Позиція:";
+"  Position:" = "  Позиція:";
 "Size:" = "Розмір:";
 "Shape:" = "Форма:";
 

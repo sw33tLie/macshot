@@ -189,6 +189,7 @@
 "Launch at login" = "Start ved login";
 "Show snap alignment guides" = "Vis fastg\U00F8relses-hj\U00E6lpelinjer";
 "Capture mouse cursor in screenshot" = "Inkluder musemark\U00F8r i sk\U00E6rmbillede";
+"Double-click selection to copy" = "Dobbeltklik p\U00E5 markeringen for at kopiere";
 "Use window title in saved filename" = "Brug vinduets titel i gemt filnavn";
 "Hide menu bar icon" = "Skjul menulinjeikon";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Genvejstaster virker stadig. For at vise ikonet igen skal du genstarte macshot.";
@@ -239,6 +240,10 @@
 "Annotation Tools" = "Annotationsv\U00E6rkt\U00F8jer";
 "Hidden tools are removed from the bottom toolbar." = "Skjulte v\U00E6rkt\U00F8jer fjernes fra bundv\U00E6rkt\U00F8jslinjen.";
 "Capture Actions" = "Optagelseshandlinger";
+"Menu Bar Order" = "Menulinjens r\U00E6kkef\U00F8lge";
+"Choose the order of capture actions in the macshot menu bar menu." = "V\U00E6lg r\U00E6kkef\U00F8lgen af optagelseshandlinger i macshot-menulinjemenuen.";
+"Move up" = "Flyt op";
+"Move down" = "Flyt ned";
 "Bottom Toolbar Actions" = "Bundv\U00E6rkt\U00F8jslinjens handlinger";
 "Hidden actions are removed from the bottom toolbar." = "Skjulte handlinger fjernes fra bundv\U00E6rkt\U00F8jslinjen.";
 "Editor Actions" = "Redigeringshandlinger";
@@ -438,11 +443,13 @@
 "Webcam Size Small" = "Lille";
 "Webcam Size Medium" = "Mellem";
 "Webcam Size Large" = "Stor";
+"Webcam Size Extra Large" = "Ekstra stor";
 "Circle" = "Cirkel";
 "Rounded Rectangle" = "Afrundet rektangel";
 "Cam pos:" = "Kam. pos.:";
 "Cam size:" = "Kam. str.:";
 "Cam shape:" = "Kam. form:";
+"  Position:" = "  Position:";
 
 /* New Strings */
 "Settings..." = "Indstillinger...";

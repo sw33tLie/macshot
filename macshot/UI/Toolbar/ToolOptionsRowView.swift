@@ -551,17 +551,17 @@ class ToolOptionsRowView: NSView {
                 path.line(to: NSPoint(x: to.x - 5, y: mid - 3))
                 path.stroke()
             case .tail:
+                // Filled circle at the start matches what the renderer actually draws.
+                let tailR: CGFloat = 2.6
+                let tailCircle = NSBezierPath(ovalIn: NSRect(
+                    x: from.x - tailR, y: mid - tailR,
+                    width: tailR * 2, height: tailR * 2))
+                tailCircle.fill()
                 let path = NSBezierPath()
                 path.lineWidth = 1.5
-                path.move(to: from)
+                path.move(to: NSPoint(x: from.x + tailR, y: mid))
                 path.line(to: NSPoint(x: to.x - 4, y: mid))
                 path.stroke()
-                // Tail crossbar — taller so it's clearly a line, not a dot
-                let tail = NSBezierPath()
-                tail.lineWidth = 1.5
-                tail.move(to: NSPoint(x: from.x, y: mid + 5))
-                tail.line(to: NSPoint(x: from.x, y: mid - 5))
-                tail.stroke()
                 let head = NSBezierPath()
                 head.move(to: to)
                 head.line(to: NSPoint(x: to.x - 5, y: mid + 3))
@@ -569,37 +569,38 @@ class ToolOptionsRowView: NSView {
                 head.close()
                 head.fill()
             case .sketchy:
-                // Wobbly shaft with a separated open head.
+                // Wobbly shaft + open chevron head with a slight hand-drawn bow.
+                let nose = NSPoint(x: to.x - 1, y: mid)
                 let shaft = NSBezierPath()
                 shaft.lineWidth = 1.6
                 shaft.lineCapStyle = .round
                 shaft.lineJoinStyle = .round
                 shaft.move(to: NSPoint(x: from.x, y: mid - 0.5))
                 shaft.curve(
-                    to: NSPoint(x: to.x - 7.5, y: mid + 0.35),
-                    controlPoint1: NSPoint(x: from.x + 5, y: mid - 1.8),
-                    controlPoint2: NSPoint(x: to.x - 12, y: mid + 1.8))
+                    to: NSPoint(x: to.x - 6.5, y: mid + 0.3),
+                    controlPoint1: NSPoint(x: from.x + 5, y: mid - 1.6),
+                    controlPoint2: NSPoint(x: to.x - 11, y: mid + 1.6))
                 shaft.stroke()
-                let pressure = NSBezierPath()
-                pressure.lineWidth = 1.0
-                pressure.lineCapStyle = .round
-                pressure.move(to: NSPoint(x: from.x + 8, y: mid - 0.9))
-                pressure.line(to: NSPoint(x: from.x + 13, y: mid + 0.2))
-                pressure.stroke()
-                let head = NSBezierPath()
-                head.lineWidth = 1.6
-                head.lineCapStyle = .round
-                head.lineJoinStyle = .round
-                head.move(to: NSPoint(x: to.x - 7.0, y: mid + 4))
-                head.curve(
-                    to: NSPoint(x: to.x - 0.8, y: mid + 0.35),
-                    controlPoint1: NSPoint(x: to.x - 1.8, y: mid + 4.1),
-                    controlPoint2: NSPoint(x: to.x + 0.2, y: mid + 2.0))
-                head.curve(
-                    to: NSPoint(x: to.x - 7.5, y: mid - 3.7),
-                    controlPoint1: NSPoint(x: to.x + 0.4, y: mid - 1.8),
-                    controlPoint2: NSPoint(x: to.x - 2.9, y: mid - 4.0))
-                head.stroke()
+                // Upper chevron leg with a tiny outward bow.
+                let upper = NSBezierPath()
+                upper.lineWidth = 1.6
+                upper.lineCapStyle = .round
+                upper.move(to: nose)
+                upper.curve(
+                    to: NSPoint(x: to.x - 6.5, y: mid + 3.5),
+                    controlPoint1: NSPoint(x: to.x - 3.5, y: mid + 1.4),
+                    controlPoint2: NSPoint(x: to.x - 4.6, y: mid + 2.2))
+                upper.stroke()
+                // Lower chevron leg with a slightly different bow.
+                let lower = NSBezierPath()
+                lower.lineWidth = 1.6
+                lower.lineCapStyle = .round
+                lower.move(to: nose)
+                lower.curve(
+                    to: NSPoint(x: to.x - 6.5, y: mid - 3.5),
+                    controlPoint1: NSPoint(x: to.x - 3.5, y: mid - 1.6),
+                    controlPoint2: NSPoint(x: to.x - 4.4, y: mid - 2.4))
+                lower.stroke()
             }
             return true
         }

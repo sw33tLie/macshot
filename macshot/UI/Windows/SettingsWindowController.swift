@@ -1351,7 +1351,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         webcamSizePopup = NSPopUpButton()
-        webcamSizePopup.addItems(withTitles: [L("Webcam Size Small"), L("Webcam Size Medium"), L("Webcam Size Large")])
+        webcamSizePopup.addItems(withTitles: [L("Webcam Size Small"), L("Webcam Size Medium"), L("Webcam Size Large"), L("Webcam Size Extra Large")])
         webcamSizePopup.target = self
         webcamSizePopup.action = #selector(webcamSizeChanged(_:))
         stack.addArrangedSubview(labeledRow(L("Size:"), controls: [webcamSizePopup]))
@@ -2205,6 +2205,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         case "small": webcamSizePopup.selectItem(at: 0)
         case "medium": webcamSizePopup.selectItem(at: 1)
         case "large": webcamSizePopup.selectItem(at: 2)
+        case "xlarge": webcamSizePopup.selectItem(at: 3)
         default: webcamSizePopup.selectItem(at: 1)
         }
 
@@ -2348,7 +2349,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     }
 
     @objc private func webcamSizeChanged(_ sender: NSPopUpButton) {
-        let values = ["small", "medium", "large"]
+        let values = ["small", "medium", "large", "xlarge"]
         UserDefaults.standard.set(values[sender.indexOfSelectedItem], forKey: "webcamSize")
     }
 

@@ -189,9 +189,14 @@
 "Launch at login" = "登入時啟動";
 "Show snap alignment guides" = "顯示對齊輔助線";
 "Capture mouse cursor in screenshot" = "在螢幕截圖中擷取滑鼠游標";
+"Double-click selection to copy" = "雙擊選取範圍以複製";
 "Use window title in saved filename" = "在儲存的檔案名稱中使用視窗標題";
 "Hide menu bar icon" = "隱藏選單列圖像";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "快捷鍵仍可使用。若要再次顯示圖像，請重新啟動 macshot。";
+"Menu Bar Order" = "選單列順序";
+"Choose the order of capture actions in the macshot menu bar menu." = "選擇 macshot 選單列選單中擷取動作的順序。";
+"Move up" = "上移";
+"Move down" = "下移";
 "Check for updates automatically" = "自動檢查更新";
 "Check for beta updates" = "檢查測試版更新";
 "Thumbnail" = "縮圖";
@@ -438,6 +443,7 @@
 "Webcam Size Small" = "小";
 "Webcam Size Medium" = "中";
 "Webcam Size Large" = "大";
+"Webcam Size Extra Large" = "特大";
 "Circle" = "圓形";
 "Rounded Rectangle" = "圓角矩形";
 "Cam pos:" = "攝影機位置：";
@@ -488,6 +494,7 @@
 "Configure S3 in Settings" = "在設定中設定 S3";
 "Sign in to Google Drive in Settings" = "在設定中登入 Google Drive";
 "Position:" = "位置：";
+"  Position:" = "  位置：";
 "Size:" = "大小：";
 "Shape:" = "形狀：";
 
