@@ -169,6 +169,11 @@ class OverlayView: NSView {
     private var spaceRepositioning: Bool = false  // Space held during drag to reposition
     private var spaceRepositionLast: NSPoint = .zero  // last mouse position when space reposition started
 
+    /// Snapshot of `undoStack.count` taken at the start of a fresh click in `selected` state.
+    /// Used by the "double-click to copy" feature to rewind annotations that the first click
+    /// (and any in-progress second click) added before triggering the confirm path.
+    private var doubleClickUndoBaseline: Int?
+
     // Annotations
     var annotations: [Annotation] = [] {
         didSet {
@@ -4689,6 +4694,17 @@ class OverlayView: NSView {
         commitSizeInputIfNeeded()
         commitZoomInputIfNeeded()
 
+        // Double-click to copy: when the setting is on, two fast clicks inside the
+        // selection confirm the capture. Annotations the first click added (and any
+        // in-progress second-click annotation) are rewound first via the undo stack
+        // so the copied image looks like nothing was drawn during the double-click.
+        if state == .selected
+            && (UserDefaults.standard.object(forKey: "doubleClickToCopy") as? Bool ?? true)
+            && handleDoubleClickToCopy(event: event, at: point)
+        {
+            return
+        }
+
         switch state {
         case .idle:
             // Check remote selection handles for cross-screen resize
@@ -5307,6 +5323,58 @@ class OverlayView: NSView {
         default:
             break
         }
+    }
+
+    /// Handle the "double-click to copy" feature. Called from `mouseDown` when the setting
+    /// is enabled and `state == .selected`. Returns true when the event was consumed.
+    ///
+    /// On the first click we snapshot the undo-stack depth. On the second click (clickCount >= 2)
+    /// inside the selection we rewind the stack to that snapshot — removing any annotation the
+    /// first click finished — cancel any in-progress drawing, then trigger confirm.
+    private func handleDoubleClickToCopy(event: NSEvent, at point: NSPoint) -> Bool {
+        // Defer to existing text/select double-click behavior when clicking directly on a
+        // text annotation — those paths already handle clickCount >= 2 (enter edit mode).
+        if currentTool == .text || currentTool == .select {
+            let hitText = annotations.reversed().first(where: {
+                $0.tool == .text && $0.hitTest(point: point)
+            })
+            if hitText != nil { return false }
+        }
+        // Don't intercept while a text editor is open — the user is typing, not double-clicking.
+        if textEditView != nil { return false }
+
+        if event.clickCount >= 2 {
+            guard pointIsInSelection(point) else {
+                // Outside selection: no drawing occurred — just confirm.
+                doubleClickUndoBaseline = nil
+                overlayDelegate?.overlayViewDidConfirm()
+                return true
+            }
+            // Cancel any in-progress annotation from this second click.
+            currentAnnotation = nil
+            // Rewind the undo stack to the baseline captured on the first click,
+            // popping the annotation(s) the first click finished.
+            if let baseline = doubleClickUndoBaseline {
+                while undoStack.count > baseline { undo() }
+            }
+            doubleClickUndoBaseline = nil
+            // Clear caches so the confirm renders without the popped annotations.
+            cachedCompositedImage = nil
+            cachedAnnotationLayer = nil
+            overlayDelegate?.overlayViewDidConfirm()
+            return true
+        }
+
+        // clickCount == 1: record the baseline so the next click (if it doubles up)
+        // knows how far to rewind. Only record when the click could plausibly create
+        // an annotation (inside selection, drawing tool). Otherwise leave it nil so
+        // a double-click outside still works without an unrelated baseline.
+        if pointIsInSelection(point) {
+            doubleClickUndoBaseline = undoStack.count
+        } else {
+            doubleClickUndoBaseline = nil
+        }
+        return false
     }
 
     private func finishSelection() {

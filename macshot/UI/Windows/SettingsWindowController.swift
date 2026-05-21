@@ -62,6 +62,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var historySizeStepper: NSStepper!
     private var snapGuidesCheckbox: NSButton!
     private var captureCursorCheckbox: NSButton!
+    private var doubleClickToCopyCheckbox: NSButton!
     private var filenameTemplateField: NSTextField!
     private var filenameTemplatePreview: NSTextField!
     private var recordingFilenameTemplateField: NSTextField!
@@ -527,6 +528,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         thumbnailCheckbox = NSButton(checkboxWithTitle: L("Show floating thumbnail after capture"), target: self, action: #selector(thumbnailChanged(_:)))
         snapGuidesCheckbox = NSButton(checkboxWithTitle: L("Show snap alignment guides"), target: self, action: #selector(snapGuidesChanged(_:)))
         captureCursorCheckbox = NSButton(checkboxWithTitle: L("Capture mouse cursor in screenshot"), target: self, action: #selector(captureCursorChanged(_:)))
+        doubleClickToCopyCheckbox = NSButton(checkboxWithTitle: L("Double-click selection to copy"), target: self, action: #selector(doubleClickToCopyChanged(_:)))
         filenameTemplateField = NSTextField()
         filenameTemplateField.placeholderString = FilenameFormatter.defaultTemplate
         filenameTemplateField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
@@ -597,6 +599,9 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
         stack.addArrangedSubview(indented(captureCursorCheckbox))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+
+        stack.addArrangedSubview(indented(doubleClickToCopyCheckbox))
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // ── Output ───────────────────────────────────────────
@@ -2118,6 +2123,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         snapGuidesCheckbox.state = snapGuides ? .on : .off
 
         captureCursorCheckbox.state = UserDefaults.standard.bool(forKey: "captureCursor") ? .on : .off
+        doubleClickToCopyCheckbox.state = (UserDefaults.standard.object(forKey: "doubleClickToCopy") as? Bool ?? true) ? .on : .off
         filenameTemplateField.stringValue = UserDefaults.standard.string(forKey: FilenameFormatter.userDefaultsKey) ?? FilenameFormatter.defaultTemplate
         updateFilenamePreview()
         recordingFilenameTemplateField.stringValue = UserDefaults.standard.string(forKey: FilenameFormatter.recordingUserDefaultsKey) ?? FilenameFormatter.defaultRecordingTemplate
@@ -2518,6 +2524,9 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     }
     @objc private func captureCursorChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "captureCursor")
+    }
+    @objc private func doubleClickToCopyChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: "doubleClickToCopy")
     }
     @objc private func filenameTemplateCommitted(_ sender: NSTextField) {
         let trimmed = sender.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
