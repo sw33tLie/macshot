@@ -426,12 +426,13 @@ extension OverlayView {
             objc_setAssociatedObject(posSeg, "handler", posHandler, .OBJC_ASSOCIATION_RETAIN)
 
             // Size
-            let sizeSeg = NSSegmentedControl(labels: ["S", "M", "L"], trackingMode: .selectOne, target: nil, action: nil)
+            let sizeSeg = NSSegmentedControl(labels: ["S", "M", "L", "XL"], trackingMode: .selectOne, target: nil, action: nil)
             let currentSize = UserDefaults.standard.string(forKey: "webcamSize") ?? "medium"
             switch currentSize {
             case "small": sizeSeg.selectedSegment = 0
             case "medium": sizeSeg.selectedSegment = 1
             case "large": sizeSeg.selectedSegment = 2
+            case "xlarge": sizeSeg.selectedSegment = 3
             default: sizeSeg.selectedSegment = 1
             }
 
@@ -439,7 +440,7 @@ extension OverlayView {
                 weak var overlayView: OverlayView?
                 init(overlayView: OverlayView?) { self.overlayView = overlayView; super.init() }
                 @objc func changed(_ sender: NSSegmentedControl) {
-                    let values = ["small", "medium", "large"]
+                    let values = ["small", "medium", "large", "xlarge"]
                     UserDefaults.standard.set(values[sender.selectedSegment], forKey: "webcamSize")
                     overlayView?.updateWebcamSetupPreview()
                 }

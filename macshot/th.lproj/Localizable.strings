@@ -189,9 +189,14 @@
 "Launch at login" = "เปิดเมื่อเข้าสู่ระบบ";
 "Show snap alignment guides" = "แสดงเส้นจัดแนว";
 "Capture mouse cursor in screenshot" = "จับภาพเคอร์เซอร์เมาส์ในภาพหน้าจอ";
+"Double-click selection to copy" = "ดับเบิลคลิกที่พื้นที่ที่เลือกเพื่อคัดลอก";
 "Use window title in saved filename" = "ใช้ชื่อหน้าต่างในชื่อไฟล์ที่บันทึก";
 "Hide menu bar icon" = "ซ่อนไอคอนแถบเมนู";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "ปุ่มลัดยังใช้งานได้ เปิด macshot ใหม่เพื่อแสดงไอคอนอีกครั้ง";
+"Menu Bar Order" = "ลำดับแถบเมนู";
+"Choose the order of capture actions in the macshot menu bar menu." = "เลือกลำดับของการดำเนินการจับภาพในเมนูแถบเมนูของ macshot";
+"Move up" = "เลื่อนขึ้น";
+"Move down" = "เลื่อนลง";
 "Check for updates automatically" = "ตรวจสอบอัปเดตอัตโนมัติ";
 "Check for beta updates" = "ตรวจสอบอัปเดตเบต้า";
 "Thumbnail" = "ภาพขนาดย่อ";
@@ -438,6 +443,7 @@
 "Webcam Size Small" = "เล็ก";
 "Webcam Size Medium" = "ปานกลาง";
 "Webcam Size Large" = "ใหญ่";
+"Webcam Size Extra Large" = "ใหญ่พิเศษ";
 "Circle" = "วงกลม";
 "Rounded Rectangle" = "สี่เหลี่ยมมุมมน";
 "Cam pos:" = "ตำแหน่งกล้อง:";
@@ -486,6 +492,7 @@
 "Configure S3 in Settings" = "ตั้งค่า S3 ในการตั้งค่า";
 "Sign in to Google Drive in Settings" = "ลงชื่อเข้าใช้ Google Drive ในการตั้งค่า";
 "Position:" = "ตำแหน่ง:";
+"  Position:" = "  ตำแหน่ง:";
 "Size:" = "ขนาด:";
 "Shape:" = "รูปร่าง:";
 

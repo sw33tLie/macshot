@@ -189,9 +189,14 @@
 "Launch at login" = "Jalankan saat masuk";
 "Show snap alignment guides" = "Tampilkan panduan perataan jepret";
 "Capture mouse cursor in screenshot" = "Tangkap kursor mouse di tangkapan layar";
+"Double-click selection to copy" = "Klik dua kali pilihan untuk menyalin";
 "Use window title in saved filename" = "Gunakan judul jendela di nama file tersimpan";
 "Hide menu bar icon" = "Sembunyikan ikon bilah menu";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Tombol pintas tetap berfungsi. Untuk menampilkan ikon kembali, jalankan ulang macshot.";
+"Menu Bar Order" = "Urutan Bilah Menu";
+"Choose the order of capture actions in the macshot menu bar menu." = "Pilih urutan tindakan tangkapan di menu bilah menu macshot.";
+"Move up" = "Pindah ke atas";
+"Move down" = "Pindah ke bawah";
 "Check for updates automatically" = "Periksa pembaruan secara otomatis";
 "Check for beta updates" = "Periksa pembaruan beta";
 "Thumbnail" = "Thumbnail";
@@ -438,6 +443,7 @@
 "Webcam Size Small" = "Kecil";
 "Webcam Size Medium" = "Sedang";
 "Webcam Size Large" = "Besar";
+"Webcam Size Extra Large" = "Sangat Besar";
 "Circle" = "Lingkaran";
 "Rounded Rectangle" = "Persegi Panjang Bulat";
 "Cam pos:" = "Pos. kam:";
@@ -486,6 +492,7 @@
 "Configure S3 in Settings" = "Konfigurasikan S3 di Pengaturan";
 "Sign in to Google Drive in Settings" = "Masuk ke Google Drive di Pengaturan";
 "Position:" = "Posisi:";
+"  Position:" = "  Posisi:";
 "Size:" = "Ukuran:";
 "Shape:" = "Bentuk:";
 

@@ -189,6 +189,7 @@
 "Launch at login" = "Porneste la autentificare";
 "Show snap alignment guides" = "Afiseaza ghidajele de aliniere";
 "Capture mouse cursor in screenshot" = "Captura cursorul mouse-ului in captura de ecran";
+"Double-click selection to copy" = "Dublu-clic pe selectie pentru a copia";
 "Use window title in saved filename" = "Foloseste titlul ferestrei in numele fisierului salvat";
 "Hide menu bar icon" = "Ascunde pictograma din bara de meniu";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Scurtaturile functioneaza in continuare. Pentru a afisa din nou pictograma, reporneste macshot.";
@@ -198,8 +199,13 @@
 "  Dismiss after:" = "  Inchide dupa:";
 "seconds before auto-dismiss (0 = never)" = "secunde inainte de inchidere automata (0 = niciodata)";
 "  Multiple previews:" = "  Previzualizari multiple:";
+"  Position:" = "  Pozitie:";
 "Stack (keep all)" = "Stiva (pastreaza toate)";
 "Replace (show only latest)" = "Inlocuieste (afiseaza doar ultima)";
+"Menu Bar Order" = "Ordinea barei de meniu";
+"Choose the order of capture actions in the macshot menu bar menu." = "Alege ordinea actiunilor de capturare in meniul barei de meniu macshot.";
+"Move up" = "Muta in sus";
+"Move down" = "Muta in jos";
 "Output" = "Iesire";
 "Image format:" = "Format imagine:";
 "Quality:" = "Calitate:";
@@ -438,6 +444,7 @@
 "Webcam Size Small" = "Mic";
 "Webcam Size Medium" = "Mediu";
 "Webcam Size Large" = "Mare";
+"Webcam Size Extra Large" = "Foarte mare";
 "Circle" = "Cerc";
 "Rounded Rectangle" = "Dreptunghi rotunjit";
 "Cam pos:" = "Poz. cam.:";

@@ -189,9 +189,14 @@
 "Launch at login" = "로그인 시 실행";
 "Show snap alignment guides" = "스냅 정렬 가이드 표시";
 "Capture mouse cursor in screenshot" = "스크린샷에 마우스 커서 포함";
+"Double-click selection to copy" = "선택 영역 더블 클릭으로 복사";
 "Use window title in saved filename" = "저장 파일명에 윈도우 제목 사용";
 "Hide menu bar icon" = "메뉴 막대 아이콘 숨기기";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "단축키는 계속 작동합니다. 아이콘을 다시 표시하려면 macshot을 재실행하세요.";
+"Menu Bar Order" = "메뉴 막대 순서";
+"Choose the order of capture actions in the macshot menu bar menu." = "macshot 메뉴 막대 메뉴에서 캡처 작업의 순서를 선택하세요.";
+"Move up" = "위로 이동";
+"Move down" = "아래로 이동";
 "Check for updates automatically" = "자동으로 업데이트 확인";
 "Check for beta updates" = "베타 업데이트 확인";
 "Thumbnail" = "썸네일";
@@ -438,6 +443,7 @@
 "Webcam Size Small" = "작게";
 "Webcam Size Medium" = "보통";
 "Webcam Size Large" = "크게";
+"Webcam Size Extra Large" = "아주 크게";
 "Circle" = "원형";
 "Rounded Rectangle" = "둥근 사각형";
 "Cam pos:" = "캠 위치:";
@@ -488,6 +494,7 @@
 "Configure S3 in Settings" = "설정에서 S3 구성";
 "Sign in to Google Drive in Settings" = "설정에서 Google Drive에 로그인";
 "Position:" = "위치:";
+"  Position:" = "  위치:";
 "Size:" = "크기:";
 "Shape:" = "모양:";
 

@@ -189,9 +189,14 @@
 "Launch at login" = "ログイン時に起動";
 "Show snap alignment guides" = "スナップ整列ガイドを表示";
 "Capture mouse cursor in screenshot" = "スクリーンショットにマウスカーソルを含める";
+"Double-click selection to copy" = "選択範囲をダブルクリックでコピー";
 "Use window title in saved filename" = "保存ファイル名にウインドウタイトルを使用";
 "Hide menu bar icon" = "メニューバーアイコンを隠す";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "ホットキーは引き続き使用できます。アイコンを再表示するには、macshot を再起動してください。";
+"Menu Bar Order" = "メニューバーの順序";
+"Choose the order of capture actions in the macshot menu bar menu." = "macshot メニューバーメニューでのキャプチャアクションの順序を選択します。";
+"Move up" = "上へ移動";
+"Move down" = "下へ移動";
 "Check for updates automatically" = "自動的にアップデートを確認";
 "Check for beta updates" = "ベータアップデートを確認";
 "Thumbnail" = "サムネイル";
@@ -438,6 +443,7 @@
 "Webcam Size Small" = "小";
 "Webcam Size Medium" = "中";
 "Webcam Size Large" = "大";
+"Webcam Size Extra Large" = "特大";
 "Circle" = "円形";
 "Rounded Rectangle" = "角丸四角形";
 "Cam pos:" = "カメラ位置:";
@@ -486,6 +492,7 @@
 "Configure S3 in Settings" = "設定で S3 を構成してください";
 "Sign in to Google Drive in Settings" = "設定で Google Drive にサインインしてください";
 "Position:" = "位置:";
+"  Position:" = "  位置:";
 "Size:" = "サイズ:";
 "Shape:" = "形状:";
 

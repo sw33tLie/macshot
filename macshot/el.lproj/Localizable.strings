@@ -189,6 +189,7 @@
 "Launch at login" = "Εκκίνηση κατά τη σύνδεση";
 "Show snap alignment guides" = "Εμφάνιση οδηγών ευθυγράμμισης κουμπώματος";
 "Capture mouse cursor in screenshot" = "Λήψη δρομέα ποντικιού στο στιγμιότυπο";
+"Double-click selection to copy" = "Διπλό κλικ στην επιλογή για αντιγραφή";
 "Use window title in saved filename" = "Χρήση τίτλου παραθύρου στο όνομα αρχείου";
 "Hide menu bar icon" = "Απόκρυψη εικονιδίου γραμμής μενού";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Τα πλήκτρα συντόμευσης λειτουργούν ακόμα. Για εμφάνιση του εικονιδίου, επανεκκινήστε το macshot.";
@@ -198,8 +199,13 @@
 "  Dismiss after:" = "  Απόκρυψη μετά από:";
 "seconds before auto-dismiss (0 = never)" = "δευτερόλεπτα πριν την αυτόματη απόκρυψη (0 = ποτέ)";
 "  Multiple previews:" = "  Πολλαπλές προεπισκοπήσεις:";
+"  Position:" = "  Θέση:";
 "Stack (keep all)" = "Στοίβαξη (διατήρηση όλων)";
 "Replace (show only latest)" = "Αντικατάσταση (εμφάνιση μόνο τελευταίου)";
+"Menu Bar Order" = "Σειρά γραμμής μενού";
+"Choose the order of capture actions in the macshot menu bar menu." = "Επιλέξτε τη σειρά των ενεργειών λήψης στο μενού της γραμμής μενού του macshot.";
+"Move up" = "Μετακίνηση πάνω";
+"Move down" = "Μετακίνηση κάτω";
 "Output" = "Έξοδος";
 "Image format:" = "Μορφή εικόνας:";
 "Quality:" = "Ποιότητα:";
@@ -438,6 +444,7 @@
 "Webcam Size Small" = "Μικρό";
 "Webcam Size Medium" = "Μεσαίο";
 "Webcam Size Large" = "Μεγάλο";
+"Webcam Size Extra Large" = "Πολύ μεγάλο";
 "Circle" = "Κύκλος";
 "Rounded Rectangle" = "Στρογγυλεμένο ορθογώνιο";
 "Cam pos:" = "Θέση κάμ.:";

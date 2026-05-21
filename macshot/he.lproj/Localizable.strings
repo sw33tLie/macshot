@@ -189,6 +189,7 @@
 "Launch at login" = "הפעל בהתחברות";
 "Show snap alignment guides" = "הצג קווי הצמדה";
 "Capture mouse cursor in screenshot" = "לכוד סמן עכבר בצילום מסך";
+"Double-click selection to copy" = "לחיצה כפולה על הבחירה להעתקה";
 "Use window title in saved filename" = "השתמש בכותרת חלון בשם הקובץ";
 "Hide menu bar icon" = "הסתר סמל שורת התפריטים";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "מקשי קיצור עדיין פועלים. להצגת הסמל שוב, הפעל מחדש את macshot.";
@@ -198,8 +199,13 @@
 "  Dismiss after:" = "  סגור אחרי:";
 "seconds before auto-dismiss (0 = never)" = "שניות לסגירה אוטומטית (0 = אף פעם)";
 "  Multiple previews:" = "  תצוגות מקדימות מרובות:";
+"  Position:" = "  מיקום:";
 "Stack (keep all)" = "ערום (שמור הכל)";
 "Replace (show only latest)" = "החלף (הצג רק אחרון)";
+"Menu Bar Order" = "סדר שורת התפריטים";
+"Choose the order of capture actions in the macshot menu bar menu." = "בחר את סדר פעולות הלכידה בתפריט שורת התפריטים של macshot.";
+"Move up" = "הזז למעלה";
+"Move down" = "הזז למטה";
 "Output" = "פלט";
 "Image format:" = "פורמט תמונה:";
 "Quality:" = "איכות:";
@@ -438,6 +444,7 @@
 "Webcam Size Small" = "קטן";
 "Webcam Size Medium" = "בינוני";
 "Webcam Size Large" = "גדול";
+"Webcam Size Extra Large" = "גדול במיוחד";
 "Circle" = "עיגול";
 "Rounded Rectangle" = "מלבן מעוגל";
 "Cam pos:" = "מיקום מצלמה:";

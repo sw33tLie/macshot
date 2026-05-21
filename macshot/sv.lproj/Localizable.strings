@@ -189,6 +189,7 @@
 "Launch at login" = "Starta vid inloggning";
 "Show snap alignment guides" = "Visa f\U00E4stlinjer";
 "Capture mouse cursor in screenshot" = "F\U00E5nga muspekaren i sk\U00E4rmbild";
+"Double-click selection to copy" = "Dubbelklicka p\U00E5 markeringen f\U00F6r att kopiera";
 "Use window title in saved filename" = "Anv\U00E4nd f\U00F6nstertitel i filnamn";
 "Hide menu bar icon" = "D\U00F6lj menyradsikon";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Kortkommandon fungerar fortfarande. F\U00F6r att visa ikonen igen, starta om macshot.";
@@ -239,6 +240,10 @@
 "Annotation Tools" = "Anteckningsverktyg";
 "Hidden tools are removed from the bottom toolbar." = "Dolda verktyg tas bort fr\U00E5n det nedre verktygsf\U00E4ltet.";
 "Capture Actions" = "F\U00E5ngst\U00E5tg\U00E4rder";
+"Menu Bar Order" = "Menyradens ordning";
+"Choose the order of capture actions in the macshot menu bar menu." = "V\U00E4lj ordningen p\U00E5 f\U00E5ngst\U00E5tg\U00E4rderna i menyn p\U00E5 macshot-menyraden.";
+"Move up" = "Flytta upp";
+"Move down" = "Flytta ned";
 "Bottom Toolbar Actions" = "\U00C5tg\U00E4rder i nedre verktygsf\U00E4ltet";
 "Hidden actions are removed from the bottom toolbar." = "Dolda \U00E5tg\U00E4rder tas bort fr\U00E5n det nedre verktygsf\U00E4ltet.";
 "Editor Actions" = "Redigerings\U00E5tg\U00E4rder";
@@ -438,11 +443,13 @@
 "Webcam Size Small" = "Liten";
 "Webcam Size Medium" = "Medel";
 "Webcam Size Large" = "Stor";
+"Webcam Size Extra Large" = "Extra stor";
 "Circle" = "Cirkel";
 "Rounded Rectangle" = "Rundad rektangel";
 "Cam pos:" = "Kam. pos.:";
 "Cam size:" = "Kam. storlek:";
 "Cam shape:" = "Kam. form:";
+"  Position:" = "  Position:";
 
 /* New Strings */
 "Settings..." = "Inst\U00E4llningar...";

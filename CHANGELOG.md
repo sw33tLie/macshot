@@ -1,5 +1,32 @@
 # Changelog
 
+## [4.1.1] - 2026-05-21
+
+### Added
+
+- **Sketchy arrow style** — hand-drawn-looking arrow option in the arrow style picker.
+- **Double-click selection to copy** — double-click inside the selection to copy the screenshot. On by default; togglable in Settings → General.
+- **Extra Large webcam size** — XL added next to Small/Medium/Large (#199).
+- **Capture menu ordering** — reorder the actions in the menu bar menu from Settings.
+
+### Changed
+
+- **Faster cold-start captures** — the overlay shows up promptly and accepts the first drag without lag, even after a long idle.
+
+### Fixed
+
+- **Scroll capture** — the HUD has been hidden behind the overlay since v3.4.5 and the overlay was eating scroll events. Both fixed.
+- **Save As no longer hijacks the default screenshots folder** — a one-off Save As destination used to replace the configured default. It's now a one-time choice (#168).
+- **Webcam preview during recording setup** — the live webcam panel now appears in the right corner of the selection before you press record, not only after.
+- **Phantom "Screen Recording" notifications** — beta.1's background prewarm triggered the macOS Sequoia indicator every 20 seconds. The prewarm is gone; macshot only reads the screen when you trigger a capture.
+- **Transient UI capture** — hotkey captures preserve disappearing UI such as Raycast, Alfred, app menus, and the Apple menu.
+- **Focus returns to the previous app** after confirming or cancelling a capture.
+- **Floating thumbnails no longer leak into the next capture.**
+- **Preview Save panel** — Save now brings its dialog to the front on the first click.
+- **Copy and Pin no longer replay the capture sound.**
+- **OCR fallback** — if accurate recognition fails, macshot retries with fast recognition.
+- **Video editor text** — double-click editing keeps alignment and background styling stable.
+
 ## [4.1.1-beta.4] - 2026-05-20
 
 ### Added

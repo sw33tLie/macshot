@@ -111,6 +111,10 @@
 "Translate" = "Prelozit";
 "Auto-Redact sensitive data" = "Automaticky zakryt citlive udaje";
 "Move Selection" = "Presunnut vyber";
+"Move up" = "Presunut nahor";
+"Move down" = "Presunut nadol";
+"Menu Bar Order" = "Poradie v liste menu";
+"Choose the order of capture actions in the macshot menu bar menu." = "Vyberte poradie akcii snimania v menu macshot v liste menu.";
 
 /* Toolbar - Recording */
 "Start Recording" = "Spustit nahravanie";
@@ -189,6 +193,7 @@
 "Launch at login" = "Spustit pri prihlaseni";
 "Show snap alignment guides" = "Zobrazit vodiace ciary zarovnania";
 "Capture mouse cursor in screenshot" = "Zachytit kurzor mysi na snimke obrazovky";
+"Double-click selection to copy" = "Kopirovat dvojklikom na vyber";
 "Use window title in saved filename" = "Pouzit nazov okna v nazve suboru";
 "Hide menu bar icon" = "Skryt ikonu v liste menu";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Klavesove skratky stale funguju. Pre opetovne zobrazenie ikony znovu spustte macshot.";
@@ -438,6 +443,7 @@
 "Webcam Size Small" = "Male";
 "Webcam Size Medium" = "Stredné";
 "Webcam Size Large" = "Velke";
+"Webcam Size Extra Large" = "Extra velke";
 "Circle" = "Kruh";
 "Rounded Rectangle" = "Zaobleny obdlznik";
 "Cam pos:" = "Poz. kam.:";
@@ -486,6 +492,7 @@
 "Configure S3 in Settings" = "Nastavte S3 v Nastaveniach";
 "Sign in to Google Drive in Settings" = "Prihlaste sa do Google Drive v Nastaveniach";
 "Position:" = "Pozicia:";
+"  Position:" = "  Pozicia:";
 "Size:" = "Velkost:";
 "Shape:" = "Tvar:";
 

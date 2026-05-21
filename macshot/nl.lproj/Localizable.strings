@@ -189,6 +189,7 @@
 "Launch at login" = "Open bij inloggen";
 "Show snap alignment guides" = "Uitlijnhulplijnen tonen";
 "Capture mouse cursor in screenshot" = "Muiscursor vastleggen in schermafbeelding";
+"Double-click selection to copy" = "Dubbelklik op selectie om te kopiëren";
 "Use window title in saved filename" = "Venstertitel gebruiken in bestandsnaam";
 "Hide menu bar icon" = "Menubalkpictogram verbergen";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Sneltoetsen werken nog steeds. Start macshot opnieuw op om het pictogram weer te tonen.";
@@ -200,6 +201,11 @@
 "  Multiple previews:" = "  Meerdere voorbeelden:";
 "Stack (keep all)" = "Stapelen (alles bewaren)";
 "Replace (show only latest)" = "Vervangen (alleen laatste tonen)";
+"  Position:" = "  Positie:";
+"Menu Bar Order" = "Volgorde menubalk";
+"Choose the order of capture actions in the macshot menu bar menu." = "Kies de volgorde van opname-acties in het menubalkmenu van macshot.";
+"Move up" = "Omhoog verplaatsen";
+"Move down" = "Omlaag verplaatsen";
 "Output" = "Uitvoer";
 "Image format:" = "Afbeeldingsformaat:";
 "Quality:" = "Kwaliteit:";
@@ -438,6 +444,7 @@
 "Webcam Size Small" = "Klein";
 "Webcam Size Medium" = "Gemiddeld";
 "Webcam Size Large" = "Groot";
+"Webcam Size Extra Large" = "Extra groot";
 "Circle" = "Cirkel";
 "Rounded Rectangle" = "Afgeronde rechthoek";
 "Cam pos:" = "Cam pos.:";

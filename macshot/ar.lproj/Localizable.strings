@@ -189,6 +189,7 @@
 "Launch at login" = "التشغيل عند تسجيل الدخول";
 "Show snap alignment guides" = "عرض خطوط المحاذاة";
 "Capture mouse cursor in screenshot" = "التقاط مؤشر الفأرة في لقطة الشاشة";
+"Double-click selection to copy" = "النقر المزدوج على التحديد للنسخ";
 "Use window title in saved filename" = "استخدام عنوان النافذة في اسم الملف المحفوظ";
 "Hide menu bar icon" = "إخفاء أيقونة شريط القوائم";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "الاختصارات لا تزال تعمل. لإظهار الأيقونة مجددًا، أعد تشغيل macshot.";
@@ -198,8 +199,13 @@
 "  Dismiss after:" = "  إخفاء بعد:";
 "seconds before auto-dismiss (0 = never)" = "ثوانٍ قبل الإخفاء التلقائي (0 = أبدًا)";
 "  Multiple previews:" = "  معاينات متعددة:";
+"  Position:" = "  الموضع:";
 "Stack (keep all)" = "تكديس (الاحتفاظ بالكل)";
 "Replace (show only latest)" = "استبدال (عرض الأحدث فقط)";
+"Menu Bar Order" = "ترتيب شريط القوائم";
+"Choose the order of capture actions in the macshot menu bar menu." = "اختر ترتيب إجراءات الالتقاط في قائمة شريط قوائم macshot.";
+"Move up" = "نقل للأعلى";
+"Move down" = "نقل للأسفل";
 "Output" = "الإخراج";
 "Image format:" = "صيغة الصورة:";
 "Quality:" = "الجودة:";
@@ -438,6 +444,7 @@
 "Webcam Size Small" = "صغير";
 "Webcam Size Medium" = "متوسط";
 "Webcam Size Large" = "كبير";
+"Webcam Size Extra Large" = "كبير جدًا";
 "Circle" = "دائرة";
 "Rounded Rectangle" = "مستطيل مستدير";
 "Cam pos:" = "موضع الكام:";

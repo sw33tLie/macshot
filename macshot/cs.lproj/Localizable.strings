@@ -111,6 +111,10 @@
 "Translate" = "Přeložit";
 "Auto-Redact sensitive data" = "Automaticky začernit citlivá data";
 "Move Selection" = "Přesunout výběr";
+"Move up" = "Přesunout nahoru";
+"Move down" = "Přesunout dolů";
+"Menu Bar Order" = "Pořadí v liště nabídek";
+"Choose the order of capture actions in the macshot menu bar menu." = "Zvolte pořadí akcí snímání v nabídce macshot v liště nabídek.";
 
 /* Toolbar - Recording */
 "Start Recording" = "Spustit nahrávání";
@@ -189,6 +193,7 @@
 "Launch at login" = "Spustit při přihlášení";
 "Show snap alignment guides" = "Zobrazit vodítka zarovnání";
 "Capture mouse cursor in screenshot" = "Zachytit kurzor myši na snímku";
+"Double-click selection to copy" = "Kopírovat dvojklikem na výběr";
 "Use window title in saved filename" = "Použít název okna v uloženém souboru";
 "Hide menu bar icon" = "Skrýt ikonu v liště";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Klávesové zkratky stále fungují. Pro opětovné zobrazení ikony znovu spusťte macshot.";
@@ -438,6 +443,7 @@
 "Webcam Size Small" = "Malý";
 "Webcam Size Medium" = "Střední";
 "Webcam Size Large" = "Velký";
+"Webcam Size Extra Large" = "Extra velký";
 "Circle" = "Kruh";
 "Rounded Rectangle" = "Zaoblený obdélník";
 "Cam pos:" = "Poz. kam.:";
@@ -486,6 +492,7 @@
 "Configure S3 in Settings" = "Nastavte S3 v Nastavení";
 "Sign in to Google Drive in Settings" = "Přihlaste se ke Google Drive v Nastavení";
 "Position:" = "Pozice:";
+"  Position:" = "  Pozice:";
 "Size:" = "Velikost:";
 "Shape:" = "Tvar:";
 

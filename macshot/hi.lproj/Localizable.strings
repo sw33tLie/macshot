@@ -189,6 +189,7 @@
 "Launch at login" = "लॉगिन पर लॉन्च करें";
 "Show snap alignment guides" = "स्नैप संरेखण गाइड दिखाएँ";
 "Capture mouse cursor in screenshot" = "स्क्रीनशॉट में माउस कर्सर कैप्चर करें";
+"Double-click selection to copy" = "कॉपी करने के लिए चयन पर डबल-क्लिक करें";
 "Use window title in saved filename" = "सहेजे गए फ़ाइलनाम में विंडो शीर्षक उपयोग करें";
 "Hide menu bar icon" = "मेनू बार आइकन छिपाएँ";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "हॉटकी अभी भी काम करेंगी। आइकन फिर से दिखाने के लिए macshot पुनः लॉन्च करें।";
@@ -198,8 +199,13 @@
 "  Dismiss after:" = "  इसके बाद खारिज करें:";
 "seconds before auto-dismiss (0 = never)" = "सेकंड में स्वतः खारिज (0 = कभी नहीं)";
 "  Multiple previews:" = "  एकाधिक पूर्वावलोकन:";
+"  Position:" = "  स्थिति:";
 "Stack (keep all)" = "स्टैक (सभी रखें)";
 "Replace (show only latest)" = "बदलें (केवल नवीनतम दिखाएँ)";
+"Menu Bar Order" = "मेनू बार क्रम";
+"Choose the order of capture actions in the macshot menu bar menu." = "macshot मेनू बार मेनू में कैप्चर क्रियाओं का क्रम चुनें।";
+"Move up" = "ऊपर ले जाएँ";
+"Move down" = "नीचे ले जाएँ";
 "Output" = "आउटपुट";
 "Image format:" = "छवि प्रारूप:";
 "Quality:" = "गुणवत्ता:";
@@ -438,6 +444,7 @@
 "Webcam Size Small" = "छोटा";
 "Webcam Size Medium" = "मध्यम";
 "Webcam Size Large" = "बड़ा";
+"Webcam Size Extra Large" = "बहुत बड़ा";
 "Circle" = "वृत्त";
 "Rounded Rectangle" = "गोलाकार आयत";
 "Cam pos:" = "कैम स्थिति:";

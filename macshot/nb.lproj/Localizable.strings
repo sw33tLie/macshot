@@ -189,6 +189,7 @@
 "Launch at login" = "Start ved innlogging";
 "Show snap alignment guides" = "Vis hjelpelinje for justering";
 "Capture mouse cursor in screenshot" = "Ta med musepeker i skjermbilde";
+"Double-click selection to copy" = "Dobbeltklikk p\U00E5 utvalget for \U00E5 kopiere";
 "Use window title in saved filename" = "Bruk vindustittel i lagret filnavn";
 "Hide menu bar icon" = "Skjul menylinje-ikon";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Hurtigtastene fungerer fortsatt. For \U00E5 vise ikonet igjen, start macshot p\U00E5 nytt.";
@@ -239,6 +240,10 @@
 "Annotation Tools" = "Kommentarverkt\U00F8y";
 "Hidden tools are removed from the bottom toolbar." = "Skjulte verkt\U00F8y fjernes fra den nederste verkt\U00F8ylinjen.";
 "Capture Actions" = "Opptakshandlinger";
+"Menu Bar Order" = "Menylinjens rekkef\U00F8lge";
+"Choose the order of capture actions in the macshot menu bar menu." = "Velg rekkef\U00F8lgen p\U00E5 opptakshandlingene i macshot-menylinjemenyen.";
+"Move up" = "Flytt opp";
+"Move down" = "Flytt ned";
 "Bottom Toolbar Actions" = "Handlinger i den nederste verkt\U00F8ylinjen";
 "Hidden actions are removed from the bottom toolbar." = "Skjulte handlinger fjernes fra den nederste verkt\U00F8ylinjen.";
 "Editor Actions" = "Redigeringshandlinger";
@@ -438,11 +443,13 @@
 "Webcam Size Small" = "Liten";
 "Webcam Size Medium" = "Middels";
 "Webcam Size Large" = "Stor";
+"Webcam Size Extra Large" = "Ekstra stor";
 "Circle" = "Sirkel";
 "Rounded Rectangle" = "Avrundet rektangel";
 "Cam pos:" = "Kam.pos.:";
 "Cam size:" = "Kam.str.:";
 "Cam shape:" = "Kam.form:";
+"  Position:" = "  Posisjon:";
 
 /* New Strings */
 "Settings..." = "Innstillinger...";

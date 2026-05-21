@@ -8,13 +8,14 @@ enum WebcamPosition: String {
 }
 
 enum WebcamSize: String {
-    case small, medium, large
+    case small, medium, large, xlarge
 
     var points: CGFloat {
         switch self {
         case .small: return 80
         case .medium: return 120
         case .large: return 160
+        case .xlarge: return 220
         }
     }
 }
@@ -46,7 +47,10 @@ class WebcamOverlay: NSPanel {
         isOpaque = false
         backgroundColor = .clear
         hasShadow = true
-        level = .statusBar + 1
+        // 258: above the capture overlay window (level 257) so the setup preview is
+        // visible before recording starts. After recording starts the overlay is gone
+        // and ScreenCaptureKit captures the panel regardless of level.
+        level = NSWindow.Level(258)
         ignoresMouseEvents = false
         hidesOnDeactivate = false
         becomesKeyOnlyIfNeeded = true

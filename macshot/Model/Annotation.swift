@@ -1258,51 +1258,87 @@ class Annotation {
         }
         strokeSketchLine(color: color, extraWidth: 0, pass: 0)
 
-        let headBaseSample = point(atDistance: headBaseLen)
-        let tangentLen = max(hypot(headBaseSample.tangent.dx, headBaseSample.tangent.dy), 0.001)
-        let dir = CGVector(dx: headBaseSample.tangent.dx / tangentLen, dy: headBaseSample.tangent.dy / tangentLen)
+        // Sample the shaft tangent at the nose so the head aligns with the line direction.
+        let headDirSample = point(atDistance: totalLen)
+        let tangentLen = max(hypot(headDirSample.tangent.dx, headDirSample.tangent.dy), 0.001)
+        let dir = CGVector(dx: headDirSample.tangent.dx / tangentLen, dy: headDirSample.tangent.dy / tangentLen)
         let normal = CGVector(dx: -dir.dy, dy: dir.dx)
-        let spread = min(max(baseWidth * 2.85, 8), headLen * 0.66)
-        let headBase = headBaseSample.point
-        let leftBase = NSPoint(
-            x: headBase.x + normal.dx * spread - dir.dx * rng.cgFloat(in: 0...(baseWidth * 0.22)),
-            y: headBase.y + normal.dy * spread - dir.dy * rng.cgFloat(in: 0...(baseWidth * 0.22)))
-        let rightBase = NSPoint(
-            x: headBase.x - normal.dx * spread * 0.94 - dir.dx * rng.cgFloat(in: 0...(baseWidth * 0.38)),
-            y: headBase.y - normal.dy * spread * 0.94 - dir.dy * rng.cgFloat(in: 0...(baseWidth * 0.38)))
-        let tipJitter = rng.cgFloat(in: -wobbleAmp...wobbleAmp)
+        // Nose tends to overshoot the shaft end a little, like a quick pen flick.
+        let noseExtend = rng.cgFloat(in: (headLen * 0.04)...(headLen * 0.14))
+        let noseLateral = rng.cgFloat(in: -headLen * 0.05...headLen * 0.05)
         let nose = NSPoint(
-            x: lastPt.x + normal.dx * tipJitter - dir.dx * rng.cgFloat(in: 0...(baseWidth * 0.25)),
-            y: lastPt.y + normal.dy * tipJitter - dir.dy * rng.cgFloat(in: 0...(baseWidth * 0.25)))
+            x: lastPt.x + dir.dx * noseExtend + normal.dx * noseLateral,
+            y: lastPt.y + dir.dy * noseExtend + normal.dy * noseLateral)
 
-        func drawHeadArc(color strokeColor: NSColor, width: CGFloat) {
-            let topControl = NSPoint(
-                x: leftBase.x + dir.dx * headLen * 0.62 + normal.dx * (spread * 0.16 + wobbleAmp * 0.18),
-                y: leftBase.y + dir.dy * headLen * 0.62 + normal.dy * (spread * 0.16 + wobbleAmp * 0.18))
-            let noseControlTop = NSPoint(
-                x: nose.x - dir.dx * headLen * 0.10 + normal.dx * (spread * 0.20 + wobbleAmp * 0.16),
-                y: nose.y - dir.dy * headLen * 0.10 + normal.dy * (spread * 0.20 + wobbleAmp * 0.16))
-            let noseControlBottom = NSPoint(
-                x: nose.x - dir.dx * headLen * 0.10 - normal.dx * (spread * 0.18 + wobbleAmp * 0.14),
-                y: nose.y - dir.dy * headLen * 0.10 - normal.dy * (spread * 0.18 + wobbleAmp * 0.14))
-            let bottomControl = NSPoint(
-                x: rightBase.x + dir.dx * headLen * 0.56 - normal.dx * (spread * 0.12 + wobbleAmp * 0.2),
-                y: rightBase.y + dir.dy * headLen * 0.56 - normal.dy * (spread * 0.12 + wobbleAmp * 0.2))
-            let path = NSBezierPath()
-            path.lineWidth = width
-            path.lineCapStyle = .round
-            path.lineJoinStyle = .round
-            path.move(to: leftBase)
-            path.curve(to: nose, controlPoint1: topControl, controlPoint2: noseControlTop)
-            path.curve(to: rightBase, controlPoint1: noseControlBottom, controlPoint2: bottomControl)
+        // Two chevron legs, deliberately uneven in length, angle, and base spread.
+        // A typical real-life sketched chevron has noticeably different legs.
+        let baseSpread = max(baseWidth * 2.6, 8)
+        let leftLen = headLen * rng.cgFloat(in: 0.92...1.18)
+        let rightLen = headLen * rng.cgFloat(in: 0.78...1.08)
+        let leftSpread = baseSpread * rng.cgFloat(in: 0.95...1.25)
+        let rightSpread = baseSpread * rng.cgFloat(in: 0.85...1.15)
+        // Each leg can tilt a bit off the perfect mirror — adds asymmetry.
+        let leftAngleSkew = rng.cgFloat(in: -0.18...0.18)
+        let rightAngleSkew = rng.cgFloat(in: -0.18...0.18)
+        // The two leg endpoints, splayed off the back of the nose with skew.
+        let leftBase = NSPoint(
+            x: nose.x - dir.dx * leftLen + normal.dx * leftSpread
+                + dir.dx * leftAngleSkew * leftSpread,
+            y: nose.y - dir.dy * leftLen + normal.dy * leftSpread
+                + dir.dy * leftAngleSkew * leftSpread)
+        let rightBase = NSPoint(
+            x: nose.x - dir.dx * rightLen - normal.dx * rightSpread
+                + dir.dx * rightAngleSkew * rightSpread,
+            y: nose.y - dir.dy * rightLen - normal.dy * rightSpread
+                + dir.dy * rightAngleSkew * rightSpread)
+        // Bow magnitude scales with leg length so it's actually visible. Sign is
+        // independent per leg so they don't mirror each other.
+        let leftBow = rng.cgFloat(in: 0.10...0.22) * leftLen
+            * (rng.next() & 1 == 0 ? 1 : -1)
+        let rightBow = rng.cgFloat(in: 0.10...0.22) * rightLen
+            * (rng.next() & 1 == 0 ? 1 : -1)
+        // Bow position along the leg (0.5 = midpoint, biased so the curve peaks
+        // slightly off-center for a more natural stroke).
+        let leftBowPos = rng.cgFloat(in: 0.40...0.62)
+        let rightBowPos = rng.cgFloat(in: 0.40...0.62)
+        // Tiny tangential nudge on the bow control to break the perfect arc shape.
+        let leftBowTan = rng.cgFloat(in: -0.08...0.08) * leftLen
+        let rightBowTan = rng.cgFloat(in: -0.08...0.08) * rightLen
+
+        func drawHeadChevron(color strokeColor: NSColor, width: CGFloat) {
             strokeColor.setStroke()
-            path.stroke()
+            // Left leg: quadratic bezier with a noticeably-bowed mid control.
+            let lmx = nose.x + (leftBase.x - nose.x) * leftBowPos
+            let lmy = nose.y + (leftBase.y - nose.y) * leftBowPos
+            let leftCtrl = NSPoint(
+                x: lmx + normal.dx * leftBow + dir.dx * leftBowTan,
+                y: lmy + normal.dy * leftBow + dir.dy * leftBowTan)
+            let leftPath = NSBezierPath()
+            leftPath.lineWidth = width
+            leftPath.lineCapStyle = .round
+            leftPath.lineJoinStyle = .round
+            leftPath.move(to: nose)
+            leftPath.curve(to: leftBase, controlPoint1: leftCtrl, controlPoint2: leftCtrl)
+            leftPath.stroke()
+            // Right leg: same idea, independent bow direction.
+            let rmx = nose.x + (rightBase.x - nose.x) * rightBowPos
+            let rmy = nose.y + (rightBase.y - nose.y) * rightBowPos
+            let rightCtrl = NSPoint(
+                x: rmx + normal.dx * rightBow + dir.dx * rightBowTan,
+                y: rmy + normal.dy * rightBow + dir.dy * rightBowTan)
+            let rightPath = NSBezierPath()
+            rightPath.lineWidth = width
+            rightPath.lineCapStyle = .round
+            rightPath.lineJoinStyle = .round
+            rightPath.move(to: nose)
+            rightPath.curve(to: rightBase, controlPoint1: rightCtrl, controlPoint2: rightCtrl)
+            rightPath.stroke()
         }
 
         if let oc = outlineColor {
-            drawHeadArc(color: oc, width: baseWidth * 0.96 + 6)
+            drawHeadChevron(color: oc, width: baseWidth + 6)
         }
-        drawHeadArc(color: color, width: baseWidth * 0.96)
+        drawHeadChevron(color: color, width: baseWidth)
     }
 
     /// Tiny deterministic PRNG (xorshift32) so sketchy arrows look the same
