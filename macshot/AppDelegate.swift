@@ -983,11 +983,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             UserDefaults.standard.set(false, forKey: "beautifyEnabled")
         }
 
-        // Hard-disable beautify entirely when the user has opted out in Settings.
-        if UserDefaults.standard.bool(forKey: "disableBeautify") {
-            UserDefaults.standard.set(false, forKey: "beautifyEnabled")
-        }
-
         // Clean up stale overlays without consuming previousApp — we just set it.
         measureCaptureTiming("dismiss stale overlays") {
             dismissOverlays(refocusPreviousApp: false)

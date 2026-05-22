@@ -63,7 +63,6 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var snapGuidesCheckbox: NSButton!
     private var captureCursorCheckbox: NSButton!
     private var doubleClickToCopyCheckbox: NSButton!
-    private var disableBeautifyCheckbox: NSButton!
     private var filenameTemplateField: NSTextField!
     private var filenameTemplatePreview: NSTextField!
     private var recordingFilenameTemplateField: NSTextField!
@@ -603,16 +602,6 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
         stack.addArrangedSubview(indented(doubleClickToCopyCheckbox))
-        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
-
-        disableBeautifyCheckbox = NSButton(checkboxWithTitle: L("Disable Beautify (no gradient background)"), target: self, action: #selector(disableBeautifyChanged(_:)))
-        stack.addArrangedSubview(indented(disableBeautifyCheckbox))
-        stack.setCustomSpacing(2, after: stack.arrangedSubviews.last!)
-
-        let disableBeautifyNote = NSTextField(wrappingLabelWithString: L("Always export the plain screenshot without the gradient background frame."))
-        disableBeautifyNote.font = NSFont.systemFont(ofSize: 10)
-        disableBeautifyNote.textColor = .secondaryLabelColor
-        stack.addArrangedSubview(indented(disableBeautifyNote))
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // ── Output ───────────────────────────────────────────
@@ -2135,7 +2124,6 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
         captureCursorCheckbox.state = UserDefaults.standard.bool(forKey: "captureCursor") ? .on : .off
         doubleClickToCopyCheckbox.state = (UserDefaults.standard.object(forKey: "doubleClickToCopy") as? Bool ?? true) ? .on : .off
-        disableBeautifyCheckbox.state = UserDefaults.standard.bool(forKey: "disableBeautify") ? .on : .off
         filenameTemplateField.stringValue = UserDefaults.standard.string(forKey: FilenameFormatter.userDefaultsKey) ?? FilenameFormatter.defaultTemplate
         updateFilenamePreview()
         recordingFilenameTemplateField.stringValue = UserDefaults.standard.string(forKey: FilenameFormatter.recordingUserDefaultsKey) ?? FilenameFormatter.defaultRecordingTemplate
@@ -2540,13 +2528,6 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     }
     @objc private func doubleClickToCopyChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "doubleClickToCopy")
-    }
-    @objc private func disableBeautifyChanged(_ sender: NSButton) {
-        let disabled = sender.state == .on
-        UserDefaults.standard.set(disabled, forKey: "disableBeautify")
-        if disabled {
-            UserDefaults.standard.set(false, forKey: "beautifyEnabled")
-        }
     }
     @objc private func filenameTemplateCommitted(_ sender: NSTextField) {
         let trimmed = sender.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
