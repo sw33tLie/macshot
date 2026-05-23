@@ -41,13 +41,15 @@ enum ClipboardTextPinRenderer {
             documentAttributes: &documentAttributes
         ) else { return nil }
 
+        let mutable = NSMutableAttributedString(attributedString: attributed)
+        normalizeImportedListMarkers(in: mutable)
+
         let documentAttributesDict = documentAttributes as? [NSAttributedString.DocumentAttributeKey: Any]
         guard let backgroundColor = documentAttributesDict?[.backgroundColor] as? NSColor,
-              attributed.length > 0 else {
-            return attributed
+              mutable.length > 0 else {
+            return mutable
         }
 
-        let mutable = NSMutableAttributedString(attributedString: attributed)
         mutable.addAttribute(.backgroundColor, value: backgroundColor, range: NSRange(location: 0, length: mutable.length))
         return mutable
     }
@@ -135,6 +137,78 @@ enum ClipboardTextPinRenderer {
                 attributed.addAttribute(.foregroundColor, value: NSColor.black, range: range)
             }
         }
+    }
+
+    private static func normalizeImportedListMarkers(in attributed: NSMutableAttributedString) {
+        let nsString = attributed.string as NSString
+        let fullRange = NSRange(location: 0, length: nsString.length)
+        var paragraphRanges: [NSRange] = []
+
+        nsString.enumerateSubstrings(in: fullRange, options: [.byParagraphs, .substringNotRequired]) { _, _, enclosingRange, _ in
+            paragraphRanges.append(enclosingRange)
+        }
+
+        for range in paragraphRanges.reversed() where range.location < attributed.length {
+            normalizeImportedListMarker(in: range, attributed: attributed)
+        }
+    }
+
+    private static func normalizeImportedListMarker(in range: NSRange, attributed: NSMutableAttributedString) {
+        guard let paragraph = attributed.attribute(.paragraphStyle, at: range.location, effectiveRange: nil) as? NSParagraphStyle,
+              let textList = paragraph.textLists.last else {
+            return
+        }
+
+        let paragraphText = (attributed.string as NSString).substring(with: range)
+        guard paragraphText.hasPrefix("\t"),
+              let secondTabIndex = paragraphText.dropFirst().firstIndex(of: "\t") else {
+            return
+        }
+
+        let marker = String(paragraphText[paragraphText.index(after: paragraphText.startIndex)..<secondTabIndex])
+        let prefixLength = paragraphText.utf16.distance(from: paragraphText.utf16.startIndex, to: paragraphText.utf16.index(after: secondTabIndex))
+        guard prefixLength > 0, prefixLength <= range.length else { return }
+
+        let style = (paragraph.mutableCopy() as? NSMutableParagraphStyle) ?? NSMutableParagraphStyle()
+        style.textLists = []
+
+        let attributesLocation = min(range.location + prefixLength, max(range.location, attributed.length - 1))
+        var attributes = attributed.attributes(at: attributesLocation, effectiveRange: nil)
+        attributes[.paragraphStyle] = style
+
+        let displayMarker = displayListMarker(marker, textList: textList)
+        let replacement = NSAttributedString(string: "\(displayMarker) ", attributes: attributes)
+        attributed.replaceCharacters(in: NSRange(location: range.location, length: prefixLength), with: replacement)
+
+        let adjustedRange = NSRange(
+            location: range.location,
+            length: range.length - prefixLength + replacement.length
+        )
+        attributed.addAttribute(.paragraphStyle, value: style, range: adjustedRange)
+    }
+
+    private static func displayListMarker(_ marker: String, textList: NSTextList) -> String {
+        let trimmed = marker.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return marker }
+        guard isOrderedListMarker(trimmed, textList: textList),
+              !trimmed.hasSuffix("."),
+              !trimmed.hasSuffix(")") else {
+            return trimmed
+        }
+        return "\(trimmed)."
+    }
+
+    private static func isOrderedListMarker(_ marker: String, textList: NSTextList) -> Bool {
+        let markerFormat = String(describing: textList.markerFormat).lowercased()
+        if markerFormat.contains("decimal")
+            || markerFormat.contains("upper")
+            || markerFormat.contains("lower")
+            || markerFormat.contains("roman")
+            || markerFormat.contains("alpha") {
+            return true
+        }
+
+        return marker.range(of: #"^\d+$"#, options: .regularExpression) != nil
     }
 
     private static func measuredSize(for attributed: NSAttributedString, maxWidth: CGFloat) -> NSSize {
