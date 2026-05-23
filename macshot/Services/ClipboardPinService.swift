@@ -46,8 +46,10 @@ enum ClipboardPinService {
     private static func textImageFromItem(_ item: NSPasteboardItem) -> NSImage? {
         if let data = item.data(forType: .html),
            let attributed = ClipboardTextPinRenderer.attributedString(html: data),
-           let image = ClipboardTextPinRenderer.render(attributed) {
-            return image
+           !ClipboardTextPinRenderer.containsAttachments(attributed) {
+            if let image = ClipboardTextPinRenderer.render(attributed) {
+                return image
+            }
         }
 
         if let data = item.data(forType: .rtf),
@@ -74,7 +76,8 @@ enum ClipboardPinService {
 
     private static func fileURLFromItem(_ item: NSPasteboardItem) -> URL? {
         if let value = item.string(forType: .fileURL),
-           let url = URL(string: value) {
+           let url = URL(string: value),
+           url.isFileURL {
             return url
         }
 
@@ -84,7 +87,8 @@ enum ClipboardPinService {
         ]
         for type in urlTypes {
             if let value = item.string(forType: type),
-               let url = URL(string: value) {
+               let url = URL(string: value),
+               url.isFileURL {
                 return url
             }
         }

@@ -656,9 +656,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         HotkeyManager.applyMenuShortcut(for: .openFromClipboard, to: pasteImageItem)
         menu.addItem(pasteImageItem)
 
-        let pinClipboardItem = NSMenuItem(title: L("Pin from Clipboard"), action: #selector(pinFromClipboard), keyEquivalent: "")
+        let pinClipboardTitle = L("Pin from Clipboard")
+        let pinClipboardItem = NSMenuItem(title: pinClipboardTitle, action: #selector(pinFromClipboard), keyEquivalent: "")
         pinClipboardItem.target = self
-        pinClipboardItem.image = NSImage(systemSymbolName: "pin.fill", accessibilityDescription: nil)
+        pinClipboardItem.image = NSImage(systemSymbolName: "pin.fill", accessibilityDescription: pinClipboardTitle)
         HotkeyManager.applyMenuShortcut(for: .pinFromClipboard, to: pinClipboardItem)
         menu.addItem(pinClipboardItem)
 
