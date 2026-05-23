@@ -656,6 +656,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         HotkeyManager.applyMenuShortcut(for: .openFromClipboard, to: pasteImageItem)
         menu.addItem(pasteImageItem)
 
+        let pinClipboardItem = NSMenuItem(title: L("Pin from Clipboard"), action: #selector(pinFromClipboard), keyEquivalent: "")
+        pinClipboardItem.target = self
+        pinClipboardItem.image = NSImage(systemSymbolName: "pin.fill", accessibilityDescription: nil)
+        HotkeyManager.applyMenuShortcut(for: .pinFromClipboard, to: pinClipboardItem)
+        menu.addItem(pinClipboardItem)
+
         menu.addItem(NSMenuItem.separator())
 
         let prefsItem = NSMenuItem(title: L("Settings..."), action: #selector(openSettings), keyEquivalent: ",")
@@ -743,6 +749,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             captureLastArea: { [weak self] in
                 stamp()
                 self?.perform(#selector(AppDelegate.captureLastAreaFromHotkey))
+            },
+            pinFromClipboard: { [weak self] in
+                DispatchQueue.main.async { self?.pinFromClipboard() }
             }
         )
     }
@@ -1771,6 +1780,29 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             return
         }
         DetachedEditorWindowController.open(image: image)
+    }
+
+    @objc private func pinFromClipboard() {
+        guard let item = NSPasteboard.general.pasteboardItems?.first else {
+            showNoPinClipboardContentAlert()
+            return
+        }
+
+        switch ClipboardPinService.image(from: item) {
+        case .image(let image):
+            showPin(image: image)
+        case .unsupported:
+            showNoPinClipboardContentAlert()
+        }
+    }
+
+    private func showNoPinClipboardContentAlert() {
+        let alert = NSAlert()
+        alert.messageText = L("No Image or Text on Clipboard")
+        alert.informativeText = L("Copy an image or text to the clipboard first, then try again.")
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: L("OK"))
+        alert.runModal()
     }
 
     private func openImageWithPanel() {

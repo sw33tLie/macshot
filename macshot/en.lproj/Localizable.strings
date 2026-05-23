@@ -29,6 +29,7 @@
 "Show History Panel" = "Show History Panel";
 "Open Image..." = "Open Image...";
 "Open from Clipboard" = "Open from Clipboard";
+"Pin from Clipboard" = "Pin from Clipboard";
 "Settings..." = "Settings...";
 "Check for Updates..." = "Check for Updates...";
 "Quit macshot" = "Quit macshot";
@@ -341,6 +342,8 @@
 /* Alerts */
 "No Image on Clipboard" = "No Image on Clipboard";
 "Copy an image to the clipboard first, then try again." = "Copy an image to the clipboard first, then try again.";
+"No Image or Text on Clipboard" = "No Image or Text on Clipboard";
+"Copy an image or text to the clipboard first, then try again." = "Copy an image or text to the clipboard first, then try again.";
 "OK" = "OK";
 "Accessibility Access Required" = "Accessibility Access Required";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again.";
