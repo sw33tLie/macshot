@@ -1249,7 +1249,40 @@ class OverlayView: NSView {
                 return row.hitTest(convert(point, to: row.superview))
             }
         }
-        return super.hitTest(point)
+        let result = super.hitTest(point)
+        if shouldIgnoreInactiveChromeHit(result) {
+            return self
+        }
+        return result
+    }
+
+    private func shouldIgnoreInactiveChromeHit(_ view: NSView?) -> Bool {
+        guard !isEditorMode, let view, view !== self else { return false }
+        for chromeView in [bottomStripView, rightStripView, toolOptionsRowView].compactMap({ $0 }) {
+            if view === chromeView || isDescendant(view, of: chromeView) {
+                return !showToolbars || hasHiddenAncestor(view, stoppingAt: self)
+            }
+        }
+        return false
+    }
+
+    private func isDescendant(_ view: NSView, of ancestor: NSView) -> Bool {
+        var current = view.superview
+        while let candidate = current {
+            if candidate === ancestor { return true }
+            if candidate === self { return false }
+            current = candidate.superview
+        }
+        return false
+    }
+
+    private func hasHiddenAncestor(_ view: NSView, stoppingAt stopView: NSView) -> Bool {
+        var current: NSView? = view
+        while let candidate = current, candidate !== stopView {
+            if candidate.isHidden { return true }
+            current = candidate.superview
+        }
+        return false
     }
 
     /// Returns true if the point is over any chrome element (toolbars, options row, popovers, labels).
