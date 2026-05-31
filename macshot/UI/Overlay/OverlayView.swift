@@ -1258,30 +1258,23 @@ class OverlayView: NSView {
 
     private func shouldIgnoreInactiveChromeHit(_ view: NSView?) -> Bool {
         guard !isEditorMode, let view, view !== self else { return false }
-        for chromeView in [bottomStripView, rightStripView, toolOptionsRowView].compactMap({ $0 }) {
-            if view === chromeView || isDescendant(view, of: chromeView) {
-                return !showToolbars || hasHiddenAncestor(view, stoppingAt: self)
-            }
-        }
-        return false
-    }
 
-    private func isDescendant(_ view: NSView, of ancestor: NSView) -> Bool {
-        var current = view.superview
-        while let candidate = current {
-            if candidate === ancestor { return true }
-            if candidate === self { return false }
-            current = candidate.superview
-        }
-        return false
-    }
-
-    private func hasHiddenAncestor(_ view: NSView, stoppingAt stopView: NSView) -> Bool {
         var current: NSView? = view
-        while let candidate = current, candidate !== stopView {
-            if candidate.isHidden { return true }
+        var hasHiddenAncestor = false
+        while let candidate = current, candidate !== self {
+            hasHiddenAncestor = hasHiddenAncestor || candidate.isHidden
+            if isOverlayChromeRoot(candidate) {
+                return !showToolbars || hasHiddenAncestor
+            }
             current = candidate.superview
         }
+        return false
+    }
+
+    private func isOverlayChromeRoot(_ view: NSView) -> Bool {
+        if let bottomStripView, view === bottomStripView { return true }
+        if let rightStripView, view === rightStripView { return true }
+        if let toolOptionsRowView, view === toolOptionsRowView { return true }
         return false
     }
 
