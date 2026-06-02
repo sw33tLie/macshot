@@ -84,6 +84,31 @@ import os.log
 
 private let timingLog = OSLog(subsystem: "com.sw33tlie.macshot.macshot", category: "capture-timing")
 
+// MARK: - Signal-safe diagnostic logging
+
+/// Async-signal-safe write(2)-only log fd for Jetsam/SIGTERM diagnostics.
+/// Opened at launch in `AppDelegate.setupSignalHandlers()` and written to
+/// by `sigtermHandler` when the system sends SIGTERM before SIGKILL.
+private var macshotSignalLogFd: Int32 = -1
+
+/// Async-signal-safe SIGTERM handler. Writes a one-line diagnostic to the
+/// pre-opened `macshotSignalLogFd`, then resets the handler to default and
+/// re-raises so `applicationWillTerminate` runs the normal cleanup path.
+private let sigtermHandler: @convention(c) (Int32) -> Void = { _ in
+    guard macshotSignalLogFd >= 0 else {
+        signal(SIGTERM, SIG_DFL)
+        return
+    }
+    // Only async-signal-safe operations below.
+    let msg: StaticString = "SIGTERM received — likely Jetsam memory-pressure kill\n"
+    _ = write(macshotSignalLogFd, msg.utf8Start, msg.utf8CodeUnitCount)
+    _ = close(macshotSignalLogFd)
+    macshotSignalLogFd = -1
+    // Re-raise with default handler so applicationWillTerminate runs.
+    signal(SIGTERM, SIG_DFL)
+    kill(getpid(), SIGTERM)
+}
+
 private final class CaptureTimingTrace: @unchecked Sendable {
     private struct Entry {
         let label: String
@@ -193,8 +218,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     private var captureTimingTrace: CaptureTimingTrace?
     /// App Nap suppression assertion. Held for the app's lifetime so global
     /// hotkeys respond instantly instead of paying a 1-2s wake-up penalty
-    /// when macshot has been idle. `.userInitiatedAllowingIdleSystemSleep`
-    /// keeps the process awake but lets the system sleep if the user is idle.
+    /// when macshot has been idle. `.userInitiated` keeps the process
+    /// running (not idle) and prevents macOS from treating the app as
+    /// eligible for Jetsam (memory-pressure termination), while still
+    /// allowing the system to sleep when the lid is closed.
     private var appNapAssertion: NSObjectProtocol?
 
     /// Shared capture sound — loaded once, reused everywhere.
@@ -220,12 +247,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // Disable App Nap. macshot is LSUIElement with no visible windows
         // when idle, so macOS aggressively sleeps it — which adds 1-2s of
         // wake-up latency to global hotkey captures. We hold this assertion
-        // for the app's lifetime. `userInitiatedAllowingIdleSystemSleep`
-        // keeps the process awake but lets the system sleep when the user
-        // is idle, so this doesn't drain battery on a closed laptop.
+        // for the app's lifetime. `.userInitiated` keeps the process
+        // running and reduces the likelihood of Jetsam (memory-pressure)
+        // termination when the system reclaims memory from background
+        // LSUIElement processes, while still allowing system sleep.
         appNapAssertion = ProcessInfo.processInfo.beginActivity(
-            options: [.userInitiatedAllowingIdleSystemSleep],
+            options: [.userInitiated],
             reason: "Global hotkey responsiveness")
+
+        // Open a signal-safe log fd and register the SIGTERM handler.
+        // When macOS Jetsam kills the process, any SIGTERM sent before
+        // SIGKILL is captured here, and the re-raise ensures
+        // applicationWillTerminate also fires — giving us two diagnostic
+        // traces to distinguish Jetsam kills from normal termination.
+        setupSignalHandlers()
 
         // Offer to move to /Applications if running from a DMG or translocated path
         promptToMoveToApplicationsIfNeeded()
@@ -250,6 +285,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         _ = ScreenshotHistory.shared
 
         updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: self, userDriverDelegate: nil)
+        // Disable silent update downloads — updates should only apply
+        // via explicit user action ("Check for Updates..." / Install),
+        // so an automatic update can't be mistaken for a silent crash.
+        updaterController.updater.automaticallyDownloadsUpdates = false
         setupMainMenu()
         setupStatusBar()
         if UserDefaults.standard.bool(forKey: "hideMenuBarIcon") {
@@ -506,11 +545,30 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
+        os_log(.fault, log: timingLog, "macshot terminating — thermalState=%d", ProcessInfo.processInfo.thermalState.rawValue)
         for (_, controller) in overlayControllerPool {
             controller.tearDown()
         }
         overlayControllerPool.removeAll()
         HotkeyManager.shared.unregister()
+        if macshotSignalLogFd >= 0 {
+            close(macshotSignalLogFd)
+            macshotSignalLogFd = -1
+        }
+    }
+
+    // MARK: - Signal Handlers
+
+    /// Opens a write-only log fd and registers the SIGTERM handler.
+    /// The fd is used by the signal handler (which can only call
+    /// async-signal-safe functions; os_log is NOT safe in that context).
+    private func setupSignalHandlers() {
+        let logDir = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("Logs/macshot", isDirectory: true)
+        try? FileManager.default.createDirectory(at: logDir, withIntermediateDirectories: true)
+        let logPath = logDir.appendingPathComponent("termination.log")
+        macshotSignalLogFd = open(logPath.path, O_WRONLY | O_CREAT | O_APPEND, 0o644)
+        signal(SIGTERM, sigtermHandler)
     }
 
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
