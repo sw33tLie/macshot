@@ -30,6 +30,7 @@
 "Show History Panel" = "Geçmiş Panelini Göster";
 "Open Image..." = "Görsel Aç...";
 "Open from Clipboard" = "Panodan Aç";
+"Pin from Clipboard" = "Panodan Sabitle";
 "Preferences..." = "Tercihler...";
 "Check for Updates..." = "Güncellemeleri Denetle...";
 "Quit macshot" = "macshot'tan Çık";
@@ -322,7 +323,9 @@
 
 /* Alerts */
 "No Image on Clipboard" = "Panoda Görsel Yok";
+"No Image or Text on Clipboard" = "Panoda Görsel veya Metin Yok";
 "Copy an image to the clipboard first, then try again." = "Önce panoya bir görsel kopyalayın, ardından tekrar deneyin.";
+"Copy an image or text to the clipboard first, then try again." = "Önce panoya bir görsel veya metin kopyalayın, ardından tekrar deneyin.";
 "OK" = "Tamam";
 "Accessibility Access Required" = "Erişilebilirlik İzni Gerekli";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot, diğer uygulamaları otomatik kaydırmak için Erişilebilirlik iznine ihtiyaç duyar. Lütfen Sistem Ayarları'ndan izin verin ve tekrar deneyin.";

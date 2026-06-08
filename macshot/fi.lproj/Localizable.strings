@@ -30,6 +30,7 @@
 "Show History Panel" = "Nayta historiapaneeli";
 "Open Image..." = "Avaa kuva...";
 "Open from Clipboard" = "Avaa leikepoydalsta";
+"Pin from Clipboard" = "Kiinnita leikepoydalsta";
 "Preferences..." = "Asetukset...";
 "Check for Updates..." = "Tarkista paivitykset...";
 "Quit macshot" = "Lopeta macshot";
@@ -321,7 +322,9 @@
 
 /* Alerts */
 "No Image on Clipboard" = "Ei kuvaa leikepöydällä";
+"No Image or Text on Clipboard" = "Ei kuvaa tai tekstiä leikepöydällä";
 "Copy an image to the clipboard first, then try again." = "Kopioi ensin kuva leikepoydale ja yrita sitten uudelleen.";
+"Copy an image or text to the clipboard first, then try again." = "Kopioi ensin kuva tai teksti leikepoydale ja yrita sitten uudelleen.";
 "OK" = "OK";
 "Accessibility Access Required" = "Esteettomyysoikeus vaaditaan";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot tarvitsee esteettomyysoikeuden vierittaakseen muita sovelluksia automaattisesti. Myonna oikeus jarjestelman asetuksissa ja yrita uudelleen.";

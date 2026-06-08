@@ -30,6 +30,7 @@
 "Show History Panel" = "Előzmények panel megjelenítése";
 "Open Image..." = "Kép megnyitása...";
 "Open from Clipboard" = "Megnyitás vágólapról";
+"Pin from Clipboard" = "Rögzítés vágólapról";
 "Preferences..." = "Beállítások...";
 "Check for Updates..." = "Frissítések keresése...";
 "Quit macshot" = "Kilépés a macshot-ból";
@@ -322,7 +323,9 @@
 
 /* Alerts */
 "No Image on Clipboard" = "Nincs kép a vágólapon";
+"No Image or Text on Clipboard" = "Nincs kép vagy szöveg a vágólapon";
 "Copy an image to the clipboard first, then try again." = "Előbb másolj egy képet a vágólapra, majd próbáld újra.";
+"Copy an image or text to the clipboard first, then try again." = "Előbb másolj egy képet vagy szöveget a vágólapra, majd próbáld újra.";
 "OK" = "OK";
 "Accessibility Access Required" = "Akadálymentesítési hozzáférés szükséges";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "A macshot-nak Akadálymentesítési engedélyre van szüksége más alkalmazások automatikus görgetéséhez. Kérlek, adj hozzáférést a Rendszerbeállításokban, majd próbáld újra.";

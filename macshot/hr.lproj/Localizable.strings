@@ -30,6 +30,7 @@
 "Show History Panel" = "Prikazi plocu povijesti";
 "Open Image..." = "Otvori sliku...";
 "Open from Clipboard" = "Otvori iz meduspremnika";
+"Pin from Clipboard" = "Prikvaci iz meduspremnika";
 "Preferences..." = "Postavke...";
 "Check for Updates..." = "Provjeri azuriranja...";
 "Quit macshot" = "Zatvori macshot";
@@ -321,7 +322,9 @@
 
 /* Alerts */
 "No Image on Clipboard" = "Nema slike u meduspremniku";
+"No Image or Text on Clipboard" = "Nema slike ni teksta u meduspremniku";
 "Copy an image to the clipboard first, then try again." = "Najprije kopirajte sliku u meduspremnik, zatim pokusajte ponovo.";
+"Copy an image or text to the clipboard first, then try again." = "Najprije kopirajte sliku ili tekst u meduspremnik, zatim pokusajte ponovo.";
 "OK" = "U redu";
 "Accessibility Access Required" = "Potreban pristup pristupacnosti";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot treba dozvolu pristupacnosti za automatsko pomicanje drugih aplikacija. Odobrite pristup u Postavkama sustava, zatim pokusajte ponovo.";

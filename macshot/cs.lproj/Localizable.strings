@@ -30,6 +30,7 @@
 "Show History Panel" = "Zobrazit panel historie";
 "Open Image..." = "Otevřít obrázek...";
 "Open from Clipboard" = "Otevřít ze schránky";
+"Pin from Clipboard" = "Připnout ze schránky";
 "Preferences..." = "Předvolby...";
 "Check for Updates..." = "Zkontrolovat aktualizace...";
 "Quit macshot" = "Ukončit macshot";
@@ -321,7 +322,9 @@
 
 /* Alerts */
 "No Image on Clipboard" = "Žádný obrázek ve schránce";
+"No Image or Text on Clipboard" = "Žádný obrázek ani text ve schránce";
 "Copy an image to the clipboard first, then try again." = "Nejprve zkopírujte obrázek do schránky a zkuste to znovu.";
+"Copy an image or text to the clipboard first, then try again." = "Nejprve zkopírujte obrázek nebo text do schránky a zkuste to znovu.";
 "OK" = "OK";
 "Accessibility Access Required" = "Vyžadován přístup k usnadnění";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot potřebuje oprávnění Usnadnění pro automatické posouvání jiných aplikací. Udělte přístup v Nastavení systému a zkuste to znovu.";

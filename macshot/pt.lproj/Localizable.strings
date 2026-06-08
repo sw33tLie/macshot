@@ -30,6 +30,7 @@
 "Show History Panel" = "Mostrar Painel de Historico";
 "Open Image..." = "Abrir Imagem...";
 "Open from Clipboard" = "Abrir da Area de Transferencia";
+"Pin from Clipboard" = "Fixar da Area de Transferencia";
 "Preferences..." = "Preferencias...";
 "Check for Updates..." = "Procurar Atualizacoes...";
 "Quit macshot" = "Sair do macshot";
@@ -321,7 +322,9 @@
 
 /* Alerts */
 "No Image on Clipboard" = "Sem Imagem na Area de Transferencia";
+"No Image or Text on Clipboard" = "Sem Imagem ou Texto na Area de Transferencia";
 "Copy an image to the clipboard first, then try again." = "Copie primeiro uma imagem para a area de transferencia e tente novamente.";
+"Copy an image or text to the clipboard first, then try again." = "Copie primeiro uma imagem ou texto para a area de transferencia e tente novamente.";
 "OK" = "OK";
 "Accessibility Access Required" = "Acesso de Acessibilidade Necessario";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "O macshot necessita de permissao de Acessibilidade para deslocar automaticamente outras aplicacoes. Conceda acesso nas Definicoes do Sistema e tente novamente.";

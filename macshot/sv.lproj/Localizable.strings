@@ -30,6 +30,7 @@
 "Show History Panel" = "Visa historikpanel";
 "Open Image..." = "\U00D6ppna bild...";
 "Open from Clipboard" = "\U00D6ppna fr\U00E5n urklipp";
+"Pin from Clipboard" = "F\U00E4st fr\U00E5n urklipp";
 "Preferences..." = "Inst\U00E4llningar...";
 "Check for Updates..." = "S\U00F6k efter uppdateringar...";
 "Quit macshot" = "Avsluta macshot";
@@ -321,7 +322,9 @@
 
 /* Alerts */
 "No Image on Clipboard" = "Ingen bild i urklipp";
+"No Image or Text on Clipboard" = "Ingen bild eller text i urklipp";
 "Copy an image to the clipboard first, then try again." = "Kopiera en bild till urklipp f\U00F6rst och f\U00F6rs\U00F6k sedan igen.";
+"Copy an image or text to the clipboard first, then try again." = "Kopiera en bild eller text till urklipp f\U00F6rst och f\U00F6rs\U00F6k sedan igen.";
 "OK" = "OK";
 "Accessibility Access Required" = "Tillg\U00E4nglighets\U00E5tkomst kr\U00E4vs";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot beh\U00F6ver tillg\U00E4nglighetsbeh\U00F6righet f\U00F6r att auto-rulla andra appar. Ge \U00E5tkomst i Systeminst\U00E4llningar och f\U00F6rs\U00F6k sedan igen.";

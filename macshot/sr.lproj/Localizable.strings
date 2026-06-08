@@ -30,6 +30,7 @@
 "Show History Panel" = "Прикажи панел историје";
 "Open Image..." = "Отвори слику...";
 "Open from Clipboard" = "Отвори из оставе";
+"Pin from Clipboard" = "Закачи из оставе";
 "Preferences..." = "Подешавања...";
 "Check for Updates..." = "Провери ажурирања...";
 "Quit macshot" = "Затвори macshot";
@@ -321,7 +322,9 @@
 
 /* Alerts */
 "No Image on Clipboard" = "Нема слике у остави";
+"No Image or Text on Clipboard" = "Нема слике или текста у остави";
 "Copy an image to the clipboard first, then try again." = "Прво копирајте слику у оставу, па покушајте поново.";
+"Copy an image or text to the clipboard first, then try again." = "Прво копирајте слику или текст у оставу, па покушајте поново.";
 "OK" = "У реду";
 "Accessibility Access Required" = "Потребан приступ приступачности";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot захтева дозволу приступачности за аутоматско скроловање других апликација. Одобрите приступ у системским подешавањима, па покушајте поново.";

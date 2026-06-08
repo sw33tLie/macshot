@@ -30,6 +30,7 @@
 "Show History Panel" = "வரலாற்றுப் பலகத்தைக் காட்டு";
 "Open Image..." = "படத்தைத் திற...";
 "Open from Clipboard" = "ஒட்டுப்பலகையிலிருந்து திற";
+"Pin from Clipboard" = "ஒட்டுப்பலகையிலிருந்து பொருத்து";
 "Preferences..." = "விருப்பங்கள்...";
 "Check for Updates..." = "புதுப்பிப்புகளைச் சரிபார்...";
 "Quit macshot" = "macshot-ஐ நிறுத்து";
@@ -322,7 +323,9 @@
 
 /* Alerts */
 "No Image on Clipboard" = "ஒட்டுப்பலகையில் படம் இல்லை";
+"No Image or Text on Clipboard" = "ஒட்டுப்பலகையில் படம் அல்லது உரை இல்லை";
 "Copy an image to the clipboard first, then try again." = "முதலில் ஒட்டுப்பலகையில் ஒரு படத்தை நகலெடுத்து, பின்னர் மீண்டும் முயற்சிக்கவும்.";
+"Copy an image or text to the clipboard first, then try again." = "முதலில் ஒட்டுப்பலகையில் ஒரு படம் அல்லது உரையை நகலெடுத்து, பின்னர் மீண்டும் முயற்சிக்கவும்.";
 "OK" = "சரி";
 "Accessibility Access Required" = "அணுகல்தன்மை அனுமதி தேவை";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot பிற பயன்பாடுகளை தானாக உருட்ட அணுகல்தன்மை அனுமதி தேவை. கணினி அமைப்புகளில் அணுகலை வழங்கி, மீண்டும் முயற்சிக்கவும்.";

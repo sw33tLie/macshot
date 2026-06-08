@@ -30,6 +30,7 @@
 "Show History Panel" = "Εμφάνιση πίνακα ιστορικού";
 "Open Image..." = "Άνοιγμα εικόνας...";
 "Open from Clipboard" = "Άνοιγμα από πρόχειρο";
+"Pin from Clipboard" = "Καρφίτσωμα από πρόχειρο";
 "Preferences..." = "Προτιμήσεις...";
 "Check for Updates..." = "Έλεγχος για ενημερώσεις...";
 "Quit macshot" = "Τερματισμός macshot";
@@ -322,7 +323,9 @@
 
 /* Alerts */
 "No Image on Clipboard" = "Δεν υπάρχει εικόνα στο πρόχειρο";
+"No Image or Text on Clipboard" = "Δεν υπάρχει εικόνα ή κείμενο στο πρόχειρο";
 "Copy an image to the clipboard first, then try again." = "Αντιγράψτε πρώτα μια εικόνα στο πρόχειρο και δοκιμάστε ξανά.";
+"Copy an image or text to the clipboard first, then try again." = "Αντιγράψτε πρώτα μια εικόνα ή κείμενο στο πρόχειρο και δοκιμάστε ξανά.";
 "OK" = "OK";
 "Accessibility Access Required" = "Απαιτείται πρόσβαση προσβασιμότητας";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "Το macshot χρειάζεται άδεια προσβασιμότητας για αυτόματη κύλιση άλλων εφαρμογών. Παραχωρήστε πρόσβαση στις Ρυθμίσεις συστήματος και δοκιμάστε ξανά.";

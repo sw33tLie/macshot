@@ -30,6 +30,7 @@
 "Show History Panel" = "Mostrar panell d'historial";
 "Open Image..." = "Obrir imatge...";
 "Open from Clipboard" = "Obrir des del porta-retalls";
+"Pin from Clipboard" = "Fixar des del porta-retalls";
 "Preferences..." = "Preferencies...";
 "Check for Updates..." = "Cercar actualitzacions...";
 "Quit macshot" = "Sortir de macshot";
@@ -322,7 +323,9 @@
 
 /* Alerts */
 "No Image on Clipboard" = "No hi ha cap imatge al porta-retalls";
+"No Image or Text on Clipboard" = "No hi ha cap imatge ni text al porta-retalls";
 "Copy an image to the clipboard first, then try again." = "Copieu primer una imatge al porta-retalls i torneu-ho a provar.";
+"Copy an image or text to the clipboard first, then try again." = "Copieu primer una imatge o text al porta-retalls i torneu-ho a provar.";
 "OK" = "D'acord";
 "Accessibility Access Required" = "Es requereix acces d'accessibilitat";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot necessita permis d'accessibilitat per desplacar automaticament altres aplicacions. Concediu l'acces a la Configuracio del sistema i torneu-ho a provar.";

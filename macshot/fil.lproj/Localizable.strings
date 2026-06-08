@@ -30,6 +30,7 @@
 "Show History Panel" = "Ipakita ang Panel ng Kasaysayan";
 "Open Image..." = "Buksan ang Larawan...";
 "Open from Clipboard" = "Buksan mula sa Clipboard";
+"Pin from Clipboard" = "I-pin mula sa Clipboard";
 "Preferences..." = "Mga Kagustuhan...";
 "Check for Updates..." = "Tingnan ang mga Update...";
 "Quit macshot" = "Isara ang macshot";
@@ -321,7 +322,9 @@
 
 /* Alerts */
 "No Image on Clipboard" = "Walang Larawan sa Clipboard";
+"No Image or Text on Clipboard" = "Walang Larawan o Teksto sa Clipboard";
 "Copy an image to the clipboard first, then try again." = "Kopyahin muna ang isang larawan sa clipboard, pagkatapos ay subukang muli.";
+"Copy an image or text to the clipboard first, then try again." = "Kopyahin muna ang isang larawan o teksto sa clipboard, pagkatapos ay subukang muli.";
 "OK" = "OK";
 "Accessibility Access Required" = "Kinakailangan ang Accessibility Access";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "Kailangan ng macshot ang Accessibility permission upang mag-auto-scroll sa ibang app. Pakibigyan ng access sa System Settings, pagkatapos ay subukang muli.";

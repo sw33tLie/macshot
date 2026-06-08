@@ -30,6 +30,7 @@
 "Show History Panel" = "Показване на панела с история";
 "Open Image..." = "Отваряне на изображение...";
 "Open from Clipboard" = "Отваряне от клипборда";
+"Pin from Clipboard" = "Закачане от клипборда";
 "Preferences..." = "Настройки...";
 "Check for Updates..." = "Проверка за обновления...";
 "Quit macshot" = "Изход от macshot";
@@ -321,7 +322,9 @@
 
 /* Alerts */
 "No Image on Clipboard" = "Няма изображение в клипборда";
+"No Image or Text on Clipboard" = "Няма изображение или текст в клипборда";
 "Copy an image to the clipboard first, then try again." = "Първо копирайте изображение в клипборда, след което опитайте отново.";
+"Copy an image or text to the clipboard first, then try again." = "Първо копирайте изображение или текст в клипборда, след което опитайте отново.";
 "OK" = "ОК";
 "Accessibility Access Required" = "Необходим е достъп за достъпност";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot се нуждае от разрешение за достъпност, за да превърта автоматично други приложения. Моля, дайте достъп в Системни настройки, след което опитайте отново.";

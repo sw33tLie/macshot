@@ -30,6 +30,7 @@
 "Show History Panel" = "기록 패널 보기";
 "Open Image..." = "이미지 열기...";
 "Open from Clipboard" = "클립보드에서 열기";
+"Pin from Clipboard" = "클립보드에서 고정";
 "Preferences..." = "환경설정...";
 "Check for Updates..." = "업데이트 확인...";
 "Quit macshot" = "macshot 종료";
@@ -321,7 +322,9 @@
 
 /* Alerts */
 "No Image on Clipboard" = "클립보드에 이미지 없음";
+"No Image or Text on Clipboard" = "클립보드에 이미지 또는 텍스트 없음";
 "Copy an image to the clipboard first, then try again." = "먼저 이미지를 클립보드에 복사한 후 다시 시도하세요.";
+"Copy an image or text to the clipboard first, then try again." = "먼저 이미지 또는 텍스트를 클립보드에 복사한 후 다시 시도하세요.";
 "OK" = "확인";
 "Accessibility Access Required" = "손쉬운 사용 권한 필요";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot이 다른 앱을 자동 스크롤하려면 손쉬운 사용 권한이 필요합니다. 시스템 설정에서 권한을 허용한 후 다시 시도하세요.";

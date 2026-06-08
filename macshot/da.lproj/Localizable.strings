@@ -30,6 +30,7 @@
 "Show History Panel" = "Vis historikpanel";
 "Open Image..." = "\U00C5bn billede...";
 "Open from Clipboard" = "\U00C5bn fra udklipsholder";
+"Pin from Clipboard" = "Fastg\U00F8r fra udklipsholder";
 "Preferences..." = "Indstillinger...";
 "Check for Updates..." = "S\U00F8g efter opdateringer...";
 "Quit macshot" = "Afslut macshot";
@@ -321,7 +322,9 @@
 
 /* Alerts */
 "No Image on Clipboard" = "Intet billede i udklipsholder";
+"No Image or Text on Clipboard" = "Intet billede eller tekst i udklipsholder";
 "Copy an image to the clipboard first, then try again." = "Kopi\U00E9r f\U00F8rst et billede til udklipsholderen, og pr\U00F8v derefter igen.";
+"Copy an image or text to the clipboard first, then try again." = "Kopi\U00E9r f\U00F8rst et billede eller tekst til udklipsholderen, og pr\U00F8v derefter igen.";
 "OK" = "OK";
 "Accessibility Access Required" = "Tilg\U00E6ngelighedsadgang kr\U00E6ves";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot kr\U00E6ver tilg\U00E6ngelighedstilladelse for at auto-rulle andre apps. Giv adgang i Systemindstillinger, og pr\U00F8v derefter igen.";

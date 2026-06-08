@@ -30,6 +30,7 @@
 "Show History Panel" = "Показати панель історії";
 "Open Image..." = "Відкрити зображення...";
 "Open from Clipboard" = "Відкрити з буфера обміну";
+"Pin from Clipboard" = "Закріпити з буфера обміну";
 "Preferences..." = "Параметри...";
 "Check for Updates..." = "Перевірити оновлення...";
 "Quit macshot" = "Завершити macshot";
@@ -321,7 +322,9 @@
 
 /* Alerts */
 "No Image on Clipboard" = "Немає зображення в буфері обміну";
+"No Image or Text on Clipboard" = "Немає зображення або тексту в буфері обміну";
 "Copy an image to the clipboard first, then try again." = "Спочатку скопіюйте зображення до буфера обміну, потім спробуйте знову.";
+"Copy an image or text to the clipboard first, then try again." = "Спочатку скопіюйте зображення або текст до буфера обміну, потім спробуйте знову.";
 "OK" = "OK";
 "Accessibility Access Required" = "Потрібен доступ до Універсального доступу";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot потребує дозволу Універсального доступу для автопрокрутки інших програм. Надайте доступ у Системних параметрах і спробуйте знову.";

@@ -30,6 +30,7 @@
 "Show History Panel" = "Afiseaza panoul istoric";
 "Open Image..." = "Deschide imagine...";
 "Open from Clipboard" = "Deschide din clipboard";
+"Pin from Clipboard" = "Fixeaza din clipboard";
 "Preferences..." = "Preferinte...";
 "Check for Updates..." = "Verifica actualizari...";
 "Quit macshot" = "Inchide macshot";
@@ -322,7 +323,9 @@
 
 /* Alerts */
 "No Image on Clipboard" = "Nicio imagine in clipboard";
+"No Image or Text on Clipboard" = "Nicio imagine sau text in clipboard";
 "Copy an image to the clipboard first, then try again." = "Copiaza mai intai o imagine in clipboard, apoi incearca din nou.";
+"Copy an image or text to the clipboard first, then try again." = "Copiaza mai intai o imagine sau text in clipboard, apoi incearca din nou.";
 "OK" = "OK";
 "Accessibility Access Required" = "Acces de accesibilitate necesar";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot are nevoie de permisiunea de accesibilitate pentru a derula automat alte aplicatii. Acorda acces din Setarile sistemului, apoi incearca din nou.";

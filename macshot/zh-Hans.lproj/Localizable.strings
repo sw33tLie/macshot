@@ -30,6 +30,7 @@
 "Show History Panel" = "显示历史面板";
 "Open Image..." = "打开图片...";
 "Open from Clipboard" = "从剪贴板打开";
+"Pin from Clipboard" = "从剪贴板固定";
 "Preferences..." = "偏好设置...";
 "Check for Updates..." = "检查更新...";
 "Quit macshot" = "退出 macshot";
@@ -321,7 +322,9 @@
 
 /* Alerts */
 "No Image on Clipboard" = "剪贴板中没有图片";
+"No Image or Text on Clipboard" = "剪贴板中没有图片或文字";
 "Copy an image to the clipboard first, then try again." = "请先将图片拷贝到剪贴板，然后重试。";
+"Copy an image or text to the clipboard first, then try again." = "请先将图片或文字拷贝到剪贴板，然后重试。";
 "OK" = "好";
 "Accessibility Access Required" = "需要辅助功能权限";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot 需要辅助功能权限才能自动滚动其他应用。请在系统设置中授予权限，然后重试。";

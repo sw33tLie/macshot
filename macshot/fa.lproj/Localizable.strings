@@ -30,6 +30,7 @@
 "Show History Panel" = "نمایش پنل تاریخچه";
 "Open Image..." = "باز کردن تصویر...";
 "Open from Clipboard" = "باز کردن از کلیپ‌بورد";
+"Pin from Clipboard" = "سنجاق کردن از کلیپ‌بورد";
 "Preferences..." = "تنظیمات...";
 "Check for Updates..." = "بررسی به‌روزرسانی‌ها...";
 "Quit macshot" = "خروج از macshot";
@@ -322,7 +323,9 @@
 
 /* Alerts */
 "No Image on Clipboard" = "تصویری در کلیپ‌بورد نیست";
+"No Image or Text on Clipboard" = "تصویر یا متنی در کلیپ‌بورد نیست";
 "Copy an image to the clipboard first, then try again." = "ابتدا یک تصویر را به کلیپ‌بورد کپی کنید، سپس دوباره تلاش کنید.";
+"Copy an image or text to the clipboard first, then try again." = "ابتدا یک تصویر یا متن را به کلیپ‌بورد کپی کنید، سپس دوباره تلاش کنید.";
 "OK" = "تایید";
 "Accessibility Access Required" = "دسترسی به قابلیت‌های دسترسی‌پذیری لازم است";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot برای پیمایش خودکار سایر برنامه‌ها به مجوز دسترسی‌پذیری نیاز دارد. لطفا دسترسی را در تنظیمات سیستم اعطا کنید و دوباره تلاش کنید.";

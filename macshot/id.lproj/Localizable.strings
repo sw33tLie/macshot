@@ -30,6 +30,7 @@
 "Show History Panel" = "Tampilkan Panel Riwayat";
 "Open Image..." = "Buka Gambar...";
 "Open from Clipboard" = "Buka dari Papan Klip";
+"Pin from Clipboard" = "Sematkan dari Papan Klip";
 "Preferences..." = "Preferensi...";
 "Check for Updates..." = "Periksa Pembaruan...";
 "Quit macshot" = "Keluar macshot";
@@ -321,7 +322,9 @@
 
 /* Alerts */
 "No Image on Clipboard" = "Tidak Ada Gambar di Papan Klip";
+"No Image or Text on Clipboard" = "Tidak Ada Gambar atau Teks di Papan Klip";
 "Copy an image to the clipboard first, then try again." = "Salin gambar ke papan klip terlebih dahulu, lalu coba lagi.";
+"Copy an image or text to the clipboard first, then try again." = "Salin gambar atau teks ke papan klip terlebih dahulu, lalu coba lagi.";
 "OK" = "OK";
 "Accessibility Access Required" = "Akses Aksesibilitas Diperlukan";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot memerlukan izin Aksesibilitas untuk menggulir otomatis aplikasi lain. Berikan akses di Pengaturan Sistem, lalu coba lagi.";

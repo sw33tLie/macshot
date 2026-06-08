@@ -30,6 +30,7 @@
 "Show History Panel" = "इतिहास पैनल दिखाएँ";
 "Open Image..." = "चित्र खोलें...";
 "Open from Clipboard" = "क्लिपबोर्ड से खोलें";
+"Pin from Clipboard" = "क्लिपबोर्ड से पिन करें";
 "Preferences..." = "प्राथमिकताएँ...";
 "Check for Updates..." = "अपडेट जाँचें...";
 "Quit macshot" = "macshot बंद करें";
@@ -322,7 +323,9 @@
 
 /* Alerts */
 "No Image on Clipboard" = "क्लिपबोर्ड पर कोई छवि नहीं";
+"No Image or Text on Clipboard" = "क्लिपबोर्ड पर कोई छवि या पाठ नहीं";
 "Copy an image to the clipboard first, then try again." = "पहले क्लिपबोर्ड पर एक छवि कॉपी करें, फिर पुनः प्रयास करें।";
+"Copy an image or text to the clipboard first, then try again." = "पहले क्लिपबोर्ड पर एक छवि या पाठ कॉपी करें, फिर पुनः प्रयास करें।";
 "OK" = "ठीक है";
 "Accessibility Access Required" = "सुलभता पहुँच आवश्यक";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot को अन्य ऐप्स को स्वतः-स्क्रॉल करने के लिए सुलभता अनुमति चाहिए। कृपया सिस्टम सेटिंग्स में पहुँच प्रदान करें, फिर पुनः प्रयास करें।";

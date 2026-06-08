@@ -30,6 +30,7 @@
 "Show History Panel" = "Pokaż panel historii";
 "Open Image..." = "Otwórz obraz...";
 "Open from Clipboard" = "Otwórz ze Schowka";
+"Pin from Clipboard" = "Przypnij ze Schowka";
 "Preferences..." = "Ustawienia...";
 "Check for Updates..." = "Sprawdź aktualizacje...";
 "Quit macshot" = "Zakończ macshot";
@@ -317,7 +318,9 @@
 
 /* Alerts */
 "No Image on Clipboard" = "Brak obrazu w Schowku";
+"No Image or Text on Clipboard" = "Brak obrazu lub tekstu w Schowku";
 "Copy an image to the clipboard first, then try again." = "Najpierw skopiuj obraz do schowka, a następnie spróbuj ponownie.";
+"Copy an image or text to the clipboard first, then try again." = "Najpierw skopiuj obraz lub tekst do schowka, a następnie spróbuj ponownie.";
 "OK" = "OK";
 "Accessibility Access Required" = "Wymagany dostęp do ułatwień dostępu";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot potrzebuje uprawnień do ułatwień dostępu, aby automatycznie przewijać inne aplikacje. Przyznaj dostęp w Ustawieniach systemowych i spróbuj ponownie.";

@@ -30,6 +30,7 @@
 "Show History Panel" = "Afficher le panneau d'historique";
 "Open Image..." = "Ouvrir une image...";
 "Open from Clipboard" = "Ouvrir depuis le presse-papiers";
+"Pin from Clipboard" = "Épingler depuis le presse-papiers";
 "Preferences..." = "Préférences...";
 "Check for Updates..." = "Rechercher les mises à jour...";
 "Quit macshot" = "Quitter macshot";
@@ -321,7 +322,9 @@
 
 /* Alerts */
 "No Image on Clipboard" = "Aucune image dans le presse-papiers";
+"No Image or Text on Clipboard" = "Aucune image ou texte dans le presse-papiers";
 "Copy an image to the clipboard first, then try again." = "Copiez d'abord une image dans le presse-papiers, puis réessayez.";
+"Copy an image or text to the clipboard first, then try again." = "Copiez d'abord une image ou un texte dans le presse-papiers, puis réessayez.";
 "OK" = "OK";
 "Accessibility Access Required" = "Accès à l'accessibilité requis";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot a besoin de l'autorisation d'accessibilité pour faire défiler automatiquement d'autres apps. Veuillez accorder l'accès dans les Réglages Système, puis réessayez.";

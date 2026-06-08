@@ -30,6 +30,7 @@
 "Show History Panel" = "Hiển thị bảng lịch sử";
 "Open Image..." = "Mở ảnh...";
 "Open from Clipboard" = "Mở từ bộ nhớ tạm";
+"Pin from Clipboard" = "Ghim từ bộ nhớ tạm";
 "Preferences..." = "Tùy chọn...";
 "Check for Updates..." = "Kiểm tra cập nhật...";
 "Quit macshot" = "Thoát macshot";
@@ -321,7 +322,9 @@
 
 /* Alerts */
 "No Image on Clipboard" = "Không có ảnh trong bộ nhớ tạm";
+"No Image or Text on Clipboard" = "Không có ảnh hoặc văn bản trong bộ nhớ tạm";
 "Copy an image to the clipboard first, then try again." = "Sao chép ảnh vào bộ nhớ tạm trước, rồi thử lại.";
+"Copy an image or text to the clipboard first, then try again." = "Sao chép ảnh hoặc văn bản vào bộ nhớ tạm trước, rồi thử lại.";
 "OK" = "OK";
 "Accessibility Access Required" = "Yêu cầu quyền Trợ năng";
 "macshot needs Accessibility permission to auto-scroll other apps. Please grant access in System Settings, then try again." = "macshot cần quyền Trợ năng để tự động cuộn các ứng dụng khác. Vui lòng cấp quyền trong Cài đặt hệ thống, rồi thử lại.";
