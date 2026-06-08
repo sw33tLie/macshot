@@ -191,6 +191,7 @@
 "Show snap alignment guides" = "Vis fastg\U00F8relses-hj\U00E6lpelinjer";
 "Capture mouse cursor in screenshot" = "Inkluder musemark\U00F8r i sk\U00E6rmbillede";
 "Double-click selection to copy" = "Dobbeltklik p\U00E5 markeringen for at kopiere";
+"Hide capture instructions" = "Skjul vejledning ved optagelse";
 "Use window title in saved filename" = "Brug vinduets titel i gemt filnavn";
 "Hide menu bar icon" = "Skjul menulinjeikon";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Genvejstaster virker stadig. For at vise ikonet igen skal du genstarte macshot.";

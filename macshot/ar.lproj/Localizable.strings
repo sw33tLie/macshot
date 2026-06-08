@@ -191,6 +191,7 @@
 "Show snap alignment guides" = "عرض خطوط المحاذاة";
 "Capture mouse cursor in screenshot" = "التقاط مؤشر الفأرة في لقطة الشاشة";
 "Double-click selection to copy" = "النقر المزدوج على التحديد للنسخ";
+"Hide capture instructions" = "إخفاء تعليمات الالتقاط";
 "Use window title in saved filename" = "استخدام عنوان النافذة في اسم الملف المحفوظ";
 "Hide menu bar icon" = "إخفاء أيقونة شريط القوائم";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "الاختصارات لا تزال تعمل. لإظهار الأيقونة مجددًا، أعد تشغيل macshot.";

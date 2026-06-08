@@ -191,6 +191,7 @@
 "Show snap alignment guides" = "Ipakita ang mga gabay sa pagkakahanay";
 "Capture mouse cursor in screenshot" = "Isama ang cursor ng mouse sa screenshot";
 "Double-click selection to copy" = "I-double-click ang pinili upang kopyahin";
+"Hide capture instructions" = "Itago ang mga tagubilin sa pagkuha ng screenshot";
 "Use window title in saved filename" = "Gamitin ang pamagat ng window sa na-save na filename";
 "Hide menu bar icon" = "Itago ang icon sa menu bar";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Gumagana pa rin ang mga hotkey. Upang ipakita muli ang icon, i-restart ang macshot.";

@@ -195,6 +195,7 @@
 "Show snap alignment guides" = "Показывать направляющие привязки";
 "Capture mouse cursor in screenshot" = "Захватывать курсор мыши на снимке экрана";
 "Double-click selection to copy" = "Копировать двойным щелчком по выделению";
+"Hide capture instructions" = "Скрывать подсказки при захвате";
 "Use window title in saved filename" = "Использовать заголовок окна в имени файла";
 "Hide menu bar icon" = "Скрыть значок в строке меню";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Горячие клавиши по-прежнему работают. Чтобы вернуть значок, перезапустите macshot.";

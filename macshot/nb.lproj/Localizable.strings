@@ -191,6 +191,7 @@
 "Show snap alignment guides" = "Vis hjelpelinje for justering";
 "Capture mouse cursor in screenshot" = "Ta med musepeker i skjermbilde";
 "Double-click selection to copy" = "Dobbeltklikk p\U00E5 utvalget for \U00E5 kopiere";
+"Hide capture instructions" = "Skjul instruksjoner ved skjermbilde";
 "Use window title in saved filename" = "Bruk vindustittel i lagret filnavn";
 "Hide menu bar icon" = "Skjul menylinje-ikon";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Hurtigtastene fungerer fortsatt. For \U00E5 vise ikonet igjen, start macshot p\U00E5 nytt.";

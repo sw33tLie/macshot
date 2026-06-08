@@ -1444,13 +1444,16 @@ class OverlayView: NSView {
         // Window snap highlight (drawn before helper text so text appears on top)
         drawWindowSnapHighlight()
 
-        // Helper text
-        if state == .idle {
-            if screenshotImage != nil {
-                drawIdleHelperText()
+        // Helper text (capture instructions). Suppressed when the user has
+        // enabled "Hide capture instructions" in Settings (issue #226).
+        if !UserDefaults.standard.bool(forKey: "hideCaptureInstructions") {
+            if state == .idle {
+                if screenshotImage != nil {
+                    drawIdleHelperText()
+                }
+            } else if state == .selecting {
+                drawSelectingHelperText()
             }
-        } else if state == .selecting {
-            drawSelectingHelperText()
         }
 
         // Draw remote selection region (cross-screen drag from another overlay)

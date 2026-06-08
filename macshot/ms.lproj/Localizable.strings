@@ -191,6 +191,7 @@
 "Show snap alignment guides" = "Tunjuk panduan penjajaran lekat";
 "Capture mouse cursor in screenshot" = "Tangkap kursor tetikus dalam tangkapan skrin";
 "Double-click selection to copy" = "Dwiklik pilihan untuk menyalin";
+"Hide capture instructions" = "Sembunyikan arahan tangkapan skrin";
 "Use window title in saved filename" = "Guna tajuk tetingkap dalam nama fail yang disimpan";
 "Hide menu bar icon" = "Sembunyikan ikon bar menu";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Kekunci panas masih berfungsi. Untuk menunjukkan ikon semula, lancar semula macshot.";

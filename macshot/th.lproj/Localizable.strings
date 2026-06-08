@@ -191,6 +191,7 @@
 "Show snap alignment guides" = "แสดงเส้นจัดแนว";
 "Capture mouse cursor in screenshot" = "จับภาพเคอร์เซอร์เมาส์ในภาพหน้าจอ";
 "Double-click selection to copy" = "ดับเบิลคลิกที่พื้นที่ที่เลือกเพื่อคัดลอก";
+"Hide capture instructions" = "ซ่อนคำแนะนำการจับภาพหน้าจอ";
 "Use window title in saved filename" = "ใช้ชื่อหน้าต่างในชื่อไฟล์ที่บันทึก";
 "Hide menu bar icon" = "ซ่อนไอคอนแถบเมนู";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "ปุ่มลัดยังใช้งานได้ เปิด macshot ใหม่เพื่อแสดงไอคอนอีกครั้ง";

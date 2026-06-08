@@ -191,6 +191,7 @@
 "Show snap alignment guides" = "スナップ整列ガイドを表示";
 "Capture mouse cursor in screenshot" = "スクリーンショットにマウスカーソルを含める";
 "Double-click selection to copy" = "選択範囲をダブルクリックでコピー";
+"Hide capture instructions" = "撮影時の操作説明を非表示";
 "Use window title in saved filename" = "保存ファイル名にウインドウタイトルを使用";
 "Hide menu bar icon" = "メニューバーアイコンを隠す";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "ホットキーは引き続き使用できます。アイコンを再表示するには、macshot を再起動してください。";

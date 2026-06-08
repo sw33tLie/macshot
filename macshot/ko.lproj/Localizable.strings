@@ -191,6 +191,7 @@
 "Show snap alignment guides" = "스냅 정렬 가이드 표시";
 "Capture mouse cursor in screenshot" = "스크린샷에 마우스 커서 포함";
 "Double-click selection to copy" = "선택 영역 더블 클릭으로 복사";
+"Hide capture instructions" = "캡처 안내 숨기기";
 "Use window title in saved filename" = "저장 파일명에 윈도우 제목 사용";
 "Hide menu bar icon" = "메뉴 막대 아이콘 숨기기";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "단축키는 계속 작동합니다. 아이콘을 다시 표시하려면 macshot을 재실행하세요.";

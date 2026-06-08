@@ -191,6 +191,7 @@
 "Show snap alignment guides" = "Εμφάνιση οδηγών ευθυγράμμισης κουμπώματος";
 "Capture mouse cursor in screenshot" = "Λήψη δρομέα ποντικιού στο στιγμιότυπο";
 "Double-click selection to copy" = "Διπλό κλικ στην επιλογή για αντιγραφή";
+"Hide capture instructions" = "Απόκρυψη οδηγιών λήψης";
 "Use window title in saved filename" = "Χρήση τίτλου παραθύρου στο όνομα αρχείου";
 "Hide menu bar icon" = "Απόκρυψη εικονιδίου γραμμής μενού";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Τα πλήκτρα συντόμευσης λειτουργούν ακόμα. Για εμφάνιση του εικονιδίου, επανεκκινήστε το macshot.";

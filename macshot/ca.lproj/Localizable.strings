@@ -191,6 +191,7 @@
 "Show snap alignment guides" = "Mostrar guies d'alineacio";
 "Capture mouse cursor in screenshot" = "Capturar el cursor del ratoli a la captura";
 "Double-click selection to copy" = "Doble clic a la seleccio per copiar";
+"Hide capture instructions" = "Amagar les instruccions de captura";
 "Use window title in saved filename" = "Utilitzar el titol de la finestra al nom del fitxer";
 "Hide menu bar icon" = "Amagar la icona de la barra de menus";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Les dreceres segueixen funcionant. Per mostrar la icona de nou, reinicieu macshot.";

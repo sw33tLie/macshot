@@ -195,6 +195,7 @@
 "Show snap alignment guides" = "Прикажи водиље за поравнање";
 "Capture mouse cursor in screenshot" = "Сними курсор миша на снимку екрана";
 "Double-click selection to copy" = "Копирај двокликом на селекцију";
+"Hide capture instructions" = "Сакриј упутства при снимању";
 "Use window title in saved filename" = "Користи наслов прозора у имену датотеке";
 "Hide menu bar icon" = "Сакриј иконицу у траци менија";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Пречице и даље раде. Да бисте поново приказали иконицу, поново покрените macshot.";

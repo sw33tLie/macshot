@@ -191,6 +191,7 @@
 "Show snap alignment guides" = "نمایش خطوط راهنمای تراز";
 "Capture mouse cursor in screenshot" = "ضبط نشانگر موس در تصویر صفحه";
 "Double-click selection to copy" = "دوبار کلیک روی انتخاب برای کپی";
+"Hide capture instructions" = "پنهان کردن راهنمای تصویربرداری";
 "Use window title in saved filename" = "استفاده از عنوان پنجره در نام فایل ذخیره‌شده";
 "Hide menu bar icon" = "پنهان کردن آیکون نوار منو";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "کلیدهای میانبر همچنان کار می‌کنند. برای نمایش مجدد آیکون، macshot را دوباره اجرا کنید.";

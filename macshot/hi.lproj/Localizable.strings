@@ -191,6 +191,7 @@
 "Show snap alignment guides" = "स्नैप संरेखण गाइड दिखाएँ";
 "Capture mouse cursor in screenshot" = "स्क्रीनशॉट में माउस कर्सर कैप्चर करें";
 "Double-click selection to copy" = "कॉपी करने के लिए चयन पर डबल-क्लिक करें";
+"Hide capture instructions" = "कैप्चर निर्देश छिपाएँ";
 "Use window title in saved filename" = "सहेजे गए फ़ाइलनाम में विंडो शीर्षक उपयोग करें";
 "Hide menu bar icon" = "मेनू बार आइकन छिपाएँ";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "हॉटकी अभी भी काम करेंगी। आइकन फिर से दिखाने के लिए macshot पुनः लॉन्च करें।";

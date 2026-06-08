@@ -191,6 +191,7 @@
 "Show snap alignment guides" = "Hizalama kılavuzlarını göster";
 "Capture mouse cursor in screenshot" = "Ekran görüntüsünde fare imlecini yakala";
 "Double-click selection to copy" = "Kopyalamak için seçime çift tıkla";
+"Hide capture instructions" = "Yakalama talimatlarını gizle";
 "Use window title in saved filename" = "Kaydedilen dosya adında pencere başlığını kullan";
 "Hide menu bar icon" = "Menü çubuğu simgesini gizle";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Kısayol tuşları çalışmaya devam eder. Simgeyi tekrar göstermek için macshot'u yeniden başlatın.";

@@ -209,6 +209,7 @@
 "Show snap alignment guides" = "Show snap alignment guides";
 "Capture mouse cursor in screenshot" = "Capture mouse cursor in screenshot";
 "Double-click selection to copy" = "Double-click selection to copy";
+"Hide capture instructions" = "Hide capture instructions";
 "Use window title in saved filename" = "Use window title in saved filename";
 "Hide menu bar icon" = "Hide menu bar icon";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Hotkeys still work. To show the icon again, re-launch macshot.";

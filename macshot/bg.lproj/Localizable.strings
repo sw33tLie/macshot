@@ -195,6 +195,7 @@
 "Show snap alignment guides" = "Показване на водачи за подравняване";
 "Capture mouse cursor in screenshot" = "Заснемане на курсора в екранната снимка";
 "Double-click selection to copy" = "Копиране с двойно щракване върху селекцията";
+"Hide capture instructions" = "Скриване на указанията при заснемане";
 "Use window title in saved filename" = "Използване на заглавието на прозореца в името на файла";
 "Hide menu bar icon" = "Скриване на иконата в лентата с менюта";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Бързите клавиши продължават да работят. За да покажете иконата отново, рестартирайте macshot.";

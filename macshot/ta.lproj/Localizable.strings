@@ -191,6 +191,7 @@
 "Show snap alignment guides" = "ஒட்டு சீரமைப்பு வழிகாட்டிகளைக் காட்டு";
 "Capture mouse cursor in screenshot" = "திரைப்பிடிப்பில் சுட்டியைப் பிடி";
 "Double-click selection to copy" = "நகலெடுக்க தேர்வில் இருமுறை கிளிக் செய்க";
+"Hide capture instructions" = "பிடிப்பு வழிமுறைகளை மறை";
 "Use window title in saved filename" = "சேமிக்கும் கோப்புப் பெயரில் சாளரத் தலைப்பைப் பயன்படுத்து";
 "Hide menu bar icon" = "பட்டிப்பட்டை ஐகானை மறை";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "விரைவு விசைகள் செயல்படும். ஐகானை மீண்டும் காட்ட, macshot-ஐ மறுதொடக்கம் செய்யுங்கள்.";

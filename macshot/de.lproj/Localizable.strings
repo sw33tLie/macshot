@@ -191,6 +191,7 @@
 "Show snap alignment guides" = "Ausrichtungshilfen anzeigen";
 "Capture mouse cursor in screenshot" = "Mauszeiger im Screenshot aufnehmen";
 "Double-click selection to copy" = "Doppelklick auf Auswahl zum Kopieren";
+"Hide capture instructions" = "Aufnahmehinweise ausblenden";
 "Use window title in saved filename" = "Fenstertitel im Dateinamen verwenden";
 "Hide menu bar icon" = "Menüleistensymbol ausblenden";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Kurzbefehle funktionieren weiterhin. Um das Symbol wieder anzuzeigen, starten Sie macshot neu.";

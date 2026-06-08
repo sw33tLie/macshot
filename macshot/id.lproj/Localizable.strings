@@ -191,6 +191,7 @@
 "Show snap alignment guides" = "Tampilkan panduan perataan jepret";
 "Capture mouse cursor in screenshot" = "Tangkap kursor mouse di tangkapan layar";
 "Double-click selection to copy" = "Klik dua kali pilihan untuk menyalin";
+"Hide capture instructions" = "Sembunyikan petunjuk pengambilan tangkapan layar";
 "Use window title in saved filename" = "Gunakan judul jendela di nama file tersimpan";
 "Hide menu bar icon" = "Sembunyikan ikon bilah menu";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Tombol pintas tetap berfungsi. Untuk menampilkan ikon kembali, jalankan ulang macshot.";

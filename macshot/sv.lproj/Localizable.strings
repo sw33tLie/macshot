@@ -191,6 +191,7 @@
 "Show snap alignment guides" = "Visa f\U00E4stlinjer";
 "Capture mouse cursor in screenshot" = "F\U00E5nga muspekaren i sk\U00E4rmbild";
 "Double-click selection to copy" = "Dubbelklicka p\U00E5 markeringen f\U00F6r att kopiera";
+"Hide capture instructions" = "D\U00F6lj instruktioner vid sk\U00E4rmbild";
 "Use window title in saved filename" = "Anv\U00E4nd f\U00F6nstertitel i filnamn";
 "Hide menu bar icon" = "D\U00F6lj menyradsikon";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Kortkommandon fungerar fortfarande. F\U00F6r att visa ikonen igen, starta om macshot.";

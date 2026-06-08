@@ -191,6 +191,7 @@
 "Show snap alignment guides" = "Nayta kohdistusoppaat";
 "Capture mouse cursor in screenshot" = "Kaappaa hiiren osoitin kuvakaappaukseen";
 "Double-click selection to copy" = "Kopioi kaksoisnapsauttamalla valintaa";
+"Hide capture instructions" = "Piilota kuvakaappausohjeet";
 "Use window title in saved filename" = "Kayta ikkunan otsikkoa tiedostonimessa";
 "Hide menu bar icon" = "Piilota valikkopalkin kuvake";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Pikanappaimet toimivat edelleen. Nayta kuvake uudelleen kaynnistamalla macshot.";

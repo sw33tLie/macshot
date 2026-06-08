@@ -191,6 +191,7 @@
 "Show snap alignment guides" = "Pokaż linie wyrównywania";
 "Capture mouse cursor in screenshot" = "Uwzględnij kursor myszy na zrzucie";
 "Double-click selection to copy" = "Kliknij dwukrotnie zaznaczenie, aby skopiować";
+"Hide capture instructions" = "Ukryj instrukcje przechwytywania";
 "Use window title in saved filename" = "Użyj tytułu okna w nazwie pliku";
 "Hide menu bar icon" = "Ukryj ikonę na pasku menu";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Skróty nadal działają. Aby przywrócić ikonę, uruchom ponownie macshot.";

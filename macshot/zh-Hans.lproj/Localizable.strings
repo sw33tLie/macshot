@@ -191,6 +191,7 @@
 "Show snap alignment guides" = "显示对齐辅助线";
 "Capture mouse cursor in screenshot" = "在截图中捕获鼠标指针";
 "Double-click selection to copy" = "双击选区以复制";
+"Hide capture instructions" = "隐藏截图操作提示";
 "Use window title in saved filename" = "在保存文件名中使用窗口标题";
 "Hide menu bar icon" = "隐藏菜单栏图标";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "快捷键仍可使用。若要再次显示图标，请重新启动 macshot。";

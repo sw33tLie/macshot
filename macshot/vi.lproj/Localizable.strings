@@ -191,6 +191,7 @@
 "Show snap alignment guides" = "Hiển thị đường căn chỉnh bắt dính";
 "Capture mouse cursor in screenshot" = "Chụp con trỏ chuột trong ảnh";
 "Double-click selection to copy" = "Nhấp đúp vào vùng chọn để sao chép";
+"Hide capture instructions" = "Ẩn hướng dẫn chụp màn hình";
 "Use window title in saved filename" = "Dùng tiêu đề cửa sổ trong tên tệp";
 "Hide menu bar icon" = "Ẩn biểu tượng thanh menu";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Phím tắt vẫn hoạt động. Để hiện lại biểu tượng, hãy khởi chạy lại macshot.";

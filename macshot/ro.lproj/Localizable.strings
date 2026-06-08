@@ -191,6 +191,7 @@
 "Show snap alignment guides" = "Afiseaza ghidajele de aliniere";
 "Capture mouse cursor in screenshot" = "Captura cursorul mouse-ului in captura de ecran";
 "Double-click selection to copy" = "Dublu-clic pe selectie pentru a copia";
+"Hide capture instructions" = "Ascunde instructiunile de captura";
 "Use window title in saved filename" = "Foloseste titlul ferestrei in numele fisierului salvat";
 "Hide menu bar icon" = "Ascunde pictograma din bara de meniu";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Scurtaturile functioneaza in continuare. Pentru a afisa din nou pictograma, reporneste macshot.";

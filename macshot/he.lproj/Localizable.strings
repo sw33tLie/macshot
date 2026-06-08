@@ -191,6 +191,7 @@
 "Show snap alignment guides" = "הצג קווי הצמדה";
 "Capture mouse cursor in screenshot" = "לכוד סמן עכבר בצילום מסך";
 "Double-click selection to copy" = "לחיצה כפולה על הבחירה להעתקה";
+"Hide capture instructions" = "הסתר הוראות צילום";
 "Use window title in saved filename" = "השתמש בכותרת חלון בשם הקובץ";
 "Hide menu bar icon" = "הסתר סמל שורת התפריטים";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "מקשי קיצור עדיין פועלים. להצגת הסמל שוב, הפעל מחדש את macshot.";

@@ -191,6 +191,7 @@
 "Show snap alignment guides" = "Uitlijnhulplijnen tonen";
 "Capture mouse cursor in screenshot" = "Muiscursor vastleggen in schermafbeelding";
 "Double-click selection to copy" = "Dubbelklik op selectie om te kopiëren";
+"Hide capture instructions" = "Opname-instructies verbergen";
 "Use window title in saved filename" = "Venstertitel gebruiken in bestandsnaam";
 "Hide menu bar icon" = "Menubalkpictogram verbergen";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Sneltoetsen werken nog steeds. Start macshot opnieuw op om het pictogram weer te tonen.";
