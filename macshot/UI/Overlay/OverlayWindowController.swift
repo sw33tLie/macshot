@@ -136,7 +136,12 @@ class OverlayWindowController {
         window.isOpaque = false
         window.backgroundColor = .clear
         window.hasShadow = false
-        window.ignoresMouseEvents = false
+        // Idle/warmed panels are click-through by invariant. Mouse events are
+        // enabled only when a real capture is presented (showOverlay/makeKey).
+        // This guarantees that a stranded warm panel — e.g. if warmPanel()'s
+        // deferred orderOut is delayed across a sleep/wake or display
+        // reconfigure — can never swallow clicks (see issue #231).
+        window.ignoresMouseEvents = true
         window.acceptsMouseMovedEvents = true
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         window.hidesOnDeactivate = false
@@ -183,6 +188,9 @@ class OverlayWindowController {
     func showOverlay() {
         guard let window = overlayWindow else { return }
         timingMark?("showOverlay begin appActive=\(NSApp.isActive)")
+        // A real capture is being presented — enable mouse interaction.
+        // (Idle/warmed panels are click-through; see setupWindow.)
+        window.ignoresMouseEvents = false
         rootView?.layoutSubtreeIfNeeded()
         timingMark?("after layoutSubtreeIfNeeded")
         overlayView?.displayIfNeeded()
@@ -208,6 +216,7 @@ class OverlayWindowController {
     }
 
     func makeKey() {
+        overlayWindow?.ignoresMouseEvents = false
         overlayWindow?.makeKeyAndOrderFront(nil)
         if let view = overlayView {
             overlayWindow?.makeFirstResponder(view)
@@ -225,14 +234,20 @@ class OverlayWindowController {
         // Use a barely-visible alpha so WindowServer doesn't optimize the
         // window away as a transparent no-op. Restore after we order out.
         let savedAlpha = panel.alphaValue
+        // Keep the warm panel click-through. Even if the deferred orderOut
+        // below is stranded (e.g. across a sleep/wake or display reconfigure),
+        // an invisible click-through window can't lock out input (issue #231).
+        panel.ignoresMouseEvents = true
         panel.alphaValue = 0.001
         panel.orderFrontRegardless()
         rootView?.layoutSubtreeIfNeeded()
         overlayView?.displayIfNeeded()
         CATransaction.flush()
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak panel] in
+            guard let panel else { return }
             panel.orderOut(nil)
             panel.alphaValue = savedAlpha
+            panel.ignoresMouseEvents = true
         }
     }
 
@@ -356,6 +371,8 @@ class OverlayWindowController {
         // with the same defaults as a fresh install.
         overlayWindow?.isOpaque = false
         overlayWindow?.backgroundColor = .clear
+        // Return to the idle click-through invariant before ordering out.
+        overlayWindow?.ignoresMouseEvents = true
         overlayWindow?.orderOut(nil)
         NSCursor.arrow.set()
         // Note: overlayDelegate is intentionally NOT cleared here; the
@@ -372,6 +389,7 @@ class OverlayWindowController {
         overlayWindow?.contentView = nil
         rootView = nil
         overlayView = nil
+        overlayWindow?.ignoresMouseEvents = true
         overlayWindow?.orderOut(nil)
         overlayWindow?.close()
         overlayWindow = nil
@@ -970,6 +988,8 @@ extension OverlayWindowController: OverlayViewDelegate {
                 self.dismiss()
                 self.overlayDelegate?.overlayDidConfirm(self, capturedImage: nil, annotationData: nil)
             } else {
+                // Save cancelled — return to the active capture, mouse-interactive.
+                self.overlayWindow?.ignoresMouseEvents = false
                 self.overlayWindow?.makeKeyAndOrderFront(nil)
                 if let view = self.overlayView {
                     self.overlayWindow?.makeFirstResponder(view)

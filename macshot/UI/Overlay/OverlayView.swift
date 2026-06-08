@@ -1249,7 +1249,39 @@ class OverlayView: NSView {
                 return row.hitTest(convert(point, to: row.superview))
             }
         }
-        return super.hitTest(point)
+        let result = super.hitTest(point)
+        if shouldIgnoreInactiveChromeHit(result) {
+            return self
+        }
+        return result
+    }
+
+    /// AppKit's default hitTest can still resolve a mouse-down to a hidden or
+    /// inactive toolbar/options subview (the chrome views are pooled and reused
+    /// across capture sessions, not destroyed). When that happens the event
+    /// never reaches OverlayView.mouseDown, so a new selection drag started over
+    /// the *previous* position of now-hidden chrome silently fails. Redirect
+    /// those hits back to self. Visible chrome is unaffected. (PR #219)
+    private func shouldIgnoreInactiveChromeHit(_ view: NSView?) -> Bool {
+        guard !isEditorMode, let view, view !== self else { return false }
+
+        var current: NSView? = view
+        var hasHiddenAncestor = false
+        while let candidate = current, candidate !== self {
+            hasHiddenAncestor = hasHiddenAncestor || candidate.isHidden
+            if isOverlayChromeRoot(candidate) {
+                return !showToolbars || hasHiddenAncestor
+            }
+            current = candidate.superview
+        }
+        return false
+    }
+
+    private func isOverlayChromeRoot(_ view: NSView) -> Bool {
+        if let bottomStripView, view === bottomStripView { return true }
+        if let rightStripView, view === rightStripView { return true }
+        if let toolOptionsRowView, view === toolOptionsRowView { return true }
+        return false
     }
 
     /// Returns true if the point is over any chrome element (toolbars, options row, popovers, labels).
