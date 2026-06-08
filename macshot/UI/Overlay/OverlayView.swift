@@ -259,6 +259,19 @@ class OverlayView: NSView {
     var numberStartAt: Int = {
         UserDefaults.standard.object(forKey: "numberStartAt") as? Int ?? 1
     }()
+    /// Next number value, derived from the annotations currently on the canvas
+    /// (issue #211): one past the highest existing number, or `numberStartAt`
+    /// when no number annotations exist. Deriving from canvas state means the
+    /// sequence resets correctly after any delete, multi-delete, or undo —
+    /// no separate counter to keep in sync.
+    var nextNumberValue: Int {
+        let maxExisting = annotations
+            .filter { $0.tool == .number }
+            .compactMap { $0.number }
+            .max()
+        if let maxExisting { return maxExisting + 1 }
+        return numberStartAt
+    }
     var currentNumberFormat: NumberFormat = {
         NumberFormat(rawValue: UserDefaults.standard.integer(forKey: "numberFormat")) ?? .decimal
     }()

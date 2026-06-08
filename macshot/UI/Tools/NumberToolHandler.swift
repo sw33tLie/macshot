@@ -7,7 +7,6 @@ final class NumberToolHandler: AnnotationToolHandler {
     let tool: AnnotationTool = .number
 
     func start(at point: NSPoint, canvas: AnnotationCanvas) -> Annotation? {
-        canvas.numberCounter += 1
         let annotation = Annotation(
             tool: .number,
             startPoint: point,
@@ -15,7 +14,10 @@ final class NumberToolHandler: AnnotationToolHandler {
             color: canvas.opacityAppliedColor(for: .number),
             strokeWidth: canvas.currentNumberSize
         )
-        annotation.number = canvas.numberCounter + (canvas.numberStartAt - 1)
+        // Derive the next value from the numbers currently on the canvas so the
+        // sequence resets correctly after deletes/undo (issue #211): one past
+        // the highest existing number, or the configured start value if none.
+        annotation.number = canvas.nextNumberValue
         annotation.numberFormat = canvas.currentNumberFormat
         return annotation
     }

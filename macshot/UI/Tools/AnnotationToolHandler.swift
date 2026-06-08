@@ -25,6 +25,10 @@ protocol AnnotationCanvas: AnyObject {
     var numberCounter: Int { get set }
     var numberStartAt: Int { get }
     var currentNumberFormat: NumberFormat { get }
+    /// The value the next placed number annotation should display — derived
+    /// from the numbers currently on the canvas (one past the max, or the
+    /// configured start value when none exist).
+    var nextNumberValue: Int { get }
 
     // Stamp tool
     var currentStampImage: NSImage? { get set }
