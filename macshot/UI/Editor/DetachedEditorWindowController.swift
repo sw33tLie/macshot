@@ -368,12 +368,17 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
         savePanel.allowedContentTypes = [ImageEncoder.utType]
         savePanel.nameFieldStringValue = FilenameFormatter.defaultImageFilename()
         savePanel.directoryURL = SaveDirectoryAccess.directoryHint()
-        savePanel.beginSheetModal(for: window!) { [weak self] response in
+        let handler: (NSApplication.ModalResponse) -> Void = { [weak self] response in
             if response == .OK, let url = savePanel.url {
                 try? imageData.write(to: url)
                 self?.playCopySound()
                 self?.autoSaveToHistoryIfNeeded(compositedImage: image)
             }
+        }
+        if let window {
+            savePanel.beginSheetModal(for: window, completionHandler: handler)
+        } else {
+            savePanel.begin(completionHandler: handler)
         }
     }
 
@@ -460,16 +465,67 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
     }
 
     private func saveImageToDirectory(_ image: NSImage) {
-        let dirURL = SaveDirectoryAccess.resolve()
+        // Resolve the filename now (at request time) so a delayed write or
+        // folder-prompt can't pick up a later timestamp.
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd 'at' HH.mm.ss"
         let filename = "Screenshot \(formatter.string(from: Date())).\(ImageEncoder.fileExtension)"
-        let fileURL = dirURL.appendingPathComponent(filename)
+        if let dirURL = SaveDirectoryAccess.resolveIfAccessible() {
+            Self.writeImage(image, toDirectory: dirURL, filename: filename, securityScoped: true)
+            return
+        }
+        // No authorized save folder (sandbox has no valid bookmark). A raw write
+        // would fail silently, so prompt the user to choose a folder once, then
+        // persist it as a bookmark for this and all future saves (issue #177).
+        requestSaveDirectoryAccess { dirURL, securityScoped in
+            Self.writeImage(image, toDirectory: dirURL, filename: filename, securityScoped: securityScoped)
+        }
+    }
 
+    /// Encode and write `image` into `dirURL` on a background queue, releasing
+    /// the security scope afterward. `defer` guarantees release even on failure.
+    private static func writeImage(_ image: NSImage, toDirectory dirURL: URL,
+                                   filename: String, securityScoped: Bool) {
         DispatchQueue.global(qos: .userInitiated).async {
+            defer { if securityScoped { SaveDirectoryAccess.stopAccessing(url: dirURL) } }
+            let fileURL = dirURL.appendingPathComponent(filename)
             guard let imageData = ImageEncoder.encode(image) else { return }
-            try? imageData.write(to: fileURL)
-            SaveDirectoryAccess.stopAccessing(url: dirURL)
+            do {
+                try imageData.write(to: fileURL)
+            } catch {
+                #if DEBUG
+                NSLog("macshot: failed to save screenshot to \(fileURL.path): \(error.localizedDescription)")
+                #endif
+            }
+        }
+    }
+
+    /// Prompt (on the main thread) for a save folder, persist it as a
+    /// security-scoped bookmark, then hand a scoped URL to `completion`.
+    private func requestSaveDirectoryAccess(completion: @escaping (URL, Bool) -> Void) {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = false
+        panel.prompt = L("Choose a folder")
+        panel.directoryURL = SaveDirectoryAccess.directoryHint()
+        let handler: (NSApplication.ModalResponse) -> Void = { response in
+            guard response == .OK, let url = panel.url else { return }
+            SaveDirectoryAccess.save(url: url)
+            // Reopen through the freshly saved bookmark so first-save behavior
+            // matches every later save in sandbox mode.
+            if let scopedURL = SaveDirectoryAccess.resolveIfAccessible() {
+                completion(scopedURL, true)
+                return
+            }
+            let securityScoped = url.startAccessingSecurityScopedResource()
+            completion(url, securityScoped)
+        }
+        // Attach as a sheet to the editor window when present; otherwise app-modal.
+        if let window {
+            panel.beginSheetModal(for: window, completionHandler: handler)
+        } else {
+            panel.begin(completionHandler: handler)
         }
     }
     func overlayViewDidRequestUpload() {

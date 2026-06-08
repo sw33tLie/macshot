@@ -2483,10 +2483,9 @@ extension AppDelegate: OverlayWindowControllerDelegate {
             }
         }
         // Fall back to the general screenshot save directory if THAT has a
-        // valid bookmark. (SaveDirectoryAccess.resolve() always returns
-        // something, but without a bookmark we have no sandbox write access.)
-        if UserDefaults.standard.data(forKey: "saveDirectoryBookmark") != nil {
-            let screenshotDir = SaveDirectoryAccess.resolve()
+        // valid security-scoped bookmark (without one we have no sandbox write
+        // access). resolveIfAccessible() returns nil precisely in that case.
+        if let screenshotDir = SaveDirectoryAccess.resolveIfAccessible() {
             defer { SaveDirectoryAccess.stopAccessing(url: screenshotDir) }
             if let moved = moveRecording(from: tmpURL, intoDirectory: screenshotDir) {
                 NSWorkspace.shared.activateFileViewerSelecting([moved])

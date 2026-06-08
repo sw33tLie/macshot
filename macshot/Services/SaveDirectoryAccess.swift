@@ -15,29 +15,46 @@ enum SaveDirectoryAccess {
                                                   includingResourceValuesForKeys: nil,
                                                   relativeTo: nil) {
             UserDefaults.standard.set(bookmark, forKey: bookmarkKey)
+        } else {
+            // Bookmark creation failed — clear any stale bookmark so we don't
+            // keep granting access to an old folder that no longer matches path.
+            UserDefaults.standard.removeObject(forKey: bookmarkKey)
         }
+    }
+
+    /// Resolve the configured save directory, starting sandbox-scoped access,
+    /// but return `nil` when no valid security-scoped bookmark exists. Use this
+    /// for writes that must succeed in the sandbox — `nil` means the caller
+    /// should prompt the user to choose a folder. Mirrors
+    /// `resolveRecordingDirectoryIfAccessible()`.
+    /// Caller **must** call `stopAccessing(url:)` when done writing.
+    static func resolveIfAccessible() -> URL? {
+        guard let bookmarkData = UserDefaults.standard.data(forKey: bookmarkKey) else { return nil }
+        var isStale = false
+        guard let url = try? URL(resolvingBookmarkData: bookmarkData,
+                                  options: .withSecurityScope,
+                                  relativeTo: nil,
+                                  bookmarkDataIsStale: &isStale) else { return nil }
+        if isStale {
+            if let fresh = try? url.bookmarkData(options: .withSecurityScope,
+                                                  includingResourceValuesForKeys: nil,
+                                                  relativeTo: nil) {
+                UserDefaults.standard.set(fresh, forKey: bookmarkKey)
+            }
+        }
+        guard url.startAccessingSecurityScopedResource() else { return nil }
+        return url
     }
 
     /// Resolve the save directory URL and start sandbox-scoped access.
     /// Caller **must** call `stopAccessing(url:)` when done writing.
+    ///
+    /// ⚠️ This **always** returns a URL, falling back to the stored raw path or
+    /// `~/Pictures` when no bookmark exists — but that fallback has **no**
+    /// sandbox write access, so `write(to:)` will fail. Prefer
+    /// `resolveIfAccessible()` for writes that must work in the sandbox.
     static func resolve() -> URL {
-        if let bookmarkData = UserDefaults.standard.data(forKey: bookmarkKey) {
-            var isStale = false
-            if let url = try? URL(resolvingBookmarkData: bookmarkData,
-                                   options: .withSecurityScope,
-                                   relativeTo: nil,
-                                   bookmarkDataIsStale: &isStale) {
-                if isStale {
-                    if let fresh = try? url.bookmarkData(options: .withSecurityScope,
-                                                          includingResourceValuesForKeys: nil,
-                                                          relativeTo: nil) {
-                        UserDefaults.standard.set(fresh, forKey: bookmarkKey)
-                    }
-                }
-                _ = url.startAccessingSecurityScopedResource()
-                return url
-            }
-        }
+        if let url = resolveIfAccessible() { return url }
         if let path = UserDefaults.standard.string(forKey: pathKey) {
             return URL(fileURLWithPath: path)
         }
