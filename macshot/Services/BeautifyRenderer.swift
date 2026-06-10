@@ -517,9 +517,59 @@ class BeautifyRenderer {
         return min(4 + radius * 0.18, 16)
     }
 
+    /// Draw a rounded-clipped image with its drop shadow cast from the image's
+    /// OWN rounded edge — no separate opaque caster fill. This avoids the thin
+    /// rim that the fill-a-rounded-rect approach leaves around the screenshot
+    /// (a white/black hairline at the rounded edge with shadow > 0).
+    ///
+    /// Technique: each shadow pass sets the CG shadow, opens a transparency
+    /// layer, draws the rounded image into it, and closes the layer — so the
+    /// shadow emanates from the composited rounded alpha exactly. A final pass
+    /// draws the image with no shadow (crisp). `context` is the current CGContext.
+    static func drawRoundedImageWithShadow(_ image: NSImage, clipPath: NSBezierPath, in rect: NSRect,
+                                           shadowRadius: CGFloat, context: CGContext) {
+        func drawRoundedImage() {
+            context.saveGState()
+            clipPath.addClip()
+            image.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1.0)
+            context.restoreGState()
+        }
+
+        if shadowRadius > 0 {
+            // Ambient shadow pass
+            context.saveGState()
+            context.setShadow(
+                offset: CGSize(width: 0, height: -shadowOffset(for: shadowRadius)),
+                blur: shadowRadius,
+                color: NSColor.black.withAlphaComponent(shadowAlpha(for: shadowRadius)).cgColor)
+            context.beginTransparencyLayer(auxiliaryInfo: nil)
+            drawRoundedImage()
+            context.endTransparencyLayer()
+            context.restoreGState()
+
+            // Contact (tighter) shadow pass
+            context.saveGState()
+            context.setShadow(
+                offset: CGSize(width: 0, height: -contactShadowOffset(for: shadowRadius)),
+                blur: contactShadowBlur(for: shadowRadius),
+                color: NSColor.black.withAlphaComponent(contactShadowAlpha(for: shadowRadius)).cgColor)
+            context.beginTransparencyLayer(auxiliaryInfo: nil)
+            drawRoundedImage()
+            context.endTransparencyLayer()
+            context.restoreGState()
+        }
+
+        // Crisp image on top, no shadow.
+        drawRoundedImage()
+    }
+
     static func drawShadowedPath(_ path: NSBezierPath, radius: CGFloat) {
         guard radius > 0 else { return }
 
+        // Used by window mode, where the caster IS the opaque light window body,
+        // so a white fill matches the window's own edge. (Plain mode uses
+        // drawRoundedImageWithShadow instead, which casts the shadow from the
+        // screenshot's rounded alpha so there is no caster rim at all.)
         NSGraphicsContext.saveGraphicsState()
         let contact = NSShadow()
         contact.shadowColor = NSColor.black.withAlphaComponent(contactShadowAlpha(for: radius))
@@ -869,16 +919,9 @@ class BeautifyRenderer {
             context.restoreGState()
 
             let imageRect = NSRect(x: padding, y: padding, width: imgSize.width, height: imgSize.height)
-
-            if shadowRadius > 0 {
-                let shadowPath = NSBezierPath(roundedRect: imageRect, xRadius: cornerRadius, yRadius: cornerRadius)
-                drawShadowedPath(shadowPath, radius: shadowRadius)
-            }
-
-            context.saveGState()
-            NSBezierPath(roundedRect: imageRect, xRadius: cornerRadius, yRadius: cornerRadius).addClip()
-            image.draw(in: imageRect, from: .zero, operation: .sourceOver, fraction: 1.0)
-            context.restoreGState()
+            let clipPath = NSBezierPath(roundedRect: imageRect, xRadius: cornerRadius, yRadius: cornerRadius)
+            drawRoundedImageWithShadow(image, clipPath: clipPath, in: imageRect,
+                                       shadowRadius: shadowRadius, context: context)
 
             success = true
             return true
