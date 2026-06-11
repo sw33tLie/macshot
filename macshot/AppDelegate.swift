@@ -599,21 +599,52 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         rebuildStatusBarMenu()
     }
 
+    // User-customizable menu bar icon (see Settings → General → Appearance).
+    // Mode is "default" (bundled StatusBarIcon asset) or "symbol" (a user-chosen SF Symbol).
+    static let statusBarIconModeKey = "statusBarIconMode"
+    static let statusBarIconSymbolNameKey = "statusBarIconSymbolName"
+
     private func applyNormalStatusBarIcon() {
         if let button = statusItem.button {
-            if let img = NSImage(named: "StatusBarIcon") {
-                img.isTemplate = true
-                img.size = NSSize(width: 22, height: 22)
-                button.image = img
-            } else {
-                button.title = "macshot"
-            }
+            applyPreferredIconImage(to: button)
             // Use custom click handler so we can dismiss modals before showing the menu
             button.target = self
             button.action = #selector(statusBarIconClicked(_:))
             button.sendAction(on: [.leftMouseDown, .rightMouseDown])
             (button.cell as? NSButtonCell)?.highlightsBy = .pushInCellMask
         }
+    }
+
+    /// Sets the button image/title from the user's icon preference. "symbol" mode renders
+    /// the chosen SF Symbol as a 22pt template image; anything else — including an empty or
+    /// invalid symbol name — falls back to the bundled icon so the item is never blank.
+    private func applyPreferredIconImage(to button: NSStatusBarButton) {
+        let mode = UserDefaults.standard.string(forKey: Self.statusBarIconModeKey) ?? "default"
+        let symbolName = UserDefaults.standard.string(forKey: Self.statusBarIconSymbolNameKey) ?? ""
+
+        if mode == "symbol", !symbolName.isEmpty,
+           let symbol = NSImage(systemSymbolName: symbolName, accessibilityDescription: "macshot") {
+            symbol.isTemplate = true
+            symbol.size = NSSize(width: 22, height: 22)
+            button.image = symbol
+            button.title = ""
+        } else if let img = NSImage(named: "StatusBarIcon") {
+            img.isTemplate = true
+            img.size = NSSize(width: 22, height: 22)
+            button.image = img
+            button.title = ""
+        } else {
+            button.image = nil
+            button.title = "macshot"
+        }
+    }
+
+    /// Re-applies the menu bar icon to reflect the user's current preference. Invoked live
+    /// from Settings so changes take effect without a relaunch. No-op while recording — the
+    /// recording state owns the icon then and restores the preferred one when it ends.
+    func refreshStatusBarIcon() {
+        guard recordingEngine == nil, let button = statusItem.button else { return }
+        applyPreferredIconImage(to: button)
     }
 
     @objc private func statusBarIconClicked(_ sender: NSStatusBarButton) {

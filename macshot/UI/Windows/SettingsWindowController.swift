@@ -58,6 +58,14 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var thumbnailScaleLabel: NSTextField!
     private var launchAtLoginCheckbox: NSButton!
     private var hideMenuBarIconCheckbox: NSButton!
+    private var menuBarIconModePopup: NSPopUpButton!
+    private var menuBarIconPresetPopup: NSPopUpButton!
+    private var menuBarIconSymbolField: NSTextField!
+
+    /// Curated SF Symbol quick-picks for the menu bar icon. Free text is still allowed.
+    private static let menuBarIconPresetSymbols = [
+        "camera.viewfinder", "camera.fill", "crop", "scissors", "bolt.fill", "star.fill",
+    ]
     private var historySizeField: NSTextField!
     private var historySizeStepper: NSStepper!
     private var snapGuidesCheckbox: NSButton!
@@ -408,6 +416,44 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         hideNote.font = NSFont.systemFont(ofSize: 10)
         hideNote.textColor = .secondaryLabelColor
         stack.addArrangedSubview(indented(hideNote))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        // Menu bar icon: keep the bundled icon or pick any SF Symbol.
+        menuBarIconModePopup = NSPopUpButton()
+        menuBarIconModePopup.addItem(withTitle: L("Default"))
+        menuBarIconModePopup.addItem(withTitle: L("Custom symbol"))
+        menuBarIconModePopup.target = self
+        menuBarIconModePopup.action = #selector(menuBarIconModeChanged(_:))
+        stack.addArrangedSubview(labeledRow(L("Menu bar icon:"), controls: [menuBarIconModePopup]))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+
+        menuBarIconSymbolField = NSTextField()
+        menuBarIconSymbolField.placeholderString = "camera.viewfinder"
+        menuBarIconSymbolField.translatesAutoresizingMaskIntoConstraints = false
+        menuBarIconSymbolField.widthAnchor.constraint(equalToConstant: 180).isActive = true
+        menuBarIconSymbolField.target = self
+        menuBarIconSymbolField.action = #selector(menuBarIconSymbolChanged(_:))
+
+        // Pull-down quick-picker: index 0 is the "Presets" label, symbols follow.
+        menuBarIconPresetPopup = NSPopUpButton(frame: .zero, pullsDown: true)
+        menuBarIconPresetPopup.addItem(withTitle: L("Presets"))
+        for symbol in Self.menuBarIconPresetSymbols {
+            menuBarIconPresetPopup.addItem(withTitle: symbol)
+        }
+        menuBarIconPresetPopup.target = self
+        menuBarIconPresetPopup.action = #selector(menuBarIconPresetChanged(_:))
+
+        let iconSymbolRow = NSStackView(views: [menuBarIconSymbolField, menuBarIconPresetPopup])
+        iconSymbolRow.orientation = .horizontal
+        iconSymbolRow.spacing = 8
+        iconSymbolRow.alignment = .centerY
+        stack.addArrangedSubview(indented(iconSymbolRow))
+        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+
+        let iconNote = NSTextField(wrappingLabelWithString: L("Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon."))
+        iconNote.font = NSFont.systemFont(ofSize: 10)
+        iconNote.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(indented(iconNote))
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
         let urlSchemeCheckbox = NSButton(checkboxWithTitle: L("Enable macshot:// URL scheme"), target: self, action: #selector(urlSchemeChanged(_:)))
@@ -2139,6 +2185,11 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
         hideMenuBarIconCheckbox.state = UserDefaults.standard.bool(forKey: "hideMenuBarIcon") ? .on : .off
 
+        let iconMode = UserDefaults.standard.string(forKey: AppDelegate.statusBarIconModeKey) ?? "default"
+        menuBarIconModePopup.selectItem(at: iconMode == "symbol" ? 1 : 0)
+        menuBarIconSymbolField.stringValue = UserDefaults.standard.string(forKey: AppDelegate.statusBarIconSymbolNameKey) ?? ""
+        updateMenuBarIconControlsEnabled()
+
         let snapGuides = UserDefaults.standard.object(forKey: "snapGuidesEnabled") as? Bool ?? true
         snapGuidesCheckbox.state = snapGuides ? .on : .off
 
@@ -2732,6 +2783,35 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         let hidden = sender.state == .on
         UserDefaults.standard.set(hidden, forKey: "hideMenuBarIcon")
         (NSApp.delegate as? AppDelegate)?.setMenuBarIconVisible(!hidden)
+    }
+
+    @objc private func menuBarIconModeChanged(_ sender: NSPopUpButton) {
+        let mode = sender.indexOfSelectedItem == 1 ? "symbol" : "default"
+        UserDefaults.standard.set(mode, forKey: AppDelegate.statusBarIconModeKey)
+        updateMenuBarIconControlsEnabled()
+        (NSApp.delegate as? AppDelegate)?.refreshStatusBarIcon()
+    }
+
+    @objc private func menuBarIconPresetChanged(_ sender: NSPopUpButton) {
+        // Pull-down: index 0 is the "Presets" label; real symbols start at 1.
+        guard sender.indexOfSelectedItem >= 1,
+              let symbol = sender.titleOfSelectedItem, !symbol.isEmpty else { return }
+        menuBarIconSymbolField.stringValue = symbol
+        UserDefaults.standard.set(symbol, forKey: AppDelegate.statusBarIconSymbolNameKey)
+        (NSApp.delegate as? AppDelegate)?.refreshStatusBarIcon()
+    }
+
+    @objc private func menuBarIconSymbolChanged(_ sender: NSTextField) {
+        let name = sender.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        UserDefaults.standard.set(name, forKey: AppDelegate.statusBarIconSymbolNameKey)
+        (NSApp.delegate as? AppDelegate)?.refreshStatusBarIcon()
+    }
+
+    /// Enables the symbol field + preset picker only in "Custom symbol" mode.
+    private func updateMenuBarIconControlsEnabled() {
+        let custom = menuBarIconModePopup.indexOfSelectedItem == 1
+        menuBarIconSymbolField.isEnabled = custom
+        menuBarIconPresetPopup.isEnabled = custom
     }
 
     @objc private func autoUpdateChanged(_ sender: NSButton) {
