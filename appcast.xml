@@ -4,13 +4,32 @@
         <title>macshot</title>
         <link>https://github.com/sw33tLie/macshot</link>
         <description>macshot updates</description>
-<item>
+<item xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
     <title>v4.1.2</title>
     <pubDate>Mon, 08 Jun 2026 14:16:52 +0000</pubDate>
     <sparkle:version>79</sparkle:version>
     <sparkle:shortVersionString>4.1.2</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
 
+    <description>
+      &lt;style&gt;
+        body { font-family: -apple-system, sans-serif; font-size: 13px; padding: 12px; }
+        h3 { font-size: 14px; margin: 12px 0 6px 0; }
+        h3:first-child { margin-top: 0; }
+        ul { padding-left: 18px; margin: 4px 0; }
+        li { margin: 4px 0; line-height: 1.5; }
+      &lt;/style&gt;
+      &lt;h3&gt;Added&lt;/h3&gt;&lt;ul&gt;  &lt;li&gt;&lt;b&gt;Pin from Clipboard&lt;/b&gt; — pin whatever is on the clipboard (image or text) as a floating window, from the menu bar or a configurable hotkey. Thanks @chablino (#210).&lt;/li&gt; &lt;li&gt;&lt;b&gt;Hide capture instructions&lt;/b&gt; — a Settings → General toggle to hide the on-screen capture hint text (#226).&lt;/li&gt;  &lt;/ul&gt;&lt;h3&gt;Fixed&lt;/h3&gt;&lt;ul&gt;  &lt;li&gt;&lt;b&gt;macshot no longer quits itself when left idle in the background&lt;/b&gt; — the menu bar process was eligible for memory-pressure (Jetsam) termination. Thanks @PINKIIILQWQ (#132, #222).&lt;/li&gt; &lt;li&gt;&lt;b&gt;Stuck invisible overlay swallowing all clicks&lt;/b&gt; — after waking from sleep, a leftover transparent overlay could intercept every click on a display until macshot was quit. Idle overlays are now click-through (#231).&lt;/li&gt; &lt;li&gt;&lt;b&gt;First selection drag no longer swallowed&lt;/b&gt; — starting a selection over the previous position of hidden toolbar chrome could silently fail. Thanks @chablino (#219).&lt;/li&gt; &lt;li&gt;&lt;b&gt;Overlay zoom-in animation with Reduce Motion&lt;/b&gt; — the capture overlay briefly scaled in (visible at the screen edges) when the system "Reduce Motion" setting was on. It now appears instantly (#205).&lt;/li&gt; &lt;li&gt;&lt;b&gt;Number tool now resets after deleting&lt;/b&gt; — deleting numbered annotations and adding a new one restarts the sequence instead of continuing to climb (#211).&lt;/li&gt; &lt;li&gt;&lt;b&gt;Silent save failures&lt;/b&gt; — saving a screenshot when no save folder was authorized could fail silently in the sandbox. macshot now prompts for a folder once, then saves there. Thanks @jeffreylyg (#177).&lt;/li&gt;&lt;/ul&gt;
+    </description>
+    <enclosure url="https://github.com/sw33tLie/macshot/releases/download/v4.1.2/MacShot.dmg" length="6150800" type="application/octet-stream" sparkle:edSignature="mJwEP5fVlL63jskhtsVeHmVtphcbspKsePHLlqnOhv074M9XoSNC3tHXumkUujouFL2rt/8PNOlHl/mM/e0gBg==" />
+</item>
+<item>
+    <title>v4.1.3-beta.1</title>
+    <pubDate>Thu, 11 Jun 2026 16:09:52 +0000</pubDate>
+    <sparkle:version>81</sparkle:version>
+    <sparkle:shortVersionString>4.1.3-beta.1</sparkle:shortVersionString>
+    <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
+    <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
       <style>
         body { font-family: -apple-system, sans-serif; font-size: 13px; padding: 12px; }
@@ -19,13 +38,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Added</h3><ul>  <li><b>Pin from Clipboard</b> — pin whatever is on the clipboard (image or text) as a floating window, from the menu bar or a configurable hotkey. Thanks @chablino (#210).</li> <li><b>Hide capture instructions</b> — a Settings → General toggle to hide the on-screen capture hint text (#226).</li>  </ul><h3>Fixed</h3><ul>  <li><b>macshot no longer quits itself when left idle in the background</b> — the menu bar process was eligible for memory-pressure (Jetsam) termination. Thanks @PINKIIILQWQ (#132, #222).</li> <li><b>Stuck invisible overlay swallowing all clicks</b> — after waking from sleep, a leftover transparent overlay could intercept every click on a display until macshot was quit. Idle overlays are now click-through (#231).</li> <li><b>First selection drag no longer swallowed</b> — starting a selection over the previous position of hidden toolbar chrome could silently fail. Thanks @chablino (#219).</li> <li><b>Overlay zoom-in animation with Reduce Motion</b> — the capture overlay briefly scaled in (visible at the screen edges) when the system "Reduce Motion" setting was on. It now appears instantly (#205).</li> <li><b>Number tool now resets after deleting</b> — deleting numbered annotations and adding a new one restarts the sequence instead of continuing to climb (#211).</li> <li><b>Silent save failures</b> — saving a screenshot when no save folder was authorized could fail silently in the sandbox. macshot now prompts for a folder once, then saves there. Thanks @jeffreylyg (#177).</li></ul>
+      <h3>Added</h3><ul>  <li><b>Liquid Glass theme</b> (macOS 26 Tahoe) — a new Settings → Appearance toggle that renders the capture toolbars, the tool options row, popovers, and recording/scroll HUDs as Apple's translucent Liquid Glass material. Independent of the toolbar color customization; only appears on macOS 26+. Off by default.</li>  </ul><h3>Fixed</h3><ul>  <li><b>Thin edge line on Beautify screenshots</b> — with a drop shadow enabled, a faint hairline appeared around the rounded screenshot edges (white on dark captures, dark on light). The shadow is now cast from the screenshot's own rounded shape, so there's no rim.</li></ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v4.1.2/MacShot.dmg"
-        length="6150800"
+        url="https://github.com/sw33tLie/macshot/releases/download/v4.1.3-beta.1/MacShot.dmg"
+        length="6214478"
         type="application/octet-stream"
-        sparkle:edSignature="mJwEP5fVlL63jskhtsVeHmVtphcbspKsePHLlqnOhv074M9XoSNC3tHXumkUujouFL2rt/8PNOlHl/mM/e0gBg=="
+        sparkle:edSignature="POh5+GabrobI5M9NeO8QmhBDtJq9YFAWFjqeyQZjv34yAMFff6JsCygaP2R519puaPNxOqWUd8IermLKYs9VCA=="
     />
 </item>
     </channel>
