@@ -68,7 +68,7 @@ class HotkeyManager {
             case .recordArea: return L("Record Area")
             case .recordScreen: return L("Record Screen")
             case .historyOverlay: return L("History")
-            case .captureOCR: return L("Capture OCR")
+            case .captureOCR: return L("Capture OCR & QR")
             case .quickCapture: return L("Quick Capture")
             case .scrollCapture: return L("Scroll Capture")
             case .openFromClipboard: return L("Open from Clipboard")

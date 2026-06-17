@@ -28,7 +28,7 @@ enum CaptureMenuItemID: String, CaseIterable {
         switch self {
         case .captureArea: return L("Capture Area")
         case .captureScreen: return L("Capture Screen")
-        case .captureOCR: return L("Capture OCR")
+        case .captureOCR: return L("Capture OCR & QR")
         case .quickCapture: return L("Quick Capture")
         case .captureLastArea: return L("Capture Last Area")
         case .scrollCapture: return L("Scroll Capture")
@@ -1779,25 +1779,21 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return }
 
         DispatchQueue.global(qos: .userInitiated).async {
-            VisionOCR.performTextRecognition(cgImage: cgImage) { [weak self] request, _ in
-                let lines = (request.results as? [VNRecognizedTextObservation])?
-                    .compactMap { $0.topCandidates(1).first?.string } ?? []
-                let text = lines.joined(separator: "\n")
-
+            VisionOCR.performTextAndQRCodeRecognition(cgImage: cgImage) { [weak self] result in
                 DispatchQueue.main.async {
                     guard let self else { return }
                     let ocrAction = UserDefaults.standard.integer(forKey: "ocrAction")
                     let shouldCopy = ocrAction == 0 || ocrAction == 2
                     let shouldShowWindow = ocrAction == 0 || ocrAction == 1
 
-                    if shouldCopy && !text.isEmpty {
+                    if shouldCopy && !result.copyText.isEmpty {
                         NSPasteboard.general.clearContents()
-                        NSPasteboard.general.setString(text, forType: .string)
+                        NSPasteboard.general.setString(result.copyText, forType: .string)
                     }
 
                     if shouldShowWindow {
                         self.ocrController?.close()
-                        let ocr = OCRResultController(text: text, image: image)
+                        let ocr = OCRResultController(text: result.text, image: image, qrCodes: result.qrCodes)
                         self.ocrController = ocr
                         ocr.show()
                     }
@@ -2219,21 +2215,21 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         }
     }
 
-    func overlayDidRequestOCR(_ controller: OverlayWindowController, text: String, image: NSImage?) {
-        // OCR action: 0 = window + copy (default), 1 = window only, 2 = copy only
+    func overlayDidRequestOCR(_ controller: OverlayWindowController, result: OCRScanResult, image: NSImage?) {
+        // OCR & QR action: 0 = window + copy (default), 1 = window only, 2 = copy only
         let ocrAction = UserDefaults.standard.integer(forKey: "ocrAction")
         let shouldCopy = ocrAction == 0 || ocrAction == 2
         let shouldShowWindow = ocrAction == 0 || ocrAction == 1
         dismissOverlays(refocusPreviousApp: !shouldShowWindow)
 
-        if shouldCopy && !text.isEmpty {
+        if shouldCopy && !result.copyText.isEmpty {
             NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(text, forType: .string)
+            NSPasteboard.general.setString(result.copyText, forType: .string)
         }
 
         if shouldShowWindow {
             ocrController?.close()
-            let ocr = OCRResultController(text: text, image: image)
+            let ocr = OCRResultController(text: result.text, image: image, qrCodes: result.qrCodes)
             ocrController = ocr
             ocr.show()
         }

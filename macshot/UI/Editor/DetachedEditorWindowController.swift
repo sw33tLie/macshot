@@ -394,23 +394,21 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
         guard let image = overlayView?.captureSelectedRegion(),
               let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return }
         DispatchQueue.global(qos: .userInitiated).async {
-            VisionOCR.performTextRecognition(cgImage: cgImage) { [weak self] req, _ in
-                let lines = (req.results as? [VNRecognizedTextObservation])?.compactMap { $0.topCandidates(1).first?.string } ?? []
-                let text = lines.joined(separator: "\n")
+            VisionOCR.performTextAndQRCodeRecognition(cgImage: cgImage) { [weak self] result in
                 DispatchQueue.main.async {
                     guard let self = self else { return }
-                    // OCR action: 0 = window + copy, 1 = window only, 2 = copy only
+                    // OCR & QR action: 0 = window + copy, 1 = window only, 2 = copy only
                     let ocrAction = UserDefaults.standard.integer(forKey: "ocrAction")
                     let shouldCopy = ocrAction == 0 || ocrAction == 2
                     let shouldShowWindow = ocrAction == 0 || ocrAction == 1
 
-                    if shouldCopy && !text.isEmpty {
+                    if shouldCopy && !result.copyText.isEmpty {
                         NSPasteboard.general.clearContents()
-                        NSPasteboard.general.setString(text, forType: .string)
+                        NSPasteboard.general.setString(result.copyText, forType: .string)
                     }
                     if shouldShowWindow {
                         self.ocrController?.close()
-                        let ocr = OCRResultController(text: text, image: image)
+                        let ocr = OCRResultController(text: result.text, image: image, qrCodes: result.qrCodes)
                         self.ocrController = ocr
                         ocr.show()
                     }
@@ -694,7 +692,7 @@ private class AddCaptureOverlayHandler: NSObject, OverlayWindowControllerDelegat
         dismissOverlays()
         onCapture?(image)
     }
-    func overlayDidRequestOCR(_ controller: OverlayWindowController, text: String, image: NSImage?) {}
+    func overlayDidRequestOCR(_ controller: OverlayWindowController, result: OCRScanResult, image: NSImage?) {}
     func overlayDidRequestUpload(_ controller: OverlayWindowController, image: NSImage) {}
     func overlayDidRequestStartRecording(_ controller: OverlayWindowController, rect: NSRect, screen: NSScreen) {}
     func overlayDidRequestStopRecording(_ controller: OverlayWindowController) {}

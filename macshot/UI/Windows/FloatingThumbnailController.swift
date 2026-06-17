@@ -387,7 +387,7 @@ class FloatingThumbnailController: NSObject, NSDraggingSource, QLPreviewPanelDat
         menu.addItem(ImageContextMenu.item(title: L("Pin to Screen"), symbolName: "pin.fill", action: #selector(contextPin), target: self))
         menu.addItem(ImageContextMenu.item(title: L("Upload"), symbolName: "icloud.and.arrow.up", action: #selector(contextUpload), target: self))
         menu.addItem(ImageContextMenu.item(title: L("Quick Look"), symbolName: "eye", action: #selector(contextQuickLook), target: self, keyEquivalent: " "))
-        menu.addItem(ImageContextMenu.item(title: L("Run OCR"), symbolName: "text.viewfinder", action: #selector(contextOCR), target: self))
+        menu.addItem(ImageContextMenu.item(title: L("Run OCR & QR"), symbolName: "text.viewfinder", action: #selector(contextOCR), target: self))
 
         menu.addItem(NSMenuItem.separator())
         ImageContextMenu.addTransformItems(to: menu, target: self, action: #selector(contextTransform(_:)))

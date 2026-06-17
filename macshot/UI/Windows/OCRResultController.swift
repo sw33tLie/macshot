@@ -11,17 +11,19 @@ class OCRResultController: NSObject {
     private var spinnerView: NSProgressIndicator?
 
     private var originalText: String
+    private var qrCodes: [QRCodePayload]
     private var isShowingTranslation = false
 
-    init(text: String, image: NSImage?) {
+    init(text: String, image: NSImage?, qrCodes: [QRCodePayload] = []) {
         self.originalText = text
+        self.qrCodes = qrCodes
         super.init()
-        buildWindow(text: text, image: image)
+        buildWindow(text: text, image: image, qrCodes: qrCodes)
     }
 
     // MARK: - Build
 
-    private func buildWindow(text: String, image: NSImage?) {
+    private func buildWindow(text: String, image: NSImage?, qrCodes: [QRCodePayload]) {
         let W: CGFloat = 720
         let H: CGFloat = 460
         let previewW: CGFloat = image != nil ? 240 : 0
@@ -39,7 +41,7 @@ class OCRResultController: NSObject {
             backing: .buffered,
             defer: false
         )
-        panel.title = L("Text Recognition")
+        panel.title = qrCodes.isEmpty ? L("Text Recognition") : L("Text & QR Recognition")
         panel.level = .floating
         panel.isReleasedWhenClosed = false
         panel.becomesKeyOnlyIfNeeded = false
@@ -177,10 +179,12 @@ class OCRResultController: NSObject {
         footer.addSubview(spinner)
         self.spinnerView = spinner
 
+        let qrSectionH = qrCodes.isEmpty ? CGFloat(0) : min(CGFloat(46 + qrCodes.count * 36), 168)
+
         // Scrollable text view
         let textAreaY = footerH + 1
-        let textAreaH = H - headerH - 1 - footerH - 1
-        let scrollView = NSScrollView(frame: NSRect(x: rightX, y: textAreaY, width: rightW, height: textAreaH))
+        let textAreaH = H - headerH - 1 - footerH - 1 - qrSectionH
+        let scrollView = NSScrollView(frame: NSRect(x: rightX, y: textAreaY + qrSectionH, width: rightW, height: textAreaH))
         scrollView.autoresizingMask = [.width, .height]
         scrollView.hasVerticalScroller = true
         scrollView.borderType = .noBorder
@@ -199,8 +203,9 @@ class OCRResultController: NSObject {
         tv.textContainer?.widthTracksTextView = true
         tv.autoresizingMask = [.width, .height]
         tv.drawsBackground = false
+        let noTextMessage = L("(No text detected in the selected area)")
         tv.string = text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            ? L("(No text detected in the selected area)")
+            ? noTextMessage
             : text
         if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             tv.textColor = .secondaryLabelColor
@@ -209,8 +214,78 @@ class OCRResultController: NSObject {
         scrollView.documentView = tv
         self.textView = tv
 
+        if !qrCodes.isEmpty {
+            let qrSection = makeQRCodeSection(
+                qrCodes: qrCodes,
+                frame: NSRect(x: rightX, y: textAreaY, width: rightW, height: qrSectionH)
+            )
+            qrSection.autoresizingMask = [.width, .maxYMargin]
+            cv.addSubview(qrSection)
+        }
+
         panel.contentView = cv
         self.window = panel
+    }
+
+    private func makeQRCodeSection(qrCodes: [QRCodePayload], frame: NSRect) -> NSView {
+        let section = NSView(frame: frame)
+
+        let topSep = NSBox(frame: NSRect(x: 0, y: frame.height - 1, width: frame.width, height: 1))
+        topSep.boxType = .separator
+        topSep.autoresizingMask = [.width, .minYMargin]
+        section.addSubview(topSep)
+
+        let title = NSTextField(labelWithString: qrCodes.count == 1 ? L("QR Code") : L("QR Codes"))
+        title.font = NSFont.systemFont(ofSize: 12, weight: .semibold)
+        title.textColor = .secondaryLabelColor
+        title.frame = NSRect(x: 14, y: frame.height - 28, width: 160, height: 18)
+        title.autoresizingMask = [.maxYMargin]
+        section.addSubview(title)
+
+        let rowH: CGFloat = 30
+        var rowY = frame.height - 32 - rowH
+        for (idx, qrCode) in qrCodes.enumerated() where rowY >= 6 {
+            let hasURL = qrCode.url != nil
+            let copyW: CGFloat = 56
+            let openW: CGFloat = hasURL ? 86 : 0
+            let gap: CGFloat = hasURL ? 8 : 0
+            let rightPad: CGFloat = 12
+            let buttonsW = copyW + openW + gap + rightPad
+
+            let valueField = NSTextField(frame: NSRect(x: 14, y: rowY + 4, width: frame.width - 28 - buttonsW, height: 22))
+            valueField.stringValue = qrCode.value
+            valueField.font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
+            valueField.textColor = .labelColor
+            valueField.isEditable = false
+            valueField.isSelectable = true
+            valueField.isBordered = false
+            valueField.drawsBackground = false
+            valueField.lineBreakMode = .byTruncatingMiddle
+            valueField.autoresizingMask = [.width]
+            section.addSubview(valueField)
+
+            var buttonX = frame.width - rightPad - copyW
+            let copy = NSButton(title: L("Copy"), target: self, action: #selector(copyQRCode(_:)))
+            copy.bezelStyle = .rounded
+            copy.tag = idx
+            copy.frame = NSRect(x: buttonX, y: rowY + 2, width: copyW, height: 26)
+            copy.autoresizingMask = [.minXMargin]
+            section.addSubview(copy)
+
+            if hasURL {
+                buttonX -= openW + gap
+                let open = NSButton(title: L("Open Link"), target: self, action: #selector(openQRCode(_:)))
+                open.bezelStyle = .rounded
+                open.tag = idx
+                open.frame = NSRect(x: buttonX, y: rowY + 2, width: openW, height: 26)
+                open.autoresizingMask = [.minXMargin]
+                section.addSubview(open)
+            }
+
+            rowY -= rowH + 6
+        }
+
+        return section
     }
 
     // MARK: - Show / Close
@@ -237,10 +312,25 @@ class OCRResultController: NSObject {
     // MARK: - Actions
 
     @objc private func copyAll() {
-        guard let text = textView?.string, !text.isEmpty else { return }
+        let text = textView?.string ?? ""
+        let noTextMessage = L("(No text detected in the selected area)")
+        let copyText = text == noTextMessage ? qrCodes.map(\.value).joined(separator: "\n") : text
+        guard !copyText.isEmpty else { return }
         NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(text, forType: .string)
+        NSPasteboard.general.setString(copyText, forType: .string)
         close()
+    }
+
+    @objc private func copyQRCode(_ sender: NSButton) {
+        guard sender.tag >= 0, sender.tag < qrCodes.count else { return }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(qrCodes[sender.tag].value, forType: .string)
+    }
+
+    @objc private func openQRCode(_ sender: NSButton) {
+        guard sender.tag >= 0, sender.tag < qrCodes.count,
+              let url = qrCodes[sender.tag].url else { return }
+        NSWorkspace.shared.open(url)
     }
 
     @objc private func openAISearch() {

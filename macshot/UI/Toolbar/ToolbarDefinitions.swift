@@ -397,11 +397,11 @@ class ToolbarLayout {
                 ToolbarButton(action: .pin, sfSymbol: "pin.fill", tooltip: L("Pin")))
         }
 
-        // OCR (tag 1003)
+        // OCR & QR (tag 1003)
         if actionEnabled(1003) {
             buttons.append(
                 ToolbarButton(
-                    action: .ocr, sfSymbol: "doc.text.viewfinder", tooltip: L("OCR Text")))
+                    action: .ocr, sfSymbol: "doc.text.viewfinder", tooltip: L("OCR & QR")))
         }
 
         // Translate (tag 1008)

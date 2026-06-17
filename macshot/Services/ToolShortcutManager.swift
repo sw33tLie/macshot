@@ -54,7 +54,7 @@ enum ToolShortcutManager {
             case .upload: return L("Upload")
             case .copy: return L("Copy")
             case .save: return L("Save")
-            case .ocr: return L("OCR Text")
+            case .ocr: return L("OCR & QR")
             case .scrollCapture: return L("Scroll Capture")
             case .beautify: return L("Beautify")
             case .invertColors: return L("Invert Colors")

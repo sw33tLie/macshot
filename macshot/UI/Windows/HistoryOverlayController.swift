@@ -322,7 +322,7 @@ final class HistoryOverlayController: NSObject, QLPreviewPanelDataSource, QLPrev
         qlItem.tag = globalIndex
         menu.addItem(qlItem)
 
-        let ocrItem = ImageContextMenu.item(title: L("Run OCR"), symbolName: "text.viewfinder", action: #selector(contextOCR(_:)), target: self)
+        let ocrItem = ImageContextMenu.item(title: L("Run OCR & QR"), symbolName: "text.viewfinder", action: #selector(contextOCR(_:)), target: self)
         ocrItem.tag = globalIndex
         menu.addItem(ocrItem)
 

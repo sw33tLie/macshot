@@ -574,7 +574,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.addArrangedSubview(indented(quickCaptureOpenEditorCheckbox))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
-        // OCR action dropdown
+        // OCR & QR action dropdown
         ocrActionPopup = NSPopUpButton()
         ocrActionPopup.addItems(withTitles: [
             L("Show window + copy to clipboard"),
@@ -584,7 +584,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         ocrActionPopup.target = self
         ocrActionPopup.action = #selector(ocrActionChanged(_:))
 
-        stack.addArrangedSubview(labeledRow(L("OCR Capture:"), controls: [ocrActionPopup]))
+        stack.addArrangedSubview(labeledRow(L("OCR & QR Capture:"), controls: [ocrActionPopup]))
         stack.setCustomSpacing(12, after: stack.arrangedSubviews.last!)
 
         // Checkboxes
@@ -1293,7 +1293,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
         let rightActionItems: [(tag: Int, label: String)] = [
             (1001, L("Upload")), (1002, L("Pin (floating window)")),
-            (1003, L("OCR (extract text)")), (1006, L("Auto-Redact sensitive data")),
+            (1003, L("OCR & QR")), (1006, L("Auto-Redact sensitive data")),
             (1008, L("Translate")),
             (1009, L("Record screen")),
             (1010, L("Scroll Capture")),
@@ -2717,7 +2717,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
             ("macshot://capture-fullscreen",  L("Capture the full screen")),
             ("macshot://capture-last",        L("Re-capture the last selected area")),
             ("macshot://quick-capture",       L("Quick capture (uses your Enter action)")),
-            ("macshot://ocr",                 L("Capture area and extract text")),
+            ("macshot://ocr",                 L("Capture area and read text/QR codes")),
             ("macshot://record",              L("Start area recording")),
             ("macshot://record-fullscreen",   L("Start full-screen recording")),
             ("macshot://stop-recording",      L("Stop the current recording")),

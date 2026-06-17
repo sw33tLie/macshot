@@ -18,6 +18,7 @@
 "Capture Area" = "Capture Area";
 "Capture Screen" = "Capture Screen";
 "Capture OCR" = "Capture OCR";
+"Capture OCR & QR" = "Capture OCR & QR";
 "Quick Capture" = "Quick Capture";
 "Scroll Capture" = "Scroll Capture";
 "Capture Delay" = "Capture Delay";
@@ -97,6 +98,8 @@
 "OCR" = "OCR";
 "OCR Text" = "OCR Text";
 "OCR (extract text)" = "OCR (extract text)";
+"OCR & QR" = "OCR & QR";
+"Run OCR & QR" = "Run OCR & QR";
 "Upload" = "Upload";
 "Share" = "Share";
 "Undo" = "Undo";
@@ -251,6 +254,7 @@
 "Background color:" = "Background color:";
 "Reset" = "Reset";
 "OCR Capture:" = "OCR Capture:";
+"OCR & QR Capture:" = "OCR & QR Capture:";
 "Show window + copy to clipboard" = "Show window + copy to clipboard";
 "Show window only" = "Show window only";
 "Copy to clipboard only" = "Copy to clipboard only";
@@ -373,6 +377,7 @@
 
 /* OCR Window */
 "Text Recognition" = "Text Recognition";
+"Text & QR Recognition" = "Text & QR Recognition";
 "Translate to:" = "Translate to:";
 "%d chars · %d words" = "%d chars · %d words";
 "Copy  ⌘↩" = "Copy  ⌘↩";
@@ -381,6 +386,9 @@
 "Translation Failed" = "Translation Failed";
 "Translation" = "Translation";
 "(No text detected in the selected area)" = "(No text detected in the selected area)";
+"QR Code" = "QR Code";
+"QR Codes" = "QR Codes";
+"Open Link" = "Open Link";
 
 /* Upload Toast */
 "URL copied to the clipboard" = "URL copied to the clipboard";
@@ -573,6 +581,7 @@
 /* Settings — shortcuts help text */
 "Application" = "Application";
 "Capture area and extract text" = "Capture area and extract text";
+"Capture area and read text/QR codes" = "Capture area and read text/QR codes";
 "Capture the full screen" = "Capture the full screen";
 "Counter for multi-screen captures" = "Counter for multi-screen captures";
 "8-character random string (e.g. k3j7x9q2)" = "8-character random string (e.g. k3j7x9q2)";

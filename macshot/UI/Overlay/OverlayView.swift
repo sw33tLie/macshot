@@ -631,9 +631,6 @@ class OverlayView: NSView {
     private var editorTooltipView: NSView?
     private var overlayErrorTimer: Timer? = nil
 
-    // Barcode / QR detection
-    private let barcodeDetector = BarcodeDetector()
-
     // Recording state
     var isRecording: Bool = false {  // true when recording toolbar is shown (pre-recording setup)
         didSet {
@@ -663,7 +660,7 @@ class OverlayView: NSView {
         }
     }
     var autoEnterRecordingMode: Bool = false  // set by "Record Screen" menu — enters recording mode after selection
-    var autoOCRMode: Bool = false  // set by "Capture OCR" menu — triggers OCR immediately after selection
+    var autoOCRMode: Bool = false  // set by "Capture OCR & QR" menu — triggers OCR immediately after selection
     var autoQuickSaveMode: Bool = false  // set by "Quick Capture" menu — quick-saves immediately after selection
     var autoScrollCaptureMode: Bool = false  // set by "Scroll Capture" menu — triggers scroll capture immediately after selection
     var autoConfirmMode: Bool = false  // set by "Add Capture" — auto-confirms selection (no toolbars, no save)
@@ -2024,13 +2021,6 @@ class OverlayView: NSView {
                 at: NSPoint(x: msgRect.minX + padding, y: msgRect.minY + padding / 2),
                 withAttributes: attrs)
         }
-
-        // Barcode / QR badge
-        if state == .selected {
-            barcodeDetector.draw(
-                selectionRect: selectionRect, bottomBarRect: bottomBarRect, viewBounds: bounds)
-        }
-
 
         // Instant tooltip for hovered toolbar button
         drawHoveredTooltip()
@@ -4487,21 +4477,6 @@ class OverlayView: NSView {
         }
     }
 
-
-    // MARK: - Barcode / QR Detection
-
-    func scheduleBarcodeDetection() {
-        barcodeDetector.cancel()
-        needsDisplay = true
-        guard state == .selected, let screenshot = screenshotImage else { return }
-        barcodeDetector.scan(
-            image: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect
-        ) { [weak self] in
-            self?.needsDisplay = true
-        }
-    }
-
-
     // MARK: - Toolbar Layout
 
     /// Rebuild toolbar button content. Call when tool, color, or state changes — NOT on every draw.
@@ -5020,28 +4995,6 @@ class OverlayView: NSView {
                     return
                 }
             }
-        }
-
-        // Barcode bar button hit-test
-        if let action = barcodeDetector.hitTest(point: point) {
-            switch action {
-            case .dismiss:
-                barcodeDetector.cancel()
-                needsDisplay = true
-            case .open(let url):
-                barcodeDetector.cancel()
-                needsDisplay = true
-                overlayDelegate?.overlayViewDidCancel()
-                if let url = URL(string: url) {
-                    DispatchQueue.main.async { NSWorkspace.shared.open(url) }
-                }
-            case .copy(let text):
-                barcodeDetector.cancel()
-                needsDisplay = true
-                NSPasteboard.general.clearContents()
-                NSPasteboard.general.setString(text, forType: .string)
-            }
-            return
         }
 
         // Editor top bar button clicks
@@ -5756,12 +5709,10 @@ class OverlayView: NSView {
                 needsDisplay = true
             } else if isDraggingSelection {
                 isDraggingSelection = false
-                scheduleBarcodeDetection()
                 needsDisplay = true
             } else if isResizingSelection {
                 isResizingSelection = false
                 resizeHandle = .none
-                scheduleBarcodeDetection()
                 if let win = window {
                     updateCursorForPoint(convert(win.mouseLocationOutsideOfEventStream, from: nil))
                 }
@@ -5907,13 +5858,12 @@ class OverlayView: NSView {
             let point = convert(win.mouseLocationOutsideOfEventStream, from: nil)
             updateCursorForPoint(point)
         }
-        scheduleBarcodeDetection()
         // Auto-enter recording mode if triggered from "Record Screen"
         if autoEnterRecordingMode {
             autoEnterRecordingMode = false
             overlayDelegate?.overlayViewDidRequestEnterRecordingMode()
         }
-        // Auto-trigger OCR if triggered from "Capture OCR"
+        // Auto-trigger OCR if triggered from "Capture OCR & QR"
         if autoOCRMode {
             autoOCRMode = false
             overlayDelegate?.overlayViewDidRequestOCR()
@@ -6012,7 +5962,6 @@ class OverlayView: NSView {
         if let win = window {
             updateCursorForPoint(convert(win.mouseLocationOutsideOfEventStream, from: nil))
         }
-        scheduleBarcodeDetection()
         needsDisplay = true
     }
 
@@ -6889,7 +6838,6 @@ class OverlayView: NSView {
                 moveBtn.isPressed = false
                 moveBtn.needsDisplay = true
             }
-            scheduleBarcodeDetection()
             needsDisplay = true
         case .undo:
             undo()
@@ -7840,7 +7788,6 @@ class OverlayView: NSView {
                     overlayDelegate?.overlayViewDidRequestQuickSave()
                 } else {
                     showToolbars = true
-                    scheduleBarcodeDetection()
                     overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
                     needsDisplay = true
                 }
@@ -8395,7 +8342,6 @@ class OverlayView: NSView {
         selectionStart = bounds.origin
         state = .selected
         showToolbars = true
-        scheduleBarcodeDetection()
         overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
         needsDisplay = true
     }
@@ -8601,7 +8547,6 @@ class OverlayView: NSView {
         overlayErrorTimer?.invalidate()
         overlayErrorTimer = nil
         overlayErrorMessage = nil
-        barcodeDetector.cancel()
         hoveredWindowRect = nil
         isRecording = false
         // Webcam setup preview (if any) — clear so a reused overlay doesn't
