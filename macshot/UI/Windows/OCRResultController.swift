@@ -92,14 +92,22 @@ class OCRResultController: NSObject {
         header.autoresizingMask = [.width, .minYMargin]
         cv.addSubview(header)
 
+        let headerRow = NSStackView(frame: NSRect(x: 12, y: 12, width: rightW - 24, height: 28))
+        headerRow.orientation = .horizontal
+        headerRow.alignment = .centerY
+        headerRow.distribution = .fill
+        headerRow.spacing = 8
+        headerRow.autoresizingMask = [.width]
+        header.addSubview(headerRow)
+
         // Language popup
         let langLabel = NSTextField(labelWithString: L("Translate to:"))
         langLabel.font = NSFont.systemFont(ofSize: 12)
         langLabel.textColor = .secondaryLabelColor
-        langLabel.frame = NSRect(x: 12, y: 25, width: 90, height: 16)
-        header.addSubview(langLabel)
+        langLabel.setContentHuggingPriority(.required, for: .horizontal)
+        headerRow.addArrangedSubview(langLabel)
 
-        let popup = NSPopUpButton(frame: NSRect(x: 106, y: 21, width: 160, height: 24), pullsDown: false)
+        let popup = NSPopUpButton(frame: .zero, pullsDown: false)
         for lang in TranslationService.availableLanguages {
             popup.addItem(withTitle: lang.name)
             popup.lastItem?.representedObject = lang.code
@@ -111,24 +119,32 @@ class OCRResultController: NSObject {
         }
         popup.target = self
         popup.action = #selector(languageChanged(_:))
-        header.addSubview(popup)
+        popup.widthAnchor.constraint(equalToConstant: 150).isActive = true
+        headerRow.addArrangedSubview(popup)
         self.langPopup = popup
 
         // Translate button
         let translateBtn = NSButton(title: L("Translate"), target: self, action: #selector(toggleTranslate))
         translateBtn.bezelStyle = .rounded
-        translateBtn.frame = NSRect(x: 276, y: 19, width: 100, height: 28)
-        header.addSubview(translateBtn)
+        translateBtn.widthAnchor.constraint(equalToConstant: 100).isActive = true
+        headerRow.addArrangedSubview(translateBtn)
         self.translateButton = translateBtn
 
         // Spinner (hidden)
-        let spinner = NSProgressIndicator(frame: NSRect(x: 388, y: 25, width: 16, height: 16))
+        let spinner = NSProgressIndicator(frame: NSRect(x: 0, y: 0, width: 16, height: 16))
         spinner.style = .spinning
         spinner.controlSize = .small
         spinner.isIndeterminate = true
         spinner.isHidden = true
-        header.addSubview(spinner)
+        spinner.widthAnchor.constraint(equalToConstant: 16).isActive = true
+        spinner.heightAnchor.constraint(equalToConstant: 16).isActive = true
+        headerRow.addArrangedSubview(spinner)
         self.spinnerView = spinner
+
+        let spacer = NSView()
+        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        spacer.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        headerRow.addArrangedSubview(spacer)
 
         // Char/word count label
         let charCount = text.count
@@ -136,10 +152,11 @@ class OCRResultController: NSObject {
         let countLbl = NSTextField(labelWithString: String(format: L("%d chars · %d words"), charCount, wordCount))
         countLbl.font = NSFont.systemFont(ofSize: 11)
         countLbl.textColor = .tertiaryLabelColor
-        countLbl.frame = NSRect(x: 12, y: 5, width: rightW - 24, height: 14)
         countLbl.alignment = .right
-        countLbl.autoresizingMask = [.width]
-        header.addSubview(countLbl)
+        countLbl.lineBreakMode = .byTruncatingTail
+        countLbl.setContentHuggingPriority(.required, for: .horizontal)
+        countLbl.setContentCompressionResistancePriority(.required, for: .horizontal)
+        headerRow.addArrangedSubview(countLbl)
         self.charCountLabel = countLbl
 
         // Header separator
