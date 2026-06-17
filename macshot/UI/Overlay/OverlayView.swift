@@ -1210,7 +1210,7 @@ class OverlayView: NSView {
 
                 // Resize handles — directional cursors for shapes, open hand for line/arrow points
                 let isShapeTool = [AnnotationTool.rectangle, .filledRectangle, .ellipse, .text,
-                                   .number, .pixelate, .stamp].contains(selectedAnnotation?.tool)
+                                   .pixelate, .stamp].contains(selectedAnnotation?.tool)
                 for (_, handleEntry) in annotationResizeHandleRects.enumerated() {
                     let (handle, rect) = handleEntry
                     if rect.insetBy(dx: -4, dy: -4).contains(handlePoint) {
@@ -3943,6 +3943,11 @@ class OverlayView: NSView {
             return
         }
 
+        if annotation.tool == .number {
+            drawNumberAnnotationControls(for: annotation, fullControls: fullControls)
+            return
+        }
+
         let baseRect: NSRect
         switch annotation.tool {
         case .pencil, .marker:
@@ -3980,15 +3985,6 @@ class OverlayView: NSView {
                 let size = text?.size() ?? NSSize(width: 50, height: 20)
                 baseRect = NSRect(origin: annotation.startPoint, size: size)
             }
-        case .number:
-            let radius = 8 + annotation.strokeWidth * 3
-            let circleRect = NSRect(
-                x: annotation.startPoint.x - radius, y: annotation.startPoint.y - radius,
-                width: radius * 2, height: radius * 2)
-            baseRect = circleRect.union(
-                NSRect(
-                    x: annotation.endPoint.x - 2, y: annotation.endPoint.y - 2, width: 4, height: 4)
-            )
         default:
             let strokePad = annotation.strokeWidth / 2
             baseRect = annotation.boundingRect.insetBy(dx: -strokePad, dy: -strokePad)
@@ -4126,6 +4122,62 @@ class OverlayView: NSView {
         }
     }
 
+    private func drawNumberAnnotationControls(for annotation: Annotation, fullControls: Bool) {
+        drawAnnotationOutlineGlow(annotation)
+
+        annotationRotateHandleRect = .zero
+        annotationEditButtonRect = .zero
+        annotationResizeHandleRects = []
+
+        guard fullControls else { return }
+
+        let center = annotation.startPoint
+        let tip = displayNumberTipHandlePoint(for: annotation)
+        let guidePath = NSBezierPath()
+        guidePath.lineWidth = 1
+        guidePath.setLineDash([3, 4], count: 2, phase: 0)
+        NSColor.white.withAlphaComponent(0.35).setStroke()
+        guidePath.move(to: center)
+        guidePath.line(to: tip)
+        guidePath.stroke()
+
+        let handleSize: CGFloat = 10
+        let centerRect = NSRect(
+            x: center.x - handleSize / 2, y: center.y - handleSize / 2,
+            width: handleSize, height: handleSize)
+        let tipRect = NSRect(
+            x: tip.x - handleSize / 2, y: tip.y - handleSize / 2,
+            width: handleSize, height: handleSize)
+        annotationResizeHandleRects = [(.bottomLeft, centerRect), (.topRight, tipRect)]
+
+        for rect in [centerRect, tipRect] {
+            ToolbarLayout.accentColor.setFill()
+            NSBezierPath(ovalIn: rect).fill()
+            NSColor.white.withAlphaComponent(0.9).setStroke()
+            let border = NSBezierPath(ovalIn: rect.insetBy(dx: 0.5, dy: 0.5))
+            border.lineWidth = 1.5
+            border.stroke()
+        }
+
+        let buttonAnchor = annotation.boundingRect
+        let btnSize: CGFloat = 22
+        let deleteRect = NSRect(
+            x: buttonAnchor.maxX + 6, y: buttonAnchor.maxY - btnSize,
+            width: btnSize, height: btnSize)
+        annotationDeleteButtonRect = deleteRect
+        drawDeleteCircle(in: deleteRect)
+    }
+
+    private func displayNumberTipHandlePoint(for annotation: Annotation) -> NSPoint {
+        let dx = annotation.endPoint.x - annotation.startPoint.x
+        let dy = annotation.endPoint.y - annotation.startPoint.y
+        if hypot(dx, dy) > 4 {
+            return annotation.endPoint
+        }
+        let radius = 8 + annotation.strokeWidth * 3
+        return NSPoint(x: annotation.startPoint.x + radius + 16, y: annotation.startPoint.y)
+    }
+
     /// Shared CIContext for outline glow rendering — reused across frames.
     private static let outlineGlowCIContext = CIContext()
 
@@ -4135,6 +4187,7 @@ class OverlayView: NSView {
         // Skip expensive glow during resize — bounding box changes every frame,
         // invalidating the CIFilter cache. A simple stroke rect is drawn instead.
         if isResizingAnnotation && isSelected(annotation) {
+            if annotation.tool == .number { return }
             let rect = annotation.boundingRect.insetBy(dx: -2, dy: -2)
             ToolbarLayout.accentColor.withAlphaComponent(0.5).setStroke()
             let path = NSBezierPath(roundedRect: rect, xRadius: 2, yRadius: 2)
@@ -5319,6 +5372,36 @@ class OverlayView: NSView {
                 }
 
                 let shiftHeld = event.modifierFlags.contains(.shift)
+
+                if annotation.tool == .number {
+                    switch annotationResizeHandle {
+                    case .bottomLeft:
+                        let pointerWasCollapsed =
+                            hypot(origEnd.x - origStart.x, origEnd.y - origStart.y) <= 4
+                        annotation.startPoint = canvasPoint
+                        if pointerWasCollapsed {
+                            annotation.endPoint = canvasPoint
+                        }
+                    case .topRight:
+                        var newTip = canvasPoint
+                        if shiftHeld {
+                            let dx = canvasPoint.x - annotation.startPoint.x
+                            let dy = canvasPoint.y - annotation.startPoint.y
+                            let angle = atan2(dy, dx)
+                            let snapped = (angle / (.pi / 4)).rounded() * (.pi / 4)
+                            let distance = hypot(dx, dy)
+                            newTip = NSPoint(
+                                x: annotation.startPoint.x + distance * cos(snapped),
+                                y: annotation.startPoint.y + distance * sin(snapped))
+                        }
+                        annotation.endPoint = newTip
+                    default:
+                        break
+                    }
+                    cachedCompositedImage = nil
+                    needsDisplay = true
+                    return
+                }
 
                 // Arrow/line/measure: .bottomLeft = startPoint, .topRight = endPoint, others = anchor points
                 if annotation.tool == .arrow || annotation.tool == .line
