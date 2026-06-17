@@ -127,10 +127,10 @@ enum FilenameFormatter {
     }
 
     /// Convenience: current user screenshot template + extension.
-    static func defaultImageFilename(windowTitle: String? = nil, index: Int? = nil) -> String {
+    static func defaultImageFilename(windowTitle: String? = nil, index: Int? = nil, fileExtension: String = ImageEncoder.fileExtension) -> String {
         let template = UserDefaults.standard.string(forKey: userDefaultsKey) ?? defaultTemplate
         let base = format(template: template, windowTitle: windowTitle, index: index)
-        return "\(base).\(ImageEncoder.fileExtension)"
+        return "\(base).\(fileExtension)"
     }
 
     private static func dateFormatter(_ format: String) -> DateFormatter {

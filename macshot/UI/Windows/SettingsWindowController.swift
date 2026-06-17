@@ -661,14 +661,17 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
         // Image format
         imageFormatPopup = NSPopUpButton()
-        imageFormatPopup.addItems(withTitles: ["PNG", "JPEG", "HEIC", "WebP"])
+        for format in ImageEncoder.availableFormats {
+            imageFormatPopup.addItem(withTitle: format.displayName)
+            imageFormatPopup.lastItem?.representedObject = format.rawValue
+        }
         imageFormatPopup.target = self
         imageFormatPopup.action = #selector(imageFormatChanged(_:))
 
         stack.addArrangedSubview(labeledRow(L("Image format:"), controls: [imageFormatPopup]))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
-        // Quality (applies to JPEG and HEIC)
+        // Quality (applies to lossy formats: JPEG, HEIC, WebP, AVIF)
         qualitySlider = NSSlider()
         qualitySlider.minValue = 10
         qualitySlider.maxValue = 100
@@ -2179,13 +2182,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         quickModePopup.selectItem(at: quickMode)
         quickCaptureOpenEditorCheckbox.state = UserDefaults.standard.bool(forKey: "quickCaptureOpenEditor") ? .on : .off
 
-        let format = ImageEncoder.format
-        switch format {
-        case .png:  imageFormatPopup.selectItem(at: 0)
-        case .jpeg: imageFormatPopup.selectItem(at: 1)
-        case .heic: imageFormatPopup.selectItem(at: 2)
-        case .webp: imageFormatPopup.selectItem(at: 3)
-        }
+        selectImageFormat(ImageEncoder.format)
 
         let quality = Int(ImageEncoder.quality * 100)
         qualitySlider.integerValue = quality
@@ -2246,10 +2243,21 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     }
 
     private func updateQualityVisibility() {
-        let hasQuality = imageFormatPopup.indexOfSelectedItem >= 1  // JPEG or HEIC
+        let raw = imageFormatPopup.selectedItem?.representedObject as? String
+        let hasQuality = raw.flatMap(ImageEncoder.Format.init(rawValue:))?.hasQuality ?? false
         qualitySlider.isEnabled = hasQuality
         qualityLabel.textColor = hasQuality ? .labelColor : .tertiaryLabelColor
         qualityRowLabel.textColor = hasQuality ? .labelColor : .tertiaryLabelColor
+    }
+
+    private func selectImageFormat(_ format: ImageEncoder.Format) {
+        for item in imageFormatPopup.itemArray {
+            if item.representedObject as? String == format.rawValue {
+                imageFormatPopup.select(item)
+                return
+            }
+        }
+        imageFormatPopup.selectItem(at: 0)
     }
 
     // MARK: - Actions
@@ -2315,8 +2323,11 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         if let url = URL(string: "https://github.com/sw33tLie/macshot") { NSWorkspace.shared.open(url) }
     }
     @objc private func imageFormatChanged(_ sender: NSPopUpButton) {
-        let formats = ["png", "jpeg", "heic", "webp"]
-        UserDefaults.standard.set(formats[sender.indexOfSelectedItem], forKey: "imageFormat")
+        guard let raw = sender.selectedItem?.representedObject as? String,
+              let format = ImageEncoder.Format(rawValue: raw),
+              ImageEncoder.isFormatAvailable(format)
+        else { return }
+        UserDefaults.standard.set(raw, forKey: "imageFormat")
         updateQualityVisibility()
     }
     @objc private func qualityChanged(_ sender: NSSlider) {

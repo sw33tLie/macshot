@@ -6,22 +6,41 @@ import WebP
 /// Shared image encoding with user-configurable format, quality, and resolution.
 enum ImageEncoder {
 
-    enum Format: String {
+    enum Format: String, CaseIterable {
         case png = "png"
         case jpeg = "jpeg"
         case heic = "heic"
         case webp = "webp"
+        case avif = "avif"
+
+        nonisolated var hasQuality: Bool {
+            switch self {
+            case .png: return false
+            case .jpeg, .heic, .webp, .avif: return true
+            }
+        }
+
+        nonisolated var displayName: String {
+            switch self {
+            case .png: return "PNG"
+            case .jpeg: return "JPEG"
+            case .heic: return "HEIC"
+            case .webp: return "WebP"
+            case .avif: return "AVIF"
+            }
+        }
     }
 
     static var format: Format {
         if let raw = UserDefaults.standard.string(forKey: "imageFormat"),
-           let fmt = Format(rawValue: raw) {
+           let fmt = Format(rawValue: raw),
+           isFormatAvailable(fmt) {
             return fmt
         }
         return .png
     }
 
-    /// Lossy quality 0.0–1.0 (used for JPEG, HEIC, and WebP)
+    /// Lossy quality 0.0–1.0 (used for JPEG, HEIC, WebP, and AVIF)
     static var quality: CGFloat {
         if let q = UserDefaults.standard.object(forKey: "imageQuality") as? Double {
             return CGFloat(max(0.1, min(1.0, q)))
@@ -40,6 +59,7 @@ enum ImageEncoder {
         case .jpeg: return "jpg"
         case .heic: return "heic"
         case .webp: return "webp"
+        case .avif: return "avif"
         }
     }
 
@@ -49,6 +69,25 @@ enum ImageEncoder {
         case .jpeg: return .jpeg
         case .heic: return .heic
         case .webp: return .webP
+        case .avif: return UTType("public.avif") ?? .image
+        }
+    }
+
+    nonisolated static var availableFormats: [Format] {
+        Format.allCases.filter { isFormatAvailable($0) }
+    }
+
+    nonisolated static func isFormatAvailable(_ format: Format) -> Bool {
+        switch format {
+        case .png, .jpeg, .heic, .webp:
+            return true
+        case .avif:
+            // Native ImageIO AVIF encode support is OS-provided. Keep the UI and
+            // saved default gated so older supported macOS versions never expose
+            // a format that cannot be written.
+            guard #available(macOS 13.0, *) else { return false }
+            let identifiers = CGImageDestinationCopyTypeIdentifiers() as NSArray
+            return identifiers.contains("public.avif")
         }
     }
 
@@ -109,6 +148,8 @@ enum ImageEncoder {
             return encodeHEIC(bitmap: bitmap, quality: quality)
         case .webp:
             return encodeWebP(bitmap: bitmap, quality: quality)
+        case .avif:
+            return encodeAVIF(bitmap: bitmap, quality: quality)
         }
     }
 
@@ -132,6 +173,12 @@ enum ImageEncoder {
     private static func encodeHEIC(bitmap: NSBitmapImageRep, quality: CGFloat) -> Data? {
         guard let cgImage = bitmap.cgImage else { return nil }
         return encodeWithCGImageDestination(cgImage: cgImage, type: "public.heic", lossyQuality: quality)
+    }
+
+    /// Encode AVIF via native ImageIO/CGImageDestination.
+    private static func encodeAVIF(bitmap: NSBitmapImageRep, quality: CGFloat) -> Data? {
+        guard isFormatAvailable(.avif), let cgImage = bitmap.cgImage else { return nil }
+        return encodeWithCGImageDestination(cgImage: cgImage, type: "public.avif", lossyQuality: quality)
     }
 
     /// Encode WebP via Swift-WebP (libwebp).
@@ -250,12 +297,17 @@ enum ImageEncoder {
             // second produce the same name and we somehow haven't cleaned
             // up the previous file yet.
             let dir = clipboardTmpDirectory
-            var candidate = dir.appendingPathComponent(FilenameFormatter.defaultImageFilename())
+            func clipboardFilename(counter: Int? = nil) -> String {
+                let filename = FilenameFormatter.defaultImageFilename(fileExtension: "png")
+                guard let counter else { return filename }
+                let base = (filename as NSString).deletingPathExtension
+                return "\(base) (\(counter)).png"
+            }
+
+            var candidate = dir.appendingPathComponent(clipboardFilename())
             var counter = 2
             while FileManager.default.fileExists(atPath: candidate.path) {
-                let base = FilenameFormatter.defaultImageFilename()
-                    .replacingOccurrences(of: ".\(ImageEncoder.fileExtension)", with: "")
-                candidate = dir.appendingPathComponent("\(base) (\(counter)).\(ImageEncoder.fileExtension)")
+                candidate = dir.appendingPathComponent(clipboardFilename(counter: counter))
                 counter += 1
                 if counter > 1000 { break }  // sanity
             }
