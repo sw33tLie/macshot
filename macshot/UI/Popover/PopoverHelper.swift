@@ -22,14 +22,7 @@ enum PopoverHelper {
         vc.view = cursorWrapped(contentView)
         popover.contentViewController = vc
         popover.show(relativeTo: rect, of: view, preferredEdge: preferredEdge)
-
-        // Ensure popover appears above high-level overlay windows
-        if let popoverWindow = popover.contentViewController?.view.window {
-            let parentLevel = view.window?.level ?? .normal
-            if parentLevel.rawValue > NSWindow.Level.normal.rawValue {
-                popoverWindow.level = NSWindow.Level(parentLevel.rawValue + 1)
-            }
-        }
+        configureShownPopover(popover, parentWindow: view.window)
         activePopover = popover
     }
 
@@ -54,14 +47,7 @@ enum PopoverHelper {
         popover.contentViewController = vc
         popover.delegate = AnchorCleanupDelegate.shared
         popover.show(relativeTo: anchor.bounds, of: anchor, preferredEdge: preferredEdge)
-
-        // Ensure popover appears above high-level overlay windows
-        if let popoverWindow = popover.contentViewController?.view.window {
-            let parentLevel = parentView.window?.level ?? .normal
-            if parentLevel.rawValue > NSWindow.Level.normal.rawValue {
-                popoverWindow.level = NSWindow.Level(parentLevel.rawValue + 1)
-            }
-        }
+        configureShownPopover(popover, parentWindow: parentView.window)
         activePopover = popover
     }
 
@@ -95,6 +81,36 @@ enum PopoverHelper {
             wrapper.addSubview(contentView)
         }
         return wrapper
+    }
+
+    /// Finish window-level setup after AppKit has created the private popover
+    /// window. Overlay popovers may be opened from non-key Liquid Glass chrome
+    /// panels while macshot itself remains inactive; without an explicit key
+    /// handoff, AppKit leaves the popover visible but the first click only
+    /// focuses it. Making the popover window key preserves the non-activating
+    /// overlay/chrome topology and keeps semitransient dismissal unchanged.
+    private static func configureShownPopover(_ popover: NSPopover, parentWindow: NSWindow?) {
+        func configure() {
+            guard popover.isShown,
+                  let popoverWindow = popover.contentViewController?.view.window else { return }
+
+            let parentLevel = parentWindow?.level ?? .normal
+            if parentLevel.rawValue > NSWindow.Level.normal.rawValue {
+                popoverWindow.level = NSWindow.Level(parentLevel.rawValue + 1)
+            }
+
+            if let parentWindow {
+                popoverWindow.collectionBehavior.formUnion(
+                    parentWindow.collectionBehavior.intersection([.canJoinAllSpaces, .fullScreenAuxiliary]))
+            }
+
+            popoverWindow.makeKey()
+        }
+
+        configure()
+        DispatchQueue.main.async {
+            configure()
+        }
     }
 }
 
