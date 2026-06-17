@@ -590,6 +590,12 @@ class OverlayView: NSView {
     private var snapGuidesEnabled: Bool {
         UserDefaults.standard.object(forKey: "snapGuidesEnabled") as? Bool ?? true
     }
+    private var selectionOutsideShadowDisabled: Bool {
+        UserDefaults.standard.bool(forKey: "disableSelectionOutsideShadow")
+    }
+    private var tooltipShortcutDisplayEnabled: Bool {
+        UserDefaults.standard.bool(forKey: "showToolShortcutsInTooltips")
+    }
 
     var cachedCompositedImage: NSImage? = nil {  // invalidated when annotations change
         didSet { if !isDraggingAnnotation && !isResizingAnnotation && !isRotatingAnnotation { cachedAnnotationLayer = nil } }
@@ -1534,8 +1540,10 @@ class OverlayView: NSView {
                 if !usesExternalScreenshotPreview {
                     image.draw(in: bounds, from: .zero, operation: .copy, fraction: 1.0)
                 }
-                NSColor.black.withAlphaComponent(0.45).setFill()
-                NSBezierPath(rect: bounds).fill()
+                if !selectionOutsideShadowDisabled {
+                    NSColor.black.withAlphaComponent(0.45).setFill()
+                    NSBezierPath(rect: bounds).fill()
+                }
             } else {
                 // No screenshot yet — fully transparent. User sees live desktop
                 // through the overlay and can start selecting immediately.
@@ -2174,7 +2182,16 @@ class OverlayView: NSView {
         func fits(_ rect: NSRect) -> Bool {
             rect.minY >= minY && rect.maxY <= maxY
         }
-        let avoidanceRects = resolutionBoxAvoidanceRects().map { $0.insetBy(dx: -4, dy: -4) }
+        let toolbarAvoidanceRects = resolutionBoxAvoidanceRects().map { $0.insetBy(dx: -4, dy: -4) }
+        let topObstructionRects = screenTopObstructionRects().map { $0.insetBy(dx: -4, dy: -2) }
+        let avoidanceRects = toolbarAvoidanceRects + topObstructionRects
+        func loweredBelowTopObstructions(_ rect: NSRect) -> NSRect {
+            var adjusted = rect
+            for obstruction in topObstructionRects where adjusted.intersects(obstruction) {
+                adjusted.origin.y = min(adjusted.origin.y, obstruction.minY - adjusted.height - 2)
+            }
+            return adjusted
+        }
         func overlapArea(_ rect: NSRect) -> CGFloat {
             avoidanceRects.reduce(CGFloat(0)) { total, occupied in
                 let hit = rect.intersection(occupied)
@@ -2183,15 +2200,15 @@ class OverlayView: NSView {
             }
         }
 
-        let aboveRect = rect(at: above)
-        let belowRect = rect(at: below)
+        let aboveRect = loweredBelowTopObstructions(rect(at: above))
+        let belowRect = loweredBelowTopObstructions(rect(at: below))
         let outsideCandidates = [aboveRect, belowRect]
         if let clear = outsideCandidates.first(where: { fits($0) && overlapArea($0) == 0 }) {
             return clear
         }
 
-        let insideTop = rect(at: selectionRect.maxY - size.height - edgeGap)
-        let insideBottom = rect(at: selectionRect.minY + edgeGap)
+        let insideTop = loweredBelowTopObstructions(rect(at: selectionRect.maxY - size.height - edgeGap))
+        let insideBottom = loweredBelowTopObstructions(rect(at: selectionRect.minY + edgeGap))
         func fitsInsideSelection(_ rect: NSRect) -> Bool {
             rect.minY >= selectionRect.minY + 2 && rect.maxY <= selectionRect.maxY - 2
         }
@@ -2213,7 +2230,66 @@ class OverlayView: NSView {
             return leastBlocked
         }
         let clampedY = max(minY, min(above, maxY - size.height))
-        return rect(at: clampedY)
+        let clampedRect = loweredBelowTopObstructions(rect(at: clampedY))
+        return fits(clampedRect) ? clampedRect : rect(at: clampedY)
+    }
+
+    /// Notched displays expose the unobscured top-left/right menu-bar areas via
+    /// NSScreen. The remaining top band is the camera housing area; keep small
+    /// floating chrome out of that rect while still allowing it in the safe side
+    /// areas on MacBooks with a notch.
+    private func screenTopObstructionRects() -> [NSRect] {
+        guard #available(macOS 12.0, *),
+              let screen = window?.screen,
+              screen.safeAreaInsets.top > 0 else { return [] }
+
+        let topBandScreen = NSRect(
+            x: screen.frame.minX,
+            y: screen.frame.maxY - screen.safeAreaInsets.top,
+            width: screen.frame.width,
+            height: screen.safeAreaInsets.top)
+
+        let topBand = overlayRect(fromScreenRect: topBandScreen)
+        guard topBand.width > 1, topBand.height > 1 else { return [] }
+
+        let unobscuredTopAreas = [screen.auxiliaryTopLeftArea, screen.auxiliaryTopRightArea].compactMap { $0 }
+            .map { overlayRect(fromScreenRect: $0).intersection(topBand) }
+            .filter { !$0.isNull && $0.width > 1 && $0.height > 1 }
+
+        return unobscuredTopAreas.reduce([topBand]) { blockedRects, unobscured in
+            blockedRects.flatMap { subtract(unobscured, from: $0) }
+        }.filter { $0.width > 1 && $0.height > 1 }
+    }
+
+    private func overlayRect(fromScreenRect rect: NSRect) -> NSRect {
+        guard rect.width > 0, rect.height > 0 else { return .zero }
+        if let win = window {
+            return convert(win.convertFromScreen(rect), from: nil)
+        }
+        if let screen = NSScreen.screens.first(where: { $0.frame.intersects(rect) }) {
+            return rect.offsetBy(dx: -screen.frame.minX, dy: -screen.frame.minY)
+        }
+        return rect
+    }
+
+    private func subtract(_ cut: NSRect, from source: NSRect) -> [NSRect] {
+        let hit = source.intersection(cut)
+        guard !hit.isNull, hit.width > 0, hit.height > 0 else { return [source] }
+
+        var pieces: [NSRect] = []
+        if hit.maxY < source.maxY {
+            pieces.append(NSRect(x: source.minX, y: hit.maxY, width: source.width, height: source.maxY - hit.maxY))
+        }
+        if hit.minY > source.minY {
+            pieces.append(NSRect(x: source.minX, y: source.minY, width: source.width, height: hit.minY - source.minY))
+        }
+        if hit.minX > source.minX {
+            pieces.append(NSRect(x: source.minX, y: hit.minY, width: hit.minX - source.minX, height: hit.height))
+        }
+        if hit.maxX < source.maxX {
+            pieces.append(NSRect(x: hit.maxX, y: hit.minY, width: source.maxX - hit.maxX, height: hit.height))
+        }
+        return pieces
     }
 
     private func resolutionBoxAvoidanceRects() -> [NSRect] {
@@ -6465,12 +6541,28 @@ class OverlayView: NSView {
                 // For non-tool actions, compare string representation
                 return "\(bv.action)" == "\(action)"
             }
-            hoveredTooltip = btn?.tooltipText
+            hoveredTooltip = toolbarTooltipText(for: action, base: btn?.tooltipText)
             hoveredTooltipButtonView = btn
         } else {
             hoveredTooltip = nil
             hoveredTooltipButtonView = nil
         }
+        needsDisplay = true
+    }
+
+    private func toolbarTooltipText(for action: ToolbarButtonAction, base: String?) -> String? {
+        guard let base, !base.isEmpty else { return base }
+        guard tooltipShortcutDisplayEnabled,
+              let shortcut = ToolShortcutManager.tooltipShortcut(for: action)
+        else { return base }
+        return "\(base) (\(shortcut))"
+    }
+
+    private func clearToolbarHoverState(suppressUntilMouseMoved: Bool = false) {
+        hoveredTooltip = nil
+        hoveredTooltipButtonView = nil
+        bottomStripView?.clearInteractionState(suppressHoverUntilMouseMoved: suppressUntilMouseMoved)
+        rightStripView?.clearInteractionState(suppressHoverUntilMouseMoved: suppressUntilMouseMoved)
         needsDisplay = true
     }
 
@@ -6995,13 +7087,7 @@ class OverlayView: NSView {
                 displayIfNeeded()
                 if event.type == .leftMouseUp { break }
             }
-            // Restore original tooltip and reset button pressed state
-            hoveredTooltip = hoveredTooltipButtonView?.tooltipText
-            if let moveBtn = rightStripView?.buttonViews.first(where: { if case .moveSelection = $0.action { return true }; return false }) {
-                moveBtn.isPressed = false
-                moveBtn.needsDisplay = true
-            }
-            needsDisplay = true
+            clearToolbarHoverState(suppressUntilMouseMoved: true)
         case .undo:
             undo()
         case .redo:
