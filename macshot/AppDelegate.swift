@@ -1636,7 +1636,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         }
         controller.onSave = { [weak self, weak controller] in
             guard let self = self, let image = controller?.image else { return }
-            self.saveImageToFile(image)
+            self.saveThumbnailImage(image)
+        }
+        controller.onSaveAs = { [weak self, weak controller] in
+            guard let self = self, let image = controller?.image else { return }
+            self.saveThumbnailImageAs(image)
         }
         controller.onPin = { [weak self, weak controller] in
             guard let self = self, let image = controller?.image else { return }
@@ -1802,22 +1806,24 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         }
     }
 
-    private func saveImageToFile(_ image: NSImage) {
-        guard let imageData = ImageEncoder.encode(image) else { return }
-        let savePanel = NSSavePanel()
-        savePanel.allowedContentTypes = [ImageEncoder.utType]
-        savePanel.nameFieldStringValue = FilenameFormatter.defaultImageFilename()
-        savePanel.directoryURL = SaveDirectoryAccess.directoryHint()
-        savePanel.level = .floating
-
-        NSApp.activate(ignoringOtherApps: true)
-        DispatchQueue.main.async {
-            savePanel.begin { response in
-                if response == .OK, let url = savePanel.url {
-                    try? imageData.write(to: url)
-                }
+    private func saveThumbnailImage(_ image: NSImage) {
+        ImageSaveService.save(image, panelLevel: .floating, activateApp: true) { [weak self] success in
+            if success {
+                self?.playCopySound()
             }
         }
+    }
+
+    private func saveThumbnailImageAs(_ image: NSImage) {
+        ImageSaveService.showSavePanel(for: image, panelLevel: .floating, activateApp: true) { [weak self] success in
+            if success {
+                self?.playCopySound()
+            }
+        }
+    }
+
+    private func saveImageToConfiguredFolder(_ image: NSImage) {
+        ImageSaveService.saveToConfiguredFolder(image, panelLevel: .floating, activateApp: true)
     }
 
     // MARK: - Upload
@@ -2925,7 +2931,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
             ImageEncoder.copyToClipboard(image)
         }
         if mode == 0 || mode == 2 {
-            saveImageToFile(image)
+            saveImageToConfiguredFolder(image)
         }
         playCopySound()
         showFloatingThumbnail(image: image)

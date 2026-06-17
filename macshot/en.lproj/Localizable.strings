@@ -259,6 +259,9 @@
 "Show window only" = "Show window only";
 "Copy to clipboard only" = "Copy to clipboard only";
 "Enter / Quick Capture:" = "Enter / Quick Capture:";
+"Save action:" = "Save action:";
+"Save to default folder" = "Save to default folder";
+"Ask where to save" = "Ask where to save";
 "Save to file" = "Save to file";
 "Save + copy to clipboard" = "Save + copy to clipboard";
 "OCR Action" = "OCR Action";

@@ -913,123 +913,50 @@ extension OverlayWindowController: OverlayViewDelegate {
         overlayDelegate?.overlayDidConfirm(self, capturedImage: image, annotationData: annotationData)
 
         if mode == 0 || mode == 2 {
-            saveImageToDirectory(image)
+            ImageSaveService.saveToConfiguredFolder(image, windowTitle: capturedWindowTitle)
         }
         // mode 3: do nothing — image is passed to delegate which shows the thumbnail
     }
 
     func overlayViewDidRequestFileSave() {
-        // Snapshot post-processing config before dismissing
-        let hasEffects = overlayView?.effectsActive ?? false
-        let effectsCfg = overlayView?.effectsConfig ?? ImageEffectsConfig()
-        let hasBeautify = overlayView?.beautifyEnabled ?? false
-        let beautifyCfg = overlayView?.beautifyConfig ?? BeautifyConfig()
-        let snapWindowImg = overlayView?.snappedWindowImage
-        let snapshotAnns = overlayView?.annotations ?? []
-        let snapshotSel = overlayView?.selectionRect ?? .zero
-
-        guard let rawImage = captureRegion() else {
+        guard let image = captureImageForSave() else {
             dismiss()
             overlayDelegate?.overlayDidCancel(self)
             return
         }
 
-        playCopySound()
         dismiss()
-
-        // Apply post-processing
-        var image = rawImage
-        if hasEffects { image = ImageEffects.apply(to: image, config: effectsCfg) }
-        if hasBeautify {
-            let beautifyInput = (beautifyCfg.isWindowSnap && snapWindowImg != nil)
-                ? compositeAnnotationsOnSnappedWindow(snapWindowImg!, annotations: snapshotAnns, selectionRect: snapshotSel)
-                : image
-            image = BeautifyRenderer.render(image: beautifyInput, config: beautifyCfg)
-        }
-
         overlayDelegate?.overlayDidConfirm(self, capturedImage: image, annotationData: nil)
-        saveImageToDirectory(image)
-    }
-
-    private func saveImageToDirectory(_ image: NSImage) {
-        // Resolve the filename now (at request time) so a delayed write or
-        // folder-prompt can't pick up a later title/timestamp.
-        let template = UserDefaults.standard.string(forKey: FilenameFormatter.userDefaultsKey) ?? FilenameFormatter.defaultTemplate
-        let base = FilenameFormatter.format(template: template, windowTitle: capturedWindowTitle)
-        let filename = "\(base).\(ImageEncoder.fileExtension)"
-        if let dirURL = SaveDirectoryAccess.resolveIfAccessible() {
-            Self.writeImage(image, toDirectory: dirURL, filename: filename, securityScoped: true)
-            return
-        }
-        // No authorized save folder (sandbox has no valid bookmark). A raw write
-        // would fail silently, so prompt the user to choose a folder once, then
-        // persist it as a bookmark for this and all future saves (issue #177).
-        requestSaveDirectoryAccess { dirURL, securityScoped in
-            Self.writeImage(image, toDirectory: dirURL, filename: filename, securityScoped: securityScoped)
-        }
-    }
-
-    /// Encode and write `image` into `dirURL` on a background queue, releasing
-    /// the security scope afterward. `defer` guarantees the scope is released
-    /// even if encoding fails.
-    private static func writeImage(_ image: NSImage, toDirectory dirURL: URL,
-                                   filename: String, securityScoped: Bool) {
-        DispatchQueue.global(qos: .userInitiated).async {
-            defer { if securityScoped { SaveDirectoryAccess.stopAccessing(url: dirURL) } }
-            let fileURL = dirURL.appendingPathComponent(filename)
-            guard let imageData = ImageEncoder.encode(image) else { return }
-            do {
-                try imageData.write(to: fileURL)
-            } catch {
-                #if DEBUG
-                NSLog("macshot: failed to save screenshot to \(fileURL.path): \(error.localizedDescription)")
-                #endif
+        ImageSaveService.saveToConfiguredFolder(
+            image,
+            windowTitle: capturedWindowTitle,
+            panelLevel: NSWindow.Level(258)
+        ) { [weak self] success in
+            if success {
+                self?.playCopySound()
             }
-        }
-    }
-
-    /// Prompt (on the main thread) for a save folder, persist it as a
-    /// security-scoped bookmark, then hand a scoped URL to `completion`.
-    /// `completion` runs only if the user picks a folder.
-    private func requestSaveDirectoryAccess(completion: @escaping (URL, Bool) -> Void) {
-        let panel = NSOpenPanel()
-        panel.canChooseDirectories = true
-        panel.canChooseFiles = false
-        panel.allowsMultipleSelection = false
-        panel.prompt = L("Choose a folder")
-        panel.directoryURL = SaveDirectoryAccess.directoryHint()
-        // App-modal (not a sheet): the overlay window is already dismissed by
-        // the time a quick-save reaches here, so there is no window to attach to.
-        panel.begin { response in
-            guard response == .OK, let url = panel.url else { return }
-            SaveDirectoryAccess.save(url: url)
-            // Reopen through the freshly saved bookmark so first-save behavior
-            // matches every later save in sandbox mode.
-            if let scopedURL = SaveDirectoryAccess.resolveIfAccessible() {
-                completion(scopedURL, true)
-                return
-            }
-            let securityScoped = url.startAccessingSecurityScopedResource()
-            completion(url, securityScoped)
         }
     }
 
     func overlayViewDidRequestSave() {
-        guard var image = captureRegion() else { return }
-        image = applyBeautifyIfNeeded(image) ?? image
-        guard let imageData = ImageEncoder.encode(image) else { return }
+        switch SaveActionPreference.current {
+        case .saveToFolder:
+            overlayViewDidRequestFileSave()
+        case .askWhereToSave:
+            overlayViewDidRequestSaveAs()
+        }
+    }
 
-        let savePanel = NSSavePanel()
-        savePanel.allowedContentTypes = [ImageEncoder.utType]
-        savePanel.nameFieldStringValue = FilenameFormatter.defaultImageFilename(windowTitle: capturedWindowTitle)
-        savePanel.level = NSWindow.Level(258)
+    func overlayViewDidRequestSaveAs() {
+        guard let image = captureImageForSave() else { return }
 
-        savePanel.directoryURL = SaveDirectoryAccess.directoryHint()
-
-        savePanel.begin { [weak self] response in
+        ImageSaveService.showSavePanel(
+            for: image,
+            windowTitle: capturedWindowTitle,
+            panelLevel: NSWindow.Level(258)
+        ) { [weak self] success in
             guard let self = self else { return }
-            if response == .OK, let url = savePanel.url {
-                try? imageData.write(to: url)
+            if success {
                 self.playCopySound()
                 self.dismiss()
                 self.overlayDelegate?.overlayDidConfirm(self, capturedImage: nil, annotationData: nil)
@@ -1042,6 +969,28 @@ extension OverlayWindowController: OverlayViewDelegate {
                 }
             }
         }
+    }
+
+    private func captureImageForSave() -> NSImage? {
+        let hasEffects = overlayView?.effectsActive ?? false
+        let effectsCfg = overlayView?.effectsConfig ?? ImageEffectsConfig()
+        let hasBeautify = overlayView?.beautifyEnabled ?? false
+        let beautifyCfg = overlayView?.beautifyConfig ?? BeautifyConfig()
+        let snapWindowImg = overlayView?.snappedWindowImage
+        let snapshotAnns = overlayView?.annotations ?? []
+        let snapshotSel = overlayView?.selectionRect ?? .zero
+
+        guard var image = captureRegion() else { return nil }
+        if hasEffects {
+            image = ImageEffects.apply(to: image, config: effectsCfg)
+        }
+        if hasBeautify {
+            let beautifyInput = (beautifyCfg.isWindowSnap && snapWindowImg != nil)
+                ? compositeAnnotationsOnSnappedWindow(snapWindowImg!, annotations: snapshotAnns, selectionRect: snapshotSel)
+                : image
+            image = BeautifyRenderer.render(image: beautifyInput, config: beautifyCfg)
+        }
+        return image
     }
 }
 

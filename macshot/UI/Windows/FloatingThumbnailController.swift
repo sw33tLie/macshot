@@ -217,6 +217,7 @@ class FloatingThumbnailController: NSObject, NSDraggingSource, QLPreviewPanelDat
     // Action callbacks
     var onCopy:     (() -> Void)?
     var onSave:     (() -> Void)?
+    var onSaveAs:   (() -> Void)?
     var onPin:      (() -> Void)?
     var onEdit:     (() -> Void)?
     var onUpload:   (() -> Void)?
@@ -379,7 +380,8 @@ class FloatingThumbnailController: NSObject, NSDraggingSource, QLPreviewPanelDat
         copyItem.keyEquivalentModifierMask = [.command]
         menu.addItem(copyItem)
 
-        menu.addItem(ImageContextMenu.item(title: L("Save As..."), symbolName: "square.and.arrow.down", action: #selector(contextSave), target: self))
+        menu.addItem(ImageContextMenu.item(title: L("Save"), symbolName: "square.and.arrow.down", action: #selector(contextSave), target: self))
+        menu.addItem(ImageContextMenu.item(title: L("Save As..."), symbolName: "square.and.arrow.down.on.square", action: #selector(contextSaveAs), target: self))
 
         menu.addItem(NSMenuItem.separator())
 
@@ -410,6 +412,7 @@ class FloatingThumbnailController: NSObject, NSDraggingSource, QLPreviewPanelDat
 
     @objc private func contextCopy() { onCopy?(); dismiss() }
     @objc private func contextSave() { onSave?(); dismiss() }
+    @objc private func contextSaveAs() { onSaveAs?(); dismiss() }
     @objc private func contextPin() { onPin?(); dismiss() }
     @objc private func contextUpload() { onUpload?(); dismiss() }
     @objc private func contextOpenEditor() { onEdit?(); dismiss() }

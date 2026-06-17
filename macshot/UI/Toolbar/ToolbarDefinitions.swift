@@ -368,10 +368,17 @@ class ToolbarLayout {
         // Copy and save are always present
         buttons.append(
             ToolbarButton(action: .copy, sfSymbol: "doc.on.doc", tooltip: L("Copy")))
+        let saveTooltip: String = {
+            switch SaveActionPreference.current {
+            case .saveToFolder:
+                return "\(L("Save to")) \(URL(fileURLWithPath: SaveDirectoryAccess.displayPath).lastPathComponent)"
+            case .askWhereToSave:
+                return L("Ask where to save")
+            }
+        }()
         var saveBtn = ToolbarButton(
             action: .save, sfSymbol: "square.and.arrow.down.fill",
-            tooltip:
-                "\(L("Save to")) \(URL(fileURLWithPath: SaveDirectoryAccess.displayPath).lastPathComponent)"
+            tooltip: saveTooltip
         )
         saveBtn.hasContextMenu = true
         buttons.append(saveBtn)

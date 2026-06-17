@@ -45,6 +45,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var toolShortcutButtons: [ToolShortcutManager.Action: NSButton] = [:]
     private var recordingToolAction: ToolShortcutManager.Action?
     private var savePathField: NSTextField!
+    private var saveActionPopup: NSPopUpButton!
     private var ocrActionPopup: NSPopUpButton!
     private var copySoundCheckbox: NSButton!
     // rememberSelectionCheckbox removed — selection is always saved for "Capture Last Area"
@@ -676,6 +677,18 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         // ── Output ───────────────────────────────────────────
         stack.addArrangedSubview(sectionHeader(L("Output")))
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        // Default save action
+        saveActionPopup = NSPopUpButton()
+        for action in SaveActionPreference.allCases {
+            saveActionPopup.addItem(withTitle: action.title)
+            saveActionPopup.lastItem?.representedObject = action.rawValue
+        }
+        saveActionPopup.target = self
+        saveActionPopup.action = #selector(saveActionChanged(_:))
+
+        stack.addArrangedSubview(labeledRow(L("Save action:"), controls: [saveActionPopup]))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         // Save folder
         savePathField = NSTextField()
@@ -2150,6 +2163,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         }
 
         savePathField.stringValue = SaveDirectoryAccess.displayPath
+        selectSaveAction(SaveActionPreference.current)
 
         // Migrate legacy bool to new int setting
         if UserDefaults.standard.object(forKey: "ocrAction") == nil {
@@ -2314,6 +2328,16 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         imageFormatPopup.selectItem(at: 0)
     }
 
+    private func selectSaveAction(_ action: SaveActionPreference) {
+        for item in saveActionPopup.itemArray {
+            if item.representedObject as? Int == action.rawValue {
+                saveActionPopup.select(item)
+                return
+            }
+        }
+        saveActionPopup.selectItem(at: 0)
+    }
+
     // MARK: - Actions
 
     @objc private func browseSavePath(_ sender: NSButton) {
@@ -2331,6 +2355,11 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
     @objc private func ocrActionChanged(_ sender: NSPopUpButton) {
         UserDefaults.standard.set(sender.indexOfSelectedItem, forKey: "ocrAction")
+    }
+    @objc private func saveActionChanged(_ sender: NSPopUpButton) {
+        guard let raw = sender.selectedItem?.representedObject as? Int,
+              let action = SaveActionPreference(rawValue: raw) else { return }
+        SaveActionPreference.current = action
     }
     @objc private func copySoundChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "playCopySound")

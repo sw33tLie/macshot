@@ -9,6 +9,7 @@ protocol OverlayViewDelegate: AnyObject {
     func overlayViewDidCancel()
     func overlayViewDidConfirm()
     func overlayViewDidRequestSave()
+    func overlayViewDidRequestSaveAs()
     func overlayViewDidRequestPin()
     func overlayViewDidRequestOCR()
     func overlayViewDidRequestQuickSave()
@@ -7611,7 +7612,7 @@ class OverlayView: NSView {
     }
 
     @objc private func saveAsMenuAction() {
-        overlayDelegate?.overlayViewDidRequestSave()
+        overlayDelegate?.overlayViewDidRequestSaveAs()
     }
 
     // MARK: - Keyboard
