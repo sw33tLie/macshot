@@ -218,11 +218,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     private var captureSessionID: UInt = 0
     private var captureTimingTrace: CaptureTimingTrace?
     /// App Nap suppression assertion. Held for the app's lifetime so global
-    /// hotkeys respond instantly instead of paying a 1-2s wake-up penalty
-    /// when macshot has been idle. `.userInitiated` keeps the process
-    /// running (not idle) and prevents macOS from treating the app as
-    /// eligible for Jetsam (memory-pressure termination), while still
-    /// allowing the system to sleep when the lid is closed.
+    /// hotkeys respond instantly instead of paying a wake-up penalty when
+    /// macshot has been idle. Use the idle-sleep-safe variant: plain
+    /// `.userInitiated` creates a `PreventUserIdleSystemSleep` assertion and
+    /// keeps Macs awake indefinitely.
     private var appNapAssertion: NSObjectProtocol?
 
     /// Shared capture sound — loaded once, reused everywhere.
@@ -246,14 +245,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         }
 
         // Disable App Nap. macshot is LSUIElement with no visible windows
-        // when idle, so macOS aggressively sleeps it — which adds 1-2s of
-        // wake-up latency to global hotkey captures. We hold this assertion
-        // for the app's lifetime. `.userInitiated` keeps the process
-        // running and reduces the likelihood of Jetsam (memory-pressure)
-        // termination when the system reclaims memory from background
-        // LSUIElement processes, while still allowing system sleep.
+        // when idle, so macOS can add wake-up latency to global hotkey
+        // captures. The "allowing idle system sleep" variant keeps the
+        // responsiveness hint without creating a PreventUserIdleSystemSleep
+        // assertion that blocks normal sleep.
         appNapAssertion = ProcessInfo.processInfo.beginActivity(
-            options: [.userInitiated],
+            options: [.userInitiatedAllowingIdleSystemSleep],
             reason: "Global hotkey responsiveness")
 
         // Open a signal-safe log fd and register the SIGTERM handler.
