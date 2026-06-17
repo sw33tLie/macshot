@@ -110,6 +110,10 @@ final class HistoryOverlayController: NSObject, QLPreviewPanelDataSource, QLPrev
     }
 
     func dismiss() {
+        dismiss(immediate: false)
+    }
+
+    private func dismiss(immediate: Bool) {
         NotificationCenter.default.removeObserver(self,
             name: NSApplication.didResignActiveNotification, object: nil)
 
@@ -126,6 +130,14 @@ final class HistoryOverlayController: NSObject, QLPreviewPanelDataSource, QLPrev
             return
         }
         panel = nil
+
+        if immediate {
+            win.orderOut(nil)
+            win.close()
+            contentView = nil
+            onDismiss?()
+            return
+        }
 
         let hiddenFrame = NSRect(
             x: win.frame.origin.x, y: win.frame.origin.y + Self.panelHeight,
@@ -257,6 +269,7 @@ final class HistoryOverlayController: NSObject, QLPreviewPanelDataSource, QLPrev
         let entries = ScreenshotHistory.shared.entries
         guard index >= 0, index < entries.count else { return }
         let fileURL = ScreenshotHistory.shared.fileURL(for: entries[index])
+        dismiss(immediate: true)
         NSWorkspace.shared.open(
             [fileURL],
             withApplicationAt: appURL,
@@ -268,6 +281,7 @@ final class HistoryOverlayController: NSObject, QLPreviewPanelDataSource, QLPrev
         let entries = ScreenshotHistory.shared.entries
         guard index >= 0, index < entries.count else { return }
         let fileURL = ScreenshotHistory.shared.fileURL(for: entries[index])
+        dismiss(immediate: true)
         service.perform(withItems: [fileURL])
     }
 
