@@ -390,9 +390,11 @@ class OverlayView: NSView {
     /// Whether toolbars are routed through glass chrome panels.
     private var usesGlassChrome: Bool { LiquidGlass.isEnabled && !isEditorMode }
 
-    // Size label
-    private var sizeLabelRect: NSRect = .zero
-    private var sizeInputField: NSTextField?
+    // Resolution box (W × H fields + presets). Replaces the old drawn size badge.
+    private var resolutionBox: ResolutionBoxView?
+    /// Overlay-space frame of the resolution box (for chrome hit-test / cursor /
+    /// zoom-badge anchoring). .zero when not shown.
+    private var resolutionBoxRect: NSRect = .zero
 
     // Zoom label
     private var zoomLabelRect: NSRect = .zero
@@ -707,6 +709,7 @@ class OverlayView: NSView {
 
     func startScrollCaptureMode() {
         isScrollCapturing = true
+        updateResolutionBox()  // hide the box during scroll capture
         scrollCaptureStripCount = 0
         scrollCapturePixelSize = .zero
         scrollCaptureAutoScrolling = false
@@ -819,6 +822,9 @@ class OverlayView: NSView {
     /// True when the current selection was made via window snap (click without drag).
     /// Cleared when the user manually resizes the selection.
     var selectionIsWindowSnap: Bool = false
+    /// Locked aspect ratio (width / height) for the selection, or nil for freeform.
+    /// When set, drag-resize and the resolution box maintain this ratio.
+    var lockedAspect: CGFloat? = nil
     var snappedWindowID: CGWindowID? = nil
     /// Independently captured window image (with transparent corners) for beautify snap mode.
     var snappedWindowImage: NSImage? = nil
@@ -1119,6 +1125,12 @@ class OverlayView: NSView {
             return
         }
 
+        // Over the resolution box: let its own cursor rects (I-beam over fields,
+        // arrow over the presets button) decide — don't override here.
+        if resolutionBoxRect != .zero && resolutionBoxRect.contains(point) {
+            return
+        }
+
         // Non-interactive states — simple cursors
         if textEditView != nil {
             NSCursor.arrow.set()
@@ -1335,7 +1347,7 @@ class OverlayView: NSView {
                optionsRowRect.contains(point) { return true }
         }
         if updateCursorForChrome(at: point) { return true }
-        if sizeLabelRect.contains(point) && sizeInputField == nil { return true }
+        if resolutionBoxRect != .zero && resolutionBoxRect.contains(point) { return true }
         if zoomLabelRect.contains(point) && zoomLabelOpacity > 0 && zoomInputField == nil {
             return true
         }
@@ -1413,7 +1425,13 @@ class OverlayView: NSView {
     func shouldDrawSelectionBorder() -> Bool { !isEditorMode }
 
     /// Override to control size label drawing. Base returns true when not recording/scrolling/editing.
-    func shouldDrawSizeLabel() -> Bool { !isRecording && !isScrollCapturing && !isEditorMode }
+    /// The resolution box shows whenever there's an adjustable selection — including
+    /// recording SETUP (isRecording true). When recording actually starts the
+    /// overlay is dismissed, so no separate gate is needed for that.
+    func shouldShowResolutionBox() -> Bool {
+        state == .selected && !isScrollCapturing && !isEditorMode
+            && selectionRect.width > 1 && selectionRect.height > 1
+    }
 
     /// Override to draw top chrome (e.g. editor top bar). Base draws editor top bar when in editor mode.    /// Override to adjust a view-space point for editor canvas offset. Base returns point unchanged.
     func adjustPointForEditor(_ p: NSPoint) -> NSPoint { p }
@@ -1813,14 +1831,11 @@ class OverlayView: NSView {
                 borderPath.stroke()
             }
 
-            if shouldDrawSizeLabel() {
-                // Size label above/below selection
-                drawSizeLabel()
-
-                // Zoom label (fades in/out beside the size label)
-                if zoomLabelOpacity > 0 {
-                    drawZoomLabel()
-                }
+            // Resolution box (real NSView) is managed in updateResolutionBox(),
+            // called from layout/selection changes — not drawn here. The zoom
+            // label still draws beside it.
+            if shouldShowResolutionBox() && zoomLabelOpacity > 0 {
+                drawZoomLabel()
             }
 
             // Resize handles (drawn even in recording setup mode, but not during scroll capture)
@@ -2095,51 +2110,93 @@ class OverlayView: NSView {
     }
 
     private static let sizeLabelFont = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium)
-    private var sizeLabelAttrs: [NSAttributedString.Key: Any] {
-        [.font: Self.sizeLabelFont, .foregroundColor: ToolbarLayout.iconColor]
+
+    /// Compute where the resolution box sits relative to the selection. Aligns
+    /// the box's W↔H midpoint (the "×") with the selection's horizontal center,
+    /// so the dimensions read as centered on the selection — the trailing presets
+    /// button just overhangs to the right (not counted in the centering).
+    private func resolutionBoxFrame(size: NSSize, dimsCenterX: CGFloat) -> NSRect {
+        let x = selectionRect.midX - dimsCenterX
+        let above = selectionRect.maxY + 4
+        let below = selectionRect.minY - size.height - 4
+        let y: CGFloat
+        if above + size.height < bounds.maxY - 2 {
+            y = above
+        } else if below >= bounds.minY + 2 {
+            y = below
+        } else {
+            y = above
+        }
+        let clampedX = max(bounds.minX + 2, min(x, bounds.maxX - size.width - 2))
+        return NSRect(x: clampedX, y: y, width: size.width, height: size.height)
     }
 
-    private func drawSizeLabel() {
-        guard sizeInputField == nil else { return }  // don't draw while editing
-
-        // Get pixel dimensions (account for Retina)
-        let scale = window?.backingScaleFactor ?? 2.0
-        let pixelW = Int(selectionRect.width * scale)
-        let pixelH = Int(selectionRect.height * scale)
-        let text = "\(pixelW) \u{00D7} \(pixelH)"
-
-        let attrs = sizeLabelAttrs
-        let textSize = (text as NSString).size(withAttributes: attrs)
-        let padding: CGFloat = 6
-        let labelW = textSize.width + padding * 2
-        let labelH = textSize.height + padding
-
-        let labelX = selectionRect.midX - labelW / 2
-
-        // Default: above selection. If toolbar is above (bottomBarRect is above selection), go below toolbar area.
-        // If no room above, go below.
-        let above = selectionRect.maxY + 4
-        let below = selectionRect.minY - labelH - 4
-        let labelY: CGFloat
-        if above + labelH < bounds.maxY - 2 {
-            labelY = above
-        } else if below >= bounds.minY + 2 {
-            labelY = below
-        } else {
-            labelY = above  // fallback
+    /// Create/position/update or remove the resolution box for the current state.
+    func updateResolutionBox() {
+        guard shouldShowResolutionBox() else {
+            resolutionBox?.removeFromSuperview()
+            resolutionBox = nil
+            resolutionBoxRect = .zero
+            return
         }
+        let box: ResolutionBoxView
+        if let existing = resolutionBox {
+            box = existing
+        } else {
+            box = ResolutionBoxView()
+            box.onCommit = { [weak self] w, h in self?.applyPixelSize(w: w, h: h) }
+            box.onPresets = { [weak self] anchor in self?.showResolutionPresets(from: anchor) }
+            addSubview(box)
+            resolutionBox = box
+        }
+        box.frame = resolutionBoxFrame(size: box.preferredSize, dimsCenterX: box.dimensionsCenterX)
+        resolutionBoxRect = box.frame
+        let px = selectionPixelSize
+        box.setDimensions(w: px.w, h: px.h)
+        box.setActiveRatioLabel(activeRatioLabel)
+    }
 
-        let rect = NSRect(x: labelX, y: labelY, width: labelW, height: labelH)
-        sizeLabelRect = rect
+    /// Human label of the currently locked aspect ratio, if any.
+    private var activeRatioLabel: String? {
+        guard let a = lockedAspect else { return nil }
+        return ResolutionPresetCatalog.ratios.first {
+            if case .ratio(_, let v) = $0 { return abs(v - a) < 0.001 }
+            return false
+        }?.label
+    }
 
-        ToolbarLayout.bgColor.setFill()
-        NSBezierPath(roundedRect: rect, xRadius: 4, yRadius: 4).fill()
-        (text as NSString).draw(
-            at: NSPoint(x: rect.minX + padding, y: rect.minY + padding / 2), withAttributes: attrs)
+    /// Show the presets popover (aspect ratios + common resolutions) from `anchor`.
+    private func showResolutionPresets(from anchor: NSView) {
+        let picker = ListPickerView()
+        var items: [ListPickerView.Item] = []
+        var actions: [() -> Void] = []
+        let all = ResolutionPresetCatalog.ratios + ResolutionPresetCatalog.resolutions
+        for preset in all {
+            let px = selectionPixelSize
+            let selected: Bool
+            switch preset {
+            case .freeform: selected = (lockedAspect == nil)
+            case .ratio(_, let v): selected = (lockedAspect.map { abs($0 - v) < 0.001 } ?? false)
+            case .resolution(_, let w, let h): selected = (px.w == w && px.h == h)
+            }
+            items.append(ListPickerView.Item(title: preset.label, isSelected: selected))
+            switch preset {
+            case .freeform: actions.append { [weak self] in self?.applyLockedAspect(nil); self?.updateResolutionBox() }
+            case .ratio(_, let v): actions.append { [weak self] in self?.applyLockedAspect(v); self?.updateResolutionBox() }
+            case .resolution(_, let w, let h): actions.append { [weak self] in self?.lockedAspect = nil; self?.applyPixelSize(w: w, h: h); self?.updateResolutionBox() }
+            }
+        }
+        picker.items = items
+        picker.onSelect = { idx in
+            PopoverHelper.dismiss()
+            if idx < actions.count { actions[idx]() }
+        }
+        PopoverHelper.show(picker, size: picker.preferredSize,
+                           relativeTo: anchor.bounds, of: anchor, preferredEdge: .maxY)
     }
 
     private func drawZoomLabel() {
-        guard sizeLabelRect != .zero, zoomInputField == nil else { return }
+        guard resolutionBoxRect != .zero, zoomInputField == nil else { return }
         let zoom = zoomLevel
         let text: String
         if abs(zoom - 1.0) < 0.005 {
@@ -2158,10 +2215,10 @@ class OverlayView: NSView {
         let textSize = (text as NSString).size(withAttributes: attrs)
         let padding: CGFloat = 6
         let labelW = textSize.width + padding * 2
-        let labelH = sizeLabelRect.height
+        let labelH = resolutionBoxRect.height
         let gap: CGFloat = 6
-        let labelX = sizeLabelRect.maxX + gap
-        let labelY = sizeLabelRect.minY
+        let labelX = resolutionBoxRect.maxX + gap
+        let labelY = resolutionBoxRect.minY
 
         let rect = NSRect(x: labelX, y: labelY, width: labelW, height: labelH)
         zoomLabelRect = rect
@@ -2173,63 +2230,67 @@ class OverlayView: NSView {
             at: NSPoint(x: labelX + padding, y: labelY + padding / 2), withAttributes: attrs)
     }
 
-    private func showSizeInput() {
+    /// Current selection size in device pixels (rounded, not truncated).
+    var selectionPixelSize: (w: Int, h: Int) {
         let scale = window?.backingScaleFactor ?? 2.0
-        let pixelW = Int(selectionRect.width * scale)
-        let pixelH = Int(selectionRect.height * scale)
-
-        let fieldWidth: CGFloat = 120
-        let fieldHeight: CGFloat = 22
-        let fieldX = sizeLabelRect.midX - fieldWidth / 2
-        let fieldY = sizeLabelRect.minY + (sizeLabelRect.height - fieldHeight) / 2
-
-        let field = NSTextField(
-            frame: NSRect(x: fieldX, y: fieldY, width: fieldWidth, height: fieldHeight))
-        field.stringValue = "\(pixelW) \u{00D7} \(pixelH)"
-        field.font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium)
-        field.alignment = .center
-        field.isBezeled = true
-        field.bezelStyle = .roundedBezel
-        field.backgroundColor = NSColor(white: 0.15, alpha: 0.95)
-        field.textColor = .white
-        field.focusRingType = .none
-        field.delegate = self
-        field.tag = 888
-
-        addSubview(field)
-        sizeInputField = field
-        window?.makeFirstResponder(field)
-        field.selectText(nil)
-        needsDisplay = true
+        return (Int((selectionRect.width * scale).rounded()),
+                Int((selectionRect.height * scale).rounded()))
     }
 
-    private func commitSizeInputIfNeeded() {
-        guard let field = sizeInputField else { return }
-        let input = field.stringValue.trimmingCharacters(in: .whitespaces)
+    /// Resize the selection to an exact pixel size (W×H in device pixels),
+    /// center-anchored and clamped to the screen. Used by the resolution box
+    /// fields and resolution presets. Returns true if it fit exactly (no clamp).
+    @discardableResult
+    func applyPixelSize(w pxW: Int, h pxH: Int) -> Bool {
+        guard pxW > 0, pxH > 0 else { return false }
+        let scale = window?.backingScaleFactor ?? 2.0
+        var newW = CGFloat(pxW) / scale
+        var newH = CGFloat(pxH) / scale
 
-        // Parse "W × H", "WxH", "W*H", "W H"
-        let separators = CharacterSet(charactersIn: "\u{00D7}xX*").union(.whitespaces)
-        let parts = input.components(separatedBy: separators).filter { !$0.isEmpty }
-
-        if parts.count == 2, let w = Int(parts[0]), let h = Int(parts[1]), w > 0, h > 0 {
-            let scale = window?.backingScaleFactor ?? 2.0
-            let newW = CGFloat(w) / scale
-            let newH = CGFloat(h) / scale
-
-            // Resize from center of current selection
-            let centerX = selectionRect.midX
-            let centerY = selectionRect.midY
-            selectionRect = NSRect(
-                x: centerX - newW / 2,
-                y: centerY - newH / 2,
-                width: newW,
-                height: newH
-            )
+        // Clamp to the overlay bounds, preserving aspect so presets don't distort.
+        let maxW = bounds.width
+        let maxH = bounds.height
+        var fits = true
+        if newW > maxW || newH > maxH {
+            fits = false
+            let s = min(maxW / newW, maxH / newH)
+            newW *= s
+            newH *= s
         }
 
-        field.removeFromSuperview()
-        sizeInputField = nil
-        window?.makeFirstResponder(self)
+        // Center on the current selection (or screen center if no selection yet),
+        // then shift fully on-screen.
+        let cx = selectionRect.width > 0 ? selectionRect.midX : bounds.midX
+        let cy = selectionRect.height > 0 ? selectionRect.midY : bounds.midY
+        var rect = NSRect(x: cx - newW / 2, y: cy - newH / 2, width: newW, height: newH)
+        rect.origin.x = max(bounds.minX, min(rect.origin.x, bounds.maxX - newW))
+        rect.origin.y = max(bounds.minY, min(rect.origin.y, bounds.maxY - newH))
+
+        selectionIsWindowSnap = false
+        selectionRect = rect
+        updateResolutionBox()
+        needsDisplay = true
+        return fits
+    }
+
+    /// Lock (or clear, when nil) the selection's aspect ratio and immediately
+    /// reshape the current selection to match (center-anchored, clamped).
+    func applyLockedAspect(_ aspect: CGFloat?) {
+        lockedAspect = aspect
+        selectionIsWindowSnap = false
+        guard let aspect, aspect > 0, selectionRect.width > 1 else { needsDisplay = true; return }
+        // Reshape to the locked ratio, keeping area roughly similar, centered.
+        let cur = selectionRect
+        var w = cur.width
+        var h = w / aspect
+        if h > bounds.height || w > bounds.width {
+            let s = min(bounds.width / w, bounds.height / h)
+            w *= s; h *= s
+        }
+        var rect = NSRect(x: cur.midX - w / 2, y: cur.midY - h / 2, width: w, height: h)
+        rect.origin.x = max(bounds.minX, min(rect.origin.x, bounds.maxX - w))
+        rect.origin.y = max(bounds.minY, min(rect.origin.y, bounds.maxY - h))
+        selectionRect = rect
         needsDisplay = true
     }
 
@@ -4295,7 +4356,7 @@ class OverlayView: NSView {
         }
 
         repositionToolbars()
-
+        updateResolutionBox()
     }
 
     /// Reposition toolbar strips based on current selection/bounds. Cheap — safe to call from draw().
@@ -4805,7 +4866,6 @@ class OverlayView: NSView {
         if !isTextFormattingClick {
             commitTextFieldIfNeeded()
         }
-        commitSizeInputIfNeeded()
         commitZoomInputIfNeeded()
 
         // Double-click to copy: when the setting is on, two fast clicks inside the
@@ -4854,13 +4914,10 @@ class OverlayView: NSView {
                 return
             }
 
-            // Check size label click
-            if sizeLabelRect.contains(point) && sizeInputField == nil {
-                showSizeInput()
+            // Resolution box is a real interactive subview — clicks inside it are
+            // handled by the view itself (don't intercept here).
+            if resolutionBoxRect != .zero && resolutionBoxRect.contains(point) {
                 return
-            }
-            if let field = sizeInputField, field.frame.contains(point) {
-                return  // let the text field handle it
             }
 
             // Check zoom label click
@@ -5283,10 +5340,12 @@ class OverlayView: NSView {
                 needsDisplay = true
             } else if isDraggingSelection {
                 selectionRect.origin = NSPoint(x: point.x - dragOffset.x, y: point.y - dragOffset.y)
+                updateResolutionBox()
                 needsDisplay = true
             } else if isResizingSelection {
                 resizeSelection(to: point)
                 overlayDelegate?.overlayViewSelectionDidChange(selectionRect)
+                updateResolutionBox()
                 needsDisplay = true
             } else if currentAnnotation != nil {
                 if spaceRepositioning {
@@ -5921,7 +5980,58 @@ class OverlayView: NSView {
             break
         }
 
+        if let aspect = lockedAspect, aspect > 0 {
+            newRect = constrainToAspect(newRect, aspect: aspect, handle: resizeHandle, minSize: minSize)
+        }
+
         selectionRect = newRect
+    }
+
+    /// Adjust `rect` to the locked `aspect` (w/h), keeping the handle's anchor fixed.
+    /// Corner handles keep the opposite corner fixed and drive from the dominant
+    /// dimension; edge handles drive the dragged axis and center the other.
+    private func constrainToAspect(_ rect: NSRect, aspect: CGFloat, handle: ResizeHandle, minSize: CGFloat) -> NSRect {
+        var w = rect.width
+        var h = rect.height
+
+        // Derive the dependent dimension from the driven one.
+        switch handle {
+        case .top, .bottom:           w = h * aspect        // height driven
+        case .left, .right:           h = w / aspect        // width driven
+        default:                                            // corner: dominant axis
+            if w / aspect >= h { h = w / aspect } else { w = h * aspect }
+        }
+
+        // Enforce min size as a RATIO-PRESERVING pair (scale both up together).
+        if w < minSize || h < minSize {
+            let s = max(minSize / w, minSize / h)
+            w *= s; h *= s
+        }
+        // Shrink (ratio-preserved) if larger than the screen.
+        if w > bounds.width || h > bounds.height {
+            let s = min(bounds.width / w, bounds.height / h)
+            w *= s; h *= s
+        }
+
+        // Anchor: corner handles keep the OPPOSITE corner fixed; edge handles keep
+        // the opposite edge fixed and center the derived dimension.
+        var x = rect.minX
+        var y = rect.minY
+        switch handle {
+        case .topLeft:      x = rect.maxX - w; y = rect.minY
+        case .topRight:     x = rect.minX;     y = rect.minY
+        case .bottomLeft:   x = rect.maxX - w; y = rect.maxY - h
+        case .bottomRight:  x = rect.minX;     y = rect.maxY - h
+        case .top:          x = rect.midX - w / 2; y = rect.minY
+        case .bottom:       x = rect.midX - w / 2; y = rect.maxY - h
+        case .left:         x = rect.maxX - w; y = rect.midY - h / 2
+        case .right:        x = rect.minX;     y = rect.midY - h / 2
+        default: break
+        }
+        // Clamp POSITION into bounds (size already fits) without distorting ratio.
+        x = max(bounds.minX, min(x, bounds.maxX - w))
+        y = max(bounds.minY, min(y, bounds.maxY - h))
+        return NSRect(x: x, y: y, width: w, height: h)
     }
 
     // MARK: - Toolbar Actions
@@ -7974,6 +8084,7 @@ class OverlayView: NSView {
         remoteSelectionRect = .zero
         remoteSelectionFullRect = .zero
         showToolbars = false
+        updateResolutionBox()  // remove the box (no selection)
         needsDisplay = true
     }
 
@@ -8154,8 +8265,10 @@ class OverlayView: NSView {
         currentRectCornerRadius = CGFloat(
             UserDefaults.standard.object(forKey: "currentRectCornerRadius") as? Double ?? 0)
         textEditor.dismiss()
-        sizeInputField?.removeFromSuperview()
-        sizeInputField = nil
+        resolutionBox?.removeFromSuperview()
+        resolutionBox = nil
+        resolutionBoxRect = .zero
+        lockedAspect = nil
         isResizingAnnotation = false
         loupeCursorPoint = .zero
         colorSamplerPoint = .zero
@@ -8188,19 +8301,6 @@ extension OverlayView: NSTextFieldDelegate {
     func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector)
         -> Bool
     {
-        if control.tag == 888 {
-            if commandSelector == #selector(NSResponder.insertNewline(_:)) {
-                commitSizeInputIfNeeded()
-                return true
-            }
-            if commandSelector == #selector(NSResponder.cancelOperation(_:)) {
-                sizeInputField?.removeFromSuperview()
-                sizeInputField = nil
-                window?.makeFirstResponder(self)
-                needsDisplay = true
-                return true
-            }
-        }
         if control.tag == 889 {
             if commandSelector == #selector(NSResponder.insertNewline(_:)) {
                 commitZoomInputIfNeeded()

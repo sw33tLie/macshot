@@ -45,7 +45,7 @@ class EditorView: OverlayView {
 
     override func shouldClipSelectionImage() -> Bool { false }
     override func shouldDrawSelectionBorder() -> Bool { false }
-    override func shouldDrawSizeLabel() -> Bool { false }
+    override func shouldShowResolutionBox() -> Bool { false }
 
     // MARK: - Coordinate transforms (identity — scroll view handles everything)
 
