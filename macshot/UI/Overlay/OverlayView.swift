@@ -396,6 +396,9 @@ class OverlayView: NSView {
     private let rightChrome = OverlayChromePresenter(cornerRadius: 6)
     private let optionsChrome = OverlayChromePresenter(cornerRadius: 6)
     private let resolutionChrome = OverlayChromePresenter(cornerRadius: 6)
+    /// Keep the editable resolution box in the overlay window. In a keyable glass
+    /// child panel, AppKit brightens the whole NSGlassEffectView while typing.
+    private var usesResolutionGlassChrome: Bool { false }
     /// Intended overlay-space rect of the options row (its live frame becomes
     /// panel-local when glass-hosted). .zero when the row is hidden.
     private var optionsRowRect: NSRect = .zero
@@ -2211,11 +2214,14 @@ class OverlayView: NSView {
             box = existing
         } else {
             box = ResolutionBoxView()
-            box.onCommit = { [weak self] w, h in self?.applyDisplaySize(w: w, h: h) }
+            box.onCommit = { [weak self] w, h, edited in
+                self?.applyDisplaySize(w: w, h: h, edited: edited)
+            }
             box.onFinishEditing = { [weak self] in
                 guard let self else { return }
                 self.window?.makeKey()
                 self.window?.makeFirstResponder(self)
+                self.updateResolutionBox()
             }
             box.onPresets = { [weak self] anchor in self?.showResolutionPresets(from: anchor) }
             resolutionBox = box
@@ -2226,7 +2232,7 @@ class OverlayView: NSView {
         box.setDimensions(w: px.w, h: px.h)
         box.setActiveRatioLabel(activeRatioLabel, locked: lockedAspect != nil)
 
-        if usesGlassChrome {
+        if usesGlassChrome && usesResolutionGlassChrome {
             // Lift into a glass chrome panel positioned at the screen rect.
             box.hostedInGlassPanel = true
             resolutionChrome.present(box, overlayRect: frame, visible: true, glass: true, in: self)
@@ -2379,7 +2385,23 @@ class OverlayView: NSView {
 
     /// Resize from values typed in the current display unit.
     @discardableResult
-    func applyDisplaySize(w: Int, h: Int) -> Bool {
+    func applyDisplaySize(
+        w inputW: Int,
+        h inputH: Int,
+        edited: ResolutionBoxView.EditedDimension = .both
+    ) -> Bool {
+        var w = inputW
+        var h = inputH
+        if let aspect = lockedAspect, aspect > 0 {
+            switch edited {
+            case .width:
+                h = max(1, Int((CGFloat(w) / aspect).rounded()))
+            case .height:
+                w = max(1, Int((CGFloat(h) * aspect).rounded()))
+            case .both:
+                break
+            }
+        }
         if resolutionUnitIsPoints {
             let scale = window?.backingScaleFactor ?? 2.0
             return applyPixelSize(w: Int((CGFloat(w) * scale).rounded()),

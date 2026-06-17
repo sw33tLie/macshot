@@ -7,8 +7,14 @@ import Cocoa
 /// aspect ratios and common resolutions. Replaces the old drawn "W × H" badge.
 final class ResolutionBoxView: NSView, NSTextFieldDelegate, ChromeContent {
 
+    enum EditedDimension {
+        case width
+        case height
+        case both
+    }
+
     /// Called when the user commits new W/H values (Enter or focus loss).
-    var onCommit: ((_ w: Int, _ h: Int) -> Void)?
+    var onCommit: ((_ w: Int, _ h: Int, _ edited: EditedDimension) -> Void)?
     /// Called after Enter commits so the owning overlay can reclaim keyboard
     /// focus from the field editor/panel.
     var onFinishEditing: (() -> Void)?
@@ -68,6 +74,8 @@ final class ResolutionBoxView: NSView, NSTextFieldDelegate, ChromeContent {
         f.alignment = .center
         f.textColor = ToolbarLayout.iconColor
         f.delegate = self
+        f.isEditable = true
+        f.isSelectable = true
         f.isBezeled = true
         f.bezelStyle = .roundedBezel
         f.drawsBackground = true
@@ -150,10 +158,17 @@ final class ResolutionBoxView: NSView, NSTextFieldDelegate, ChromeContent {
         onPresets?(presetsButton)
     }
 
-    private func commit() {
+    private func editedDimension(for control: Any?) -> EditedDimension {
+        guard let control = control as? NSControl else { return .both }
+        if control === widthField { return .width }
+        if control === heightField { return .height }
+        return .both
+    }
+
+    private func commit(edited: EditedDimension) {
         guard let w = Int(widthField.stringValue), let h = Int(heightField.stringValue),
               w > 0, h > 0 else { return }
-        onCommit?(w, h)
+        onCommit?(w, h, edited)
     }
 
     private func finishEditing() {
@@ -168,7 +183,7 @@ final class ResolutionBoxView: NSView, NSTextFieldDelegate, ChromeContent {
         if selector == #selector(NSResponder.insertNewline(_:))
             || selector == #selector(NSResponder.cancelOperation(_:)) {
             suppressNextEndEditingCommit = true
-            commit()
+            commit(edited: editedDimension(for: control))
             finishEditing()
             return true
         }
@@ -181,7 +196,7 @@ final class ResolutionBoxView: NSView, NSTextFieldDelegate, ChromeContent {
             suppressNextEndEditingCommit = false
             return
         }
-        commit()
+        commit(edited: editedDimension(for: obj.object))
     }
 
     override func resetCursorRects() {
@@ -192,11 +207,9 @@ final class ResolutionBoxView: NSView, NSTextFieldDelegate, ChromeContent {
     }
 }
 
-/// A number field may enter editing from a direct mouse click, but it must not
-/// make the glass panel key. A key glass panel brightens the whole resolution
-/// box, which reads like an unwanted active/hover state.
-private final class ResolutionNumberField: NSTextField, PanelKeyRequestingView {
-    var requestsPanelKeyForMouseDown: Bool { false }
+/// A number field may enter editing from a direct mouse click, without becoming
+/// a stray first responder during overlay keyboard handling.
+private final class ResolutionNumberField: NSTextField {
     private var acceptingMouseFocus = false
 
     override var needsPanelToBecomeKey: Bool { false }
