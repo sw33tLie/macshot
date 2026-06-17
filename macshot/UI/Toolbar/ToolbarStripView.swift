@@ -46,7 +46,7 @@ class ToolbarStripView: NSView, ChromeContent {
     override func mouseMoved(with event: NSEvent) { NSCursor.arrow.set() }
     override func cursorUpdate(with event: NSEvent) { NSCursor.arrow.set() }
     override func mouseExited(with event: NSEvent) {
-        for bv in buttonViews { bv.setHovered(false) }
+        clearInteractionState()
     }
 
     /// Rebuild buttons from ToolbarButton data.
@@ -74,6 +74,12 @@ class ToolbarStripView: NSView, ChromeContent {
     /// mouseExited to (happens in non-activating glass chrome panels).
     func clearHover(except keep: ToolbarButtonView) {
         for bv in buttonViews where bv !== keep { bv.setHovered(false) }
+    }
+
+    func clearInteractionState(suppressHoverUntilMouseMoved suppress: Bool = false) {
+        for bv in buttonViews {
+            bv.clearInteractionState(suppressHoverUntilMouseMoved: suppress)
+        }
     }
 
     /// Update visual state without rebuilding.

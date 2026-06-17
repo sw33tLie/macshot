@@ -216,6 +216,7 @@
 "Capture mouse cursor in screenshot" = "Capture mouse cursor in screenshot";
 "Double-click selection to copy" = "Double-click selection to copy";
 "Hide capture instructions" = "Hide capture instructions";
+"Disable shadow outside selection" = "Disable shadow outside selection";
 "Use window title in saved filename" = "Use window title in saved filename";
 "Hide menu bar icon" = "Hide menu bar icon";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Hotkeys still work. To show the icon again, re-launch macshot.";
@@ -485,6 +486,7 @@
 "Done" = "Done";
 "Do nothing" = "Do nothing";
 "Overlay / Editor Shortcuts" = "Overlay / Editor Shortcuts";
+"Show shortcuts in tooltips" = "Show shortcuts in tooltips";
 "Set" = "Set";
 "Press..." = "Press...";
 "Reset to default" = "Reset to default";

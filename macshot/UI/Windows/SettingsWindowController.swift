@@ -43,6 +43,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var recordingSlot: HotkeyManager.HotkeySlot?
     private var toolShortcutFields: [ToolShortcutManager.Action: NSTextField] = [:]
     private var toolShortcutButtons: [ToolShortcutManager.Action: NSButton] = [:]
+    private var showToolShortcutsInTooltipsCheckbox: NSButton!
     private var recordingToolAction: ToolShortcutManager.Action?
     private var savePathField: NSTextField!
     private var saveActionPopup: NSPopUpButton!
@@ -75,6 +76,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var captureCursorCheckbox: NSButton!
     private var doubleClickToCopyCheckbox: NSButton!
     private var hideCaptureInstructionsCheckbox: NSButton!
+    private var disableSelectionShadowCheckbox: NSButton!
     private var liquidGlassCheckbox: NSButton!
     private var filenameTemplateField: NSTextField!
     private var filenameTemplatePreview: NSTextField!
@@ -596,6 +598,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         captureCursorCheckbox = NSButton(checkboxWithTitle: L("Capture mouse cursor in screenshot"), target: self, action: #selector(captureCursorChanged(_:)))
         doubleClickToCopyCheckbox = NSButton(checkboxWithTitle: L("Double-click selection to copy"), target: self, action: #selector(doubleClickToCopyChanged(_:)))
         hideCaptureInstructionsCheckbox = NSButton(checkboxWithTitle: L("Hide capture instructions"), target: self, action: #selector(hideCaptureInstructionsChanged(_:)))
+        disableSelectionShadowCheckbox = NSButton(checkboxWithTitle: L("Disable shadow outside selection"), target: self, action: #selector(disableSelectionShadowChanged(_:)))
         filenameTemplateField = NSTextField()
         filenameTemplateField.placeholderString = FilenameFormatter.defaultTemplate
         filenameTemplateField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
@@ -672,6 +675,9 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
         stack.addArrangedSubview(indented(hideCaptureInstructionsCheckbox))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+
+        stack.addArrangedSubview(indented(disableSelectionShadowCheckbox))
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // ── Output ───────────────────────────────────────────
@@ -1040,6 +1046,13 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.addArrangedSubview(sectionHeader(L("Overlay / Editor Shortcuts")))
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
+        showToolShortcutsInTooltipsCheckbox = NSButton(
+            checkboxWithTitle: L("Show shortcuts in tooltips"),
+            target: self,
+            action: #selector(showToolShortcutsInTooltipsChanged(_:)))
+        stack.addArrangedSubview(indented(showToolShortcutsInTooltipsCheckbox))
+        stack.setCustomSpacing(12, after: stack.arrangedSubviews.last!)
+
         for action in ToolShortcutManager.Action.allCases {
             let field = NSTextField()
             field.isEditable = false
@@ -1219,6 +1232,10 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stopToolShortcutRecording()
         ToolShortcutManager.setKey(action.defaultKey, for: action)
         toolShortcutFields[action]?.stringValue = ToolShortcutManager.displayString(for: action)
+    }
+
+    @objc private func showToolShortcutsInTooltipsChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: "showToolShortcutsInTooltips")
     }
 
     private func stopToolShortcutRecording() {
@@ -2212,10 +2229,12 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
         let snapGuides = UserDefaults.standard.object(forKey: "snapGuidesEnabled") as? Bool ?? true
         snapGuidesCheckbox.state = snapGuides ? .on : .off
+        showToolShortcutsInTooltipsCheckbox.state = UserDefaults.standard.bool(forKey: "showToolShortcutsInTooltips") ? .on : .off
 
         captureCursorCheckbox.state = UserDefaults.standard.bool(forKey: "captureCursor") ? .on : .off
         doubleClickToCopyCheckbox.state = (UserDefaults.standard.object(forKey: "doubleClickToCopy") as? Bool ?? true) ? .on : .off
         hideCaptureInstructionsCheckbox.state = UserDefaults.standard.bool(forKey: "hideCaptureInstructions") ? .on : .off
+        disableSelectionShadowCheckbox.state = UserDefaults.standard.bool(forKey: "disableSelectionOutsideShadow") ? .on : .off
         filenameTemplateField.stringValue = UserDefaults.standard.string(forKey: FilenameFormatter.userDefaultsKey) ?? FilenameFormatter.defaultTemplate
         updateFilenamePreview()
         recordingFilenameTemplateField.stringValue = UserDefaults.standard.string(forKey: FilenameFormatter.recordingUserDefaultsKey) ?? FilenameFormatter.defaultRecordingTemplate
@@ -2656,6 +2675,9 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     }
     @objc private func hideCaptureInstructionsChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "hideCaptureInstructions")
+    }
+    @objc private func disableSelectionShadowChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: "disableSelectionOutsideShadow")
     }
     @objc private func filenameTemplateCommitted(_ sender: NSTextField) {
         let trimmed = sender.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)

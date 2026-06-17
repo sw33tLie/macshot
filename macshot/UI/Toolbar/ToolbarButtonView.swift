@@ -16,6 +16,7 @@ class ToolbarButtonView: NSView {
     private var isHovered: Bool = false
     var isPressed: Bool = false
     private var trackingArea: NSTrackingArea?
+    private var suppressHoverUntilMouseMoved: Bool = false
     private var cachedIcon: NSImage?       // cached tinted SF Symbol for current state
     private var cachedIconIsOn: Bool?       // the isOn state when icon was cached
 
@@ -152,7 +153,7 @@ class ToolbarButtonView: NSView {
         // (Liquid Glass chrome). With `.activeInActiveApp`, mouseExited wouldn't
         // fire when the app isn't frontmost, leaving a previous button stuck in
         // its hover state when moving to another.
-        trackingArea = NSTrackingArea(rect: bounds, options: [.mouseEnteredAndExited, .cursorUpdate, .activeAlways], owner: self, userInfo: nil)
+        trackingArea = NSTrackingArea(rect: bounds, options: [.mouseEnteredAndExited, .mouseMoved, .cursorUpdate, .activeAlways], owner: self, userInfo: nil)
         addTrackingArea(trackingArea!)
     }
 
@@ -164,13 +165,31 @@ class ToolbarButtonView: NSView {
 
     override func mouseEntered(with event: NSEvent) {
         NSCursor.arrow.set()
+        guard !suppressHoverUntilMouseMoved else {
+            setHovered(false)
+            return
+        }
         // Robustly clear any sibling that AppKit failed to send mouseExited to
         // (common in non-activating glass chrome panels) so only one button is
         // ever hovered.
         (superview as? ToolbarStripView ?? superview?.superview as? ToolbarStripView)?.clearHover(except: self)
-        isHovered = true; needsDisplay = true; onHover?(action, true)
+        setHovered(true)
     }
-    override func mouseExited(with event: NSEvent) { setHovered(false) }
+
+    override func mouseMoved(with event: NSEvent) {
+        NSCursor.arrow.set()
+        guard suppressHoverUntilMouseMoved else { return }
+        suppressHoverUntilMouseMoved = false
+        if bounds.contains(convert(event.locationInWindow, from: nil)) {
+            (superview as? ToolbarStripView ?? superview?.superview as? ToolbarStripView)?.clearHover(except: self)
+            setHovered(true)
+        }
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        suppressHoverUntilMouseMoved = false
+        setHovered(false)
+    }
 
     /// Externally force the hover state (used by the strip to clear stale hovers).
     func setHovered(_ hovered: Bool) {
@@ -178,6 +197,14 @@ class ToolbarButtonView: NSView {
         isHovered = hovered
         needsDisplay = true
         onHover?(action, hovered)
+    }
+
+    func clearInteractionState(suppressHoverUntilMouseMoved suppress: Bool = false) {
+        suppressHoverUntilMouseMoved = suppress
+        forwardingDrag = false
+        isPressed = false
+        setHovered(false)
+        needsDisplay = true
     }
 
     private var forwardingDrag = false
