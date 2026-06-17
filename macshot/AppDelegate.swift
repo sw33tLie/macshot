@@ -1092,6 +1092,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // so new OverlayView instances start clean.
         let rememberTool = UserDefaults.standard.object(forKey: "rememberLastTool") as? Bool ?? true
         if !rememberTool {
+            OverlayView.resetRememberedTool()
             UserDefaults.standard.removeObject(forKey: "effectsPreset")
             UserDefaults.standard.removeObject(forKey: "effectsBrightness")
             UserDefaults.standard.removeObject(forKey: "effectsContrast")

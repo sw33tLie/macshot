@@ -2336,7 +2336,11 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         UserDefaults.standard.set(sender.state == .on, forKey: "playCopySound")
     }
     @objc private func rememberToolChanged(_ sender: NSButton) {
-        UserDefaults.standard.set(sender.state == .on, forKey: "rememberLastTool")
+        let enabled = sender.state == .on
+        UserDefaults.standard.set(enabled, forKey: "rememberLastTool")
+        if !enabled {
+            OverlayView.resetRememberedTool()
+        }
     }
     @objc private func thumbnailChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "showFloatingThumbnail")

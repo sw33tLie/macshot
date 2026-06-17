@@ -215,13 +215,22 @@ class OverlayView: NSView {
         }
         return .arrow
     }()
+    private static var shouldRememberLastTool: Bool {
+        UserDefaults.standard.object(forKey: "rememberLastTool") as? Bool ?? true
+    }
+    private static var initialTool: AnnotationTool {
+        shouldRememberLastTool ? lastUsedTool : .arrow
+    }
+    static func resetRememberedTool() {
+        lastUsedTool = .arrow
+        UserDefaults.standard.removeObject(forKey: "lastUsedTool")
+    }
     var currentTool: AnnotationTool = {
-        let remember = UserDefaults.standard.object(forKey: "rememberLastTool") as? Bool ?? true
-        return remember ? OverlayView.lastUsedTool : .arrow
+        OverlayView.initialTool
     }() {
         didSet {
             // Persist drawing tool choices; skip transient/mode tools
-            if currentTool != .select && currentTool != .loupe {
+            if OverlayView.shouldRememberLastTool && currentTool != .select && currentTool != .loupe {
                 OverlayView.lastUsedTool = currentTool
                 UserDefaults.standard.set(currentTool.rawValue, forKey: "lastUsedTool")
             }
@@ -8341,6 +8350,7 @@ class OverlayView: NSView {
         undoStack.removeAll()
         redoStack.removeAll()
         currentAnnotation = nil
+        currentTool = OverlayView.initialTool
         numberCounter = 0
         showToolbars = false
         teardownGlassChromePanels()
