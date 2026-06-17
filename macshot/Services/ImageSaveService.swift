@@ -37,7 +37,7 @@ enum ImageSaveService {
         windowTitle: String? = nil,
         panelLevel: NSWindow.Level? = nil,
         sheetWindow: NSWindow? = nil,
-        activateApp: Bool = false,
+        activateApp: Bool = true,
         completion: Completion? = nil
     ) {
         switch action {
@@ -65,7 +65,7 @@ enum ImageSaveService {
         windowTitle: String? = nil,
         panelLevel: NSWindow.Level? = nil,
         sheetWindow: NSWindow? = nil,
-        activateApp: Bool = false,
+        activateApp: Bool = true,
         completion: Completion? = nil
     ) {
         let filename = defaultFilename(windowTitle: windowTitle)
@@ -85,23 +85,21 @@ enum ImageSaveService {
 
     static func showSavePanel(
         for image: NSImage,
+        suggestedFilename: String? = nil,
         windowTitle: String? = nil,
         panelLevel: NSWindow.Level? = nil,
         sheetWindow: NSWindow? = nil,
-        activateApp: Bool = false,
+        activateApp: Bool = true,
         completion: Completion? = nil
     ) {
         let panel = NSSavePanel()
         panel.allowedContentTypes = [ImageEncoder.utType]
-        panel.nameFieldStringValue = defaultFilename(windowTitle: windowTitle)
+        panel.nameFieldStringValue = suggestedFilename ?? defaultFilename(windowTitle: windowTitle)
         panel.directoryURL = SaveDirectoryAccess.directoryHint()
         panel.canCreateDirectories = true
+        panel.isExtensionHidden = false
         if let panelLevel {
             panel.level = panelLevel
-        }
-
-        if activateApp {
-            NSApp.activate(ignoringOtherApps: true)
         }
 
         let handler: (NSApplication.ModalResponse) -> Void = { response in
@@ -122,11 +120,7 @@ enum ImageSaveService {
             }
         }
 
-        if let sheetWindow {
-            panel.beginSheetModal(for: sheetWindow, completionHandler: handler)
-        } else {
-            panel.begin(completionHandler: handler)
-        }
+        presentPanel(panel, sheetWindow: sheetWindow, activateApp: activateApp, completionHandler: handler)
     }
 
     private static func defaultFilename(windowTitle: String?) -> String {
@@ -179,10 +173,6 @@ enum ImageSaveService {
             panel.level = panelLevel
         }
 
-        if activateApp {
-            NSApp.activate(ignoringOtherApps: true)
-        }
-
         let handler: (NSApplication.ModalResponse) -> Void = { response in
             guard response == .OK, let url = panel.url else { return }
             SaveDirectoryAccess.save(url: url)
@@ -194,10 +184,28 @@ enum ImageSaveService {
             completion(url, securityScoped)
         }
 
-        if let sheetWindow {
-            panel.beginSheetModal(for: sheetWindow, completionHandler: handler)
-        } else {
-            panel.begin(completionHandler: handler)
+        presentPanel(panel, sheetWindow: sheetWindow, activateApp: activateApp, completionHandler: handler)
+    }
+
+    private static func presentPanel(
+        _ panel: NSSavePanel,
+        sheetWindow: NSWindow?,
+        activateApp: Bool,
+        completionHandler: @escaping (NSApplication.ModalResponse) -> Void
+    ) {
+        if activateApp {
+            NSApp.activate(ignoringOtherApps: true)
+        }
+
+        DispatchQueue.main.async {
+            if activateApp {
+                NSApp.activate(ignoringOtherApps: true)
+            }
+            if let sheetWindow {
+                panel.beginSheetModal(for: sheetWindow, completionHandler: completionHandler)
+            } else {
+                panel.begin(completionHandler: completionHandler)
+            }
         }
     }
 

@@ -309,19 +309,7 @@ private class PinView: NSView {
     }
 
     @objc private func saveImage() {
-        guard let imageData = ImageEncoder.encode(image) else { return }
-
-        let savePanel = NSSavePanel()
-        savePanel.allowedContentTypes = [ImageEncoder.utType]
-        savePanel.nameFieldStringValue = FilenameFormatter.defaultImageFilename()
-
-        savePanel.directoryURL = SaveDirectoryAccess.directoryHint()
-
-        savePanel.begin { response in
-            if response == .OK, let url = savePanel.url {
-                try? imageData.write(to: url)
-            }
-        }
+        ImageSaveService.showSavePanel(for: image, panelLevel: .floating)
     }
 
     override func mouseDown(with event: NSEvent) {
