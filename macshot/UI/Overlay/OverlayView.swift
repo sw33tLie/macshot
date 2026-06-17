@@ -2163,6 +2163,11 @@ class OverlayView: NSView {
         } else {
             box = ResolutionBoxView()
             box.onCommit = { [weak self] w, h in self?.applyDisplaySize(w: w, h: h) }
+            box.onFinishEditing = { [weak self] in
+                guard let self else { return }
+                self.window?.makeKey()
+                self.window?.makeFirstResponder(self)
+            }
             box.onPresets = { [weak self] anchor in self?.showResolutionPresets(from: anchor) }
             resolutionBox = box
         }

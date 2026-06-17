@@ -23,7 +23,7 @@ final class ResolutionPresetsView: NSView {
     private let colW: CGFloat = 116
     private let headerH: CGFloat = 22
     private let vPad: CGFloat = 8
-    private let footerH: CGFloat = 64
+    private let footerH: CGFloat = 78
     private let midGap: CGFloat = 1  // vertical divider column
 
     func build() {
@@ -76,7 +76,7 @@ final class ResolutionPresetsView: NSView {
 
     private func buildFooter(width: CGFloat) {
         // Toggle row.
-        let toggleY = footerH - 28
+        let toggleY = footerH - 30
         let label = NSTextField(labelWithString: L("Keep ratio for next captures"))
         label.font = NSFont.systemFont(ofSize: 11)
         label.textColor = ToolbarLayout.iconColor
@@ -92,7 +92,7 @@ final class ResolutionPresetsView: NSView {
         addSubview(toggle)
 
         // Unit selector (px | pt).
-        let unitY: CGFloat = 8
+        let unitY: CGFloat = 10
         let unitLabel = NSTextField(labelWithString: L("Units"))
         unitLabel.font = NSFont.systemFont(ofSize: 11)
         unitLabel.textColor = ToolbarLayout.iconColor

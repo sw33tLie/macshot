@@ -9,6 +9,9 @@ final class ResolutionBoxView: NSView, NSTextFieldDelegate, ChromeContent {
 
     /// Called when the user commits new W/H values (Enter or focus loss).
     var onCommit: ((_ w: Int, _ h: Int) -> Void)?
+    /// Called after Enter commits so the owning overlay can reclaim keyboard
+    /// focus from the field editor/panel.
+    var onFinishEditing: (() -> Void)?
     /// Called when the presets button is clicked; passes the button for anchoring.
     var onPresets: ((_ anchor: NSView) -> Void)?
 
@@ -22,6 +25,7 @@ final class ResolutionBoxView: NSView, NSTextFieldDelegate, ChromeContent {
     private let gap: CGFloat = 4
     private let pad: CGFloat = 6
     private let btnW: CGFloat = 30
+    private var suppressNextEndEditingCommit = false
 
     /// When hosted in a Liquid Glass chrome panel, the panel's glass provides the
     /// background, so the box clears its own solid layer fill (ChromeContent).
@@ -143,7 +147,6 @@ final class ResolutionBoxView: NSView, NSTextFieldDelegate, ChromeContent {
     }
 
     @objc private func presetsClicked() {
-        commit()  // flush any in-progress edit first
         onPresets?(presetsButton)
     }
 
@@ -153,11 +156,19 @@ final class ResolutionBoxView: NSView, NSTextFieldDelegate, ChromeContent {
         onCommit?(w, h)
     }
 
+    private func finishEditing() {
+        window?.makeFirstResponder(nil)
+        DispatchQueue.main.async { [weak self] in
+            self?.onFinishEditing?()
+        }
+    }
+
     // Enter in either field commits.
     func control(_ control: NSControl, textView: NSTextView, doCommandBy selector: Selector) -> Bool {
         if selector == #selector(NSResponder.insertNewline(_:)) {
+            suppressNextEndEditingCommit = true
             commit()
-            window?.makeFirstResponder(superview)  // resign so it's clear edit ended
+            finishEditing()
             return true
         }
         return false
@@ -165,6 +176,10 @@ final class ResolutionBoxView: NSView, NSTextFieldDelegate, ChromeContent {
 
     // Commit on focus loss too.
     func controlTextDidEndEditing(_ obj: Notification) {
+        if suppressNextEndEditingCommit {
+            suppressNextEndEditingCommit = false
+            return
+        }
         commit()
     }
 
