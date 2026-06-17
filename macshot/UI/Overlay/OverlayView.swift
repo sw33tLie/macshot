@@ -1286,6 +1286,15 @@ class OverlayView: NSView {
                 return row.hitTest(convert(point, to: row.superview))
             }
         }
+        if let event = NSApp.currentEvent,
+           event.type == .leftMouseDown,
+           event.clickCount >= 2,
+           state == .selected,
+           isDoubleClickToCopyEnabled,
+           let sv = textEditor.scrollView,
+           sv.frame.contains(point) {
+            return self
+        }
         let result = super.hitTest(point)
         if shouldIgnoreInactiveChromeHit(result) {
             return self
@@ -4749,6 +4758,17 @@ class OverlayView: NSView {
             return
         }
 
+        // Double-click to copy must win over Text tool placement/editing. If the
+        // first click opened an empty text editor, the second click is routed
+        // here by hitTest(_:) so we can save current text and confirm instead
+        // of letting NSTextView consume the event.
+        if state == .selected
+            && isDoubleClickToCopyEnabled
+            && handleDoubleClickToCopy(event: event, at: point)
+        {
+            return
+        }
+
         let isTextEditing = textEditView != nil
 
         // Check text box resize handles when editing
@@ -4807,17 +4827,6 @@ class OverlayView: NSView {
         }
         commitSizeInputIfNeeded()
         commitZoomInputIfNeeded()
-
-        // Double-click to copy: when the setting is on, two fast clicks inside the
-        // selection confirm the capture. Annotations the first click added (and any
-        // in-progress second-click annotation) are rewound first via the undo stack
-        // so the copied image looks like nothing was drawn during the double-click.
-        if state == .selected
-            && (UserDefaults.standard.object(forKey: "doubleClickToCopy") as? Bool ?? true)
-            && handleDoubleClickToCopy(event: event, at: point)
-        {
-            return
-        }
 
         switch state {
         case .idle:
@@ -5446,16 +5455,14 @@ class OverlayView: NSView {
     /// inside the selection we rewind the stack to that snapshot — removing any annotation the
     /// first click finished — cancel any in-progress drawing, then trigger confirm.
     private func handleDoubleClickToCopy(event: NSEvent, at point: NSPoint) -> Bool {
-        // Defer to existing text/select double-click behavior when clicking directly on a
-        // text annotation — those paths already handle clickCount >= 2 (enter edit mode).
-        if currentTool == .text || currentTool == .select {
+        // Defer to existing Select-tool double-click behavior when clicking directly on a
+        // text annotation — that path already handles clickCount >= 2 (enter edit mode).
+        if currentTool == .select {
             let hitText = annotations.reversed().first(where: {
                 $0.tool == .text && $0.hitTest(point: point)
             })
             if hitText != nil { return false }
         }
-        // Don't intercept while a text editor is open — the user is typing, not double-clicking.
-        if textEditView != nil { return false }
 
         if event.clickCount >= 2 {
             guard pointIsInSelection(point) else {
@@ -5463,6 +5470,10 @@ class OverlayView: NSView {
                 doubleClickUndoBaseline = nil
                 overlayDelegate?.overlayViewDidConfirm()
                 return true
+            }
+            if textEditor.isEditing {
+                commitTextFieldIfNeeded()
+                doubleClickUndoBaseline = undoStack.count
             }
             // Cancel any in-progress annotation from this second click.
             currentAnnotation = nil
@@ -5489,6 +5500,10 @@ class OverlayView: NSView {
             doubleClickUndoBaseline = nil
         }
         return false
+    }
+
+    private var isDoubleClickToCopyEnabled: Bool {
+        UserDefaults.standard.object(forKey: "doubleClickToCopy") as? Bool ?? true
     }
 
     private func finishSelection() {
