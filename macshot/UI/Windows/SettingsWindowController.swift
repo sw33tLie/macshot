@@ -64,7 +64,9 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
     /// Curated SF Symbol quick-picks for the menu bar icon. Free text is still allowed.
     private static let menuBarIconPresetSymbols = [
-        "camera.viewfinder", "camera.fill", "crop", "scissors", "bolt.fill", "star.fill",
+        "camera.viewfinder", "camera", "camera.fill", "camera.aperture",
+        "viewfinder", "crop", "crop.rotate", "scissors",
+        "rectangle.dashed", "square.dashed", "photo", "record.circle",
     ]
     private var historySizeField: NSTextField!
     private var historySizeStepper: NSStepper!
