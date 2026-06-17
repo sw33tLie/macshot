@@ -811,6 +811,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             },
             pinFromClipboard: { [weak self] in
                 DispatchQueue.main.async { self?.pinFromClipboard() }
+            },
+            clearHistory: { [weak self] in
+                DispatchQueue.main.async { self?.clearHistorySilently() }
             }
         )
     }
@@ -2909,6 +2912,10 @@ extension AppDelegate: NSMenuDelegate {
 
     @objc private func clearHistory() {
         confirmClearHistory()
+    }
+
+    private func clearHistorySilently() {
+        ScreenshotHistory.shared.clear()
     }
 
     /// Show a confirmation dialog before clearing all history. Reused by history panel trash button.

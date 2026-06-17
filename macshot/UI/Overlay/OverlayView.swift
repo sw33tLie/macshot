@@ -832,7 +832,7 @@ class OverlayView: NSView {
         get { UserDefaults.standard.bool(forKey: "keepAspectRatio") }
         set { UserDefaults.standard.set(newValue, forKey: "keepAspectRatio") }
     }
-    /// The persisted ratio value (only meaningful when keepRatioForNextCaptures).
+    /// The persisted ratio value. Zero means freeform/no locked ratio.
     private var persistedAspect: CGFloat {
         get { CGFloat(UserDefaults.standard.double(forKey: "keepAspectRatioValue")) }
         set { UserDefaults.standard.set(Double(newValue), forKey: "keepAspectRatioValue") }
@@ -2260,9 +2260,8 @@ class OverlayView: NSView {
     /// Persist (or clear) the current locked ratio for future captures, per the
     /// "keep ratio" toggle.
     private func persistRatioIfNeeded() {
-        if keepRatioForNextCaptures, let a = lockedAspect {
-            persistedAspect = a
-        }
+        guard keepRatioForNextCaptures else { return }
+        persistedAspect = lockedAspect ?? 0
     }
 
     /// Apply the persisted aspect ratio to a freshly started selection, if the
