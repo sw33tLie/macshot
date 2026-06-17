@@ -163,9 +163,10 @@ final class ResolutionBoxView: NSView, NSTextFieldDelegate, ChromeContent {
         }
     }
 
-    // Enter in either field commits.
+    // Enter or Escape in either field commits and returns focus to the overlay.
     func control(_ control: NSControl, textView: NSTextView, doCommandBy selector: Selector) -> Bool {
-        if selector == #selector(NSResponder.insertNewline(_:)) {
+        if selector == #selector(NSResponder.insertNewline(_:))
+            || selector == #selector(NSResponder.cancelOperation(_:)) {
             suppressNextEndEditingCommit = true
             commit()
             finishEditing()
