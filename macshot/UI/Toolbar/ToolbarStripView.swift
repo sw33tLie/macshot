@@ -83,6 +83,8 @@ class ToolbarStripView: NSView, ChromeContent {
             buttonViews[i].tintColor = data.tintColor
             buttonViews[i].swatchColor = data.bgColor
             buttonViews[i].sfSymbol = data.sfSymbol
+            buttonViews[i].tooltipText = data.tooltip
+            buttonViews[i].hasContextMenu = data.hasContextMenu
             buttonViews[i].needsDisplay = true
         }
     }
