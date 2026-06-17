@@ -633,6 +633,11 @@ class OverlayView: NSView {
     // Instant tooltip for hovered toolbar button
     private var hoveredTooltip: String?
     private var hoveredTooltipButtonView: ToolbarButtonView?
+
+    private var currentCanvasMousePoint: NSPoint? {
+        guard let windowPoint = window?.mouseLocationOutsideOfEventStream else { return nil }
+        return viewToCanvas(convert(windowPoint, from: nil))
+    }
     private var editorTooltipView: NSView?
     private var overlayErrorTimer: Timer? = nil
 
@@ -2119,7 +2124,9 @@ class OverlayView: NSView {
     private func drawSelectingHelperText() {
         guard selectionRect.width >= 1, selectionRect.height >= 1 else { return }
 
-        let text = L("Release to annotate and edit")
+        let text = autoQuickSaveMode
+            ? L("Space to move. Release to finish")
+            : L("Space to move. Release to annotate and edit")
         let attrs = Self.helperTextAttrs
         let size = (text as NSString).size(withAttributes: attrs)
         let padding: CGFloat = 10
@@ -5370,6 +5377,31 @@ class OverlayView: NSView {
                 return
             }
             if isResizingAnnotation, let annotation = selectedAnnotation {
+                if spaceRepositioning {
+                    let dx = canvasPoint.x - spaceRepositionLast.x
+                    let dy = canvasPoint.y - spaceRepositionLast.y
+                    annotation.move(dx: dx, dy: dy)
+                    annotationResizeOrigStart.x += dx
+                    annotationResizeOrigStart.y += dy
+                    annotationResizeOrigEnd.x += dx
+                    annotationResizeOrigEnd.y += dy
+                    annotationResizeOrigTextOrigin.x += dx
+                    annotationResizeOrigTextOrigin.y += dy
+                    annotationResizeOrigControlPoint.x += dx
+                    annotationResizeOrigControlPoint.y += dy
+                    annotationResizeMouseStart.x += dx
+                    annotationResizeMouseStart.y += dy
+                    spaceRepositionLast = canvasPoint
+                    if annotation.tool == .loupe {
+                        annotation.bakedBlurNSImage = nil
+                        annotation.bakeLoupe()
+                    }
+                    if annotation.tool == .pixelate { annotation.bakedBlurNSImage = nil }
+                    cachedCompositedImage = nil
+                    needsDisplay = true
+                    return
+                }
+
                 let dx = canvasPoint.x - annotationResizeMouseStart.x
                 let dy = canvasPoint.y - annotationResizeMouseStart.y
                 let origStart = annotationResizeOrigStart
@@ -7858,27 +7890,37 @@ class OverlayView: NSView {
             return
         }
 
-        // Space: reposition shape/selection mid-drag (design tool convention)
-        if event.keyCode == 49 {
+        // Space: reposition shape/selection mid-drag (design tool convention).
+        // When it is not actionable, still consume it so key repeat never falls
+        // through to AppKit's "unhandled key" beep while the overlay is focused.
+        if event.keyCode == 49 && textEditView == nil
+            && !event.modifierFlags.contains(.command)
+            && !event.modifierFlags.contains(.option)
+            && !event.modifierFlags.contains(.control)
+        {
             // Swallow all repeats while repositioning to prevent system beep
             if spaceRepositioning { return }
 
             if !event.isARepeat {
-                let isDraggingAnnotation =
+                let isDrawingAnnotation =
                     currentAnnotation != nil && currentAnnotation!.tool != .pencil
                     && currentAnnotation!.tool != .marker
+                let isResizingExistingAnnotation = isResizingAnnotation && selectedAnnotation != nil
                 let isDraggingNewSelection = state == .selecting
 
-                if isDraggingAnnotation || isDraggingNewSelection {
+                if isDrawingAnnotation || isResizingExistingAnnotation || isDraggingNewSelection {
                     spaceRepositioning = true
-                    if isDraggingAnnotation {
-                        spaceRepositionLast = lastDragPoint ?? .zero
+                    if isDrawingAnnotation {
+                        spaceRepositionLast = lastDragPoint ?? currentCanvasMousePoint ?? .zero
+                    } else if isResizingExistingAnnotation {
+                        spaceRepositionLast = currentCanvasMousePoint ?? annotationResizeMouseStart
                     } else if let windowPoint = window?.mouseLocationOutsideOfEventStream {
                         spaceRepositionLast = convert(windowPoint, from: nil)
                     }
                     return
                 }
             }
+            return
         }
 
         switch event.keyCode {
@@ -8036,6 +8078,13 @@ class OverlayView: NSView {
     override func keyUp(with event: NSEvent) {
         if event.keyCode == 49 && spaceRepositioning {
             spaceRepositioning = false
+            return
+        }
+        if event.keyCode == 49 && textEditView == nil
+            && !event.modifierFlags.contains(.command)
+            && !event.modifierFlags.contains(.option)
+            && !event.modifierFlags.contains(.control)
+        {
             return
         }
         // Clear auto-measure preview on key release (click to commit instead)

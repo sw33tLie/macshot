@@ -176,6 +176,8 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Click a window  ·  Drag for custom area  ·  F for full screen";
 "Drag to select  ·  Click for full screen" = "Drag to select  ·  Click for full screen";
 "Release to annotate and edit" = "Release to annotate and edit";
+"Space to move. Release to annotate and edit" = "Space to move. Release to annotate and edit";
+"Space to move. Release to finish" = "Space to move. Release to finish";
 "Window snap: " = "Window snap: ";
 "ON" = "ON";
 "OFF" = "OFF";
