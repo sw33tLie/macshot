@@ -7796,7 +7796,7 @@ class OverlayView: NSView {
             if textEditView == nil, state == .selected {
                 overlayDelegate?.overlayViewDidRequestQuickSave()
             }
-        case 51:  // Backspace/Delete — remove selected annotation(s)
+        case 51, 117:  // Backspace / Forward-Delete — remove selected annotation(s)
             guard textEditView == nil, state == .selected, !selectedAnnotations.isEmpty else { break }
             for ann in selectedAnnotations {
                 if let idx = annotations.firstIndex(where: { $0 === ann }) {
