@@ -283,6 +283,16 @@ class Annotation {
     }
 
     var boundingRect: NSRect {
+        if tool == .number {
+            let radius = 8 + strokeWidth * 3
+            let circleRect = NSRect(
+                x: startPoint.x - radius, y: startPoint.y - radius,
+                width: radius * 2, height: radius * 2)
+            let tipRect = NSRect(x: endPoint.x, y: endPoint.y, width: 0, height: 0)
+                .insetBy(dx: -max(2, strokeWidth), dy: -max(2, strokeWidth))
+            return circleRect.union(tipRect)
+        }
+
         var minX = min(startPoint.x, endPoint.x)
         var minY = min(startPoint.y, endPoint.y)
         var maxX = max(startPoint.x, endPoint.x)
@@ -396,7 +406,13 @@ class Annotation {
             return textDrawRect.insetBy(dx: -threshold, dy: -threshold).contains(point)
         case .number:
             let radius = 8 + strokeWidth * 3 + threshold
-            return hypot(point.x - startPoint.x, point.y - startPoint.y) < radius
+            if hypot(point.x - startPoint.x, point.y - startPoint.y) < radius {
+                return true
+            }
+            let pointerDistance = hypot(endPoint.x - startPoint.x, endPoint.y - startPoint.y)
+            guard pointerDistance > 4 else { return false }
+            let pointerThreshold = max(threshold, strokeWidth * 2)
+            return distanceToLineSegment(point: point, from: startPoint, to: endPoint) < pointerThreshold
         case .stamp, .pixelate, .blur:
             return boundingRect.insetBy(dx: -threshold, dy: -threshold).contains(point)
         default:
