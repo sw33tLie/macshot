@@ -2176,10 +2176,32 @@ class OverlayView: NSView {
             }
         }
 
-        let candidates = [rect(at: above), rect(at: below)]
-        if let clear = candidates.first(where: { fits($0) && overlapArea($0) == 0 }) {
+        let aboveRect = rect(at: above)
+        let belowRect = rect(at: below)
+        let outsideCandidates = [aboveRect, belowRect]
+        if let clear = outsideCandidates.first(where: { fits($0) && overlapArea($0) == 0 }) {
             return clear
         }
+
+        let insideTop = rect(at: selectionRect.maxY - size.height - edgeGap)
+        let insideBottom = rect(at: selectionRect.minY + edgeGap)
+        func fitsInsideSelection(_ rect: NSRect) -> Bool {
+            rect.minY >= selectionRect.minY + 2 && rect.maxY <= selectionRect.maxY - 2
+        }
+        let insideCandidates: [NSRect]
+        if !fits(aboveRect) && fits(belowRect) {
+            insideCandidates = [insideTop, insideBottom]
+        } else if !fits(belowRect) && fits(aboveRect) {
+            insideCandidates = [insideBottom, insideTop]
+        } else {
+            insideCandidates = [insideTop, insideBottom]
+        }
+        let clearInsideCandidates = insideCandidates.filter { fits($0) && fitsInsideSelection($0) }
+        if let clearInside = clearInsideCandidates.first(where: { overlapArea($0) == 0 }) {
+            return clearInside
+        }
+
+        let candidates = outsideCandidates + clearInsideCandidates
         if let leastBlocked = candidates.filter(fits).min(by: { overlapArea($0) < overlapArea($1) }) {
             return leastBlocked
         }
@@ -6557,10 +6579,21 @@ class OverlayView: NSView {
                 anchorRect: anchorView.convert(anchorView.bounds, to: self), anchorView: anchorView)
         case .save:
             let menu = NSMenu()
-            let saveAsItem = NSMenuItem(
-                title: L("Save As..."), action: #selector(saveAsMenuAction), keyEquivalent: "")
-            saveAsItem.target = self
-            menu.addItem(saveAsItem)
+            switch SaveActionPreference.current {
+            case .saveToFolder:
+                let saveAsItem = NSMenuItem(
+                    title: L("Save As..."), action: #selector(saveAsMenuAction), keyEquivalent: "")
+                saveAsItem.target = self
+                menu.addItem(saveAsItem)
+            case .askWhereToSave:
+                let folderName = URL(fileURLWithPath: SaveDirectoryAccess.displayPath).lastPathComponent
+                let saveToFolderItem = NSMenuItem(
+                    title: "\(L("Save to")) \(folderName)",
+                    action: #selector(saveToFolderMenuAction),
+                    keyEquivalent: "")
+                saveToFolderItem.target = self
+                menu.addItem(saveToFolderItem)
+            }
             menu.popUp(
                 positioning: nil, at: NSPoint(x: 0, y: anchorView.bounds.height), in: anchorView)
         case .upload:
@@ -6944,7 +6977,7 @@ class OverlayView: NSView {
         case .copy:
             overlayDelegate?.overlayViewDidConfirm()
         case .save:
-            overlayDelegate?.overlayViewDidRequestFileSave()
+            overlayDelegate?.overlayViewDidRequestSave()
         case .upload:
             let confirmEnabled = UserDefaults.standard.bool(forKey: "uploadConfirmEnabled")
             if confirmEnabled {
@@ -7710,6 +7743,10 @@ class OverlayView: NSView {
 
     @objc private func saveAsMenuAction() {
         overlayDelegate?.overlayViewDidRequestSaveAs()
+    }
+
+    @objc private func saveToFolderMenuAction() {
+        overlayDelegate?.overlayViewDidRequestFileSave()
     }
 
     // MARK: - Keyboard

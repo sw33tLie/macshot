@@ -1623,6 +1623,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
         let controller = FloatingThumbnailController(image: image)
         controller.historyEntryID = historyEntryID
+        controller.annotationData = annotationData
         controller.onDismiss = { [weak self] in
             self?.thumbnailControllers.removeAll { $0 === controller }
             self?.reflowThumbnails()
@@ -1645,13 +1646,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             self.showPin(image: image)
         }
         controller.onEdit = { [weak controller] in
-            guard let image = controller?.image else { return }
-            if let data = annotationData {
-                DetachedEditorWindowController.open(image: data.rawImage, annotations: data.annotations, historyEntryID: historyEntryID)
-            } else {
-                // Image already has beautify/effects baked in — disable to avoid double-applying
-                DetachedEditorWindowController.open(image: image, historyEntryID: historyEntryID, disableBeautify: true)
+            guard let controller else { return }
+            let image = controller.image
+            let id = controller.historyEntryID ?? historyEntryID
+            if let data = controller.annotationData {
+                DetachedEditorWindowController.open(image: data.rawImage, annotations: data.annotations, historyEntryID: id)
+                return
             }
+            if let id,
+               let entry = ScreenshotHistory.shared.entries.first(where: { $0.id == id }),
+               let rawImage = ScreenshotHistory.shared.loadRawImage(for: entry),
+               let annotations = ScreenshotHistory.shared.loadAnnotations(for: entry) {
+                DetachedEditorWindowController.open(image: rawImage, annotations: annotations, historyEntryID: id)
+                return
+            }
+            // Image already has beautify/effects baked in — disable to avoid double-applying
+            DetachedEditorWindowController.open(image: image, historyEntryID: id, disableBeautify: true)
         }
         controller.onUpload = { [weak self, weak controller] in
             guard let self = self, let image = controller?.image else { return }
@@ -1763,9 +1773,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     /// Update a floating thumbnail's image if it matches the given history entry.
-    func refreshThumbnail(for entryID: String, image: NSImage) {
+    func refreshThumbnail(for entryID: String, image: NSImage, annotationData: CaptureAnnotationData? = nil) {
         for tc in thumbnailControllers where tc.historyEntryID == entryID {
-            tc.updateImage(image)
+            tc.updateImage(image, annotationData: annotationData)
         }
     }
 

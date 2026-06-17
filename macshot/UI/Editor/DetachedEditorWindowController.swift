@@ -285,46 +285,54 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
     }
 
     /// Save current editor state to the linked history entry (without closing).
-    private func saveToHistory() {
+    private func saveToHistory(annotationData: CaptureAnnotationData? = nil) {
         guard let entryID = historyEntryID, let view = overlayView else { return }
         guard let composited = view.captureSelectedRegion() else { return }
         let finalImage = applyPostProcessing(composited)
-        let annotations = view.annotations.filter { $0.isMovable }
-        let rawImage: NSImage? = annotations.isEmpty ? nil : view.captureSelectedRegionRaw()
+        let data = annotationData ?? currentAnnotationData()
         ScreenshotHistory.shared.updateEntry(
             id: entryID,
             compositedImage: finalImage,
-            rawImage: rawImage,
-            annotations: annotations.isEmpty ? nil : annotations)
+            rawImage: data?.rawImage,
+            annotations: data?.annotations)
         lastSavedUndoDepth = view.undoStack.count
         // Update floating thumbnail if it's still visible
-        (NSApp.delegate as? AppDelegate)?.refreshThumbnail(for: entryID, image: finalImage)
+        (NSApp.delegate as? AppDelegate)?.refreshThumbnail(for: entryID, image: finalImage, annotationData: data)
     }
 
     /// Commit current editor state back to the history entry, then close.
     private func commitToHistory() {
         // Capture the final image before close tears down the view
         let finalImage: NSImage?
+        let annotationData = currentAnnotationData()
         if let view = overlayView, let composited = view.captureSelectedRegion() {
             finalImage = applyPostProcessing(composited)
         } else {
             finalImage = nil
         }
-        saveToHistory()
+        saveToHistory(annotationData: annotationData)
         window?.close()
         // Show a new floating thumbnail with the saved image
         if let image = finalImage, let entryID = historyEntryID {
-            (NSApp.delegate as? AppDelegate)?.showFloatingThumbnail(image: image, historyEntryID: entryID)
+            (NSApp.delegate as? AppDelegate)?.showFloatingThumbnail(image: image, annotationData: annotationData, historyEntryID: entryID)
         }
     }
 
     /// Called by output actions (copy, save, etc.) to persist changes to history.
-    private func autoSaveToHistoryIfNeeded(compositedImage: NSImage) {
+    private func autoSaveToHistoryIfNeeded(compositedImage: NSImage, annotationData: CaptureAnnotationData? = nil) {
         screenshotNeverOutput = false
-        ensureInHistory(compositedImage: compositedImage)
+        ensureInHistory(compositedImage: compositedImage, annotationData: annotationData)
         if historyEntryID != nil {
-            saveToHistory()
+            saveToHistory(annotationData: annotationData)
         }
+    }
+
+    private func currentAnnotationData() -> CaptureAnnotationData? {
+        guard let view = overlayView else { return nil }
+        let annotations = view.annotations.filter { $0.isMovable }
+        guard !annotations.isEmpty,
+              let rawImage = view.captureSelectedRegionRaw() else { return nil }
+        return CaptureAnnotationData(rawImage: rawImage, annotations: annotations)
     }
 
     /// Apply image effects and beautify to the captured image.
@@ -353,10 +361,11 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
     func overlayViewDidConfirm() {
         guard let raw = overlayView?.captureSelectedRegion() else { return }
         let image = applyPostProcessing(raw)
+        let annotationData = currentAnnotationData()
         ImageEncoder.copyToClipboard(image)
         playCopySound()
-        (NSApp.delegate as? AppDelegate)?.showFloatingThumbnail(image: image)
-        autoSaveToHistoryIfNeeded(compositedImage: image)
+        autoSaveToHistoryIfNeeded(compositedImage: image, annotationData: annotationData)
+        (NSApp.delegate as? AppDelegate)?.showFloatingThumbnail(image: image, annotationData: annotationData, historyEntryID: historyEntryID)
     }
 
     func overlayViewDidRequestSave() {
@@ -429,10 +438,10 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
         if mode == 0 || mode == 2 {
             ImageSaveService.saveToConfiguredFolder(image, sheetWindow: window)
         }
+        let annotationData = currentAnnotationData()
         playCopySound()
-        (NSApp.delegate as? AppDelegate)?.showFloatingThumbnail(image: image)
-
-        autoSaveToHistoryIfNeeded(compositedImage: image)
+        autoSaveToHistoryIfNeeded(compositedImage: image, annotationData: annotationData)
+        (NSApp.delegate as? AppDelegate)?.showFloatingThumbnail(image: image, annotationData: annotationData, historyEntryID: historyEntryID)
     }
 
     func overlayViewDidRequestFileSave() {
@@ -448,14 +457,13 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
 
     /// Ensure the current editor content is in screenshot history.
     /// Creates a history entry if one doesn't exist yet, and shows the Done button.
-    private func ensureInHistory(compositedImage: NSImage) {
-        guard historyEntryID == nil, let view = overlayView else { return }
-        let annotations = view.annotations.filter { $0.isMovable }
-        let rawImage: NSImage? = annotations.isEmpty ? nil : view.captureSelectedRegionRaw()
+    private func ensureInHistory(compositedImage: NSImage, annotationData: CaptureAnnotationData? = nil) {
+        guard historyEntryID == nil, overlayView != nil else { return }
+        let data = annotationData ?? currentAnnotationData()
         ScreenshotHistory.shared.add(
             image: compositedImage,
-            rawImage: rawImage,
-            annotations: annotations.isEmpty ? nil : annotations)
+            rawImage: data?.rawImage,
+            annotations: data?.annotations)
         historyEntryID = ScreenshotHistory.shared.entries.first?.id
         if historyEntryID != nil {
             topBar?.showDoneButton()

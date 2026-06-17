@@ -205,6 +205,8 @@ class FloatingThumbnailController: NSObject, NSDraggingSource, QLPreviewPanelDat
     private var corner: FloatingThumbnailCorner = .bottomRight
     /// History entry ID — used to match and update the thumbnail when the editor saves.
     var historyEntryID: String?
+    /// Editable raw image + annotations for opening the thumbnail back in the editor.
+    var annotationData: CaptureAnnotationData?
     /// The intended final frame — used instead of window.frame to avoid reading
     /// intermediate positions during slide-in or reflow animations.
     private var targetFrame: NSRect = .zero
@@ -357,8 +359,9 @@ class FloatingThumbnailController: NSObject, NSDraggingSource, QLPreviewPanelDat
     func showWindow() { window?.orderFront(nil) }
 
     /// Update the displayed image (e.g. after editor saves new annotations).
-    func updateImage(_ newImage: NSImage) {
+    func updateImage(_ newImage: NSImage, annotationData: CaptureAnnotationData? = nil) {
         image = newImage
+        self.annotationData = annotationData
         thumbnailView?.updateImage(newImage)
     }
 

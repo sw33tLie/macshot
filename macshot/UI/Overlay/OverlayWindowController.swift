@@ -439,6 +439,17 @@ class OverlayWindowController {
         return CaptureAnnotationData(rawImage: rawImage, annotations: shifted)
     }
 
+    private func currentAnnotationDataForHistory() -> CaptureAnnotationData? {
+        let beautifyCfg = overlayView?.beautifyConfig ?? BeautifyConfig()
+        let snapWindowImg = overlayView?.snappedWindowImage
+        let hasAnnotations = overlayView?.annotations.contains(where: { $0.isMovable }) ?? false
+        guard hasAnnotations else { return nil }
+        let rawImage: NSImage? = (beautifyCfg.isWindowSnap && snapWindowImg != nil)
+            ? snapWindowImg : overlayView?.captureSelectedRegionRaw()
+        guard let rawImage else { return nil }
+        return snapshotAnnotationData(rawImage: rawImage)
+    }
+
     /// Composite annotations onto the snapped window image (preserving transparency).
     private func compositeAnnotationsOnSnappedWindow(_ windowImage: NSImage, annotations: [Annotation], selectionRect: NSRect) -> NSImage {
         guard !annotations.isEmpty else { return windowImage }
@@ -924,9 +935,10 @@ extension OverlayWindowController: OverlayViewDelegate {
             overlayDelegate?.overlayDidCancel(self)
             return
         }
+        let annotationData = currentAnnotationDataForHistory()
 
         dismiss()
-        overlayDelegate?.overlayDidConfirm(self, capturedImage: image, annotationData: nil)
+        overlayDelegate?.overlayDidConfirm(self, capturedImage: image, annotationData: annotationData)
         ImageSaveService.saveToConfiguredFolder(
             image,
             windowTitle: capturedWindowTitle,
