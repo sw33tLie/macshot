@@ -1692,44 +1692,78 @@ class Annotation {
     private func drawNumber() {
         guard let number = number else { return }
         let radius: CGFloat = 8 + strokeWidth * 3
+        let outlineWidth: CGFloat = 3
         let center = startPoint
 
-        // Draw pointer cone if dragged (startPoint != endPoint)
         let dx = endPoint.x - startPoint.x
         let dy = endPoint.y - startPoint.y
         let dist = hypot(dx, dy)
-        if dist > 4 {
+        var coneFillPath: NSBezierPath?
+        var coneOutlinePath: NSBezierPath?
+        if dist > radius + outlineWidth {
             let angle = atan2(dy, dx)
-            // Cone base width tapers from the circle edge, narrowing to a point
             let baseHalfWidth = radius * 0.55
             let perpAngle = angle + .pi / 2
 
-            // Base points on the circle's edge
-            let baseL = NSPoint(x: center.x + baseHalfWidth * cos(perpAngle),
-                                y: center.y + baseHalfWidth * sin(perpAngle))
-            let baseR = NSPoint(x: center.x - baseHalfWidth * cos(perpAngle),
-                                y: center.y - baseHalfWidth * sin(perpAngle))
+            let fillBaseL = NSPoint(x: center.x + baseHalfWidth * cos(perpAngle),
+                                    y: center.y + baseHalfWidth * sin(perpAngle))
+            let fillBaseR = NSPoint(x: center.x - baseHalfWidth * cos(perpAngle),
+                                    y: center.y - baseHalfWidth * sin(perpAngle))
+
+            func circleIntersection(from tip: NSPoint, to innerBase: NSPoint) -> NSPoint {
+                let vx = innerBase.x - tip.x
+                let vy = innerBase.y - tip.y
+                let fx = tip.x - center.x
+                let fy = tip.y - center.y
+                let outlineRadius = radius + outlineWidth
+                let a = vx * vx + vy * vy
+                let b = 2 * (fx * vx + fy * vy)
+                let c = fx * fx + fy * fy - outlineRadius * outlineRadius
+                let disc = b * b - 4 * a * c
+                guard a > 0, disc >= 0 else { return innerBase }
+                let root = sqrt(disc)
+                let candidates = [(-b - root) / (2 * a), (-b + root) / (2 * a)]
+                    .filter { $0 >= 0 && $0 <= 1 }
+                    .sorted()
+                guard let t = candidates.first else { return innerBase }
+                return NSPoint(x: tip.x + vx * t, y: tip.y + vy * t)
+            }
+
+            let outlineBaseL = circleIntersection(from: endPoint, to: fillBaseL)
+            let outlineBaseR = circleIntersection(from: endPoint, to: fillBaseR)
 
             let cone = NSBezierPath()
-            cone.move(to: baseL)
+            cone.move(to: fillBaseL)
             cone.line(to: endPoint)
-            cone.line(to: baseR)
+            cone.line(to: fillBaseR)
             cone.close()
-            color.setFill()
-            cone.fill()
+            coneFillPath = cone
+
+            let outline = NSBezierPath()
+            outline.move(to: outlineBaseL)
+            outline.line(to: endPoint)
+            outline.line(to: outlineBaseR)
+            coneOutlinePath = outline
         }
 
-        // Draw the circle on top of the cone
         let circleRect = NSRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)
-        // Outline behind circle
         if let oc = outlineColor {
-            let outlineCircle = NSBezierPath(ovalIn: circleRect.insetBy(dx: -2, dy: -2))
-            outlineCircle.lineWidth = 3
-            oc.setStroke()
-            outlineCircle.stroke()
+            oc.setFill()
+            NSBezierPath(ovalIn: circleRect.insetBy(dx: -outlineWidth, dy: -outlineWidth)).fill()
         }
         color.setFill()
         NSBezierPath(ovalIn: circleRect).fill()
+
+        if let coneFillPath {
+            if let oc = outlineColor, let coneOutlinePath {
+                coneOutlinePath.lineWidth = outlineWidth * 2
+                coneOutlinePath.lineJoinStyle = .round
+                oc.setStroke()
+                coneOutlinePath.stroke()
+            }
+            color.setFill()
+            coneFillPath.fill()
+        }
 
         // Choose contrasting text color: black for light backgrounds, white for dark
         let textColor: NSColor = {

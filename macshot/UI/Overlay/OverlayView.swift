@@ -2143,8 +2143,9 @@ class OverlayView: NSView {
     /// button just overhangs to the right (not counted in the centering).
     private func resolutionBoxFrame(size: NSSize, dimsCenterX: CGFloat) -> NSRect {
         let x = selectionRect.midX - dimsCenterX
-        let above = selectionRect.maxY + 4
-        let below = selectionRect.minY - size.height - 4
+        let edgeGap = handleSize / 2 + 3
+        let above = selectionRect.maxY + edgeGap
+        let below = selectionRect.minY - size.height - edgeGap
         let y: CGFloat
         if above + size.height < bounds.maxY - 2 {
             y = above

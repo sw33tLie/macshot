@@ -35,6 +35,7 @@ enum ResolutionPresetCatalog {
         .ratio(label: "16 : 10", value: 16.0 / 10.0),
         .ratio(label: "16 : 9", value: 16.0 / 9.0),
         .ratio(label: "21 : 9", value: 21.0 / 9.0),
+        .ratio(label: "5 : 1", value: 5.0 / 1.0),
         .ratio(label: "3 : 4", value: 3.0 / 4.0),
         .ratio(label: "9 : 16", value: 9.0 / 16.0),
     ]
@@ -42,6 +43,7 @@ enum ResolutionPresetCatalog {
     /// Common exact pixel resolutions.
     static let resolutions: [ResolutionPreset] = [
         .resolution(label: "1920 × 1080", w: 1920, h: 1080),
+        .resolution(label: "1920 × 384", w: 1920, h: 384),
         .resolution(label: "1280 × 720", w: 1280, h: 720),
         .resolution(label: "1080 × 1080", w: 1080, h: 1080),
         .resolution(label: "1080 × 1920", w: 1080, h: 1920),

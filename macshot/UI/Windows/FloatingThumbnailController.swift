@@ -15,6 +15,11 @@ enum FloatingThumbnailCorner: String {
     }
 }
 
+private enum ThumbnailDismissGesture {
+    case mouseDrag
+    case scroll
+}
+
 @MainActor
 class FloatingThumbnailController: NSObject, NSDraggingSource {
 
@@ -28,6 +33,9 @@ class FloatingThumbnailController: NSObject, NSDraggingSource {
     /// The intended final frame — used instead of window.frame to avoid reading
     /// intermediate positions during slide-in or reflow animations.
     private var targetFrame: NSRect = .zero
+    private var dismissDragStartFrame: NSRect?
+    private var isInteractiveDismissActive = false
+    private var isScrollDismissHostActive = false
     var onDismiss: (() -> Void)?
 
     // Action callbacks
@@ -91,8 +99,13 @@ class FloatingThumbnailController: NSObject, NSDraggingSource {
         let view = ThumbnailView(image: image, thumbSize: thumbSize)
         view.frame = NSRect(origin: .zero, size: thumbSize)
         view.autoresizingMask = [.width, .height]
+        view.dismissesTowardLeft = corner.isLeft
 
         view.onDragStarted = { [weak self] event in self?.startDrag(event: event) }
+        view.onDismissDragStarted = { [weak self] kind in self?.beginDismissDrag(kind: kind) }
+        view.onDismissDragChanged = { [weak self] offset in self?.updateDismissDrag(offset: offset) }
+        view.onDismissDragEnded = { [weak self] offset in self?.endDismissDrag(offset: offset) }
+        view.onDismissDragCancelled = { [weak self] in self?.cancelDismissDrag() }
         view.onClose    = { [weak self] in self?.dismiss() }
         view.onCopy     = { [weak self] in self?.onCopy?();     self?.dismiss() }
         view.onSave     = { [weak self] in self?.onSave?();     self?.dismiss() }
@@ -141,6 +154,9 @@ class FloatingThumbnailController: NSObject, NSDraggingSource {
     func dismiss() {
         dismissTask?.cancel()
         dismissTask = nil
+        isInteractiveDismissActive = false
+        isScrollDismissHostActive = false
+        dismissDragStartFrame = nil
         window?.orderOut(nil)
         window?.close()
         window = nil
@@ -169,6 +185,7 @@ class FloatingThumbnailController: NSObject, NSDraggingSource {
     /// Animate this thumbnail to a new Y position (used when a lower thumbnail is dismissed).
     func moveTo(origin: NSPoint) {
         guard let window = window else { return }
+        guard !isInteractiveDismissActive else { return }
         guard targetFrame.origin != origin else { return }
         let newFrame = NSRect(x: origin.x, y: origin.y, width: targetFrame.width, height: targetFrame.height)
         targetFrame = newFrame
@@ -181,9 +198,14 @@ class FloatingThumbnailController: NSObject, NSDraggingSource {
 
     private func animateOut() {
         guard let window = window else { return }
+        isInteractiveDismissActive = true
+        if isScrollDismissHostActive {
+            animateScrollDismissHostOut()
+            return
+        }
+
         let frame = window.frame
-        let screen = NSScreen.main ?? NSScreen.screens[0]
-        let offscreenX = corner.isLeft ? screen.visibleFrame.minX - frame.width - 10 : screen.visibleFrame.maxX + 10
+        let offscreenX = offscreenX(for: frame)
 
         NSAnimationContext.runAnimationGroup({ ctx in
             ctx.duration = 0.4
@@ -194,7 +216,151 @@ class FloatingThumbnailController: NSObject, NSDraggingSource {
             )
             window.animator().alphaValue = 0
         }, completionHandler: { [weak self] in
-            self?.dismiss()
+            guard let self = self else { return }
+            Task { @MainActor [self] in
+                self.dismiss()
+            }
+        })
+    }
+
+    private var dismissDirection: CGFloat {
+        corner.isLeft ? -1 : 1
+    }
+
+    private func visibleScreenFrame(for frame: NSRect) -> NSRect {
+        if let screen = NSScreen.screens.first(where: { $0.visibleFrame.intersects(frame) || $0.frame.intersects(frame) }) {
+            return screen.visibleFrame
+        }
+        return (NSScreen.main ?? NSScreen.screens[0]).visibleFrame
+    }
+
+    private func offscreenX(for frame: NSRect) -> CGFloat {
+        let screenFrame = visibleScreenFrame(for: frame)
+        return corner.isLeft ? screenFrame.minX - frame.width - 10 : screenFrame.maxX + 10
+    }
+
+    private func dismissCompletionThreshold(for frame: NSRect) -> CGFloat {
+        min(max(frame.width * 0.05, 8), 16)
+    }
+
+    private func dismissProgressDistance(for frame: NSRect) -> CGFloat {
+        dismissCompletionThreshold(for: frame) * 1.4
+    }
+
+    private func beginDismissDrag(kind: ThumbnailDismissGesture) {
+        guard let window = window else { return }
+        dismissTask?.cancel()
+        dismissTask = nil
+        isInteractiveDismissActive = true
+
+        if dismissDragStartFrame == nil {
+            let currentFrame = window.frame
+            dismissDragStartFrame = currentFrame
+            window.setFrame(currentFrame, display: true, animate: false)
+        }
+
+        if kind == .scroll {
+            prepareScrollDismissHost()
+        }
+    }
+
+    private func updateDismissDrag(offset: CGFloat) {
+        guard let window = window else { return }
+        if dismissDragStartFrame == nil {
+            beginDismissDrag(kind: .mouseDrag)
+        }
+        let startFrame = dismissDragStartFrame ?? window.frame
+        let clampedOffset = max(0, offset)
+        let progress = min(1, clampedOffset / dismissProgressDistance(for: startFrame))
+
+        if isScrollDismissHostActive {
+            thumbnailView?.dismissContentOffsetX = clampedOffset * dismissDirection
+            window.alphaValue = 1 - progress * 0.45
+            return
+        }
+
+        let frame = NSRect(
+            x: startFrame.minX + clampedOffset * dismissDirection,
+            y: startFrame.minY,
+            width: startFrame.width,
+            height: startFrame.height
+        )
+        window.setFrame(frame, display: true)
+        window.alphaValue = 1 - progress * 0.45
+    }
+
+    private func endDismissDrag(offset: CGFloat) {
+        let startFrame = dismissDragStartFrame ?? targetFrame
+        if offset >= dismissCompletionThreshold(for: startFrame) {
+            dismissDragStartFrame = nil
+            animateOut()
+        } else {
+            cancelDismissDrag()
+        }
+    }
+
+    private func cancelDismissDrag() {
+        guard let window = window else { return }
+        let restoreFrame = dismissDragStartFrame ?? targetFrame
+        let wasScrollDismissHostActive = isScrollDismissHostActive
+        dismissDragStartFrame = nil
+        isInteractiveDismissActive = false
+        isScrollDismissHostActive = false
+
+        NSAnimationContext.runAnimationGroup({ ctx in
+            ctx.duration = 0.18
+            ctx.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            if wasScrollDismissHostActive {
+                thumbnailView?.animator().dismissContentOffsetX = 0
+            } else {
+                window.animator().setFrame(restoreFrame, display: true)
+            }
+            window.animator().alphaValue = 1
+        }, completionHandler: { [weak self] in
+            guard let self = self else { return }
+            Task { @MainActor [self] in
+                if wasScrollDismissHostActive, let window = self.window {
+                    window.setFrame(self.targetFrame, display: true, animate: false)
+                    self.thumbnailView?.resetDismissContentPosition()
+                }
+            }
+        })
+    }
+
+    private func prepareScrollDismissHost() {
+        guard let window = window, !isScrollDismissHostActive else { return }
+        let startFrame = dismissDragStartFrame ?? window.frame
+        let offscreenX = offscreenX(for: startFrame)
+        let hostX = min(startFrame.minX, offscreenX)
+        let hostMaxX = max(startFrame.maxX, offscreenX + startFrame.width)
+        let hostFrame = NSRect(
+            x: hostX,
+            y: startFrame.minY,
+            width: hostMaxX - hostX,
+            height: startFrame.height
+        )
+
+        isScrollDismissHostActive = true
+        window.setFrame(hostFrame, display: true, animate: false)
+        thumbnailView?.dismissContentBaseX = startFrame.minX - hostFrame.minX
+        thumbnailView?.dismissContentOffsetX = 0
+    }
+
+    private func animateScrollDismissHostOut() {
+        guard let window = window else { return }
+        let startFrame = dismissDragStartFrame ?? targetFrame
+        let finalOffset = offscreenX(for: startFrame) - startFrame.minX
+
+        NSAnimationContext.runAnimationGroup({ ctx in
+            ctx.duration = 0.22
+            ctx.timingFunction = CAMediaTimingFunction(name: .easeIn)
+            thumbnailView?.animator().dismissContentOffsetX = finalOffset
+            window.animator().alphaValue = 0
+        }, completionHandler: { [weak self] in
+            guard let self = self else { return }
+            Task { @MainActor [self] in
+                self.dismiss()
+            }
         })
     }
 
@@ -233,10 +399,29 @@ private class ThumbnailView: NSView {
     var onSaveAll:  (() -> Void)?
     var onHoverEnter: (() -> Void)?
     var onHoverExit:  (() -> Void)?
+    var onDismissDragStarted: ((ThumbnailDismissGesture) -> Void)?
+    var onDismissDragChanged: ((CGFloat) -> Void)?
+    var onDismissDragEnded: ((CGFloat) -> Void)?
+    var onDismissDragCancelled: (() -> Void)?
+    var dismissesTowardLeft: Bool = false
+    @objc dynamic var dismissContentBaseX: CGFloat = 0 {
+        didSet { needsDisplay = true }
+    }
+    @objc dynamic var dismissContentOffsetX: CGFloat = 0 {
+        didSet { needsDisplay = true }
+    }
 
     private var image: NSImage
     private let thumbSize: NSSize
-    private var dragStartPoint: NSPoint?
+    private var dragStartScreenPoint: NSPoint?
+    private var dragMode: DragMode = .idle
+    private var dismissDragOffset: CGFloat = 0
+    private var scrollDismissOffset: CGFloat = 0
+    private var isScrollDismissing: Bool = false
+    private var scrollGestureStartedOnButton: Bool = false
+    private var scrollDismissEndTask: DispatchWorkItem?
+    private var scrollDismissGlobalMonitor: Any?
+    private var scrollDismissLocalMonitor: Any?
     private var isHovering: Bool = false
     private var trackingArea: NSTrackingArea?
 
@@ -250,10 +435,47 @@ private class ThumbnailView: NSView {
 
     private var hoveredRect: NSRect = .zero
 
+    private enum DragMode {
+        case idle
+        case button
+        case pending
+        case dismissing
+        case exporting
+    }
+
+    private struct ScrollDismissSample {
+        let rawDX: CGFloat
+        let rawDY: CGFloat
+        let didBegin: Bool
+        let didEnd: Bool
+        let hasGesturePhase: Bool
+        let isTrackpadLike: Bool
+    }
+
+    deinit {
+        removeScrollDismissMonitors()
+    }
+
+    func resetDismissContentPosition() {
+        dismissContentBaseX = 0
+        dismissContentOffsetX = 0
+        frame = NSRect(origin: .zero, size: thumbSize)
+        needsDisplay = true
+    }
+
     private var controlScale: CGFloat {
         guard thumbSize.width > 0, thumbSize.height > 0 else { return 1 }
         let baseScale = min(bounds.width / 240, bounds.height / 160)
         return min(max(baseScale, 0.55), 2.0)
+    }
+
+    private var thumbnailDrawRect: NSRect {
+        NSRect(
+            x: dismissContentBaseX + dismissContentOffsetX,
+            y: 0,
+            width: thumbSize.width,
+            height: thumbSize.height
+        )
     }
 
     private func scaled(_ value: CGFloat, minimum: CGFloat = 0) -> CGFloat {
@@ -316,7 +538,7 @@ private class ThumbnailView: NSView {
     // MARK: - Drawing
 
     override func draw(_ dirtyRect: NSRect) {
-        let r = bounds
+        let r = thumbnailDrawRect
         let cr: CGFloat = 12
 
         // Rounded clip for entire thumbnail
@@ -457,22 +679,60 @@ private class ThumbnailView: NSView {
     // MARK: - Mouse events
 
     override func mouseDown(with event: NSEvent) {
-        dragStartPoint = event.locationInWindow
+        dragStartScreenPoint = screenPoint(for: event)
+        dismissDragOffset = 0
+        let point = convert(event.locationInWindow, from: nil)
+        dragMode = actionButtonRect(containing: point) == nil ? .pending : .button
     }
 
     override func mouseDragged(with event: NSEvent) {
-        guard let start = dragStartPoint else { return }
-        let current = event.locationInWindow
-        if hypot(current.x - start.x, current.y - start.y) > 4 {
-            dragStartPoint = nil
+        guard let start = dragStartScreenPoint else { return }
+        let current = screenPoint(for: event)
+
+        switch dragMode {
+        case .button, .exporting:
+            return
+        case .dismissing:
+            dismissDragOffset = max(0, (current.x - start.x) * dismissDirection)
+            onDismissDragChanged?(dismissDragOffset)
+            return
+        case .idle, .pending:
+            break
+        }
+
+        let dx = current.x - start.x
+        let dy = current.y - start.y
+        let distance = hypot(dx, dy)
+        guard distance > 4 else { return }
+
+        let directionalOffset = dx * dismissDirection
+        let isEdgewardDismiss = directionalOffset > 6 && abs(dx) >= max(6, abs(dy) * 0.35)
+        if isEdgewardDismiss {
+            dragMode = .dismissing
+            dismissDragOffset = directionalOffset
+            onDismissDragStarted?(.mouseDrag)
+            onDismissDragChanged?(dismissDragOffset)
+        } else if distance > 8 {
+            dragMode = .exporting
+            dragStartScreenPoint = nil
             onDragStarted?(event)
         }
     }
 
     override func mouseUp(with event: NSEvent) {
-        guard dragStartPoint != nil else { return }
-        dragStartPoint = nil
+        if dragMode == .dismissing {
+            onDismissDragEnded?(dismissDragOffset)
+            resetMouseDragState()
+            return
+        }
+
+        guard dragStartScreenPoint != nil else {
+            resetMouseDragState()
+            return
+        }
+        dragStartScreenPoint = nil
         let p = convert(event.locationInWindow, from: nil)
+        defer { resetMouseDragState() }
 
         if closeBtnRect.contains(p)  { onClose?();  return }
         if pinBtnRect.contains(p)    { onPin?();    return }
@@ -483,6 +743,160 @@ private class ThumbnailView: NSView {
 
         // Click anywhere else on thumbnail — dismiss
         if isHovering { onClose?() }
+    }
+
+    override func scrollWheel(with event: NSEvent) {
+        handleScrollDismiss(sample: Self.scrollDismissSample(from: event), isOverButton: false)
+    }
+
+    private func handleScrollDismiss(sample: ScrollDismissSample, isOverButton: Bool?) {
+        guard sample.isTrackpadLike else { return }
+
+        if sample.didBegin {
+            scrollDismissOffset = 0
+            isScrollDismissing = false
+            scrollGestureStartedOnButton = isOverButton ?? false
+            scrollDismissEndTask?.cancel()
+            scrollDismissEndTask = nil
+        } else if !isScrollDismissing && scrollDismissOffset == 0 && scrollDismissEndTask == nil {
+            scrollGestureStartedOnButton = isOverButton ?? scrollGestureStartedOnButton
+        }
+
+        guard !scrollGestureStartedOnButton else {
+            if sample.didEnd {
+                scrollGestureStartedOnButton = false
+            }
+            return
+        }
+        guard isScrollDismissing || abs(sample.rawDX) > max(0.5, abs(sample.rawDY) * 0.35) else { return }
+
+        let directionalDelta = sample.rawDX * dismissDirection
+        if directionalDelta > 0 {
+            if !isScrollDismissing {
+                isScrollDismissing = true
+                installScrollDismissMonitors()
+                onDismissDragStarted?(.scroll)
+            }
+            scrollDismissOffset += directionalDelta
+            onDismissDragChanged?(scrollDismissOffset)
+            scheduleScrollDismissEnd(after: scrollDismissFallbackDelay(for: sample))
+        } else if scrollDismissOffset > 0 {
+            scheduleScrollDismissEnd(after: scrollDismissFallbackDelay(for: sample))
+        }
+
+        if sample.didEnd {
+            scrollGestureStartedOnButton = false
+            scheduleScrollDismissEnd(after: 0.04)
+        }
+    }
+
+    override func swipe(with event: NSEvent) {
+        let directionalDelta = event.deltaX * dismissDirection
+        guard directionalDelta > 0 else { return }
+        scrollDismissEndTask?.cancel()
+        scrollDismissEndTask = nil
+        scrollDismissOffset = 0
+        isScrollDismissing = true
+        scrollGestureStartedOnButton = false
+        removeScrollDismissMonitors()
+        onDismissDragStarted?(.scroll)
+        onDismissDragChanged?(120)
+        onDismissDragEnded?(120)
+        isScrollDismissing = false
+    }
+
+    private var dismissDirection: CGFloat {
+        dismissesTowardLeft ? -1 : 1
+    }
+
+    private func resetMouseDragState() {
+        dragStartScreenPoint = nil
+        dragMode = .idle
+        dismissDragOffset = 0
+    }
+
+    private func screenPoint(for event: NSEvent) -> NSPoint {
+        window?.convertPoint(toScreen: event.locationInWindow) ?? NSEvent.mouseLocation
+    }
+
+    private func actionButtonRect(containing point: NSPoint) -> NSRect? {
+        [closeBtnRect, pinBtnRect, editBtnRect, uploadBtnRect, copyBtnRect, saveBtnRect]
+            .first { !$0.isEmpty && $0.contains(point) }
+    }
+
+    private static func scrollDismissSample(from event: NSEvent) -> ScrollDismissSample {
+        let didEnd = event.phase.contains(.ended)
+            || event.phase.contains(.cancelled)
+            || event.momentumPhase.contains(.ended)
+            || event.momentumPhase.contains(.cancelled)
+        let hasGesturePhase = event.phase != [] || event.momentumPhase != []
+        return ScrollDismissSample(
+            rawDX: event.scrollingDeltaX,
+            rawDY: event.scrollingDeltaY,
+            didBegin: event.phase.contains(.began),
+            didEnd: didEnd,
+            hasGesturePhase: hasGesturePhase,
+            isTrackpadLike: hasGesturePhase || event.hasPreciseScrollingDeltas
+        )
+    }
+
+    private func installScrollDismissMonitors() {
+        guard scrollDismissGlobalMonitor == nil && scrollDismissLocalMonitor == nil else { return }
+
+        scrollDismissGlobalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .scrollWheel) { [weak self] event in
+            let sample = Self.scrollDismissSample(from: event)
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self, self.isScrollDismissing else { return }
+                self.handleScrollDismiss(sample: sample, isOverButton: nil)
+            }
+        }
+
+        scrollDismissLocalMonitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [weak self] event in
+            guard let self = self, self.isScrollDismissing else { return event }
+            if let eventWindow = event.window, eventWindow === self.window { return event }
+            self.handleScrollDismiss(sample: Self.scrollDismissSample(from: event), isOverButton: nil)
+            return event
+        }
+    }
+
+    private func removeScrollDismissMonitors() {
+        if let monitor = scrollDismissGlobalMonitor {
+            NSEvent.removeMonitor(monitor)
+            scrollDismissGlobalMonitor = nil
+        }
+        if let monitor = scrollDismissLocalMonitor {
+            NSEvent.removeMonitor(monitor)
+            scrollDismissLocalMonitor = nil
+        }
+    }
+
+    private func scheduleScrollDismissEnd(after delay: TimeInterval = 0.12) {
+        scrollDismissEndTask?.cancel()
+        let task = DispatchWorkItem { [weak self] in
+            self?.finishScrollDismiss()
+        }
+        scrollDismissEndTask = task
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: task)
+    }
+
+    private func scrollDismissFallbackDelay(for sample: ScrollDismissSample) -> TimeInterval {
+        sample.hasGesturePhase ? 0.8 : 0.45
+    }
+
+    private func finishScrollDismiss() {
+        scrollDismissEndTask?.cancel()
+        scrollDismissEndTask = nil
+        removeScrollDismissMonitors()
+        guard scrollDismissOffset > 0 else {
+            isScrollDismissing = false
+            scrollGestureStartedOnButton = false
+            return
+        }
+        let offset = scrollDismissOffset
+        scrollDismissOffset = 0
+        isScrollDismissing = false
+        scrollGestureStartedOnButton = false
+        onDismissDragEnded?(offset)
     }
 
     override func rightMouseDown(with event: NSEvent) {
