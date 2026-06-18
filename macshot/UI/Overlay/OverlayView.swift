@@ -2359,6 +2359,12 @@ class OverlayView: NSView {
         }
     }
 
+    private func refreshResolutionAndToolbarLayout() {
+        updateResolutionBox()
+        repositionToolbars()
+        updateResolutionBox()
+    }
+
     /// Human label of the currently locked aspect ratio, if any.
     private var activeRatioLabel: String? {
         guard let a = lockedAspect else { return nil }
@@ -2392,7 +2398,6 @@ class OverlayView: NSView {
                 guard let self else { return }
                 self.applyLockedAspect(preset.aspectValue)
                 self.persistRatioIfNeeded()
-                self.updateResolutionBox()
             }
         }
         view.resolutionRows = ResolutionPresetCatalog.resolutions.map { preset in
@@ -2405,7 +2410,6 @@ class OverlayView: NSView {
                 self.applyLockedAspect(nil)
                 self.applyPixelSize(w: w, h: h)
                 self.persistRatioIfNeeded()
-                self.updateResolutionBox()
             }
         }
         view.keepRatioOn = keepRatioForNextCaptures
@@ -2413,12 +2417,12 @@ class OverlayView: NSView {
             guard let self else { return }
             self.keepRatioForNextCaptures = on
             self.persistRatioIfNeeded()
-            self.updateResolutionBox()  // refresh the enforced-icon tint
+            self.refreshResolutionAndToolbarLayout()  // refresh the enforced-icon tint
         }
         view.unitIndex = resolutionUnitIsPoints ? 1 : 0
         view.onPickUnit = { [weak self] idx in
             self?.resolutionUnitIsPoints = (idx == 1)
-            self?.updateResolutionBox()  // re-display W/H in the new unit
+            self?.refreshResolutionAndToolbarLayout()  // re-display W/H in the new unit
         }
         view.build()
         PopoverHelper.show(view, size: view.preferredSize,
@@ -2554,7 +2558,7 @@ class OverlayView: NSView {
 
         selectionIsWindowSnap = false
         selectionRect = rect
-        updateResolutionBox()
+        refreshResolutionAndToolbarLayout()
         refreshCursorAfterSelectionChange()
         needsDisplay = true
         return fits
@@ -2575,7 +2579,11 @@ class OverlayView: NSView {
     func applyLockedAspect(_ aspect: CGFloat?) {
         lockedAspect = aspect
         selectionIsWindowSnap = false
-        guard let aspect, aspect > 0, selectionRect.width > 1 else { needsDisplay = true; return }
+        guard let aspect, aspect > 0, selectionRect.width > 1 else {
+            refreshResolutionAndToolbarLayout()
+            needsDisplay = true
+            return
+        }
         // Reshape to the locked ratio, keeping area roughly similar, centered.
         let cur = selectionRect
         var w = cur.width
@@ -2588,6 +2596,7 @@ class OverlayView: NSView {
         rect.origin.x = max(bounds.minX, min(rect.origin.x, bounds.maxX - w))
         rect.origin.y = max(bounds.minY, min(rect.origin.y, bounds.maxY - h))
         selectionRect = rect
+        refreshResolutionAndToolbarLayout()
         refreshCursorAfterSelectionChange()
         needsDisplay = true
     }
@@ -4872,7 +4881,38 @@ class OverlayView: NSView {
                     }
                 }
             }
+
+            // The resolution box is positioned independently from the toolbar
+            // strips. During live selection/annotation resizing it can already
+            // be visible when this method runs, so make the side toolbar treat
+            // it as an obstacle too. Prefer moving the side toolbar farther to
+            // the right; that preserves the user's mental model of "actions sit
+            // beside the selection" when there is still room on that side.
+            if shouldShowResolutionBox(), resolutionBoxRect.width > 1, resolutionBoxRect.height > 1 {
+                let gap: CGFloat = 6
+                let avoidRect = resolutionBoxRect.insetBy(dx: -gap, dy: -gap)
+                let candidate = NSRect(x: rx, y: ry, width: rightSize.width, height: rightSize.height)
+                if candidate.intersects(avoidRect) {
+                    let pushRight = avoidRect.maxX + gap
+                    let pushLeft = avoidRect.minX - rightSize.width - gap
+                    let pushUp = avoidRect.maxY + gap
+                    let pushDown = avoidRect.minY - rightSize.height - gap
+
+                    if pushRight + rightSize.width <= bounds.maxX - 4 {
+                        rx = pushRight
+                    } else if pushLeft >= bounds.minX + 4 {
+                        rx = pushLeft
+                    } else if pushUp + rightSize.height <= bounds.maxY - 4 {
+                        ry = pushUp
+                    } else if pushDown >= bounds.minY + 4 {
+                        ry = pushDown
+                    }
+                }
+            }
+
             bx = max(bounds.minX + 4, min(bx, bounds.maxX - bottomSize.width - 4))
+            rx = max(bounds.minX + 4, min(rx, bounds.maxX - rightSize.width - 4))
+            ry = max(bounds.minY + 4, min(ry, bounds.maxY - rightSize.height - 4))
 
             bottomStrip.frame.origin = NSPoint(x: bx, y: by)
             rightStrip.frame.origin = NSPoint(x: rx, y: ry)
