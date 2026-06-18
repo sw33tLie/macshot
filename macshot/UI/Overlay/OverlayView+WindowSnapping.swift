@@ -8,6 +8,15 @@ extension OverlayView {
         let windowID: CGWindowID
     }
 
+    private struct WindowSnapCandidate {
+        let rect: NSRect
+        let windowID: CGWindowID
+        let owner: String
+        let ownerPID: Int
+        let name: String
+        let area: CGFloat
+    }
+
     private static func isQuickLookWindow(_ info: [String: Any]) -> Bool {
         let owner = ((info[kCGWindowOwnerName as String] as? String) ?? "").lowercased()
         let name = ((info[kCGWindowName as String] as? String) ?? "").lowercased()
@@ -28,6 +37,25 @@ extension OverlayView {
         return isQuickLookWindow(info)
     }
 
+    private static func isLikelyFinderQuickLookPreview(
+        _ candidate: WindowSnapCandidate,
+        frontmost: WindowSnapCandidate
+    ) -> Bool {
+        let owner = candidate.owner.lowercased()
+        if owner.contains("quicklook") || owner.contains("quick look") { return true }
+        guard owner == "finder", candidate.windowID != frontmost.windowID else { return false }
+
+        // Finder's Spacebar preview is commonly exposed as an untitled Finder
+        // window that is significantly tighter than the real Finder browser.
+        // Keep this narrow so normal same-app overlapping windows still respect
+        // z-order instead of snapping to covered smaller windows.
+        let name = candidate.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return name.isEmpty
+            && candidate.area < frontmost.area * 0.85
+            && candidate.rect.width >= 80
+            && candidate.rect.height >= 80
+    }
+
     /// Returns the frontmost visible window rect (in view coordinates) that contains `screenPoint`.
     /// `screenPoint` is in AppKit screen coordinates (origin bottom-left of main screen).
     static func windowRectOnBackground(
@@ -41,6 +69,9 @@ extension OverlayView {
             let windowList = CGWindowListCopyWindowInfo(
                 [.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]]
         else { return nil }
+
+        var frontmost: WindowSnapCandidate?
+        var sameOwnerCandidates: [WindowSnapCandidate] = []
 
         for info in windowList {
             guard isWindowSnapCandidate(info),
@@ -63,13 +94,45 @@ extension OverlayView {
                     width: appKitRect.width,
                     height: appKitRect.height
                 )
-                return WindowSnapResult(
+                let candidate = WindowSnapCandidate(
                     rect: viewRect.intersection(viewBounds),
-                    windowID: CGWindowID(winNum)
+                    windowID: CGWindowID(winNum),
+                    owner: (info[kCGWindowOwnerName as String] as? String) ?? "",
+                    ownerPID: (info[kCGWindowOwnerPID as String] as? Int) ?? 0,
+                    name: (info[kCGWindowName as String] as? String) ?? "",
+                    area: cgW * cgH,
                 )
+
+                if let frontmost {
+                    // CG's list is z-ordered, so never let a lower/covered
+                    // window from another app win just because it is smaller.
+                    // Finder Quick Look is the exception: Spacebar previews can
+                    // be reported as another Finder-owned layer-0 window, and
+                    // choosing the tighter same-owner rect matches the visible
+                    // preview without regressing normal inter-app overlap.
+                    if candidate.ownerPID == frontmost.ownerPID {
+                        sameOwnerCandidates.append(candidate)
+                    }
+                } else {
+                    frontmost = candidate
+                    sameOwnerCandidates = [candidate]
+                }
             }
         }
-        return nil
+        guard let frontmost else { return nil }
+
+        let owner = frontmost.owner.lowercased()
+        let best: WindowSnapCandidate
+        if owner == "finder" || owner.contains("quicklook") || owner.contains("quick look") {
+            best = sameOwnerCandidates
+                .filter { isLikelyFinderQuickLookPreview($0, frontmost: frontmost) }
+                .min(by: { $0.area < $1.area })
+                ?? frontmost
+        } else {
+            best = frontmost
+        }
+
+        return WindowSnapResult(rect: best.rect, windowID: best.windowID)
     }
 
     func drawWindowSnapHighlight() {

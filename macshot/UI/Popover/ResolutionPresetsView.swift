@@ -15,6 +15,7 @@ final class ResolutionPresetsView: NSView {
     var resolutionRows: [Row] = []
     var keepRatioOn = false
     var onToggleKeepRatio: ((Bool) -> Void)?
+    var showsFooter = true
     /// 0 = pixels, 1 = points.
     var unitIndex = 0
     var onPickUnit: ((Int) -> Void)?
@@ -32,7 +33,8 @@ final class ResolutionPresetsView: NSView {
         let rows = max(ratioRows.count, resolutionRows.count)
         let colsH = headerH + CGFloat(rows) * rowH
         let totalW = colW * 2 + midGap
-        let totalH = vPad + colsH + footerH + vPad
+        let activeFooterH = showsFooter ? footerH : 0
+        let totalH = vPad + colsH + activeFooterH + vPad
         frame.size = NSSize(width: totalW, height: totalH)
 
         // Column headers + rows (top-to-bottom).
@@ -46,14 +48,16 @@ final class ResolutionPresetsView: NSView {
         div.layer?.backgroundColor = ToolbarLayout.iconColor.withAlphaComponent(0.12).cgColor
         addSubview(div)
 
-        // Horizontal separator above the footer.
-        let sepY = footerH + vPad
-        let hsep = NSView(frame: NSRect(x: 12, y: sepY, width: totalW - 24, height: 1))
-        hsep.wantsLayer = true
-        hsep.layer?.backgroundColor = ToolbarLayout.iconColor.withAlphaComponent(0.12).cgColor
-        addSubview(hsep)
+        if showsFooter {
+            // Horizontal separator above the footer.
+            let sepY = footerH + vPad
+            let hsep = NSView(frame: NSRect(x: 12, y: sepY, width: totalW - 24, height: 1))
+            hsep.wantsLayer = true
+            hsep.layer?.backgroundColor = ToolbarLayout.iconColor.withAlphaComponent(0.12).cgColor
+            addSubview(hsep)
 
-        buildFooter(width: totalW)
+            buildFooter(width: totalW)
+        }
     }
 
     private func addColumn(rows: [Row], x: CGFloat, header: String, colsH: CGFloat, totalH: CGFloat) {

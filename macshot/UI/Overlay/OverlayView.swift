@@ -407,6 +407,8 @@ class OverlayView: NSView {
     /// Overlay-space frame of the resolution box (for chrome hit-test / cursor /
     /// zoom-badge anchoring). .zero when not shown.
     private var resolutionBoxRect: NSRect = .zero
+    private var preSelectionPresetButton: PreSelectionPresetButton?
+    private var preSelectionPresetButtonRect: NSRect = .zero
 
     // Zoom label
     private var zoomLabelRect: NSRect = .zero
@@ -861,6 +863,21 @@ class OverlayView: NSView {
         get { CGFloat(UserDefaults.standard.double(forKey: "keepAspectRatioValue")) }
         set { UserDefaults.standard.set(Double(newValue), forKey: "keepAspectRatioValue") }
     }
+    private enum PreSelectionPreset {
+        case freeform
+        case ratio(CGFloat)
+        case resolution(w: Int, h: Int)
+    }
+    private enum PreSelectionPresetStorageKind: Int {
+        case inherited = 0
+        case freeform = 1
+        case ratio = 2
+        case resolution = 3
+    }
+    private static let preSelectionPresetKindKey = "preSelectionResolutionPresetKind"
+    private static let preSelectionPresetAspectKey = "preSelectionResolutionPresetAspect"
+    private static let preSelectionPresetWidthKey = "preSelectionResolutionPresetWidth"
+    private static let preSelectionPresetHeightKey = "preSelectionResolutionPresetHeight"
     var snappedWindowID: CGWindowID? = nil
     /// Independently captured window image (with transparent corners) for beautify snap mode.
     var snappedWindowImage: NSImage? = nil
@@ -1162,6 +1179,9 @@ class OverlayView: NSView {
         super.resetCursorRects()
         if !isEditorMode && !isScrollCapturing && !isRecording && (state == .idle || state == .selecting) {
             addCursorRect(bounds, cursor: .crosshair)
+            if preSelectionPresetButton?.isHidden == false && preSelectionPresetButtonRect.width > 1 {
+                addCursorRect(preSelectionPresetButtonRect, cursor: .arrow)
+            }
         }
     }
 
@@ -1177,6 +1197,10 @@ class OverlayView: NSView {
         // Over the resolution box: let its own cursor rects (I-beam over fields,
         // arrow over the presets button) decide — don't override here.
         if resolutionBoxRect != .zero && resolutionBoxRect.contains(point) {
+            return
+        }
+        if preSelectionPresetButton?.isHidden == false && preSelectionPresetButtonRect.contains(point) {
+            NSCursor.arrow.set()
             return
         }
 
@@ -1400,6 +1424,9 @@ class OverlayView: NSView {
         }
         if updateCursorForChrome(at: point) { return true }
         if resolutionBoxRect != .zero && resolutionBoxRect.contains(point) { return true }
+        if preSelectionPresetButton?.isHidden == false && preSelectionPresetButtonRect.contains(point) {
+            return true
+        }
         if zoomLabelRect.contains(point) && zoomLabelOpacity > 0 && zoomInputField == nil {
             return true
         }
@@ -1553,13 +1580,20 @@ class OverlayView: NSView {
 
         // Helper text (capture instructions). Suppressed when the user has
         // enabled "Hide capture instructions" in Settings (issue #226).
-        if !UserDefaults.standard.bool(forKey: "hideCaptureInstructions") {
+        if UserDefaults.standard.bool(forKey: "hideCaptureInstructions") {
+            hidePreSelectionPresetButton()
+        } else {
             if state == .idle {
                 if screenshotImage != nil {
                     drawIdleHelperText()
+                } else {
+                    hidePreSelectionPresetButton()
                 }
             } else if state == .selecting {
+                hidePreSelectionPresetButton()
                 drawSelectingHelperText()
+            } else {
+                hidePreSelectionPresetButton()
             }
         }
 
@@ -2092,8 +2126,12 @@ class OverlayView: NSView {
 
         let lineSpacing: CGFloat = 6
         let padding: CGFloat = 14
-        let totalTextHeight = size1.height + lineSpacing + size2total.height
-        let bgWidth = max(size1.width, size2total.width) + padding * 2
+        let buttonSize = NSSize(width: 34, height: 28)
+        let buttonGap: CGFloat = 10
+        let showPresetButton = shouldShowPreSelectionPresetButton
+        let buttonBlockHeight = showPresetButton ? buttonSize.height + buttonGap : 0
+        let totalTextHeight = size1.height + lineSpacing + size2total.height + buttonBlockHeight
+        let bgWidth = max(size1.width, size2total.width, showPresetButton ? buttonSize.width : 0) + padding * 2
         let bgHeight = totalTextHeight + padding * 2
 
         let bgX = bounds.midX - bgWidth / 2
@@ -2103,8 +2141,19 @@ class OverlayView: NSView {
         NSColor.black.withAlphaComponent(0.65).setFill()
         NSBezierPath(roundedRect: bgRect, xRadius: 8, yRadius: 8).fill()
 
-        let textY1 = bgY + padding + size2total.height + lineSpacing
-        let textY2 = bgY + padding
+        if showPresetButton {
+            let buttonFrame = NSRect(
+                x: bounds.midX - buttonSize.width / 2,
+                y: bgY + padding,
+                width: buttonSize.width,
+                height: buttonSize.height)
+            showPreSelectionPresetButton(frame: buttonFrame)
+        } else {
+            hidePreSelectionPresetButton()
+        }
+
+        let textY2 = bgY + padding + buttonBlockHeight
+        let textY1 = textY2 + size2total.height + lineSpacing
 
         (line1 as NSString).draw(
             at: NSPoint(x: bounds.midX - size1.width / 2, y: textY1), withAttributes: attrs1)
@@ -2130,8 +2179,8 @@ class OverlayView: NSView {
         guard selectionRect.width >= 1, selectionRect.height >= 1 else { return }
 
         let text = autoQuickSaveMode
-            ? L("Space to move. Release to finish")
-            : L("Space to move. Release to annotate and edit")
+            ? L("Hold Space to move. Release to finish")
+            : L("Hold Space to move. Release to annotate and edit")
         let attrs = Self.helperTextAttrs
         let size = (text as NSString).size(withAttributes: attrs)
         let padding: CGFloat = 10
@@ -2393,6 +2442,11 @@ class OverlayView: NSView {
             return ResolutionPresetsView.Row(title: preset.label, isSelected: selected) { [weak self] in
                 PopoverHelper.dismiss()
                 guard let self else { return }
+                if let aspect = preset.aspectValue {
+                    self.setPreSelectionPreset(.ratio(aspect))
+                } else {
+                    self.setPreSelectionPreset(.freeform)
+                }
                 self.applyLockedAspect(preset.aspectValue)
                 self.persistRatioIfNeeded()
             }
@@ -2404,6 +2458,7 @@ class OverlayView: NSView {
             return ResolutionPresetsView.Row(title: preset.label, isSelected: (px.w == w && px.h == h)) { [weak self] in
                 PopoverHelper.dismiss()
                 guard let self else { return }
+                self.setPreSelectionPreset(.resolution(w: w, h: h))
                 self.applyLockedAspect(nil)
                 self.applyPixelSize(w: w, h: h)
                 self.persistRatioIfNeeded()
@@ -2420,6 +2475,176 @@ class OverlayView: NSView {
         view.onPickUnit = { [weak self] idx in
             self?.resolutionUnitIsPoints = (idx == 1)
             self?.refreshResolutionAndToolbarLayout()  // re-display W/H in the new unit
+        }
+        view.build()
+        PopoverHelper.show(view, size: view.preferredSize,
+                           relativeTo: anchor.bounds, of: anchor, preferredEdge: .maxY)
+    }
+
+    private var preSelectionPresetStorageKind: PreSelectionPresetStorageKind {
+        get {
+            PreSelectionPresetStorageKind(
+                rawValue: UserDefaults.standard.integer(forKey: Self.preSelectionPresetKindKey))
+                ?? .inherited
+        }
+        set { UserDefaults.standard.set(newValue.rawValue, forKey: Self.preSelectionPresetKindKey) }
+    }
+
+    private var activePreSelectionPreset: PreSelectionPreset {
+        switch preSelectionPresetStorageKind {
+        case .freeform:
+            return .freeform
+        case .ratio:
+            let aspect = CGFloat(UserDefaults.standard.double(forKey: Self.preSelectionPresetAspectKey))
+            return aspect > 0 ? .ratio(aspect) : .freeform
+        case .resolution:
+            let w = UserDefaults.standard.integer(forKey: Self.preSelectionPresetWidthKey)
+            let h = UserDefaults.standard.integer(forKey: Self.preSelectionPresetHeightKey)
+            return w > 0 && h > 0 ? .resolution(w: w, h: h) : .freeform
+        case .inherited:
+            return keepRatioForNextCaptures && persistedAspect > 0 ? .ratio(persistedAspect) : .freeform
+        }
+    }
+
+    private var activePreSelectionRatio: CGFloat? {
+        if case .ratio(let aspect) = activePreSelectionPreset, aspect > 0 { return aspect }
+        return nil
+    }
+
+    private var preSelectionPresetDisplayLabel: String? {
+        switch activePreSelectionPreset {
+        case .freeform:
+            return nil
+        case .ratio(let aspect):
+            return ResolutionPresetCatalog.ratios.first {
+                if case .ratio(_, let value) = $0 { return abs(value - aspect) < 0.001 }
+                return false
+            }?.label ?? String(format: "%.2f : 1", aspect)
+        case .resolution(let w, let h):
+            return ResolutionPresetCatalog.resolutions.first {
+                if case .resolution(_, let presetW, let presetH) = $0 {
+                    return presetW == w && presetH == h
+                }
+                return false
+            }?.label ?? "\(w) × \(h)"
+        }
+    }
+
+    private var shouldShowPreSelectionPresetButton: Bool {
+        state == .idle
+            && screenshotImage != nil
+            && !isEditorMode
+            && !isRecording
+            && !autoOCRMode
+            && remoteSelectionRect.width < 1
+            && remoteSelectionRect.height < 1
+    }
+
+    private func showPreSelectionPresetButton(frame: NSRect) {
+        let button: PreSelectionPresetButton
+        if let existing = preSelectionPresetButton {
+            button = existing
+        } else {
+            button = PreSelectionPresetButton()
+            button.target = self
+            button.action = #selector(preSelectionPresetButtonClicked(_:))
+            preSelectionPresetButton = button
+        }
+
+        if button.superview !== self {
+            button.removeFromSuperview()
+            addSubview(button)
+        }
+
+        preSelectionPresetButtonRect = frame
+        button.frame = frame
+        let label = preSelectionPresetDisplayLabel
+        let title = L("Aspect ratio & resolution presets")
+        button.update(active: label != nil, tooltip: label.map { "\(title): \($0)" } ?? title)
+        button.isHidden = false
+    }
+
+    private func hidePreSelectionPresetButton() {
+        preSelectionPresetButton?.isHidden = true
+        preSelectionPresetButtonRect = .zero
+    }
+
+    @objc private func preSelectionPresetButtonClicked(_ sender: NSButton) {
+        showPreSelectionResolutionPresets(from: sender)
+    }
+
+    private func setPreSelectionPreset(_ preset: PreSelectionPreset) {
+        switch preset {
+        case .freeform:
+            preSelectionPresetStorageKind = .freeform
+            lockedAspect = nil
+        case .ratio(let aspect):
+            preSelectionPresetStorageKind = .ratio
+            UserDefaults.standard.set(Double(aspect), forKey: Self.preSelectionPresetAspectKey)
+            lockedAspect = aspect
+        case .resolution(let w, let h):
+            preSelectionPresetStorageKind = .resolution
+            UserDefaults.standard.set(w, forKey: Self.preSelectionPresetWidthKey)
+            UserDefaults.standard.set(h, forKey: Self.preSelectionPresetHeightKey)
+            lockedAspect = nil
+        }
+        if state == .selected {
+            refreshResolutionAndToolbarLayout()
+        }
+        preSelectionPresetButton?.update(
+            active: preSelectionPresetDisplayLabel != nil,
+            tooltip: preSelectionPresetDisplayLabel.map {
+                "\(L("Aspect ratio & resolution presets")): \($0)"
+            } ?? L("Aspect ratio & resolution presets"))
+        needsDisplay = true
+    }
+
+    private func showPreSelectionResolutionPresets(from anchor: NSView) {
+        if PopoverHelper.isVisible || PopoverHelper.wasRecentlyDismissed() {
+            PopoverHelper.dismiss()
+            return
+        }
+
+        let activePreset = activePreSelectionPreset
+        let view = ResolutionPresetsView()
+        view.showsFooter = false
+        view.ratioRows = ResolutionPresetCatalog.ratios.map { preset in
+            let selected: Bool
+            switch (preset, activePreset) {
+            case (.freeform, .freeform):
+                selected = true
+            case (.ratio(_, let value), .ratio(let active)):
+                selected = abs(value - active) < 0.001
+            default:
+                selected = false
+            }
+            return ResolutionPresetsView.Row(title: preset.label, isSelected: selected) { [weak self] in
+                PopoverHelper.dismiss()
+                guard let self else { return }
+                switch preset {
+                case .freeform:
+                    self.setPreSelectionPreset(.freeform)
+                case .ratio(_, let value):
+                    self.setPreSelectionPreset(.ratio(value))
+                default:
+                    break
+                }
+            }
+        }
+        view.resolutionRows = ResolutionPresetCatalog.resolutions.map { preset in
+            guard case .resolution(_, let w, let h) = preset else {
+                return ResolutionPresetsView.Row(title: preset.label, isSelected: false, action: {})
+            }
+            let selected: Bool
+            if case .resolution(let activeW, let activeH) = activePreset {
+                selected = activeW == w && activeH == h
+            } else {
+                selected = false
+            }
+            return ResolutionPresetsView.Row(title: preset.label, isSelected: selected) { [weak self] in
+                PopoverHelper.dismiss()
+                self?.setPreSelectionPreset(.resolution(w: w, h: h))
+            }
         }
         view.build()
         PopoverHelper.show(view, size: view.preferredSize,
@@ -5137,6 +5362,9 @@ class OverlayView: NSView {
         }
 
         // Note: toolbar strips and options row are routed by hitTest() — they never reach here
+        if preSelectionPresetButton?.isHidden == false && preSelectionPresetButtonRect.contains(point) {
+            return
+        }
 
         // Control-click = right-click for color sampler (supports BetterTouchTool and other tools
         // that simulate right-click via control-click instead of rightMouseDown)
@@ -5348,7 +5576,6 @@ class OverlayView: NSView {
             // work (#154). Treat outside clicks as a no-op once we have a
             // committed selection; ESC still cancels deliberately.
             return
-            needsDisplay = true
 
         case .selecting:
             break
@@ -6093,10 +6320,7 @@ class OverlayView: NSView {
         if selectionRect.width > 5 || selectionRect.height > 5 {
             // Real drag — use drawn rect as-is
             state = .selected
-            // If the user chose to keep a ratio for future captures, snap this
-            // fresh selection to it (drag freely, lock on release).
-            applyPersistedRatioIfNeeded()
-            if let a = lockedAspect, a > 0 { applyLockedAspect(a) }
+            applyPreSelectionLockAfterSelection()
             if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode { showToolbars = true }
             overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
         } else if windowSnapEnabled, let snapRect = hoveredWindowRect, !snapRect.isEmpty {
@@ -6159,6 +6383,15 @@ class OverlayView: NSView {
         needsDisplay = true
     }
 
+    private func applyPreSelectionLockAfterSelection() {
+        switch activePreSelectionPreset {
+        case .ratio(let aspect):
+            lockedAspect = aspect > 0 ? aspect : nil
+        case .freeform, .resolution:
+            lockedAspect = nil
+        }
+    }
+
     /// Update `selectionRect` from the anchor at `selectionStart` to the
     /// current cursor point. Honors Shift (constrain to square) and Space
     /// (reposition anchor). Shared between drag-to-select (mouseDragged)
@@ -6172,15 +6405,55 @@ class OverlayView: NSView {
             selectionStart.y += dy
             spaceRepositionLast = point
         }
+
+        if case .resolution(let pxW, let pxH) = activePreSelectionPreset {
+            selectionRect = fixedPreSelectionRect(centeredAt: point, pxW: pxW, pxH: pxH)
+            overlayDelegate?.overlayViewSelectionDidChange(selectionRect)
+            needsDisplay = true
+            return
+        }
+
         let rawW = abs(point.x - selectionStart.x)
         let rawH = abs(point.y - selectionStart.y)
-        let w = max(1, shiftHeld ? min(rawW, rawH) : rawW)
-        let h = max(1, shiftHeld ? min(rawW, rawH) : rawH)
+        var w = max(1, rawW)
+        var h = max(1, rawH)
+        if let aspect = activePreSelectionRatio, aspect > 0 {
+            if rawW / max(rawH, 1) > aspect {
+                w = max(1, rawH * aspect)
+                h = max(1, rawH)
+            } else {
+                w = max(1, rawW)
+                h = max(1, rawW / aspect)
+            }
+        } else if shiftHeld {
+            let side = max(1, min(rawW, rawH))
+            w = side
+            h = side
+        }
+
         let x = selectionStart.x < point.x ? selectionStart.x : selectionStart.x - w
         let y = selectionStart.y < point.y ? selectionStart.y : selectionStart.y - h
         selectionRect = NSRect(x: x, y: y, width: w, height: h)
         overlayDelegate?.overlayViewSelectionDidChange(selectionRect)
         needsDisplay = true
+    }
+
+    private func fixedPreSelectionRect(centeredAt point: NSPoint, pxW: Int, pxH: Int) -> NSRect {
+        let scale = window?.backingScaleFactor ?? 2.0
+        var w = CGFloat(max(1, pxW)) / scale
+        var h = CGFloat(max(1, pxH)) / scale
+
+        if w > bounds.width || h > bounds.height {
+            let s = min(bounds.width / w, bounds.height / h)
+            w *= s
+            h *= s
+        }
+
+        var x = point.x - w / 2
+        var y = point.y - h / 2
+        x = max(bounds.minX, min(x, bounds.maxX - w))
+        y = max(bounds.minY, min(y, bounds.maxY - h))
+        return NSRect(x: x, y: y, width: w, height: h)
     }
 
     /// mouseMoved entry point when the right-click-anchored mode is active.
@@ -6198,6 +6471,7 @@ class OverlayView: NSView {
         isAnchoredSelecting = false
         if selectionRect.width > 5 || selectionRect.height > 5 {
             state = .selected
+            applyPreSelectionLockAfterSelection()
             if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode {
                 showToolbars = true
             }
@@ -8911,8 +9185,8 @@ class OverlayView: NSView {
         resolutionBox?.removeFromSuperview()
         resolutionBox = nil
         resolutionBoxRect = .zero
-        // Keep the locked ratio across captures only if the user opted in.
-        lockedAspect = keepRatioForNextCaptures ? lockedAspect : nil
+        hidePreSelectionPresetButton()
+        lockedAspect = activePreSelectionRatio
         isResizingAnnotation = false
         loupeCursorPoint = .zero
         colorSamplerPoint = .zero
@@ -9027,5 +9301,89 @@ private class TooltipBackgroundView: NSView {
         NSBezierPath(roundedRect: bounds, xRadius: 4, yRadius: 4).fill()
         let pad: CGFloat = 6
         (text as NSString).draw(at: NSPoint(x: pad, y: pad / 2), withAttributes: attrs)
+    }
+}
+
+/// Compact icon-only control shown in the pre-selection helper. It opens the
+/// same ratio/resolution presets as the selected-area size control without
+/// turning the idle helper into a full toolbar.
+private final class PreSelectionPresetButton: NSButton {
+    private var hovered = false
+    private var activePreset = false
+    private var trackingArea: NSTrackingArea?
+
+    init() {
+        super.init(frame: .zero)
+        isBordered = false
+        bezelStyle = .regularSquare
+        imagePosition = .imageOnly
+        imageScaling = .scaleProportionallyDown
+        focusRingType = .none
+        setButtonType(.momentaryChange)
+        if #available(macOS 11.0, *) {
+            let symbol = NSImage(systemSymbolName: "aspectratio", accessibilityDescription: nil)
+                ?? NSImage(systemSymbolName: "rectangle.dashed", accessibilityDescription: nil)
+            symbol?.isTemplate = true
+            image = symbol
+        }
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    func update(active: Bool, tooltip: String) {
+        activePreset = active
+        toolTip = tooltip
+        contentTintColor = active ? ToolbarLayout.accentColor : ToolbarLayout.iconColor.withAlphaComponent(0.88)
+        needsDisplay = true
+    }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        if let trackingArea { removeTrackingArea(trackingArea) }
+        let area = NSTrackingArea(
+            rect: bounds,
+            options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
+            owner: self,
+            userInfo: nil)
+        addTrackingArea(area)
+        trackingArea = area
+    }
+
+    override func mouseEntered(with event: NSEvent) {
+        hovered = true
+        needsDisplay = true
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        hovered = false
+        needsDisplay = true
+    }
+
+    override func resetCursorRects() {
+        addCursorRect(bounds, cursor: .arrow)
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        let rect = bounds.insetBy(dx: 0.5, dy: 0.5)
+        let bg: NSColor
+        if isHighlighted {
+            bg = ToolbarLayout.accentColor.withAlphaComponent(0.28)
+        } else if hovered {
+            bg = ToolbarLayout.iconColor.withAlphaComponent(0.14)
+        } else {
+            bg = NSColor.white.withAlphaComponent(0.07)
+        }
+        bg.setFill()
+        NSBezierPath(roundedRect: rect, xRadius: 6, yRadius: 6).fill()
+
+        let stroke = activePreset
+            ? ToolbarLayout.accentColor.withAlphaComponent(0.85)
+            : ToolbarLayout.iconColor.withAlphaComponent(0.18)
+        stroke.setStroke()
+        let border = NSBezierPath(roundedRect: rect, xRadius: 6, yRadius: 6)
+        border.lineWidth = activePreset ? 1.3 : 1.0
+        border.stroke()
+
+        super.draw(dirtyRect)
     }
 }
