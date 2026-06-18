@@ -8,6 +8,26 @@ extension OverlayView {
         let windowID: CGWindowID
     }
 
+    private static func isQuickLookWindow(_ info: [String: Any]) -> Bool {
+        let owner = ((info[kCGWindowOwnerName as String] as? String) ?? "").lowercased()
+        let name = ((info[kCGWindowName as String] as? String) ?? "").lowercased()
+        return owner.contains("quicklook")
+            || owner.contains("quick look")
+            || name.contains("quicklook")
+            || name.contains("quick look")
+    }
+
+    private static func isWindowSnapCandidate(_ info: [String: Any]) -> Bool {
+        guard let layer = info[kCGWindowLayer as String] as? Int else { return false }
+        if layer == 0 { return true }
+
+        // Finder's Spacebar preview is rendered by a Quick Look helper/panel,
+        // not always as a regular layer-0 app window. Keep the broad nonzero
+        // layer filter for menus/tooltips, but allow this specific visible
+        // preview window through so it can be snapped like a normal window.
+        return isQuickLookWindow(info)
+    }
+
     /// Returns the frontmost visible window rect (in view coordinates) that contains `screenPoint`.
     /// `screenPoint` is in AppKit screen coordinates (origin bottom-left of main screen).
     static func windowRectOnBackground(
@@ -23,7 +43,7 @@ extension OverlayView {
         else { return nil }
 
         for info in windowList {
-            guard let layer = info[kCGWindowLayer as String] as? Int, layer == 0,
+            guard isWindowSnapCandidate(info),
                 let boundsDict = info[kCGWindowBounds as String] as? [String: CGFloat],
                 let winNum = info[kCGWindowNumber as String] as? Int,
                 winNum != overlayWindowNumber

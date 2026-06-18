@@ -396,10 +396,7 @@ class OverlayView: NSView {
     private let bottomChrome = OverlayChromePresenter(cornerRadius: 6)
     private let rightChrome = OverlayChromePresenter(cornerRadius: 6)
     private let optionsChrome = OverlayChromePresenter(cornerRadius: 6)
-    private let resolutionChrome = OverlayChromePresenter(cornerRadius: 6)
-    /// Keep the editable resolution box in the overlay window. In a keyable glass
-    /// child panel, AppKit brightens the whole NSGlassEffectView while typing.
-    private var usesResolutionGlassChrome: Bool { false }
+    private let resolutionChrome = OverlayChromePresenter(cornerRadius: 6, keyCapable: true)
     /// Intended overlay-space rect of the options row (its live frame becomes
     /// panel-local when glass-hosted). .zero when the row is hidden.
     private var optionsRowRect: NSRect = .zero
@@ -2345,7 +2342,7 @@ class OverlayView: NSView {
         box.setDimensions(w: px.w, h: px.h)
         box.setActiveRatioLabel(activeRatioLabel, locked: lockedAspect != nil)
 
-        if usesGlassChrome && usesResolutionGlassChrome {
+        if usesGlassChrome {
             // Lift into a glass chrome panel positioned at the screen rect.
             box.hostedInGlassPanel = true
             resolutionChrome.present(box, overlayRect: frame, visible: true, glass: true, in: self)

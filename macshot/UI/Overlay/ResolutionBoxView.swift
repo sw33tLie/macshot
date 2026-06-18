@@ -209,8 +209,9 @@ final class ResolutionBoxView: NSView, NSTextFieldDelegate, ChromeContent {
 
 /// A number field may enter editing from a direct mouse click, without becoming
 /// a stray first responder during overlay keyboard handling.
-private final class ResolutionNumberField: NSTextField {
+private final class ResolutionNumberField: NSTextField, PanelKeyRequestingView {
     private var acceptingMouseFocus = false
+    var requestsPanelKeyForMouseDown: Bool { true }
 
     override var needsPanelToBecomeKey: Bool { false }
 
