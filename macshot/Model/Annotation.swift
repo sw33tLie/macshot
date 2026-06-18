@@ -2030,8 +2030,10 @@ class Annotation {
         guard rect.width > 1, rect.height > 1 else { return }
         let border = NSBezierPath(rect: rect)
         border.lineWidth = 1.5
-        let pattern: [CGFloat] = [4, 4]
-        border.setLineDash(pattern, count: 2, phase: 0)
+        // Border style follows lineStyle: .solid = clean rect, .dashed = dashes.
+        if lineStyle == .dashed {
+            border.setLineDash([4, 4], count: 2, phase: 0)
+        }
         NSColor.white.withAlphaComponent(0.6).setStroke()
         border.stroke()
     }

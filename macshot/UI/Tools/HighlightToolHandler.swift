@@ -12,6 +12,8 @@ final class HighlightToolHandler: AnnotationToolHandler {
     let tool: AnnotationTool = .highlight
 
     static let dimOpacityKey = "highlightDimOpacity"
+    /// Whether the highlight rect border is dashed (true, default) or solid.
+    static let dashedBorderKey = "highlightBorderDashed"
 
     func start(at point: NSPoint, canvas: AnnotationCanvas) -> Annotation? {
         let annotation = Annotation(
@@ -25,6 +27,10 @@ final class HighlightToolHandler: AnnotationToolHandler {
         )
         let stored = UserDefaults.standard.object(forKey: Self.dimOpacityKey) as? Double
         annotation.dimOpacity = stored.map { CGFloat($0) } ?? 0.55
+        // Default to a dashed border (matches the original look) unless the user
+        // switched to solid.
+        let dashed = UserDefaults.standard.object(forKey: Self.dashedBorderKey) as? Bool ?? true
+        annotation.lineStyle = dashed ? .dashed : .solid
         return annotation
     }
 
