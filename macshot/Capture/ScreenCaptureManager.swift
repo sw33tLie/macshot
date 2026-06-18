@@ -313,14 +313,18 @@ class ScreenCaptureManager {
     /// On macOS 14+, uses `desktopIndependentWindow` filter for clean transparent background.
     /// On macOS 12–13, uses `CGWindowListCreateImage` targeting the specific window.
     static func captureWindow(windowID: CGWindowID, screen: NSScreen) async -> CGImage? {
+        func captureViaWindowList() -> CGImage? {
+            CGWindowListCreateImage(.null, .optionIncludingWindow, windowID, .bestResolution)
+        }
+
         if #available(macOS 14.0, *) {
             guard
                 let content = try? await SCShareableContent.excludingDesktopWindows(
                     false, onScreenWindowsOnly: true)
-            else { return nil }
+            else { return captureViaWindowList() }
             guard
                 let scWindow = content.windows.first(where: { CGWindowID($0.windowID) == windowID })
-            else { return nil }
+            else { return captureViaWindowList() }
 
             let filter: SCContentFilter
             if #available(macOS 14.2, *) {
@@ -333,7 +337,7 @@ class ScreenCaptureManager {
                             as? CGDirectDisplayID
                         return screenID != nil && $0.displayID == screenID!
                     }) ?? content.displays.first
-                else { return nil }
+                else { return captureViaWindowList() }
                 let otherWindows = content.windows.filter { CGWindowID($0.windowID) != windowID }
                 filter = SCContentFilter(display: display, excludingWindows: otherWindows)
             }
@@ -349,12 +353,11 @@ class ScreenCaptureManager {
                 let image = try? await SCScreenshotManager.captureImage(
                     contentFilter: filter, configuration: config
                 )
-            else { return nil }
+            else { return captureViaWindowList() }
             return image
         } else {
             // macOS 12.3–13.x: CGWindowListCreateImage targeting the specific window
-            return CGWindowListCreateImage(
-                .null, .optionIncludingWindow, windowID, .bestResolution)
+            return captureViaWindowList()
         }
     }
 }
