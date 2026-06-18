@@ -356,6 +356,10 @@ class OverlayView: NSView {
     // Text editing — state managed by TextEditingController
     let textEditor = TextEditingController()
     var textEditView: NSTextView? { textEditor.textView }
+    /// True for the duration of a single mouseDown that committed an open text
+    /// editor, so the text tool dismisses it without placing a new field at the
+    /// click point. Reset at the end of mouseDown.
+    private var justDismissedTextEditor = false
 
     // Text box resize state (stays here — tied to mouse drag handling)
     private var isResizingTextBox: Bool = false
@@ -4273,8 +4277,32 @@ class OverlayView: NSView {
 
         let padded = baseRect.insetBy(dx: -4, dy: -4)
 
-        // Generic outline glow — works for all annotation types, single and multi-select
-        drawAnnotationOutlineGlow(annotation)
+        // Text: a glyph-tracing glow looks noisy. Show a plain solid selection
+        // rectangle connecting the handles instead. Other annotations keep the
+        // shape-following outline glow.
+        if annotation.tool == .text {
+            let rotated = annotation.rotation != 0 && annotation.supportsRotation
+            if rotated {
+                // Draw the rect rotated about the box center to match the text.
+                NSGraphicsContext.current?.cgContext.saveGState()
+                let center = NSPoint(x: baseRect.midX, y: baseRect.midY)
+                let xform = NSAffineTransform()
+                xform.translateX(by: center.x, yBy: center.y)
+                xform.rotate(byRadians: annotation.rotation)
+                xform.translateX(by: -center.x, yBy: -center.y)
+                xform.concat()
+            }
+            let border = NSBezierPath(rect: padded)
+            border.lineWidth = 1.5
+            ToolbarLayout.accentColor.setStroke()
+            border.stroke()
+            if rotated {
+                NSGraphicsContext.current?.cgContext.restoreGState()
+            }
+        } else {
+            // Generic outline glow — works for all annotation types, single and multi-select
+            drawAnnotationOutlineGlow(annotation)
+        }
 
         // Multi-select: no handles, rotate, or delete buttons
         guard fullControls else { return }
@@ -5214,6 +5242,7 @@ class OverlayView: NSView {
 
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
+        justDismissedTextEditor = false  // reset per click; set below if we commit one
 
         // Anchored selection commit: a left-click while the right-click-
         // anchored tracker is live finalizes the selection and returns to
@@ -5351,6 +5380,10 @@ class OverlayView: NSView {
         let isTextFormattingClick =
             textEditView != nil && currentTool == .text
             && ((toolOptionsRowView?.frame.contains(point) ?? false))
+        // A click that dismisses an open text editor should NOT also place a new
+        // text box where it landed — remember that we just committed one so the
+        // text-tool dispatch (startAnnotation) skips creating a new field.
+        justDismissedTextEditor = textEditor.isEditing && !isTextFormattingClick
         if !isTextFormattingClick {
             commitTextFieldIfNeeded()
         }
@@ -5627,7 +5660,21 @@ class OverlayView: NSView {
                         size: NSSize(width: origEnd.x - origStart.x, height: origEnd.y - origStart.y))
                     var newRect = origRect
                     let minW: CGFloat = 40
-                    let minH: CGFloat = max(20, annotation.fontSize + 8)
+                    // Minimum height must fit the actual rendered line height
+                    // (ascent+descent+leading ≈ 1.2–1.3× font size), not just the
+                    // point size, or the text clips at the bottom and floats with
+                    // a gap at the top. Measure it from the string when available.
+                    let textInset: CGFloat = 4
+                    let lineHeight: CGFloat
+                    if let attrStr = annotation.attributedText, attrStr.length > 0 {
+                        lineHeight = ceil(attrStr.boundingRect(
+                            with: NSSize(width: CGFloat.greatestFiniteMagnitude,
+                                         height: CGFloat.greatestFiniteMagnitude),
+                            options: [.usesLineFragmentOrigin, .usesFontLeading]).height)
+                    } else {
+                        lineHeight = ceil(annotation.fontSize * 1.3)
+                    }
+                    let minH: CGFloat = max(20, lineHeight + textInset * 2)
 
                     switch annotationResizeHandle {
                     case .right: newRect.size.width = max(minW, origRect.width + dx)
@@ -7706,8 +7753,10 @@ class OverlayView: NSView {
                         existingFrame: existingAnn.textDrawRect)
                     cachedCompositedImage = nil
                 }
-            } else {
-                // Click on empty space → new text annotation, immediately enter edit
+            } else if !justDismissedTextEditor {
+                // Click on empty space → new text annotation, immediately enter
+                // edit. Skipped when this same click just dismissed an open editor
+                // (clicking out should close it, not place a new field).
                 showTextField(at: point)
             }
         }
