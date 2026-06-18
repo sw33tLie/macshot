@@ -18,6 +18,8 @@
 "Capture Area" = "Tangkap Area";
 "Capture Screen" = "Tangkap Layar";
 "Capture OCR" = "Tangkap OCR";
+"Capture OCR & QR" = "Tangkap OCR & QR";
+"Capture area and read text/QR codes" = "Tangkap area dan baca teks/kode QR";
 "Quick Capture" = "Tangkap Cepat";
 "Scroll Capture" = "Tangkap Gulir";
 "Capture Last Area" = "Tangkap Area Terakhir";
@@ -58,10 +60,13 @@
 /* Editor Top Bar */
 "Zoom In" = "Perbesar";
 "Zoom Out" = "Perkecil";
+"Zoom" = "Zoom";
 "Fit Canvas" = "Sesuaikan Kanvas";
 "Crop" = "Potong";
 "Flip Horizontal" = "Balik Horizontal";
 "Flip Vertical" = "Balik Vertikal";
+"Rotate Left" = "Putar Kiri";
+"Rotate Right" = "Putar Kanan";
 "Add Capture" = "Tambah Tangkapan";
 
 /* Toolbar - Tools */
@@ -97,8 +102,17 @@
 "OCR" = "OCR";
 "OCR Text" = "Teks OCR";
 "OCR (extract text)" = "OCR (ekstrak teks)";
+"OCR & QR" = "OCR & QR";
+"Run OCR & QR" = "Jalankan OCR & QR";
+"Text & QR Recognition" = "Pengenalan Teks & QR";
+"QR Code" = "Kode QR";
+"QR Codes" = "Kode QR";
+"Open Link" = "Buka Tautan";
 "Upload" = "Unggah";
 "Share" = "Bagikan";
+"Open With" = "Buka Dengan";
+"No Apps Available" = "Tidak Ada Aplikasi Tersedia";
+"No Share Services" = "Tidak Ada Layanan Berbagi";
 "Undo" = "Urungkan";
 "Redo" = "Ulangi";
 "Close" = "Tutup";
@@ -153,6 +167,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Klik jendela  ·  Seret untuk area kustom  ·  F untuk layar penuh";
 "Drag to select  ·  Click for full screen" = "Seret untuk memilih  ·  Klik untuk layar penuh";
 "Release to annotate and edit" = "Lepaskan untuk menganotasi dan mengedit";
+"Release to finish" = "Lepaskan untuk menyelesaikan";
+"Hold Space to move. Release to annotate and edit" = "Tahan Spasi untuk memindahkan. Lepaskan untuk menganotasi dan mengedit";
+"Hold Space to move. Release to finish" = "Tahan Spasi untuk memindahkan. Lepaskan untuk menyelesaikan";
 "Window snap: " = "Jepret jendela: ";
 "ON" = "AKTIF";
 "OFF" = "NONAKTIF";
@@ -162,6 +179,14 @@
 "Set color %@" = "Atur warna %@";
 "Draw something first to use the move tool." = "Gambar sesuatu terlebih dahulu untuk menggunakan alat pindah.";
 "Drag to reposition" = "Seret untuk memposisikan ulang";
+
+/* Aspect ratio & resolution presets */
+"Aspect ratio & resolution presets" = "Prasetel rasio aspek & resolusi";
+"Aspect ratio" = "Rasio aspek";
+"Resolution" = "Resolusi";
+"Freeform" = "Bebas";
+"Units" = "Unit";
+"Keep ratio for next captures" = "Pertahankan rasio untuk tangkapan berikutnya";
 
 /* Overlay - Popovers */
 "Format:" = "Format:";
@@ -192,6 +217,8 @@
 "Capture mouse cursor in screenshot" = "Tangkap kursor mouse di tangkapan layar";
 "Double-click selection to copy" = "Klik dua kali pilihan untuk menyalin";
 "Hide capture instructions" = "Sembunyikan petunjuk pengambilan tangkapan layar";
+"Disable shadow outside selection" = "Nonaktifkan bayangan di luar seleksi";
+"Show shortcuts in tooltips" = "Tampilkan pintasan di tooltip";
 "Use window title in saved filename" = "Gunakan judul jendela di nama file tersimpan";
 "Hide menu bar icon" = "Sembunyikan ikon bilah menu";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Tombol pintas tetap berfungsi. Untuk menampilkan ikon kembali, jalankan ulang macshot.";
@@ -228,7 +255,15 @@
 "Icon color:" = "Warna ikon:";
 "Background color:" = "Warna latar belakang:";
 "Reset" = "Atur Ulang";
+"Menu bar icon:" = "Ikon bilah menu:";
+"Custom symbol" = "Simbol kustom";
+"Default" = "Default";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "Masukkan nama SF Symbol apa pun (mis. camera.fill) atau pilih prasetel. Telusuri nama di aplikasi SF Symbols Apple. Nama yang tidak valid akan kembali ke ikon default.";
 "OCR Capture:" = "Tangkapan OCR:";
+"OCR & QR Capture:" = "Tangkapan OCR & QR:";
+"Save action:" = "Aksi simpan:";
+"Ask where to save" = "Tanya lokasi penyimpanan";
+"Save to default folder" = "Simpan ke folder default";
 "Show window + copy to clipboard" = "Tampilkan jendela + salin ke papan klip";
 "Show window only" = "Tampilkan jendela saja";
 "Copy to clipboard only" = "Salin ke papan klip saja";

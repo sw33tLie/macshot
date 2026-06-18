@@ -18,6 +18,8 @@
 "Capture Area" = "擷取區域";
 "Capture Screen" = "擷取螢幕";
 "Capture OCR" = "擷取 OCR";
+"Capture OCR & QR" = "擷取 OCR 與 QR";
+"Capture area and read text/QR codes" = "擷取區域並讀取文字／QR 條碼";
 "Quick Capture" = "快速擷取";
 "Scroll Capture" = "捲動擷取";
 "Capture Last Area" = "擷取上次區域";
@@ -58,10 +60,13 @@
 /* Editor Top Bar */
 "Zoom In" = "放大";
 "Zoom Out" = "縮小";
+"Zoom" = "縮放";
 "Fit Canvas" = "配合畫布大小";
 "Crop" = "裁切";
 "Flip Horizontal" = "水平翻轉";
 "Flip Vertical" = "垂直翻轉";
+"Rotate Left" = "向左旋轉";
+"Rotate Right" = "向右旋轉";
 "Add Capture" = "加入擷取";
 
 /* Toolbar - Tools */
@@ -97,6 +102,14 @@
 "OCR" = "OCR";
 "OCR Text" = "OCR 文字辨識";
 "OCR (extract text)" = "OCR（擷取文字）";
+"OCR & QR" = "OCR 與 QR";
+"Run OCR & QR" = "執行 OCR 與 QR";
+"Open Link" = "開啟連結";
+"Open With" = "開啟方式";
+"No Apps Available" = "沒有可用的 App";
+"No Share Services" = "沒有可用的分享服務";
+"QR Code" = "QR 條碼";
+"QR Codes" = "QR 條碼";
 "Upload" = "上傳";
 "Share" = "分享";
 "Undo" = "還原";
@@ -153,6 +166,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "點按視窗  ·  拖移以自訂區域  ·  F 全螢幕";
 "Drag to select  ·  Click for full screen" = "拖移以選取  ·  點按以全螢幕";
 "Release to annotate and edit" = "放開以標註與編輯";
+"Release to finish" = "放開以完成";
+"Hold Space to move. Release to annotate and edit" = "按住空白鍵以移動。放開以標註與編輯";
+"Hold Space to move. Release to finish" = "按住空白鍵以移動。放開以完成";
 "Window snap: " = "視窗吸附：";
 "ON" = "開";
 "OFF" = "關";
@@ -162,6 +178,14 @@
 "Set color %@" = "設定顏色 %@";
 "Draw something first to use the move tool." = "請先繪製內容再使用移動工具。";
 "Drag to reposition" = "拖移以重新定位";
+
+/* Resolution / Aspect Ratio Presets */
+"Aspect ratio & resolution presets" = "長寬比與解析度預設";
+"Aspect ratio" = "長寬比";
+"Resolution" = "解析度";
+"Freeform" = "自由形式";
+"Units" = "單位";
+"Keep ratio for next captures" = "為後續擷取保留比例";
 
 /* Overlay - Popovers */
 "Format:" = "格式：";
@@ -192,9 +216,15 @@
 "Capture mouse cursor in screenshot" = "在螢幕截圖中擷取滑鼠游標";
 "Double-click selection to copy" = "雙擊選取範圍以複製";
 "Hide capture instructions" = "隱藏截圖操作提示";
+"Disable shadow outside selection" = "停用選取範圍外的陰影";
+"Show shortcuts in tooltips" = "在工具提示中顯示快捷鍵";
 "Use window title in saved filename" = "在儲存的檔案名稱中使用視窗標題";
 "Hide menu bar icon" = "隱藏選單列圖像";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "快捷鍵仍可使用。若要再次顯示圖像，請重新啟動 macshot。";
+"Menu bar icon:" = "選單列圖像：";
+"Default" = "預設";
+"Custom symbol" = "自訂符號";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "輸入任何 SF Symbol 名稱（例如 camera.fill）或選擇預設。可在 Apple 的 SF Symbols App 中瀏覽名稱。無效的名稱將回復為預設圖像。";
 "Menu Bar Order" = "選單列順序";
 "Choose the order of capture actions in the macshot menu bar menu." = "選擇 macshot 選單列選單中擷取動作的順序。";
 "Move up" = "上移";
@@ -229,12 +259,16 @@
 "Background color:" = "背景顏色：";
 "Reset" = "重置";
 "OCR Capture:" = "OCR 擷取：";
+"OCR & QR Capture:" = "OCR 與 QR 擷取：";
 "Show window + copy to clipboard" = "顯示視窗 + 拷貝至剪貼簿";
 "Show window only" = "僅顯示視窗";
 "Copy to clipboard only" = "僅拷貝至剪貼簿";
 "Enter / Quick Capture:" = "Enter / 快速擷取：";
 "Save to file" = "儲存至檔案";
 "Save + copy to clipboard" = "儲存 + 拷貝至剪貼簿";
+"Save action:" = "儲存動作：";
+"Save to default folder" = "儲存至預設檔案夾";
+"Ask where to save" = "詢問儲存位置";
 "OCR Action" = "OCR 動作";
 
 /* Preferences - Shortcuts */
@@ -352,6 +386,7 @@
 
 /* OCR Window */
 "Text Recognition" = "文字辨識";
+"Text & QR Recognition" = "文字與 QR 辨識";
 "Translate to:" = "翻譯為：";
 "%d chars · %d words" = "%d 字元 · %d 詞";
 "Copy  ⌘↩" = "拷貝  ⌘↩";

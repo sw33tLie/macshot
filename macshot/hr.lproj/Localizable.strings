@@ -18,6 +18,8 @@
 "Capture Area" = "Snimi podrucje";
 "Capture Screen" = "Snimi zaslon";
 "Capture OCR" = "Snimi OCR";
+"Capture OCR & QR" = "Snimi OCR i QR";
+"Capture area and read text/QR codes" = "Snimi područje i očitaj tekst/QR kodove";
 "Quick Capture" = "Brzo snimanje";
 "Scroll Capture" = "Snimanje pomicanjem";
 "Capture Last Area" = "Snimi zadnje područje";
@@ -62,6 +64,9 @@
 "Crop" = "Izrezi";
 "Flip Horizontal" = "Okreni vodoravno";
 "Flip Vertical" = "Okreni okomito";
+"Rotate Left" = "Zakreni ulijevo";
+"Rotate Right" = "Zakreni udesno";
+"Zoom" = "Zumiranje";
 "Add Capture" = "Dodaj snimku";
 
 /* Toolbar - Tools */
@@ -86,6 +91,14 @@
 "Select & Edit" = "Odaberi i uredi";
 "Color" = "Boja";
 
+/* Aspect ratio & resolution presets */
+"Aspect ratio & resolution presets" = "Predlošci omjera i razlučivosti";
+"Aspect ratio" = "Omjer slike";
+"Resolution" = "Razlučivost";
+"Freeform" = "Slobodan oblik";
+"Units" = "Jedinice";
+"Keep ratio for next captures" = "Zadrži omjer za sljedeća snimanja";
+
 /* Toolbar - Actions */
 "Copy to Clipboard" = "Kopiraj u meduspremnik";
 "Save to File" = "Spremi u datoteku";
@@ -97,6 +110,15 @@
 "OCR" = "OCR";
 "OCR Text" = "OCR tekst";
 "OCR (extract text)" = "OCR (izdvoji tekst)";
+"OCR & QR" = "OCR i QR";
+"Run OCR & QR" = "Pokreni OCR i QR";
+"Text & QR Recognition" = "Prepoznavanje teksta i QR";
+"QR Code" = "QR kod";
+"QR Codes" = "QR kodovi";
+"Open Link" = "Otvori poveznicu";
+"Open With" = "Otvori pomoću";
+"No Apps Available" = "Nema dostupnih aplikacija";
+"No Share Services" = "Nema usluga dijeljenja";
 "Upload" = "Ucitaj";
 "Share" = "Podijeli";
 "Undo" = "Ponisti";
@@ -157,6 +179,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Klikni prozor  ·  Povuci za podrucje  ·  F za cijeli zaslon";
 "Drag to select  ·  Click for full screen" = "Povuci za odabir  ·  Klikni za cijeli zaslon";
 "Release to annotate and edit" = "Pusti za oznacavanje i uredivanje";
+"Release to finish" = "Pusti za završetak";
+"Hold Space to move. Release to annotate and edit" = "Držite Razmaknicu za pomicanje. Pustite za označavanje i uređivanje";
+"Hold Space to move. Release to finish" = "Držite Razmaknicu za pomicanje. Pustite za završetak";
 "Window snap: " = "Hvatanje prozora: ";
 "ON" = "UKLJ.";
 "OFF" = "ISKLJ.";
@@ -229,6 +254,7 @@
 "Background color:" = "Boja pozadine:";
 "Reset" = "Ponisti";
 "OCR Capture:" = "OCR snimanje:";
+"OCR & QR Capture:" = "OCR i QR snimanje:";
 "Show window + copy to clipboard" = "Prikazi prozor + kopiraj u meduspremnik";
 "Show window only" = "Samo prikazi prozor";
 "Copy to clipboard only" = "Samo kopiraj u meduspremnik";
@@ -236,6 +262,15 @@
 "Save to file" = "Spremi u datoteku";
 "Save + copy to clipboard" = "Spremi + kopiraj u meduspremnik";
 "OCR Action" = "OCR radnja";
+"Save action:" = "Radnja spremanja:";
+"Save to default folder" = "Spremi u zadanu mapu";
+"Ask where to save" = "Pitaj gdje spremiti";
+"Show shortcuts in tooltips" = "Prikaži prečace u opisima";
+"Disable shadow outside selection" = "Onemogući sjenu izvan odabira";
+"Menu bar icon:" = "Ikona u traci izbornika:";
+"Default" = "Zadano";
+"Custom symbol" = "Prilagođeni simbol";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "Unesite bilo koje SF Symbol ime (npr. camera.fill) ili odaberite predložak. Pregledajte imena u Apple SF Symbols aplikaciji. Nevažeća imena vraćaju se na zadanu ikonu.";
 
 /* Preferences - Shortcuts */
 "Keyboard Shortcuts" = "Tipkovni precaci";

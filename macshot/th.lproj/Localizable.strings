@@ -18,6 +18,8 @@
 "Capture Area" = "จับภาพพื้นที่";
 "Capture Screen" = "จับภาพหน้าจอ";
 "Capture OCR" = "จับภาพ OCR";
+"Capture OCR & QR" = "จับภาพ OCR และ QR";
+"Capture area and read text/QR codes" = "จับภาพพื้นที่และอ่านข้อความ/รหัส QR";
 "Quick Capture" = "จับภาพด่วน";
 "Scroll Capture" = "จับภาพแบบเลื่อน";
 "Capture Last Area" = "จับภาพพื้นที่ล่าสุด";
@@ -58,10 +60,13 @@
 /* Editor Top Bar */
 "Zoom In" = "ขยาย";
 "Zoom Out" = "ย่อ";
+"Zoom" = "ซูม";
 "Fit Canvas" = "พอดีกับผืนผ้าใบ";
 "Crop" = "ครอบตัด";
 "Flip Horizontal" = "พลิกแนวนอน";
 "Flip Vertical" = "พลิกแนวตั้ง";
+"Rotate Left" = "หมุนซ้าย";
+"Rotate Right" = "หมุนขวา";
 "Add Capture" = "เพิ่มภาพจับ";
 
 /* Toolbar - Tools */
@@ -97,6 +102,14 @@
 "OCR" = "OCR";
 "OCR Text" = "OCR ข้อความ";
 "OCR (extract text)" = "OCR (ดึงข้อความ)";
+"OCR & QR" = "OCR และ QR";
+"Run OCR & QR" = "เรียกใช้ OCR และ QR";
+"Open Link" = "เปิดลิงก์";
+"Open With" = "เปิดด้วย";
+"No Apps Available" = "ไม่มีแอปที่ใช้ได้";
+"No Share Services" = "ไม่มีบริการแชร์";
+"QR Code" = "รหัส QR";
+"QR Codes" = "รหัส QR";
 "Upload" = "อัปโหลด";
 "Share" = "แชร์";
 "Undo" = "เลิกทำ";
@@ -153,6 +166,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "คลิกที่หน้าต่าง  ·  ลากเพื่อเลือกพื้นที่  ·  F เพื่อเต็มจอ";
 "Drag to select  ·  Click for full screen" = "ลากเพื่อเลือก  ·  คลิกเพื่อเต็มจอ";
 "Release to annotate and edit" = "ปล่อยเพื่อใส่คำอธิบายและแก้ไข";
+"Release to finish" = "ปล่อยเพื่อเสร็จสิ้น";
+"Hold Space to move. Release to annotate and edit" = "กด Space ค้างเพื่อย้าย ปล่อยเพื่อใส่คำอธิบายและแก้ไข";
+"Hold Space to move. Release to finish" = "กด Space ค้างเพื่อย้าย ปล่อยเพื่อเสร็จสิ้น";
 "Window snap: " = "จับหน้าต่าง: ";
 "ON" = "เปิด";
 "OFF" = "ปิด";
@@ -162,6 +178,14 @@
 "Set color %@" = "ตั้งสี %@";
 "Draw something first to use the move tool." = "วาดบางอย่างก่อนเพื่อใช้เครื่องมือย้าย";
 "Drag to reposition" = "ลากเพื่อจัดตำแหน่งใหม่";
+
+/* Resolution / Aspect Ratio Presets */
+"Aspect ratio & resolution presets" = "ค่าที่ตั้งไว้ของอัตราส่วนภาพและความละเอียด";
+"Aspect ratio" = "อัตราส่วนภาพ";
+"Resolution" = "ความละเอียด";
+"Freeform" = "อิสระ";
+"Units" = "หน่วย";
+"Keep ratio for next captures" = "คงอัตราส่วนสำหรับการจับภาพครั้งถัดไป";
 
 /* Overlay - Popovers */
 "Format:" = "รูปแบบ:";
@@ -192,9 +216,15 @@
 "Capture mouse cursor in screenshot" = "จับภาพเคอร์เซอร์เมาส์ในภาพหน้าจอ";
 "Double-click selection to copy" = "ดับเบิลคลิกที่พื้นที่ที่เลือกเพื่อคัดลอก";
 "Hide capture instructions" = "ซ่อนคำแนะนำการจับภาพหน้าจอ";
+"Disable shadow outside selection" = "ปิดเงานอกพื้นที่ที่เลือก";
+"Show shortcuts in tooltips" = "แสดงปุ่มลัดในคำแนะนำเครื่องมือ";
 "Use window title in saved filename" = "ใช้ชื่อหน้าต่างในชื่อไฟล์ที่บันทึก";
 "Hide menu bar icon" = "ซ่อนไอคอนแถบเมนู";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "ปุ่มลัดยังใช้งานได้ เปิด macshot ใหม่เพื่อแสดงไอคอนอีกครั้ง";
+"Menu bar icon:" = "ไอคอนแถบเมนู:";
+"Default" = "ค่าเริ่มต้น";
+"Custom symbol" = "สัญลักษณ์กำหนดเอง";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "ป้อนชื่อ SF Symbol ใดก็ได้ (เช่น camera.fill) หรือเลือกค่าที่ตั้งไว้ ดูชื่อได้ในแอป SF Symbols ของ Apple ชื่อที่ไม่ถูกต้องจะกลับไปใช้ไอคอนเริ่มต้น";
 "Menu Bar Order" = "ลำดับแถบเมนู";
 "Choose the order of capture actions in the macshot menu bar menu." = "เลือกลำดับของการดำเนินการจับภาพในเมนูแถบเมนูของ macshot";
 "Move up" = "เลื่อนขึ้น";
@@ -229,12 +259,16 @@
 "Background color:" = "สีพื้นหลัง:";
 "Reset" = "รีเซ็ต";
 "OCR Capture:" = "การจับภาพ OCR:";
+"OCR & QR Capture:" = "การจับภาพ OCR และ QR:";
 "Show window + copy to clipboard" = "แสดงหน้าต่าง + คัดลอกไปยังคลิปบอร์ด";
 "Show window only" = "แสดงหน้าต่างเท่านั้น";
 "Copy to clipboard only" = "คัดลอกไปยังคลิปบอร์ดเท่านั้น";
 "Enter / Quick Capture:" = "Enter / จับภาพด่วน:";
 "Save to file" = "บันทึกเป็นไฟล์";
 "Save + copy to clipboard" = "บันทึก + คัดลอกไปยังคลิปบอร์ด";
+"Save action:" = "การดำเนินการบันทึก:";
+"Save to default folder" = "บันทึกไปยังโฟลเดอร์เริ่มต้น";
+"Ask where to save" = "ถามตำแหน่งที่จะบันทึก";
 "OCR Action" = "การดำเนินการ OCR";
 
 /* Preferences - Shortcuts */
@@ -352,6 +386,7 @@
 
 /* OCR Window */
 "Text Recognition" = "การรู้จำข้อความ";
+"Text & QR Recognition" = "การรู้จำข้อความและ QR";
 "Translate to:" = "แปลเป็น:";
 "%d chars · %d words" = "%d ตัวอักษร · %d คำ";
 "Copy  ⌘↩" = "คัดลอก  ⌘↩";

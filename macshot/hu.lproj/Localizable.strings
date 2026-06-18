@@ -18,6 +18,8 @@
 "Capture Area" = "Terület rögzítése";
 "Capture Screen" = "Képernyő rögzítése";
 "Capture OCR" = "OCR rögzítés";
+"Capture OCR & QR" = "OCR és QR rögzítés";
+"Capture area and read text/QR codes" = "Terület rögzítése és szöveg/QR-kódok olvasása";
 "Quick Capture" = "Gyors rögzítés";
 "Scroll Capture" = "Görgetett rögzítés";
 "Capture Last Area" = "Utolsó terület rögzítése";
@@ -41,6 +43,9 @@
 "Copy" = "Másolás";
 "Save As..." = "Mentés másként...";
 "Open in Editor" = "Megnyitás a szerkesztőben";
+"Open With" = "Megnyitás ezzel";
+"Open Link" = "Hivatkozás megnyitása";
+"No Apps Available" = "Nincs elérhető alkalmazás";
 "Pin to Screen" = "Rögzítés a képernyőre";
 "Quick Look" = "Gyorsnézet";
 "Delete" = "Törlés";
@@ -56,12 +61,15 @@
 "Save" = "Mentés";
 
 /* Editor Top Bar */
+"Zoom" = "Nagyítás/Kicsinyítés";
 "Zoom In" = "Nagyítás";
 "Zoom Out" = "Kicsinyítés";
 "Fit Canvas" = "Vászon illesztése";
 "Crop" = "Vágás";
 "Flip Horizontal" = "Vízszintes tükrözés";
 "Flip Vertical" = "Függőleges tükrözés";
+"Rotate Left" = "Forgatás balra";
+"Rotate Right" = "Forgatás jobbra";
 "Add Capture" = "Rögzítés hozzáadása";
 
 /* Toolbar - Tools */
@@ -97,8 +105,11 @@
 "OCR" = "OCR";
 "OCR Text" = "OCR szöveg";
 "OCR (extract text)" = "OCR (szöveg kinyerése)";
+"OCR & QR" = "OCR és QR";
+"Run OCR & QR" = "OCR és QR futtatása";
 "Upload" = "Feltöltés";
 "Share" = "Megosztás";
+"No Share Services" = "Nincsenek megosztási szolgáltatások";
 "Undo" = "Visszavonás";
 "Redo" = "Újra";
 "Close" = "Bezárás";
@@ -153,6 +164,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Kattints egy ablakra  ·  Húzd az egyéni területhez  ·  F a teljes képernyőhöz";
 "Drag to select  ·  Click for full screen" = "Húzd a kiválasztáshoz  ·  Kattints a teljes képernyőhöz";
 "Release to annotate and edit" = "Engedd el a jegyzetelés és szerkesztés megkezdéséhez";
+"Release to finish" = "Engedd el a befejezéshez";
+"Hold Space to move. Release to annotate and edit" = "Tartsd lenyomva a szóközt a mozgatáshoz. Engedd el a jegyzeteléshez és szerkesztéshez";
+"Hold Space to move. Release to finish" = "Tartsd lenyomva a szóközt a mozgatáshoz. Engedd el a befejezéshez";
 "Window snap: " = "Ablak illesztés: ";
 "ON" = "BE";
 "OFF" = "KI";
@@ -170,6 +184,14 @@
 "Open editor" = "Szerkesztő megnyitása";
 "Show in Finder" = "Megjelenítés a Finder-ben";
 "Copy to clipboard" = "Másolás a vágólapra";
+
+/* Overlay - Presets (aspect ratio & resolution) */
+"Aspect ratio & resolution presets" = "Képarány- és felbontás-előbeállítások";
+"Aspect ratio" = "Képarány";
+"Resolution" = "Felbontás";
+"Freeform" = "Szabad forma";
+"Units" = "Mértékegységek";
+"Keep ratio for next captures" = "Képarány megtartása a következő rögzítésekhez";
 
 /* Preferences - General */
 "macshot Preferences" = "macshot beállítások";
@@ -192,6 +214,8 @@
 "Capture mouse cursor in screenshot" = "Egérmutató rögzítése a képernyőképen";
 "Double-click selection to copy" = "Dupla kattintás a kijelölésre a másoláshoz";
 "Hide capture instructions" = "Rögzítési útmutató elrejtése";
+"Disable shadow outside selection" = "Árnyék letiltása a kijelölésen kívül";
+"Show shortcuts in tooltips" = "Gyorsbillentyűk megjelenítése a buboréksúgókban";
 "Use window title in saved filename" = "Ablakcím használata a mentett fájlnévben";
 "Hide menu bar icon" = "Menüsor ikon elrejtése";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "A gyorsbillentyűk továbbra is működnek. Az ikon újbóli megjelenítéséhez indítsd újra a macshot-ot.";
@@ -222,6 +246,9 @@
 "Save Directory" = "Mentési könyvtár";
 "Save folder:" = "Mentési mappa:";
 "Browse…" = "Tallózás…";
+"Save action:" = "Mentési művelet:";
+"Save to default folder" = "Mentés az alapértelmezett mappába";
+"Ask where to save" = "Kérdezze meg a mentés helyét";
 "Appearance" = "Megjelenés";
 "Liquid Glass theme" = "Liquid Glass téma";
 "Translucent toolbars that show the screen behind them." = "Áttetsző eszköztárak, amelyek átengedik a mögöttük lévő képernyőt.";
@@ -229,7 +256,13 @@
 "Icon color:" = "Ikon szín:";
 "Background color:" = "Háttérszín:";
 "Reset" = "Visszaállítás";
+"Menu bar icon:" = "Menüsor ikon:";
+"Default" = "Alapértelmezett";
+"Custom symbol" = "Egyéni szimbólum";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "Adj meg bármilyen SF Symbol nevet (pl. camera.fill), vagy válassz egy előbeállítást. A neveket az Apple SF Symbols alkalmazásában böngészheted. Az érvénytelen nevek esetén az alapértelmezett ikon kerül használatra.";
 "OCR Capture:" = "OCR rögzítés:";
+"OCR & QR Capture:" = "OCR és QR rögzítés:";
+"Text & QR Recognition" = "Szöveg- és QR-felismerés";
 "Show window + copy to clipboard" = "Ablak megjelenítése + másolás a vágólapra";
 "Show window only" = "Csak ablak megjelenítése";
 "Copy to clipboard only" = "Csak másolás a vágólapra";
@@ -353,6 +386,8 @@
 
 /* OCR Window */
 "Text Recognition" = "Szövegfelismerés";
+"QR Code" = "QR-kód";
+"QR Codes" = "QR-kódok";
 "Translate to:" = "Fordítás erre:";
 "%d chars · %d words" = "%d karakter · %d szó";
 "Copy  ⌘↩" = "Másolás  ⌘↩";

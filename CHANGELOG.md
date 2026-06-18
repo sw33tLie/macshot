@@ -1,5 +1,41 @@
 # Changelog
 
+## [4.2.0-beta.1] - 2026-06-18
+
+### Added
+
+- Native AVIF export.
+- Custom menu bar icon — the default, a built-in preset, or any SF Symbol.
+- OCR now detects QR codes too, with open/copy/scan actions.
+- Right-click menu for history screenshots: copy, save, edit, pin, upload, OCR/QR, rotate, flip, open with, share, delete.
+- Pre-draw aspect-ratio/resolution preset button for quick and scroll capture.
+- Window snapping can select Finder Quick Look windows.
+- Silent "Clear History" hotkey.
+- Forward Delete for annotations.
+- Point handles for number annotations; improved loupe controls.
+- Settings: configurable save action, hide shadow outside selection, show shortcuts in tooltips.
+
+### Changed
+
+- Redesigned selection size control: split width/height fields, presets, recording-friendly.
+- Resolution preset popovers behave like real controls (focus, Escape, dismissal, glass state); preset choice is shared between pre-draw and selected-area popovers.
+- Exact-resolution pre-draw capture drags as a fixed-size frame.
+- OCR/QR results UI aligns with Translate, actions moved into the header.
+- Toolbars stay attached to the selection without overlapping; Liquid Glass covers the size/resolution toolbar.
+- Idle sleep allowed again. Text fields use the standard edit menu.
+
+### Fixed
+
+- Fixed-resolution preset no longer leaks into the next capture when "keep ratio" is off.
+- Liquid Glass popovers interact on first click; Remember Last Tool respected.
+- Double-click text editing no longer copies accidentally.
+- Resolution fields keep edits and focus; readout no longer overlaps the right toolbar.
+- Save panel opens focused; history overlay dismisses before external image actions.
+- Editable annotations and post-processing state preserved when reopening captures; Save/Done state updates correctly.
+- Toolbar buttons no longer fire stale actions or leave random hover/pressed states; tooltips no longer flash.
+- Space-to-move works after resizing; toolbar layout recalculates after preset changes.
+- Window snapping ignores hidden windows behind the frontmost one.
+
 ## [4.1.3-beta.1] - 2026-06-11
 
 ### Added

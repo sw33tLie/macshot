@@ -18,6 +18,8 @@
 "Capture Area" = "क्षेत्र कैप्चर करें";
 "Capture Screen" = "स्क्रीन कैप्चर करें";
 "Capture OCR" = "OCR कैप्चर करें";
+"Capture OCR & QR" = "OCR और QR कैप्चर करें";
+"Capture area and read text/QR codes" = "क्षेत्र कैप्चर करें और पाठ/QR कोड पढ़ें";
 "Quick Capture" = "त्वरित कैप्चर";
 "Scroll Capture" = "स्क्रॉल कैप्चर";
 "Capture Last Area" = "अंतिम क्षेत्र कैप्चर करें";
@@ -41,6 +43,8 @@
 "Copy" = "कॉपी करें";
 "Save As..." = "इस रूप में सहेजें...";
 "Open in Editor" = "संपादक में खोलें";
+"Open Link" = "लिंक खोलें";
+"Open With" = "इसके साथ खोलें";
 "Pin to Screen" = "स्क्रीन पर पिन करें";
 "Quick Look" = "त्वरित झलक";
 "Delete" = "हटाएँ";
@@ -56,12 +60,15 @@
 "Save" = "सहेजें";
 
 /* Editor Top Bar */
+"Zoom" = "ज़ूम";
 "Zoom In" = "ज़ूम इन";
 "Zoom Out" = "ज़ूम आउट";
 "Fit Canvas" = "कैनवास फ़िट करें";
 "Crop" = "क्रॉप";
 "Flip Horizontal" = "क्षैतिज पलटें";
 "Flip Vertical" = "लंबवत पलटें";
+"Rotate Left" = "बाएँ घुमाएँ";
+"Rotate Right" = "दाएँ घुमाएँ";
 "Add Capture" = "कैप्चर जोड़ें";
 
 /* Toolbar - Tools */
@@ -153,6 +160,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "विंडो पर क्लिक करें  ·  कस्टम क्षेत्र के लिए खींचें  ·  पूर्ण स्क्रीन के लिए F";
 "Drag to select  ·  Click for full screen" = "चुनने के लिए खींचें  ·  पूर्ण स्क्रीन के लिए क्लिक करें";
 "Release to annotate and edit" = "एनोटेट और संपादित करने के लिए छोड़ें";
+"Release to finish" = "समाप्त करने के लिए छोड़ें";
+"Hold Space to move. Release to annotate and edit" = "स्थानांतरित करने के लिए Space दबाए रखें। एनोटेट और संपादित करने के लिए छोड़ें";
+"Hold Space to move. Release to finish" = "स्थानांतरित करने के लिए Space दबाए रखें। समाप्त करने के लिए छोड़ें";
 "Window snap: " = "विंडो स्नैप: ";
 "ON" = "चालू";
 "OFF" = "बंद";
@@ -192,6 +202,16 @@
 "Capture mouse cursor in screenshot" = "स्क्रीनशॉट में माउस कर्सर कैप्चर करें";
 "Double-click selection to copy" = "कॉपी करने के लिए चयन पर डबल-क्लिक करें";
 "Hide capture instructions" = "कैप्चर निर्देश छिपाएँ";
+"Disable shadow outside selection" = "चयन के बाहर छाया अक्षम करें";
+"Show shortcuts in tooltips" = "टूलटिप में शॉर्टकट दिखाएँ";
+
+/* Capture Presets — aspect ratio / resolution */
+"Aspect ratio & resolution presets" = "पहलू अनुपात और रिज़ॉल्यूशन प्रीसेट";
+"Aspect ratio" = "पहलू अनुपात";
+"Resolution" = "रिज़ॉल्यूशन";
+"Freeform" = "मुक्त रूप";
+"Units" = "इकाइयाँ";
+"Keep ratio for next captures" = "अगले कैप्चर के लिए अनुपात बनाए रखें";
 "Use window title in saved filename" = "सहेजे गए फ़ाइलनाम में विंडो शीर्षक उपयोग करें";
 "Hide menu bar icon" = "मेनू बार आइकन छिपाएँ";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "हॉटकी अभी भी काम करेंगी। आइकन फिर से दिखाने के लिए macshot पुनः लॉन्च करें।";
@@ -229,7 +249,12 @@
 "Icon color:" = "आइकन रंग:";
 "Background color:" = "पृष्ठभूमि रंग:";
 "Reset" = "रीसेट";
+"Menu bar icon:" = "मेनू बार आइकन:";
+"Default" = "डिफ़ॉल्ट";
+"Custom symbol" = "कस्टम सिंबल";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "कोई भी SF Symbol नाम दर्ज करें (उदा. camera.fill) या एक प्रीसेट चुनें। Apple के SF Symbols ऐप में नाम ब्राउज़ करें। अमान्य नाम डिफ़ॉल्ट आइकन पर वापस आ जाते हैं।";
 "OCR Capture:" = "OCR कैप्चर:";
+"OCR & QR Capture:" = "OCR और QR कैप्चर:";
 "Show window + copy to clipboard" = "विंडो दिखाएँ + क्लिपबोर्ड पर कॉपी करें";
 "Show window only" = "केवल विंडो दिखाएँ";
 "Copy to clipboard only" = "केवल क्लिपबोर्ड पर कॉपी करें";
@@ -237,6 +262,13 @@
 "Save to file" = "फ़ाइल में सहेजें";
 "Save + copy to clipboard" = "सहेजें + क्लिपबोर्ड पर कॉपी करें";
 "OCR Action" = "OCR क्रिया";
+"OCR & QR" = "OCR और QR";
+"Run OCR & QR" = "OCR और QR चलाएँ";
+"QR Code" = "QR कोड";
+"QR Codes" = "QR कोड";
+"Save action:" = "सहेजने की क्रिया:";
+"Save to default folder" = "डिफ़ॉल्ट फ़ोल्डर में सहेजें";
+"Ask where to save" = "कहाँ सहेजना है पूछें";
 
 /* Preferences - Shortcuts */
 "Keyboard Shortcuts" = "कीबोर्ड शॉर्टकट";
@@ -310,6 +342,8 @@
 "API key:" = "API कुंजी:";
 "Upload History" = "अपलोड इतिहास";
 "No uploads yet." = "अभी तक कोई अपलोड नहीं।";
+"No Apps Available" = "कोई ऐप उपलब्ध नहीं";
+"No Share Services" = "कोई साझा सेवा नहीं";
 "Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "सार्वजनिक पहुँच के लिए बेस URL। यदि खाली है, तो S3 एंडपॉइंट URL उपयोग होता है (सार्वजनिक रूप से सुलभ नहीं हो सकता)।";
 "A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "एक साझा कुंजी शामिल है — यदि दर सीमा तक पहुँचें तो imgbb.com/api पर अपनी मुफ़्त कुंजी प्राप्त करें। केवल चित्र (वीडियो समर्थन नहीं)।";
 "Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, और अन्य S3-संगत सेवाओं के साथ काम करता है। चित्र और वीडियो समर्थित हैं।";
@@ -353,6 +387,7 @@
 
 /* OCR Window */
 "Text Recognition" = "पाठ पहचान";
+"Text & QR Recognition" = "पाठ और QR पहचान";
 "Translate to:" = "अनुवाद करें:";
 "%d chars · %d words" = "%d अक्षर · %d शब्द";
 "Copy  ⌘↩" = "कॉपी  ⌘↩";

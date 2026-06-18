@@ -18,6 +18,8 @@
 "Capture Area" = "Przechwyć obszar";
 "Capture Screen" = "Przechwyć ekran";
 "Capture OCR" = "Wykonaj OCR";
+"Capture OCR & QR" = "Wykonaj OCR i QR";
+"Capture area and read text/QR codes" = "Przechwyć obszar i odczytaj tekst/kody QR";
 "Quick Capture" = "Szybkie przechwycenie";
 "Scroll Capture" = "Przechwyć i przewiń";
 "Capture Last Area" = "Przechwyć ostatni obszar";
@@ -58,10 +60,13 @@
 /* Editor Top Bar */
 "Zoom In" = "Powiększ";
 "Zoom Out" = "Pomniejsz";
+"Zoom" = "Powiększenie";
 "Fit Canvas" = "Dopasuj do obszaru";
 "Crop" = "Kadruj";
 "Flip Horizontal" = "Odbij w poziomie";
 "Flip Vertical" = "Odbij w pionie";
+"Rotate Left" = "Obróć w lewo";
+"Rotate Right" = "Obróć w prawo";
 "Add Capture" = "Dodaj zrzut";
 
 /* Toolbar - Tools */
@@ -97,8 +102,17 @@
 "OCR" = "OCR";
 "OCR Text" = "OCR — tekst";
 "OCR (extract text)" = "OCR (wyodrębnij tekst)";
+"OCR & QR" = "OCR i QR";
+"Run OCR & QR" = "Uruchom OCR i QR";
+"Text & QR Recognition" = "Rozpoznawanie tekstu i kodów QR";
+"QR Code" = "Kod QR";
+"QR Codes" = "Kody QR";
 "Upload" = "Wyślij";
 "Share" = "Udostępnij";
+"Open Link" = "Otwórz odnośnik";
+"Open With" = "Otwórz w programie";
+"No Apps Available" = "Brak dostępnych aplikacji";
+"No Share Services" = "Brak usług udostępniania";
 "Undo" = "Cofnij";
 "Redo" = "Ponów";
 "Close" = "Zamknij";
@@ -153,6 +167,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Kliknij okno  ·  Przeciągnij, aby wybrać obszar  ·  F — pełny ekran";
 "Drag to select  ·  Click for full screen" = "Przeciągnij, aby zaznaczyć  ·  Kliknij — pełny ekran";
 "Release to annotate and edit" = "Puść, aby opisać i edytować";
+"Release to finish" = "Puść, aby zakończyć";
+"Hold Space to move. Release to annotate and edit" = "Przytrzymaj Spację, aby przesunąć. Puść, aby opisać i edytować";
+"Hold Space to move. Release to finish" = "Przytrzymaj Spację, aby przesunąć. Puść, aby zakończyć";
 "Window snap: " = "Przyciąganie do okien: ";
 "ON" = "WŁ.";
 "OFF" = "WYŁ.";
@@ -192,6 +209,8 @@
 "Capture mouse cursor in screenshot" = "Uwzględnij kursor myszy na zrzucie";
 "Double-click selection to copy" = "Kliknij dwukrotnie zaznaczenie, aby skopiować";
 "Hide capture instructions" = "Ukryj instrukcje przechwytywania";
+"Disable shadow outside selection" = "Wyłącz przyciemnienie poza zaznaczeniem";
+"Show shortcuts in tooltips" = "Pokazuj skróty w podpowiedziach";
 "Use window title in saved filename" = "Użyj tytułu okna w nazwie pliku";
 "Hide menu bar icon" = "Ukryj ikonę na pasku menu";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Skróty nadal działają. Aby przywrócić ikonę, uruchom ponownie macshot.";
@@ -207,6 +226,12 @@
 "Output" = "Wyjście";
 "Image format:" = "Format obrazu:";
 "Quality:" = "Jakość:";
+"Aspect ratio & resolution presets" = "Ustawienia proporcji i rozdzielczości";
+"Aspect ratio" = "Proporcje";
+"Resolution" = "Rozdzielczość";
+"Freeform" = "Dowolny kształt";
+"Units" = "Jednostki";
+"Keep ratio for next captures" = "Zachowaj proporcje dla kolejnych zrzutów";
 "%d%%" = "%d%%";
 "Save at standard resolution (1x)" = "Zapisz w standardowej rozdzielczości (1x)";
 "Halves dimensions on Retina displays, ~4x smaller files" = "Zmniejsza wymiary o połowę na ekranach Retina, ~4x mniejsze pliki";
@@ -224,13 +249,21 @@
 "Accent color:" = "Kolor akcentu:";
 "Icon color:" = "Kolor ikony:";
 "Background color:" = "Kolor tła:";
+"Menu bar icon:" = "Ikona na pasku menu:";
+"Default" = "Domyślna";
+"Custom symbol" = "Własny symbol";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "Wpisz dowolną nazwę SF Symbol (np. camera.fill) lub wybierz gotowy. Przeglądaj nazwy w aplikacji SF Symbols firmy Apple. Nieprawidłowe nazwy powodują użycie domyślnej ikony.";
 "Reset" = "Resetuj";
 "OCR Capture:" = "Zrzut OCR:";
+"OCR & QR Capture:" = "Zrzut OCR i QR:";
 "Show window + copy to clipboard" = "Pokaż okno + kopiuj do Schowka";
 "Show window only" = "Tylko pokaż okno";
 "Copy to clipboard only" = "Tylko kopiuj do Schowka";
 "Enter / Quick Capture:" = "Enter / Szybki zrzut:";
+"Save action:" = "Akcja zapisu:";
 "Save to file" = "Zachowaj do pliku";
+"Save to default folder" = "Zachowaj w domyślnym folderze";
+"Ask where to save" = "Pytaj, gdzie zapisać";
 "Save + copy to clipboard" = "Zachowaj + kopiuj do Schowka";
 "OCR Action" = "Akcja OCR";
 

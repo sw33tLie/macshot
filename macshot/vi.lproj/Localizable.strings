@@ -18,6 +18,8 @@
 "Capture Area" = "Chụp vùng chọn";
 "Capture Screen" = "Chụp màn hình";
 "Capture OCR" = "Chụp OCR";
+"Capture OCR & QR" = "Chụp OCR & QR";
+"Capture area and read text/QR codes" = "Chụp vùng chọn và đọc văn bản/mã QR";
 "Quick Capture" = "Chụp nhanh";
 "Scroll Capture" = "Chụp cuộn trang";
 "Capture Last Area" = "Chụp vùng cuối cùng";
@@ -58,10 +60,13 @@
 /* Editor Top Bar */
 "Zoom In" = "Phóng to";
 "Zoom Out" = "Thu nhỏ";
+"Zoom" = "Thu phóng";
 "Fit Canvas" = "Vừa khung hình";
 "Crop" = "Cắt";
 "Flip Horizontal" = "Lật ngang";
 "Flip Vertical" = "Lật dọc";
+"Rotate Left" = "Xoay trái";
+"Rotate Right" = "Xoay phải";
 "Add Capture" = "Thêm ảnh chụp";
 
 /* Toolbar - Tools */
@@ -97,6 +102,14 @@
 "OCR" = "OCR";
 "OCR Text" = "OCR văn bản";
 "OCR (extract text)" = "OCR (trích xuất văn bản)";
+"OCR & QR" = "OCR & QR";
+"Run OCR & QR" = "Chạy OCR & QR";
+"Open Link" = "Mở liên kết";
+"Open With" = "Mở bằng";
+"No Apps Available" = "Không có ứng dụng nào";
+"No Share Services" = "Không có dịch vụ chia sẻ";
+"QR Code" = "Mã QR";
+"QR Codes" = "Mã QR";
 "Upload" = "Tải lên";
 "Share" = "Chia sẻ";
 "Undo" = "Hoàn tác";
@@ -153,6 +166,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Nhấp vào cửa sổ  ·  Kéo để chọn vùng  ·  F để toàn màn hình";
 "Drag to select  ·  Click for full screen" = "Kéo để chọn  ·  Nhấp để toàn màn hình";
 "Release to annotate and edit" = "Thả chuột để chú thích và chỉnh sửa";
+"Release to finish" = "Thả chuột để hoàn tất";
+"Hold Space to move. Release to annotate and edit" = "Giữ Space để di chuyển. Thả chuột để chú thích và chỉnh sửa";
+"Hold Space to move. Release to finish" = "Giữ Space để di chuyển. Thả chuột để hoàn tất";
 "Window snap: " = "Bắt cửa sổ: ";
 "ON" = "BẬT";
 "OFF" = "TẮT";
@@ -162,6 +178,14 @@
 "Set color %@" = "Đặt màu %@";
 "Draw something first to use the move tool." = "Hãy vẽ gì đó trước khi dùng công cụ di chuyển.";
 "Drag to reposition" = "Kéo để thay đổi vị trí";
+
+/* Resolution / Aspect Ratio Presets */
+"Aspect ratio & resolution presets" = "Cài sẵn tỷ lệ khung hình & độ phân giải";
+"Aspect ratio" = "Tỷ lệ khung hình";
+"Resolution" = "Độ phân giải";
+"Freeform" = "Tự do";
+"Units" = "Đơn vị";
+"Keep ratio for next captures" = "Giữ tỷ lệ cho các lần chụp sau";
 
 /* Overlay - Popovers */
 "Format:" = "Định dạng:";
@@ -192,9 +216,15 @@
 "Capture mouse cursor in screenshot" = "Chụp con trỏ chuột trong ảnh";
 "Double-click selection to copy" = "Nhấp đúp vào vùng chọn để sao chép";
 "Hide capture instructions" = "Ẩn hướng dẫn chụp màn hình";
+"Disable shadow outside selection" = "Tắt bóng tối bên ngoài vùng chọn";
+"Show shortcuts in tooltips" = "Hiển thị phím tắt trong chú giải công cụ";
 "Use window title in saved filename" = "Dùng tiêu đề cửa sổ trong tên tệp";
 "Hide menu bar icon" = "Ẩn biểu tượng thanh menu";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Phím tắt vẫn hoạt động. Để hiện lại biểu tượng, hãy khởi chạy lại macshot.";
+"Menu bar icon:" = "Biểu tượng thanh menu:";
+"Default" = "Mặc định";
+"Custom symbol" = "Ký hiệu tùy chỉnh";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "Nhập bất kỳ tên SF Symbol nào (ví dụ: camera.fill) hoặc chọn một cài sẵn. Duyệt tên trong ứng dụng SF Symbols của Apple. Tên không hợp lệ sẽ chuyển về biểu tượng mặc định.";
 "Menu Bar Order" = "Thứ tự thanh menu";
 "Choose the order of capture actions in the macshot menu bar menu." = "Chọn thứ tự các hành động chụp trong menu thanh menu của macshot.";
 "Move up" = "Di chuyển lên";
@@ -229,12 +259,16 @@
 "Background color:" = "Màu nền:";
 "Reset" = "Đặt lại";
 "OCR Capture:" = "Chụp OCR:";
+"OCR & QR Capture:" = "Chụp OCR & QR:";
 "Show window + copy to clipboard" = "Hiện cửa sổ + sao chép vào bộ nhớ tạm";
 "Show window only" = "Chỉ hiện cửa sổ";
 "Copy to clipboard only" = "Chỉ sao chép vào bộ nhớ tạm";
 "Enter / Quick Capture:" = "Enter / Chụp nhanh:";
 "Save to file" = "Lưu vào tệp";
 "Save + copy to clipboard" = "Lưu + sao chép vào bộ nhớ tạm";
+"Save action:" = "Hành động lưu:";
+"Save to default folder" = "Lưu vào thư mục mặc định";
+"Ask where to save" = "Hỏi nơi lưu";
 "OCR Action" = "Hành động OCR";
 
 /* Preferences - Shortcuts */
@@ -352,6 +386,7 @@
 
 /* OCR Window */
 "Text Recognition" = "Nhận dạng văn bản";
+"Text & QR Recognition" = "Nhận dạng văn bản & QR";
 "Translate to:" = "Dịch sang:";
 "%d chars · %d words" = "%d ký tự · %d từ";
 "Copy  ⌘↩" = "Sao chép  ⌘↩";

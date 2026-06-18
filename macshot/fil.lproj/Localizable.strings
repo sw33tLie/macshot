@@ -18,6 +18,8 @@
 "Capture Area" = "Kunan ang Lugar";
 "Capture Screen" = "Kunan ang Screen";
 "Capture OCR" = "Kunan ang OCR";
+"Capture OCR & QR" = "Kunan ang OCR & QR";
+"Capture area and read text/QR codes" = "Kumuha ng lugar at basahin ang teksto/QR code";
 "Quick Capture" = "Mabilisang Pagkuha";
 "Scroll Capture" = "Scroll Capture";
 "Capture Last Area" = "Kunin ang Huling Lugar";
@@ -58,10 +60,13 @@
 /* Editor Top Bar */
 "Zoom In" = "Palakihin";
 "Zoom Out" = "Paliitin";
+"Zoom" = "Zoom";
 "Fit Canvas" = "Iayon sa Canvas";
 "Crop" = "I-crop";
 "Flip Horizontal" = "I-flip Pahalang";
 "Flip Vertical" = "I-flip Patayo";
+"Rotate Left" = "Iikot Pakaliwa";
+"Rotate Right" = "Iikot Pakanan";
 "Add Capture" = "Magdagdag ng Pagkuha";
 
 /* Toolbar - Tools */
@@ -97,8 +102,17 @@
 "OCR" = "OCR";
 "OCR Text" = "OCR Teksto";
 "OCR (extract text)" = "OCR (kunin ang teksto)";
+"OCR & QR" = "OCR & QR";
+"Run OCR & QR" = "Patakbuhin ang OCR & QR";
+"Text & QR Recognition" = "Pagkilala ng Teksto & QR";
+"QR Code" = "QR Code";
+"QR Codes" = "Mga QR Code";
+"Open Link" = "Buksan ang Link";
 "Upload" = "I-upload";
 "Share" = "Ibahagi";
+"Open With" = "Buksan Gamit ang";
+"No Apps Available" = "Walang Available na App";
+"No Share Services" = "Walang Share Service";
 "Undo" = "I-undo";
 "Redo" = "I-redo";
 "Close" = "Isara";
@@ -153,6 +167,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "I-click ang window  ·  I-drag para sa custom na lugar  ·  F para sa buong screen";
 "Drag to select  ·  Click for full screen" = "I-drag upang pumili  ·  I-click para sa buong screen";
 "Release to annotate and edit" = "Bitawan upang mag-annotate at mag-edit";
+"Release to finish" = "Bitawan upang tapusin";
+"Hold Space to move. Release to annotate and edit" = "Pindutin ang Space upang ilipat. Bitawan upang mag-annotate at mag-edit";
+"Hold Space to move. Release to finish" = "Pindutin ang Space upang ilipat. Bitawan upang tapusin";
 "Window snap: " = "Window snap: ";
 "ON" = "ON";
 "OFF" = "OFF";
@@ -162,6 +179,14 @@
 "Set color %@" = "Itakda ang kulay %@";
 "Draw something first to use the move tool." = "Gumuhit muna bago gamitin ang move tool.";
 "Drag to reposition" = "I-drag upang ilipat";
+
+/* Aspect ratio & resolution presets */
+"Aspect ratio & resolution presets" = "Mga preset ng aspect ratio at resolution";
+"Aspect ratio" = "Aspect ratio";
+"Resolution" = "Resolution";
+"Freeform" = "Malayang anyo";
+"Units" = "Mga Unit";
+"Keep ratio for next captures" = "Panatilihin ang ratio para sa susunod na mga pagkuha";
 
 /* Overlay - Popovers */
 "Format:" = "Format:";
@@ -192,6 +217,8 @@
 "Capture mouse cursor in screenshot" = "Isama ang cursor ng mouse sa screenshot";
 "Double-click selection to copy" = "I-double-click ang pinili upang kopyahin";
 "Hide capture instructions" = "Itago ang mga tagubilin sa pagkuha ng screenshot";
+"Disable shadow outside selection" = "I-disable ang anino sa labas ng pinili";
+"Show shortcuts in tooltips" = "Ipakita ang mga shortcut sa mga tooltip";
 "Use window title in saved filename" = "Gamitin ang pamagat ng window sa na-save na filename";
 "Hide menu bar icon" = "Itago ang icon sa menu bar";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Gumagana pa rin ang mga hotkey. Upang ipakita muli ang icon, i-restart ang macshot.";
@@ -228,7 +255,15 @@
 "Icon color:" = "Kulay ng icon:";
 "Background color:" = "Kulay ng background:";
 "Reset" = "I-reset";
+"Menu bar icon:" = "Icon ng menu bar:";
+"Custom symbol" = "Custom na simbolo";
+"Default" = "Default";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "Maglagay ng anumang pangalan ng SF Symbol (hal. camera.fill) o pumili ng preset. I-browse ang mga pangalan sa SF Symbols app ng Apple. Ang mga hindi wastong pangalan ay babalik sa default na icon.";
 "OCR Capture:" = "OCR Capture:";
+"OCR & QR Capture:" = "OCR & QR Capture:";
+"Save action:" = "Aksyon sa pag-save:";
+"Ask where to save" = "Itanong kung saan ise-save";
+"Save to default folder" = "I-save sa default na folder";
 "Show window + copy to clipboard" = "Ipakita ang window + kopyahin sa clipboard";
 "Show window only" = "Ipakita ang window lamang";
 "Copy to clipboard only" = "Kopyahin sa clipboard lamang";

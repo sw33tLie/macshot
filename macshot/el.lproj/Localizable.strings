@@ -18,6 +18,9 @@
 "Capture Area" = "Λήψη περιοχής";
 "Capture Screen" = "Λήψη οθόνης";
 "Capture OCR" = "Λήψη OCR";
+"Capture OCR & QR" = "Λήψη OCR & QR";
+"Capture area and read text/QR codes" = "Λήψη περιοχής και ανάγνωση κειμένου/κωδικών QR";
+"OCR & QR" = "OCR & QR";
 "Quick Capture" = "Γρήγορη λήψη";
 "Scroll Capture" = "Λήψη με κύλιση";
 "Capture Last Area" = "Λήψη τελευταίας περιοχής";
@@ -41,6 +44,9 @@
 "Copy" = "Αντιγραφή";
 "Save As..." = "Αποθήκευση ως...";
 "Open in Editor" = "Άνοιγμα σε επεξεργαστή";
+"Open Link" = "Άνοιγμα συνδέσμου";
+"Open With" = "Άνοιγμα με";
+"No Apps Available" = "Δεν υπάρχουν διαθέσιμες εφαρμογές";
 "Pin to Screen" = "Καρφίτσωμα στην οθόνη";
 "Quick Look" = "Γρήγορη προβολή";
 "Delete" = "Διαγραφή";
@@ -58,10 +64,13 @@
 /* Editor Top Bar */
 "Zoom In" = "Μεγέθυνση";
 "Zoom Out" = "Σμίκρυνση";
+"Zoom" = "Ζουμ";
 "Fit Canvas" = "Προσαρμογή καμβά";
 "Crop" = "Περικοπή";
 "Flip Horizontal" = "Αναστροφή οριζόντια";
 "Flip Vertical" = "Αναστροφή κατακόρυφα";
+"Rotate Left" = "Περιστροφή αριστερά";
+"Rotate Right" = "Περιστροφή δεξιά";
 "Add Capture" = "Προσθήκη λήψης";
 
 /* Toolbar - Tools */
@@ -97,8 +106,10 @@
 "OCR" = "OCR";
 "OCR Text" = "Κείμενο OCR";
 "OCR (extract text)" = "OCR (εξαγωγή κειμένου)";
+"Run OCR & QR" = "Εκτέλεση OCR & QR";
 "Upload" = "Μεταφόρτωση";
 "Share" = "Κοινοποίηση";
+"No Share Services" = "Δεν υπάρχουν υπηρεσίες κοινοποίησης";
 "Undo" = "Αναίρεση";
 "Redo" = "Επανάληψη";
 "Close" = "Κλείσιμο";
@@ -149,10 +160,21 @@
 "Right-click to add points" = "Δεξί κλικ για προσθήκη σημείων";
 "Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "Κρατήστε 1 αυτόματα κατακόρυφα  ·  Κρατήστε 2 αυτόματα οριζόντια";
 
+/* Aspect Ratio & Resolution Presets */
+"Aspect ratio" = "Αναλογία διαστάσεων";
+"Aspect ratio & resolution presets" = "Προεπιλογές αναλογίας διαστάσεων & ανάλυσης";
+"Resolution" = "Ανάλυση";
+"Freeform" = "Ελεύθερη μορφή";
+"Units" = "Μονάδες";
+"Keep ratio for next captures" = "Διατήρηση αναλογίας για επόμενες λήψεις";
+
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Κλικ σε παράθυρο  ·  Σύρσιμο για προσαρμοσμένη περιοχή  ·  F για πλήρη οθόνη";
 "Drag to select  ·  Click for full screen" = "Σύρετε για επιλογή  ·  Κλικ για πλήρη οθόνη";
 "Release to annotate and edit" = "Αφήστε για σχολιασμό και επεξεργασία";
+"Release to finish" = "Αφήστε για ολοκλήρωση";
+"Hold Space to move. Release to annotate and edit" = "Κρατήστε το Space για μετακίνηση. Αφήστε για σχολιασμό και επεξεργασία";
+"Hold Space to move. Release to finish" = "Κρατήστε το Space για μετακίνηση. Αφήστε για ολοκλήρωση";
 "Window snap: " = "Κούμπωμα παραθύρου: ";
 "ON" = "ON";
 "OFF" = "OFF";
@@ -192,8 +214,14 @@
 "Capture mouse cursor in screenshot" = "Λήψη δρομέα ποντικιού στο στιγμιότυπο";
 "Double-click selection to copy" = "Διπλό κλικ στην επιλογή για αντιγραφή";
 "Hide capture instructions" = "Απόκρυψη οδηγιών λήψης";
+"Disable shadow outside selection" = "Απενεργοποίηση σκιάς εκτός επιλογής";
+"Show shortcuts in tooltips" = "Εμφάνιση συντομεύσεων στις επεξηγήσεις";
 "Use window title in saved filename" = "Χρήση τίτλου παραθύρου στο όνομα αρχείου";
 "Hide menu bar icon" = "Απόκρυψη εικονιδίου γραμμής μενού";
+"Menu bar icon:" = "Εικονίδιο γραμμής μενού:";
+"Custom symbol" = "Προσαρμοσμένο σύμβολο";
+"Default" = "Προεπιλογή";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "Εισαγάγετε οποιοδήποτε όνομα SF Symbol (π.χ. camera.fill) ή επιλέξτε μια προεπιλογή. Περιηγηθείτε στα ονόματα στην εφαρμογή SF Symbols της Apple. Τα μη έγκυρα ονόματα επιστρέφουν στο προεπιλεγμένο εικονίδιο.";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Τα πλήκτρα συντόμευσης λειτουργούν ακόμα. Για εμφάνιση του εικονιδίου, επανεκκινήστε το macshot.";
 "Check for updates automatically" = "Αυτόματος έλεγχος ενημερώσεων";
 "Check for beta updates" = "Έλεγχος για ενημερώσεις beta";
@@ -230,13 +258,19 @@
 "Background color:" = "Χρώμα φόντου:";
 "Reset" = "Επαναφορά";
 "OCR Capture:" = "Λήψη OCR:";
+"OCR & QR Capture:" = "Λήψη OCR & QR:";
 "Show window + copy to clipboard" = "Εμφάνιση παραθύρου + αντιγραφή στο πρόχειρο";
 "Show window only" = "Μόνο εμφάνιση παραθύρου";
 "Copy to clipboard only" = "Μόνο αντιγραφή στο πρόχειρο";
 "Enter / Quick Capture:" = "Enter / Γρήγορη λήψη:";
+"Save action:" = "Ενέργεια αποθήκευσης:";
+"Save to default folder" = "Αποθήκευση στον προεπιλεγμένο φάκελο";
+"Ask where to save" = "Ερώτηση πού να αποθηκευτεί";
 "Save to file" = "Αποθήκευση σε αρχείο";
 "Save + copy to clipboard" = "Αποθήκευση + αντιγραφή στο πρόχειρο";
 "OCR Action" = "Ενέργεια OCR";
+"QR Code" = "Κωδικός QR";
+"QR Codes" = "Κωδικοί QR";
 
 /* Preferences - Shortcuts */
 "Keyboard Shortcuts" = "Συντομεύσεις πληκτρολογίου";
@@ -353,6 +387,7 @@
 
 /* OCR Window */
 "Text Recognition" = "Αναγνώριση κειμένου";
+"Text & QR Recognition" = "Αναγνώριση κειμένου & QR";
 "Translate to:" = "Μετάφραση σε:";
 "%d chars · %d words" = "%d χαρακτήρες · %d λέξεις";
 "Copy  ⌘↩" = "Αντιγραφή  ⌘↩";

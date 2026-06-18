@@ -18,6 +18,8 @@
 "Capture Area" = "Захват области";
 "Capture Screen" = "Захват экрана";
 "Capture OCR" = "Захват OCR";
+"Capture OCR & QR" = "Захват OCR и QR";
+"Capture area and read text/QR codes" = "Захват области и распознавание текста/QR-кодов";
 "Quick Capture" = "Быстрый захват";
 "Scroll Capture" = "Захват прокрутки";
 "Capture Last Area" = "Захват последней области";
@@ -62,6 +64,9 @@
 "Crop" = "Обрезать";
 "Flip Horizontal" = "Отразить по горизонтали";
 "Flip Vertical" = "Отразить по вертикали";
+"Rotate Left" = "Повернуть влево";
+"Rotate Right" = "Повернуть вправо";
+"Zoom" = "Масштаб";
 "Add Capture" = "Добавить снимок";
 
 /* Toolbar - Tools */
@@ -86,6 +91,14 @@
 "Select & Edit" = "Выбрать и изменить";
 "Color" = "Цвет";
 
+/* Aspect ratio & resolution presets */
+"Aspect ratio & resolution presets" = "Пресеты соотношения сторон и разрешения";
+"Aspect ratio" = "Соотношение сторон";
+"Resolution" = "Разрешение";
+"Freeform" = "Свободная форма";
+"Units" = "Единицы";
+"Keep ratio for next captures" = "Сохранить соотношение для следующих снимков";
+
 /* Toolbar - Actions */
 "Copy to Clipboard" = "Копировать в буфер обмена";
 "Save to File" = "Сохранить в файл";
@@ -97,6 +110,15 @@
 "OCR" = "OCR";
 "OCR Text" = "OCR-текст";
 "OCR (extract text)" = "OCR (распознать текст)";
+"OCR & QR" = "OCR и QR";
+"Run OCR & QR" = "Запустить OCR и QR";
+"Text & QR Recognition" = "Распознавание текста и QR";
+"QR Code" = "QR-код";
+"QR Codes" = "QR-коды";
+"Open Link" = "Открыть ссылку";
+"Open With" = "Открыть в программе";
+"No Apps Available" = "Нет доступных приложений";
+"No Share Services" = "Нет служб для общего доступа";
 "Upload" = "Загрузить";
 "Share" = "Поделиться";
 "Undo" = "Отменить";
@@ -157,6 +179,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Нажмите на окно  ·  Выделите область  ·  F для полного экрана";
 "Drag to select  ·  Click for full screen" = "Выделите область  ·  Нажмите для полного экрана";
 "Release to annotate and edit" = "Отпустите для аннотации и редактирования";
+"Release to finish" = "Отпустите для завершения";
+"Hold Space to move. Release to annotate and edit" = "Удерживайте Пробел для перемещения. Отпустите для аннотации и редактирования";
+"Hold Space to move. Release to finish" = "Удерживайте Пробел для перемещения. Отпустите для завершения";
 "Window snap: " = "Привязка к окнам: ";
 "ON" = "ВКЛ";
 "OFF" = "ВЫКЛ";
@@ -229,6 +254,7 @@
 "Background color:" = "Цвет фона:";
 "Reset" = "Сбросить";
 "OCR Capture:" = "Захват OCR:";
+"OCR & QR Capture:" = "Захват OCR и QR:";
 "Show window + copy to clipboard" = "Показать окно и скопировать";
 "Show window only" = "Только показать окно";
 "Copy to clipboard only" = "Только скопировать";
@@ -236,6 +262,15 @@
 "Save to file" = "Сохранить в файл";
 "Save + copy to clipboard" = "Сохранить и скопировать";
 "OCR Action" = "Действие OCR";
+"Save action:" = "Действие сохранения:";
+"Save to default folder" = "Сохранять в папку по умолчанию";
+"Ask where to save" = "Спрашивать, куда сохранять";
+"Show shortcuts in tooltips" = "Показывать сочетания в подсказках";
+"Disable shadow outside selection" = "Отключить затемнение вне выделения";
+"Menu bar icon:" = "Значок в строке меню:";
+"Default" = "По умолчанию";
+"Custom symbol" = "Пользовательский символ";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "Введите любое имя SF Symbol (например, camera.fill) или выберите пресет. Просматривайте имена в приложении Apple SF Symbols. При недопустимом имени используется значок по умолчанию.";
 
 /* Preferences - Shortcuts */
 "Keyboard Shortcuts" = "Сочетания клавиш";

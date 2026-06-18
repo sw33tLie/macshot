@@ -18,6 +18,8 @@
 "Capture Area" = "Capturar Area";
 "Capture Screen" = "Capturar Ecra";
 "Capture OCR" = "Capturar OCR";
+"Capture OCR & QR" = "Capturar OCR e QR";
+"Capture area and read text/QR codes" = "Capturar area e ler texto/codigos QR";
 "Quick Capture" = "Captura Rapida";
 "Scroll Capture" = "Captura com Deslocamento";
 "Capture Last Area" = "Capturar última área";
@@ -58,10 +60,13 @@
 /* Editor Top Bar */
 "Zoom In" = "Ampliar";
 "Zoom Out" = "Reduzir";
+"Zoom" = "Zoom";
 "Fit Canvas" = "Ajustar ao Canvas";
 "Crop" = "Recortar";
 "Flip Horizontal" = "Inverter Horizontalmente";
 "Flip Vertical" = "Inverter Verticalmente";
+"Rotate Left" = "Rodar para a Esquerda";
+"Rotate Right" = "Rodar para a Direita";
 "Add Capture" = "Adicionar Captura";
 
 /* Toolbar - Tools */
@@ -97,8 +102,17 @@
 "OCR" = "OCR";
 "OCR Text" = "Texto OCR";
 "OCR (extract text)" = "OCR (extrair texto)";
+"OCR & QR" = "OCR e QR";
+"Run OCR & QR" = "Executar OCR e QR";
+"Text & QR Recognition" = "Reconhecimento de Texto e QR";
+"QR Code" = "Codigo QR";
+"QR Codes" = "Codigos QR";
 "Upload" = "Carregar";
 "Share" = "Partilhar";
+"Open With" = "Abrir Com";
+"Open Link" = "Abrir Ligacao";
+"No Apps Available" = "Sem Aplicacoes Disponiveis";
+"No Share Services" = "Sem Servicos de Partilha";
 "Undo" = "Desfazer";
 "Redo" = "Refazer";
 "Close" = "Fechar";
@@ -153,6 +167,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Clicar numa janela  ·  Arrastar para area personalizada  ·  F para ecra inteiro";
 "Drag to select  ·  Click for full screen" = "Arrastar para selecionar  ·  Clicar para ecra inteiro";
 "Release to annotate and edit" = "Soltar para anotar e editar";
+"Release to finish" = "Soltar para concluir";
+"Hold Space to move. Release to annotate and edit" = "Mantenha Espaco para mover. Solte para anotar e editar";
+"Hold Space to move. Release to finish" = "Mantenha Espaco para mover. Solte para concluir";
 "Window snap: " = "Ajuste a janela: ";
 "ON" = "LIGADO";
 "OFF" = "DESLIGADO";
@@ -186,12 +203,14 @@
 "Play sound on capture" = "Reproduzir som ao capturar";
 "Play sound on copy" = "Reproduzir som ao copiar";
 "Remember last selected tool" = "Recordar ultima ferramenta selecionada";
+"Show shortcuts in tooltips" = "Mostrar atalhos nas descricoes";
 "Show floating thumbnail after capture" = "Mostrar miniatura flutuante apos captura";
 "Launch at login" = "Iniciar ao arrancar";
 "Show snap alignment guides" = "Mostrar guias de alinhamento";
 "Capture mouse cursor in screenshot" = "Capturar cursor do rato na captura de ecra";
 "Double-click selection to copy" = "Duplo clique na selecao para copiar";
 "Hide capture instructions" = "Ocultar instrucoes de captura";
+"Disable shadow outside selection" = "Desativar sombra fora da selecao";
 "Use window title in saved filename" = "Usar titulo da janela no nome do ficheiro";
 "Hide menu bar icon" = "Ocultar icone da barra de menus";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Os atalhos continuam a funcionar. Para mostrar o icone novamente, reinicie o macshot.";
@@ -220,6 +239,9 @@
 "History size:" = "Tamanho do historico:";
 "screenshots kept on disk (0 = off)" = "capturas mantidas no disco (0 = desligado)";
 "Save Directory" = "Diretoria de Gravacao";
+"Save action:" = "Acao ao guardar:";
+"Save to default folder" = "Guardar na pasta predefinida";
+"Ask where to save" = "Perguntar onde guardar";
 "Save folder:" = "Pasta de gravacao:";
 "Browse…" = "Procurar...";
 "Appearance" = "Aparencia";
@@ -229,7 +251,12 @@
 "Icon color:" = "Cor do icone:";
 "Background color:" = "Cor de fundo:";
 "Reset" = "Repor";
+"Menu bar icon:" = "Icone da barra de menus:";
+"Default" = "Predefinido";
+"Custom symbol" = "Simbolo personalizado";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "Introduza qualquer nome de SF Symbol (ex.: camera.fill) ou escolha uma predefinicao. Procure nomes na app SF Symbols da Apple. Nomes invalidos revertem para o icone predefinido.";
 "OCR Capture:" = "Captura OCR:";
+"OCR & QR Capture:" = "Captura OCR e QR:";
 "Show window + copy to clipboard" = "Mostrar janela + copiar para a area de transferencia";
 "Show window only" = "Apenas mostrar janela";
 "Copy to clipboard only" = "Apenas copiar para a area de transferencia";
@@ -593,3 +620,11 @@
 "Trigger macshot from Raycast, Alfred, Shortcuts, or any tool that opens URLs." = "Acione o macshot a partir de Raycast, Alfred, Shortcuts ou qualquer ferramenta que abra URLs.";
 "URL scheme info" = "Informação do esquema de URL";
 "sec (0 = never)" = "seg (0 = nunca)";
+
+/* Resolution Presets Popover */
+"Aspect ratio & resolution presets" = "Predefinições de proporção e resolução";
+"Aspect ratio" = "Proporção";
+"Resolution" = "Resolução";
+"Freeform" = "Livre";
+"Units" = "Unidades";
+"Keep ratio for next captures" = "Manter proporção nas próximas capturas";

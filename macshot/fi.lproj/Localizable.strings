@@ -18,6 +18,8 @@
 "Capture Area" = "Kaappaa alue";
 "Capture Screen" = "Kaappaa ruutu";
 "Capture OCR" = "Kaappaa OCR";
+"Capture OCR & QR" = "Kaappaa OCR & QR";
+"Capture area and read text/QR codes" = "Kaappaa alue ja lue teksti/QR-koodit";
 "Quick Capture" = "Pikakaappaus";
 "Scroll Capture" = "Vierityskaappaus";
 "Capture Last Area" = "Kaappaa viimeinen alue";
@@ -56,10 +58,13 @@
 "Save" = "Tallenna";
 
 /* Editor Top Bar */
+"Zoom" = "Zoomaus";
 "Zoom In" = "Lahenna";
 "Zoom Out" = "Loitonna";
 "Fit Canvas" = "Sovita kankaalle";
 "Crop" = "Rajaa";
+"Rotate Left" = "Kierra vasemmalle";
+"Rotate Right" = "Kierra oikealle";
 "Flip Horizontal" = "Kaanna vaakasuunnassa";
 "Flip Vertical" = "Kaanna pystysuunnassa";
 "Add Capture" = "Lisaa kaappaus";
@@ -97,6 +102,12 @@
 "OCR" = "OCR";
 "OCR Text" = "OCR-teksti";
 "OCR (extract text)" = "OCR (poimi teksti)";
+"OCR & QR" = "OCR & QR";
+"Run OCR & QR" = "Suorita OCR & QR";
+"Text & QR Recognition" = "Tekstin & QR:n tunnistus";
+"QR Code" = "QR-koodi";
+"QR Codes" = "QR-koodit";
+"Open Link" = "Avaa linkki";
 "Upload" = "Lataa";
 "Share" = "Jaa";
 "Undo" = "Kumoa";
@@ -112,6 +123,12 @@
 "Translate" = "Kaanna";
 "Auto-Redact sensitive data" = "Piilota arkaluontoiset tiedot automaattisesti";
 "Move Selection" = "Siirra valintaa";
+"Aspect ratio & resolution presets" = "Kuvasuhteen ja tarkkuuden esiasetukset";
+"Aspect ratio" = "Kuvasuhde";
+"Resolution" = "Tarkkuus";
+"Freeform" = "Vapaamuotoinen";
+"Units" = "Yksikot";
+"Keep ratio for next captures" = "Sailyta suhde seuraavissa kaappauksissa";
 
 /* Toolbar - Recording */
 "Start Recording" = "Aloita nauhoitus";
@@ -153,6 +170,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Napsauta ikkunaa  ·  Vedä valitaksesi alue  ·  F koko ruudulle";
 "Drag to select  ·  Click for full screen" = "Vedä valitaksesi  ·  Napsauta koko ruudulle";
 "Release to annotate and edit" = "Vapauta merkintoja ja muokkausta varten";
+"Release to finish" = "Vapauta lopettaaksesi";
+"Hold Space to move. Release to annotate and edit" = "Pida valilyontia siirtaaksesi. Vapauta merkintoja ja muokkausta varten";
+"Hold Space to move. Release to finish" = "Pida valilyontia siirtaaksesi. Vapauta lopettaaksesi";
 "Window snap: " = "Ikkunan tarttuminen: ";
 "ON" = "PAALLA";
 "OFF" = "POIS";
@@ -168,6 +188,9 @@
 "FPS:" = "FPS:";
 "When done:" = "Kun valmis:";
 "Open editor" = "Avaa editori";
+"Open With" = "Avaa sovelluksella";
+"No Apps Available" = "Ei sovelluksia saatavilla";
+"No Share Services" = "Ei jakopalveluita";
 "Show in Finder" = "Nayta Finder-sovelluksessa";
 "Copy to clipboard" = "Kopioi leikepoydale";
 
@@ -225,6 +248,7 @@
 "Background color:" = "Taustaväri:";
 "Reset" = "Nollaa";
 "OCR Capture:" = "OCR-kaappaus:";
+"OCR & QR Capture:" = "OCR- & QR-kaappaus:";
 "Show window + copy to clipboard" = "Nayta ikkuna + kopioi leikepoydale";
 "Show window only" = "Nayta vain ikkuna";
 "Copy to clipboard only" = "Kopioi vain leikepoydale";
@@ -232,6 +256,15 @@
 "Save to file" = "Tallenna tiedostoon";
 "Save + copy to clipboard" = "Tallenna + kopioi leikepoydale";
 "OCR Action" = "OCR-toiminto";
+"Save action:" = "Tallennustoiminto:";
+"Save to default folder" = "Tallenna oletuskansioon";
+"Ask where to save" = "Kysy tallennuspaikka";
+"Disable shadow outside selection" = "Poista varjo valinnan ulkopuolelta";
+"Show shortcuts in tooltips" = "Nayta pikanappaimet tyokaluvihjeissa";
+"Menu bar icon:" = "Valikkopalkin kuvake:";
+"Default" = "Oletus";
+"Custom symbol" = "Mukautettu symboli";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "Anna mika tahansa SF Symbol -nimi (esim. camera.fill) tai valitse esiasetus. Selaa nimia Applen SF Symbols -sovelluksessa. Virheelliset nimet palautuvat oletuskuvakkeeseen.";
 
 /* Preferences - Shortcuts */
 "Keyboard Shortcuts" = "Pikanappaimet";

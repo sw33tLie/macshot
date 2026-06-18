@@ -41,6 +41,10 @@
 "Copy" = "Kopyala";
 "Save As..." = "Farklı Kaydet...";
 "Open in Editor" = "Düzenleyicide Aç";
+"Open With" = "Birlikte Aç";
+"Open Link" = "Bağlantıyı Aç";
+"No Apps Available" = "Kullanılabilir Uygulama Yok";
+"No Share Services" = "Paylaşım Servisi Yok";
 "Pin to Screen" = "Ekrana Sabitle";
 "Quick Look" = "Göz At";
 "Delete" = "Sil";
@@ -56,10 +60,13 @@
 "Save" = "Kaydet";
 
 /* Editor Top Bar */
+"Zoom" = "Yakınlaştırma";
 "Zoom In" = "Yakınlaştır";
 "Zoom Out" = "Uzaklaştır";
 "Fit Canvas" = "Tuvale Sığdır";
 "Crop" = "Kırp";
+"Rotate Left" = "Sola Döndür";
+"Rotate Right" = "Sağa Döndür";
 "Flip Horizontal" = "Yatay Çevir";
 "Flip Vertical" = "Dikey Çevir";
 "Add Capture" = "Yakalama Ekle";
@@ -153,6 +160,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Pencereye tıklayın  ·  Özel alan için sürükleyin  ·  Tam ekran için F";
 "Drag to select  ·  Click for full screen" = "Seçmek için sürükleyin  ·  Tam ekran için tıklayın";
 "Release to annotate and edit" = "Açıklama eklemek ve düzenlemek için bırakın";
+"Release to finish" = "Bitirmek için bırakın";
+"Hold Space to move. Release to annotate and edit" = "Taşımak için Space tuşunu basılı tutun. Açıklama eklemek ve düzenlemek için bırakın";
+"Hold Space to move. Release to finish" = "Taşımak için Space tuşunu basılı tutun. Bitirmek için bırakın";
 "Window snap: " = "Pencere yakalama: ";
 "ON" = "AÇIK";
 "OFF" = "KAPALI";
@@ -192,9 +202,15 @@
 "Capture mouse cursor in screenshot" = "Ekran görüntüsünde fare imlecini yakala";
 "Double-click selection to copy" = "Kopyalamak için seçime çift tıkla";
 "Hide capture instructions" = "Yakalama talimatlarını gizle";
+"Disable shadow outside selection" = "Seçim dışındaki gölgeyi devre dışı bırak";
+"Show shortcuts in tooltips" = "Kısayolları ipuçlarında göster";
 "Use window title in saved filename" = "Kaydedilen dosya adında pencere başlığını kullan";
 "Hide menu bar icon" = "Menü çubuğu simgesini gizle";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Kısayol tuşları çalışmaya devam eder. Simgeyi tekrar göstermek için macshot'u yeniden başlatın.";
+"Menu bar icon:" = "Menü çubuğu simgesi:";
+"Default" = "Varsayılan";
+"Custom symbol" = "Özel sembol";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "Herhangi bir SF Symbol adı girin (örn. camera.fill) veya bir hazır ayar seçin. Adlara Apple'ın SF Symbols uygulamasından göz atın. Geçersiz adlar varsayılan simgeye döner.";
 "Check for updates automatically" = "Güncellemeleri otomatik denetle";
 "Check for beta updates" = "Beta güncellemelerini denetle";
 "Thumbnail" = "Küçük Resim";
@@ -222,6 +238,9 @@
 "Save Directory" = "Kayıt Dizini";
 "Save folder:" = "Kayıt klasörü:";
 "Browse…" = "Gözat…";
+"Save action:" = "Kaydetme eylemi:";
+"Save to default folder" = "Varsayılan klasöre kaydet";
+"Ask where to save" = "Nereye kaydedileceğini sor";
 "Appearance" = "Görünüm";
 "Liquid Glass theme" = "Liquid Glass teması";
 "Translucent toolbars that show the screen behind them." = "Arkalarındaki ekranı gösteren yarı saydam araç çubukları.";
@@ -237,6 +256,14 @@
 "Save to file" = "Dosyaya kaydet";
 "Save + copy to clipboard" = "Kaydet + panoya kopyala";
 "OCR Action" = "OCR Eylemi";
+"OCR & QR Capture:" = "OCR ve QR Yakalama:";
+"OCR & QR" = "OCR ve QR";
+"Text & QR Recognition" = "Metin ve QR Tanıma";
+"Capture OCR & QR" = "OCR ve QR Yakala";
+"Capture area and read text/QR codes" = "Alan yakala ve metin/QR kodlarını oku";
+"Run OCR & QR" = "OCR ve QR Çalıştır";
+"QR Code" = "QR Kodu";
+"QR Codes" = "QR Kodları";
 
 /* Preferences - Shortcuts */
 "Keyboard Shortcuts" = "Klavye Kısayolları";
@@ -514,6 +541,14 @@
 "Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Dosyalar, Google Drive'ınızdaki \"macshot\" klasörüne yüklenir. Her şey gizli kalır — hiçbir şey herkesle paylaşılmaz.";
 
 "Pressure" = "Basınç";
+
+/* Aspect ratio & resolution presets */
+"Aspect ratio & resolution presets" = "En boy oranı ve çözünürlük hazır ayarları";
+"Aspect ratio" = "En boy oranı";
+"Resolution" = "Çözünürlük";
+"Freeform" = "Serbest biçim";
+"Units" = "Birimler";
+"Keep ratio for next captures" = "Sonraki yakalamalar için oranı koru";
 
 /* Added for v4.1.0-beta.3 — video editor, effects, open-video, shortcuts help */
 "Open Video..." = "Video Aç...";

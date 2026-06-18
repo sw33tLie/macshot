@@ -18,6 +18,8 @@
 "Capture Area" = "エリアをキャプチャ";
 "Capture Screen" = "画面をキャプチャ";
 "Capture OCR" = "OCR キャプチャ";
+"Capture OCR & QR" = "OCR & QR キャプチャ";
+"Capture area and read text/QR codes" = "エリアをキャプチャしてテキスト/QR コードを読み取る";
 "Quick Capture" = "クイックキャプチャ";
 "Scroll Capture" = "スクロールキャプチャ";
 "Capture Last Area" = "前回のエリアをキャプチャ";
@@ -62,6 +64,9 @@
 "Crop" = "切り取り";
 "Flip Horizontal" = "左右反転";
 "Flip Vertical" = "上下反転";
+"Rotate Left" = "左に回転";
+"Rotate Right" = "右に回転";
+"Zoom" = "ズーム";
 "Add Capture" = "キャプチャを追加";
 
 /* Toolbar - Tools */
@@ -97,6 +102,8 @@
 "OCR" = "OCR";
 "OCR Text" = "OCR テキスト";
 "OCR (extract text)" = "OCR (テキスト抽出)";
+"OCR & QR" = "OCR & QR";
+"Run OCR & QR" = "OCR & QR を実行";
 "Upload" = "アップロード";
 "Share" = "共有";
 "Undo" = "取り消す";
@@ -153,6 +160,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "ウインドウをクリック · ドラッグで範囲選択 · F でフルスクリーン";
 "Drag to select  ·  Click for full screen" = "ドラッグで選択 · クリックでフルスクリーン";
 "Release to annotate and edit" = "離して注釈・編集";
+"Release to finish" = "離して完了";
+"Hold Space to move. Release to annotate and edit" = "スペースキー長押しで移動。離して注釈・編集";
+"Hold Space to move. Release to finish" = "スペースキー長押しで移動。離して完了";
 "Window snap: " = "ウインドウスナップ: ";
 "ON" = "オン";
 "OFF" = "オフ";
@@ -228,7 +238,17 @@
 "Icon color:" = "アイコンカラー:";
 "Background color:" = "背景色:";
 "Reset" = "リセット";
+"Menu bar icon:" = "メニューバーアイコン:";
+"Custom symbol" = "カスタムシンボル";
+"Default" = "デフォルト";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "任意の SF Symbol 名 (例: camera.fill) を入力するか、プリセットを選択します。名前は Apple の SF Symbols アプリで参照できます。無効な名前はデフォルトのアイコンに戻ります。";
+"Save action:" = "保存アクション:";
+"Save to default folder" = "デフォルトフォルダに保存";
+"Ask where to save" = "保存先を確認";
+"Disable shadow outside selection" = "選択範囲外のシャドウを無効化";
+"Show shortcuts in tooltips" = "ツールチップにショートカットを表示";
 "OCR Capture:" = "OCR キャプチャ:";
+"OCR & QR Capture:" = "OCR & QR キャプチャ:";
 "Show window + copy to clipboard" = "ウインドウを表示 + クリップボードにコピー";
 "Show window only" = "ウインドウのみ表示";
 "Copy to clipboard only" = "クリップボードにコピーのみ";
@@ -352,6 +372,9 @@
 
 /* OCR Window */
 "Text Recognition" = "テキスト認識";
+"Text & QR Recognition" = "テキスト & QR 認識";
+"QR Code" = "QR コード";
+"QR Codes" = "QR コード";
 "Translate to:" = "翻訳先:";
 "%d chars · %d words" = "%d 文字 · %d 単語";
 "Copy  ⌘↩" = "コピー  ⌘↩";
@@ -368,6 +391,10 @@
 "Uploaded! Link copied." = "アップロード完了! リンクをコピーしました。";
 "Uploading to %@... %d%%" = "%@ にアップロード中... %d%%";
 "Open" = "開く";
+"Open Link" = "リンクを開く";
+"Open With" = "次で開く";
+"No Apps Available" = "利用可能なアプリがありません";
+"No Share Services" = "共有サービスがありません";
 
 /* Recording Toast */
 "Recording saved" = "録画を保存しました";
@@ -593,3 +620,11 @@
 "URL scheme info" = "URL スキーム情報";
 "Enable macshot:// URL scheme" = "macshot:// URL スキームを有効にする";
 "sec (0 = never)" = "秒 (0 = 無効)";
+
+/* Resolution / Aspect Ratio Presets */
+"Aspect ratio & resolution presets" = "アスペクト比と解像度のプリセット";
+"Aspect ratio" = "アスペクト比";
+"Resolution" = "解像度";
+"Freeform" = "自由形式";
+"Units" = "単位";
+"Keep ratio for next captures" = "次回以降のキャプチャでも比率を維持";

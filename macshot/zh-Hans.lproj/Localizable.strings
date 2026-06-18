@@ -18,6 +18,8 @@
 "Capture Area" = "捕获区域";
 "Capture Screen" = "捕获屏幕";
 "Capture OCR" = "捕获 OCR";
+"Capture OCR & QR" = "捕获 OCR & QR";
+"Capture area and read text/QR codes" = "捕获区域并读取文字/QR 码";
 "Quick Capture" = "快速捕获";
 "Scroll Capture" = "滚动捕获";
 "Capture Last Area" = "捕获上次区域";
@@ -62,6 +64,9 @@
 "Crop" = "裁剪";
 "Flip Horizontal" = "水平翻转";
 "Flip Vertical" = "垂直翻转";
+"Rotate Left" = "向左旋转";
+"Rotate Right" = "向右旋转";
+"Zoom" = "缩放";
 "Add Capture" = "添加捕获";
 
 /* Toolbar - Tools */
@@ -97,6 +102,8 @@
 "OCR" = "OCR";
 "OCR Text" = "OCR 文字";
 "OCR (extract text)" = "OCR（提取文字）";
+"OCR & QR" = "OCR & QR";
+"Run OCR & QR" = "运行 OCR & QR";
 "Upload" = "上传";
 "Share" = "共享";
 "Undo" = "撤销";
@@ -153,6 +160,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "点按窗口  ·  拖拽自定义区域  ·  F 全屏";
 "Drag to select  ·  Click for full screen" = "拖拽选择  ·  点按全屏捕获";
 "Release to annotate and edit" = "松开以标注和编辑";
+"Release to finish" = "松开以完成";
+"Hold Space to move. Release to annotate and edit" = "按住空格键移动。松开以标注和编辑";
+"Hold Space to move. Release to finish" = "按住空格键移动。松开以完成";
 "Window snap: " = "窗口吸附: ";
 "ON" = "开";
 "OFF" = "关";
@@ -228,7 +238,17 @@
 "Icon color:" = "图标颜色:";
 "Background color:" = "背景颜色:";
 "Reset" = "重置";
+"Menu bar icon:" = "菜单栏图标:";
+"Custom symbol" = "自定义符号";
+"Default" = "默认";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "输入任意 SF Symbol 名称（例如 camera.fill）或选择预设。可在 Apple 的 SF Symbols 应用中浏览名称。无效名称将回退为默认图标。";
+"Save action:" = "保存操作:";
+"Save to default folder" = "保存到默认文件夹";
+"Ask where to save" = "询问保存位置";
+"Disable shadow outside selection" = "禁用选区外的阴影";
+"Show shortcuts in tooltips" = "在工具提示中显示快捷键";
 "OCR Capture:" = "OCR 捕获:";
+"OCR & QR Capture:" = "OCR & QR 捕获:";
 "Show window + copy to clipboard" = "显示窗口 + 拷贝到剪贴板";
 "Show window only" = "仅显示窗口";
 "Copy to clipboard only" = "仅拷贝到剪贴板";
@@ -352,6 +372,9 @@
 
 /* OCR Window */
 "Text Recognition" = "文字识别";
+"Text & QR Recognition" = "文字 & QR 识别";
+"QR Code" = "QR 码";
+"QR Codes" = "QR 码";
 "Translate to:" = "翻译为:";
 "%d chars · %d words" = "%d 个字符 · %d 个词";
 "Copy  ⌘↩" = "拷贝  ⌘↩";
@@ -368,6 +391,10 @@
 "Uploaded! Link copied." = "上传完成！链接已拷贝。";
 "Uploading to %@... %d%%" = "正在上传到 %@... %d%%";
 "Open" = "打开";
+"Open Link" = "打开链接";
+"Open With" = "打开方式";
+"No Apps Available" = "没有可用的应用";
+"No Share Services" = "没有共享服务";
 
 /* Recording Toast */
 "Recording saved" = "录制已保存";
@@ -595,3 +622,11 @@
 "URL scheme info" = "URL scheme 信息";
 "Enable macshot:// URL scheme" = "启用 macshot:// URL scheme";
 "sec (0 = never)" = "秒（0 = 永不）";
+
+/* Resolution / Aspect Ratio Presets */
+"Aspect ratio & resolution presets" = "宽高比与分辨率预设";
+"Aspect ratio" = "宽高比";
+"Resolution" = "分辨率";
+"Freeform" = "自由形状";
+"Units" = "单位";
+"Keep ratio for next captures" = "在后续捕获中保持比例";

@@ -41,6 +41,9 @@
 "Copy" = "Copiaza";
 "Save As..." = "Salveaza ca...";
 "Open in Editor" = "Deschide in editor";
+"Open With" = "Deschide cu";
+"Open Link" = "Deschide linkul";
+"No Apps Available" = "Nicio aplicatie disponibila";
 "Pin to Screen" = "Fixeaza pe ecran";
 "Quick Look" = "Previzualizare rapida";
 "Delete" = "Sterge";
@@ -56,12 +59,15 @@
 "Save" = "Salveaza";
 
 /* Editor Top Bar */
+"Zoom" = "Zoom";
 "Zoom In" = "Mareste";
 "Zoom Out" = "Micsoreaza";
 "Fit Canvas" = "Potriveste la canvas";
 "Crop" = "Decupeaza";
 "Flip Horizontal" = "Oglindire orizontala";
 "Flip Vertical" = "Oglindire verticala";
+"Rotate Left" = "Roteste la stanga";
+"Rotate Right" = "Roteste la dreapta";
 "Add Capture" = "Adauga captura";
 
 /* Toolbar - Tools */
@@ -99,6 +105,7 @@
 "OCR (extract text)" = "OCR (extrage text)";
 "Upload" = "Incarca";
 "Share" = "Partajeaza";
+"No Share Services" = "Niciun serviciu de partajare";
 "Undo" = "Anuleaza";
 "Redo" = "Refacere";
 "Close" = "Inchide";
@@ -153,6 +160,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Clic pe o fereastra  ·  Trage pentru zona personalizata  ·  F pentru ecran complet";
 "Drag to select  ·  Click for full screen" = "Trage pentru selectare  ·  Clic pentru ecran complet";
 "Release to annotate and edit" = "Elibereaza pentru adnotare si editare";
+"Release to finish" = "Elibereaza pentru a finaliza";
+"Hold Space to move. Release to annotate and edit" = "Tine Space pentru a muta. Elibereaza pentru adnotare si editare";
+"Hold Space to move. Release to finish" = "Tine Space pentru a muta. Elibereaza pentru a finaliza";
 "Window snap: " = "Fixare fereastra: ";
 "ON" = "ACTIVAT";
 "OFF" = "DEZACTIVAT";
@@ -192,8 +202,14 @@
 "Capture mouse cursor in screenshot" = "Captura cursorul mouse-ului in captura de ecran";
 "Double-click selection to copy" = "Dublu-clic pe selectie pentru a copia";
 "Hide capture instructions" = "Ascunde instructiunile de captura";
+"Disable shadow outside selection" = "Dezactiveaza umbra in afara selectiei";
+"Show shortcuts in tooltips" = "Afiseaza scurtaturile in sfaturi";
 "Use window title in saved filename" = "Foloseste titlul ferestrei in numele fisierului salvat";
 "Hide menu bar icon" = "Ascunde pictograma din bara de meniu";
+"Menu bar icon:" = "Pictograma barei de meniu:";
+"Custom symbol" = "Simbol personalizat";
+"Default" = "Implicit";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "Introdu orice nume de SF Symbol (ex. camera.fill) sau alege o presetare. Rasfoieste numele in aplicatia SF Symbols de la Apple. Numele invalide revin la pictograma implicita.";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Scurtaturile functioneaza in continuare. Pentru a afisa din nou pictograma, reporneste macshot.";
 "Check for updates automatically" = "Verifica actualizarile automat";
 "Check for beta updates" = "Verifica actualizarile beta";
@@ -221,6 +237,9 @@
 "screenshots kept on disk (0 = off)" = "capturi de ecran pastrate pe disc (0 = dezactivat)";
 "Save Directory" = "Director de salvare";
 "Save folder:" = "Dosar de salvare:";
+"Save action:" = "Actiune salvare:";
+"Save to default folder" = "Salveaza in dosarul implicit";
+"Ask where to save" = "Intreaba unde sa salveze";
 "Browse…" = "Rasfoieste...";
 "Appearance" = "Aspect";
 "Liquid Glass theme" = "Tema Liquid Glass";
@@ -237,6 +256,14 @@
 "Save to file" = "Salveaza in fisier";
 "Save + copy to clipboard" = "Salveaza + copiaza in clipboard";
 "OCR Action" = "Actiune OCR";
+"OCR & QR Capture:" = "Captura OCR & QR:";
+"OCR & QR" = "OCR & QR";
+"Text & QR Recognition" = "Recunoastere text & QR";
+"QR Code" = "Cod QR";
+"QR Codes" = "Coduri QR";
+"Capture OCR & QR" = "Captura OCR & QR";
+"Capture area and read text/QR codes" = "Captura zona si citeste text/coduri QR";
+"Run OCR & QR" = "Ruleaza OCR & QR";
 
 /* Preferences - Shortcuts */
 "Keyboard Shortcuts" = "Scurtaturi de tastatura";
@@ -512,6 +539,14 @@
 "Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Fișierele sunt încărcate într-un folder \"macshot\" din Google Drive-ul tău. Totul rămâne privat — nimic nu este distribuit public.";
 
 "Pressure" = "Presiune";
+
+/* Aspect Ratio & Resolution Presets */
+"Aspect ratio & resolution presets" = "Presetari raport aspect & rezolutie";
+"Aspect ratio" = "Raport aspect";
+"Resolution" = "Rezolutie";
+"Freeform" = "Liber";
+"Units" = "Unitati";
+"Keep ratio for next captures" = "Pastreaza raportul pentru capturile urmatoare";
 
 /* Added for v4.1.0-beta.3 — video editor, effects, open-video, shortcuts help */
 "Open Video..." = "Deschide video...";

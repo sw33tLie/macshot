@@ -18,6 +18,8 @@
 "Capture Area" = "Захоплення області";
 "Capture Screen" = "Захоплення екрана";
 "Capture OCR" = "Захоплення OCR";
+"Capture OCR & QR" = "Захоплення OCR і QR";
+"Capture area and read text/QR codes" = "Захоплення області та зчитування тексту/QR-кодів";
 "Quick Capture" = "Швидке захоплення";
 "Scroll Capture" = "Захоплення з прокруткою";
 "Capture Last Area" = "Захопити останню область";
@@ -62,6 +64,9 @@
 "Crop" = "Обрізати";
 "Flip Horizontal" = "Відбити горизонтально";
 "Flip Vertical" = "Відбити вертикально";
+"Rotate Left" = "Повернути ліворуч";
+"Rotate Right" = "Повернути праворуч";
+"Zoom" = "Масштаб";
 "Add Capture" = "Додати захоплення";
 
 /* Toolbar - Tools */
@@ -86,6 +91,14 @@
 "Select & Edit" = "Вибрати і редагувати";
 "Color" = "Колір";
 
+/* Aspect ratio & resolution presets */
+"Aspect ratio & resolution presets" = "Пресети співвідношення сторін і роздільності";
+"Aspect ratio" = "Співвідношення сторін";
+"Resolution" = "Роздільність";
+"Freeform" = "Довільна форма";
+"Units" = "Одиниці";
+"Keep ratio for next captures" = "Зберігати співвідношення для наступних захоплень";
+
 /* Toolbar - Actions */
 "Copy to Clipboard" = "Копіювати до буфера обміну";
 "Save to File" = "Зберегти у файл";
@@ -97,6 +110,15 @@
 "OCR" = "OCR";
 "OCR Text" = "OCR Текст";
 "OCR (extract text)" = "OCR (розпізнати текст)";
+"OCR & QR" = "OCR і QR";
+"Run OCR & QR" = "Запустити OCR і QR";
+"Text & QR Recognition" = "Розпізнавання тексту та QR";
+"QR Code" = "QR-код";
+"QR Codes" = "QR-коди";
+"Open Link" = "Відкрити посилання";
+"Open With" = "Відкрити за допомогою";
+"No Apps Available" = "Немає доступних програм";
+"No Share Services" = "Немає служб спільного доступу";
 "Upload" = "Завантажити";
 "Share" = "Поділитися";
 "Undo" = "Скасувати";
@@ -157,6 +179,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Клацніть вікно  ·  Перетягніть для довільної області  ·  F для повного екрана";
 "Drag to select  ·  Click for full screen" = "Перетягніть для вибору  ·  Клацніть для повного екрана";
 "Release to annotate and edit" = "Відпустіть для анотації та редагування";
+"Release to finish" = "Відпустіть для завершення";
+"Hold Space to move. Release to annotate and edit" = "Утримуйте Пробіл для переміщення. Відпустіть для анотації та редагування";
+"Hold Space to move. Release to finish" = "Утримуйте Пробіл для переміщення. Відпустіть для завершення";
 "Window snap: " = "Прилипання до вікна: ";
 "ON" = "УВІМК.";
 "OFF" = "ВИМК.";
@@ -229,6 +254,7 @@
 "Background color:" = "Колір фону:";
 "Reset" = "Скинути";
 "OCR Capture:" = "Захоплення OCR:";
+"OCR & QR Capture:" = "Захоплення OCR і QR:";
 "Show window + copy to clipboard" = "Показати вікно + копіювати до буфера обміну";
 "Show window only" = "Лише показати вікно";
 "Copy to clipboard only" = "Лише копіювати до буфера обміну";
@@ -236,6 +262,15 @@
 "Save to file" = "Зберегти у файл";
 "Save + copy to clipboard" = "Зберегти + копіювати до буфера обміну";
 "OCR Action" = "Дія OCR";
+"Save action:" = "Дія збереження:";
+"Save to default folder" = "Зберігати в теку за замовчуванням";
+"Ask where to save" = "Запитувати, куди зберігати";
+"Show shortcuts in tooltips" = "Показувати скорочення в підказках";
+"Disable shadow outside selection" = "Вимкнути затемнення поза виділенням";
+"Menu bar icon:" = "Іконка в рядку меню:";
+"Default" = "За замовчуванням";
+"Custom symbol" = "Власний символ";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "Введіть будь-яке ім'я SF Symbol (наприклад, camera.fill) або виберіть пресет. Переглядайте імена в програмі Apple SF Symbols. За недійсного імені використовується іконка за замовчуванням.";
 
 /* Preferences - Shortcuts */
 "Keyboard Shortcuts" = "Клавіатурні скорочення";

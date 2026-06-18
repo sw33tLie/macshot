@@ -18,6 +18,8 @@
 "Capture Area" = "Bereich aufnehmen";
 "Capture Screen" = "Bildschirm aufnehmen";
 "Capture OCR" = "OCR-Aufnahme";
+"Capture OCR & QR" = "OCR & QR aufnehmen";
+"Capture area and read text/QR codes" = "Bereich aufnehmen und Text/QR-Codes lesen";
 "Quick Capture" = "Schnellaufnahme";
 "Scroll Capture" = "Scroll-Aufnahme";
 "Capture Last Area" = "Letzten Bereich aufnehmen";
@@ -62,6 +64,9 @@
 "Crop" = "Zuschneiden";
 "Flip Horizontal" = "Horizontal spiegeln";
 "Flip Vertical" = "Vertikal spiegeln";
+"Rotate Left" = "Nach links drehen";
+"Rotate Right" = "Nach rechts drehen";
+"Zoom" = "Zoom";
 "Add Capture" = "Aufnahme hinzufügen";
 
 /* Toolbar - Tools */
@@ -97,8 +102,17 @@
 "OCR" = "OCR";
 "OCR Text" = "OCR-Text";
 "OCR (extract text)" = "OCR (Text erkennen)";
+"OCR & QR" = "OCR & QR";
+"Run OCR & QR" = "OCR & QR ausführen";
+"Text & QR Recognition" = "Text- & QR-Erkennung";
+"QR Code" = "QR-Code";
+"QR Codes" = "QR-Codes";
 "Upload" = "Hochladen";
 "Share" = "Teilen";
+"Open With" = "Öffnen mit";
+"Open Link" = "Link öffnen";
+"No Apps Available" = "Keine Apps verfügbar";
+"No Share Services" = "Keine Teilen-Dienste";
 "Undo" = "Widerrufen";
 "Redo" = "Wiederherstellen";
 "Close" = "Schließen";
@@ -153,6 +167,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Fenster klicken  ·  Ziehen für eigenen Bereich  ·  F für Vollbild";
 "Drag to select  ·  Click for full screen" = "Ziehen zum Auswählen  ·  Klicken für Vollbild";
 "Release to annotate and edit" = "Loslassen zum Beschriften und Bearbeiten";
+"Release to finish" = "Loslassen zum Abschließen";
+"Hold Space to move. Release to annotate and edit" = "Leertaste halten zum Verschieben. Loslassen zum Beschriften und Bearbeiten";
+"Hold Space to move. Release to finish" = "Leertaste halten zum Verschieben. Loslassen zum Abschließen";
 "Window snap: " = "Fenster-Einrasten: ";
 "ON" = "AN";
 "OFF" = "AUS";
@@ -192,6 +209,8 @@
 "Capture mouse cursor in screenshot" = "Mauszeiger im Screenshot aufnehmen";
 "Double-click selection to copy" = "Doppelklick auf Auswahl zum Kopieren";
 "Hide capture instructions" = "Aufnahmehinweise ausblenden";
+"Disable shadow outside selection" = "Schatten außerhalb der Auswahl deaktivieren";
+"Show shortcuts in tooltips" = "Kurzbefehle in Tooltips anzeigen";
 "Use window title in saved filename" = "Fenstertitel im Dateinamen verwenden";
 "Hide menu bar icon" = "Menüleistensymbol ausblenden";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Kurzbefehle funktionieren weiterhin. Um das Symbol wieder anzuzeigen, starten Sie macshot neu.";
@@ -222,14 +241,22 @@
 "Save Directory" = "Speicherort";
 "Save folder:" = "Speicherordner:";
 "Browse…" = "Durchsuchen …";
+"Save action:" = "Speicheraktion:";
+"Save to default folder" = "In Standardordner sichern";
+"Ask where to save" = "Nach Speicherort fragen";
 "Appearance" = "Erscheinungsbild";
 "Liquid Glass theme" = "Liquid Glass-Design";
 "Translucent toolbars that show the screen behind them." = "Transparente Symbolleisten, durch die der dahinterliegende Bildschirm sichtbar ist.";
 "Accent color:" = "Akzentfarbe:";
 "Icon color:" = "Symbolfarbe:";
 "Background color:" = "Hintergrundfarbe:";
+"Menu bar icon:" = "Menüleistensymbol:";
+"Default" = "Standard";
+"Custom symbol" = "Eigenes Symbol";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "Geben Sie einen beliebigen SF Symbol-Namen ein (z. B. camera.fill) oder wählen Sie eine Vorgabe. Durchsuchen Sie Namen in Apples SF Symbols-App. Ungültige Namen fallen auf das Standardsymbol zurück.";
 "Reset" = "Zurücksetzen";
 "OCR Capture:" = "OCR-Aufnahme:";
+"OCR & QR Capture:" = "OCR & QR-Aufnahme:";
 "Show window + copy to clipboard" = "Fenster anzeigen + in Zwischenablage kopieren";
 "Show window only" = "Nur Fenster anzeigen";
 "Copy to clipboard only" = "Nur in Zwischenablage kopieren";
@@ -512,6 +539,14 @@
 "Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Dateien werden in einen \"macshot\"-Ordner in deinem Google Drive hochgeladen. Alles bleibt privat — nichts wird öffentlich geteilt.";
 
 "Pressure" = "Druck";
+
+/* Resolution / Aspect ratio presets */
+"Aspect ratio & resolution presets" = "Seitenverhältnis- & Auflösungsvorgaben";
+"Aspect ratio" = "Seitenverhältnis";
+"Resolution" = "Auflösung";
+"Freeform" = "Freiform";
+"Units" = "Einheiten";
+"Keep ratio for next captures" = "Verhältnis für nächste Aufnahmen beibehalten";
 
 /* Added for v4.1.0-beta.3 — video editor, effects, open-video, shortcuts help */
 "Open Video..." = "Video öffnen ...";

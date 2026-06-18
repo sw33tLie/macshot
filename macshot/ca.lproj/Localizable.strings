@@ -41,6 +41,10 @@
 "Copy" = "Copiar";
 "Save As..." = "Desar com a...";
 "Open in Editor" = "Obrir a l'editor";
+"Open With" = "Obrir amb";
+"Open Link" = "Obrir enllaç";
+"No Apps Available" = "No hi ha aplicacions disponibles";
+"No Share Services" = "No hi ha serveis de compartició";
 "Pin to Screen" = "Fixar a la pantalla";
 "Quick Look" = "Vista rapida";
 "Delete" = "Eliminar";
@@ -58,10 +62,13 @@
 /* Editor Top Bar */
 "Zoom In" = "Ampliar";
 "Zoom Out" = "Reduir";
+"Zoom" = "Zoom";
 "Fit Canvas" = "Ajustar al llencat";
 "Crop" = "Retallar";
 "Flip Horizontal" = "Voltejar horitzontalment";
 "Flip Vertical" = "Voltejar verticalment";
+"Rotate Left" = "Girar a l'esquerra";
+"Rotate Right" = "Girar a la dreta";
 "Add Capture" = "Afegir captura";
 
 /* Toolbar - Tools */
@@ -153,6 +160,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Clic a una finestra  ·  Arrossegar per area personalitzada  ·  F per pantalla completa";
 "Drag to select  ·  Click for full screen" = "Arrossegar per seleccionar  ·  Clic per pantalla completa";
 "Release to annotate and edit" = "Deixar anar per anotar i editar";
+"Hold Space to move. Release to annotate and edit" = "Mantingueu Espai per moure. Deixeu anar per anotar i editar";
+"Hold Space to move. Release to finish" = "Mantingueu Espai per moure. Deixeu anar per acabar";
+"Release to finish" = "Deixar anar per acabar";
 "Window snap: " = "Ajust de finestra: ";
 "ON" = "ACTIVAT";
 "OFF" = "DESACTIVAT";
@@ -192,6 +202,8 @@
 "Capture mouse cursor in screenshot" = "Capturar el cursor del ratoli a la captura";
 "Double-click selection to copy" = "Doble clic a la seleccio per copiar";
 "Hide capture instructions" = "Amagar les instruccions de captura";
+"Disable shadow outside selection" = "Desactivar l'ombra fora de la selecció";
+"Show shortcuts in tooltips" = "Mostrar dreceres als consells d'eina";
 "Use window title in saved filename" = "Utilitzar el titol de la finestra al nom del fitxer";
 "Hide menu bar icon" = "Amagar la icona de la barra de menus";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Les dreceres segueixen funcionant. Per mostrar la icona de nou, reinicieu macshot.";
@@ -222,7 +234,14 @@
 "Save Directory" = "Directori de desat";
 "Save folder:" = "Carpeta de desat:";
 "Browse…" = "Explorar...";
+"Save action:" = "Acció de desat:";
+"Save to default folder" = "Desar a la carpeta per defecte";
+"Ask where to save" = "Preguntar on desar";
 "Appearance" = "Aparenca";
+"Menu bar icon:" = "Icona de la barra de menus:";
+"Default" = "Per defecte";
+"Custom symbol" = "Símbol personalitzat";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "Introduïu qualsevol nom de SF Symbol (p. ex. camera.fill) o trieu un predefinit. Exploreu els noms a l'aplicació SF Symbols d'Apple. Els noms no vàlids tornen a la icona per defecte.";
 "Liquid Glass theme" = "Tema Liquid Glass";
 "Translucent toolbars that show the screen behind them." = "Barres d'eines translucides que mostren la pantalla del darrere.";
 "Accent color:" = "Color d'accent:";
@@ -237,6 +256,14 @@
 "Save to file" = "Desar a fitxer";
 "Save + copy to clipboard" = "Desar + copiar al porta-retalls";
 "OCR Action" = "Accio OCR";
+"OCR & QR Capture:" = "Captura OCR & QR:";
+"OCR & QR" = "OCR & QR";
+"Text & QR Recognition" = "Reconeixement de text & QR";
+"Capture OCR & QR" = "Capturar OCR & QR";
+"Capture area and read text/QR codes" = "Capturar àrea i llegir text/codis QR";
+"Run OCR & QR" = "Executar OCR & QR";
+"QR Code" = "Codi QR";
+"QR Codes" = "Codis QR";
 
 /* Preferences - Shortcuts */
 "Keyboard Shortcuts" = "Dreceres de teclat";
@@ -595,3 +622,11 @@
 "Trigger macshot from Raycast, Alfred, Shortcuts, or any tool that opens URLs." = "Activeu macshot des de Raycast, Alfred, Shortcuts o qualsevol eina que obri URLs.";
 "URL scheme info" = "Informació de l'esquema d'URL";
 "sec (0 = never)" = "seg (0 = mai)";
+
+/* Capture presets — aspect ratio & resolution */
+"Aspect ratio" = "Relació d'aspecte";
+"Resolution" = "Resolució";
+"Aspect ratio & resolution presets" = "Predefinits de relació d'aspecte i resolució";
+"Freeform" = "Forma lliure";
+"Units" = "Unitats";
+"Keep ratio for next captures" = "Mantenir la relació per a les properes captures";

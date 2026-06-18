@@ -18,6 +18,8 @@
 "Capture Area" = "영역 캡처";
 "Capture Screen" = "화면 캡처";
 "Capture OCR" = "OCR 캡처";
+"Capture OCR & QR" = "OCR & QR 캡처";
+"Capture area and read text/QR codes" = "영역을 캡처하여 텍스트/QR 코드 읽기";
 "Quick Capture" = "빠른 캡처";
 "Scroll Capture" = "스크롤 캡처";
 "Capture Last Area" = "마지막 영역 캡처";
@@ -62,6 +64,9 @@
 "Crop" = "자르기";
 "Flip Horizontal" = "좌우 뒤집기";
 "Flip Vertical" = "상하 뒤집기";
+"Rotate Left" = "왼쪽으로 회전";
+"Rotate Right" = "오른쪽으로 회전";
+"Zoom" = "확대/축소";
 "Add Capture" = "캡처 추가";
 
 /* Toolbar - Tools */
@@ -97,6 +102,8 @@
 "OCR" = "OCR";
 "OCR Text" = "OCR 텍스트";
 "OCR (extract text)" = "OCR (텍스트 추출)";
+"OCR & QR" = "OCR & QR";
+"Run OCR & QR" = "OCR & QR 실행";
 "Upload" = "업로드";
 "Share" = "공유";
 "Undo" = "실행 취소";
@@ -153,6 +160,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "윈도우 클릭  ·  드래그하여 영역 선택  ·  F 전체 화면";
 "Drag to select  ·  Click for full screen" = "드래그하여 선택  ·  클릭하여 전체 화면";
 "Release to annotate and edit" = "놓으면 주석 및 편집";
+"Release to finish" = "놓으면 완료";
+"Hold Space to move. Release to annotate and edit" = "스페이스바를 누른 채로 이동. 놓으면 주석 및 편집";
+"Hold Space to move. Release to finish" = "스페이스바를 누른 채로 이동. 놓으면 완료";
 "Window snap: " = "윈도우 스냅: ";
 "ON" = "켜짐";
 "OFF" = "꺼짐";
@@ -228,7 +238,17 @@
 "Icon color:" = "아이콘 색상:";
 "Background color:" = "배경색:";
 "Reset" = "재설정";
+"Menu bar icon:" = "메뉴 막대 아이콘:";
+"Custom symbol" = "사용자 지정 기호";
+"Default" = "기본값";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "원하는 SF Symbol 이름 (예: camera.fill) 을 입력하거나 프리셋을 선택하세요. 이름은 Apple의 SF Symbols 앱에서 찾아볼 수 있습니다. 잘못된 이름은 기본 아이콘으로 대체됩니다.";
+"Save action:" = "저장 동작:";
+"Save to default folder" = "기본 폴더에 저장";
+"Ask where to save" = "저장 위치 묻기";
+"Disable shadow outside selection" = "선택 영역 바깥 그림자 비활성화";
+"Show shortcuts in tooltips" = "툴팁에 단축키 표시";
 "OCR Capture:" = "OCR 캡처:";
+"OCR & QR Capture:" = "OCR & QR 캡처:";
 "Show window + copy to clipboard" = "윈도우 표시 + 클립보드에 복사";
 "Show window only" = "윈도우만 표시";
 "Copy to clipboard only" = "클립보드에만 복사";
@@ -352,6 +372,9 @@
 
 /* OCR Window */
 "Text Recognition" = "텍스트 인식";
+"Text & QR Recognition" = "텍스트 & QR 인식";
+"QR Code" = "QR 코드";
+"QR Codes" = "QR 코드";
 "Translate to:" = "번역 대상:";
 "%d chars · %d words" = "%d자 · %d단어";
 "Copy  ⌘↩" = "복사  ⌘↩";
@@ -368,6 +391,10 @@
 "Uploaded! Link copied." = "업로드 완료! 링크가 복사되었습니다.";
 "Uploading to %@... %d%%" = "%@에 업로드 중... %d%%";
 "Open" = "열기";
+"Open Link" = "링크 열기";
+"Open With" = "다음으로 열기";
+"No Apps Available" = "사용 가능한 앱 없음";
+"No Share Services" = "공유 서비스 없음";
 
 /* Recording Toast */
 "Recording saved" = "녹화 저장됨";
@@ -595,3 +622,11 @@
 "URL scheme info" = "URL 스킴 정보";
 "Enable macshot:// URL scheme" = "macshot:// URL 스킴 사용";
 "sec (0 = never)" = "초 (0 = 사용 안 함)";
+
+/* Resolution / Aspect Ratio Presets */
+"Aspect ratio & resolution presets" = "종횡비 및 해상도 프리셋";
+"Aspect ratio" = "종횡비";
+"Resolution" = "해상도";
+"Freeform" = "자유 형식";
+"Units" = "단위";
+"Keep ratio for next captures" = "다음 캡처에도 비율 유지";

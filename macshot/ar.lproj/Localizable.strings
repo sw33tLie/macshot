@@ -41,6 +41,10 @@
 "Copy" = "نسخ";
 "Save As..." = "حفظ باسم...";
 "Open in Editor" = "فتح في المحرر";
+"Open With" = "فتح باستخدام";
+"Open Link" = "فتح الرابط";
+"No Apps Available" = "لا توجد تطبيقات متاحة";
+"No Share Services" = "لا توجد خدمات مشاركة";
 "Pin to Screen" = "تثبيت على الشاشة";
 "Quick Look" = "نظرة سريعة";
 "Delete" = "حذف";
@@ -56,10 +60,13 @@
 "Save" = "حفظ";
 
 /* Editor Top Bar */
+"Zoom" = "تكبير/تصغير";
 "Zoom In" = "تكبير";
 "Zoom Out" = "تصغير";
 "Fit Canvas" = "ملاءمة اللوحة";
 "Crop" = "اقتصاص";
+"Rotate Left" = "تدوير لليسار";
+"Rotate Right" = "تدوير لليمين";
 "Flip Horizontal" = "قلب أفقي";
 "Flip Vertical" = "قلب عمودي";
 "Add Capture" = "إضافة التقاط";
@@ -153,6 +160,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "انقر على نافذة  ·  اسحب لتحديد منطقة  ·  F لملء الشاشة";
 "Drag to select  ·  Click for full screen" = "اسحب للتحديد  ·  انقر لملء الشاشة";
 "Release to annotate and edit" = "أفلت للتعليق والتعديل";
+"Release to finish" = "أفلت للإنهاء";
+"Hold Space to move. Release to annotate and edit" = "اضغط مفتاح المسافة للتحريك. أفلت للتعليق والتعديل";
+"Hold Space to move. Release to finish" = "اضغط مفتاح المسافة للتحريك. أفلت للإنهاء";
 "Window snap: " = "التقاط النوافذ: ";
 "ON" = "تشغيل";
 "OFF" = "إيقاف";
@@ -192,9 +202,15 @@
 "Capture mouse cursor in screenshot" = "التقاط مؤشر الفأرة في لقطة الشاشة";
 "Double-click selection to copy" = "النقر المزدوج على التحديد للنسخ";
 "Hide capture instructions" = "إخفاء تعليمات الالتقاط";
+"Disable shadow outside selection" = "تعطيل الظل خارج التحديد";
+"Show shortcuts in tooltips" = "عرض الاختصارات في التلميحات";
 "Use window title in saved filename" = "استخدام عنوان النافذة في اسم الملف المحفوظ";
 "Hide menu bar icon" = "إخفاء أيقونة شريط القوائم";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "الاختصارات لا تزال تعمل. لإظهار الأيقونة مجددًا، أعد تشغيل macshot.";
+"Menu bar icon:" = "أيقونة شريط القوائم:";
+"Default" = "افتراضي";
+"Custom symbol" = "رمز مخصص";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "أدخل أي اسم SF Symbol (مثل camera.fill) أو اختر إعدادًا مسبقًا. تصفّح الأسماء في تطبيق SF Symbols من Apple. الأسماء غير الصالحة تعود إلى الأيقونة الافتراضية.";
 "Check for updates automatically" = "التحقق من التحديثات تلقائيًا";
 "Check for beta updates" = "التحقق من التحديثات التجريبية";
 "Thumbnail" = "صورة مصغرة";
@@ -222,6 +238,9 @@
 "Save Directory" = "مجلد الحفظ";
 "Save folder:" = "مجلد الحفظ:";
 "Browse…" = "استعراض…";
+"Save action:" = "إجراء الحفظ:";
+"Save to default folder" = "الحفظ في المجلد الافتراضي";
+"Ask where to save" = "السؤال عن موضع الحفظ";
 "Appearance" = "المظهر";
 "Liquid Glass theme" = "سمة Liquid Glass";
 "Translucent toolbars that show the screen behind them." = "أشرطة أدوات شبه شفافة تُظهر الشاشة خلفها.";
@@ -237,6 +256,14 @@
 "Save to file" = "حفظ في ملف";
 "Save + copy to clipboard" = "حفظ + نسخ إلى الحافظة";
 "OCR Action" = "إجراء OCR";
+"OCR & QR Capture:" = "التقاط OCR و QR:";
+"OCR & QR" = "OCR و QR";
+"Text & QR Recognition" = "التعرف على النص و QR";
+"Capture OCR & QR" = "التقاط OCR و QR";
+"Capture area and read text/QR codes" = "التقاط منطقة وقراءة النص/رموز QR";
+"Run OCR & QR" = "تشغيل OCR و QR";
+"QR Code" = "رمز QR";
+"QR Codes" = "رموز QR";
 
 /* Preferences - Shortcuts */
 "Keyboard Shortcuts" = "اختصارات لوحة المفاتيح";
@@ -514,6 +541,14 @@
 "Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "يتم تحميل الملفات إلى مجلد \"macshot\" في Google Drive الخاص بك. كل شيء يبقى خاصًا — لا يُشارك أي شيء بشكل عام.";
 
 "Pressure" = "الضغط";
+
+/* Aspect ratio & resolution presets */
+"Aspect ratio & resolution presets" = "إعدادات نسبة العرض إلى الارتفاع والدقة المسبقة";
+"Aspect ratio" = "نسبة العرض إلى الارتفاع";
+"Resolution" = "الدقة";
+"Freeform" = "حر";
+"Units" = "الوحدات";
+"Keep ratio for next captures" = "الاحتفاظ بالنسبة للالتقاطات التالية";
 
 /* Added for v4.1.0-beta.3 — video editor, effects, open-video, shortcuts help */
 "Open Video..." = "فتح فيديو...";

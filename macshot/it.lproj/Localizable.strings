@@ -46,8 +46,11 @@
 "Zoom Out" = "Zoom indietro";
 "Fit Canvas" = "Adatta alla finestra";
 "Crop" = "Ritaglia";
+"Rotate Left" = "Ruota a sinistra";
+"Rotate Right" = "Ruota a destra";
 "Flip Horizontal" = "Capovolgi orizzontale";
 "Flip Vertical" = "Capovolgi verticale";
+"Zoom" = "Zoom";
 "Add Capture" = "Aggiungi cattura";
 
 /* Toolbar - Tools */
@@ -83,8 +86,19 @@
 "OCR" = "OCR";
 "OCR Text" = "Testo OCR";
 "OCR (extract text)" = "OCR (estrai testo)";
+"OCR & QR" = "OCR e QR";
+"Capture OCR & QR" = "Cattura OCR e QR";
+"Capture area and read text/QR codes" = "Cattura l'area e leggi testo/codici QR";
+"Run OCR & QR" = "Esegui OCR e QR";
+"Text & QR Recognition" = "Riconoscimento testo e QR";
+"QR Code" = "Codice QR";
+"QR Codes" = "Codici QR";
 "Upload" = "Carica";
 "Share" = "Condividi";
+"Open With" = "Apri con";
+"Open Link" = "Apri link";
+"No Apps Available" = "Nessuna app disponibile";
+"No Share Services" = "Nessun servizio di condivisione";
 "Undo" = "Annulla";
 "Redo" = "Ripristina";
 "Close" = "Chiudi";
@@ -139,6 +153,15 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Clicca una finestra  ·  Trascina per area personalizzata  ·  F per schermo intero";
 "Drag to select  ·  Click for full screen" = "Trascina per selezionare  ·  Clicca per schermo intero";
 "Release to annotate and edit" = "Rilascia per annotare e modificare";
+"Release to finish" = "Rilascia per completare";
+"Hold Space to move. Release to annotate and edit" = "Tieni premuto Spazio per spostare. Rilascia per annotare e modificare";
+"Hold Space to move. Release to finish" = "Tieni premuto Spazio per spostare. Rilascia per completare";
+"Aspect ratio & resolution presets" = "Predefiniti di proporzioni e risoluzione";
+"Aspect ratio" = "Proporzioni";
+"Resolution" = "Risoluzione";
+"Freeform" = "Forma libera";
+"Units" = "Unità";
+"Keep ratio for next captures" = "Mantieni le proporzioni per le prossime catture";
 "Window snap: " = "Aggancio finestra: ";
 "ON" = "ON";
 "OFF" = "OFF";
@@ -178,6 +201,8 @@
 "Capture mouse cursor in screenshot" = "Cattura il cursore del mouse nello screenshot";
 "Double-click selection to copy" = "Doppio clic sulla selezione per copiare";
 "Hide capture instructions" = "Nascondi istruzioni di cattura";
+"Disable shadow outside selection" = "Disattiva l'ombra fuori dalla selezione";
+"Show shortcuts in tooltips" = "Mostra le scorciatoie nei suggerimenti";
 "Use window title in saved filename" = "Usa il titolo della finestra nel nome del file";
 "Hide menu bar icon" = "Nascondi icona nella barra dei menu";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Le scorciatoie continuano a funzionare. Per mostrare di nuovo l'icona, riavvia macshot.";
@@ -207,6 +232,9 @@
 "screenshots kept on disk (0 = off)" = "screenshot conservati su disco (0 = disattivato)";
 "Save Directory" = "Cartella di salvataggio";
 "Save folder:" = "Cartella di salvataggio:";
+"Save action:" = "Azione di salvataggio:";
+"Save to default folder" = "Salva nella cartella predefinita";
+"Ask where to save" = "Chiedi dove salvare";
 "Browse…" = "Sfoglia…";
 "Appearance" = "Aspetto";
 "Liquid Glass theme" = "Tema Liquid Glass";
@@ -215,7 +243,12 @@
 "Icon color:" = "Colore icona:";
 "Background color:" = "Colore sfondo:";
 "Reset" = "Ripristina";
+"Menu bar icon:" = "Icona nella barra dei menu:";
+"Default" = "Predefinita";
+"Custom symbol" = "Simbolo personalizzato";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "Inserisci un nome SF Symbol qualsiasi (es. camera.fill) o scegli un predefinito. Sfoglia i nomi nell'app SF Symbols di Apple. I nomi non validi ripristinano l'icona predefinita.";
 "OCR Capture:" = "Cattura OCR:";
+"OCR & QR Capture:" = "Cattura OCR e QR:";
 "Show window + copy to clipboard" = "Mostra finestra + copia negli appunti";
 "Show window only" = "Mostra solo la finestra";
 "Copy to clipboard only" = "Solo copia negli appunti";

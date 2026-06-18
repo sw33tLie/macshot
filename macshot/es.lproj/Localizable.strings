@@ -62,6 +62,9 @@
 "Crop" = "Recortar";
 "Flip Horizontal" = "Voltear horizontal";
 "Flip Vertical" = "Voltear vertical";
+"Rotate Left" = "Girar a la izquierda";
+"Rotate Right" = "Girar a la derecha";
+"Zoom" = "Zoom";
 "Add Capture" = "Agregar captura";
 
 /* Toolbar - Tools */
@@ -97,6 +100,17 @@
 "OCR" = "OCR";
 "OCR Text" = "Texto OCR";
 "OCR (extract text)" = "OCR (extraer texto)";
+"OCR & QR" = "OCR y QR";
+"Run OCR & QR" = "Ejecutar OCR y QR";
+"Text & QR Recognition" = "Reconocimiento de texto y QR";
+"Capture OCR & QR" = "Capturar OCR y QR";
+"Capture area and read text/QR codes" = "Capturar área y leer texto/códigos QR";
+"QR Code" = "Código QR";
+"QR Codes" = "Códigos QR";
+"Open Link" = "Abrir enlace";
+"Open With" = "Abrir con";
+"No Apps Available" = "No hay apps disponibles";
+"No Share Services" = "No hay servicios de compartir";
 "Upload" = "Subir";
 "Share" = "Compartir";
 "Undo" = "Deshacer";
@@ -153,6 +167,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Clic en una ventana  ·  Arrastra para area personalizada  ·  F para pantalla completa";
 "Drag to select  ·  Click for full screen" = "Arrastra para seleccionar  ·  Clic para pantalla completa";
 "Release to annotate and edit" = "Suelta para anotar y editar";
+"Release to finish" = "Suelta para terminar";
+"Hold Space to move. Release to annotate and edit" = "Mantén Espacio para mover. Suelta para anotar y editar";
+"Hold Space to move. Release to finish" = "Mantén Espacio para mover. Suelta para terminar";
 "Window snap: " = "Ajuste a ventana: ";
 "ON" = "SI";
 "OFF" = "NO";
@@ -192,6 +209,8 @@
 "Capture mouse cursor in screenshot" = "Capturar cursor del mouse en la captura";
 "Double-click selection to copy" = "Doble clic en la seleccion para copiar";
 "Hide capture instructions" = "Ocultar instrucciones de captura";
+"Disable shadow outside selection" = "Desactivar la sombra fuera de la selección";
+"Show shortcuts in tooltips" = "Mostrar atajos en las descripciones emergentes";
 "Use window title in saved filename" = "Usar titulo de ventana en el nombre de archivo";
 "Hide menu bar icon" = "Ocultar icono de la barra de menu";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Los atajos siguen funcionando. Para mostrar el icono de nuevo, reinicia macshot.";
@@ -220,6 +239,9 @@
 "History size:" = "Tamano del historial:";
 "screenshots kept on disk (0 = off)" = "capturas guardadas en disco (0 = desactivado)";
 "Save Directory" = "Directorio de guardado";
+"Save action:" = "Acción de guardado:";
+"Save to default folder" = "Guardar en la carpeta predeterminada";
+"Ask where to save" = "Preguntar dónde guardar";
 "Save folder:" = "Carpeta de guardado:";
 "Browse…" = "Examinar…";
 "Appearance" = "Apariencia";
@@ -228,8 +250,13 @@
 "Accent color:" = "Color de acento:";
 "Icon color:" = "Color del icono:";
 "Background color:" = "Color de fondo:";
+"Menu bar icon:" = "Icono de la barra de menú:";
+"Default" = "Predeterminado";
+"Custom symbol" = "Símbolo personalizado";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "Introduce cualquier nombre de SF Symbol (p. ej. camera.fill) o elige un preajuste. Explora los nombres en la app SF Symbols de Apple. Los nombres no válidos usan el icono predeterminado.";
 "Reset" = "Restablecer";
 "OCR Capture:" = "Captura OCR:";
+"OCR & QR Capture:" = "Captura OCR y QR:";
 "Show window + copy to clipboard" = "Mostrar ventana + copiar al portapapeles";
 "Show window only" = "Solo mostrar ventana";
 "Copy to clipboard only" = "Solo copiar al portapapeles";
@@ -593,3 +620,11 @@
 "Trigger macshot from Raycast, Alfred, Shortcuts, or any tool that opens URLs." = "Activa macshot desde Raycast, Alfred, Shortcuts o cualquier herramienta que abra URLs.";
 "URL scheme info" = "Información del esquema URL";
 "sec (0 = never)" = "seg (0 = nunca)";
+
+/* Resolution presets popover */
+"Aspect ratio & resolution presets" = "Preajustes de relación de aspecto y resolución";
+"Aspect ratio" = "Relación de aspecto";
+"Resolution" = "Resolución";
+"Freeform" = "Libre";
+"Units" = "Unidades";
+"Keep ratio for next captures" = "Mantener la relación para las próximas capturas";

@@ -62,6 +62,9 @@
 "Crop" = "Recadrer";
 "Flip Horizontal" = "Retourner horizontalement";
 "Flip Vertical" = "Retourner verticalement";
+"Rotate Left" = "Pivoter à gauche";
+"Rotate Right" = "Pivoter à droite";
+"Zoom" = "Zoom";
 "Add Capture" = "Ajouter une capture";
 
 /* Toolbar - Tools */
@@ -97,8 +100,19 @@
 "OCR" = "OCR";
 "OCR Text" = "Texte OCR";
 "OCR (extract text)" = "OCR (extraire le texte)";
+"OCR & QR" = "OCR & QR";
+"Run OCR & QR" = "Lancer OCR & QR";
+"Capture OCR & QR" = "Capturer OCR & QR";
+"Capture area and read text/QR codes" = "Capturer une zone et lire le texte/les codes QR";
+"Text & QR Recognition" = "Reconnaissance de texte & QR";
+"Open Link" = "Ouvrir le lien";
+"QR Code" = "Code QR";
+"QR Codes" = "Codes QR";
 "Upload" = "Téléverser";
 "Share" = "Partager";
+"Open With" = "Ouvrir avec";
+"No Apps Available" = "Aucune app disponible";
+"No Share Services" = "Aucun service de partage";
 "Undo" = "Annuler";
 "Redo" = "Rétablir";
 "Close" = "Fermer";
@@ -153,11 +167,20 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Cliquer sur une fenêtre  ·  Glisser pour une zone  ·  F pour plein écran";
 "Drag to select  ·  Click for full screen" = "Glisser pour sélectionner  ·  Cliquer pour plein écran";
 "Release to annotate and edit" = "Relâcher pour annoter et modifier";
+"Release to finish" = "Relâcher pour terminer";
+"Hold Space to move. Release to annotate and edit" = "Maintenir Espace pour déplacer. Relâcher pour annoter et modifier";
+"Hold Space to move. Release to finish" = "Maintenir Espace pour déplacer. Relâcher pour terminer";
 "Window snap: " = "Accrochage fenêtre : ";
 "ON" = "OUI";
 "OFF" = "NON";
 "  (Tab to toggle)" = "  (Tab pour basculer)";
 "Right-click to copy" = "Clic droit pour copier";
+"Aspect ratio & resolution presets" = "Préréglages de ratio et de résolution";
+"Aspect ratio" = "Ratio d'aspect";
+"Resolution" = "Résolution";
+"Freeform" = "Libre";
+"Units" = "Unités";
+"Keep ratio for next captures" = "Conserver le ratio pour les prochaines captures";
 "Copied %@" = "%@ copié";
 "Set color %@" = "Couleur définie %@";
 "Draw something first to use the move tool." = "Dessinez d'abord quelque chose pour utiliser l'outil de déplacement.";
@@ -192,6 +215,8 @@
 "Capture mouse cursor in screenshot" = "Capturer le curseur dans la capture d'écran";
 "Double-click selection to copy" = "Double-cliquer sur la sélection pour copier";
 "Hide capture instructions" = "Masquer les instructions de capture";
+"Disable shadow outside selection" = "Désactiver l'ombre en dehors de la sélection";
+"Show shortcuts in tooltips" = "Afficher les raccourcis dans les info-bulles";
 "Use window title in saved filename" = "Utiliser le titre de la fenêtre dans le nom du fichier";
 "Hide menu bar icon" = "Masquer l'icône de la barre des menus";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Les raccourcis restent actifs. Pour réafficher l'icône, relancez macshot.";
@@ -220,6 +245,9 @@
 "History size:" = "Taille de l'historique :";
 "screenshots kept on disk (0 = off)" = "captures conservées sur le disque (0 = désactivé)";
 "Save Directory" = "Dossier d'enregistrement";
+"Save action:" = "Action d'enregistrement :";
+"Save to default folder" = "Enregistrer dans le dossier par défaut";
+"Ask where to save" = "Demander où enregistrer";
 "Save folder:" = "Dossier :";
 "Browse…" = "Parcourir…";
 "Appearance" = "Apparence";
@@ -229,7 +257,12 @@
 "Icon color:" = "Couleur de l'icône :";
 "Background color:" = "Couleur de fond :";
 "Reset" = "Réinitialiser";
+"Menu bar icon:" = "Icône de la barre des menus :";
+"Default" = "Par défaut";
+"Custom symbol" = "Symbole personnalisé";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "Saisissez n'importe quel nom de SF Symbol (par ex. camera.fill) ou choisissez un préréglage. Parcourez les noms dans l'app SF Symbols d'Apple. Les noms invalides reviennent à l'icône par défaut.";
 "OCR Capture:" = "Capture OCR :";
+"OCR & QR Capture:" = "Capture OCR & QR :";
 "Show window + copy to clipboard" = "Afficher la fenêtre + copier dans le presse-papiers";
 "Show window only" = "Afficher la fenêtre uniquement";
 "Copy to clipboard only" = "Copier dans le presse-papiers uniquement";

@@ -41,6 +41,10 @@
 "Copy" = "העתק";
 "Save As..." = "שמור בשם...";
 "Open in Editor" = "פתח בעורך";
+"Open With" = "פתח באמצעות";
+"Open Link" = "פתח קישור";
+"No Apps Available" = "אין יישומים זמינים";
+"No Share Services" = "אין שירותי שיתוף";
 "Pin to Screen" = "הצמד למסך";
 "Quick Look" = "הצצה מהירה";
 "Delete" = "מחק";
@@ -56,10 +60,13 @@
 "Save" = "שמור";
 
 /* Editor Top Bar */
+"Zoom" = "מרחק מתצוגה";
 "Zoom In" = "הגדל";
 "Zoom Out" = "הקטן";
 "Fit Canvas" = "התאם לקנבס";
 "Crop" = "חתוך";
+"Rotate Left" = "סובב שמאלה";
+"Rotate Right" = "סובב ימינה";
 "Flip Horizontal" = "הפוך אופקית";
 "Flip Vertical" = "הפוך אנכית";
 "Add Capture" = "הוסף לכידה";
@@ -153,6 +160,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "לחץ על חלון  ·  גרור לאזור מותאם  ·  F למסך מלא";
 "Drag to select  ·  Click for full screen" = "גרור לבחירה  ·  לחץ למסך מלא";
 "Release to annotate and edit" = "שחרר להוספת הערות ועריכה";
+"Release to finish" = "שחרר לסיום";
+"Hold Space to move. Release to annotate and edit" = "החזק רווח להזזה. שחרר להוספת הערות ועריכה";
+"Hold Space to move. Release to finish" = "החזק רווח להזזה. שחרר לסיום";
 "Window snap: " = "הצמדה לחלון: ";
 "ON" = "פעיל";
 "OFF" = "כבוי";
@@ -192,9 +202,15 @@
 "Capture mouse cursor in screenshot" = "לכוד סמן עכבר בצילום מסך";
 "Double-click selection to copy" = "לחיצה כפולה על הבחירה להעתקה";
 "Hide capture instructions" = "הסתר הוראות צילום";
+"Disable shadow outside selection" = "השבת הצללה מחוץ לבחירה";
+"Show shortcuts in tooltips" = "הצג קיצורים בתיאורי כלים";
 "Use window title in saved filename" = "השתמש בכותרת חלון בשם הקובץ";
 "Hide menu bar icon" = "הסתר סמל שורת התפריטים";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "מקשי קיצור עדיין פועלים. להצגת הסמל שוב, הפעל מחדש את macshot.";
+"Menu bar icon:" = "סמל שורת התפריטים:";
+"Default" = "ברירת מחדל";
+"Custom symbol" = "סמל מותאם אישית";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "הזן שם SF Symbol כלשהו (למשל camera.fill) או בחר ערכה מוגדרת מראש. עיין בשמות באפליקציית SF Symbols של Apple. שמות לא חוקיים חוזרים לסמל ברירת המחדל.";
 "Check for updates automatically" = "בדוק עדכונים באופן אוטומטי";
 "Check for beta updates" = "בדוק עדכוני בטא";
 "Thumbnail" = "תמונה ממוזערת";
@@ -222,6 +238,9 @@
 "Save Directory" = "תיקיית שמירה";
 "Save folder:" = "תיקיית שמירה:";
 "Browse…" = "עיין…";
+"Save action:" = "פעולת שמירה:";
+"Save to default folder" = "שמור לתיקיית ברירת המחדל";
+"Ask where to save" = "שאל היכן לשמור";
 "Appearance" = "מראה";
 "Liquid Glass theme" = "ערכת נושא Liquid Glass";
 "Translucent toolbars that show the screen behind them." = "סרגלי כלים שקופים למחצה שמציגים את המסך שמאחוריהם.";
@@ -237,6 +256,14 @@
 "Save to file" = "שמור לקובץ";
 "Save + copy to clipboard" = "שמור + העתק ללוח";
 "OCR Action" = "פעולת OCR";
+"OCR & QR Capture:" = "לכידת OCR ו-QR:";
+"OCR & QR" = "OCR ו-QR";
+"Text & QR Recognition" = "זיהוי טקסט ו-QR";
+"Capture OCR & QR" = "לכידת OCR ו-QR";
+"Capture area and read text/QR codes" = "לכוד אזור וקרא טקסט/קודי QR";
+"Run OCR & QR" = "הפעל OCR ו-QR";
+"QR Code" = "קוד QR";
+"QR Codes" = "קודי QR";
 
 /* Preferences - Shortcuts */
 "Keyboard Shortcuts" = "קיצורי מקלדת";
@@ -514,6 +541,14 @@
 "Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "הקבצים מועלים לתיקייה \"macshot\" ב-Google Drive שלך. הכל נשאר פרטי — שום דבר אינו משותף באופן ציבורי.";
 
 "Pressure" = "לחץ";
+
+/* Aspect ratio & resolution presets */
+"Aspect ratio & resolution presets" = "ערכות יחס גובה-רוחב ורזולוציה מוגדרות מראש";
+"Aspect ratio" = "יחס גובה-רוחב";
+"Resolution" = "רזולוציה";
+"Freeform" = "חופשי";
+"Units" = "יחידות";
+"Keep ratio for next captures" = "שמור יחס ללכידות הבאות";
 
 /* Added for v4.1.0-beta.3 — video editor, effects, open-video, shortcuts help */
 "Open Video..." = "פתח וידאו...";

@@ -18,6 +18,10 @@
 "Capture Area" = "এলাকা ক্যাপচার";
 "Capture Screen" = "স্ক্রিন ক্যাপচার";
 "Capture OCR" = "OCR ক্যাপচার";
+"Capture OCR & QR" = "OCR ও QR ক্যাপচার";
+"Capture area and read text/QR codes" = "এলাকা ক্যাপচার করুন এবং টেক্সট/QR কোড পড়ুন";
+"OCR & QR" = "OCR ও QR";
+"Run OCR & QR" = "OCR ও QR চালান";
 "Quick Capture" = "দ্রুত ক্যাপচার";
 "Scroll Capture" = "স্ক্রল ক্যাপচার";
 "Capture Last Area" = "শেষ এলাকা ক্যাপচার";
@@ -41,6 +45,7 @@
 "Copy" = "কপি";
 "Save As..." = "এইরূপে সংরক্ষণ...";
 "Open in Editor" = "সম্পাদকে খুলুন";
+"Open With" = "এর সাহায্যে খুলুন";
 "Pin to Screen" = "স্ক্রিনে পিন করুন";
 "Quick Look" = "দ্রুত দেখুন";
 "Delete" = "মুছুন";
@@ -58,10 +63,13 @@
 /* Editor Top Bar */
 "Zoom In" = "জুম ইন";
 "Zoom Out" = "জুম আউট";
+"Zoom" = "জুম";
 "Fit Canvas" = "ক্যানভাসে মানানসই";
 "Crop" = "ক্রপ";
 "Flip Horizontal" = "অনুভূমিক উল্টান";
 "Flip Vertical" = "উল্লম্ব উল্টান";
+"Rotate Left" = "বামে ঘোরান";
+"Rotate Right" = "ডানে ঘোরান";
 "Add Capture" = "ক্যাপচার যোগ করুন";
 
 /* Toolbar - Tools */
@@ -99,6 +107,8 @@
 "OCR (extract text)" = "OCR (টেক্সট বের করুন)";
 "Upload" = "আপলোড";
 "Share" = "শেয়ার";
+"No Apps Available" = "কোনো অ্যাপ উপলব্ধ নেই";
+"No Share Services" = "কোনো শেয়ার সেবা নেই";
 "Undo" = "পূর্বাবস্থায় ফেরান";
 "Redo" = "পুনরায় করুন";
 "Close" = "বন্ধ";
@@ -153,6 +163,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "উইন্ডোতে ক্লিক করুন  ·  কাস্টম এলাকার জন্য টানুন  ·  পূর্ণ স্ক্রিনের জন্য F";
 "Drag to select  ·  Click for full screen" = "নির্বাচন করতে টানুন  ·  পূর্ণ স্ক্রিনের জন্য ক্লিক করুন";
 "Release to annotate and edit" = "টীকা ও সম্পাদনার জন্য ছেড়ে দিন";
+"Release to finish" = "শেষ করতে ছেড়ে দিন";
+"Hold Space to move. Release to annotate and edit" = "সরাতে Space ধরে রাখুন। টীকা ও সম্পাদনার জন্য ছেড়ে দিন";
+"Hold Space to move. Release to finish" = "সরাতে Space ধরে রাখুন। শেষ করতে ছেড়ে দিন";
 "Window snap: " = "উইন্ডো স্ন্যাপ: ";
 "ON" = "চালু";
 "OFF" = "বন্ধ";
@@ -192,8 +205,14 @@
 "Capture mouse cursor in screenshot" = "স্ক্রিনশটে মাউস কার্সর ক্যাপচার করুন";
 "Double-click selection to copy" = "কপি করতে নির্বাচনে ডাবল-ক্লিক করুন";
 "Hide capture instructions" = "ক্যাপচার নির্দেশাবলী লুকান";
+"Disable shadow outside selection" = "নির্বাচনের বাইরে ছায়া নিষ্ক্রিয় করুন";
+"Show shortcuts in tooltips" = "টুলটিপে শর্টকাট দেখান";
 "Use window title in saved filename" = "সংরক্ষিত ফাইলনামে উইন্ডো শিরোনাম ব্যবহার করুন";
 "Hide menu bar icon" = "মেনু বার আইকন লুকান";
+"Menu bar icon:" = "মেনু বার আইকন:";
+"Custom symbol" = "কাস্টম প্রতীক";
+"Default" = "ডিফল্ট";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "যেকোনো SF Symbol নাম লিখুন (যেমন camera.fill) বা একটি প্রিসেট বেছে নিন। Apple-এর SF Symbols অ্যাপে নাম ব্রাউজ করুন। অবৈধ নাম ডিফল্ট আইকনে ফিরে যায়।";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "হটকি এখনও কাজ করে। আইকন আবার দেখাতে macshot পুনরায় চালু করুন।";
 "Check for updates automatically" = "স্বয়ংক্রিয়ভাবে আপডেট পরীক্ষা করুন";
 "Check for beta updates" = "বিটা আপডেট পরীক্ষা করুন";
@@ -221,6 +240,9 @@
 "screenshots kept on disk (0 = off)" = "ডিস্কে রাখা স্ক্রিনশট (0 = বন্ধ)";
 "Save Directory" = "সংরক্ষণ ডিরেক্টরি";
 "Save folder:" = "সংরক্ষণ ফোল্ডার:";
+"Save action:" = "সংরক্ষণ অ্যাকশন:";
+"Save to default folder" = "ডিফল্ট ফোল্ডারে সংরক্ষণ";
+"Ask where to save" = "কোথায় সংরক্ষণ করবেন জিজ্ঞাসা করুন";
 "Browse…" = "ব্রাউজ করুন…";
 "Appearance" = "চেহারা";
 "Liquid Glass theme" = "Liquid Glass থিম";
@@ -237,6 +259,15 @@
 "Save to file" = "ফাইলে সংরক্ষণ";
 "Save + copy to clipboard" = "সংরক্ষণ + ক্লিপবোর্ডে কপি";
 "OCR Action" = "OCR অ্যাকশন";
+"OCR & QR Capture:" = "OCR ও QR ক্যাপচার:";
+
+/* Capture Presets — aspect ratio / resolution */
+"Aspect ratio & resolution presets" = "অ্যাসপেক্ট অনুপাত ও রেজোলিউশন প্রিসেট";
+"Aspect ratio" = "অ্যাসপেক্ট অনুপাত";
+"Resolution" = "রেজোলিউশন";
+"Freeform" = "মুক্তরূপ";
+"Units" = "একক";
+"Keep ratio for next captures" = "পরবর্তী ক্যাপচারের জন্য অনুপাত রাখুন";
 
 /* Preferences - Shortcuts */
 "Keyboard Shortcuts" = "কীবোর্ড শর্টকাট";
@@ -353,6 +384,9 @@
 
 /* OCR Window */
 "Text Recognition" = "টেক্সট সনাক্তকরণ";
+"Text & QR Recognition" = "টেক্সট ও QR সনাক্তকরণ";
+"QR Code" = "QR কোড";
+"QR Codes" = "QR কোড";
 "Translate to:" = "এতে অনুবাদ করুন:";
 "%d chars · %d words" = "%d অক্ষর · %d শব্দ";
 "Copy  ⌘↩" = "কপি  ⌘↩";
@@ -386,6 +420,7 @@
 
 /* Barcode Detector */
 /* "Open" and "Copy" are shared with other sections */
+"Open Link" = "লিংক খুলুন";
 
 /* Save Panel */
 "Save As..." = "এইরূপে সংরক্ষণ...";

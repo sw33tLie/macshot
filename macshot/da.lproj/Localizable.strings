@@ -18,6 +18,8 @@
 "Capture Area" = "Optag omr\U00E5de";
 "Capture Screen" = "Optag sk\U00E6rm";
 "Capture OCR" = "Optag OCR";
+"Capture OCR & QR" = "Optag OCR & QR";
+"Capture area and read text/QR codes" = "Optag omr\U00E5de og l\U00E6s tekst/QR-koder";
 "Quick Capture" = "Hurtig optagelse";
 "Scroll Capture" = "Rulleoptagelse";
 "Capture Last Area" = "Optag sidste omr\U00E5de";
@@ -56,10 +58,13 @@
 "Save" = "Gem";
 
 /* Editor Top Bar */
+"Zoom" = "Zoom";
 "Zoom In" = "Zoom ind";
 "Zoom Out" = "Zoom ud";
 "Fit Canvas" = "Tilpas l\U00E6rred";
 "Crop" = "Besk\U00E6r";
+"Rotate Left" = "Rot\U00E9r mod venstre";
+"Rotate Right" = "Rot\U00E9r mod h\U00F8jre";
 "Flip Horizontal" = "Vend vandret";
 "Flip Vertical" = "Vend lodret";
 "Add Capture" = "Tilf\U00F8j optagelse";
@@ -97,6 +102,12 @@
 "OCR" = "OCR";
 "OCR Text" = "OCR-tekst";
 "OCR (extract text)" = "OCR (udtræk tekst)";
+"OCR & QR" = "OCR & QR";
+"Run OCR & QR" = "K\U00F8r OCR & QR";
+"Text & QR Recognition" = "Tekst- & QR-genkendelse";
+"QR Code" = "QR-kode";
+"QR Codes" = "QR-koder";
+"Open Link" = "\U00C5bn link";
 "Upload" = "Upload";
 "Share" = "Del";
 "Undo" = "Fortryd";
@@ -112,6 +123,12 @@
 "Translate" = "Overs\U00E6t";
 "Auto-Redact sensitive data" = "Auto-censurer f\U00F8lsomme data";
 "Move Selection" = "Flyt markering";
+"Aspect ratio & resolution presets" = "Forudindstillinger for billedformat og opl\U00F8sning";
+"Aspect ratio" = "Billedformat";
+"Resolution" = "Opl\U00F8sning";
+"Freeform" = "Frih\U00E5nd";
+"Units" = "Enheder";
+"Keep ratio for next captures" = "Behold forhold til n\U00E6ste optagelser";
 
 /* Toolbar - Recording */
 "Start Recording" = "Start optagelse";
@@ -153,6 +170,9 @@
 "Click a window  \U00B7  Drag for custom area  \U00B7  F for full screen" = "Klik p\U00E5 et vindue  \U00B7  Tr\U00E6k for tilpasset omr\U00E5de  \U00B7  F for fuld sk\U00E6rm";
 "Drag to select  \U00B7  Click for full screen" = "Tr\U00E6k for at v\U00E6lge  \U00B7  Klik for fuld sk\U00E6rm";
 "Release to annotate and edit" = "Slip for at annotere og redigere";
+"Release to finish" = "Slip for at afslutte";
+"Hold Space to move. Release to annotate and edit" = "Hold mellemrum for at flytte. Slip for at annotere og redigere";
+"Hold Space to move. Release to finish" = "Hold mellemrum for at flytte. Slip for at afslutte";
 "Window snap: " = "Vinduesfang: ";
 "ON" = "TIL";
 "OFF" = "FRA";
@@ -168,6 +188,9 @@
 "FPS:" = "FPS:";
 "When done:" = "N\U00E5r f\U00E6rdig:";
 "Open editor" = "\U00C5bn redigering";
+"Open With" = "\U00C5bn med";
+"No Apps Available" = "Ingen apps tilg\U00E6ngelige";
+"No Share Services" = "Ingen delingstjenester";
 "Show in Finder" = "Vis i Finder";
 "Copy to clipboard" = "Kopi\U00E9r til udklipsholder";
 
@@ -225,6 +248,7 @@
 "Background color:" = "Baggrundsfarve:";
 "Reset" = "Nulstil";
 "OCR Capture:" = "OCR-optagelse:";
+"OCR & QR Capture:" = "OCR- & QR-optagelse:";
 "Show window + copy to clipboard" = "Vis vindue + kopi\U00E9r til udklipsholder";
 "Show window only" = "Vis kun vindue";
 "Copy to clipboard only" = "Kopi\U00E9r kun til udklipsholder";
@@ -232,6 +256,15 @@
 "Save to file" = "Gem i fil";
 "Save + copy to clipboard" = "Gem + kopi\U00E9r til udklipsholder";
 "OCR Action" = "OCR-handling";
+"Save action:" = "Gemmehandling:";
+"Save to default folder" = "Gem i standardmappe";
+"Ask where to save" = "Sp\U00F8rg, hvor der skal gemmes";
+"Disable shadow outside selection" = "Deaktiv\U00E9r skygge uden for markering";
+"Show shortcuts in tooltips" = "Vis genveje i v\U00E6rkt\U00F8jstips";
+"Menu bar icon:" = "Menulinjeikon:";
+"Default" = "Standard";
+"Custom symbol" = "Tilpasset symbol";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "Indtast et hvilket som helst SF Symbol-navn (f.eks. camera.fill) eller v\U00E6lg en forudindstilling. Gennemse navne i Apples SF Symbols-app. Ugyldige navne falder tilbage til standardikonet.";
 
 /* Preferences - Shortcuts */
 "Keyboard Shortcuts" = "Tastaturgenveje";

@@ -18,6 +18,10 @@
 "Capture Area" = "பகுதியைப் பிடி";
 "Capture Screen" = "திரையைப் பிடி";
 "Capture OCR" = "OCR பிடிப்பு";
+"Capture OCR & QR" = "OCR & QR பிடிப்பு";
+"Capture area and read text/QR codes" = "பகுதியைப் பிடித்து உரை/QR குறியீடுகளைப் படி";
+"OCR & QR" = "OCR & QR";
+"Run OCR & QR" = "OCR & QR இயக்கு";
 "Quick Capture" = "விரைவு பிடிப்பு";
 "Scroll Capture" = "உருள் பிடிப்பு";
 "Capture Last Area" = "கடைசி பகுதியை பிடி";
@@ -41,6 +45,8 @@
 "Copy" = "நகலெடு";
 "Save As..." = "இவ்வாறு சேமி...";
 "Open in Editor" = "திருத்தியில் திற";
+"Open With" = "இதனுடன் திற";
+"Open Link" = "இணைப்பைத் திற";
 "Pin to Screen" = "திரையில் பொருத்து";
 "Quick Look" = "விரைவுப் பார்வை";
 "Delete" = "நீக்கு";
@@ -58,10 +64,13 @@
 /* Editor Top Bar */
 "Zoom In" = "பெரிதாக்கு";
 "Zoom Out" = "சிறிதாக்கு";
+"Zoom" = "பெரிதாக்கம்";
 "Fit Canvas" = "கேன்வாஸுக்குப் பொருத்து";
 "Crop" = "செதுக்கு";
 "Flip Horizontal" = "கிடைமட்டமாகப் புரட்டு";
 "Flip Vertical" = "செங்குத்தாகப் புரட்டு";
+"Rotate Left" = "இடதுபுறம் சுழற்று";
+"Rotate Right" = "வலதுபுறம் சுழற்று";
 "Add Capture" = "பிடிப்பைச் சேர்";
 
 /* Toolbar - Tools */
@@ -99,6 +108,8 @@
 "OCR (extract text)" = "OCR (உரையைப் பிரி)";
 "Upload" = "பதிவேற்று";
 "Share" = "பகிர்";
+"No Apps Available" = "பயன்பாடுகள் எதுவும் இல்லை";
+"No Share Services" = "பகிர்வு சேவைகள் இல்லை";
 "Undo" = "செயல்தவிர்";
 "Redo" = "மீண்டும் செய்";
 "Close" = "மூடு";
@@ -153,6 +164,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "சாளரத்தைக் கிளிக் செய்  ·  தனிப்பயன் பகுதிக்கு இழு  ·  முழுத்திரைக்கு F";
 "Drag to select  ·  Click for full screen" = "தேர்வு செய்ய இழு  ·  முழுத்திரைக்கு கிளிக் செய்";
 "Release to annotate and edit" = "குறிப்பெழுத மற்றும் திருத்த விடுவி";
+"Release to finish" = "முடிக்க விடுவி";
+"Hold Space to move. Release to annotate and edit" = "நகர்த்த Space ஐ அழுத்திப் பிடி. குறிப்பெழுத மற்றும் திருத்த விடுவி";
+"Hold Space to move. Release to finish" = "நகர்த்த Space ஐ அழுத்திப் பிடி. முடிக்க விடுவி";
 "Window snap: " = "சாளர ஒட்டுதல்: ";
 "ON" = "இயக்கு";
 "OFF" = "நிறுத்து";
@@ -193,6 +207,16 @@
 "Double-click selection to copy" = "நகலெடுக்க தேர்வில் இருமுறை கிளிக் செய்க";
 "Hide capture instructions" = "பிடிப்பு வழிமுறைகளை மறை";
 "Use window title in saved filename" = "சேமிக்கும் கோப்புப் பெயரில் சாளரத் தலைப்பைப் பயன்படுத்து";
+"Disable shadow outside selection" = "தேர்வுக்கு வெளியே நிழலை முடக்கு";
+"Show shortcuts in tooltips" = "கருவித்துணுக்குகளில் குறுக்குவழிகளைக் காட்டு";
+
+/* Capture Presets */
+"Aspect ratio" = "விகிதம்";
+"Resolution" = "தெளிவுத்திறன்";
+"Aspect ratio & resolution presets" = "விகிதம் & தெளிவுத்திறன் முன்னமைவுகள்";
+"Freeform" = "சுதந்திர வடிவம்";
+"Units" = "அலகுகள்";
+"Keep ratio for next captures" = "அடுத்த பிடிப்புகளுக்கு விகிதத்தை வைத்திரு";
 "Hide menu bar icon" = "பட்டிப்பட்டை ஐகானை மறை";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "விரைவு விசைகள் செயல்படும். ஐகானை மீண்டும் காட்ட, macshot-ஐ மறுதொடக்கம் செய்யுங்கள்.";
 "Check for updates automatically" = "புதுப்பிப்புகளைத் தானாகச் சரிபார்";
@@ -220,6 +244,9 @@
 "History size:" = "வரலாற்று அளவு:";
 "screenshots kept on disk (0 = off)" = "வட்டில் வைக்கப்படும் திரைப்பிடிப்புகள் (0 = நிறுத்து)";
 "Save Directory" = "சேமிப்பு அடைவு";
+"Save action:" = "சேமிப்புச் செயல்:";
+"Save to default folder" = "இயல்புநிலை கோப்புறையில் சேமி";
+"Ask where to save" = "எங்கே சேமிப்பது என்று கேள்";
 "Save folder:" = "சேமிப்பு கோப்புறை:";
 "Browse…" = "உலாவு…";
 "Appearance" = "தோற்றம்";
@@ -227,9 +254,14 @@
 "Translucent toolbars that show the screen behind them." = "அவற்றுக்குப் பின்னால் உள்ள திரையைக் காட்டும் ஒளிஊடுருவும் கருவிப்பட்டைகள்.";
 "Accent color:" = "முதன்மை நிறம்:";
 "Icon color:" = "ஐகான் நிறம்:";
+"Menu bar icon:" = "பட்டிப்பட்டை ஐகான்:";
+"Default" = "இயல்புநிலை";
+"Custom symbol" = "தனிப்பயன் சின்னம்";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "எந்த SF Symbol பெயரையும் உள்ளிடவும் (எ.கா. camera.fill) அல்லது ஒரு முன்னமைவைத் தேர்வுசெய்யவும். Apple-இன் SF Symbols பயன்பாட்டில் பெயர்களை உலாவவும். தவறான பெயர்கள் இயல்புநிலை ஐகானுக்குத் திரும்பும்.";
 "Background color:" = "பின்னணி நிறம்:";
 "Reset" = "மீட்டமை";
 "OCR Capture:" = "OCR பிடிப்பு:";
+"OCR & QR Capture:" = "OCR & QR பிடிப்பு:";
 "Show window + copy to clipboard" = "சாளரத்தைக் காட்டு + ஒட்டுப்பலகையில் நகலெடு";
 "Show window only" = "சாளரத்தை மட்டும் காட்டு";
 "Copy to clipboard only" = "ஒட்டுப்பலகையில் மட்டும் நகலெடு";
@@ -353,6 +385,9 @@
 
 /* OCR Window */
 "Text Recognition" = "உரை அடையாளம்";
+"Text & QR Recognition" = "உரை & QR அடையாளம்";
+"QR Code" = "QR குறியீடு";
+"QR Codes" = "QR குறியீடுகள்";
 "Translate to:" = "இதற்கு மொழிபெயர்:";
 "%d chars · %d words" = "%d எழுத்துகள் · %d சொற்கள்";
 "Copy  ⌘↩" = "நகலெடு  ⌘↩";

@@ -62,6 +62,8 @@
 "Crop" = "Bijsnijden";
 "Flip Horizontal" = "Horizontaal spiegelen";
 "Flip Vertical" = "Verticaal spiegelen";
+"Rotate Left" = "Linksom draaien";
+"Rotate Right" = "Rechtsom draaien";
 "Add Capture" = "Opname toevoegen";
 
 /* Toolbar - Tools */
@@ -97,6 +99,17 @@
 "OCR" = "OCR";
 "OCR Text" = "OCR-tekst";
 "OCR (extract text)" = "OCR (tekst extraheren)";
+"OCR & QR" = "OCR & QR";
+"Capture OCR & QR" = "OCR & QR vastleggen";
+"Capture area and read text/QR codes" = "Gebied vastleggen en tekst/QR-codes lezen";
+"Run OCR & QR" = "OCR & QR uitvoeren";
+"Text & QR Recognition" = "Tekst- & QR-herkenning";
+"QR Code" = "QR-code";
+"QR Codes" = "QR-codes";
+"Open Link" = "Link openen";
+"Open With" = "Openen met";
+"No Apps Available" = "Geen apps beschikbaar";
+"No Share Services" = "Geen deeldiensten";
 "Upload" = "Uploaden";
 "Share" = "Deel";
 "Undo" = "Ongedaan maken";
@@ -153,6 +166,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Klik op een venster  ·  Sleep voor aangepast gebied  ·  F voor volledig scherm";
 "Drag to select  ·  Click for full screen" = "Sleep om te selecteren  ·  Klik voor volledig scherm";
 "Release to annotate and edit" = "Laat los om te annoteren en bewerken";
+"Release to finish" = "Laat los om te voltooien";
+"Hold Space to move. Release to annotate and edit" = "Houd Spatie ingedrukt om te verplaatsen. Laat los om te annoteren en bewerken";
+"Hold Space to move. Release to finish" = "Houd Spatie ingedrukt om te verplaatsen. Laat los om te voltooien";
 "Window snap: " = "Venster-snap: ";
 "ON" = "AAN";
 "OFF" = "UIT";
@@ -192,6 +208,8 @@
 "Capture mouse cursor in screenshot" = "Muiscursor vastleggen in schermafbeelding";
 "Double-click selection to copy" = "Dubbelklik op selectie om te kopiëren";
 "Hide capture instructions" = "Opname-instructies verbergen";
+"Disable shadow outside selection" = "Schaduw buiten selectie uitschakelen";
+"Show shortcuts in tooltips" = "Sneltoetsen in knopinfo tonen";
 "Use window title in saved filename" = "Venstertitel gebruiken in bestandsnaam";
 "Hide menu bar icon" = "Menubalkpictogram verbergen";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Sneltoetsen werken nog steeds. Start macshot opnieuw op om het pictogram weer te tonen.";
@@ -220,6 +238,9 @@
 "History size:" = "Geschiedenisgrootte:";
 "screenshots kept on disk (0 = off)" = "schermafbeeldingen bewaard op schijf (0 = uit)";
 "Save Directory" = "Opslagmap";
+"Save action:" = "Opslagactie:";
+"Save to default folder" = "Opslaan in standaardmap";
+"Ask where to save" = "Vragen waar op te slaan";
 "Save folder:" = "Opslagmap:";
 "Browse…" = "Bladeren…";
 "Appearance" = "Weergave";
@@ -229,7 +250,12 @@
 "Icon color:" = "Pictogramkleur:";
 "Background color:" = "Achtergrondkleur:";
 "Reset" = "Herstel";
+"Menu bar icon:" = "Menubalkpictogram:";
+"Default" = "Standaard";
+"Custom symbol" = "Aangepast symbool";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "Voer een willekeurige SF Symbol-naam in (bijv. camera.fill) of kies een voorinstelling. Blader door namen in Apple's SF Symbols-app. Ongeldige namen vallen terug op het standaardpictogram.";
 "OCR Capture:" = "OCR-opname:";
+"OCR & QR Capture:" = "OCR & QR-opname:";
 "Show window + copy to clipboard" = "Venster tonen + kopieren naar klembord";
 "Show window only" = "Alleen venster tonen";
 "Copy to clipboard only" = "Alleen kopieren naar klembord";
@@ -593,3 +619,12 @@
 "Trigger macshot from Raycast, Alfred, Shortcuts, or any tool that opens URLs." = "Activeer macshot vanuit Raycast, Alfred, Shortcuts of elke tool die URL's opent.";
 "URL scheme info" = "URL-schema-info";
 "sec (0 = never)" = "sec (0 = nooit)";
+
+/* Resolution / aspect ratio presets */
+"Aspect ratio & resolution presets" = "Voorinstellingen voor beeldverhouding en resolutie";
+"Aspect ratio" = "Beeldverhouding";
+"Resolution" = "Resolutie";
+"Freeform" = "Vrije vorm";
+"Units" = "Eenheden";
+"Keep ratio for next captures" = "Verhouding behouden voor volgende opnames";
+"Zoom" = "Zoom";

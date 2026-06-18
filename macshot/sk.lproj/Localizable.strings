@@ -18,6 +18,8 @@
 "Capture Area" = "Zachytit oblast";
 "Capture Screen" = "Zachytit obrazovku";
 "Capture OCR" = "Zachytit OCR";
+"Capture OCR & QR" = "Zachytiť OCR a QR";
+"Capture area and read text/QR codes" = "Zachytiť oblasť a načítať text/QR kódy";
 "Quick Capture" = "Rychle zachytit";
 "Scroll Capture" = "Zachytit posun";
 "Capture Last Area" = "Zachytiť poslednú oblasť";
@@ -62,6 +64,9 @@
 "Crop" = "Orezat";
 "Flip Horizontal" = "Preklopit vodorovne";
 "Flip Vertical" = "Preklopit zvisle";
+"Rotate Left" = "Otočiť doľava";
+"Rotate Right" = "Otočiť doprava";
+"Zoom" = "Priblíženie";
 "Add Capture" = "Pridat zachytenie";
 
 /* Toolbar - Tools */
@@ -86,6 +91,14 @@
 "Select & Edit" = "Vybrat a upravit";
 "Color" = "Farba";
 
+/* Aspect ratio & resolution presets */
+"Aspect ratio & resolution presets" = "Predvoľby pomeru strán a rozlíšenia";
+"Aspect ratio" = "Pomer strán";
+"Resolution" = "Rozlíšenie";
+"Freeform" = "Voľný tvar";
+"Units" = "Jednotky";
+"Keep ratio for next captures" = "Zachovať pomer pre ďalšie snímky";
+
 /* Toolbar - Actions */
 "Copy to Clipboard" = "Kopirovat do schranky";
 "Save to File" = "Ulozit do suboru";
@@ -97,6 +110,15 @@
 "OCR" = "OCR";
 "OCR Text" = "OCR text";
 "OCR (extract text)" = "OCR (extrahovat text)";
+"OCR & QR" = "OCR a QR";
+"Run OCR & QR" = "Spustiť OCR a QR";
+"Text & QR Recognition" = "Rozpoznávanie textu a QR";
+"QR Code" = "QR kód";
+"QR Codes" = "QR kódy";
+"Open Link" = "Otvoriť odkaz";
+"Open With" = "Otvoriť pomocou";
+"No Apps Available" = "Žiadne dostupné aplikácie";
+"No Share Services" = "Žiadne služby zdieľania";
 "Upload" = "Nahrat";
 "Share" = "Zdielat";
 "Undo" = "Spat";
@@ -157,6 +179,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Kliknite na okno  ·  Potiahnite pre vlastnu oblast  ·  F pre celu obrazovku";
 "Drag to select  ·  Click for full screen" = "Potiahnite pre vyber  ·  Kliknite pre celu obrazovku";
 "Release to annotate and edit" = "Pustite pre anotaciu a upravu";
+"Release to finish" = "Pustite pre dokončenie";
+"Hold Space to move. Release to annotate and edit" = "Podržte Medzerník pre presun. Pustite pre anotáciu a úpravu";
+"Hold Space to move. Release to finish" = "Podržte Medzerník pre presun. Pustite pre dokončenie";
 "Window snap: " = "Prichytenie okna: ";
 "ON" = "ZAP";
 "OFF" = "VYP";
@@ -229,6 +254,7 @@
 "Background color:" = "Farba pozadia:";
 "Reset" = "Resetovat";
 "OCR Capture:" = "OCR zachytenie:";
+"OCR & QR Capture:" = "OCR a QR zachytenie:";
 "Show window + copy to clipboard" = "Zobrazit okno + kopirovat do schranky";
 "Show window only" = "Zobrazit len okno";
 "Copy to clipboard only" = "Kopirovat len do schranky";
@@ -236,6 +262,15 @@
 "Save to file" = "Ulozit do suboru";
 "Save + copy to clipboard" = "Ulozit + kopirovat do schranky";
 "OCR Action" = "OCR akcia";
+"Save action:" = "Akcia uloženia:";
+"Save to default folder" = "Uložiť do predvoleného priečinka";
+"Ask where to save" = "Spýtať sa, kam uložiť";
+"Show shortcuts in tooltips" = "Zobraziť skratky v popisoch";
+"Disable shadow outside selection" = "Vypnúť tieň mimo výberu";
+"Menu bar icon:" = "Ikona v lište menu:";
+"Default" = "Predvolené";
+"Custom symbol" = "Vlastný symbol";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "Zadajte ľubovoľný názov SF Symbol (napr. camera.fill) alebo vyberte predvoľbu. Prehliadajte názvy v aplikácii Apple SF Symbols. Neplatné názvy sa vrátia k predvolenej ikone.";
 
 /* Preferences - Shortcuts */
 "Keyboard Shortcuts" = "Klavesove skratky";

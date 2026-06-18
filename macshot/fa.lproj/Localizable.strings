@@ -41,6 +41,10 @@
 "Copy" = "کپی";
 "Save As..." = "ذخیره به عنوان...";
 "Open in Editor" = "باز کردن در ویرایشگر";
+"Open With" = "باز کردن با";
+"Open Link" = "باز کردن پیوند";
+"No Apps Available" = "هیچ برنامه‌ای در دسترس نیست";
+"No Share Services" = "هیچ سرویس اشتراک‌گذاری در دسترس نیست";
 "Pin to Screen" = "سنجاق به صفحه";
 "Quick Look" = "نمای سریع";
 "Delete" = "حذف";
@@ -56,10 +60,13 @@
 "Save" = "ذخیره";
 
 /* Editor Top Bar */
+"Zoom" = "بزرگ‌نمایی";
 "Zoom In" = "بزرگ‌نمایی";
 "Zoom Out" = "کوچک‌نمایی";
 "Fit Canvas" = "تناسب بوم";
 "Crop" = "برش";
+"Rotate Left" = "چرخش به چپ";
+"Rotate Right" = "چرخش به راست";
 "Flip Horizontal" = "وارونه افقی";
 "Flip Vertical" = "وارونه عمودی";
 "Add Capture" = "افزودن ضبط";
@@ -153,6 +160,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "کلیک روی پنجره  ·  کشیدن برای ناحیه دلخواه  ·  F برای تمام صفحه";
 "Drag to select  ·  Click for full screen" = "بکشید برای انتخاب  ·  کلیک برای تمام صفحه";
 "Release to annotate and edit" = "رها کنید برای حاشیه‌نویسی و ویرایش";
+"Release to finish" = "رها کنید برای پایان";
+"Hold Space to move. Release to annotate and edit" = "Space را نگه دارید برای جابجایی. رها کنید برای حاشیه‌نویسی و ویرایش";
+"Hold Space to move. Release to finish" = "Space را نگه دارید برای جابجایی. رها کنید برای پایان";
 "Window snap: " = "چسبش پنجره: ";
 "ON" = "روشن";
 "OFF" = "خاموش";
@@ -192,9 +202,15 @@
 "Capture mouse cursor in screenshot" = "ضبط نشانگر موس در تصویر صفحه";
 "Double-click selection to copy" = "دوبار کلیک روی انتخاب برای کپی";
 "Hide capture instructions" = "پنهان کردن راهنمای تصویربرداری";
+"Disable shadow outside selection" = "غیرفعال کردن سایه خارج از انتخاب";
+"Show shortcuts in tooltips" = "نمایش میانبرها در راهنمای ابزار";
 "Use window title in saved filename" = "استفاده از عنوان پنجره در نام فایل ذخیره‌شده";
 "Hide menu bar icon" = "پنهان کردن آیکون نوار منو";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "کلیدهای میانبر همچنان کار می‌کنند. برای نمایش مجدد آیکون، macshot را دوباره اجرا کنید.";
+"Menu bar icon:" = "آیکون نوار منو:";
+"Default" = "پیش‌فرض";
+"Custom symbol" = "نماد سفارشی";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "هر نام SF Symbol دلخواه (مثلاً camera.fill) را وارد کنید یا یک پیش‌تنظیم انتخاب کنید. نام‌ها را در برنامه SF Symbols اپل مرور کنید. نام‌های نامعتبر به آیکون پیش‌فرض بازمی‌گردند.";
 "Check for updates automatically" = "بررسی خودکار به‌روزرسانی‌ها";
 "Check for beta updates" = "بررسی به‌روزرسانی‌های بتا";
 "Thumbnail" = "تصویر بندانگشتی";
@@ -222,6 +238,9 @@
 "Save Directory" = "پوشه ذخیره‌سازی";
 "Save folder:" = "پوشه ذخیره:";
 "Browse…" = "مرور…";
+"Save action:" = "عملکرد ذخیره:";
+"Save to default folder" = "ذخیره در پوشه پیش‌فرض";
+"Ask where to save" = "پرسش درباره محل ذخیره";
 "Appearance" = "ظاهر";
 "Liquid Glass theme" = "زمینه Liquid Glass";
 "Translucent toolbars that show the screen behind them." = "نوارهای ابزار نیمه‌شفاف که صفحه پشت خود را نشان می‌دهند.";
@@ -237,6 +256,14 @@
 "Save to file" = "ذخیره در فایل";
 "Save + copy to clipboard" = "ذخیره + کپی به کلیپ‌بورد";
 "OCR Action" = "عملکرد OCR";
+"OCR & QR Capture:" = "ضبط OCR و QR:";
+"OCR & QR" = "OCR و QR";
+"Text & QR Recognition" = "تشخیص متن و QR";
+"Capture OCR & QR" = "ضبط OCR و QR";
+"Capture area and read text/QR codes" = "ضبط ناحیه و خواندن متن/کدهای QR";
+"Run OCR & QR" = "اجرای OCR و QR";
+"QR Code" = "کد QR";
+"QR Codes" = "کدهای QR";
 
 /* Preferences - Shortcuts */
 "Keyboard Shortcuts" = "میانبرهای صفحه‌کلید";
@@ -514,6 +541,14 @@
 "Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "فایل‌ها در پوشه‌ای به نام \"macshot\" در Google Drive شما بارگذاری می‌شوند. همه چیز خصوصی می‌ماند — هیچ چیز به‌صورت عمومی به اشتراک گذاشته نمی‌شود.";
 
 "Pressure" = "فشار";
+
+/* Aspect ratio & resolution presets */
+"Aspect ratio & resolution presets" = "پیش‌تنظیم‌های نسبت ابعاد و وضوح";
+"Aspect ratio" = "نسبت ابعاد";
+"Resolution" = "وضوح";
+"Freeform" = "آزاد";
+"Units" = "واحدها";
+"Keep ratio for next captures" = "حفظ نسبت برای ضبط‌های بعدی";
 
 /* Added for v4.1.0-beta.3 — video editor, effects, open-video, shortcuts help */
 "Open Video..." = "باز کردن ویدیو...";

@@ -18,6 +18,8 @@
 "Capture Area" = "Capturar Área";
 "Capture Screen" = "Capturar Tela";
 "Capture OCR" = "Capturar OCR";
+"Capture OCR & QR" = "Capturar OCR e QR";
+"Capture area and read text/QR codes" = "Capturar área e ler texto/códigos QR";
 "Quick Capture" = "Captura Rápida";
 "Scroll Capture" = "Captura com Rolagem";
 "Capture Last Area" = "Capturar última área";
@@ -56,12 +58,15 @@
 "Save" = "Salvar";
 
 /* Editor Top Bar */
+"Zoom" = "Zoom";
 "Zoom In" = "Aumentar Zoom";
 "Zoom Out" = "Diminuir Zoom";
 "Fit Canvas" = "Ajustar à Tela";
 "Crop" = "Recortar";
 "Flip Horizontal" = "Espelhar Horizontalmente";
 "Flip Vertical" = "Espelhar Verticalmente";
+"Rotate Left" = "Girar à Esquerda";
+"Rotate Right" = "Girar à Direita";
 "Add Capture" = "Adicionar Captura";
 
 /* Toolbar - Tools */
@@ -97,8 +102,17 @@
 "OCR" = "OCR";
 "OCR Text" = "Texto OCR";
 "OCR (extract text)" = "OCR (extrair texto)";
+"OCR & QR" = "OCR e QR";
+"Run OCR & QR" = "Executar OCR e QR";
+"Text & QR Recognition" = "Reconhecimento de Texto e QR";
+"QR Code" = "Código QR";
+"QR Codes" = "Códigos QR";
 "Upload" = "Enviar";
 "Share" = "Compartilhar";
+"Open With" = "Abrir Com";
+"Open Link" = "Abrir Link";
+"No Apps Available" = "Nenhum App Disponível";
+"No Share Services" = "Nenhum Serviço de Compartilhamento";
 "Undo" = "Desfazer";
 "Redo" = "Refazer";
 "Close" = "Fechar";
@@ -153,6 +167,9 @@
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Clique em uma janela  ·  Arraste para área personalizada  ·  F para tela cheia";
 "Drag to select  ·  Click for full screen" = "Arraste para selecionar  ·  Clique para tela cheia";
 "Release to annotate and edit" = "Solte para anotar e editar";
+"Release to finish" = "Solte para concluir";
+"Hold Space to move. Release to annotate and edit" = "Segure Espaço para mover. Solte para anotar e editar";
+"Hold Space to move. Release to finish" = "Segure Espaço para mover. Solte para concluir";
 "Window snap: " = "Encaixe de janela: ";
 "ON" = "LIGADO";
 "OFF" = "DESLIGADO";
@@ -192,6 +209,8 @@
 "Capture mouse cursor in screenshot" = "Capturar cursor do mouse na captura de tela";
 "Double-click selection to copy" = "Clique duplo na seleção para copiar";
 "Hide capture instructions" = "Ocultar instruções de captura";
+"Disable shadow outside selection" = "Desativar sombra fora da seleção";
+"Show shortcuts in tooltips" = "Mostrar atalhos nas dicas de ferramenta";
 "Use window title in saved filename" = "Usar título da janela no nome do arquivo salvo";
 "Hide menu bar icon" = "Ocultar ícone da barra de menus";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Os atalhos continuam funcionando. Para mostrar o ícone novamente, reabra o macshot.";
@@ -220,6 +239,9 @@
 "History size:" = "Tamanho do histórico:";
 "screenshots kept on disk (0 = off)" = "capturas mantidas no disco (0 = desativado)";
 "Save Directory" = "Diretório de Salvamento";
+"Save action:" = "Ação de salvamento:";
+"Save to default folder" = "Salvar na pasta padrão";
+"Ask where to save" = "Perguntar onde salvar";
 "Save folder:" = "Pasta de salvamento:";
 "Browse…" = "Procurar…";
 "Appearance" = "Aparência";
@@ -228,8 +250,13 @@
 "Accent color:" = "Cor de destaque:";
 "Icon color:" = "Cor do ícone:";
 "Background color:" = "Cor de fundo:";
+"Menu bar icon:" = "Ícone da barra de menus:";
+"Default" = "Padrão";
+"Custom symbol" = "Símbolo personalizado";
+"Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "Digite qualquer nome de SF Symbol (ex.: camera.fill) ou escolha uma predefinição. Procure nomes no app SF Symbols da Apple. Nomes inválidos voltam ao ícone padrão.";
 "Reset" = "Redefinir";
 "OCR Capture:" = "Captura OCR:";
+"OCR & QR Capture:" = "Captura OCR e QR:";
 "Show window + copy to clipboard" = "Mostrar janela + copiar para área de transferência";
 "Show window only" = "Mostrar janela apenas";
 "Copy to clipboard only" = "Copiar para área de transferência apenas";
@@ -593,3 +620,11 @@
 "Trigger macshot from Raycast, Alfred, Shortcuts, or any tool that opens URLs." = "Acione o macshot pelo Raycast, Alfred, Shortcuts ou qualquer ferramenta que abra URLs.";
 "URL scheme info" = "Informações do URL scheme";
 "sec (0 = never)" = "s (0 = nunca)";
+
+/* Aspect ratio & resolution presets */
+"Aspect ratio & resolution presets" = "Predefinições de proporção e resolução";
+"Aspect ratio" = "Proporção";
+"Resolution" = "Resolução";
+"Freeform" = "Livre";
+"Units" = "Unidades";
+"Keep ratio for next captures" = "Manter proporção nas próximas capturas";
