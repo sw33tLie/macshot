@@ -146,6 +146,13 @@ final class ResolutionBoxView: NSView, NSTextFieldDelegate, ChromeContent {
         return field.window?.firstResponder === editor
     }
 
+    /// True while either W/H field is actively being edited. The owning overlay
+    /// uses this to avoid re-presenting/re-placing the glass panel mid-edit,
+    /// which would disturb the field editor and make typing beep.
+    var isActivelyEditing: Bool {
+        isEditing(widthField) || isEditing(heightField)
+    }
+
     /// Reflect the active ratio/resolution preset in the presets button.
     func setActivePresetLabel(_ label: String?) {
         presetsButton.toolTip = label.map { "\(L("Presets")) — \($0)" } ?? L("Aspect ratio & resolution presets")
@@ -211,7 +218,11 @@ private final class ResolutionNumberField: NSTextField, PanelKeyRequestingView {
     private var acceptingMouseFocus = false
     var requestsPanelKeyForMouseDown: Bool { true }
 
-    override var needsPanelToBecomeKey: Bool { false }
+    // The field lives inside a borderless, non-activating glass child panel. For
+    // AppKit to install a field editor there, the field must advertise that it
+    // needs the panel to become key — otherwise clicks focus it inconsistently
+    // and typing beeps.
+    override var needsPanelToBecomeKey: Bool { true }
 
     override var acceptsFirstResponder: Bool {
         acceptingMouseFocus || currentEditor() != nil

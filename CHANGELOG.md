@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.0-beta.2] - 2026-06-18
+
+### Fixed
+
+- Resolution W×H fields are editable again in Liquid Glass mode (typing no longer beeps).
+- Removed a stray duplicate resolution box that appeared in the bottom-left corner.
+
 ## [4.2.0-beta.1] - 2026-06-18
 
 ### Added

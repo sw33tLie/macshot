@@ -2368,6 +2368,12 @@ class OverlayView: NSView {
             resolutionBoxRect = .zero
             return
         }
+        // While a W/H field is being edited, leave the box (and its glass panel)
+        // exactly where it is. Re-laying-out or re-presenting mid-edit disturbs
+        // the field editor / first responder, which makes typing beep. The
+        // selection isn't changing during editing, so there's nothing to update.
+        if let editing = resolutionBox, editing.isActivelyEditing { return }
+
         let box: ResolutionBoxView
         if let existing = resolutionBox {
             box = existing
@@ -5227,6 +5233,9 @@ class OverlayView: NSView {
             optionsChrome.present(row, overlayRect: optionsRowRect,
                                   visible: !row.isHidden, glass: glass, in: self)
         }
+        // Note: the resolution box's glass panel is owned by updateResolutionBox(),
+        // not synced here, so editing it is never disturbed by draw-driven
+        // repositionToolbars() calls.
     }
 
     /// Tear down all glass chrome panels, returning their views to the overlay.
@@ -5234,7 +5243,14 @@ class OverlayView: NSView {
         bottomChrome.reclaim(bottomStripView, to: self)
         rightChrome.reclaim(rightStripView, to: self)
         optionsChrome.reclaim(toolOptionsRowView, to: self)
-        resolutionChrome.reclaim(resolutionBox, to: self)
+        // The resolution box is recreated on demand by updateResolutionBox(), and
+        // unlike the strips it has no inline hidden home to return to. Reclaiming
+        // it would re-parent it into the overlay at its stale panel-local frame,
+        // leaving a stray visible box in the bottom-left corner. Dispose it fully.
+        resolutionChrome.teardown()
+        resolutionBox?.removeFromSuperview()
+        resolutionBox = nil
+        resolutionBoxRect = .zero
     }
 
     // MARK: - Handle hit testing
