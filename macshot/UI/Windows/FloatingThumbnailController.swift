@@ -391,7 +391,9 @@ class FloatingThumbnailController: NSObject, NSDraggingSource, QLPreviewPanelDat
         menu.addItem(ImageContextMenu.item(title: L("Open in Editor"), symbolName: "pencil", action: #selector(contextOpenEditor), target: self, keyEquivalent: "e"))
         menu.addItem(ImageContextMenu.item(title: L("Pin to Screen"), symbolName: "pin.fill", action: #selector(contextPin), target: self))
         menu.addItem(ImageContextMenu.item(title: L("Upload"), symbolName: "icloud.and.arrow.up", action: #selector(contextUpload), target: self))
-        menu.addItem(ImageContextMenu.item(title: L("Quick Look"), symbolName: "eye", action: #selector(contextQuickLook), target: self, keyEquivalent: " "))
+        let quickLookItem = ImageContextMenu.item(title: L("Quick Look"), symbolName: "eye", action: #selector(contextQuickLook), target: self, keyEquivalent: " ")
+        quickLookItem.keyEquivalentModifierMask = []
+        menu.addItem(quickLookItem)
         menu.addItem(ImageContextMenu.item(title: L("Run OCR & QR"), symbolName: "text.viewfinder", action: #selector(contextOCR), target: self))
 
         menu.addItem(NSMenuItem.separator())
@@ -404,7 +406,9 @@ class FloatingThumbnailController: NSObject, NSDraggingSource, QLPreviewPanelDat
         }
 
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(ImageContextMenu.item(title: L("Delete"), symbolName: "trash", action: #selector(contextDelete), target: self, keyEquivalent: "\u{8}"))
+        let deleteItem = ImageContextMenu.item(title: L("Delete"), symbolName: "trash", action: #selector(contextDelete), target: self, keyEquivalent: "\u{8}")
+        deleteItem.keyEquivalentModifierMask = []
+        menu.addItem(deleteItem)
 
         menu.addItem(NSMenuItem.separator())
         menu.addItem(ImageContextMenu.item(title: L("Close All"), symbolName: "xmark.circle", action: #selector(contextCloseAll), target: self))

@@ -30,6 +30,15 @@ final class OverlayChromePresenter {
 
     var hasPanel: Bool { panel != nil }
 
+    /// Temporarily make the floating chrome window mouse-transparent. Used while
+    /// a toolbar-initiated drag is moving the selection: the glass panels are
+    /// separate windows, and moving them under the stationary cursor causes
+    /// AppKit to synthesize hover/entered states for arbitrary buttons.
+    func setMouseInteractionEnabled(_ enabled: Bool) {
+        panel?.ignoresMouseEvents = !enabled
+        panel?.acceptsMouseMovedEvents = enabled
+    }
+
     /// Present `content` at `overlayRect` (overlay-space) within `overlayView`.
     /// When `glass` is true and `visible`, host it in a child panel; otherwise
     /// return it to the overlay as a normal subview.

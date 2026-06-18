@@ -16,7 +16,7 @@ class ToolbarButtonView: NSView {
     private var isHovered: Bool = false
     var isPressed: Bool = false
     private var trackingArea: NSTrackingArea?
-    private var suppressHoverUntilMouseMoved: Bool = false
+    private var suppressHoverStartPoint: NSPoint?
     private var cachedIcon: NSImage?       // cached tinted SF Symbol for current state
     private var cachedIconIsOn: Bool?       // the isOn state when icon was cached
 
@@ -165,7 +165,7 @@ class ToolbarButtonView: NSView {
 
     override func mouseEntered(with event: NSEvent) {
         NSCursor.arrow.set()
-        guard !suppressHoverUntilMouseMoved else {
+        guard suppressHoverStartPoint == nil else {
             setHovered(false)
             return
         }
@@ -178,8 +178,19 @@ class ToolbarButtonView: NSView {
 
     override func mouseMoved(with event: NSEvent) {
         NSCursor.arrow.set()
-        guard suppressHoverUntilMouseMoved else { return }
-        suppressHoverUntilMouseMoved = false
+        if let start = suppressHoverStartPoint {
+            let now = NSEvent.mouseLocation
+            let dx = now.x - start.x
+            let dy = now.y - start.y
+            // AppKit can synthesize a mouseMoved/entered pass at the same
+            // location after a toolbar drag loop unwinds. Keep hover suppressed
+            // until the pointer actually moves away from the release point.
+            guard dx * dx + dy * dy >= 9 else {
+                setHovered(false)
+                return
+            }
+            suppressHoverStartPoint = nil
+        }
         if bounds.contains(convert(event.locationInWindow, from: nil)) {
             (superview as? ToolbarStripView ?? superview?.superview as? ToolbarStripView)?.clearHover(except: self)
             setHovered(true)
@@ -187,7 +198,7 @@ class ToolbarButtonView: NSView {
     }
 
     override func mouseExited(with event: NSEvent) {
-        suppressHoverUntilMouseMoved = false
+        suppressHoverStartPoint = nil
         setHovered(false)
     }
 
@@ -200,7 +211,7 @@ class ToolbarButtonView: NSView {
     }
 
     func clearInteractionState(suppressHoverUntilMouseMoved suppress: Bool = false) {
-        suppressHoverUntilMouseMoved = suppress
+        suppressHoverStartPoint = suppress ? NSEvent.mouseLocation : nil
         forwardingDrag = false
         isPressed = false
         setHovered(false)

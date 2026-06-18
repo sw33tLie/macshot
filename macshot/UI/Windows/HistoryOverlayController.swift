@@ -302,7 +302,8 @@ final class HistoryOverlayController: NSObject, QLPreviewPanelDataSource, QLPrev
         copyItem.tag = globalIndex
         menu.addItem(copyItem)
 
-        let saveItem = ImageContextMenu.item(title: L("Save As..."), symbolName: "square.and.arrow.down", action: #selector(contextSave(_:)), target: self)
+        let saveItem = ImageContextMenu.item(title: L("Save As..."), symbolName: "square.and.arrow.down", action: #selector(contextSave(_:)), target: self, keyEquivalent: "s")
+        saveItem.keyEquivalentModifierMask = [.command]
         saveItem.tag = globalIndex
         menu.addItem(saveItem)
 
@@ -322,6 +323,7 @@ final class HistoryOverlayController: NSObject, QLPreviewPanelDataSource, QLPrev
         menu.addItem(uploadItem)
 
         let qlItem = ImageContextMenu.item(title: L("Quick Look"), symbolName: "eye", action: #selector(contextQuickLook(_:)), target: self, keyEquivalent: " ")
+        qlItem.keyEquivalentModifierMask = []
         qlItem.tag = globalIndex
         menu.addItem(qlItem)
 
@@ -344,6 +346,7 @@ final class HistoryOverlayController: NSObject, QLPreviewPanelDataSource, QLPrev
         menu.addItem(NSMenuItem.separator())
 
         let deleteItem = ImageContextMenu.item(title: L("Delete"), symbolName: "trash", action: #selector(contextDelete(_:)), target: self, keyEquivalent: "\u{8}")
+        deleteItem.keyEquivalentModifierMask = []
         deleteItem.tag = globalIndex
         menu.addItem(deleteItem)
 
@@ -1078,6 +1081,8 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
             activateSelectedForDelete()
         case 8 where cmd: // Cmd+C
             activateSelectedForCopy()
+        case 1 where cmd: // Cmd+S
+            activateSelectedForSave()
         case 14 where cmd: // Cmd+E
             activateSelectedForOpenEditor()
         default:
@@ -1132,6 +1137,11 @@ private final class HistoryPanelView: NSView, NSDraggingSource {
     private func activateSelectedForOpenEditor() {
         guard let idx = globalIndexForSelected() else { return }
         controller?.openInEditor(index: idx)
+    }
+
+    private func activateSelectedForSave() {
+        guard let idx = globalIndexForSelected() else { return }
+        controller?.saveToFile(index: idx)
     }
 
     private func activateSelectedForQuickLook() {
