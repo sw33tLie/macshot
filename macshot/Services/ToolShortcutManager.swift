@@ -16,6 +16,7 @@ enum ToolShortcutManager {
         case text
         case number
         case censor       // pixelate/blur tool
+        case highlight    // spotlight tool
         case colorSampler
         case stamp
         case measure
@@ -45,6 +46,7 @@ enum ToolShortcutManager {
             case .text: return L("Text")
             case .number: return L("Number")
             case .censor: return L("Censor")
+            case .highlight: return L("Highlight")
             case .colorSampler: return L("Color Picker")
             case .stamp: return L("Stamp")
             case .measure: return L("Measure")
@@ -76,6 +78,7 @@ enum ToolShortcutManager {
             case .text: return "t"
             case .number: return "n"
             case .censor: return "b"
+            case .highlight: return "h"
             case .colorSampler: return "i"
             case .stamp: return "g"
             case .measure: return ""
@@ -141,6 +144,7 @@ enum ToolShortcutManager {
             case .text: lookup[k] = .tool(.text)
             case .number: lookup[k] = .tool(.number)
             case .censor: lookup[k] = .tool(.pixelate)
+            case .highlight: lookup[k] = .tool(.highlight)
             case .colorSampler: lookup[k] = .tool(.colorSampler)
             case .stamp: lookup[k] = .tool(.stamp)
             case .measure: lookup[k] = .tool(.measure)
@@ -185,6 +189,7 @@ enum ToolShortcutManager {
             case .text: action = .text
             case .number: action = .number
             case .pixelate: action = .censor
+            case .highlight: action = .highlight
             case .colorSampler: action = .colorSampler
             case .stamp: action = .stamp
             case .measure: action = .measure

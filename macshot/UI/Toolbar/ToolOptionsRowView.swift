@@ -134,6 +134,13 @@ class ToolOptionsRowView: NSView, ChromeContent {
             curX = addSeparator(at: curX)
             curX = addLoupeMagnificationSlider(at: curX, ov: ov)
         }
+        if tool == .highlight {
+            curX = addHighlightDimSlider(at: curX, ov: ov)
+            let totalW = max(curX + padding, 200)
+            contentWidth = totalW
+            frame.size = NSSize(width: totalW, height: rowHeight)
+            return
+        }
 
         // ── Line style (line, pencil, rectangle) ──
         let hasLineStyle = [.line, .pencil, .rectangle, .arrow, .ellipse].contains(tool)
@@ -357,6 +364,40 @@ class ToolOptionsRowView: NSView, ChromeContent {
         label.alignment = .right
         label.frame = NSRect(x: curX, y: (rowHeight - 14) / 2, width: 38, height: 14)
         label.tag = 994
+        addSubview(label)
+        curX += 38
+
+        return curX
+    }
+
+    private func addHighlightDimSlider(at x: CGFloat, ov: OverlayView) -> CGFloat {
+        var curX = x
+
+        let nameLabel = NSTextField(labelWithString: L("Dim"))
+        nameLabel.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
+        nameLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.4)
+        nameLabel.sizeToFit()
+        nameLabel.frame.origin = NSPoint(x: curX, y: (rowHeight - nameLabel.frame.height) / 2)
+        addSubview(nameLabel)
+        curX += nameLabel.frame.width + 4
+
+        let stored = UserDefaults.standard.object(forKey: HighlightToolHandler.dimOpacityKey) as? Double
+        let currentVal = editingAnnotation?.dimOpacity ?? CGFloat(stored ?? 0.55)
+        let sliderW: CGFloat = 84
+        let slider = NSSlider(value: Double(currentVal),
+                              minValue: 0.1, maxValue: 0.95,
+                              target: self, action: #selector(highlightDimChanged(_:)))
+        slider.frame = NSRect(x: curX, y: (rowHeight - 20) / 2, width: sliderW, height: 20)
+        slider.isContinuous = true
+        addSubview(slider)
+        curX += sliderW + 4
+
+        let label = NSTextField(labelWithString: "\(Int((currentVal * 100).rounded()))%")
+        label.font = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .medium)
+        label.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.6)
+        label.alignment = .right
+        label.frame = NSRect(x: curX, y: (rowHeight - 14) / 2, width: 38, height: 14)
+        label.tag = 993
         addSubview(label)
         curX += 38
 
@@ -1380,6 +1421,23 @@ class ToolOptionsRowView: NSView, ChromeContent {
         ov.setActiveLoupeMagnification(val)
         if let label = viewWithTag(994) as? NSTextField {
             label.stringValue = String(format: "%.1fx", val)
+        }
+        ov.needsDisplay = true
+    }
+
+    @objc private func highlightDimChanged(_ sender: NSSlider) {
+        guard let ov = overlayView else { return }
+        let val = min(0.95, max(0.1, CGFloat(sender.doubleValue)))
+        if let ann = editingAnnotation, ann.tool == .highlight {
+            ensureSnapshot()
+            ann.dimOpacity = val
+            // Highlight bakes nothing; just invalidate the cached layers so the
+            // global union dim re-renders at the new strength.
+            ov.cachedCompositedImage = nil
+        }
+        UserDefaults.standard.set(Double(val), forKey: HighlightToolHandler.dimOpacityKey)
+        if let label = viewWithTag(993) as? NSTextField {
+            label.stringValue = "\(Int((val * 100).rounded()))%"
         }
         ov.needsDisplay = true
     }

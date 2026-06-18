@@ -473,7 +473,13 @@ class OverlayWindowController {
             guard let ctx = NSGraphicsContext.current else { return true }
             // Translate so annotation coords (relative to selectionRect) map to image coords
             ctx.cgContext.translateBy(x: -sel.origin.x, y: -sel.origin.y)
-            for annotation in annotations {
+            // Match the live order: censor, then the spotlight dim (union of
+            // highlight rects, clipped to the selection), then shapes on top.
+            for annotation in annotations where annotation.tool == .pixelate {
+                annotation.draw(in: ctx)
+            }
+            Annotation.drawHighlightDim(for: annotations, in: sel)
+            for annotation in annotations where annotation.tool != .pixelate {
                 annotation.draw(in: ctx)
             }
             return true

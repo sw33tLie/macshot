@@ -207,6 +207,7 @@ class OverlayView: NSView {
             MeasureToolHandler(),
             NumberToolHandler(),
             StampToolHandler(),
+            HighlightToolHandler(),
         ]
         return Dictionary(uniqueKeysWithValues: handlers.map { ($0.tool, $0) })
     }()
@@ -1260,7 +1261,7 @@ class OverlayView: NSView {
 
                 // Resize handles — directional cursors for shapes, open hand for line/arrow points
                 let isShapeTool = [AnnotationTool.rectangle, .filledRectangle, .ellipse, .text,
-                                   .pixelate, .stamp, .loupe].contains(selectedAnnotation?.tool)
+                                   .pixelate, .stamp, .loupe, .highlight].contains(selectedAnnotation?.tool)
                 for (_, handleEntry) in annotationResizeHandleRects.enumerated() {
                     let (handle, rect) = handleEntry
                     if rect.insetBy(dx: -4, dy: -4).contains(handlePoint) {
@@ -1533,6 +1534,12 @@ class OverlayView: NSView {
     /// Override to change the rect used when drawing the screenshot in `captureSelectedRegion`. Base returns bounds.
     var captureDrawRect: NSRect { isEditorMode ? selectionRect : bounds }
 
+    /// Bounds the spotlight dim is clipped to: only the screenshot SELECTION
+    /// region should dim, never the dark area outside it. In editor mode the
+    /// drawn region is the whole document (selectionRect); in overlay mode the
+    /// selection is a sub-rect of the full-screen overlay.
+    var highlightDimBounds: NSRect { isEditorMode ? captureDrawRect : selectionRect }
+
     /// Override to position toolbars for editor mode. Base pins bottom bar centered at bottom, right bar at top-right.    /// Override to control whether detach (open in editor) is allowed. Base returns true when not in editor mode.
     func shouldAllowDetach() -> Bool { !isEditorMode }
 
@@ -1660,9 +1667,23 @@ class OverlayView: NSView {
                         context.saveGraphicsState()
                         applyCanvasTransform(to: context)
                         staticLayer.draw(in: bounds, from: .zero, operation: .sourceOver, fraction: 1.0)
+                        // The static layer skipped the highlight dim; draw it live
+                        // here over the union of ALL highlights at their current
+                        // (possibly mid-drag) positions, before the selected
+                        // annotations' borders.
+                        Annotation.drawHighlightDim(for: annotations, in: highlightDimBounds)
                         for annotation in selectedAnnotations {
                             annotation.draw(in: context)
                         }
+                    } else if currentAnnotation?.tool == .highlight {
+                        // Drawing a NEW highlight: render committed annotations
+                        // WITHOUT their dim, then draw one union dim live below
+                        // (committed + in-progress) so previously placed highlights
+                        // stay bright instead of being re-dimmed by the preview.
+                        let layer = renderAnnotationBitmap(annotations: annotations, skipHighlightDim: true)
+                        context.saveGraphicsState()
+                        applyCanvasTransform(to: context)
+                        layer.draw(in: bounds, from: .zero, operation: .sourceOver, fraction: 1.0)
                     } else {
                         let layer = annotationLayerImage()
                         context.saveGraphicsState()
@@ -1688,6 +1709,13 @@ class OverlayView: NSView {
                     for annotation in annotations where annotation.tool != .translateOverlay && annotation.tool == .pixelate {
                         annotation.draw(in: context)
                     }
+                    // Skip the committed-highlight dim while a new highlight is
+                    // being drawn — it's drawn live below over the full union
+                    // (committed + in-progress) so the existing ones don't get
+                    // re-dimmed by the preview pass.
+                    if !(currentAnnotation?.tool == .highlight) {
+                        Annotation.drawHighlightDim(for: annotations, in: highlightDimBounds)
+                    }
                     for annotation in annotations where annotation.tool != .translateOverlay && annotation.tool != .pixelate {
                         annotation.draw(in: context)
                     }
@@ -1696,6 +1724,12 @@ class OverlayView: NSView {
                 // Still need the canvas transform for active drawing and overlays below
                 context.saveGraphicsState()
                 applyCanvasTransform(to: context)
+            }
+            // Live spotlight dim preview while a new highlight is being dragged:
+            // dim the union of ALL highlights (committed + the in-progress one) so
+            // previously-placed highlights stay bright instead of being re-dimmed.
+            if let cur = currentAnnotation, cur.tool == .highlight {
+                Annotation.drawHighlightDim(for: annotations, extra: cur, in: highlightDimBounds)
             }
             currentAnnotation?.draw(in: context)
             autoMeasurePreview?.draw(in: context)
@@ -1868,6 +1902,7 @@ class OverlayView: NSView {
                 effectsImage.draw(in: captureDrawRect, from: .zero, operation: .copy, fraction: 1.0)
                 // Re-draw annotations on top (censor first, then everything else)
                 for annotation in annotations where annotation.tool == .pixelate { annotation.draw(in: context) }
+                Annotation.drawHighlightDim(for: annotations, extra: currentAnnotation, in: highlightDimBounds)
                 for annotation in annotations where annotation.tool != .pixelate { annotation.draw(in: context) }
                 currentAnnotation?.draw(in: context)
                 context.restoreGraphicsState()
@@ -3109,7 +3144,11 @@ class OverlayView: NSView {
             if dx != 0 || dy != 0 {
                 context.cgContext.translateBy(x: dx, y: dy)
             }
-            for annotation in annotations {
+            for annotation in annotations where annotation.tool == .pixelate {
+                annotation.draw(in: context)
+            }
+            Annotation.drawHighlightDim(for: annotations, extra: currentAnnotation, in: selectionRect)
+            for annotation in annotations where annotation.tool != .pixelate {
                 annotation.draw(in: context)
             }
             currentAnnotation?.draw(in: context)
@@ -3190,7 +3229,11 @@ class OverlayView: NSView {
             if dx != 0 || dy != 0 {
                 context.cgContext.translateBy(x: dx, y: dy)
             }
-            for annotation in annotations {
+            for annotation in annotations where annotation.tool == .pixelate {
+                annotation.draw(in: context)
+            }
+            Annotation.drawHighlightDim(for: annotations, extra: currentAnnotation, in: selectionRect)
+            for annotation in annotations where annotation.tool != .pixelate {
                 annotation.draw(in: context)
             }
             currentAnnotation?.draw(in: context)
@@ -3216,7 +3259,11 @@ class OverlayView: NSView {
             if dx != 0 || dy != 0 {
                 context.cgContext.translateBy(x: dx, y: dy)
             }
-            for annotation in annotations {
+            for annotation in annotations where annotation.tool == .pixelate {
+                annotation.draw(in: context)
+            }
+            Annotation.drawHighlightDim(for: annotations, extra: currentAnnotation, in: selectionRect)
+            for annotation in annotations where annotation.tool != .pixelate {
                 annotation.draw(in: context)
             }
             currentAnnotation?.draw(in: context)
@@ -3238,7 +3285,7 @@ class OverlayView: NSView {
         }
         switch currentTool {
         case .pencil, .line, .arrow, .rectangle, .ellipse, .marker, .number, .loupe, .measure,
-            .pixelate, .stamp:
+            .pixelate, .stamp, .highlight:
             return true
         case .text:
             return true
@@ -8801,16 +8848,20 @@ class OverlayView: NSView {
     }
 
     /// Build annotation layer excluding specific annotations (used during drag/resize).
+    /// Skips the highlight dim: while dragging/resizing, the dim is a moving union
+    /// of ALL highlights, so it's drawn live in the draw pass over this static
+    /// layer rather than baked here (which would dim using stale positions and
+    /// double up with the live pass).
     private func buildAnnotationLayer(excluding: Set<ObjectIdentifier>) -> NSImage {
         let filtered = annotations.filter { !excluding.contains(ObjectIdentifier($0)) }
-        return renderAnnotationBitmap(annotations: filtered)
+        return renderAnnotationBitmap(annotations: filtered, skipHighlightDim: true)
     }
 
     /// Render annotations into a fixed bitmap at the current backing scale.
     /// Uses CGBitmapContext with the window's color space so colors match exactly.
     /// Returns an NSImage backed by a CGImage so AppKit never re-invokes a
     /// drawing handler when the image is drawn into a zoomed context.
-    private func renderAnnotationBitmap(annotations: [Annotation]) -> NSImage {
+    private func renderAnnotationBitmap(annotations: [Annotation], skipHighlightDim: Bool = false) -> NSImage {
         let size = bounds.size
         let scale = window?.backingScaleFactor ?? 2.0
         let pxW = Int(ceil(size.width * scale))
@@ -8831,6 +8882,12 @@ class OverlayView: NSView {
         for annotation in annotations where annotation.tool == .pixelate {
             annotation.draw(in: nsCtx)
         }
+        // Spotlight dim: a single union pass over all highlight rects, after the
+        // censor effects and before the shape annotations (so shapes stay
+        // readable over the dimming). Highlights' own draw() only adds a border.
+        if !skipHighlightDim {
+            Annotation.drawHighlightDim(for: annotations, in: highlightDimBounds)
+        }
         for annotation in annotations where annotation.tool != .pixelate {
             annotation.draw(in: nsCtx)
         }
@@ -8850,6 +8907,7 @@ class OverlayView: NSView {
         if annotations.isEmpty { return screenshot }
 
         let drawRect = captureDrawRect
+        let dimBounds = highlightDimBounds
         let annotationsCopy = annotations
         var success = false
         let image = NSImage(size: drawRect.size, flipped: false) { _ in
@@ -8865,6 +8923,7 @@ class OverlayView: NSView {
             for annotation in annotationsCopy where annotation.tool == .pixelate {
                 annotation.draw(in: context)
             }
+            Annotation.drawHighlightDim(for: annotationsCopy, in: dimBounds)
             for annotation in annotationsCopy where annotation.tool != .pixelate {
                 annotation.draw(in: context)
             }
@@ -8959,7 +9018,14 @@ class OverlayView: NSView {
         }
 
         if includeAnnotations {
-            for annotation in annotations {
+            // Match the live draw order: censor effects first, then the spotlight
+            // dim (union of highlight rects), then the regular shape annotations
+            // on top — so the exported image matches what's on screen.
+            for annotation in annotations where annotation.tool == .pixelate {
+                annotation.draw(in: nsContext)
+            }
+            Annotation.drawHighlightDim(for: annotations, in: highlightDimBounds)
+            for annotation in annotations where annotation.tool != .pixelate {
                 annotation.draw(in: nsContext)
             }
         }

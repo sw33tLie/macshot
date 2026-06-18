@@ -19,6 +19,7 @@ enum AnnotationTool: Int, CaseIterable {
     case crop            // crop image (detached editor only)
     case colorSampler    // pick color from screen
     case stamp           // emoji or image stamp
+    case highlight       // spotlight: dims everything outside the drawn rect
 }
 
 enum LineStyle: Int, CaseIterable {
@@ -162,6 +163,11 @@ class Annotation {
     var isUnderline: Bool = false
     var isStrikethrough: Bool = false
     var rotation: CGFloat = 0         // rotation angle in radians
+    /// For .highlight: opacity of the dim applied OUTSIDE the highlighted rect
+    /// (0 = no dimming, 1 = fully black). The highlighted region itself stays
+    /// bright. The dim is rendered globally (union of all highlight rects), not
+    /// baked per-annotation.
+    var dimOpacity: CGFloat = 0.55
 
     var supportsRotation: Bool {
         switch tool {
@@ -258,6 +264,7 @@ class Annotation {
         c.outlineColor = outlineColor
         c.randomSeed = randomSeed
         c.loupeMagnification = loupeMagnification
+        c.dimOpacity = dimOpacity
         return c
     }
 
@@ -290,6 +297,7 @@ class Annotation {
         }
         measureInPoints = src.measureInPoints
         censorMode = src.censorMode
+        dimOpacity = src.dimOpacity
     }
 
     var boundingRect: NSRect {
@@ -423,7 +431,7 @@ class Annotation {
             guard pointerDistance > 4 else { return false }
             let pointerThreshold = max(threshold, strokeWidth * 2)
             return distanceToLineSegment(point: point, from: startPoint, to: endPoint) < pointerThreshold
-        case .stamp, .pixelate, .blur:
+        case .stamp, .pixelate, .blur, .highlight:
             return boundingRect.insetBy(dx: -threshold, dy: -threshold).contains(point)
         default:
             return false
@@ -604,6 +612,8 @@ class Annotation {
             break  // preview-only tool, no annotation drawn
         case .stamp:
             drawStamp()
+        case .highlight:
+            drawHighlight()
         }
 
         if rotation != 0 && supportsRotation {
@@ -2010,6 +2020,76 @@ class Annotation {
         border.setLineDash(pattern, count: 2, phase: 0)
         NSColor.white.withAlphaComponent(censorMode == .blur ? 0.7 : 0.5).setStroke()
         border.stroke()
+    }
+
+    /// Highlight (spotlight) only draws its own thin border — the dimming of the
+    /// area OUTSIDE the rect is rendered globally as a single union pass (see
+    /// `Annotation.drawHighlightDim`), so overlapping highlights don't stack.
+    private func drawHighlight() {
+        let rect = boundingRect
+        guard rect.width > 1, rect.height > 1 else { return }
+        let border = NSBezierPath(rect: rect)
+        border.lineWidth = 1.5
+        let pattern: [CGFloat] = [4, 4]
+        border.setLineDash(pattern, count: 2, phase: 0)
+        NSColor.white.withAlphaComponent(0.6).setStroke()
+        border.stroke()
+    }
+
+    /// Draw a single dim layer covering `bounds` MINUS the union of all
+    /// `highlightRects` (so a pixel inside ANY highlight stays bright). Drawn
+    /// once per render pass — AFTER the screenshot/censor effects and BEFORE the
+    /// regular shape annotations, so shapes stay readable over the dimming.
+    /// No-op when there are no highlight rects.
+    ///
+    /// Uses fill + destination-out punch-through (not an even-odd combined path):
+    /// even-odd would re-dim the OVERLAP of two highlights (a point inside the
+    /// outer rect + two inner rects has odd winding). Clearing each rect from an
+    /// already-dimmed layer is idempotent, giving a true union of bright regions.
+    static func drawHighlightDim(highlightRects: [NSRect], in bounds: NSRect, opacity: CGFloat) {
+        let rects = highlightRects.compactMap { r -> NSRect? in
+            let i = r.intersection(bounds)
+            return (i.width > 1 && i.height > 1) ? i : nil
+        }
+        guard !rects.isEmpty, bounds.width > 0, bounds.height > 0, opacity > 0,
+              let ctx = NSGraphicsContext.current?.cgContext else { return }
+
+        ctx.saveGState()
+        // Clip to the bounds so the dim never spills outside the canvas/selection.
+        ctx.clip(to: bounds)
+        // Build the dim in an isolated transparency layer so the destination-out
+        // punch-through only clears the DIM, not the screenshot already drawn
+        // beneath it in this context.
+        ctx.beginTransparencyLayer(auxiliaryInfo: nil)
+        // 1) Dim the whole area.
+        ctx.setFillColor(NSColor.black.withAlphaComponent(min(1, opacity)).cgColor)
+        ctx.fill(bounds)
+        // 2) Punch the bright holes (union — overlaps clear once, idempotent).
+        ctx.setBlendMode(.destinationOut)
+        ctx.setFillColor(CGColor(gray: 0, alpha: 1))
+        for r in rects { ctx.fill(r) }
+        ctx.endTransparencyLayer()
+        ctx.restoreGState()
+    }
+
+    /// Convenience: draw the union highlight dim for all `.highlight` annotations
+    /// in `list` (optionally including an in-progress one) over `bounds`. The dim
+    /// opacity is taken from the strongest (max) highlight so a stack reads as one
+    /// consistent dim. No-op when there are no highlights. Call this AFTER the
+    /// screenshot/censor effects and BEFORE the regular shape annotations.
+    static func drawHighlightDim(for list: [Annotation], extra: Annotation? = nil, in bounds: NSRect) {
+        var rects: [NSRect] = []
+        var opacity: CGFloat = 0
+        for a in list where a.tool == .highlight {
+            rects.append(a.boundingRect)
+            opacity = max(opacity, a.dimOpacity)
+        }
+        if let extra, extra.tool == .highlight {
+            rects.append(extra.boundingRect)
+            opacity = max(opacity, extra.dimOpacity)
+        }
+        guard !rects.isEmpty else { return }
+        drawHighlightDim(highlightRects: rects, in: bounds, opacity: opacity)
     }
 
     /// Erase mode: sample the border pixels around the rect from the source image,

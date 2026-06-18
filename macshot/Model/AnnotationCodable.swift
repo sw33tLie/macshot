@@ -65,6 +65,7 @@ struct CodableAnnotation: Codable {
     var censorMode: Int = 0
     var groupID: String?  // UUID string
     var randomSeed: UInt32 = 0  // 0 = legacy capture, regenerate at decode
+    var dimOpacity: CGFloat = 0.55  // highlight (spotlight) dim strength
 }
 
 extension Annotation {
@@ -142,6 +143,7 @@ extension Annotation {
         c.censorMode = censorMode.rawValue
         if let gid = groupID { c.groupID = gid.uuidString }
         c.randomSeed = randomSeed
+        c.dimOpacity = dimOpacity
 
         return c
     }
@@ -221,6 +223,9 @@ extension Annotation {
         // Misc
         ann.measureInPoints = c.measureInPoints
         ann.censorMode = CensorMode(rawValue: c.censorMode) ?? .pixelate
+        // Highlight dim strength; older captures lack the field (decodes to the
+        // struct default 0.55). Guard against a zero/invalid value.
+        ann.dimOpacity = c.dimOpacity > 0 ? min(1, c.dimOpacity) : 0.55
         if let gidStr = c.groupID { ann.groupID = UUID(uuidString: gidStr) }
         // Legacy captures have seed=0; assign a fresh one so sketchy variation
         // remains deterministic per-load even for old data.
