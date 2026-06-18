@@ -1,5 +1,21 @@
 # Changelog
 
+## [4.2.0-beta.3] - 2026-06-18
+
+### Added
+
+- Highlight (spotlight) tool — drag a rectangle to keep that region bright while dimming the rest of the capture. Adjustable dim strength and a solid/dashed border.
+
+### Changed
+
+- Removed scroll/pinch-to-zoom from the capture overlay (the editor window still zooms).
+- Selected text now shows a plain selection rectangle instead of an outline tracing the letters.
+
+### Fixed
+
+- Clicking outside a text box closes it without dropping a new empty text box where you clicked.
+- Text no longer clips at the bottom when a text box is resized to its minimum height.
+
 ## [4.2.0-beta.2] - 2026-06-18
 
 ### Fixed
