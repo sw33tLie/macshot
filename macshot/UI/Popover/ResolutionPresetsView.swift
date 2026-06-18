@@ -15,7 +15,8 @@ final class ResolutionPresetsView: NSView {
     var resolutionRows: [Row] = []
     var keepRatioOn = false
     var onToggleKeepRatio: ((Bool) -> Void)?
-    var showsFooter = true
+    var showsKeepRatioToggle = true
+    var showsUnitSelector = true
     /// 0 = pixels, 1 = points.
     var unitIndex = 0
     var onPickUnit: ((Int) -> Void)?
@@ -24,7 +25,8 @@ final class ResolutionPresetsView: NSView {
     private let colW: CGFloat = 116
     private let headerH: CGFloat = 22
     private let vPad: CGFloat = 8
-    private let footerH: CGFloat = 78
+    private let fullFooterH: CGFloat = 78
+    private let keepRatioFooterH: CGFloat = 44
     private let midGap: CGFloat = 1  // vertical divider column
 
     func build() {
@@ -33,7 +35,7 @@ final class ResolutionPresetsView: NSView {
         let rows = max(ratioRows.count, resolutionRows.count)
         let colsH = headerH + CGFloat(rows) * rowH
         let totalW = colW * 2 + midGap
-        let activeFooterH = showsFooter ? footerH : 0
+        let activeFooterH = footerHeight
         let totalH = vPad + colsH + activeFooterH + vPad
         frame.size = NSSize(width: totalW, height: totalH)
 
@@ -48,15 +50,15 @@ final class ResolutionPresetsView: NSView {
         div.layer?.backgroundColor = ToolbarLayout.iconColor.withAlphaComponent(0.12).cgColor
         addSubview(div)
 
-        if showsFooter {
+        if activeFooterH > 0 {
             // Horizontal separator above the footer.
-            let sepY = footerH + vPad
+            let sepY = activeFooterH + vPad
             let hsep = NSView(frame: NSRect(x: 12, y: sepY, width: totalW - 24, height: 1))
             hsep.wantsLayer = true
             hsep.layer?.backgroundColor = ToolbarLayout.iconColor.withAlphaComponent(0.12).cgColor
             addSubview(hsep)
 
-            buildFooter(width: totalW)
+            buildFooter(width: totalW, height: activeFooterH)
         }
     }
 
@@ -78,37 +80,48 @@ final class ResolutionPresetsView: NSView {
         }
     }
 
-    private func buildFooter(width: CGFloat) {
-        // Toggle row.
-        let toggleY = footerH - 30
-        let label = NSTextField(labelWithString: L("Keep ratio for next captures"))
-        label.font = NSFont.systemFont(ofSize: 11)
-        label.textColor = ToolbarLayout.iconColor
-        label.frame = NSRect(x: 14, y: toggleY, width: width - 70, height: 18)
-        addSubview(label)
+    private var footerHeight: CGFloat {
+        if showsKeepRatioToggle && showsUnitSelector { return fullFooterH }
+        if showsKeepRatioToggle { return keepRatioFooterH }
+        if showsUnitSelector { return keepRatioFooterH }
+        return 0
+    }
 
-        let toggle = NSSwitch()
-        toggle.state = keepRatioOn ? .on : .off
-        toggle.target = self
-        toggle.action = #selector(keepRatioChanged(_:))
-        let sw = toggle.intrinsicContentSize
-        toggle.frame = NSRect(x: width - sw.width - 12, y: toggleY - 2, width: sw.width, height: sw.height)
-        addSubview(toggle)
+    private func buildFooter(width: CGFloat, height: CGFloat) {
+        // Toggle row.
+        if showsKeepRatioToggle {
+            let toggleY = height - 30
+            let label = NSTextField(labelWithString: L("Keep ratio for next captures"))
+            label.font = NSFont.systemFont(ofSize: 11)
+            label.textColor = ToolbarLayout.iconColor
+            label.frame = NSRect(x: 14, y: toggleY, width: width - 70, height: 18)
+            addSubview(label)
+
+            let toggle = NSSwitch()
+            toggle.state = keepRatioOn ? .on : .off
+            toggle.target = self
+            toggle.action = #selector(keepRatioChanged(_:))
+            let sw = toggle.intrinsicContentSize
+            toggle.frame = NSRect(x: width - sw.width - 12, y: toggleY - 2, width: sw.width, height: sw.height)
+            addSubview(toggle)
+        }
 
         // Unit selector (px | pt).
-        let unitY: CGFloat = 10
-        let unitLabel = NSTextField(labelWithString: L("Units"))
-        unitLabel.font = NSFont.systemFont(ofSize: 11)
-        unitLabel.textColor = ToolbarLayout.iconColor
-        unitLabel.frame = NSRect(x: 14, y: unitY + 2, width: 60, height: 18)
-        addSubview(unitLabel)
+        if showsUnitSelector {
+            let unitY: CGFloat = showsKeepRatioToggle ? 10 : height - 32
+            let unitLabel = NSTextField(labelWithString: L("Units"))
+            unitLabel.font = NSFont.systemFont(ofSize: 11)
+            unitLabel.textColor = ToolbarLayout.iconColor
+            unitLabel.frame = NSRect(x: 14, y: unitY + 2, width: 60, height: 18)
+            addSubview(unitLabel)
 
-        let seg = NSSegmentedControl(labels: ["px", "pt"], trackingMode: .selectOne, target: self, action: #selector(unitChanged(_:)))
-        seg.selectedSegment = unitIndex
-        seg.segmentDistribution = .fillEqually
-        let segW: CGFloat = 80
-        seg.frame = NSRect(x: width - segW - 12, y: unitY, width: segW, height: 22)
-        addSubview(seg)
+            let seg = NSSegmentedControl(labels: ["px", "pt"], trackingMode: .selectOne, target: self, action: #selector(unitChanged(_:)))
+            seg.selectedSegment = unitIndex
+            seg.segmentDistribution = .fillEqually
+            let segW: CGFloat = 80
+            seg.frame = NSRect(x: width - segW - 12, y: unitY, width: segW, height: 22)
+            addSubview(seg)
+        }
     }
 
     var preferredSize: NSSize { frame.size }

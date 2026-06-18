@@ -2374,7 +2374,10 @@ class OverlayView: NSView {
         } else {
             box = ResolutionBoxView()
             box.onCommit = { [weak self] w, h, edited in
-                self?.applyDisplaySize(w: w, h: h, edited: edited)
+                guard let self else { return }
+                if self.applyDisplaySize(w: w, h: h, edited: edited) {
+                    self.clearStaleExactPreSelectionPresetIfNeeded()
+                }
             }
             box.onFinishEditing = { [weak self] in
                 guard let self else { return }
@@ -2389,7 +2392,7 @@ class OverlayView: NSView {
         resolutionBoxRect = frame  // overlay-space rect (for chrome/cursor/zoom anchor)
         let px = selectionDisplaySize
         box.setDimensions(w: px.w, h: px.h)
-        box.setActiveRatioLabel(activeRatioLabel, locked: lockedAspect != nil)
+        box.setActivePresetLabel(preSelectionPresetDisplayLabel)
 
         if usesGlassChrome {
             // Lift into a glass chrome panel positioned at the screen rect.
@@ -2429,21 +2432,24 @@ class OverlayView: NSView {
             PopoverHelper.dismiss()
             return
         }
-        let px = selectionPixelSize
+        let activePreset = activePreSelectionPreset
         let view = ResolutionPresetsView()
 
         view.ratioRows = ResolutionPresetCatalog.ratios.map { preset in
-            let selected: Bool
-            switch preset {
-            case .freeform: selected = (lockedAspect == nil)
-            case .ratio(_, let v): selected = (lockedAspect.map { abs($0 - v) < 0.001 } ?? false)
-            default: selected = false
-            }
+            let selected = preSelectionPreset(activePreset, selects: preset)
             return ResolutionPresetsView.Row(title: preset.label, isSelected: selected) { [weak self] in
                 PopoverHelper.dismiss()
                 guard let self else { return }
-                if let aspect = preset.aspectValue {
-                    self.setPreSelectionPreset(.ratio(aspect))
+                // A choice made on an active selection only persists into the
+                // next capture when "keep ratio for next captures" is on. When
+                // it's off, apply to the current selection but clear any
+                // pre-selection preset so the next capture starts freeform.
+                if self.keepRatioForNextCaptures {
+                    if let aspect = preset.aspectValue {
+                        self.setPreSelectionPreset(.ratio(aspect))
+                    } else {
+                        self.setPreSelectionPreset(.freeform)
+                    }
                 } else {
                     self.setPreSelectionPreset(.freeform)
                 }
@@ -2455,10 +2461,17 @@ class OverlayView: NSView {
             guard case .resolution(_, let w, let h) = preset else {
                 return ResolutionPresetsView.Row(title: preset.label, isSelected: false, action: {})
             }
-            return ResolutionPresetsView.Row(title: preset.label, isSelected: (px.w == w && px.h == h)) { [weak self] in
+            return ResolutionPresetsView.Row(title: preset.label, isSelected: preSelectionPreset(activePreset, selects: preset)) { [weak self] in
                 PopoverHelper.dismiss()
                 guard let self else { return }
-                self.setPreSelectionPreset(.resolution(w: w, h: h))
+                // Same rule for fixed resolutions: only persist for the next
+                // capture when keep-ratio is on; otherwise this resolution
+                // applies to the current selection only.
+                if self.keepRatioForNextCaptures {
+                    self.setPreSelectionPreset(.resolution(w: w, h: h))
+                } else {
+                    self.setPreSelectionPreset(.freeform)
+                }
                 self.applyLockedAspect(nil)
                 self.applyPixelSize(w: w, h: h)
                 self.persistRatioIfNeeded()
@@ -2527,6 +2540,27 @@ class OverlayView: NSView {
                 }
                 return false
             }?.label ?? "\(w) × \(h)"
+        }
+    }
+
+    private func preSelectionPreset(_ activePreset: PreSelectionPreset, selects preset: ResolutionPreset) -> Bool {
+        switch (activePreset, preset) {
+        case (.freeform, .freeform):
+            return true
+        case (.ratio(let active), .ratio(_, let value)):
+            return abs(active - value) < 0.001
+        case (.resolution(let activeW, let activeH), .resolution(_, let w, let h)):
+            return activeW == w && activeH == h
+        default:
+            return false
+        }
+    }
+
+    private func clearStaleExactPreSelectionPresetIfNeeded() {
+        guard case .resolution(let presetW, let presetH) = activePreSelectionPreset else { return }
+        let px = selectionPixelSize
+        if px.w != presetW || px.h != presetH {
+            setPreSelectionPreset(.freeform)
         }
     }
 
@@ -2607,17 +2641,10 @@ class OverlayView: NSView {
 
         let activePreset = activePreSelectionPreset
         let view = ResolutionPresetsView()
-        view.showsFooter = false
+        view.showsKeepRatioToggle = true
+        view.showsUnitSelector = false
         view.ratioRows = ResolutionPresetCatalog.ratios.map { preset in
-            let selected: Bool
-            switch (preset, activePreset) {
-            case (.freeform, .freeform):
-                selected = true
-            case (.ratio(_, let value), .ratio(let active)):
-                selected = abs(value - active) < 0.001
-            default:
-                selected = false
-            }
+            let selected = preSelectionPreset(activePreset, selects: preset)
             return ResolutionPresetsView.Row(title: preset.label, isSelected: selected) { [weak self] in
                 PopoverHelper.dismiss()
                 guard let self else { return }
@@ -2635,16 +2662,22 @@ class OverlayView: NSView {
             guard case .resolution(_, let w, let h) = preset else {
                 return ResolutionPresetsView.Row(title: preset.label, isSelected: false, action: {})
             }
-            let selected: Bool
-            if case .resolution(let activeW, let activeH) = activePreset {
-                selected = activeW == w && activeH == h
-            } else {
-                selected = false
-            }
+            let selected = preSelectionPreset(activePreset, selects: preset)
             return ResolutionPresetsView.Row(title: preset.label, isSelected: selected) { [weak self] in
                 PopoverHelper.dismiss()
                 self?.setPreSelectionPreset(.resolution(w: w, h: h))
             }
+        }
+        view.keepRatioOn = keepRatioForNextCaptures
+        view.onToggleKeepRatio = { [weak self] on in
+            guard let self else { return }
+            self.keepRatioForNextCaptures = on
+            if on, case .ratio(let aspect) = self.activePreSelectionPreset {
+                self.persistedAspect = aspect
+            } else if !on {
+                self.persistedAspect = 0
+            }
+            self.refreshResolutionAndToolbarLayout()
         }
         view.build()
         PopoverHelper.show(view, size: view.preferredSize,

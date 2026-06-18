@@ -146,12 +146,10 @@ final class ResolutionBoxView: NSView, NSTextFieldDelegate, ChromeContent {
         return field.window?.firstResponder === editor
     }
 
-    /// Reflect the active ratio in the presets button. When `locked`, tint the
-    /// icon with the accent color so the current selection clearly reads as
-    /// constrained even if that ratio is not persisted for future captures.
-    func setActiveRatioLabel(_ label: String?, locked: Bool) {
+    /// Reflect the active ratio/resolution preset in the presets button.
+    func setActivePresetLabel(_ label: String?) {
         presetsButton.toolTip = label.map { "\(L("Presets")) — \($0)" } ?? L("Aspect ratio & resolution presets")
-        presetsButton.contentTintColor = locked ? ToolbarLayout.accentColor : ToolbarLayout.iconColor
+        presetsButton.contentTintColor = label == nil ? ToolbarLayout.iconColor : ToolbarLayout.accentColor
     }
 
     @objc private func presetsClicked() {
