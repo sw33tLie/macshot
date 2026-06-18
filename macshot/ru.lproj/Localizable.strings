@@ -86,6 +86,9 @@
 "Measure" = "Линейка";
 "Measure (px)" = "Линейка (px)";
 "Magnify (Loupe)" = "Лупа";
+"Highlight" = "Подсветка";
+"Highlight (Spotlight)" = "Подсветка (Прожектор)";
+"Dim" = "Затемнение";
 "Color Sampler" = "Пипетка";
 "Color Picker" = "Палитра";
 "Select & Edit" = "Выбрать и изменить";

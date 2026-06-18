@@ -86,6 +86,9 @@
 "Measure" = "วัด";
 "Measure (px)" = "วัด (px)";
 "Magnify (Loupe)" = "ขยาย (แว่นขยาย)";
+"Highlight" = "เน้นจุด";
+"Highlight (Spotlight)" = "เน้นจุด (สปอตไลต์)";
+"Dim" = "หรี่แสง";
 "Color Sampler" = "ตัวดูดสี";
 "Color Picker" = "ตัวเลือกสี";
 "Select & Edit" = "เลือกและแก้ไข";

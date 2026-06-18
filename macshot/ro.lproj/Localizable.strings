@@ -87,6 +87,9 @@
 "Measure" = "Masoara";
 "Measure (px)" = "Masoara (px)";
 "Magnify (Loupe)" = "Lupa (Marire)";
+"Highlight" = "Evidentiere";
+"Highlight (Spotlight)" = "Evidentiere (Reflector)";
+"Dim" = "Intunecare";
 "Color Sampler" = "Selector culoare";
 "Color Picker" = "Alegator de culori";
 "Select & Edit" = "Selecteaza si editeaza";

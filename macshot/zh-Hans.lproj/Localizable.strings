@@ -86,6 +86,9 @@
 "Measure" = "测量";
 "Measure (px)" = "测量 (px)";
 "Magnify (Loupe)" = "放大镜";
+"Highlight" = "聚光";
+"Highlight (Spotlight)" = "聚光（聚光灯）";
+"Dim" = "变暗";
 "Color Sampler" = "取色器";
 "Color Picker" = "颜色选取器";
 "Select & Edit" = "选择与编辑";

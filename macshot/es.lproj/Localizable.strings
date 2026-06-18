@@ -84,6 +84,9 @@
 "Measure" = "Medir";
 "Measure (px)" = "Medir (px)";
 "Magnify (Loupe)" = "Lupa";
+"Highlight" = "Resaltar";
+"Highlight (Spotlight)" = "Resaltar (Foco)";
+"Dim" = "Atenuar";
 "Color Sampler" = "Muestreador de color";
 "Color Picker" = "Selector de color";
 "Select & Edit" = "Seleccionar y editar";

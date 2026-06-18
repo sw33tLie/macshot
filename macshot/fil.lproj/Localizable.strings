@@ -86,6 +86,9 @@
 "Measure" = "Sukat";
 "Measure (px)" = "Sukat (px)";
 "Magnify (Loupe)" = "Palakihin (Loupe)";
+"Highlight" = "Tutok";
+"Highlight (Spotlight)" = "Tutok (Spotlight)";
+"Dim" = "Padilimin";
 "Color Sampler" = "Tagakuha ng Kulay";
 "Color Picker" = "Tagapili ng Kulay";
 "Select & Edit" = "Pumili at I-edit";

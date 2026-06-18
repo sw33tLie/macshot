@@ -86,6 +86,9 @@
 "Measure" = "Merat";
 "Measure (px)" = "Merat (px)";
 "Magnify (Loupe)" = "Zvacsit (Lupa)";
+"Highlight" = "Zvyraznit";
+"Highlight (Spotlight)" = "Zvyraznit (Reflektor)";
+"Dim" = "Stmavit";
 "Color Sampler" = "Vzorkovac farieb";
 "Color Picker" = "Vyber farby";
 "Select & Edit" = "Vybrat a upravit";

@@ -88,6 +88,9 @@
 "Measure" = "قياس";
 "Measure (px)" = "قياس (px)";
 "Magnify (Loupe)" = "تكبير (عدسة)";
+"Highlight" = "تسليط الضوء";
+"Highlight (Spotlight)" = "تسليط الضوء (بقعة ضوء)";
+"Dim" = "تعتيم";
 "Color Sampler" = "أداة اختيار اللون";
 "Color Picker" = "منتقي الألوان";
 "Select & Edit" = "تحديد وتعديل";

@@ -86,6 +86,9 @@
 "Measure" = "計測";
 "Measure (px)" = "計測 (px)";
 "Magnify (Loupe)" = "拡大鏡 (ルーペ)";
+"Highlight" = "スポット";
+"Highlight (Spotlight)" = "スポット (スポットライト)";
+"Dim" = "暗さ";
 "Color Sampler" = "カラーサンプラー";
 "Color Picker" = "カラーピッカー";
 "Select & Edit" = "選択して編集";

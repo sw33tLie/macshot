@@ -86,6 +86,9 @@
 "Measure" = "측정";
 "Measure (px)" = "측정 (px)";
 "Magnify (Loupe)" = "확대경 (돋보기)";
+"Highlight" = "강조";
+"Highlight (Spotlight)" = "강조 (스포트라이트)";
+"Dim" = "어둡게";
 "Color Sampler" = "색상 추출";
 "Color Picker" = "색상 선택기";
 "Select & Edit" = "선택 및 편집";

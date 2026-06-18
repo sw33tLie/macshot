@@ -84,6 +84,9 @@
 "Measure" = "Mesure";
 "Measure (px)" = "Mesure (px)";
 "Magnify (Loupe)" = "Loupe (Zoom)";
+"Highlight" = "Mettre en évidence";
+"Highlight (Spotlight)" = "Mettre en évidence (Projecteur)";
+"Dim" = "Assombrir";
 "Color Sampler" = "Pipette";
 "Color Picker" = "Sélecteur de couleur";
 "Select & Edit" = "Sélectionner et modifier";

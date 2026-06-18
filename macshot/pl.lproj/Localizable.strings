@@ -86,6 +86,9 @@
 "Measure" = "Miarka";
 "Measure (px)" = "Miarka (px)";
 "Magnify (Loupe)" = "Lupa";
+"Highlight" = "Podświetlenie";
+"Highlight (Spotlight)" = "Podświetlenie (Reflektor)";
+"Dim" = "Przyciemnienie";
 "Color Sampler" = "Próbnik kolorów";
 "Color Picker" = "Wybór koloru";
 "Select & Edit" = "Zaznacz i edytuj";

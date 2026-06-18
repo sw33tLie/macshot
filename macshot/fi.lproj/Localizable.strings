@@ -86,6 +86,9 @@
 "Measure" = "Mittaa";
 "Measure (px)" = "Mittaa (px)";
 "Magnify (Loupe)" = "Suurenna (Luuppi)";
+"Highlight" = "Korosta";
+"Highlight (Spotlight)" = "Korosta (Kohdevalo)";
+"Dim" = "Himmennä";
 "Color Sampler" = "Varipoimija";
 "Color Picker" = "Varivalitsin";
 "Select & Edit" = "Valitse ja muokkaa";
