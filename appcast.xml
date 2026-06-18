@@ -24,10 +24,10 @@
     <enclosure url="https://github.com/sw33tLie/macshot/releases/download/v4.1.2/MacShot.dmg" length="6150800" type="application/octet-stream" sparkle:edSignature="mJwEP5fVlL63jskhtsVeHmVtphcbspKsePHLlqnOhv074M9XoSNC3tHXumkUujouFL2rt/8PNOlHl/mM/e0gBg==" />
 </item>
 <item>
-    <title>v4.2.0-beta.1</title>
-    <pubDate>Thu, 18 Jun 2026 02:14:13 +0000</pubDate>
-    <sparkle:version>82</sparkle:version>
-    <sparkle:shortVersionString>4.2.0-beta.1</sparkle:shortVersionString>
+    <title>v4.2.0-beta.2</title>
+    <pubDate>Thu, 18 Jun 2026 02:31:32 +0000</pubDate>
+    <sparkle:version>83</sparkle:version>
+    <sparkle:shortVersionString>4.2.0-beta.2</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
     <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
@@ -38,13 +38,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Added</h3><ul>  <li>Native AVIF export.</li> <li>Custom menu bar icon — the default, a built-in preset, or any SF Symbol.</li> <li>OCR now detects QR codes too, with open/copy/scan actions.</li> <li>Right-click menu for history screenshots: copy, save, edit, pin, upload, OCR/QR, rotate, flip, open with, share, delete.</li> <li>Pre-draw aspect-ratio/resolution preset button for quick and scroll capture.</li> <li>Window snapping can select Finder Quick Look windows.</li> <li>Silent "Clear History" hotkey.</li> <li>Forward Delete for annotations.</li> <li>Point handles for number annotations; improved loupe controls.</li> <li>Settings: configurable save action, hide shadow outside selection, show shortcuts in tooltips.</li>  </ul><h3>Changed</h3><ul>  <li>Redesigned selection size control: split width/height fields, presets, recording-friendly.</li> <li>Resolution preset popovers behave like real controls (focus, Escape, dismissal, glass state); preset choice is shared between pre-draw and selected-area popovers.</li> <li>Exact-resolution pre-draw capture drags as a fixed-size frame.</li> <li>OCR/QR results UI aligns with Translate, actions moved into the header.</li> <li>Toolbars stay attached to the selection without overlapping; Liquid Glass covers the size/resolution toolbar.</li> <li>Idle sleep allowed again. Text fields use the standard edit menu.</li>  </ul><h3>Fixed</h3><ul>  <li>Fixed-resolution preset no longer leaks into the next capture when "keep ratio" is off.</li> <li>Liquid Glass popovers interact on first click; Remember Last Tool respected.</li> <li>Double-click text editing no longer copies accidentally.</li> <li>Resolution fields keep edits and focus; readout no longer overlaps the right toolbar.</li> <li>Save panel opens focused; history overlay dismisses before external image actions.</li> <li>Editable annotations and post-processing state preserved when reopening captures; Save/Done state updates correctly.</li> <li>Toolbar buttons no longer fire stale actions or leave random hover/pressed states; tooltips no longer flash.</li> <li>Space-to-move works after resizing; toolbar layout recalculates after preset changes.</li> <li>Window snapping ignores hidden windows behind the frontmost one.</li></ul>
+      <h3>Fixed</h3><ul>  <li>Resolution W×H fields are editable again in Liquid Glass mode (typing no longer beeps).</li> <li>Removed a stray duplicate resolution box that appeared in the bottom-left corner.</li></ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v4.2.0-beta.1/MacShot.dmg"
-        length="6497492"
+        url="https://github.com/sw33tLie/macshot/releases/download/v4.2.0-beta.2/MacShot.dmg"
+        length="6497769"
         type="application/octet-stream"
-        sparkle:edSignature="03Xqa35w0VPo6UI1kZs0pKTb1yE6ttqAZz+/0XRq0dvoG+j549FnxncbgY0CHrO3FYPR201+5SjIAl3cUMTdCw=="
+        sparkle:edSignature="T2M0LsKf7BR+eqOLttGE2ODO6G9349llNI9MQZ0AF++jl6/upZITavP7oSnlS+WaENMgHm7YgEKlZLmTFICKCg=="
     />
 </item>
     </channel>
