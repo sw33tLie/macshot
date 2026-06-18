@@ -1429,11 +1429,21 @@ class ToolOptionsRowView: NSView, ChromeContent {
         guard let ov = overlayView else { return }
         let val = min(0.95, max(0.1, CGFloat(sender.doubleValue)))
         if let ann = editingAnnotation, ann.tool == .highlight {
+            // Editing a specific selected highlight.
             ensureSnapshot()
             ann.dimOpacity = val
-            // Highlight bakes nothing; just invalidate the cached layers so the
-            // global union dim re-renders at the new strength.
             ov.cachedCompositedImage = nil
+        } else {
+            // Highlight tool active with no specific selection: the dim is a
+            // single spotlight level, so apply it to every placed highlight live
+            // (not just the next one). Highlight bakes nothing — invalidating the
+            // cache re-renders the union dim at the new strength.
+            var changed = false
+            for ann in ov.annotations where ann.tool == .highlight {
+                ann.dimOpacity = val
+                changed = true
+            }
+            if changed { ov.cachedCompositedImage = nil }
         }
         UserDefaults.standard.set(Double(val), forKey: HighlightToolHandler.dimOpacityKey)
         if let label = viewWithTag(993) as? NSTextField {
