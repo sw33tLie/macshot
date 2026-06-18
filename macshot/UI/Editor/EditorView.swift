@@ -75,10 +75,7 @@ class EditorView: OverlayView {
     override func shouldAllowNewSelection() -> Bool { false }
     override func shouldAllowDetach() -> Bool { false }
 
-    // MARK: - Zoom (not needed — NSScrollView handles it)
-
-    override func canPanAtOneX() -> Bool { false }
-    override func clampZoomAnchorForEditor(r: NSRect, z: CGFloat, ac: NSPoint, av: inout NSPoint) {}
+    // MARK: - Zoom (handled by NSScrollView magnification, not OverlayView)
 
     // MARK: - Export
 

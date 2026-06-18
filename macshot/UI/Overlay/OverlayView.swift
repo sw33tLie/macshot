@@ -133,17 +133,14 @@ class OverlayView: NSView {
 
     private(set) var state: State = .idle
 
-    // Zoom
+    // Zoom — the capture overlay no longer zooms (scroll/pinch zoom was
+    // removed). These remain fixed at the identity values so the shared
+    // coordinate transforms (viewToCanvas / canvasToView / applyZoomTransform)
+    // stay pure pass-throughs; the editor zooms via NSScrollView magnification
+    // instead, which doesn't touch these.
     var zoomLevel: CGFloat = 1.0
-    // The canvas point that stays pinned to zoomAnchorView on screen.
-    // Both default to selection center; updated on each scroll/pinch to be the cursor position.
     var zoomAnchorCanvas: NSPoint = .zero
     var zoomAnchorView: NSPoint = .zero
-    private var zoomFadingOut: Bool = false
-    private var zoomLabelOpacity: CGFloat = 0.0
-    private var zoomFadeTimer: Timer?
-    var zoomMin: CGFloat { 1.0 }
-    private let zoomMax: CGFloat = 8.0
 
     // Selection
     private(set) var selectionRect: NSRect = .zero
@@ -410,10 +407,6 @@ class OverlayView: NSView {
     private var resolutionBoxRect: NSRect = .zero
     private var preSelectionPresetButton: PreSelectionPresetButton?
     private var preSelectionPresetButtonRect: NSRect = .zero
-
-    // Zoom label
-    private var zoomLabelRect: NSRect = .zero
-    private var zoomInputField: NSTextField?
 
     // Beautify
     var beautifyEnabled: Bool = UserDefaults.standard.bool(forKey: "beautifyEnabled")
@@ -1428,9 +1421,6 @@ class OverlayView: NSView {
         if preSelectionPresetButton?.isHidden == false && preSelectionPresetButtonRect.contains(point) {
             return true
         }
-        if zoomLabelRect.contains(point) && zoomLabelOpacity > 0 && zoomInputField == nil {
-            return true
-        }
         return false
     }
 
@@ -1524,12 +1514,6 @@ class OverlayView: NSView {
 
     /// Override to control whether a new selection can be started. Base returns true when not recording and not in editor mode.
     func shouldAllowNewSelection() -> Bool { !isRecording && !isEditorMode }
-
-    /// Override to allow panning at 1x zoom. Base returns false.
-    func canPanAtOneX() -> Bool { false }
-
-    /// Override point for editor-specific zoom clamping. Base does nothing.
-    func clampZoomAnchorForEditor(r: NSRect, z: CGFloat, ac: NSPoint, av: inout NSPoint) {}
 
     /// Override to change the rect used when drawing the screenshot in `captureSelectedRegion`. Base returns bounds.
     var captureDrawRect: NSRect { isEditorMode ? selectionRect : bounds }
@@ -1955,11 +1939,7 @@ class OverlayView: NSView {
             }
 
             // Resolution box (real NSView) is managed in updateResolutionBox(),
-            // called from layout/selection changes — not drawn here. The zoom
-            // label still draws beside it.
-            if shouldShowResolutionBox() && zoomLabelOpacity > 0 {
-                drawZoomLabel()
-            }
+            // called from layout/selection changes — not drawn here.
 
             // Resize handles (drawn even in recording setup mode, but not during scroll capture)
             if state == .selected && !isEditorMode && !isScrollCapturing {
@@ -2740,41 +2720,6 @@ class OverlayView: NSView {
         lockedAspect = persistedAspect
     }
 
-    private func drawZoomLabel() {
-        guard resolutionBoxRect != .zero, zoomInputField == nil else { return }
-        let zoom = zoomLevel
-        let text: String
-        if abs(zoom - 1.0) < 0.005 {
-            text = "1×"
-        } else if zoom >= 10 {
-            text = String(format: "%.0f×", zoom)
-        } else {
-            text = String(format: "%.1f×", zoom).replacingOccurrences(of: ".0×", with: "×")
-        }
-
-        let alpha = zoomLabelOpacity
-        let attrs: [NSAttributedString.Key: Any] = [
-            .font: Self.sizeLabelFont,
-            .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(alpha),
-        ]
-        let textSize = (text as NSString).size(withAttributes: attrs)
-        let padding: CGFloat = 6
-        let labelW = textSize.width + padding * 2
-        let labelH = resolutionBoxRect.height
-        let gap: CGFloat = 6
-        let labelX = resolutionBoxRect.maxX + gap
-        let labelY = resolutionBoxRect.minY
-
-        let rect = NSRect(x: labelX, y: labelY, width: labelW, height: labelH)
-        zoomLabelRect = rect
-
-        let bgColor = ToolbarLayout.bgColor.withAlphaComponent(alpha * 0.85)
-        bgColor.setFill()
-        NSBezierPath(roundedRect: rect, xRadius: 4, yRadius: 4).fill()
-        (text as NSString).draw(
-            at: NSPoint(x: labelX + padding, y: labelY + padding / 2), withAttributes: attrs)
-    }
-
     /// Current selection size in device pixels (rounded, not truncated).
     var selectionPixelSize: (w: Int, h: Int) {
         let scale = window?.backingScaleFactor ?? 2.0
@@ -2894,67 +2839,6 @@ class OverlayView: NSView {
         selectionRect = rect
         refreshResolutionAndToolbarLayout()
         refreshCursorAfterSelectionChange()
-        needsDisplay = true
-    }
-
-    private func showZoomInput() {
-        guard zoomLabelRect != .zero else { return }
-        // Show zoom as a plain number (e.g. "2" or "3.5") so user can type a new value
-        let currentText: String
-        if abs(zoomLevel - 1.0) < 0.005 {
-            currentText = "1"
-        } else {
-            let rounded = (zoomLevel * 10).rounded() / 10
-            currentText =
-                rounded == rounded.rounded()
-                ? String(format: "%.0f", rounded) : String(format: "%.1f", rounded)
-        }
-
-        let fieldWidth: CGFloat = 70
-        let fieldHeight: CGFloat = 22
-        let fieldX = zoomLabelRect.midX - fieldWidth / 2
-        let fieldY = zoomLabelRect.minY + (zoomLabelRect.height - fieldHeight) / 2
-
-        let field = NSTextField(
-            frame: NSRect(x: fieldX, y: fieldY, width: fieldWidth, height: fieldHeight))
-        field.stringValue = currentText
-        field.font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium)
-        field.alignment = .center
-        field.isBezeled = true
-        field.bezelStyle = .roundedBezel
-        field.backgroundColor = NSColor(white: 0.15, alpha: 0.95)
-        field.textColor = .white
-        field.focusRingType = .none
-        field.delegate = self
-        field.tag = 889
-
-        addSubview(field)
-        zoomInputField = field
-        window?.makeFirstResponder(field)
-        field.selectText(nil)
-        // Keep zoom label visible while editing
-        zoomLabelOpacity = 1.0
-        zoomFadeTimer?.invalidate()
-        needsDisplay = true
-    }
-
-    private func commitZoomInputIfNeeded() {
-        guard let field = zoomInputField else { return }
-        let input = field.stringValue.trimmingCharacters(in: .whitespaces)
-        // Strip trailing × if user typed it
-        let cleaned = input.replacingOccurrences(of: "×", with: "").replacingOccurrences(
-            of: "x", with: ""
-        ).trimmingCharacters(in: .whitespaces)
-        if let value = Double(cleaned), value > 0 {
-            let newLevel = max(zoomMin, min(zoomMax, CGFloat(value)))
-            // Zoom toward selection center when set via text
-            let center = NSPoint(x: selectionRect.midX, y: selectionRect.midY)
-            setZoom(newLevel, cursorView: center)
-        }
-
-        field.removeFromSuperview()
-        zoomInputField = nil
-        window?.makeFirstResponder(self)
         needsDisplay = true
     }
 
@@ -4159,29 +4043,8 @@ class OverlayView: NSView {
     }
 
     /// Set zoom level, pinning the given view-space cursor point in place.
-    private func setZoom(_ level: CGFloat, cursorView: NSPoint) {
-        // Canvas point currently under cursor (before zoom change)
-        let canvasUnderCursor = viewToCanvas(cursorView)
-        zoomLevel = max(zoomMin, min(zoomMax, level))
-
-        // When zooming back to 1×, reset anchors to avoid floating-point drift
-        // that causes visual misalignment between background and annotations.
-        if abs(zoomLevel - 1.0) < 0.005 {
-            zoomLevel = 1.0
-            zoomAnchorCanvas = .zero
-            zoomAnchorView = .zero
-        } else {
-            // After zoom change, pin that canvas point to the cursor's view position.
-            // because applyZoomTransform runs after the editor translate.
-            zoomAnchorCanvas = canvasUnderCursor
-            zoomAnchorView = cursorView
-            clampZoomAnchor()
-        }
-        showZoomLabel()
-        needsDisplay = true
-    }
-
-    /// Reset zoom to 1× (no transform).
+    /// Reset zoom to 1× (no transform). Retained because crop/undo/redo call it;
+    /// the overlay no longer zooms, so this just affirms the identity state.
     private func resetZoom() {
         zoomLevel = 1.0
         zoomAnchorCanvas = .zero
@@ -4258,77 +4121,6 @@ class OverlayView: NSView {
         currentTool = .arrow
         rebuildToolbarLayout()
         needsDisplay = true
-    }
-
-    /// Clamp zoomAnchorView.
-    ///
-    /// Transform: screenPos = zoomAnchorView + (canvasPos - zoomAnchorCanvas) * zoom
-    ///
-    /// zoom > 1×: keep all four image edges inside selectionRect (no empty border visible).
-    /// zoom < 1×: allow free panning but keep at least `margin` screen-space pixels of the
-    ///            image visible on each side, so the user never scrolls completely off canvas.
-    private func clampZoomAnchor() {
-        // At 1x, no clamping needed (image fills the view exactly)
-        if zoomLevel == 1.0 { return }
-        let r = selectionRect
-        let z = zoomLevel
-        let ac = zoomAnchorCanvas
-        var av = zoomAnchorView
-
-        if z > 1.0 {
-            // Overlay zoom-in: edges must stay covered.
-            let maxAVx = r.minX - (r.minX - ac.x) * z
-            let minAVx = r.maxX - (r.maxX - ac.x) * z
-            av.x = max(minAVx, min(maxAVx, av.x))
-
-            let maxAVy = r.minY - (r.minY - ac.y) * z
-            let minAVy = r.maxY - (r.maxY - ac.y) * z
-            av.y = max(minAVy, min(maxAVy, av.y))
-        }
-
-        zoomAnchorView = av
-    }
-
-    private func showZoomLabel() {
-        zoomLabelOpacity = 1.0
-        zoomFadeTimer?.invalidate()
-        zoomFadeTimer = nil
-        if zoomLevel == 1.0 {
-            // Back at 1× — fade out after a short pause
-            zoomFadeTimer = Timer.scheduledTimer(withTimeInterval: 0.8, repeats: false) {
-                [weak self] _ in
-                self?.fadeOutZoomLabel()
-            }
-        }
-        // While zoomed ≠ 1×: stay fully visible, no timer
-    }
-
-    private func fadeOutZoomLabel() {
-        // Don't fade if we're zoomed (either direction)
-        guard zoomLevel == 1.0 else { return }
-        zoomFadingOut = true
-        let step: CGFloat = 0.08
-        Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { [weak self] t in
-            guard let self = self else {
-                t.invalidate()
-                return
-            }
-            // Abort fade if user zoomed during the animation
-            if self.zoomLevel != 1.0 {
-                self.zoomLabelOpacity = 1.0
-                self.zoomFadingOut = false
-                t.invalidate()
-                self.needsDisplay = true
-                return
-            }
-            self.zoomLabelOpacity -= step
-            if self.zoomLabelOpacity <= 0 {
-                self.zoomLabelOpacity = 0
-                self.zoomFadingOut = false
-                t.invalidate()
-            }
-            self.needsDisplay = true
-        }
     }
 
     // MARK: - Annotation Controls
@@ -5562,7 +5354,6 @@ class OverlayView: NSView {
         if !isTextFormattingClick {
             commitTextFieldIfNeeded()
         }
-        commitZoomInputIfNeeded()
 
         // Double-click to copy: when the setting is on, two fast clicks inside the
         // selection confirm the capture. Annotations the first click added (and any
@@ -5614,19 +5405,6 @@ class OverlayView: NSView {
             // handled by the view itself (don't intercept here).
             if resolutionBoxRect != .zero && resolutionBoxRect.contains(point) {
                 return
-            }
-
-            // Check zoom label click
-            if zoomLabelRect.contains(point) && zoomInputField == nil && zoomLabelOpacity > 0 {
-                showZoomInput()
-                return
-            }
-            if let field = zoomInputField, field.frame.contains(point) {
-                return  // let the text field handle it
-            }
-
-            if showToolbars {
-
             }
 
             // Check handles (disabled in editor)
@@ -6798,50 +6576,19 @@ class OverlayView: NSView {
     }
 
     override func scrollWheel(with event: NSEvent) {
-        // Editor mode: all scroll handling is done by CenteringClipView
+        // Editor mode: all scroll handling is done by CenteringClipView.
+        // The capture overlay no longer zooms/pans on scroll.
         if isInsideScrollView {
             enclosingScrollView?.scrollWheel(with: event)
-            return
         }
-        guard state == .selected else { return }
-        let isTrackpadPhased = event.phase != [] || event.momentumPhase != []
-        let isCommandScroll = event.modifierFlags.contains(.command)
-
-        // Phase-based (trackpad) scroll without Cmd → pan only, never zoom
-        // Suppress panning while actively drawing to prevent pan+draw conflict (Apple Pencil / Sidecar)
-        if isTrackpadPhased && !isCommandScroll && currentAnnotation != nil { return }
-        if isTrackpadPhased && !isCommandScroll {
-            // Allow panning when zoomed OR when the image exceeds the view (tall/wide images in editor)
-            let imageExceedsView =
-                canPanAtOneX()
-                || (isEditorMode
-                    && (selectionRect.height > bounds.height || selectionRect.width > bounds.width))
-            guard zoomLevel != 1.0 || imageExceedsView else { return }
-            let dx = event.scrollingDeltaX
-            let dy = event.scrollingDeltaY
-            zoomAnchorView.x += dx
-            zoomAnchorView.y -= dy  // AppKit Y is flipped vs scroll direction
-            clampZoomAnchor()
-            needsDisplay = true
-            return
-        }
-
-        // Cmd+scroll or plain mouse wheel (non-trackpad) → zoom
-        guard isCommandScroll || !isTrackpadPhased else { return }
-        let cursor = convert(event.locationInWindow, from: nil)
-        let delta = event.deltaY
-        let factor: CGFloat = 0.1
-        setZoom(zoomLevel + delta * factor, cursorView: cursor)
     }
 
     override func magnify(with event: NSEvent) {
+        // Editor mode pinch-zooms via the scroll view; the capture overlay
+        // does not respond to pinch.
         if isInsideScrollView {
             editorZoom(by: 1.0 + event.magnification, cursorInWindow: event.locationInWindow)
-            return
         }
-        guard state == .selected else { return }
-        let cursor = convert(event.locationInWindow, from: nil)
-        setZoom(zoomLevel + event.magnification, cursorView: cursor)
     }
 
     // MARK: - Middle Mouse (toggle move mode)
@@ -8582,13 +8329,11 @@ class OverlayView: NSView {
                     return
                 }
                 if event.charactersIgnoringModifiers == "0" {
+                    // Cmd+0 resets zoom in the editor only; the capture overlay
+                    // doesn't zoom.
                     if isInsideScrollView, let sv = enclosingScrollView {
                         sv.magnification = 1.0
                         findTopBar()?.updateZoom(1.0)
-                    } else if state == .selected && zoomLevel != 1.0 {
-                        resetZoom()
-                        showZoomLabel()
-                        needsDisplay = true
                     }
                     return
                 }
@@ -9324,29 +9069,6 @@ class OverlayView: NSView {
         autoScrollCaptureMode = false
         autoConfirmMode = false
         needsDisplay = true
-    }
-}
-
-// MARK: - NSTextFieldDelegate
-
-extension OverlayView: NSTextFieldDelegate {
-    func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector)
-        -> Bool
-    {
-        if control.tag == 889 {
-            if commandSelector == #selector(NSResponder.insertNewline(_:)) {
-                commitZoomInputIfNeeded()
-                return true
-            }
-            if commandSelector == #selector(NSResponder.cancelOperation(_:)) {
-                zoomInputField?.removeFromSuperview()
-                zoomInputField = nil
-                window?.makeFirstResponder(self)
-                needsDisplay = true
-                return true
-            }
-        }
-        return false
     }
 }
 
