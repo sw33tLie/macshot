@@ -85,6 +85,9 @@ class ToolbarLayout {
     }
     static var handleColor: NSColor { accentColor }
     static let cornerRadius: CGFloat = 6
+    static let allKnownActionTags: [Int] = [
+        1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011, 1012, 1013,
+    ]
 
     /// Save accent color to UserDefaults.
     static func saveAccentColor(_ color: NSColor) {
@@ -325,9 +328,6 @@ class ToolbarLayout {
             return buttons
         }
 
-        let allKnownActionTags: [Int] = [
-            1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011, 1012, 1013,
-        ]
         // Migrate: only add action tags that are brand-new (never seen before).
         // knownActionTags tracks which tags have been introduced so user-disabled tags are
         // never silently re-enabled when future versions add new action tags.

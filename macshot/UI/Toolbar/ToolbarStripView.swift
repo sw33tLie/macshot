@@ -82,16 +82,10 @@ class ToolbarStripView: NSView, ChromeContent {
         }
     }
 
-    /// Update visual state without rebuilding.
+    /// Update button state without rebuilding views.
     func updateState(from buttons: [ToolbarButton]) {
         for (i, data) in buttons.enumerated() where i < buttonViews.count {
-            buttonViews[i].isOn = data.isSelected
-            buttonViews[i].tintColor = data.tintColor
-            buttonViews[i].swatchColor = data.bgColor
-            buttonViews[i].sfSymbol = data.sfSymbol
-            buttonViews[i].tooltipText = data.tooltip
-            buttonViews[i].hasContextMenu = data.hasContextMenu
-            buttonViews[i].needsDisplay = true
+            buttonViews[i].configure(with: data)
         }
     }
 

@@ -2533,8 +2533,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         let key = sender.identifier?.rawValue ?? "enabledTools"
         let allTools: [AnnotationTool] = [.pencil, .line, .arrow, .rectangle,
                                           .ellipse, .marker, .text, .number, .pixelate, .loupe, .stamp, .measure]
-        let allActions: [Int] = [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010]
-        let defaultValues: [Int] = key == "enabledTools" ? allTools.map { $0.rawValue } : allActions
+        let defaultValues: [Int] = key == "enabledTools" ? allTools.map { $0.rawValue } : ToolbarLayout.allKnownActionTags
         var enabled = UserDefaults.standard.array(forKey: key) as? [Int] ?? defaultValues
         if sender.state == .on { if !enabled.contains(sender.tag) { enabled.append(sender.tag) } }
         else { enabled.removeAll { $0 == sender.tag } }

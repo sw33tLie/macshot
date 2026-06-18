@@ -4,7 +4,7 @@ import Cocoa
 /// Matches the existing dark toolbar look: purple accent, SF Symbols, color swatches.
 class ToolbarButtonView: NSView {
 
-    let action: ToolbarButtonAction
+    var action: ToolbarButtonAction
     var sfSymbol: String?
     var isOn: Bool = false { didSet { if oldValue != isOn { cachedIcon = nil; needsDisplay = true } } }
     var tintColor: NSColor = ToolbarLayout.iconColor { didSet { cachedIcon = nil; cachedIconIsOn = nil; needsDisplay = true } }
@@ -49,6 +49,30 @@ class ToolbarButtonView: NSView {
     }
 
     required init?(coder: NSCoder) { fatalError() }
+
+    func configure(with data: ToolbarButton) {
+        action = data.action
+        isOn = data.isSelected
+        tintColor = data.tintColor
+        swatchColor = data.bgColor
+        sfSymbol = data.sfSymbol
+        tooltipText = data.tooltip
+        hasContextMenu = data.hasContextMenu
+        if case .micAudio = action {
+            // Preserve the live mic meter while this reused view is still the
+            // mic button.
+        } else {
+            micLevel = 0
+        }
+        // Only the move button uses onMouseDown for synchronous drag tracking.
+        // Reset it when a reused slot changes meaning; OverlayView assigns it
+        // again to the current move button after updating the strip.
+        onMouseDown = nil
+        dragForwardTarget = nil
+        forwardingDrag = false
+        isPressed = false
+        needsDisplay = true
+    }
 
     override func draw(_ dirtyRect: NSRect) {
         // Background

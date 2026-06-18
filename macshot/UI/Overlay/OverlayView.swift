@@ -405,13 +405,6 @@ class OverlayView: NSView {
     private var optionsRowRect: NSRect = .zero
     /// Whether toolbars are routed through glass chrome panels.
     private var usesGlassChrome: Bool { LiquidGlass.isEnabled && !isEditorMode }
-    /// True only while the move-selection toolbar button is dragging. Liquid
-    /// Glass toolbars live in child panels; if those panels follow the selection
-    /// every drag tick, AppKit sends hover events to whatever button the moving
-    /// panel passes under the cursor. Freeze chrome layout during the drag and
-    /// snap it to the final selection once the mouse is up.
-    private var isToolbarMoveDragActive = false
-
     // Resolution box (W × H fields + presets). Replaces the old drawn size badge.
     private var resolutionBox: ResolutionBoxView?
     /// Overlay-space frame of the resolution box (for chrome hit-test / cursor /
@@ -2010,7 +2003,7 @@ class OverlayView: NSView {
             // In editor mode toolbars have autoresizingMask, so they only need repositioning
             // on explicit layout changes (handled by rebuildToolbarLayout).
             // In overlay mode the selection rect moves, so we must reposition here.
-            if showToolbars && state == .selected && !isScrollCapturing && !isToolbarMoveDragActive {
+            if showToolbars && state == .selected && !isScrollCapturing {
                 if !isEditorMode { repositionToolbars() }
                 // Toolbars are real NSView subviews (ToolbarStripView) — no custom drawing needed.
                 // Tool options row handled by ToolOptionsRowView (real NSView subview)
@@ -7068,9 +7061,8 @@ class OverlayView: NSView {
             break
         case .moveSelection:
             guard let win = window else { break }
-            let freezeFloatingChrome = usesGlassChrome
-            if freezeFloatingChrome {
-                isToolbarMoveDragActive = true
+            let suppressFloatingChromeMouse = usesGlassChrome
+            if suppressFloatingChromeMouse {
                 setFloatingToolbarMouseInteractionEnabled(false)
                 clearToolbarHoverState(suppressUntilMouseMoved: true)
             }
@@ -7106,12 +7098,8 @@ class OverlayView: NSView {
                 displayIfNeeded()
                 if event.type == .leftMouseUp { break }
             }
-            if freezeFloatingChrome {
-                isToolbarMoveDragActive = false
-                repositionToolbars()
-            }
             clearToolbarHoverState(suppressUntilMouseMoved: true)
-            if freezeFloatingChrome {
+            if suppressFloatingChromeMouse {
                 DispatchQueue.main.async { [weak self] in
                     guard let self else { return }
                     self.setFloatingToolbarMouseInteractionEnabled(true)
