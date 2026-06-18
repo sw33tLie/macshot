@@ -24,10 +24,10 @@
     <enclosure url="https://github.com/sw33tLie/macshot/releases/download/v4.1.2/MacShot.dmg" length="6150800" type="application/octet-stream" sparkle:edSignature="mJwEP5fVlL63jskhtsVeHmVtphcbspKsePHLlqnOhv074M9XoSNC3tHXumkUujouFL2rt/8PNOlHl/mM/e0gBg==" />
 </item>
 <item>
-    <title>v4.2.0-beta.2</title>
-    <pubDate>Thu, 18 Jun 2026 02:31:32 +0000</pubDate>
-    <sparkle:version>83</sparkle:version>
-    <sparkle:shortVersionString>4.2.0-beta.2</sparkle:shortVersionString>
+    <title>v4.2.0-beta.3</title>
+    <pubDate>Thu, 18 Jun 2026 16:01:55 +0000</pubDate>
+    <sparkle:version>84</sparkle:version>
+    <sparkle:shortVersionString>4.2.0-beta.3</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
     <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
@@ -38,13 +38,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Fixed</h3><ul>  <li>Resolution W×H fields are editable again in Liquid Glass mode (typing no longer beeps).</li> <li>Removed a stray duplicate resolution box that appeared in the bottom-left corner.</li></ul>
+      <h3>Added</h3><ul>  <li>Highlight (spotlight) tool — drag a rectangle to keep that region bright while dimming the rest of the capture. Adjustable dim strength and a solid/dashed border.</li>  </ul><h3>Changed</h3><ul>  <li>Removed scroll/pinch-to-zoom from the capture overlay (the editor window still zooms).</li> <li>Selected text now shows a plain selection rectangle instead of an outline tracing the letters.</li>  </ul><h3>Fixed</h3><ul>  <li>Clicking outside a text box closes it without dropping a new empty text box where you clicked.</li> <li>Text no longer clips at the bottom when a text box is resized to its minimum height.</li></ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v4.2.0-beta.2/MacShot.dmg"
-        length="6497769"
+        url="https://github.com/sw33tLie/macshot/releases/download/v4.2.0-beta.3/MacShot.dmg"
+        length="6504494"
         type="application/octet-stream"
-        sparkle:edSignature="T2M0LsKf7BR+eqOLttGE2ODO6G9349llNI9MQZ0AF++jl6/upZITavP7oSnlS+WaENMgHm7YgEKlZLmTFICKCg=="
+        sparkle:edSignature="UgFx9z3ve0tZYqRc3xLtO/nn5BuFZyLMjmacKmyLoGpzMEuctHy2pQg5EoqA6sFKE/cztXW/n2T0Ix2X5vP/BA=="
     />
 </item>
     </channel>
