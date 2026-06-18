@@ -136,6 +136,8 @@ class ToolOptionsRowView: NSView, ChromeContent {
         }
         if tool == .highlight {
             curX = addHighlightDimSlider(at: curX, ov: ov)
+            curX = addSeparator(at: curX)
+            curX = addHighlightBorderSegment(at: curX, ov: ov)
             let totalW = max(curX + padding, 200)
             contentWidth = totalW
             frame.size = NSSize(width: totalW, height: rowHeight)
@@ -401,6 +403,33 @@ class ToolOptionsRowView: NSView, ChromeContent {
         addSubview(label)
         curX += 38
 
+        return curX
+    }
+
+    /// Solid | Dashed border-style toggle for the highlight rect.
+    private func addHighlightBorderSegment(at x: CGFloat, ov: OverlayView) -> CGFloat {
+        var curX = x
+        let seg = NSSegmentedControl()
+        seg.segmentCount = 2
+        seg.trackingMode = .selectOne
+        seg.target = self
+        seg.action = #selector(highlightBorderChanged(_:))
+        seg.tag = 992
+        seg.setImage(Self.lineStyleImage(.solid), forSegment: 0)
+        seg.setImage(Self.lineStyleImage(.dashed), forSegment: 1)
+        seg.setWidth(36, forSegment: 0)
+        seg.setWidth(36, forSegment: 1)
+        let dashed: Bool
+        if let ann = editingAnnotation, ann.tool == .highlight {
+            dashed = ann.lineStyle == .dashed
+        } else {
+            dashed = UserDefaults.standard.object(forKey: HighlightToolHandler.dashedBorderKey) as? Bool ?? true
+        }
+        seg.selectedSegment = dashed ? 1 : 0
+        seg.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: 72, height: 22)
+        (seg.cell as? NSSegmentedCell)?.segmentStyle = .roundRect
+        addSubview(seg)
+        curX += 72
         return curX
     }
 
@@ -1449,6 +1478,26 @@ class ToolOptionsRowView: NSView, ChromeContent {
         if let label = viewWithTag(993) as? NSTextField {
             label.stringValue = "\(Int((val * 100).rounded()))%"
         }
+        ov.needsDisplay = true
+    }
+
+    @objc private func highlightBorderChanged(_ sender: NSSegmentedControl) {
+        guard let ov = overlayView else { return }
+        let dashed = sender.selectedSegment == 1
+        let style: LineStyle = dashed ? .dashed : .solid
+        if let ann = editingAnnotation, ann.tool == .highlight {
+            ensureSnapshot()
+            ann.lineStyle = style
+            ov.cachedCompositedImage = nil
+        } else {
+            var changed = false
+            for ann in ov.annotations where ann.tool == .highlight {
+                ann.lineStyle = style
+                changed = true
+            }
+            if changed { ov.cachedCompositedImage = nil }
+        }
+        UserDefaults.standard.set(dashed, forKey: HighlightToolHandler.dashedBorderKey)
         ov.needsDisplay = true
     }
 
