@@ -217,6 +217,7 @@
 "Show floating thumbnail after capture" = "Show floating thumbnail after capture";
 "Launch at login" = "Launch at login";
 "Show snap alignment guides" = "Show snap alignment guides";
+"Snap selection edges to image boundaries" = "Snap selection edges to image boundaries";
 "Capture mouse cursor in screenshot" = "Capture mouse cursor in screenshot";
 "Double-click selection to copy" = "Double-click selection to copy";
 "Hide capture instructions" = "Hide capture instructions";

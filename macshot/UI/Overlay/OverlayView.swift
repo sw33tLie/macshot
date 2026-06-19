@@ -116,6 +116,14 @@ class OverlayView: NSView {
                     queryWindowSnap(at: NSEvent.mouseLocation)
                 }
             }
+            // Build (or invalidate) the boundary-snap edge index off the main thread.
+            boundarySnapBuildGeneration += 1
+            boundarySnapIndex = nil
+            boundarySnapGuideX = nil
+            boundarySnapGuideY = nil
+            if boundarySnapEnabled, !isEditorMode {
+                scheduleBoundarySnapIndexBuild()
+            }
         }
     }
     var captureSourceImage: NSImage?
@@ -841,6 +849,21 @@ class OverlayView: NSView {
         get { UserDefaults.standard.object(forKey: "windowSnapEnabled") as? Bool ?? true }
         set { UserDefaults.standard.set(newValue, forKey: "windowSnapEnabled") }
     }
+
+    // Boundary snapping — snap the selection's dragged edges to strong color
+    // edges in the captured image (UI lines, window borders, etc.). Off by
+    // default. Hold Option while dragging to bypass.
+    var boundarySnapEnabled: Bool {
+        UserDefaults.standard.object(forKey: "boundarySnapEnabled") as? Bool ?? false
+    }
+    private var boundarySnapIndex: BoundarySnapIndex?
+    private var boundarySnapBuildGeneration = 0
+    /// Snap radius in overlay points.
+    private let boundarySnapRadiusPoints: CGFloat = 4
+    /// Overlay-space coordinates of the active snapped edge(s), for the guide
+    /// line feedback. nil when not snapping that axis.
+    private var boundarySnapGuideX: CGFloat?
+    private var boundarySnapGuideY: CGFloat?
     var hoveredWindowRect: NSRect? = nil
     var hoveredWindowID: CGWindowID? = nil
     private var windowSnapCooldown: Bool = true  // true until overlay has rendered
@@ -1948,6 +1971,12 @@ class OverlayView: NSView {
             // Resize handles (drawn even in recording setup mode, but not during scroll capture)
             if state == .selected && !isEditorMode && !isScrollCapturing {
                 drawResizeHandles()
+            }
+
+            // Boundary-snap guide line(s) — while resizing or drawing a new
+            // selection with an active snap.
+            if isResizingSelection || state == .selecting {
+                drawBoundarySnapGuides()
             }
 
             // Hide the text view when color picker is open for bg/outline (so picker isn't behind it)
@@ -3759,6 +3788,28 @@ class OverlayView: NSView {
         }
     }
 
+    /// Solid accent guide line(s) on the image edge the selection just snapped
+    /// to (boundary snap). Spans the full overlay so the snapped image line is
+    /// obvious. Drawn only while resizing with an active snap.
+    private func drawBoundarySnapGuides() {
+        guard boundarySnapGuideX != nil || boundarySnapGuideY != nil else { return }
+        ToolbarLayout.accentColor.withAlphaComponent(0.9).setStroke()
+        if let gx = boundarySnapGuideX {
+            let line = NSBezierPath()
+            line.move(to: NSPoint(x: gx, y: bounds.minY))
+            line.line(to: NSPoint(x: gx, y: bounds.maxY))
+            line.lineWidth = 1
+            line.stroke()
+        }
+        if let gy = boundarySnapGuideY {
+            let line = NSBezierPath()
+            line.move(to: NSPoint(x: bounds.minX, y: gy))
+            line.line(to: NSPoint(x: bounds.maxX, y: gy))
+            line.lineWidth = 1
+            line.stroke()
+        }
+    }
+
     // MARK: - Auto Measure
 
     /// Update the auto-measure live preview based on cursor position.
@@ -5251,7 +5302,7 @@ class OverlayView: NSView {
         // the standard flow. Do this BEFORE any other mouseDown handling so
         // we don't accidentally restart the selection from the click point.
         if isAnchoredSelecting {
-            updateSelectionRect(to: point, shiftHeld: event.modifierFlags.contains(.shift))
+            updateSelectionRect(to: point, shiftHeld: event.modifierFlags.contains(.shift), modifiers: event.modifierFlags)
             commitAnchoredSelection()
             return
         }
@@ -5606,7 +5657,7 @@ class OverlayView: NSView {
 
         switch state {
         case .selecting:
-            updateSelectionRect(to: point, shiftHeld: event.modifierFlags.contains(.shift))
+            updateSelectionRect(to: point, shiftHeld: event.modifierFlags.contains(.shift), modifiers: event.modifierFlags)
 
         case .selected:
             // Convert to canvas space for annotation interactions (accounts for zoom)
@@ -5994,7 +6045,7 @@ class OverlayView: NSView {
                     selectionRect.origin.y += dy
                     spaceRepositionLast = point
                 } else {
-                    resizeSelection(to: point)
+                    resizeSelection(to: point, modifiers: event.modifierFlags)
                 }
                 overlayDelegate?.overlayViewSelectionDidChange(selectionRect)
                 updateResolutionBox()
@@ -6036,6 +6087,10 @@ class OverlayView: NSView {
 
     override func mouseUp(with event: NSEvent) {
         spaceRepositioning = false
+
+        // Any drag that used boundary snap is ending — clear its guide lines.
+        boundarySnapGuideX = nil
+        boundarySnapGuideY = nil
 
         // Clean up long-press timer
         longPressTimer?.invalidate()
@@ -6136,6 +6191,8 @@ class OverlayView: NSView {
             } else if isResizingSelection {
                 isResizingSelection = false
                 resizeHandle = .none
+                boundarySnapGuideX = nil
+                boundarySnapGuideY = nil
                 if let win = window {
                     updateCursorForPoint(convert(win.mouseLocationOutsideOfEventStream, from: nil))
                 }
@@ -6320,7 +6377,9 @@ class OverlayView: NSView {
     /// (reposition anchor). Shared between drag-to-select (mouseDragged)
     /// and right-click-anchored select (mouseMoved) so both flows produce
     /// identical geometry.
-    private func updateSelectionRect(to point: NSPoint, shiftHeld: Bool) {
+    private func updateSelectionRect(to point: NSPoint, shiftHeld: Bool,
+                                     modifiers: NSEvent.ModifierFlags = []) {
+        var point = point
         if spaceRepositioning {
             let dx = point.x - spaceRepositionLast.x
             let dy = point.y - spaceRepositionLast.y
@@ -6334,6 +6393,17 @@ class OverlayView: NSView {
             overlayDelegate?.overlayViewSelectionDidChange(selectionRect)
             needsDisplay = true
             return
+        }
+
+        // Boundary snap the MOVING corner (the cursor) to nearby image edges.
+        // Skipped for freeform-constrained drags (aspect/shift) so the constraint
+        // stays exact, and bypassed with Option. The anchor edge stays put.
+        if boundarySnapEnabled, !modifiers.contains(.option), let index = boundarySnapIndex,
+           activePreSelectionRatio == nil, !shiftHeld {
+            point = snapMovingPoint(point, anchor: selectionStart, index: index)
+        } else if boundarySnapGuideX != nil || boundarySnapGuideY != nil {
+            boundarySnapGuideX = nil
+            boundarySnapGuideY = nil
         }
 
         let rawW = abs(point.x - selectionStart.x)
@@ -6383,7 +6453,7 @@ class OverlayView: NSView {
     /// Kept separate from the drag path so cross-screen tracking and other
     /// mouseDragged-only features don't get accidentally invoked.
     private func updateAnchoredSelection(to point: NSPoint, event: NSEvent) {
-        updateSelectionRect(to: point, shiftHeld: event.modifierFlags.contains(.shift))
+        updateSelectionRect(to: point, shiftHeld: event.modifierFlags.contains(.shift), modifiers: event.modifierFlags)
     }
 
     /// Commit an anchored selection — matches the branch in mouseUp that
@@ -6458,7 +6528,7 @@ class OverlayView: NSView {
         // commits. Left-click during tracking also commits (handled in
         // mouseDown). ESC cancels. Locked during recording and editor mode.
         if isAnchoredSelecting {
-            updateSelectionRect(to: point, shiftHeld: event.modifierFlags.contains(.shift))
+            updateSelectionRect(to: point, shiftHeld: event.modifierFlags.contains(.shift), modifiers: event.modifierFlags)
             commitAnchoredSelection()
             return
         }
@@ -6648,7 +6718,7 @@ class OverlayView: NSView {
 
     // MARK: - Selection Resizing
 
-    private func resizeSelection(to point: NSPoint) {
+    private func resizeSelection(to point: NSPoint, modifiers: NSEvent.ModifierFlags = []) {
         let minSize: CGFloat = 10
         let r = selectionRect
         var newRect = r
@@ -6687,11 +6757,95 @@ class OverlayView: NSView {
             break
         }
 
+        // Boundary snap (before aspect, so the locked ratio is preserved): snap
+        // the dragged edge(s) to nearby strong image edges. Option bypasses.
+        if boundarySnapEnabled, !modifiers.contains(.option), let index = boundarySnapIndex {
+            newRect = applyBoundarySnap(to: newRect, handle: resizeHandle, minSize: minSize, index: index)
+        } else if boundarySnapGuideX != nil || boundarySnapGuideY != nil {
+            boundarySnapGuideX = nil
+            boundarySnapGuideY = nil
+        }
+
         if let aspect = lockedAspect, aspect > 0 {
             newRect = constrainToAspect(newRect, aspect: aspect, handle: resizeHandle, minSize: minSize)
         }
 
         selectionRect = newRect
+    }
+
+    /// Snap the dragged edge(s) of `rect` to nearby strong image boundaries.
+    /// Each handle drives one or two edges; only those are snapped. Updates the
+    /// snap-guide feedback coordinates.
+    private func applyBoundarySnap(to rect: NSRect, handle: ResizeHandle, minSize: CGFloat,
+                                   index: BoundarySnapIndex) -> NSRect {
+        var minX = rect.minX, maxX = rect.maxX, minY = rect.minY, maxY = rect.maxY
+        var guideX: CGFloat?
+        var guideY: CGFloat?
+        let radius = boundarySnapRadiusPoints
+
+        // Which edges does this handle move?
+        let movesLeft = handle == .left || handle == .topLeft || handle == .bottomLeft
+        let movesRight = handle == .right || handle == .topRight || handle == .bottomRight
+        let movesTop = handle == .top || handle == .topLeft || handle == .topRight
+        let movesBottom = handle == .bottom || handle == .bottomLeft || handle == .bottomRight
+
+        if movesLeft, let hit = index.nearestVertical(toViewX: minX, yMinView: minY, yMaxView: maxY, radiusPoints: radius) {
+            if hit.viewPosition <= maxX - minSize { minX = hit.viewPosition; guideX = hit.viewPosition }
+        }
+        if movesRight, let hit = index.nearestVertical(toViewX: maxX, yMinView: minY, yMaxView: maxY, radiusPoints: radius) {
+            if hit.viewPosition >= minX + minSize { maxX = hit.viewPosition; guideX = hit.viewPosition }
+        }
+        if movesBottom, let hit = index.nearestHorizontal(toViewY: minY, xMinView: minX, xMaxView: maxX, radiusPoints: radius) {
+            if hit.viewPosition <= maxY - minSize { minY = hit.viewPosition; guideY = hit.viewPosition }
+        }
+        if movesTop, let hit = index.nearestHorizontal(toViewY: maxY, xMinView: minX, xMaxView: maxX, radiusPoints: radius) {
+            if hit.viewPosition >= minY + minSize { maxY = hit.viewPosition; guideY = hit.viewPosition }
+        }
+
+        boundarySnapGuideX = guideX
+        boundarySnapGuideY = guideY
+        return NSRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+    }
+
+    /// Snap the moving corner of an in-progress rubber-band selection to nearby
+    /// image edges (the anchor corner stays fixed). Returns the adjusted point
+    /// and updates the snap-guide feedback.
+    private func snapMovingPoint(_ point: NSPoint, anchor: NSPoint,
+                                 index: BoundarySnapIndex) -> NSPoint {
+        var p = point
+        var guideX: CGFloat?
+        var guideY: CGFloat?
+        let radius = boundarySnapRadiusPoints
+        let yMin = min(anchor.y, point.y), yMax = max(anchor.y, point.y)
+        let xMin = min(anchor.x, point.x), xMax = max(anchor.x, point.x)
+        if let hit = index.nearestVertical(toViewX: point.x, yMinView: yMin, yMaxView: yMax, radiusPoints: radius) {
+            p.x = hit.viewPosition
+            guideX = hit.viewPosition
+        }
+        if let hit = index.nearestHorizontal(toViewY: point.y, xMinView: xMin, xMaxView: xMax, radiusPoints: radius) {
+            p.y = hit.viewPosition
+            guideY = hit.viewPosition
+        }
+        boundarySnapGuideX = guideX
+        boundarySnapGuideY = guideY
+        return p
+    }
+
+    /// Build the boundary-snap edge index for the current screenshot off the
+    /// main thread, discarding the result if a newer screenshot arrived.
+    private func scheduleBoundarySnapIndexBuild() {
+        guard let image = screenshotImage,
+              let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        else { return }
+        let generation = boundarySnapBuildGeneration
+        let drawRect = captureDrawRect
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let index = BoundarySnapIndex.build(from: cgImage, drawRect: drawRect)
+            DispatchQueue.main.async {
+                guard let self, self.boundarySnapBuildGeneration == generation else { return }
+                self.boundarySnapIndex = index
+            }
+        }
     }
 
     /// Adjust `rect` to the locked `aspect` (w/h), keeping the handle's anchor fixed.

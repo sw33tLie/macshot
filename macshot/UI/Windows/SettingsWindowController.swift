@@ -73,6 +73,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var historySizeField: NSTextField!
     private var historySizeStepper: NSStepper!
     private var snapGuidesCheckbox: NSButton!
+    private var boundarySnapCheckbox: NSButton!
     private var captureCursorCheckbox: NSButton!
     private var doubleClickToCopyCheckbox: NSButton!
     private var hideCaptureInstructionsCheckbox: NSButton!
@@ -595,6 +596,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         rememberToolCheckbox = NSButton(checkboxWithTitle: L("Remember last selected tool"), target: self, action: #selector(rememberToolChanged(_:)))
         thumbnailCheckbox = NSButton(checkboxWithTitle: L("Show floating thumbnail after capture"), target: self, action: #selector(thumbnailChanged(_:)))
         snapGuidesCheckbox = NSButton(checkboxWithTitle: L("Show snap alignment guides"), target: self, action: #selector(snapGuidesChanged(_:)))
+        boundarySnapCheckbox = NSButton(checkboxWithTitle: L("Snap selection edges to image boundaries"), target: self, action: #selector(boundarySnapChanged(_:)))
         captureCursorCheckbox = NSButton(checkboxWithTitle: L("Capture mouse cursor in screenshot"), target: self, action: #selector(captureCursorChanged(_:)))
         doubleClickToCopyCheckbox = NSButton(checkboxWithTitle: L("Double-click selection to copy"), target: self, action: #selector(doubleClickToCopyChanged(_:)))
         hideCaptureInstructionsCheckbox = NSButton(checkboxWithTitle: L("Hide capture instructions"), target: self, action: #selector(hideCaptureInstructionsChanged(_:)))
@@ -666,6 +668,8 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         stack.addArrangedSubview(indented(snapGuidesCheckbox))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+        stack.addArrangedSubview(indented(boundarySnapCheckbox))
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
         stack.addArrangedSubview(indented(captureCursorCheckbox))
@@ -2230,6 +2234,8 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
         let snapGuides = UserDefaults.standard.object(forKey: "snapGuidesEnabled") as? Bool ?? true
         snapGuidesCheckbox.state = snapGuides ? .on : .off
+        let boundarySnap = UserDefaults.standard.object(forKey: "boundarySnapEnabled") as? Bool ?? false
+        boundarySnapCheckbox.state = boundarySnap ? .on : .off
         showToolShortcutsInTooltipsCheckbox.state = UserDefaults.standard.bool(forKey: "showToolShortcutsInTooltips") ? .on : .off
 
         captureCursorCheckbox.state = UserDefaults.standard.bool(forKey: "captureCursor") ? .on : .off
@@ -2666,6 +2672,9 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     }
     @objc private func snapGuidesChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "snapGuidesEnabled")
+    }
+    @objc private func boundarySnapChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: "boundarySnapEnabled")
     }
     @objc private func captureCursorChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "captureCursor")
