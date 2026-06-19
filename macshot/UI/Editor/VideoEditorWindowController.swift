@@ -1807,7 +1807,18 @@ private final class VideoEditorView: NSView {
         let needsExport = needsTrim || isMuted || needsScale || needsRecompress || needsEffects || needsCuts || needsSpeed || needsFreeze
 
         if !needsExport {
-            // No processing needed — copy temp file to destination
+            // No processing needed — copy source to destination.
+            // CRITICAL: if the destination IS the source (e.g. user opened a file
+            // via "Open Video..." and saved over it with no edits), deleting the
+            // destination first would destroy the source and the copy would then
+            // fail — losing the user's video. In that case there's nothing to do.
+            if destURL.standardizedFileURL == videoURL.standardizedFileURL {
+                savedURL = destURL
+                if let dirURL = dirURL { SaveDirectoryAccess.stopAccessing(url: dirURL) }
+                showStatus(String(format: L("Saved to %@"), destURL.lastPathComponent))
+                needsDisplay = true
+                return
+            }
             try? FileManager.default.removeItem(at: destURL)
             do {
                 try FileManager.default.copyItem(at: videoURL, to: destURL)
