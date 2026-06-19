@@ -216,6 +216,7 @@
 "Show floating thumbnail after capture" = "擷取後顯示浮動縮圖";
 "Launch at login" = "登入時啟動";
 "Show snap alignment guides" = "顯示對齊輔助線";
+"Snap selection edges to image boundaries" = "將選取範圍邊緣貼齊影像邊界";
 "Capture mouse cursor in screenshot" = "在螢幕截圖中擷取滑鼠游標";
 "Double-click selection to copy" = "雙擊選取範圍以複製";
 "Hide capture instructions" = "隱藏截圖操作提示";

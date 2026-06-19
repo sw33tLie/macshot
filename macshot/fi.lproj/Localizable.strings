@@ -215,6 +215,7 @@
 "Show floating thumbnail after capture" = "Nayta kelluva pienoiskuva kaappauksen jalkeen";
 "Launch at login" = "Kaynnista kirjautumisen yhteydessa";
 "Show snap alignment guides" = "Nayta kohdistusoppaat";
+"Snap selection edges to image boundaries" = "Kohdista valinnan reunat kuvan rajoihin";
 "Capture mouse cursor in screenshot" = "Kaappaa hiiren osoitin kuvakaappaukseen";
 "Double-click selection to copy" = "Kopioi kaksoisnapsauttamalla valintaa";
 "Hide capture instructions" = "Piilota kuvakaappausohjeet";

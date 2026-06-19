@@ -215,6 +215,7 @@
 "Show floating thumbnail after capture" = "Vis flytende miniatyrbilde etter opptak";
 "Launch at login" = "Start ved innlogging";
 "Show snap alignment guides" = "Vis hjelpelinje for justering";
+"Snap selection edges to image boundaries" = "Fest markeringskanter til bildegrenser";
 "Capture mouse cursor in screenshot" = "Ta med musepeker i skjermbilde";
 "Double-click selection to copy" = "Dobbeltklikk p\U00E5 utvalget for \U00E5 kopiere";
 "Hide capture instructions" = "Skjul instruksjoner ved skjermbilde";

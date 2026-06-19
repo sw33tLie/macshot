@@ -202,6 +202,7 @@
 "Show floating thumbnail after capture" = "捕获后显示浮动缩略图";
 "Launch at login" = "登录时启动";
 "Show snap alignment guides" = "显示对齐辅助线";
+"Snap selection edges to image boundaries" = "将选区边缘吸附到图像边界";
 "Capture mouse cursor in screenshot" = "在截图中捕获鼠标指针";
 "Double-click selection to copy" = "双击选区以复制";
 "Hide capture instructions" = "隐藏截图操作提示";

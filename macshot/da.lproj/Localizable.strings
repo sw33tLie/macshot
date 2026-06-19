@@ -215,6 +215,7 @@
 "Show floating thumbnail after capture" = "Vis flydende miniature efter optagelse";
 "Launch at login" = "Start ved login";
 "Show snap alignment guides" = "Vis fastg\U00F8relses-hj\U00E6lpelinjer";
+"Snap selection edges to image boundaries" = "Fastg\U00F8r markeringskanter til billedgr\U00E6nser";
 "Capture mouse cursor in screenshot" = "Inkluder musemark\U00F8r i sk\U00E6rmbillede";
 "Double-click selection to copy" = "Dobbeltklik p\U00E5 markeringen for at kopiere";
 "Hide capture instructions" = "Skjul vejledning ved optagelse";

@@ -209,6 +209,7 @@
 "Show floating thumbnail after capture" = "Pokaż pływającą miniaturę po zrzucie";
 "Launch at login" = "Uruchamiaj przy logowaniu";
 "Show snap alignment guides" = "Pokaż linie wyrównywania";
+"Snap selection edges to image boundaries" = "Przyciągaj krawędzie zaznaczenia do granic obrazu";
 "Capture mouse cursor in screenshot" = "Uwzględnij kursor myszy na zrzucie";
 "Double-click selection to copy" = "Kliknij dwukrotnie zaznaczenie, aby skopiować";
 "Hide capture instructions" = "Ukryj instrukcje przechwytywania";

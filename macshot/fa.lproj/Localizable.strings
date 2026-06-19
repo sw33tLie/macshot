@@ -202,6 +202,7 @@
 "Show floating thumbnail after capture" = "نمایش تصویر بندانگشتی شناور پس از ضبط";
 "Launch at login" = "اجرا هنگام ورود";
 "Show snap alignment guides" = "نمایش خطوط راهنمای تراز";
+"Snap selection edges to image boundaries" = "چسباندن لبه‌های انتخاب به مرزهای تصویر";
 "Capture mouse cursor in screenshot" = "ضبط نشانگر موس در تصویر صفحه";
 "Double-click selection to copy" = "دوبار کلیک روی انتخاب برای کپی";
 "Hide capture instructions" = "پنهان کردن راهنمای تصویربرداری";

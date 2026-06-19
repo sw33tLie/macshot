@@ -202,6 +202,7 @@
 "Show floating thumbnail after capture" = "הצג תמונה ממוזערת צפה לאחר לכידה";
 "Launch at login" = "הפעל בהתחברות";
 "Show snap alignment guides" = "הצג קווי הצמדה";
+"Snap selection edges to image boundaries" = "הצמד את קצות הבחירה לגבולות התמונה";
 "Capture mouse cursor in screenshot" = "לכוד סמן עכבר בצילום מסך";
 "Double-click selection to copy" = "לחיצה כפולה על הבחירה להעתקה";
 "Hide capture instructions" = "הסתר הוראות צילום";

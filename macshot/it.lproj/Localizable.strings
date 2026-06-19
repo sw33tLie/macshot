@@ -201,6 +201,7 @@
 "Show floating thumbnail after capture" = "Mostra miniatura mobile dopo la cattura";
 "Launch at login" = "Avvia al login";
 "Show snap alignment guides" = "Mostra guide di allineamento";
+"Snap selection edges to image boundaries" = "Allinea i bordi della selezione ai contorni dell’immagine";
 "Capture mouse cursor in screenshot" = "Cattura il cursore del mouse nello screenshot";
 "Double-click selection to copy" = "Doppio clic sulla selezione per copiare";
 "Hide capture instructions" = "Nascondi istruzioni di cattura";

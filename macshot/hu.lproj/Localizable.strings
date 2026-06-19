@@ -214,6 +214,7 @@
 "Show floating thumbnail after capture" = "Lebegő bélyegkép megjelenítése rögzítés után";
 "Launch at login" = "Indítás bejelentkezéskor";
 "Show snap alignment guides" = "Illesztési segédvonalak megjelenítése";
+"Snap selection edges to image boundaries" = "Kijelölés széleinek illesztése a kép határaihoz";
 "Capture mouse cursor in screenshot" = "Egérmutató rögzítése a képernyőképen";
 "Double-click selection to copy" = "Dupla kattintás a kijelölésre a másoláshoz";
 "Hide capture instructions" = "Rögzítési útmutató elrejtése";

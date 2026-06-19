@@ -202,6 +202,7 @@
 "Show floating thumbnail after capture" = "Afiseaza miniatura flotanta dupa captura";
 "Launch at login" = "Porneste la autentificare";
 "Show snap alignment guides" = "Afiseaza ghidajele de aliniere";
+"Snap selection edges to image boundaries" = "Aliniaza marginile selectiei la limitele imaginii";
 "Capture mouse cursor in screenshot" = "Captura cursorul mouse-ului in captura de ecran";
 "Double-click selection to copy" = "Dublu-clic pe selectie pentru a copia";
 "Hide capture instructions" = "Ascunde instructiunile de captura";

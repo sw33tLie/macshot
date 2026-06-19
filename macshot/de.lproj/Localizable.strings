@@ -209,6 +209,7 @@
 "Show floating thumbnail after capture" = "Schwebendes Vorschaubild nach Aufnahme anzeigen";
 "Launch at login" = "Bei Anmeldung starten";
 "Show snap alignment guides" = "Ausrichtungshilfen anzeigen";
+"Snap selection edges to image boundaries" = "Auswahlkanten an Bildgrenzen ausrichten";
 "Capture mouse cursor in screenshot" = "Mauszeiger im Screenshot aufnehmen";
 "Double-click selection to copy" = "Doppelklick auf Auswahl zum Kopieren";
 "Hide capture instructions" = "Aufnahmehinweise ausblenden";

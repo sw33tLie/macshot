@@ -215,6 +215,7 @@
 "Show floating thumbnail after capture" = "Visa flytande miniatyrbild efter f\U00E5ngst";
 "Launch at login" = "Starta vid inloggning";
 "Show snap alignment guides" = "Visa f\U00E4stlinjer";
+"Snap selection edges to image boundaries" = "F\U00E4st markeringskanter mot bildgr\U00E4nser";
 "Capture mouse cursor in screenshot" = "F\U00E5nga muspekaren i sk\U00E4rmbild";
 "Double-click selection to copy" = "Dubbelklicka p\U00E5 markeringen f\U00F6r att kopiera";
 "Hide capture instructions" = "D\U00F6lj instruktioner vid sk\U00E4rmbild";

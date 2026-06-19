@@ -205,6 +205,7 @@
 "Show floating thumbnail after capture" = "ক্যাপচারের পর ভাসমান থাম্বনেইল দেখান";
 "Launch at login" = "লগইনে চালু করুন";
 "Show snap alignment guides" = "স্ন্যাপ সারিবদ্ধকরণ গাইড দেখান";
+"Snap selection edges to image boundaries" = "নির্বাচনের প্রান্তগুলি ছবির সীমানায় স্ন্যাপ করুন";
 "Capture mouse cursor in screenshot" = "স্ক্রিনশটে মাউস কার্সর ক্যাপচার করুন";
 "Double-click selection to copy" = "কপি করতে নির্বাচনে ডাবল-ক্লিক করুন";
 "Hide capture instructions" = "ক্যাপচার নির্দেশাবলী লুকান";

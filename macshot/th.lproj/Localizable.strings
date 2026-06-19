@@ -216,6 +216,7 @@
 "Show floating thumbnail after capture" = "แสดงภาพขนาดย่อลอยหลังจับภาพ";
 "Launch at login" = "เปิดเมื่อเข้าสู่ระบบ";
 "Show snap alignment guides" = "แสดงเส้นจัดแนว";
+"Snap selection edges to image boundaries" = "ดูดขอบพื้นที่เลือกเข้ากับขอบเขตของภาพ";
 "Capture mouse cursor in screenshot" = "จับภาพเคอร์เซอร์เมาส์ในภาพหน้าจอ";
 "Double-click selection to copy" = "ดับเบิลคลิกที่พื้นที่ที่เลือกเพื่อคัดลอก";
 "Hide capture instructions" = "ซ่อนคำแนะนำการจับภาพหน้าจอ";
