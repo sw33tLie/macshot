@@ -4457,16 +4457,18 @@ class OverlayView: NSView {
         let tipRect = NSRect(
             x: tip.x - handleSize / 2, y: tip.y - handleSize / 2,
             width: handleSize, height: handleSize)
+        // Keep both as draggable handles (center moves the circle, tip moves the
+        // pointer), but only DRAW the tip dot. The center dot sat on top of the
+        // digit and made the number hard to read while selected — the whole
+        // circle body is draggable anyway.
         annotationResizeHandleRects = [(.bottomLeft, centerRect), (.topRight, tipRect)]
 
-        for rect in [centerRect, tipRect] {
-            ToolbarLayout.accentColor.setFill()
-            NSBezierPath(ovalIn: rect).fill()
-            NSColor.white.withAlphaComponent(0.9).setStroke()
-            let border = NSBezierPath(ovalIn: rect.insetBy(dx: 0.5, dy: 0.5))
-            border.lineWidth = 1.5
-            border.stroke()
-        }
+        ToolbarLayout.accentColor.setFill()
+        NSBezierPath(ovalIn: tipRect).fill()
+        NSColor.white.withAlphaComponent(0.9).setStroke()
+        let tipBorder = NSBezierPath(ovalIn: tipRect.insetBy(dx: 0.5, dy: 0.5))
+        tipBorder.lineWidth = 1.5
+        tipBorder.stroke()
 
         let buttonAnchor = annotation.boundingRect
         let btnSize: CGFloat = 22
