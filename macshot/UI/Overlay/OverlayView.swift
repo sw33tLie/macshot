@@ -8474,7 +8474,7 @@ class OverlayView: NSView {
                     needsDisplay = true
                 }
             }
-        case 36:  // Return/Enter — quick capture (respects quickCaptureMode setting)
+        case 36, 76:  // Return / numpad Enter — quick capture (respects quickCaptureMode setting)
             if textEditView == nil, state == .selected {
                 overlayDelegate?.overlayViewDidRequestQuickSave()
             }
