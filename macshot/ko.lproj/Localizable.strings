@@ -202,6 +202,7 @@
 "Show floating thumbnail after capture" = "캡처 후 플로팅 썸네일 표시";
 "Launch at login" = "로그인 시 실행";
 "Show snap alignment guides" = "스냅 정렬 가이드 표시";
+"Snap selection edges to image boundaries" = "선택 영역 가장자리를 이미지 경계에 스냅";
 "Capture mouse cursor in screenshot" = "스크린샷에 마우스 커서 포함";
 "Double-click selection to copy" = "선택 영역 더블 클릭으로 복사";
 "Hide capture instructions" = "캡처 안내 숨기기";

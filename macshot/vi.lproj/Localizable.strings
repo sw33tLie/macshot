@@ -216,6 +216,7 @@
 "Show floating thumbnail after capture" = "Hiển thị ảnh thu nhỏ nổi sau khi chụp";
 "Launch at login" = "Khởi chạy khi đăng nhập";
 "Show snap alignment guides" = "Hiển thị đường căn chỉnh bắt dính";
+"Snap selection edges to image boundaries" = "Bắt dính cạnh vùng chọn vào ranh giới ảnh";
 "Capture mouse cursor in screenshot" = "Chụp con trỏ chuột trong ảnh";
 "Double-click selection to copy" = "Nhấp đúp vào vùng chọn để sao chép";
 "Hide capture instructions" = "Ẩn hướng dẫn chụp màn hình";

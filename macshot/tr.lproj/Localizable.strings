@@ -202,6 +202,7 @@
 "Show floating thumbnail after capture" = "Yakalamadan sonra kayan küçük resim göster";
 "Launch at login" = "Oturum açılışında başlat";
 "Show snap alignment guides" = "Hizalama kılavuzlarını göster";
+"Snap selection edges to image boundaries" = "Seçim kenarlarını görüntü sınırlarına yapıştır";
 "Capture mouse cursor in screenshot" = "Ekran görüntüsünde fare imlecini yakala";
 "Double-click selection to copy" = "Kopyalamak için seçime çift tıkla";
 "Hide capture instructions" = "Yakalama talimatlarını gizle";

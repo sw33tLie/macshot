@@ -221,6 +221,7 @@
 "Show floating thumbnail after capture" = "Zobrazit plovoucí náhled po zachycení";
 "Launch at login" = "Spustit při přihlášení";
 "Show snap alignment guides" = "Zobrazit vodítka zarovnání";
+"Snap selection edges to image boundaries" = "Přichytit okraje výběru k hranicím obrázku";
 "Capture mouse cursor in screenshot" = "Zachytit kurzor myši na snímku";
 "Double-click selection to copy" = "Kopírovat dvojklikem na výběr";
 "Hide capture instructions" = "Skrýt pokyny při snímání";

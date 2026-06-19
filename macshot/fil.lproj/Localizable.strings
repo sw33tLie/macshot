@@ -217,6 +217,7 @@
 "Show floating thumbnail after capture" = "Ipakita ang lumulutang na thumbnail pagkatapos kumuha";
 "Launch at login" = "Buksan kapag nag-login";
 "Show snap alignment guides" = "Ipakita ang mga gabay sa pagkakahanay";
+"Snap selection edges to image boundaries" = "I-snap ang mga gilid ng seleksiyon sa hangganan ng imahe";
 "Capture mouse cursor in screenshot" = "Isama ang cursor ng mouse sa screenshot";
 "Double-click selection to copy" = "I-double-click ang pinili upang kopyahin";
 "Hide capture instructions" = "Itago ang mga tagubilin sa pagkuha ng screenshot";

@@ -217,6 +217,7 @@
 "Show floating thumbnail after capture" = "Tunjuk lakaran kecil terapung selepas tangkapan";
 "Launch at login" = "Lancar semasa log masuk";
 "Show snap alignment guides" = "Tunjuk panduan penjajaran lekat";
+"Snap selection edges to image boundaries" = "Lekatkan tepi pilihan pada sempadan imej";
 "Capture mouse cursor in screenshot" = "Tangkap kursor tetikus dalam tangkapan skrin";
 "Double-click selection to copy" = "Dwiklik pilihan untuk menyalin";
 "Hide capture instructions" = "Sembunyikan arahan tangkapan skrin";

@@ -221,6 +221,7 @@
 "Show floating thumbnail after capture" = "Показване на плаващ миниатюр след заснемане";
 "Launch at login" = "Стартиране при вход";
 "Show snap alignment guides" = "Показване на водачи за подравняване";
+"Snap selection edges to image boundaries" = "Прилепване на ръбовете на селекцията към границите на изображението";
 "Capture mouse cursor in screenshot" = "Заснемане на курсора в екранната снимка";
 "Double-click selection to copy" = "Копиране с двойно щракване върху селекцията";
 "Hide capture instructions" = "Скриване на указанията при заснемане";

@@ -221,6 +221,7 @@
 "Show floating thumbnail after capture" = "Zobrazit plavajuci nahlad po zachyteni";
 "Launch at login" = "Spustit pri prihlaseni";
 "Show snap alignment guides" = "Zobrazit vodiace ciary zarovnania";
+"Snap selection edges to image boundaries" = "Prichytit okraje vyberu k hraniciam obrazka";
 "Capture mouse cursor in screenshot" = "Zachytit kurzor mysi na snimke obrazovky";
 "Double-click selection to copy" = "Kopirovat dvojklikom na vyber";
 "Hide capture instructions" = "Skryt pokyny pri snimani";

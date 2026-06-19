@@ -202,6 +202,7 @@
 "Show floating thumbnail after capture" = "キャプチャ後にフローティングサムネイルを表示";
 "Launch at login" = "ログイン時に起動";
 "Show snap alignment guides" = "スナップ整列ガイドを表示";
+"Snap selection edges to image boundaries" = "選択範囲の端を画像の境界にスナップ";
 "Capture mouse cursor in screenshot" = "スクリーンショットにマウスカーソルを含める";
 "Double-click selection to copy" = "選択範囲をダブルクリックでコピー";
 "Hide capture instructions" = "撮影時の操作説明を非表示";

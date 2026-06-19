@@ -221,6 +221,7 @@
 "Show floating thumbnail after capture" = "Показувати плаваючу мініатюру після захоплення";
 "Launch at login" = "Запускати при вході в систему";
 "Show snap alignment guides" = "Показувати напрямні вирівнювання";
+"Snap selection edges to image boundaries" = "Прив'язувати краї виділення до меж зображення";
 "Capture mouse cursor in screenshot" = "Захоплювати курсор миші на знімку екрана";
 "Double-click selection to copy" = "Копіювати подвійним клацанням по виділенню";
 "Hide capture instructions" = "Приховувати підказки під час захоплення";

@@ -214,6 +214,7 @@
 "Show floating thumbnail after capture" = "Εμφάνιση αιωρούμενης μικρογραφίας μετά τη λήψη";
 "Launch at login" = "Εκκίνηση κατά τη σύνδεση";
 "Show snap alignment guides" = "Εμφάνιση οδηγών ευθυγράμμισης κουμπώματος";
+"Snap selection edges to image boundaries" = "Κούμπωμα των άκρων επιλογής στα όρια της εικόνας";
 "Capture mouse cursor in screenshot" = "Λήψη δρομέα ποντικιού στο στιγμιότυπο";
 "Double-click selection to copy" = "Διπλό κλικ στην επιλογή για αντιγραφή";
 "Hide capture instructions" = "Απόκρυψη οδηγιών λήψης";

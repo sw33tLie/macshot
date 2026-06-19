@@ -221,6 +221,7 @@
 "Show floating thumbnail after capture" = "Прикажи плутајући приказ после снимања";
 "Launch at login" = "Покрени при пријављивању";
 "Show snap alignment guides" = "Прикажи водиље за поравнање";
+"Snap selection edges to image boundaries" = "Привежи ивице избора уз границе слике";
 "Capture mouse cursor in screenshot" = "Сними курсор миша на снимку екрана";
 "Double-click selection to copy" = "Копирај двокликом на селекцију";
 "Hide capture instructions" = "Сакриј упутства при снимању";

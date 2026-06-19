@@ -202,6 +202,7 @@
 "Show floating thumbnail after capture" = "عرض الصورة المصغرة العائمة بعد الالتقاط";
 "Launch at login" = "التشغيل عند تسجيل الدخول";
 "Show snap alignment guides" = "عرض خطوط المحاذاة";
+"Snap selection edges to image boundaries" = "محاذاة حواف التحديد إلى حدود الصورة";
 "Capture mouse cursor in screenshot" = "التقاط مؤشر الفأرة في لقطة الشاشة";
 "Double-click selection to copy" = "النقر المزدوج على التحديد للنسخ";
 "Hide capture instructions" = "إخفاء تعليمات الالتقاط";

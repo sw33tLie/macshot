@@ -206,6 +206,7 @@
 "Show floating thumbnail after capture" = "பிடிப்புக்குப் பிறகு மிதக்கும் சிறுபடத்தைக் காட்டு";
 "Launch at login" = "உள்நுழையும்போது தொடங்கு";
 "Show snap alignment guides" = "ஒட்டு சீரமைப்பு வழிகாட்டிகளைக் காட்டு";
+"Snap selection edges to image boundaries" = "தேர்வின் விளிம்புகளைப் படத்தின் எல்லைகளுக்கு ஒட்டவை";
 "Capture mouse cursor in screenshot" = "திரைப்பிடிப்பில் சுட்டியைப் பிடி";
 "Double-click selection to copy" = "நகலெடுக்க தேர்வில் இருமுறை கிளிக் செய்க";
 "Hide capture instructions" = "பிடிப்பு வழிமுறைகளை மறை";

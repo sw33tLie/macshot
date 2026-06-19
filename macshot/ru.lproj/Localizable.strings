@@ -221,6 +221,7 @@
 "Show floating thumbnail after capture" = "Показывать миниатюру после захвата";
 "Launch at login" = "Запускать при входе в систему";
 "Show snap alignment guides" = "Показывать направляющие привязки";
+"Snap selection edges to image boundaries" = "Привязывать края выделения к границам изображения";
 "Capture mouse cursor in screenshot" = "Захватывать курсор мыши на снимке экрана";
 "Double-click selection to copy" = "Копировать двойным щелчком по выделению";
 "Hide capture instructions" = "Скрывать подсказки при захвате";

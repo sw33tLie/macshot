@@ -215,6 +215,7 @@
 "Show floating thumbnail after capture" = "Afficher la vignette flottante après la capture";
 "Launch at login" = "Lancer au démarrage";
 "Show snap alignment guides" = "Afficher les guides d'alignement";
+"Snap selection edges to image boundaries" = "Aligner les bords de la sélection sur les limites de l'image";
 "Capture mouse cursor in screenshot" = "Capturer le curseur dans la capture d'écran";
 "Double-click selection to copy" = "Double-cliquer sur la sélection pour copier";
 "Hide capture instructions" = "Masquer les instructions de capture";

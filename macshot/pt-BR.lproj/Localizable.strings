@@ -209,6 +209,7 @@
 "Show floating thumbnail after capture" = "Mostrar miniatura flutuante após captura";
 "Launch at login" = "Abrir ao iniciar sessão";
 "Show snap alignment guides" = "Mostrar guias de alinhamento";
+"Snap selection edges to image boundaries" = "Ajustar as bordas da seleção aos limites da imagem";
 "Capture mouse cursor in screenshot" = "Capturar cursor do mouse na captura de tela";
 "Double-click selection to copy" = "Clique duplo na seleção para copiar";
 "Hide capture instructions" = "Ocultar instruções de captura";
