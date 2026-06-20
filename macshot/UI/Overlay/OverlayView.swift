@@ -3471,6 +3471,13 @@ class OverlayView: NSView {
         // Expand the canvas to fit the new annotation
         expandCanvasToFitAnnotations()
         rebuildToolbarLayout()
+
+        // Keep the editor top-bar size label in sync (the canvas may have grown).
+        if let cg = screenshotImage?.cgImage(forProposedRect: nil, context: nil, hints: nil),
+           let topBar = chromeParentView?.subviews.compactMap({ $0 as? EditorTopBarView }).first {
+            topBar.updateSizeLabel(width: cg.width, height: cg.height)
+        }
+
         needsDisplay = true
     }
 
@@ -8331,6 +8338,14 @@ class OverlayView: NSView {
                         pasteAnnotations()
                         selectedAnnotations = []
                         needsDisplay = true
+                    } else if NSPasteboard.general.canReadObject(forClasses: [NSString.self], options: nil) {
+                        // Clipboard has text — paste it into the text field.
+                        tv.paste(nil)
+                    } else if isEditorMode {
+                        // No text, but an image may be present — commit the text edit
+                        // and paste the image as a stamp (mirrors "Add Capture").
+                        commitTextFieldIfNeeded()
+                        _ = pasteImageFromClipboard()
                     } else {
                         tv.paste(nil)
                     }
@@ -8358,6 +8373,11 @@ class OverlayView: NSView {
                 case 9:  // V
                     if NSPasteboard.general.data(forType: Self.annotationPasteboardType) != nil {
                         pasteAnnotations()
+                        return true
+                    }
+                    // Editor only: fall back to pasting a clipboard image as a stamp
+                    // placed below the canvas (mirrors "Add Capture").
+                    if pasteImageFromClipboard() {
                         return true
                     }
                 default: break
@@ -8635,6 +8655,18 @@ class OverlayView: NSView {
         selectedAnnotations = newAnnotations
         cachedCompositedImage = nil
         needsDisplay = true
+    }
+
+    /// Editor only: paste an image from the clipboard as a draggable stamp placed
+    /// below the canvas (auto-expands to fit), mirroring the "Add Capture" flow.
+    /// Returns true if an image was found and pasted.
+    func pasteImageFromClipboard() -> Bool {
+        guard isEditorMode else { return false }
+        guard let image = NSImage(pasteboard: NSPasteboard.general), image.size.width > 0, image.size.height > 0 else {
+            return false
+        }
+        addCaptureImage(image)
+        return true
     }
 
     // MARK: - Undo/Redo
