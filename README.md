@@ -7,7 +7,7 @@
 <p align="center">
   <b>The most feature-rich open-source screenshot tool on macOS.</b><br>
   <br>
-  18+ annotation tools, screen recording with a full video editor, OCR + translation,<br>
+  19+ annotation tools, screen recording with a full video editor, OCR + translation,<br>
   auto-redact PII, scroll capture, beautify — all native, all free.
 </p>
 
@@ -31,7 +31,7 @@
 - **Screen recording with built-in editor** — record any area or full screen as MP4/GIF with system audio + microphone. Audio merge dialog with per-track volume control. Trim and export without leaving the app.
 - **Scroll capture** — select a region and scroll. macshot stitches it into one seamless tall (or wide) image automatically.
 - **Upload anywhere** — one-click upload to Google Drive, imgbb, or any S3-compatible service (Cloudflare R2, AWS S3, MinIO, etc.). Link copied to clipboard instantly.
-- **Lightweight & native** — ~8 MB memory at idle. Lives in your menu bar. Built with Swift and AppKit, not a web browser in disguise.
+- **Lightweight & native** — lives in your menu bar. Built with Swift and AppKit, not a web browser in disguise.
 - **40 languages** — English, 中文, 日本語, 한국어, Deutsch, Français, Español, Italiano, Português, العربية, हिन्दी, and 29 more. Auto-detects your system language.
 
 ---
@@ -62,6 +62,8 @@ brew install --cask macshot
 ### Capture
 - **Instant capture** — global hotkey freezes your screen, select any region
 - **Window snap** — hover over a window and click to capture it exactly; `Tab` toggles snap, `F` for full screen
+- **Resolution & aspect presets** — set an exact pixel size or lock an aspect ratio (1:1, 4:3, 16:9, 9:16, …) before or after selecting; editable width/height fields
+- **Boundary snap** — selection edges snap to strong color edges (UI lines, window borders) while dragging or resizing; hold `Option` to bypass
 - **Scroll capture** — auto-detects vertical or horizontal scrolling, stitches with Apple Vision, live preview panel beside the capture region
 - **Capture delay** — 3/5/10/30 second countdown before capture, set via menu bar. Escape to cancel.
 - **Multi-monitor** — captures all screens simultaneously; drag a selection across screens for a stitched image
@@ -78,6 +80,7 @@ brew install --cask macshot
 - **Censor (Pixelate / Blur / Solid / Erase)** — unified redaction tool with 4 modes: pixelate, Gaussian blur, solid color fill, or smart erase that samples surrounding colors for invisible content removal. Auto-redact PII (emails, phones, credit cards, SSNs, API keys), auto-detect faces and people, or draw in "Text Only" mode to censor just the text in a region
 - **Measure** — pixel ruler with px/pt toggle; hold `1` or `2` for auto-measure
 - **Loupe** — 2x magnifier
+- **Highlight (spotlight)** — drag a region to keep it bright while dimming the rest; adjustable dim strength and solid/dashed border
 - **Color sampler** — eyedropper to pick any color; right-click to copy hex; auto-saves to custom palette slots
 - **Space to reposition** — hold Space while drawing to move the shape without changing its size
 - **Rotation** — rotate shapes via handle, Shift for 90° snaps
@@ -94,7 +97,7 @@ brew install --cask macshot
 - **Video editor** — trim timeline, mute/strip audio, play/pause, save (with Save As), upload, reveal in Finder
 
 ### Output & Upload
-- **Formats** — PNG, JPEG, HEIC, WebP with quality slider
+- **Formats** — PNG, JPEG, HEIC, WebP, AVIF with quality slider
 - **Google Drive** — sign in once, uploads to a private "macshot" folder
 - **imgbb** — anonymous image hosting with shareable links
 - **S3-compatible** — upload to Cloudflare R2, AWS S3, MinIO, DigitalOcean Spaces, Backblaze B2, etc.
@@ -104,6 +107,7 @@ brew install --cask macshot
 ### Editor Window
 - Standalone resizable window with full annotation tools, beautify preview
 - **Add Capture** — capture additional screen regions and compose them into a single image, drag to reposition
+- **Paste image** — `Cmd+V` drops a clipboard image into the canvas as a draggable layer
 - Crop (with rule-of-thirds grid), flip H/V, zoom 0.1x–8x
 - Top bar with pixel dimensions, zoom dropdown (presets, fit canvas, zoom in/out)
 
@@ -118,7 +122,7 @@ brew install --cask macshot
 - Live preview in the overlay
 
 ### Other
-- **OCR** — extract text with Apple Vision (auto-detects all languages on macOS 13+), auto-copy to clipboard, translate to 30+ languages, Google AI Search
+- **OCR & QR** — extract text with Apple Vision (auto-detects all languages on macOS 13+), auto-copy to clipboard, translate to 30+ languages, Google AI Search; also reads QR codes with open/copy/scan actions
 - **Invert colors** — one-click color inversion, apply twice to revert
 - **Background removal** — Apple Vision foreground mask (macOS 14+)
 - **Pin to screen** — floating always-on-top window
@@ -126,8 +130,9 @@ brew install --cask macshot
 - **Screenshot history with editable annotations** — menu bar submenu + drop-down history panel (`Cmd+Shift+H`). Re-open any capture in the editor with live annotations preserved — edit, then press Done to save back. Drag-and-drop, Quick Look, and right-click actions
 - **QR & barcode detection** — inline Open/Copy actions
 - **Snap alignment guides** — annotations snap to midlines and edges
+- **Liquid Glass theme** (macOS 26 Tahoe) — render toolbars, popovers, and HUDs as Apple's translucent Liquid Glass material
+- **Custom menu bar icon** — use the default, a built-in preset, or any SF Symbol
 - **Auto-updates** via Sparkle
-- **~8 MB memory** at idle
 
 </details>
 
@@ -175,6 +180,7 @@ brew install --cask macshot
 | `T` | Text |
 | `N` | Number |
 | `B` | Censor (Pixelate/Blur) |
+| `H` | Highlight (spotlight) |
 | `I` | Color Sampler |
 | `G` | Stamp / Emoji |
 | `S` | Select & Edit |
