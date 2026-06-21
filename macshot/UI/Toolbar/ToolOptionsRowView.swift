@@ -127,6 +127,8 @@ class ToolOptionsRowView: NSView {
         if tool == .loupe {
             curX = addSeparator(at: curX)
             curX = addLoupeMagnificationSlider(at: curX, ov: ov)
+            curX = addSeparator(at: curX)
+            curX = addLoupeOutlineControls(at: curX, ov: ov)
         }
         if tool == .highlight {
             curX = addHighlightDimSlider(at: curX, ov: ov)
@@ -1437,6 +1439,8 @@ class ToolOptionsRowView: NSView {
         if let ann = editingAnnotation, ann.tool == .loupe {
             ensureSnapshot()
             ann.loupeMagnification = val
+            // Keep the source circle framing exactly what the lens shows.
+            ann.syncLoupeSourceToMagnification()
             ann.bakedBlurNSImage = nil
             ann.bakeLoupe()
             ov.cachedCompositedImage = nil
@@ -1846,6 +1850,73 @@ class ToolOptionsRowView: NSView {
         if PopoverHelper.toggleClosedIfOpen() { return }
         guard let ov = overlayView else { return }
         ov.showColorPickerPopover(target: .annotationOutline, anchorView: sender)
+    }
+
+    // MARK: - Loupe outline color
+
+    private func addLoupeOutlineControls(at x: CGFloat, ov: OverlayView) -> CGFloat {
+        var curX = x
+        let enabled: Bool
+        let col: NSColor
+        if let ann = editingAnnotation, ann.tool == .loupe {
+            enabled = ann.loupeOutlineEnabled
+            col = ann.outlineColor ?? ov.currentLoupeOutlineColor
+        } else {
+            enabled = ov.currentLoupeOutlineEnabled
+            col = ov.currentLoupeOutlineColor
+        }
+
+        let outlineBtn = NSButton(title: L("Outline"), target: self, action: #selector(loupeOutlineToggled(_:)))
+        outlineBtn.bezelStyle = .recessed
+        outlineBtn.setButtonType(.toggle)
+        outlineBtn.state = enabled ? .on : .off
+        outlineBtn.attributedTitle = NSAttributedString(string: L("Outline"), attributes: [
+            .font: NSFont.systemFont(ofSize: 10, weight: .medium),
+            .baselineOffset: 0.5,
+        ])
+        outlineBtn.sizeToFit()
+        let rowHeight: CGFloat = frame.height > 0 ? frame.height : 30
+        outlineBtn.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: max(50, outlineBtn.frame.width), height: 22)
+        addSubview(outlineBtn)
+        curX += outlineBtn.frame.width + 2
+
+        let swatchSize: CGFloat = 18
+        let swatch = NSButton(frame: NSRect(x: curX, y: (rowHeight - swatchSize) / 2, width: swatchSize, height: swatchSize))
+        swatch.title = ""
+        swatch.isBordered = false
+        swatch.wantsLayer = true
+        swatch.layer?.backgroundColor = col.cgColor
+        swatch.layer?.cornerRadius = 3
+        swatch.layer?.borderWidth = 1.5
+        swatch.layer?.borderColor = ToolbarLayout.iconColor.withAlphaComponent(0.4).cgColor
+        swatch.layer?.opacity = enabled ? 1.0 : 0.3
+        swatch.tag = 976
+        swatch.target = self
+        swatch.action = #selector(loupeOutlineColorClicked(_:))
+        addSubview(swatch)
+        curX += swatchSize
+        return curX
+    }
+
+    @objc private func loupeOutlineToggled(_ sender: NSButton) {
+        guard let ov = overlayView else { return }
+        let isOn = sender.state == .on
+        ov.currentLoupeOutlineEnabled = isOn
+        UserDefaults.standard.set(isOn, forKey: "loupeOutlineEnabled")
+        if let swatch = viewWithTag(976) { swatch.layer?.opacity = isOn ? 1.0 : 0.3 }
+        if let ann = editingAnnotation, ann.tool == .loupe {
+            ensureSnapshot()
+            ann.loupeOutlineEnabled = isOn
+            if isOn, ann.outlineColor == nil { ann.outlineColor = ov.currentLoupeOutlineColor }
+            ov.invalidateLoupeCaches()
+        }
+        ov.needsDisplay = true
+    }
+
+    @objc private func loupeOutlineColorClicked(_ sender: NSButton) {
+        if PopoverHelper.toggleClosedIfOpen() { return }
+        guard let ov = overlayView else { return }
+        ov.showColorPickerPopover(target: .loupeOutline, anchorView: sender)
     }
 
     @objc private func textCancelClicked() {

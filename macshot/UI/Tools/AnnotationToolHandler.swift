@@ -16,6 +16,8 @@ protocol AnnotationCanvas: AnyObject {
     var currentMeasureInPoints: Bool { get }
     var currentLoupeSize: CGFloat { get }
     var currentLoupeMagnification: CGFloat { get }
+    var currentLoupeOutlineColor: NSColor { get }
+    var currentLoupeOutlineEnabled: Bool { get }
     var pencilSmoothMode: Int { get }  // 0=None, 1=Smooth, 2=Extra
     var pencilPressureEnabled: Bool { get }
     var currentPressure: CGFloat { get }

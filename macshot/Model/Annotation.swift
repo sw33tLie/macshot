@@ -216,6 +216,15 @@ class Annotation {
     var randomSeed: UInt32 = UInt32.random(in: 1...UInt32.max)
     /// Magnification factor for loupe annotations.
     var loupeMagnification: CGFloat = 2.0
+    /// Rooted-magnifier source circle (#197). When non-nil, the loupe is a
+    /// two-circle magnifier: this rect is the SOURCE spot that's sampled, and the
+    /// annotation's bounding box (startPoint/endPoint) is the LENS circle that
+    /// shows the magnified view. The two are connected by a line. nil = legacy
+    /// single-circle loupe that magnifies the region under itself.
+    var loupeSourceRect: NSRect?
+    /// When true, the loupe ring (and connecting line) use `outlineColor` instead
+    /// of the default gray gradient ring.
+    var loupeOutlineEnabled: Bool = false
 
     init(tool: AnnotationTool, startPoint: NSPoint, endPoint: NSPoint, color: NSColor, strokeWidth: CGFloat) {
         self.tool = tool
@@ -264,6 +273,8 @@ class Annotation {
         c.outlineColor = outlineColor
         c.randomSeed = randomSeed
         c.loupeMagnification = loupeMagnification
+        c.loupeSourceRect = loupeSourceRect
+        c.loupeOutlineEnabled = loupeOutlineEnabled
         c.dimOpacity = dimOpacity
         return c
     }
@@ -289,9 +300,12 @@ class Annotation {
         fontFamilyName = src.fontFamilyName
         numberFormat = src.numberFormat
         loupeMagnification = src.loupeMagnification
+        outlineColor = src.outlineColor
+        loupeOutlineEnabled = src.loupeOutlineEnabled
         if tool == .loupe {
             startPoint = src.startPoint
             endPoint = src.endPoint
+            loupeSourceRect = src.loupeSourceRect
             bakedBlurNSImage = nil
             bakeLoupe()
         }
@@ -419,7 +433,13 @@ class Annotation {
             let nx = (point.x - cx) / rx, ny = (point.y - cy) / ry
             let d = nx * nx + ny * ny
             let rNorm = threshold / min(rx, ry)
-            return d <= (1.0 + rNorm) * (1.0 + rNorm)
+            if d <= (1.0 + rNorm) * (1.0 + rNorm) { return true }
+            // Two-circle loupe: also hit the rooted source circle.
+            if let src = loupeSourceRect, src.width > 0, src.height > 0 {
+                let sr = min(src.width, src.height) / 2 + threshold
+                if hypot(point.x - src.midX, point.y - src.midY) <= sr { return true }
+            }
+            return false
         case .text:
             return textDrawRect.insetBy(dx: -threshold, dy: -threshold).contains(point)
         case .number:
@@ -467,6 +487,9 @@ class Annotation {
             }
             anchorPoints = anchors
         }
+        // NOTE: loupeSourceRect is intentionally NOT moved here. The standard
+        // annotation drag moves the LENS only (the source stays rooted, #197).
+        // Moving the source is handled separately (drag the small source circle).
         // Clear baked image so it re-renders at the new position
         if tool == .loupe || tool == .pixelate {
             bakedBlurNSImage = nil
@@ -2265,9 +2288,18 @@ class Annotation {
         let size = min(rect.width, rect.height)
         guard size > 10 else { return nil }
 
-        let centerX = rect.origin.x + rect.width / 2
-        let centerY = rect.origin.y + rect.height / 2
-        
+        // Two-circle magnifier: sample under the rooted SOURCE circle. Legacy
+        // single loupe: sample under itself.
+        let centerX: CGFloat
+        let centerY: CGFloat
+        if let src = loupeSourceRect {
+            centerX = src.midX
+            centerY = src.midY
+        } else {
+            centerX = rect.origin.x + rect.width / 2
+            centerY = rect.origin.y + rect.height / 2
+        }
+
         let srcSize = size / scale
         let srcX = centerX - srcSize / 2
         let srcY = centerY - srcSize / 2
@@ -2319,17 +2351,87 @@ class Annotation {
         return CGGradient(colorsSpace: CGColorSpace(name: CGColorSpace.sRGB)!, colors: colors, locations: [0.0, 1.0])
     }()
 
+    /// Outline ring thickness used both for the colored ring and (so preview ==
+    /// committed) the selection chrome.
+    static let loupeOutlineWidth: CGFloat = 4.0
+
+    /// The circular lens rect (the magnified circle) for this loupe.
+    var loupeLensSquareRect: NSRect {
+        let rect = boundingRect
+        let size = min(rect.width, rect.height)
+        return NSRect(x: rect.origin.x + (rect.width - size) / 2,
+                      y: rect.origin.y + (rect.height - size) / 2,
+                      width: size, height: size)
+    }
+
+    /// Two-circle loupe invariant: the source circle frames exactly the region
+    /// the lens magnifies, so its diameter = lensDiameter / magnification. Resize
+    /// the source (keeping it centered) to satisfy this. No-op for a single loupe.
+    func syncLoupeSourceToMagnification() {
+        guard tool == .loupe, let src = loupeSourceRect else { return }
+        let lensSize = loupeLensSquareRect.width
+        let mag = max(1.1, loupeMagnification)
+        let newSize = lensSize / mag
+        let cx = src.midX, cy = src.midY
+        loupeSourceRect = NSRect(x: cx - newSize / 2, y: cy - newSize / 2,
+                                 width: newSize, height: newSize)
+    }
+
     private func drawLoupe(in context: NSGraphicsContext) {
         let rect = boundingRect
         guard rect.width > 10, rect.height > 10 else { return }
 
-        let size = min(rect.width, rect.height)
-        let squareRect = NSRect(
-            x: rect.origin.x + (rect.width - size) / 2,
-            y: rect.origin.y + (rect.height - size) / 2,
-            width: size,
-            height: size
-        )
+        let squareRect = loupeLensSquareRect
+        let size = squareRect.width
+        let colored = loupeOutlineEnabled
+        let ringColor = outlineColor ?? .systemRed
+
+        // Two-circle (rooted) magnifier: draw the connecting line + source ring
+        // first, behind the lens. The lens samples the region under the SOURCE
+        // circle, magnified to fill the lens.
+        if let src = loupeSourceRect, src.width > 4, src.height > 4 {
+            let srcCenter = NSPoint(x: src.midX, y: src.midY)
+            let lensCenter = NSPoint(x: squareRect.midX, y: squareRect.midY)
+            let lineColor = colored ? ringColor : NSColor.white
+            let lineWidth = colored ? Self.loupeOutlineWidth * 0.6 : 2.0
+            let srcRadius = min(src.width, src.height) / 2
+            let lensRadius = size / 2
+
+            // Connecting line: trim each end to the circle's circumference so it
+            // touches the edges instead of running into the centers.
+            let dx = lensCenter.x - srcCenter.x
+            let dy = lensCenter.y - srcCenter.y
+            let dist = hypot(dx, dy)
+            if dist > srcRadius + lensRadius {
+                let ux = dx / dist, uy = dy / dist
+                let from = NSPoint(x: srcCenter.x + ux * srcRadius, y: srcCenter.y + uy * srcRadius)
+                let to = NSPoint(x: lensCenter.x - ux * lensRadius, y: lensCenter.y - uy * lensRadius)
+                let line = NSBezierPath()
+                line.move(to: from)
+                line.line(to: to)
+                line.lineWidth = lineWidth
+                lineColor.setStroke()
+                line.stroke()
+            }
+
+            // Source ring (outline only — shows the real, un-magnified spot).
+            let srcSize = min(src.width, src.height)
+            let srcSquare = NSRect(x: srcCenter.x - srcSize / 2, y: srcCenter.y - srcSize / 2,
+                                   width: srcSize, height: srcSize)
+            let srcRing = NSBezierPath(ovalIn: srcSquare)
+            srcRing.lineWidth = colored ? Self.loupeOutlineWidth : 2.0
+            (colored ? ringColor : NSColor.white).setStroke()
+            srcRing.stroke()
+        }
+
+        // Source center to sample the magnified content from. With a source rect,
+        // sample under it; otherwise sample under the lens itself (legacy loupe).
+        let sampleCenter: NSPoint
+        if let src = loupeSourceRect {
+            sampleCenter = NSPoint(x: src.midX, y: src.midY)
+        } else {
+            sampleCenter = NSPoint(x: rect.midX, y: rect.midY)
+        }
 
         let path = NSBezierPath(ovalIn: squareRect)
 
@@ -2354,10 +2456,9 @@ class Annotation {
             let scaleY = imgSize.height / sourceImageBounds.height
             let magnification = max(1.1, loupeMagnification)
             let srcSize = size / magnification
-            let cx = rect.midX, cy = rect.midY
             let fromRect = NSRect(
-                x: (cx - srcSize/2) * scaleX,
-                y: (cy - srcSize/2) * scaleY,
+                x: (sampleCenter.x - srcSize/2) * scaleX,
+                y: (sampleCenter.y - srcSize/2) * scaleY,
                 width: srcSize * scaleX,
                 height: srcSize * scaleY
             )
@@ -2366,24 +2467,33 @@ class Annotation {
         }
         context.restoreGraphicsState()
 
-        // 3. Gradient border ring
+        // 3. Border ring — colored solid ring, or the default gray gradient.
         let cgCtx = context.cgContext
-        let borderWidth: CGFloat = 4.0
-        let innerPath = NSBezierPath(ovalIn: squareRect.insetBy(dx: borderWidth, dy: borderWidth))
-        let ringPath = NSBezierPath()
-        ringPath.append(path)
-        ringPath.append(innerPath.reversed)
-        cgCtx.saveGState()
-        ringPath.addClip()
-        if let gradient = Self.loupeGradient {
-            cgCtx.drawLinearGradient(
-                gradient,
-                start: CGPoint(x: squareRect.midX, y: squareRect.maxY),
-                end:   CGPoint(x: squareRect.midX, y: squareRect.minY),
-                options: []
-            )
+        let borderWidth: CGFloat = Self.loupeOutlineWidth
+        if colored {
+            context.saveGraphicsState()
+            let ring = NSBezierPath(ovalIn: squareRect.insetBy(dx: borderWidth / 2, dy: borderWidth / 2))
+            ring.lineWidth = borderWidth
+            ringColor.setStroke()
+            ring.stroke()
+            context.restoreGraphicsState()
+        } else {
+            let innerPath = NSBezierPath(ovalIn: squareRect.insetBy(dx: borderWidth, dy: borderWidth))
+            let ringPath = NSBezierPath()
+            ringPath.append(path)
+            ringPath.append(innerPath.reversed)
+            cgCtx.saveGState()
+            ringPath.addClip()
+            if let gradient = Self.loupeGradient {
+                cgCtx.drawLinearGradient(
+                    gradient,
+                    start: CGPoint(x: squareRect.midX, y: squareRect.maxY),
+                    end:   CGPoint(x: squareRect.midX, y: squareRect.minY),
+                    options: []
+                )
+            }
+            cgCtx.restoreGState()
         }
-        cgCtx.restoreGState()
 
         // 4. Inner shadow
         context.saveGraphicsState()

@@ -59,6 +59,8 @@ struct CodableAnnotation: Codable {
 
     // Loupe
     var loupeMagnification: CGFloat?
+    var loupeSourceRect: [CGFloat]?      // [x, y, w, h] for the rooted source circle
+    var loupeOutlineEnabled: Bool = false
 
     // Misc
     var measureInPoints: Bool = false
@@ -137,6 +139,10 @@ extension Annotation {
 
         // Loupe
         c.loupeMagnification = loupeMagnification
+        if let r = loupeSourceRect {
+            c.loupeSourceRect = [r.origin.x, r.origin.y, r.size.width, r.size.height]
+        }
+        c.loupeOutlineEnabled = loupeOutlineEnabled
 
         // Misc
         c.measureInPoints = measureInPoints
@@ -219,6 +225,10 @@ extension Annotation {
 
         // Loupe
         ann.loupeMagnification = c.loupeMagnification ?? 2.0
+        if let r = c.loupeSourceRect, r.count == 4 {
+            ann.loupeSourceRect = NSRect(x: r[0], y: r[1], width: r[2], height: r[3])
+        }
+        ann.loupeOutlineEnabled = c.loupeOutlineEnabled
 
         // Misc
         ann.measureInPoints = c.measureInPoints
