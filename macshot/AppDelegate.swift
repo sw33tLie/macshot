@@ -1243,19 +1243,31 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
         // Run the screenshot capture now and dispatch back to main when done.
         // Window creation above already ran in parallel with the prep that the
-        // background queue still has to do (cursor capture, context setup is
-        // already done — the heavy work is CGWindowListCreateImage).
-        DispatchQueue.global(qos: .userInteractive).async { [weak self] in
+        // background work still has to do.
+        //
+        // Prefer SCScreenshotManager (macOS 14+): it honors the "Capture mouse
+        // cursor" toggle even for the enlarged shake-to-find / accessibility
+        // cursor, which CGWindowListCreateImage cannot exclude (the cursor is a
+        // WindowServer layer, not a window). It captures FRESH shareable content
+        // so transient UI (menus, Spotlight) is preserved. If SCK fails or can't
+        // cover every display, fall back to the synchronous CGWindowListCreateImage
+        // path (which manually composites the cursor from the prebuilt context).
+        Task { [weak self] in
             trace?.mark("background screenshot begin")
-            let captures = ScreenCaptureManager.captureAllScreensImmediately(
+            var captures: [ScreenCapture]? = nil
+            if #available(macOS 14.0, *) {
+                captures = await ScreenCaptureManager.captureAllScreensImmediatelySCK(
+                    timing: { label in trace?.mark(label) })
+            }
+            let finalCaptures = captures ?? ScreenCaptureManager.captureAllScreensImmediately(
                 context: captureContext,
                 timing: { label in trace?.mark(label) })
-            trace?.mark("background screenshot end count=\(captures.count)")
-            DispatchQueue.main.async {
+            trace?.mark("background screenshot end count=\(finalCaptures.count)")
+            await MainActor.run {
                 guard let self = self, self.isCapturing,
                       self.captureSessionID == sessionID else { return }
                 self.installAndShowOverlays(
-                    captures: captures,
+                    captures: finalCaptures,
                     controllers: controllers,
                     mouseScreen: mouseScreen,
                     applyFullScreen: didApplyFullScreen,

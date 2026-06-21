@@ -117,6 +117,91 @@ class ScreenCaptureManager {
         }
     }
 
+    /// SCScreenshotManager-based immediate capture (macOS 14+). Unlike
+    /// `captureAllScreensImmediately` (which uses CGWindowListCreateImage and
+    /// cannot exclude the WindowServer-composited cursor — notably the enlarged
+    /// shake-to-find / accessibility pointer), SCK never paints the cursor when
+    /// `showsCursor` is false, so the "Capture mouse cursor" toggle is honored
+    /// for the enlarged cursor too.
+    ///
+    /// Fetches FRESH shareable content (not the cache) so transient UI present at
+    /// hotkey time — open menus, Spotlight/Raycast panels — is in the window list
+    /// and gets captured. Returns nil on any failure so the caller can fall back
+    /// to the synchronous CGWindowListCreateImage path.
+    @available(macOS 14.0, *)
+    static func captureAllScreensImmediatelySCK(
+        timing: (@Sendable (String) -> Void)? = nil
+    ) async -> [ScreenCapture]? {
+        let showsCursor = UserDefaults.standard.bool(forKey: "captureCursor")
+        timing?("SCK immediate: shareable content begin")
+        guard
+            let content = try? await SCShareableContent.excludingDesktopWindows(
+                false, onScreenWindowsOnly: true)
+        else {
+            timing?("SCK immediate: shareable content failed — fallback")
+            return nil
+        }
+        timing?("SCK immediate: shareable content end displays=\(content.displays.count) windows=\(content.windows.count)")
+
+        let screens = NSScreen.screens
+        var pairs: [(SCDisplay, NSScreen)] = []
+        for display in content.displays {
+            if let screen = screens.first(where: { nsScreen in
+                let screenNumber =
+                    nsScreen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")]
+                    as? CGDirectDisplayID
+                return screenNumber == display.displayID
+            }) {
+                pairs.append((display, screen))
+            }
+        }
+        guard !pairs.isEmpty else {
+            timing?("SCK immediate: no display-screen pairs — fallback")
+            return nil
+        }
+
+        let captures = await withTaskGroup(
+            of: ScreenCapture?.self, returning: [ScreenCapture].self
+        ) { group in
+            for (index, pair) in pairs.enumerated() {
+                let (display, screen) = pair
+                group.addTask {
+                    // Capture the whole display, excluding nothing: transient UI
+                    // must be preserved. The cursor is controlled by showsCursor,
+                    // not by the window list.
+                    let filter = SCContentFilter(display: display, excludingWindows: [])
+                    let config = SCStreamConfiguration()
+                    let scale = Int(screen.backingScaleFactor)
+                    config.width = display.width * scale
+                    config.height = display.height * scale
+                    config.showsCursor = showsCursor
+                    config.captureResolution = .best
+                    timing?("SCK immediate capture begin display=\(index)")
+                    guard
+                        let image = try? await SCScreenshotManager.captureImage(
+                            contentFilter: filter, configuration: config)
+                    else {
+                        timing?("SCK immediate capture failed display=\(index)")
+                        return nil
+                    }
+                    timing?("SCK immediate capture end display=\(index) pixels=\(image.width)x\(image.height)")
+                    return ScreenCapture(screen: screen, image: image)
+                }
+            }
+            var results: [ScreenCapture] = []
+            for await capture in group { if let capture = capture { results.append(capture) } }
+            return results
+        }
+
+        // If SCK couldn't produce an image for every display, fall back rather
+        // than show a partial capture.
+        guard captures.count == pairs.count else {
+            timing?("SCK immediate: partial captures \(captures.count)/\(pairs.count) — fallback")
+            return nil
+        }
+        return captures
+    }
+
     static func makeDisplayPreviewImage(from image: CGImage, maxPixelDimension: Int = 1400) -> CGImage {
         let maxDimension = max(image.width, image.height)
         guard maxDimension > maxPixelDimension else { return image }
