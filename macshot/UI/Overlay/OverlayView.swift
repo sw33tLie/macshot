@@ -345,6 +345,13 @@ class OverlayView: NSView {
     private var isDraggingAnnotation: Bool = false
     private var didMoveAnnotation: Bool = false
     private var annotationDragStart: NSPoint = .zero
+    /// Two-circle loupe: dragging the small SOURCE circle (re-roots what's
+    /// magnified) independently of the lens.
+    private var isDraggingLoupeSource: Bool = false
+    private var loupeSourceDragStart: NSPoint = .zero
+    private var loupeSourceDragOrig: NSRect = .zero
+    /// Two-circle loupe: resizing the SOURCE circle (changes the zoom).
+    private var isResizingLoupeSource: Bool = false
     /// When ctrl+clicking an already-selected annotation, defer the deselect
     /// to mouseUp so the user can still drag the full multi-selection.
     private weak var shiftClickPendingDeselect: Annotation?
@@ -509,7 +516,7 @@ class OverlayView: NSView {
     var cachedEffectsScreenshot: NSImage?
 
     // Color picker target
-    enum ColorPickerTarget { case drawColor, textBg, textOutline, textGlyphStroke, annotationOutline }
+    enum ColorPickerTarget { case drawColor, textBg, textOutline, textGlyphStroke, annotationOutline, loupeOutline }
     private var colorPickerTarget: ColorPickerTarget = .drawColor
 
     // Beautify toolbar animation
@@ -563,6 +570,15 @@ class OverlayView: NSView {
         let saved = UserDefaults.standard.object(forKey: "loupeMagnification") as? Double
         return saved != nil ? CGFloat(saved!) : 2.0
     }()
+    var currentLoupeOutlineColor: NSColor = {
+        if let data = UserDefaults.standard.data(forKey: "loupeOutlineColor"),
+           let c = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data) {
+            return c
+        }
+        return .systemRed
+    }()
+    var currentLoupeOutlineEnabled: Bool =
+        UserDefaults.standard.object(forKey: "loupeOutlineEnabled") as? Bool ?? false
     private var loupeCursorPoint: NSPoint = .zero
     var drawingCursorPoint: NSPoint = .zero
     private var smartMarkerLineHeight: CGFloat?  // detected text line height at cursor (smart marker)
@@ -622,6 +638,8 @@ class OverlayView: NSView {
     private var annotationResizeMouseStart: NSPoint = .zero
     private var annotationDeleteButtonRect: NSRect = .zero
     private var annotationEditButtonRect: NSRect = .zero
+    /// Resize handle on a two-circle loupe's SOURCE circle (.zero when none).
+    private var loupeSourceHandleRect: NSRect = .zero
     private var annotationResizeHandleRects: [(ResizeHandle, NSRect)] = []
     private var multiSelectDeleteButtonRect: NSRect = .zero  // consolidated delete for multi-selection
 
@@ -3982,37 +4000,26 @@ class OverlayView: NSView {
         guard let screenshot = screenshotImage, let context = NSGraphicsContext.current else {
             return
         }
+        // Build a throwaway loupe annotation with the SAME settings used on commit
+        // and render it through the real drawLoupe path, so the cursor-follow
+        // preview matches the placed loupe exactly (outline color + thickness).
         let size = currentLoupeSize
-        let squareRect = NSRect(
-            x: center.x - size / 2, y: center.y - size / 2, width: size, height: size)
-        let magnification = max(1.1, currentLoupeMagnification)
+        let preview = Annotation(
+            tool: .loupe,
+            startPoint: NSPoint(x: center.x - size / 2, y: center.y - size / 2),
+            endPoint: NSPoint(x: center.x + size / 2, y: center.y + size / 2),
+            color: currentColor,
+            strokeWidth: size)
+        preview.loupeMagnification = currentLoupeMagnification
+        preview.outlineColor = currentLoupeOutlineColor
+        preview.loupeOutlineEnabled = currentLoupeOutlineEnabled
+        preview.sourceImage = screenshot
+        preview.sourceImageBounds = captureDrawRect
+        preview.bakeLoupe()
 
         context.saveGraphicsState()
         context.cgContext.setAlpha(0.75)
-
-        // Clip to circle
-        let path = NSBezierPath(ovalIn: squareRect)
-        path.addClip()
-
-        // Draw magnified region directly from screenshot (no intermediate image)
-        let srcSize = size / magnification
-        let srcRect = NSRect(
-            x: center.x - srcSize / 2, y: center.y - srcSize / 2, width: srcSize, height: srcSize)
-        let imgSize = screenshot.size
-        let drawRect = captureDrawRect
-        let scaleX = imgSize.width / drawRect.width
-        let scaleY = imgSize.height / drawRect.height
-        let fromRect = NSRect(
-            x: (srcRect.origin.x - drawRect.origin.x) * scaleX,
-            y: (srcRect.origin.y - drawRect.origin.y) * scaleY,
-            width: srcRect.width * scaleX, height: srcRect.height * scaleY)
-        screenshot.draw(in: squareRect, from: fromRect, operation: .copy, fraction: 1.0)
-
-        // Simple border
-        NSColor.white.withAlphaComponent(0.6).setStroke()
-        path.lineWidth = 3
-        path.stroke()
-
+        preview.draw(in: context)
         context.restoreGraphicsState()
     }
 
@@ -4413,6 +4420,30 @@ class OverlayView: NSView {
         annotationDeleteButtonRect = deleteRect
         drawDeleteCircle(in: deleteRect)
 
+        // Two-circle loupe: resize handle on the SOURCE circle (drag to change
+        // zoom — the source frames exactly what the lens shows).
+        loupeSourceHandleRect = .zero
+        if annotation.tool == .loupe, let src = annotation.loupeSourceRect, src.width > 4 {
+            let r = min(src.width, src.height) / 2
+            // Place on the source circle's outer edge, away from the lens.
+            let lensCenter = NSPoint(x: annotation.loupeLensSquareRect.midX,
+                                     y: annotation.loupeLensSquareRect.midY)
+            let srcCenter = NSPoint(x: src.midX, y: src.midY)
+            var ux = srcCenter.x - lensCenter.x, uy = srcCenter.y - lensCenter.y
+            let d = hypot(ux, uy)
+            if d > 0.001 { ux /= d; uy /= d } else { ux = 0; uy = -1 }
+            let hp = NSPoint(x: srcCenter.x + ux * r, y: srcCenter.y + uy * r)
+            let hs: CGFloat = 12
+            let hrect = NSRect(x: hp.x - hs / 2, y: hp.y - hs / 2, width: hs, height: hs)
+            loupeSourceHandleRect = hrect
+            NSColor.white.setFill()
+            NSBezierPath(ovalIn: hrect).fill()
+            ToolbarLayout.accentColor.setStroke()
+            let hb = NSBezierPath(ovalIn: hrect.insetBy(dx: 0.5, dy: 0.5))
+            hb.lineWidth = 1.5
+            hb.stroke()
+        }
+
         // Edit button (pencil) for text annotations — matches delete button style
         if annotation.tool == .text {
             let editRect = NSRect(
@@ -4604,7 +4635,16 @@ class OverlayView: NSView {
         guard let offNSCtx = NSGraphicsContext.current else { annotation.rotation = savedRotation; offscreen.unlockFocus(); return }
         offNSCtx.cgContext.scaleBy(x: scale, y: scale)
         offNSCtx.cgContext.translateBy(x: -unrotatedBBox.origin.x, y: -unrotatedBBox.origin.y)
-        annotation.draw(in: offNSCtx)
+        if annotation.tool == .loupe {
+            // Glow only the lens circle. Drawing the full loupe would trace the
+            // connecting line + source ring too, and since the glow bitmap is
+            // clipped to the lens bounding box, the line produced a broken stray
+            // segment. A filled lens circle gives a clean ring glow.
+            NSColor.black.setFill()
+            NSBezierPath(ovalIn: annotation.loupeLensSquareRect).fill()
+        } else {
+            annotation.draw(in: offNSCtx)
+        }
         offscreen.unlockFocus()
         annotation.rotation = savedRotation
 
@@ -5941,6 +5981,10 @@ class OverlayView: NSView {
                     annotation.startPoint = NSPoint(x: newMinX, y: newMinY)
                     annotation.endPoint = NSPoint(x: newMaxX, y: newMaxY)
                     if annotation.tool == .loupe {
+                        // Two-circle loupe: resizing the lens keeps the zoom
+                        // (magnification) fixed and re-frames the source so it
+                        // still outlines exactly what the lens shows.
+                        annotation.syncLoupeSourceToMagnification()
                         annotation.bakedBlurNSImage = nil
                         annotation.bakeLoupe()
                     }
@@ -5955,6 +5999,35 @@ class OverlayView: NSView {
                 let w = abs(canvasPoint.x - lassoStart.x)
                 let h = abs(canvasPoint.y - lassoStart.y)
                 lassoRect = NSRect(x: x, y: y, width: w, height: h)
+                needsDisplay = true
+            } else if isResizingLoupeSource, let loupe = selectedAnnotation, loupe.tool == .loupe {
+                // Resize the source circle by dragging its handle → changes zoom.
+                // magnification = lensSize / sourceSize; the source is re-framed to
+                // match via syncLoupeSourceToMagnification on the next draw/bake.
+                let cx = loupeSourceDragOrig.midX, cy = loupeSourceDragOrig.midY
+                let newR = max(6, hypot(canvasPoint.x - cx, canvasPoint.y - cy))
+                let lensSize = loupe.loupeLensSquareRect.width
+                let mag = max(1.1, min(12, lensSize / (newR * 2)))
+                loupe.loupeMagnification = mag
+                let newSize = lensSize / mag
+                loupe.loupeSourceRect = NSRect(x: cx - newSize / 2, y: cy - newSize / 2,
+                                               width: newSize, height: newSize)
+                loupe.bakedBlurNSImage = nil
+                loupe.bakeLoupe()
+                didMoveAnnotation = true
+                cachedCompositedImage = nil
+                needsDisplay = true
+            } else if isDraggingLoupeSource, let loupe = selectedAnnotation, loupe.tool == .loupe {
+                // Move the rooted source circle independently; the lens stays put
+                // and the connecting line re-adjusts. Magnification is kept, so
+                // the source size is unchanged.
+                let dx = canvasPoint.x - loupeSourceDragStart.x
+                let dy = canvasPoint.y - loupeSourceDragStart.y
+                loupe.loupeSourceRect = loupeSourceDragOrig.offsetBy(dx: dx, dy: dy)
+                loupe.bakedBlurNSImage = nil
+                loupe.bakeLoupe()
+                didMoveAnnotation = true
+                cachedCompositedImage = nil
                 needsDisplay = true
             } else if isDraggingAnnotation, !selectedAnnotations.isEmpty {
                 let rawDx = canvasPoint.x - annotationDragStart.x
@@ -6076,6 +6149,25 @@ class OverlayView: NSView {
             isRotatingAnnotation = false
             cachedAnnotationLayerExcludingSelected = nil
             cachedAnnotationLayer = nil
+            NSCursor.openHand.set()
+            needsDisplay = true
+            return
+        }
+        if isDraggingLoupeSource || isResizingLoupeSource {
+            let wasResize = isResizingLoupeSource
+            isDraggingLoupeSource = false
+            isResizingLoupeSource = false
+            cachedAnnotationLayerExcludingSelected = nil
+            cachedAnnotationLayer = nil
+            if let ann = selectedAnnotation, ann.tool == .loupe {
+                ann.bakedBlurNSImage = nil
+                ann.bakeLoupe()
+                if wasResize {
+                    // Reflect the new zoom in the options row slider/label.
+                    toolOptionsRowView?.rebuild(forAnnotation: ann)
+                }
+            }
+            cachedCompositedImage = nil
             NSCursor.openHand.set()
             needsDisplay = true
             return
@@ -7738,6 +7830,25 @@ class OverlayView: NSView {
                     // Not Ctrl, not already selected: replace selection
                     selectedAnnotation = clicked
                 }
+                // Two-circle loupe: if the click landed on the small SOURCE circle
+                // (and not the lens), drag the source — even on the first click
+                // that also selects the loupe. Otherwise the first click would
+                // fall through to the lens drag below.
+                if clicked.tool == .loupe, let src = clicked.loupeSourceRect, src.width > 4 {
+                    let sr = min(src.width, src.height) / 2 + 6
+                    let onSource = hypot(point.x - src.midX, point.y - src.midY) <= sr
+                    let onLens = NSBezierPath(ovalIn: clicked.loupeLensSquareRect).contains(point)
+                    if onSource && !onLens {
+                        isDraggingLoupeSource = true
+                        didMoveAnnotation = false
+                        loupeSourceDragStart = point
+                        loupeSourceDragOrig = src
+                        cachedAnnotationLayerExcludingSelected = buildAnnotationLayer(excluding: Set(selectedAnnotations.map { ObjectIdentifier($0) }))
+                        NSCursor.closedHand.set()
+                        needsDisplay = true
+                        return
+                    }
+                }
                 // If already selected without Ctrl: keep current selection (allows multi-drag)
                 isDraggingAnnotation = true
                 didMoveAnnotation = false
@@ -7900,6 +8011,18 @@ class OverlayView: NSView {
         } else {
             handleTestPoint = point
         }
+        // Two-circle loupe: source-circle resize handle (changes zoom).
+        if selected.tool == .loupe, loupeSourceHandleRect != .zero,
+           loupeSourceHandleRect.insetBy(dx: -6, dy: -6).contains(point) {
+            isResizingLoupeSource = true
+            didMoveAnnotation = false
+            loupeSourceDragStart = point
+            loupeSourceDragOrig = selected.loupeSourceRect ?? .zero
+            cachedAnnotationLayerExcludingSelected = buildAnnotationLayer(excluding: Set(selectedAnnotations.map { ObjectIdentifier($0) }))
+            NSCursor.closedHand.set()
+            needsDisplay = true
+            return true
+        }
         // Check resize handles (populated by drawAnnotationControls)
         for (handleIdx, handleEntry) in annotationResizeHandleRects.enumerated() {
             let (handle, rect) = handleEntry
@@ -7984,6 +8107,25 @@ class OverlayView: NSView {
                     at: selected.textDrawRect.origin, existingText: selected.attributedText,
                     existingFrame: selected.textDrawRect)
                 cachedCompositedImage = nil
+                return true
+            }
+        }
+        // Two-circle loupe: pressing the small SOURCE circle drags it
+        // independently (re-roots what's magnified), with the connecting line
+        // auto-adjusting. Check this BEFORE the lens body so the source wins when
+        // the press is over it but not over the lens.
+        if selected.tool == .loupe, let src = selected.loupeSourceRect, src.width > 4 {
+            let sr = min(src.width, src.height) / 2 + 6
+            let onSource = hypot(point.x - src.midX, point.y - src.midY) <= sr
+            let onLens = NSBezierPath(ovalIn: selected.loupeLensSquareRect).contains(point)
+            if onSource && !onLens {
+                isDraggingLoupeSource = true
+                didMoveAnnotation = false
+                loupeSourceDragStart = point
+                loupeSourceDragOrig = src
+                cachedAnnotationLayerExcludingSelected = buildAnnotationLayer(excluding: Set(selectedAnnotations.map { ObjectIdentifier($0) }))
+                NSCursor.closedHand.set()
+                needsDisplay = true
                 return true
             }
         }
@@ -9074,6 +9216,14 @@ class OverlayView: NSView {
     }
 
 
+    /// Invalidate the cached layers so loupe appearance changes (outline color/
+    /// toggle) repaint immediately.
+    func invalidateLoupeCaches() {
+        cachedAnnotationLayer = nil
+        cachedAnnotationLayerExcludingSelected = nil
+        cachedCompositedImage = nil
+    }
+
     func showColorPickerPopover(target: ColorPickerTarget, anchorView: NSView? = nil, anchorRect: NSRect = .zero) {
         colorPickerTarget = target
         let picker = ColorPickerView()
@@ -9090,6 +9240,10 @@ class OverlayView: NSView {
             } else {
                 initialColor = .white
             }
+        case .loupeOutline:
+            let editingLoupe = toolOptionsRowView?.editingAnnotation.flatMap { $0.tool == .loupe ? $0 : nil }
+            initialColor = (editingLoupe ?? selectedAnnotations.first { $0.tool == .loupe })?.outlineColor
+                ?? currentLoupeOutlineColor
         }
         picker.setColor(initialColor, opacity: currentColorOpacity)
         picker.customColors = customColors
@@ -9161,6 +9315,27 @@ class OverlayView: NSView {
                 ann.outlineColor = color
             }
             cachedCompositedImage = nil
+        case .loupeOutline:
+            currentLoupeOutlineColor = color
+            currentLoupeOutlineEnabled = true
+            if let data = try? NSKeyedArchiver.archivedData(withRootObject: color, requiringSecureCoding: false) {
+                UserDefaults.standard.set(data, forKey: "loupeOutlineColor")
+            }
+            UserDefaults.standard.set(true, forKey: "loupeOutlineEnabled")
+            // Apply to the loupe being edited / selected loupes.
+            var targets = selectedAnnotations.filter { $0.tool == .loupe }
+            if let editing = toolOptionsRowView?.editingAnnotation, editing.tool == .loupe,
+               !targets.contains(where: { $0 === editing }) {
+                targets.append(editing)
+            }
+            for ann in targets {
+                ann.outlineColor = color
+                ann.loupeOutlineEnabled = true
+            }
+            cachedAnnotationLayer = nil
+            cachedAnnotationLayerExcludingSelected = nil
+            cachedCompositedImage = nil
+            toolOptionsRowView?.updateSwatchColors()
         }
         needsDisplay = true
     }
