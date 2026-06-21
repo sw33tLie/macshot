@@ -7503,13 +7503,20 @@ class OverlayView: NSView {
             commitTextFieldIfNeeded()
             stampPreviewPoint = nil
             loupeCursorPoint = .zero
-            // Auto-enable beautify on first click in this session
-            if !beautifyEnabled {
+            // Toggle beautify on/off. When enabling, also reveal the options row
+            // so users can tweak padding/gradient. When disabling, collapse it.
+            if beautifyEnabled {
+                beautifyEnabled = false
+                UserDefaults.standard.set(false, forKey: "beautifyEnabled")
+                showBeautifyInOptionsRow = false
+                startBeautifyToolbarAnimation()
+            } else {
                 beautifyEnabled = true
                 UserDefaults.standard.set(true, forKey: "beautifyEnabled")
+                showBeautifyInOptionsRow = true
                 startBeautifyToolbarAnimation()
             }
-            showBeautifyInOptionsRow = true
+            rebuildToolbarLayout()
             needsDisplay = true
         case .beautifyStyle:
             beautifyStyleIndex = (beautifyStyleIndex + 1) % BeautifyRenderer.styles.count
