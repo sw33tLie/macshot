@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Auto-Redact a Screenshot on Mac — Hide PII Automatically | macshot</title>
+<meta name="description" content="Automatically find and redact sensitive info in a screenshot on Mac — emails, phone numbers, credit cards, SSNs, IPs, API keys, even faces. One step, runs locally. Free and open source.">
+<meta name="theme-color" content="#211BEF">
+<link rel="canonical" href="https://macshot.io/auto-redact-screenshot-mac">
+<meta property="og:title" content="Auto-Redact a Screenshot on Mac — macshot">
+<meta property="og:description" content="Automatically detect and redact personal info — emails, cards, SSNs, keys, faces — in a screenshot. Runs on your Mac. Free and open source.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://macshot.io/auto-redact-screenshot-mac">
+<meta property="og:image" content="https://macshot.io/preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Can a Mac redact sensitive info in a screenshot automatically?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Not with built-in tools — you'd have to find and cover each item by hand. macshot can scan a screenshot, detect personal information automatically, and redact it all in one step."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What kinds of data can it detect?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "macshot recognises emails, phone numbers, credit card numbers, social security numbers, IP addresses, AWS keys, and bearer tokens, plus faces and people in the image. It uses on-device OCR and pattern matching."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is the redaction reversible?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Auto-redaction replaces the detected regions with a solid fill, so the original pixels are gone from the saved image and can't be recovered."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does anything get uploaded?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Detection runs entirely on your Mac using Apple's Vision framework. Nothing is sent to a server."
+      }
+    }
+  ]
+}
+</script>
+<link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16">
+<link rel="icon" href="/favicon.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="glow"></div>
+
+<nav>
+<div class="wrap">
+<a href="/" class="logo"><img src="/logo.svg" alt="macshot" width="32" height="32">macshot</a>
+<div class="links">
+<a href="/#features">Features</a>
+<a href="/#install">Install</a>
+<a href="/#shortcuts">Shortcuts</a>
+<a href="https://github.com/sw33tLie/macshot" target="_blank">GitHub</a>
+<a href="https://github.com/sw33tLie/macshot/releases/latest/download/MacShot.dmg" class="btn btn-primary">Download</a>
+</div>
+</div>
+</nav>
+
+<section class="page-hero">
+<div class="wrap">
+<h1>Auto-redact a screenshot on Mac</h1>
+<p class="lead">Don't hunt for things to hide. macshot scans your screenshot, finds personal information on its own — emails, cards, keys, faces — and redacts it all in one step, right on your Mac.</p>
+<div style="text-align:center;margin-top:32px">
+<img src="/assets/auto-redact-screenshot-mac.png" alt="macshot automatically detecting and redacting emails, phone numbers, credit card numbers and API keys in a screenshot on macOS" width="1000" style="max-width:100%;height:auto;border-radius:16px;box-shadow:0 32px 80px rgba(0,0,0,.5),0 0 0 1px var(--border)" loading="lazy">
+</div>
+<div class="actions" style="display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap">
+<a href="https://github.com/sw33tLie/macshot/releases/latest/download/MacShot.dmg" class="btn btn-primary btn-big">Download for macOS</a>
+<a href="https://github.com/sw33tLie/macshot" class="btn btn-outline btn-big" target="_blank">View on GitHub</a>
+</div>
+<p class="meta" style="margin-top:16px">macOS 12.3+ <span>|</span> Apple Silicon &amp; Intel <span>|</span> Free &amp; open source</p>
+</div>
+</section>
+
+<section>
+<div class="wrap">
+<div class="prose">
+<h2>Manual redaction misses things</h2>
+<p>When you blur sensitive data by hand, it's easy to overlook an email in a sidebar, a token in a log line, or a phone number in a signature. macshot's auto-redact does the scanning for you so nothing slips through.</p>
+
+<h2>What it detects</h2>
+<p>macshot reads the text in your screenshot with on-device OCR, then matches it against patterns for common sensitive data:</p>
+<ul>
+<li>Email addresses and phone numbers</li>
+<li>Credit card and social security numbers</li>
+<li>IP addresses</li>
+<li>AWS access keys and bearer tokens</li>
+<li>Faces and people in the image</li>
+</ul>
+<p>Everything it finds is redacted in a single action, and the whole batch can be undone together if it catches something it shouldn't.</p>
+
+<h2>Redaction that can't be undone</h2>
+<p>Auto-redact lays a solid fill over each detected region, so the original pixels are replaced entirely. Unlike a light blur — which can sometimes be reversed — the sensitive content is genuinely gone from the saved image.</p>
+
+<h2>Nothing leaves your Mac</h2>
+<p>Detection runs locally using Apple's Vision framework. Your screenshot and the data in it are never uploaded to a server or third-party service.</p>
+
+<h2>Free, native, and open source</h2>
+<p>macshot is a native Swift and AppKit app, free and open source under the GPLv3 license, with no subscription or account. Prefer to redact by hand? It also has manual <a href="/blur-screenshot-mac">blur, pixelate, fill and erase</a> tools.</p>
+</div>
+</div>
+</section>
+
+<section>
+<div class="wrap">
+<div class="section-label"><h2>Common questions</h2></div>
+<div class="faq">
+<details><summary>Can a Mac redact sensitive info in a screenshot automatically?</summary><p>Not with built-in tools — you'd have to find and cover each item by hand. macshot can scan a screenshot, detect personal information automatically, and redact it all in one step.</p></details>
+<details><summary>What kinds of data can it detect?</summary><p>macshot recognises emails, phone numbers, credit card numbers, social security numbers, IP addresses, AWS keys, and bearer tokens, plus faces and people in the image. It uses on-device OCR and pattern matching.</p></details>
+<details><summary>Is the redaction reversible?</summary><p>No. Auto-redaction replaces the detected regions with a solid fill, so the original pixels are gone from the saved image and can't be recovered.</p></details>
+<details><summary>Does anything get uploaded?</summary><p>No. Detection runs entirely on your Mac using Apple's Vision framework. Nothing is sent to a server.</p></details>
+</div>
+</div>
+</section>
+
+<section>
+<div class="wrap">
+<div class="cta">
+<h2>Catch every secret before you share</h2>
+<p>Free, native, and open source.</p>
+<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+<a href="https://github.com/sw33tLie/macshot/releases/latest/download/MacShot.dmg" class="btn btn-primary btn-big">Download for macOS</a>
+<a href="https://github.com/sw33tLie/macshot" class="btn btn-outline btn-big" target="_blank">Star on GitHub</a>
+</div>
+</div>
+</div>
+</section>
+
+<footer>
+<div class="wrap">
+<p>macshot is free, open-source software licensed under GPLv3.</p>
+<div class="links">
+<a href="/">Home</a>
+<a href="https://github.com/sw33tLie/macshot">GitHub</a>
+<a href="https://github.com/sw33tLie/macshot/blob/main/CHANGELOG.md">Changelog</a>
+<a href="https://github.com/sw33tLie/macshot/blob/main/PRIVACY.md">Privacy</a>
+</div>
+</div>
+</footer>
+</body>
+</html>

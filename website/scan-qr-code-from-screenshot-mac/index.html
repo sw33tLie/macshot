@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Scan a QR Code from a Screenshot on Mac — No Phone Needed | macshot</title>
+<meta name="description" content="Read a QR code or barcode that's on your Mac screen — no phone required. macshot detects QR codes in a screenshot and lets you open or copy the link instantly. Free and open source.">
+<meta name="theme-color" content="#211BEF">
+<link rel="canonical" href="https://macshot.io/scan-qr-code-from-screenshot-mac">
+<meta property="og:title" content="Scan a QR Code from a Screenshot on Mac — macshot">
+<meta property="og:description" content="Read a QR code that's on your Mac screen without reaching for your phone. macshot decodes it and opens or copies the link. Free and open source.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://macshot.io/scan-qr-code-from-screenshot-mac">
+<meta property="og:image" content="https://macshot.io/preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I scan a QR code on my Mac screen?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "macOS has no built-in QR scanner for the screen. macshot fills the gap: capture the area with the QR code and macshot decodes it automatically, then lets you open the link or copy its contents — no phone needed."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can macOS read a QR code from an image?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Not on its own. The built-in screenshot and Markup tools don't decode QR codes or barcodes. macshot uses Apple's Vision framework on your Mac to read them out of any capture."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it work for barcodes too?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. macshot detects QR codes and standard barcodes, shows the decoded payload, and lets you open or copy it."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is macshot free?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. macshot is free and open source under the GPLv3 license, with no subscription or account."
+      }
+    }
+  ]
+}
+</script>
+<link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16">
+<link rel="icon" href="/favicon.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="glow"></div>
+
+<nav>
+<div class="wrap">
+<a href="/" class="logo"><img src="/logo.svg" alt="macshot" width="32" height="32">macshot</a>
+<div class="links">
+<a href="/#features">Features</a>
+<a href="/#install">Install</a>
+<a href="/#shortcuts">Shortcuts</a>
+<a href="https://github.com/sw33tLie/macshot" target="_blank">GitHub</a>
+<a href="https://github.com/sw33tLie/macshot/releases/latest/download/MacShot.dmg" class="btn btn-primary">Download</a>
+</div>
+</div>
+</nav>
+
+<section class="page-hero">
+<div class="wrap">
+<h1>Scan a QR code from a screenshot on Mac</h1>
+<p class="lead">There's a QR code on your screen and your phone is across the room. macOS can't read it for you — macshot can. Capture the code and it decodes instantly, ready to open or copy.</p>
+<div style="text-align:center;margin-top:32px">
+<img src="/assets/scan-qr-code-from-screenshot-mac.png" alt="macshot detecting a QR code in a screenshot on macOS and showing the decoded link with open and copy actions" width="1000" style="max-width:100%;height:auto;border-radius:16px;box-shadow:0 32px 80px rgba(0,0,0,.5),0 0 0 1px var(--border)" loading="lazy">
+</div>
+<div class="actions" style="display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap">
+<a href="https://github.com/sw33tLie/macshot/releases/latest/download/MacShot.dmg" class="btn btn-primary btn-big">Download for macOS</a>
+<a href="https://github.com/sw33tLie/macshot" class="btn btn-outline btn-big" target="_blank">View on GitHub</a>
+</div>
+<p class="meta" style="margin-top:16px">macOS 12.3+ <span>|</span> Apple Silicon &amp; Intel <span>|</span> Free &amp; open source</p>
+</div>
+</section>
+
+<section>
+<div class="wrap">
+<div class="prose">
+<h2>Why your Mac can't do this on its own</h2>
+<p>iPhones read QR codes straight from the Camera app, but macOS has no equivalent for codes that appear <em>on the screen</em> — in a browser, a PDF, a Slack message, or a video call. The built-in screenshot and Markup tools capture the pixels but never decode them. So the usual workaround is to grab your phone and point it at the monitor.</p>
+
+<h2>Read it without your phone</h2>
+<p>macshot detects QR codes and barcodes the moment you capture them:</p>
+<ul>
+<li>Capture the area containing the code with the global hotkey.</li>
+<li>macshot scans the image and highlights any QR codes or barcodes it finds.</li>
+<li>The decoded contents appear — a URL, Wi-Fi credentials, text, or contact info.</li>
+<li>Open the link in your browser or copy the payload in one click.</li>
+</ul>
+
+<h2>Works for barcodes too</h2>
+<p>It's not just QR codes. macshot recognises standard barcodes as well, decodes the value, and lets you copy it — handy for product codes, tickets, and shipping labels shown on screen.</p>
+
+<h2>Everything runs on your Mac</h2>
+<p>Detection uses Apple's Vision framework locally. The screenshot and whatever the code contains never leave your machine — nothing is uploaded to a scanning service.</p>
+
+<h2>Free, native, and open source</h2>
+<p>macshot is a native Swift and AppKit app. It's free and open source under the GPLv3 license, with no subscription, account, or watermark — and reading a QR code from your screen is just one of the things it does.</p>
+</div>
+</div>
+</section>
+
+<section>
+<div class="wrap">
+<div class="section-label"><h2>Common questions</h2></div>
+<div class="faq">
+<details><summary>How do I scan a QR code on my Mac screen?</summary><p>macOS has no built-in QR scanner for the screen. macshot fills the gap — capture the area with the QR code and macshot decodes it automatically, then lets you open the link or copy its contents. No phone needed.</p></details>
+<details><summary>Can macOS read a QR code from an image?</summary><p>Not on its own. The built-in screenshot and Markup tools don't decode QR codes or barcodes. macshot uses Apple's Vision framework on your Mac to read them out of any capture.</p></details>
+<details><summary>Does it work for barcodes too?</summary><p>Yes. macshot detects QR codes and standard barcodes, shows the decoded payload, and lets you open or copy it.</p></details>
+<details><summary>Is macshot free?</summary><p>Yes. macshot is free and open source under the GPLv3 license, with no subscription or account.</p></details>
+</div>
+</div>
+</section>
+
+<section>
+<div class="wrap">
+<div class="cta">
+<h2>Read any code on your screen</h2>
+<p>Free, native, and open source.</p>
+<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+<a href="https://github.com/sw33tLie/macshot/releases/latest/download/MacShot.dmg" class="btn btn-primary btn-big">Download for macOS</a>
+<a href="https://github.com/sw33tLie/macshot" class="btn btn-outline btn-big" target="_blank">Star on GitHub</a>
+</div>
+</div>
+</div>
+</section>
+
+<footer>
+<div class="wrap">
+<p>macshot is free, open-source software licensed under GPLv3.</p>
+<div class="links">
+<a href="/">Home</a>
+<a href="https://github.com/sw33tLie/macshot">GitHub</a>
+<a href="https://github.com/sw33tLie/macshot/blob/main/CHANGELOG.md">Changelog</a>
+<a href="https://github.com/sw33tLie/macshot/blob/main/PRIVACY.md">Privacy</a>
+</div>
+</div>
+</footer>
+</body>
+</html>
