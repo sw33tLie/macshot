@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.2.0-beta.6] - 2026-06-21
+
+### Added
+
+- Loupe: click + drag to create a rooted two-circle magnifier — a source circle stays where you click and the magnified lens follows your drag, connected by a line. Both circles move and resize independently, the source always frames exactly what the lens shows, and there's an outline color option for the rings and line. (#197)
+
+### Fixed
+
+- The enlarged "shake to find" / accessibility mouse cursor is no longer captured when "Capture mouse cursor" is off.
+- Clicking a toolbar button that opened a popover (beautify gradient, adjust/effects, color pickers, etc.) now closes it instead of reopening.
+- The right-side toolbar no longer gets placed under the notch on MacBooks that have one.
+
 ## [4.2.0-beta.5] - 2026-06-21
 
 ### Added
