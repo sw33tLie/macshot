@@ -5061,6 +5061,20 @@ class OverlayView: NSView {
             rx = max(bounds.minX + 4, min(rx, bounds.maxX - rightSize.width - 4))
             ry = max(bounds.minY + 4, min(ry, bounds.maxY - rightSize.height - 4))
 
+            // Keep the right bar clear of the notch / camera housing. The
+            // resolution box already does this (loweredBelowTopObstructions); the
+            // right strip had no such limit, so its top button could land under
+            // the notch. Push it down so its top edge sits below any top
+            // obstruction it would overlap (using the final rx so the horizontal
+            // overlap test matches the placed strip).
+            let topObstructions = screenTopObstructionRects().map { $0.insetBy(dx: -4, dy: -2) }
+            for obstruction in topObstructions {
+                let rightFrame = NSRect(x: rx, y: ry, width: rightSize.width, height: rightSize.height)
+                guard rightFrame.intersects(obstruction) else { continue }
+                ry = min(ry, obstruction.minY - rightSize.height - 2)
+            }
+            ry = max(bounds.minY + 4, ry)
+
             bottomStrip.frame.origin = NSPoint(x: bx, y: by)
             rightStrip.frame.origin = NSPoint(x: rx, y: ry)
         }
