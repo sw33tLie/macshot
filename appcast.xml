@@ -24,10 +24,10 @@
     <enclosure url="https://github.com/sw33tLie/macshot/releases/download/v4.1.2/MacShot.dmg" length="6150800" type="application/octet-stream" sparkle:edSignature="mJwEP5fVlL63jskhtsVeHmVtphcbspKsePHLlqnOhv074M9XoSNC3tHXumkUujouFL2rt/8PNOlHl/mM/e0gBg==" />
 </item>
 <item>
-    <title>v4.2.0-beta.4</title>
-    <pubDate>Fri, 19 Jun 2026 14:32:23 +0000</pubDate>
-    <sparkle:version>85</sparkle:version>
-    <sparkle:shortVersionString>4.2.0-beta.4</sparkle:shortVersionString>
+    <title>v4.2.0-beta.5</title>
+    <pubDate>Sun, 21 Jun 2026 00:14:43 +0000</pubDate>
+    <sparkle:version>86</sparkle:version>
+    <sparkle:shortVersionString>4.2.0-beta.5</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
     <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
@@ -38,13 +38,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Added</h3><ul>  <li>Boundary snap — when enabled, the capture selection's edges snap to strong color edges in the image (UI lines, window borders) while you drag or resize it. Off by default (Settings → Capture); hold Option to bypass.</li>  </ul><h3>Fixed</h3><ul>  <li>Menu bar icon could freeze the app and stop the global hotkey from working.</li> <li>Number tool no longer draws a handle dot over the digit while selected.</li></ul>
+      <h3>Added</h3><ul>  <li>Paste a clipboard image directly into the Editor window with Cmd+V.</li>  </ul><h3>Changed</h3><ul>  <li>Boundary snap is now enabled by default.</li> <li>Removed the Liquid Glass theme. Toolbars, popovers, and HUDs use the standard solid appearance everywhere.</li>  </ul><h3>Fixed</h3><ul>  <li>Clicking the scroll-capture HUD no longer steals focus from the window being captured.</li></ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v4.2.0-beta.4/MacShot.dmg"
-        length="6517091"
+        url="https://github.com/sw33tLie/macshot/releases/download/v4.2.0-beta.5/MacShot.dmg"
+        length="6518116"
         type="application/octet-stream"
-        sparkle:edSignature="yGEKvYnPQP6yd2l9hqBqFpzdIivC//b/KPDh+/4kbshLgoeIWaaZAc1FFJ3kOQtu84C5b9Bi638KA1RMVpgXDw=="
+        sparkle:edSignature="Lyv0NjaGMoSm/V9eMR/cUEhxw8lsV5OWTZlHs+0mCForReLc5rsHYG9fPTHUJxOYTYSZp82NVzSOgbvuxRBtDQ=="
     />
 </item>
     </channel>
