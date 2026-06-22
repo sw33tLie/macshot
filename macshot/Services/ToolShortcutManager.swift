@@ -21,6 +21,7 @@ enum ToolShortcutManager {
         case stamp
         case measure
         case loupe
+        case moveSelection
         case openInEditor
         case pin
         case upload
@@ -51,6 +52,7 @@ enum ToolShortcutManager {
             case .stamp: return L("Stamp")
             case .measure: return L("Measure")
             case .loupe: return L("Loupe")
+            case .moveSelection: return L("Move Selection")
             case .openInEditor: return L("Open in Editor")
             case .pin: return L("Pin")
             case .upload: return L("Upload")
@@ -83,6 +85,7 @@ enum ToolShortcutManager {
             case .stamp: return "g"
             case .measure: return ""
             case .loupe: return ""
+            case .moveSelection: return " "
             case .openInEditor: return "e"
             case .pin: return "f"
             case .upload: return "u"
@@ -149,6 +152,7 @@ enum ToolShortcutManager {
             case .stamp: lookup[k] = .tool(.stamp)
             case .measure: lookup[k] = .tool(.measure)
             case .loupe: lookup[k] = .tool(.loupe)
+            case .moveSelection: lookup[k] = .moveSelection
             case .openInEditor: lookup[k] = .detach
             case .pin: lookup[k] = .pin
             case .upload: lookup[k] = .upload
@@ -170,6 +174,7 @@ enum ToolShortcutManager {
     /// Display string for a key (for UI).
     static func displayString(for action: Action) -> String {
         let k = key(for: action)
+        if k == " " { return L("Space") }
         return k.isEmpty ? L("None") : k.uppercased()
     }
 
@@ -210,11 +215,14 @@ enum ToolShortcutManager {
         case .undo: action = .undo
         case .redo: action = .redo
         case .loupe: action = .loupe
+        case .moveSelection: action = .moveSelection
         default: action = nil
         }
 
         guard let action else { return nil }
-        let shortcut = key(for: action).trimmingCharacters(in: .whitespacesAndNewlines)
-        return shortcut.isEmpty ? nil : shortcut
+        let shortcut = key(for: action)
+        if shortcut == " " { return displayString(for: action) }
+        let trimmed = shortcut.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }
