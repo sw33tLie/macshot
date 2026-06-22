@@ -1245,11 +1245,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // Window creation above already ran in parallel with the prep that the
         // background work still has to do.
         //
-        // Prefer SCScreenshotManager (macOS 14+): it honors the "Capture mouse
-        // cursor" toggle even for the enlarged shake-to-find / accessibility
-        // cursor, which CGWindowListCreateImage cannot exclude (the cursor is a
-        // WindowServer layer, not a window). It captures FRESH shareable content
-        // so transient UI (menus, Spotlight) is preserved. If SCK fails or can't
+        // Prefer SCScreenshotManager: it honors the "Capture mouse cursor"
+        // toggle even for the enlarged shake-to-find / accessibility cursor,
+        // which CGWindowListCreateImage cannot exclude (the cursor is a
+        // WindowServer layer, not a window). On macOS 26+, use the rect-based
+        // screenshot API to avoid SCShareableContent enumeration in the hot
+        // path. Older SCK fallback still fetches fresh shareable content so
+        // transient UI (menus, Spotlight) is preserved. If SCK fails or can't
         // cover every display, fall back to the synchronous CGWindowListCreateImage
         // path (which manually composites the cursor from the prebuilt context).
         Task { [weak self] in
