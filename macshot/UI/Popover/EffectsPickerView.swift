@@ -28,7 +28,14 @@ class EffectsPickerView: NSView {
     private var sharpnessSlider: NSSlider!
 
     init(config: ImageEffectsConfig) {
-        self.config = config
+        var normalizedConfig = config
+        if normalizedConfig.preset == .vivid {
+            normalizedConfig.brightness = 0
+            normalizedConfig.contrast = 1.0
+            normalizedConfig.saturation = 1.0
+            normalizedConfig.sharpness = 0
+        }
+        self.config = normalizedConfig
         super.init(frame: .zero)
         setupSwatches()
         setupUI()
@@ -208,11 +215,13 @@ class EffectsPickerView: NSView {
             if sr.insetBy(dx: -2, dy: -2).contains(pt) {
                 config.preset = presets[i]
 
-                // Vivid sets sliders to specific values
+                // Vivid is implemented as a fixed preset in ImageEffects. Keep
+                // the sliders neutral so its boost does not leak into whatever
+                // preset the user selects next.
                 if presets[i] == .vivid {
                     config.brightness = 0
-                    config.contrast = 1.2
-                    config.saturation = 1.5
+                    config.contrast = 1.0
+                    config.saturation = 1.0
                     config.sharpness = 0
                     updateSliders()
                 } else if presets[i] == .none {

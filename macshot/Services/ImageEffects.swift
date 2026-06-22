@@ -53,6 +53,8 @@ struct ImageEffectsConfig {
 enum ImageEffects {
 
     private static let ciContext = CIContext(options: [.useSoftwareRenderer: false])
+    private static let vividContrast: Float = 1.2
+    private static let vividSaturation: Float = 1.5
 
     /// Apply image effects to an NSImage. Returns the original if config is identity.
     static func apply(to image: NSImage, config: ImageEffectsConfig) -> NSImage {
@@ -66,12 +68,13 @@ enum ImageEffects {
 
         // 1. Preset filter
         if config.preset == .vivid {
-            // Vivid is just high saturation + contrast via CIColorControls
+            // Vivid is a fixed preset, not slider state, so it cannot leak into
+            // later presets when the user switches effects.
             if let filter = CIFilter(name: "CIColorControls") {
                 filter.setValue(ciImage, forKey: kCIInputImageKey)
-                filter.setValue(config.brightness, forKey: kCIInputBrightnessKey)
-                filter.setValue(config.contrast * 1.2, forKey: kCIInputContrastKey)
-                filter.setValue(config.saturation * 1.5, forKey: kCIInputSaturationKey)
+                filter.setValue(Float(0), forKey: kCIInputBrightnessKey)
+                filter.setValue(vividContrast, forKey: kCIInputContrastKey)
+                filter.setValue(vividSaturation, forKey: kCIInputSaturationKey)
                 if let output = filter.outputImage {
                     ciImage = output
                 }
