@@ -124,15 +124,28 @@ class ScreenCaptureManager {
     /// `showsCursor` is false, so the "Capture mouse cursor" toggle is honored
     /// for the enlarged cursor too.
     ///
-    /// Fetches FRESH shareable content (not the cache) so transient UI present at
-    /// hotkey time — open menus, Spotlight/Raycast panels — is in the window list
-    /// and gets captured. Returns nil on any failure so the caller can fall back
-    /// to the synchronous CGWindowListCreateImage path.
+    /// On macOS 26+, first uses the rect-based screenshot API. That avoids
+    /// enumerating SCShareableContent in the hot path, while still freezing
+    /// trigger-time pixels before the overlay is ordered front. If that fails,
+    /// falls back to the older content-filter path, which fetches fresh
+    /// shareable content so transient UI present at hotkey time — open menus,
+    /// Spotlight/Raycast panels — is in the window list and gets captured.
+    /// Returns nil on any failure so the caller can fall back to the synchronous
+    /// CGWindowListCreateImage path.
     @available(macOS 14.0, *)
     static func captureAllScreensImmediatelySCK(
         timing: (@Sendable (String) -> Void)? = nil
     ) async -> [ScreenCapture]? {
         let showsCursor = UserDefaults.standard.bool(forKey: "captureCursor")
+        if #available(macOS 26.0, *) {
+            if let captures = await captureAllScreensImmediatelySCKRect(
+                showsCursor: showsCursor,
+                timing: timing
+            ) {
+                return captures
+            }
+        }
+
         timing?("SCK immediate: shareable content begin")
         guard
             let content = try? await SCShareableContent.excludingDesktopWindows(
@@ -200,6 +213,77 @@ class ScreenCaptureManager {
             return nil
         }
         return captures
+    }
+
+    @available(macOS 26.0, *)
+    private static func captureAllScreensImmediatelySCKRect(
+        showsCursor: Bool,
+        timing: (@Sendable (String) -> Void)? = nil
+    ) async -> [ScreenCapture]? {
+        let screens = NSScreen.screens
+        guard !screens.isEmpty else {
+            timing?("SCK rect immediate: no screens — fallback")
+            return nil
+        }
+
+        timing?("SCK rect immediate: begin screens=\(screens.count)")
+        let captures = await withTaskGroup(
+            of: ScreenCapture?.self,
+            returning: [ScreenCapture].self
+        ) { group in
+            for (index, screen) in screens.enumerated() {
+                group.addTask {
+                    let rect = screen.frame
+                    let config = SCScreenshotConfiguration()
+                    config.width = Int(rect.width * screen.backingScaleFactor)
+                    config.height = Int(rect.height * screen.backingScaleFactor)
+                    config.showsCursor = showsCursor
+                    config.displayIntent = .local
+                    config.dynamicRange = .sdr
+                    timing?("SCK rect capture begin screen=\(index) rect=\(Int(rect.origin.x)),\(Int(rect.origin.y)) \(Int(rect.width))x\(Int(rect.height))")
+                    let result = await captureScreenshotOutput(rect: rect, configuration: config)
+                    guard
+                        result.error == nil,
+                        let output = result.output,
+                        let image = output.sdrImage ?? output.hdrImage
+                    else {
+                        let reason = result.error?.localizedDescription ?? "no image returned"
+                        timing?("SCK rect capture failed screen=\(index) error=\(reason)")
+                        return nil
+                    }
+                    timing?("SCK rect capture end screen=\(index) pixels=\(image.width)x\(image.height)")
+                    return ScreenCapture(screen: screen, image: image)
+                }
+            }
+
+            var results: [ScreenCapture] = []
+            for await capture in group {
+                if let capture { results.append(capture) }
+            }
+            return results
+        }
+
+        guard captures.count == screens.count else {
+            timing?("SCK rect immediate: partial captures \(captures.count)/\(screens.count) — fallback")
+            return nil
+        }
+
+        timing?("SCK rect immediate: end")
+        return captures
+    }
+
+    @available(macOS 26.0, *)
+    private static func captureScreenshotOutput(
+        rect: CGRect,
+        configuration: SCScreenshotConfiguration
+    ) async -> (output: SCScreenshotOutput?, error: Error?) {
+        await withCheckedContinuation { continuation in
+            SCScreenshotManager.captureScreenshot(rect: rect, configuration: configuration) {
+                output,
+                error in
+                continuation.resume(returning: (output, error))
+            }
+        }
     }
 
     static func makeDisplayPreviewImage(from image: CGImage, maxPixelDimension: Int = 1400) -> CGImage {
