@@ -247,6 +247,10 @@
 "Screenshot History" = "திரைப்பிடிப்பு வரலாறு";
 "History size:" = "வரலாற்று அளவு:";
 "screenshots kept on disk (0 = off)" = "வட்டில் வைக்கப்படும் திரைப்பிடிப்புகள் (0 = நிறுத்து)";
+"Order history by last edit" = "கடைசி திருத்தத்தின் படி வரலாற்றை வரிசைப்படுத்து";
+"Edited screenshots move to the top. Off keeps them in capture order." = "திருத்தப்பட்ட திரைப்பிடிப்புகள் மேலே நகர்கின்றன. அணைத்தால் அவை பிடிப்பு வரிசையில் இருக்கும்.";
+"Custom · %@" = "தனிப்பயன் · %@";
+"Space" = "இடைவெளி";
 "Save Directory" = "சேமிப்பு அடைவு";
 "Save action:" = "சேமிப்புச் செயல்:";
 "Save to default folder" = "இயல்புநிலை கோப்புறையில் சேமி";

@@ -173,6 +173,7 @@
 "Release to finish" = "Lepaskan untuk selesai";
 "Hold Space to move. Release to annotate and edit" = "Tahan Space untuk alih. Lepaskan untuk anotasi dan sunting";
 "Hold Space to move. Release to finish" = "Tahan Space untuk alih. Lepaskan untuk selesai";
+"Space" = "Space";
 "Window snap: " = "Lekat tetingkap: ";
 "ON" = "HIDUP";
 "OFF" = "MATI";
@@ -190,6 +191,9 @@
 "Freeform" = "Bebas";
 "Units" = "Unit";
 "Keep ratio for next captures" = "Kekalkan nisbah untuk tangkapan seterusnya";
+"Custom · %@" = "Tersuai · %@";
+"Order history by last edit" = "Susun sejarah mengikut suntingan terakhir";
+"Edited screenshots move to the top. Off keeps them in capture order." = "Tangkapan skrin yang disunting akan beralih ke atas. Matikan untuk mengekalkan susunan tangkapan.";
 
 /* Overlay - Popovers */
 "Format:" = "Format:";

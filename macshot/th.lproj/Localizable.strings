@@ -172,6 +172,7 @@
 "Release to finish" = "ปล่อยเพื่อเสร็จสิ้น";
 "Hold Space to move. Release to annotate and edit" = "กด Space ค้างเพื่อย้าย ปล่อยเพื่อใส่คำอธิบายและแก้ไข";
 "Hold Space to move. Release to finish" = "กด Space ค้างเพื่อย้าย ปล่อยเพื่อเสร็จสิ้น";
+"Space" = "Space";
 "Window snap: " = "จับหน้าต่าง: ";
 "ON" = "เปิด";
 "OFF" = "ปิด";
@@ -189,6 +190,9 @@
 "Freeform" = "อิสระ";
 "Units" = "หน่วย";
 "Keep ratio for next captures" = "คงอัตราส่วนสำหรับการจับภาพครั้งถัดไป";
+"Custom · %@" = "กำหนดเอง · %@";
+"Order history by last edit" = "จัดเรียงประวัติตามการแก้ไขล่าสุด";
+"Edited screenshots move to the top. Off keeps them in capture order." = "ภาพหน้าจอที่แก้ไขจะย้ายไปด้านบน ปิดไว้เพื่อคงลำดับตามการจับภาพ";
 
 /* Overlay - Popovers */
 "Format:" = "รูปแบบ:";

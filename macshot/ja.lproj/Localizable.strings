@@ -166,6 +166,7 @@
 "Release to finish" = "離して完了";
 "Hold Space to move. Release to annotate and edit" = "スペースキー長押しで移動。離して注釈・編集";
 "Hold Space to move. Release to finish" = "スペースキー長押しで移動。離して完了";
+"Space" = "スペース";
 "Window snap: " = "ウインドウスナップ: ";
 "ON" = "オン";
 "OFF" = "オフ";
@@ -630,3 +631,6 @@
 "Freeform" = "自由形式";
 "Units" = "単位";
 "Keep ratio for next captures" = "次回以降のキャプチャでも比率を維持";
+"Custom · %@" = "カスタム · %@";
+"Order history by last edit" = "最終編集順に履歴を並べ替え";
+"Edited screenshots move to the top. Off keeps them in capture order." = "編集したスクリーンショットが先頭に移動します。オフにするとキャプチャ順のままになります。";

@@ -235,6 +235,10 @@
 "Screenshot History" = "Historial de captures";
 "History size:" = "Mida de l'historial:";
 "screenshots kept on disk (0 = off)" = "captures desades al disc (0 = desactivat)";
+"Order history by last edit" = "Ordena l'historial per última edició";
+"Edited screenshots move to the top. Off keeps them in capture order." = "Les captures editades passen a dalt. Desactivat les manté en l'ordre de captura.";
+"Custom · %@" = "Personalitzat · %@";
+"Space" = "Espai";
 "Save Directory" = "Directori de desat";
 "Save folder:" = "Carpeta de desat:";
 "Browse…" = "Explorar...";

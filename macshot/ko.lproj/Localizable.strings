@@ -166,6 +166,7 @@
 "Release to finish" = "놓으면 완료";
 "Hold Space to move. Release to annotate and edit" = "스페이스바를 누른 채로 이동. 놓으면 주석 및 편집";
 "Hold Space to move. Release to finish" = "스페이스바를 누른 채로 이동. 놓으면 완료";
+"Space" = "스페이스";
 "Window snap: " = "윈도우 스냅: ";
 "ON" = "켜짐";
 "OFF" = "꺼짐";
@@ -632,3 +633,6 @@
 "Freeform" = "자유 형식";
 "Units" = "단위";
 "Keep ratio for next captures" = "다음 캡처에도 비율 유지";
+"Custom · %@" = "사용자 지정 · %@";
+"Order history by last edit" = "마지막 편집순으로 기록 정렬";
+"Edited screenshots move to the top. Off keeps them in capture order." = "편집한 스크린샷이 맨 위로 이동합니다. 끄면 캡처 순서를 유지합니다.";

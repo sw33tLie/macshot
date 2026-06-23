@@ -101,6 +101,7 @@
 "Freeform" = "Довільна форма";
 "Units" = "Одиниці";
 "Keep ratio for next captures" = "Зберігати співвідношення для наступних захоплень";
+"Custom · %@" = "Власне · %@";
 
 /* Toolbar - Actions */
 "Copy to Clipboard" = "Копіювати до буфера обміну";
@@ -189,6 +190,7 @@
 "ON" = "УВІМК.";
 "OFF" = "ВИМК.";
 "  (Tab to toggle)" = "  (Tab для перемикання)";
+"Space" = "Пробіл";
 "Right-click to copy" = "Клацніть правою кнопкою, щоб копіювати";
 "Copied %@" = "Скопійовано %@";
 "Set color %@" = "Встановлено колір %@";
@@ -247,6 +249,8 @@
 "Screenshot History" = "Історія знімків екрана";
 "History size:" = "Розмір історії:";
 "screenshots kept on disk (0 = off)" = "знімків зберігається на диску (0 = вимкнено)";
+"Order history by last edit" = "Упорядкувати історію за останнім редагуванням";
+"Edited screenshots move to the top. Off keeps them in capture order." = "Відредаговані знімки переміщуються вгору. Якщо вимкнено, зберігається порядок захоплення.";
 "Save Directory" = "Тека збереження";
 "Save folder:" = "Тека збереження:";
 "Browse…" = "Огляд…";

@@ -172,6 +172,7 @@
 "Release to finish" = "Thả chuột để hoàn tất";
 "Hold Space to move. Release to annotate and edit" = "Giữ Space để di chuyển. Thả chuột để chú thích và chỉnh sửa";
 "Hold Space to move. Release to finish" = "Giữ Space để di chuyển. Thả chuột để hoàn tất";
+"Space" = "Space";
 "Window snap: " = "Bắt cửa sổ: ";
 "ON" = "BẬT";
 "OFF" = "TẮT";
@@ -189,6 +190,9 @@
 "Freeform" = "Tự do";
 "Units" = "Đơn vị";
 "Keep ratio for next captures" = "Giữ tỷ lệ cho các lần chụp sau";
+"Custom · %@" = "Tùy chỉnh · %@";
+"Order history by last edit" = "Sắp xếp lịch sử theo lần chỉnh sửa gần nhất";
+"Edited screenshots move to the top. Off keeps them in capture order." = "Ảnh chụp đã chỉnh sửa sẽ chuyển lên đầu. Tắt để giữ theo thứ tự chụp.";
 
 /* Overlay - Popovers */
 "Format:" = "Định dạng:";

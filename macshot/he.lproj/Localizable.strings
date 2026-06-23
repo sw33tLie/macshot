@@ -239,6 +239,10 @@
 "Screenshot History" = "היסטוריית צילומי מסך";
 "History size:" = "גודל היסטוריה:";
 "screenshots kept on disk (0 = off)" = "צילומי מסך נשמרים בדיסק (0 = כבוי)";
+"Order history by last edit" = "מיין היסטוריה לפי עריכה אחרונה";
+"Edited screenshots move to the top. Off keeps them in capture order." = "צילומי מסך שנערכו עוברים לראש. כיבוי משאיר אותם בסדר הצילום.";
+"Custom · %@" = "מותאם אישית · %@";
+"Space" = "רווח";
 "Save Directory" = "תיקיית שמירה";
 "Save folder:" = "תיקיית שמירה:";
 "Browse…" = "עיין…";

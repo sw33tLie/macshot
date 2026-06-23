@@ -240,6 +240,8 @@
 "Embed sRGB color profile" = "Incorporar perfil de cor sRGB";
 "Ensures consistent colors across different displays" = "Assegura cores consistentes em diferentes ecras";
 "Screenshot History" = "Historico de Capturas";
+"Order history by last edit" = "Ordenar historico pela ultima edicao";
+"Edited screenshots move to the top. Off keeps them in capture order." = "As capturas editadas passam para o topo. Desativado mantem a ordem de captura.";
 "History size:" = "Tamanho do historico:";
 "screenshots kept on disk (0 = off)" = "capturas mantidas no disco (0 = desligado)";
 "Save Directory" = "Diretoria de Gravacao";
@@ -628,5 +630,9 @@
 "Aspect ratio" = "Proporção";
 "Resolution" = "Resolução";
 "Freeform" = "Livre";
+"Custom · %@" = "Personalizado · %@";
 "Units" = "Unidades";
 "Keep ratio for next captures" = "Manter proporção nas próximas capturas";
+
+/* Keyboard key names */
+"Space" = "Espaço";

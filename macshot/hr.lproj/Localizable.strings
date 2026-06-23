@@ -101,6 +101,7 @@
 "Freeform" = "Slobodan oblik";
 "Units" = "Jedinice";
 "Keep ratio for next captures" = "Zadrži omjer za sljedeća snimanja";
+"Custom · %@" = "Prilagođeno · %@";
 
 /* Toolbar - Actions */
 "Copy to Clipboard" = "Kopiraj u meduspremnik";
@@ -189,6 +190,7 @@
 "ON" = "UKLJ.";
 "OFF" = "ISKLJ.";
 "  (Tab to toggle)" = "  (Tab za prebacivanje)";
+"Space" = "Razmaknica";
 "Right-click to copy" = "Desni klik za kopiranje";
 "Copied %@" = "Kopirano %@";
 "Set color %@" = "Postavi boju %@";
@@ -247,6 +249,8 @@
 "Screenshot History" = "Povijest snimki zaslona";
 "History size:" = "Velicina povijesti:";
 "screenshots kept on disk (0 = off)" = "snimki zaslona na disku (0 = iskljuceno)";
+"Order history by last edit" = "Poredaj povijest po zadnjoj izmjeni";
+"Edited screenshots move to the top. Off keeps them in capture order." = "Uređene snimke premještaju se na vrh. Isključeno zadržava redoslijed snimanja.";
 "Save Directory" = "Mapa za spremanje";
 "Save folder:" = "Mapa za spremanje:";
 "Browse…" = "Pregledaj...";

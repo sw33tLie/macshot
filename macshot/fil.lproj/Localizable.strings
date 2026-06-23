@@ -173,6 +173,7 @@
 "Release to finish" = "Bitawan upang tapusin";
 "Hold Space to move. Release to annotate and edit" = "Pindutin ang Space upang ilipat. Bitawan upang mag-annotate at mag-edit";
 "Hold Space to move. Release to finish" = "Pindutin ang Space upang ilipat. Bitawan upang tapusin";
+"Space" = "Space";
 "Window snap: " = "Window snap: ";
 "ON" = "ON";
 "OFF" = "OFF";
@@ -190,6 +191,9 @@
 "Freeform" = "Malayang anyo";
 "Units" = "Mga Unit";
 "Keep ratio for next captures" = "Panatilihin ang ratio para sa susunod na mga pagkuha";
+"Custom · %@" = "Custom · %@";
+"Order history by last edit" = "Ayusin ang kasaysayan ayon sa huling pag-edit";
+"Edited screenshots move to the top. Off keeps them in capture order." = "Ang mga na-edit na screenshot ay lilipat sa itaas. I-off upang panatilihin ang pagkakasunod-sunod ng pagkuha.";
 
 /* Overlay - Popovers */
 "Format:" = "Format:";

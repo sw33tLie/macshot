@@ -166,6 +166,7 @@
 "Release to finish" = "松开以完成";
 "Hold Space to move. Release to annotate and edit" = "按住空格键移动。松开以标注和编辑";
 "Hold Space to move. Release to finish" = "按住空格键移动。松开以完成";
+"Space" = "空格";
 "Window snap: " = "窗口吸附: ";
 "ON" = "开";
 "OFF" = "关";
@@ -632,3 +633,6 @@
 "Freeform" = "自由形状";
 "Units" = "单位";
 "Keep ratio for next captures" = "在后续捕获中保持比例";
+"Custom · %@" = "自定义 · %@";
+"Order history by last edit" = "按最近编辑排序历史";
+"Edited screenshots move to the top. Off keeps them in capture order." = "编辑过的截图会移到顶部。关闭后则保持捕获顺序。";

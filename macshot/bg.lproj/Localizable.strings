@@ -101,6 +101,7 @@
 "Freeform" = "Свободна форма";
 "Units" = "Единици";
 "Keep ratio for next captures" = "Запазване на съотношението за следващите заснемания";
+"Custom · %@" = "Персонализирано · %@";
 
 /* Toolbar - Actions */
 "Copy to Clipboard" = "Копиране в клипборда";
@@ -189,6 +190,7 @@
 "ON" = "ВКЛ.";
 "OFF" = "ИЗКЛ.";
 "  (Tab to toggle)" = "  (Tab за превключване)";
+"Space" = "Интервал";
 "Right-click to copy" = "Десен бутон за копиране";
 "Copied %@" = "Копирано %@";
 "Set color %@" = "Зададен цвят %@";
@@ -247,6 +249,8 @@
 "Screenshot History" = "История на екранните снимки";
 "History size:" = "Размер на историята:";
 "screenshots kept on disk (0 = off)" = "екранни снимки на диска (0 = изкл.)";
+"Order history by last edit" = "Подреди историята по последна редакция";
+"Edited screenshots move to the top. Off keeps them in capture order." = "Редактираните снимки се преместват най-горе. Изключено запазва реда на заснемане.";
 "Save Directory" = "Папка за запазване";
 "Save folder:" = "Папка за запазване:";
 "Browse…" = "Преглед…";

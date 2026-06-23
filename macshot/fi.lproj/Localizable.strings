@@ -128,6 +128,7 @@
 "Move Selection" = "Siirra valintaa";
 "Aspect ratio & resolution presets" = "Kuvasuhteen ja tarkkuuden esiasetukset";
 "Aspect ratio" = "Kuvasuhde";
+"Custom \U00B7 %@" = "Mukautettu \U00B7 %@";
 "Resolution" = "Tarkkuus";
 "Freeform" = "Vapaamuotoinen";
 "Units" = "Yksikot";
@@ -176,6 +177,7 @@
 "Release to finish" = "Vapauta lopettaaksesi";
 "Hold Space to move. Release to annotate and edit" = "Pida valilyontia siirtaaksesi. Vapauta merkintoja ja muokkausta varten";
 "Hold Space to move. Release to finish" = "Pida valilyontia siirtaaksesi. Vapauta lopettaaksesi";
+"Space" = "V\U00E4lily\U00F6nti";
 "Window snap: " = "Ikkunan tarttuminen: ";
 "ON" = "PAALLA";
 "OFF" = "POIS";
@@ -241,6 +243,8 @@
 "Screenshot History" = "Kuvakaappaushistoria";
 "History size:" = "Historian koko:";
 "screenshots kept on disk (0 = off)" = "kuvakaappausta sailytetaan levylla (0 = pois)";
+"Order history by last edit" = "J\U00E4rjest\U00E4 historia viimeisimm\U00E4n muokkauksen mukaan";
+"Edited screenshots move to the top. Off keeps them in capture order." = "Muokatut kuvakaappaukset siirtyv\U00E4t yl\U00F6s. Pois pit\U00E4\U00E4 ne kaappausj\U00E4rjestyksess\U00E4.";
 "Save Directory" = "Tallennuskansio";
 "Save folder:" = "Tallennuskansio:";
 "Browse…" = "Selaa…";

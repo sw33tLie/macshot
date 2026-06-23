@@ -101,6 +101,7 @@
 "Freeform" = "Свободная форма";
 "Units" = "Единицы";
 "Keep ratio for next captures" = "Сохранить соотношение для следующих снимков";
+"Custom · %@" = "Произвольно · %@";
 
 /* Toolbar - Actions */
 "Copy to Clipboard" = "Копировать в буфер обмена";
@@ -189,6 +190,7 @@
 "ON" = "ВКЛ";
 "OFF" = "ВЫКЛ";
 "  (Tab to toggle)" = "  (Tab для переключения)";
+"Space" = "Пробел";
 "Right-click to copy" = "Нажмите правой кнопкой, чтобы скопировать";
 "Copied %@" = "Скопировано: %@";
 "Set color %@" = "Установлен цвет %@";
@@ -247,6 +249,8 @@
 "Screenshot History" = "История снимков экрана";
 "History size:" = "Размер истории:";
 "screenshots kept on disk (0 = off)" = "снимков хранится на диске (0 = выкл.)";
+"Order history by last edit" = "Сортировать историю по последнему изменению";
+"Edited screenshots move to the top. Off keeps them in capture order." = "Изменённые снимки перемещаются вверх. Если выключено, сохраняется порядок захвата.";
 "Save Directory" = "Папка сохранения";
 "Save folder:" = "Папка сохранения:";
 "Browse…" = "Обзор…";

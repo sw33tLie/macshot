@@ -172,6 +172,7 @@
 "Release to finish" = "放開以完成";
 "Hold Space to move. Release to annotate and edit" = "按住空白鍵以移動。放開以標註與編輯";
 "Hold Space to move. Release to finish" = "按住空白鍵以移動。放開以完成";
+"Space" = "空白鍵";
 "Window snap: " = "視窗吸附：";
 "ON" = "開";
 "OFF" = "關";
@@ -189,6 +190,9 @@
 "Freeform" = "自由形式";
 "Units" = "單位";
 "Keep ratio for next captures" = "為後續擷取保留比例";
+"Custom · %@" = "自訂 · %@";
+"Order history by last edit" = "依最近編輯排序歷史記錄";
+"Edited screenshots move to the top. Off keeps them in capture order." = "編輯過的截圖會移至頂部。關閉後則保持擷取順序。";
 
 /* Overlay - Popovers */
 "Format:" = "格式：";

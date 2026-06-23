@@ -163,6 +163,7 @@
 "Aspect ratio" = "Proporzioni";
 "Resolution" = "Risoluzione";
 "Freeform" = "Forma libera";
+"Custom · %@" = "Personalizzato · %@";
 "Units" = "Unità";
 "Keep ratio for next captures" = "Mantieni le proporzioni per le prossime catture";
 "Window snap: " = "Aggancio finestra: ";
@@ -232,6 +233,8 @@
 "Embed sRGB color profile" = "Incorpora profilo colore sRGB";
 "Ensures consistent colors across different displays" = "Garantisce colori coerenti su diversi display";
 "Screenshot History" = "Cronologia screenshot";
+"Order history by last edit" = "Ordina la cronologia per ultima modifica";
+"Edited screenshots move to the top. Off keeps them in capture order." = "Le schermate modificate vanno in cima. Disattivato mantiene l'ordine di acquisizione.";
 "History size:" = "Dimensione cronologia:";
 "screenshots kept on disk (0 = off)" = "screenshot conservati su disco (0 = disattivato)";
 "Save Directory" = "Cartella di salvataggio";
@@ -611,3 +614,6 @@
 "Trigger macshot from Raycast, Alfred, Shortcuts, or any tool that opens URLs." = "Attiva macshot da Raycast, Alfred, Shortcuts o qualsiasi strumento che apre URL.";
 "URL scheme info" = "Info URL scheme";
 "sec (0 = never)" = "sec (0 = mai)";
+
+/* Keyboard key names */
+"Space" = "Spazio";

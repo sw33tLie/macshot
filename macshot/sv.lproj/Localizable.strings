@@ -128,6 +128,7 @@
 "Move Selection" = "Flytta markering";
 "Aspect ratio & resolution presets" = "F\U00F6rinst\U00E4llningar f\U00F6r bildf\U00F6rh\U00E5llande och uppl\U00F6sning";
 "Aspect ratio" = "Bildf\U00F6rh\U00E5llande";
+"Custom \U00B7 %@" = "Anpassat \U00B7 %@";
 "Resolution" = "Uppl\U00F6sning";
 "Freeform" = "Fri form";
 "Units" = "Enheter";
@@ -176,6 +177,7 @@
 "Release to finish" = "Sl\U00E4pp f\U00F6r att avsluta";
 "Hold Space to move. Release to annotate and edit" = "H\U00E5ll mellanslag f\U00F6r att flytta. Sl\U00E4pp f\U00F6r att anteckna och redigera";
 "Hold Space to move. Release to finish" = "H\U00E5ll mellanslag f\U00F6r att flytta. Sl\U00E4pp f\U00F6r att avsluta";
+"Space" = "Blanksteg";
 "Window snap: " = "F\U00F6nsterf\U00E5ngst: ";
 "ON" = "P\U00C5";
 "OFF" = "AV";
@@ -241,6 +243,8 @@
 "Screenshot History" = "Sk\U00E4rmbildshistorik";
 "History size:" = "Historikstorlek:";
 "screenshots kept on disk (0 = off)" = "sk\U00E4rmbilder sparade p\U00E5 disk (0 = av)";
+"Order history by last edit" = "Sortera historik efter senaste redigering";
+"Edited screenshots move to the top. Off keeps them in capture order." = "Redigerade sk\U00E4rmbilder flyttas \U00F6verst. Av beh\U00E5ller dem i f\U00E5ngstordning.";
 "Save Directory" = "Spara-mapp";
 "Save folder:" = "Spara-mapp:";
 "Browse\U2026" = "Bl\U00E4ddra\U2026";

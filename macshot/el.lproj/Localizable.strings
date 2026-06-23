@@ -251,6 +251,10 @@
 "Screenshot History" = "Ιστορικό στιγμιοτύπων";
 "History size:" = "Μέγεθος ιστορικού:";
 "screenshots kept on disk (0 = off)" = "στιγμιότυπα αποθηκευμένα στον δίσκο (0 = απενεργοποίηση)";
+"Order history by last edit" = "Ταξινόμηση ιστορικού κατά τελευταία επεξεργασία";
+"Edited screenshots move to the top. Off keeps them in capture order." = "Τα επεξεργασμένα στιγμιότυπα μετακινούνται στην κορυφή. Απενεργοποιημένο τα διατηρεί στη σειρά λήψης.";
+"Custom · %@" = "Προσαρμοσμένο · %@";
+"Space" = "Διάστημα";
 "Save Directory" = "Φάκελος αποθήκευσης";
 "Save folder:" = "Φάκελος αποθήκευσης:";
 "Browse…" = "Περιήγηση…";

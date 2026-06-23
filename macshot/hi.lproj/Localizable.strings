@@ -243,6 +243,10 @@
 "Screenshot History" = "स्क्रीनशॉट इतिहास";
 "History size:" = "इतिहास आकार:";
 "screenshots kept on disk (0 = off)" = "डिस्क पर रखे गए स्क्रीनशॉट (0 = बंद)";
+"Order history by last edit" = "इतिहास को अंतिम संपादन के अनुसार क्रमित करें";
+"Edited screenshots move to the top. Off keeps them in capture order." = "संपादित स्क्रीनशॉट सबसे ऊपर आ जाते हैं. बंद होने पर वे कैप्चर क्रम में रहते हैं.";
+"Custom · %@" = "कस्टम · %@";
+"Space" = "स्पेस";
 "Save Directory" = "सहेजने की डायरेक्टरी";
 "Save folder:" = "सहेजने का फ़ोल्डर:";
 "Browse…" = "ब्राउज़ करें…";

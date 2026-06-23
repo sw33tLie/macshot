@@ -239,6 +239,8 @@
 "Embed sRGB color profile" = "sRGB-kleurprofiel insluiten";
 "Ensures consistent colors across different displays" = "Zorgt voor consistente kleuren op verschillende schermen";
 "Screenshot History" = "Schermafbeeldingsgeschiedenis";
+"Order history by last edit" = "Geschiedenis sorteren op laatste bewerking";
+"Edited screenshots move to the top. Off keeps them in capture order." = "Bewerkte schermafbeeldingen komen bovenaan. Uit houdt ze in opnamevolgorde.";
 "History size:" = "Geschiedenisgrootte:";
 "screenshots kept on disk (0 = off)" = "schermafbeeldingen bewaard op schijf (0 = uit)";
 "Save Directory" = "Opslagmap";
@@ -627,6 +629,10 @@
 "Aspect ratio" = "Beeldverhouding";
 "Resolution" = "Resolutie";
 "Freeform" = "Vrije vorm";
+"Custom · %@" = "Aangepast · %@";
 "Units" = "Eenheden";
 "Keep ratio for next captures" = "Verhouding behouden voor volgende opnames";
 "Zoom" = "Zoom";
+
+/* Keyboard key names */
+"Space" = "Spatie";

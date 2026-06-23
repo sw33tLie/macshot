@@ -239,6 +239,10 @@
 "Screenshot History" = "Ekran Görüntüsü Geçmişi";
 "History size:" = "Geçmiş boyutu:";
 "screenshots kept on disk (0 = off)" = "diskte saklanan ekran görüntüsü (0 = kapalı)";
+"Order history by last edit" = "Geçmişi son düzenlemeye göre sırala";
+"Edited screenshots move to the top. Off keeps them in capture order." = "Düzenlenen ekran görüntüleri en üste taşınır. Kapalıyken yakalama sırasında kalır.";
+"Custom · %@" = "Özel · %@";
+"Space" = "Boşluk";
 "Save Directory" = "Kayıt Dizini";
 "Save folder:" = "Kayıt klasörü:";
 "Browse…" = "Gözat…";

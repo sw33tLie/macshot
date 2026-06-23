@@ -128,6 +128,7 @@
 "Move Selection" = "Flytt utvalg";
 "Aspect ratio & resolution presets" = "Forh\U00E5ndsinnstillinger for bildeforhold og oppl\U00F8sning";
 "Aspect ratio" = "Bildeforhold";
+"Custom \U00B7 %@" = "Egendefinert \U00B7 %@";
 "Resolution" = "Oppl\U00F8sning";
 "Freeform" = "Fri form";
 "Units" = "Enheter";
@@ -176,6 +177,7 @@
 "Release to finish" = "Slipp for \U00E5 fullf\U00F8re";
 "Hold Space to move. Release to annotate and edit" = "Hold mellomrom for \U00E5 flytte. Slipp for \U00E5 kommentere og redigere";
 "Hold Space to move. Release to finish" = "Hold mellomrom for \U00E5 flytte. Slipp for \U00E5 fullf\U00F8re";
+"Space" = "Mellomrom";
 "Window snap: " = "Vindussnapping: ";
 "ON" = "P\U00C5";
 "OFF" = "AV";
@@ -241,6 +243,8 @@
 "Screenshot History" = "Skjermbildehistorikk";
 "History size:" = "Historikkst\U00F8rrelse:";
 "screenshots kept on disk (0 = off)" = "skjermbilder lagret p\U00E5 disk (0 = av)";
+"Order history by last edit" = "Sorter historikk etter siste redigering";
+"Edited screenshots move to the top. Off keeps them in capture order." = "Redigerte skjermbilder flyttes til toppen. Av beholder dem i opptaksrekkef\U00F8lge.";
 "Save Directory" = "Lagringsmappe";
 "Save folder:" = "Lagringsmappe:";
 "Browse\U2026" = "Bla gjennom\U2026";

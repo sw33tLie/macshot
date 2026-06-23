@@ -239,6 +239,10 @@
 "Screenshot History" = "Istoric capturi de ecran";
 "History size:" = "Dimensiune istoric:";
 "screenshots kept on disk (0 = off)" = "capturi de ecran pastrate pe disc (0 = dezactivat)";
+"Order history by last edit" = "Ordoneaza istoricul dupa ultima editare";
+"Edited screenshots move to the top. Off keeps them in capture order." = "Capturile editate se muta in partea de sus. Dezactivat le pastreaza in ordinea capturarii.";
+"Custom · %@" = "Personalizat · %@";
+"Space" = "Spatiu";
 "Save Directory" = "Director de salvare";
 "Save folder:" = "Dosar de salvare:";
 "Save action:" = "Actiune salvare:";

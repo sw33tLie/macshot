@@ -101,6 +101,7 @@
 "Freeform" = "Volný tvar";
 "Units" = "Jednotky";
 "Keep ratio for next captures" = "Zachovat poměr pro další snímky";
+"Custom · %@" = "Vlastní · %@";
 
 /* Toolbar - Actions */
 "Copy to Clipboard" = "Kopírovat do schránky";
@@ -189,6 +190,7 @@
 "ON" = "ZAP";
 "OFF" = "VYP";
 "  (Tab to toggle)" = "  (Tab pro přepnutí)";
+"Space" = "Mezerník";
 "Right-click to copy" = "Pravým tlačítkem kopírovat";
 "Copied %@" = "Zkopírováno %@";
 "Set color %@" = "Nastavit barvu %@";
@@ -247,6 +249,8 @@
 "Screenshot History" = "Historie snímků";
 "History size:" = "Velikost historie:";
 "screenshots kept on disk (0 = off)" = "snímků uchovávaných na disku (0 = vypnuto)";
+"Order history by last edit" = "Řadit historii podle poslední úpravy";
+"Edited screenshots move to the top. Off keeps them in capture order." = "Upravené snímky se přesunou nahoru. Vypnuto ponechá pořadí pořízení.";
 "Save Directory" = "Složka pro ukládání";
 "Save folder:" = "Složka pro uložení:";
 "Browse…" = "Procházet…";

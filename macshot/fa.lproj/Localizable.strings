@@ -239,6 +239,10 @@
 "Screenshot History" = "تاریخچه تصاویر صفحه";
 "History size:" = "اندازه تاریخچه:";
 "screenshots kept on disk (0 = off)" = "تصویر صفحه نگهداری‌شده روی دیسک (0 = خاموش)";
+"Order history by last edit" = "مرتب‌سازی تاریخچه بر اساس آخرین ویرایش";
+"Edited screenshots move to the top. Off keeps them in capture order." = "تصاویر صفحه ویرایش‌شده به بالا منتقل می‌شوند. خاموش‌بودن آن‌ها را به ترتیب گرفتن نگه می‌دارد.";
+"Custom · %@" = "سفارشی · %@";
+"Space" = "فاصله";
 "Save Directory" = "پوشه ذخیره‌سازی";
 "Save folder:" = "پوشه ذخیره:";
 "Browse…" = "مرور…";

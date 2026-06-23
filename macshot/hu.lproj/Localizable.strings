@@ -247,6 +247,10 @@
 "Screenshot History" = "Képernyőkép előzmény";
 "History size:" = "Előzmények mérete:";
 "screenshots kept on disk (0 = off)" = "lemezen tárolt képernyőkép (0 = ki)";
+"Order history by last edit" = "Előzmények rendezése utolsó szerkesztés szerint";
+"Edited screenshots move to the top. Off keeps them in capture order." = "A szerkesztett képernyőképek a tetejére kerülnek. Kikapcsolva a rögzítés sorrendjében maradnak.";
+"Custom · %@" = "Egyéni · %@";
+"Space" = "Szóköz";
 "Save Directory" = "Mentési könyvtár";
 "Save folder:" = "Mentési mappa:";
 "Browse…" = "Tallózás…";

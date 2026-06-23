@@ -239,6 +239,10 @@
 "Screenshot History" = "سجل لقطات الشاشة";
 "History size:" = "حجم السجل:";
 "screenshots kept on disk (0 = off)" = "لقطات شاشة محفوظة على القرص (0 = إيقاف)";
+"Order history by last edit" = "ترتيب السجل حسب آخر تعديل";
+"Edited screenshots move to the top. Off keeps them in capture order." = "تنتقل لقطات الشاشة المُحرَّرة إلى الأعلى. إيقافه يبقيها بترتيب الالتقاط.";
+"Custom · %@" = "مخصص · %@";
+"Space" = "مسافة";
 "Save Directory" = "مجلد الحفظ";
 "Save folder:" = "مجلد الحفظ:";
 "Browse…" = "استعراض…";

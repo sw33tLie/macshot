@@ -128,6 +128,7 @@
 "Move Selection" = "Flyt markering";
 "Aspect ratio & resolution presets" = "Forudindstillinger for billedformat og opl\U00F8sning";
 "Aspect ratio" = "Billedformat";
+"Custom \U00B7 %@" = "Tilpasset \U00B7 %@";
 "Resolution" = "Opl\U00F8sning";
 "Freeform" = "Frih\U00E5nd";
 "Units" = "Enheder";
@@ -176,6 +177,7 @@
 "Release to finish" = "Slip for at afslutte";
 "Hold Space to move. Release to annotate and edit" = "Hold mellemrum for at flytte. Slip for at annotere og redigere";
 "Hold Space to move. Release to finish" = "Hold mellemrum for at flytte. Slip for at afslutte";
+"Space" = "Mellemrum";
 "Window snap: " = "Vinduesfang: ";
 "ON" = "TIL";
 "OFF" = "FRA";
@@ -241,6 +243,8 @@
 "Screenshot History" = "Sk\U00E6rmbilledhistorik";
 "History size:" = "Historikst\U00F8rrelse:";
 "screenshots kept on disk (0 = off)" = "sk\U00E6rmbilleder gemt p\U00E5 disk (0 = fra)";
+"Order history by last edit" = "Sort\U00E9r historik efter sidste redigering";
+"Edited screenshots move to the top. Off keeps them in capture order." = "Redigerede sk\U00E6rmbilleder flyttes til toppen. Fra beholder dem i optagelsesr\U00E6kkef\U00F8lge.";
 "Save Directory" = "Gemmemappe";
 "Save folder:" = "Gemmemappe:";
 "Browse\U2026" = "Gennemse\U2026";
