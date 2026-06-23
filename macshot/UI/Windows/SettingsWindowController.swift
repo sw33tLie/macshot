@@ -57,6 +57,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var thumbnailStackingPopup: NSPopUpButton!
     private var thumbnailCornerPopup: NSPopUpButton!
     private var historyUnlimitedCheckbox: NSButton!
+    private var historyOrderByLastEditCheckbox: NSButton!
     private var thumbnailScaleLabel: NSTextField!
     private var launchAtLoginCheckbox: NSButton!
     private var hideMenuBarIconCheckbox: NSButton!
@@ -790,6 +791,19 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         histNote.textColor = .secondaryLabelColor
 
         stack.addArrangedSubview(labeledRow(L("History size:"), controls: [historySizeField, historySizeStepper, histNote, historyUnlimitedCheckbox]))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        historyOrderByLastEditCheckbox = NSButton(
+            checkboxWithTitle: L("Order history by last edit"),
+            target: self, action: #selector(historyOrderByLastEditChanged(_:)))
+        historyOrderByLastEditCheckbox.state = ScreenshotHistory.orderByLastEdit ? .on : .off
+        stack.addArrangedSubview(indented(historyOrderByLastEditCheckbox))
+        stack.setCustomSpacing(2, after: stack.arrangedSubviews.last!)
+
+        let orderNote = NSTextField(labelWithString: L("Edited screenshots move to the top. Off keeps them in capture order."))
+        orderNote.font = NSFont.systemFont(ofSize: 10)
+        orderNote.textColor = .tertiaryLabelColor
+        stack.addArrangedSubview(indented(orderNote))
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // ── Translation ──────────────────────────────────────
@@ -2453,6 +2467,13 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         let unlimited = sender.state == .on
         UserDefaults.standard.set(unlimited, forKey: "historyUnlimited")
         updateHistoryControlsEnabled()
+    }
+
+    @objc private func historyOrderByLastEditChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: "historyOrderByLastEdit")
+        // Re-sort existing entries to reflect the new preference immediately and
+        // persist the new order so it survives a restart.
+        ScreenshotHistory.shared.applyHistoryOrderPreference(persist: true)
     }
 
     private func updateHistoryControlsEnabled() {

@@ -3,11 +3,16 @@ import Cocoa
 struct HistoryEntry {
     let id: String           // UUID filename (without extension)
     let fileExtension: String // "png" or "jpg"
-    let timestamp: Date
+    let timestamp: Date       // creation time
+    /// Last time the entry was edited & saved from the editor (nil = never).
+    var lastEditedAt: Date? = nil
     var pixelWidth: Int
     var pixelHeight: Int
     var hasAnnotations: Bool = false  // true if editable raw data is saved alongside
     var thumbnail: NSImage?  // lazily cached, tiny
+
+    /// The time used for "order by last edit": the most recent of edit/creation.
+    var effectiveSortDate: Date { lastEditedAt ?? timestamp }
 
     var timeAgoString: String {
         let seconds = Int(-timestamp.timeIntervalSinceNow)
@@ -197,6 +202,24 @@ class ScreenshotHistory {
 
     /// Update an existing history entry in-place (for "Done" in editor).
     /// Rewrites the composited image, raw image, annotations, thumbnail, and preview.
+    /// Whether the history panel orders entries by last-edit time (default on).
+    /// When off, entries stay in creation order (newest created first).
+    static var orderByLastEdit: Bool {
+        UserDefaults.standard.object(forKey: "historyOrderByLastEdit") as? Bool ?? true
+    }
+
+    /// Re-sort `entries` to honor the current ordering preference. When ordering
+    /// by last edit, sort by the most recent of edit/creation, descending. When
+    /// off, restore creation order (newest first). Stable for equal dates.
+    func applyHistoryOrderPreference(persist: Bool = false) {
+        if Self.orderByLastEdit {
+            entries.sort { $0.effectiveSortDate > $1.effectiveSortDate }
+        } else {
+            entries.sort { $0.timestamp > $1.timestamp }
+        }
+        if persist { saveIndex() }
+    }
+
     func updateEntry(id: String, compositedImage: NSImage, rawImage: NSImage?, annotations: [Annotation]?, editState: CaptureEditState? = nil) {
         guard let idx = entries.firstIndex(where: { $0.id == id }) else { return }
 
@@ -204,6 +227,10 @@ class ScreenshotHistory {
         let hasEditState = editState?.hasPostProcessing == true
         let hasEditableData = rawImage != nil && (hasAnns || hasEditState)
         entries[idx].hasAnnotations = hasEditableData
+        // Stamp the edit time (used for last-edit ordering). The actual reorder
+        // happens at the end, after all entries[idx] field updates, so the index
+        // stays valid here.
+        entries[idx].lastEditedAt = Date()
         let scale: CGFloat = ImageEncoder.downscaleRetina ? 1.0 : (NSScreen.main?.backingScaleFactor ?? 2.0)
         entries[idx].pixelWidth = Int(compositedImage.size.width * scale)
         entries[idx].pixelHeight = Int(compositedImage.size.height * scale)
@@ -225,6 +252,11 @@ class ScreenshotHistory {
         // Update thumbnail in memory immediately
         let thumb = makeThumbnail(image: compositedImage, maxWidth: 36)
         entries[idx].thumbnail = thumb
+        // When ordering by last edit, float the just-edited entry to the top.
+        if Self.orderByLastEdit, idx != 0 {
+            let edited = entries.remove(at: idx)
+            entries.insert(edited, at: 0)
+        }
         saveIndex()
 
         DispatchQueue.global(qos: .utility).async { [weak self] in
@@ -398,13 +430,15 @@ class ScreenshotHistory {
         let pixelWidth: Int
         let pixelHeight: Int
         var hasAnnotations: Bool?  // optional for backward compat with old index files
+        var lastEditedAt: Date?    // optional for backward compat (nil = never edited)
     }
 
     private func saveIndex() {
         let indexEntries = entries.map {
             IndexEntry(id: $0.id, fileExtension: $0.fileExtension, timestamp: $0.timestamp,
                        pixelWidth: $0.pixelWidth, pixelHeight: $0.pixelHeight,
-                       hasAnnotations: $0.hasAnnotations ? true : nil)
+                       hasAnnotations: $0.hasAnnotations ? true : nil,
+                       lastEditedAt: $0.lastEditedAt)
         }
         if let data = try? JSONEncoder().encode(indexEntries) {
             try? data.write(to: indexFile, options: .atomic)
@@ -420,8 +454,12 @@ class ScreenshotHistory {
             let ext = ie.fileExtension
             let fileURL = historyDir.appendingPathComponent("\(ie.id).\(ext)")
             guard FileManager.default.fileExists(atPath: fileURL.path) else { return nil }
-            return HistoryEntry(id: ie.id, fileExtension: ext, timestamp: ie.timestamp, pixelWidth: ie.pixelWidth, pixelHeight: ie.pixelHeight, hasAnnotations: ie.hasAnnotations ?? false, thumbnail: nil)
+            return HistoryEntry(id: ie.id, fileExtension: ext, timestamp: ie.timestamp, lastEditedAt: ie.lastEditedAt, pixelWidth: ie.pixelWidth, pixelHeight: ie.pixelHeight, hasAnnotations: ie.hasAnnotations ?? false, thumbnail: nil)
         }
+
+        // Apply the persisted ordering preference on load so the panel reflects
+        // it immediately (when off, this is a no-op — array stays creation-order).
+        applyHistoryOrderPreference()
 
         // Prune if maxEntries was lowered since last run
         let max = maxEntries
