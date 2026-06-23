@@ -157,6 +157,7 @@ extension OverlayView {
             self.cachedCompositedImage = nil
             self.needsDisplay = true
             self.updateBeautifySwatch(styleIndex: idx)
+            self.onContentChanged?()
             // Rebuild options row so blur slider appears/disappears
             self.rebuildToolbarLayout()
         }
@@ -569,6 +570,7 @@ extension OverlayView {
             self.cachedEffectsScreenshot = nil
             self.rebuildToolbarLayout()
             self.needsDisplay = true
+            self.onContentChanged?()
         }
         let size = picker.preferredSize
         if let anchor = anchorView {

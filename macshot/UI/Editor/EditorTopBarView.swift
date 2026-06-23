@@ -213,6 +213,12 @@ class EditorTopBarView: NSView {
         doneButton = btn
     }
 
+    /// Remove the Done button (used until the user makes an edit).
+    func hideDoneButton() {
+        doneButton?.removeFromSuperview()
+        doneButton = nil
+    }
+
     @objc private func doneClicked() { onDone?() }
 
     @objc private func cropClicked() {

@@ -302,12 +302,24 @@ class Annotation {
         loupeMagnification = src.loupeMagnification
         outlineColor = src.outlineColor
         loupeOutlineEnabled = src.loupeOutlineEnabled
+        // Restore geometry/position too, so this can undo a move/resize as well as
+        // a style edit. For a pure style change the source geometry is identical,
+        // so this is a no-op there.
+        startPoint = src.startPoint
+        endPoint = src.endPoint
+        points = src.points
+        controlPoint = src.controlPoint
+        anchorPoints = src.anchorPoints
+        textDrawRect = src.textDrawRect
+        rotation = src.rotation
         if tool == .loupe {
-            startPoint = src.startPoint
-            endPoint = src.endPoint
             loupeSourceRect = src.loupeSourceRect
             bakedBlurNSImage = nil
             bakeLoupe()
+        } else if tool == .pixelate || tool == .blur {
+            // Position changed — the baked censor must re-render at the new spot.
+            bakedBlurNSImage = nil
+            bakePixelate()
         }
         measureInPoints = src.measureInPoints
         censorMode = src.censorMode

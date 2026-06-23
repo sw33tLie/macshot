@@ -108,6 +108,11 @@ extension OverlayView {
         customBeautifyBackground = state.customBeautifyBackground
         if customBeautifyBackground != nil {
             prepareBeautifyBackgroundCache()
+        } else {
+            // The custom style can be selected without a stored background in the
+            // edit state — load it eagerly here (not lazily in beautifyConfig's
+            // getter) so the editor's clean-state signature is stable.
+            ensureCustomBeautifyBackgroundLoaded()
         }
 
         cachedCompositedImage = nil

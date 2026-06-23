@@ -1343,6 +1343,7 @@ class ToolOptionsRowView: NSView {
         ov.beautifyMode = sender.selectedSegment == 0 ? .window : .rounded
         UserDefaults.standard.set(ov.beautifyMode.rawValue, forKey: "beautifyMode")
         ov.needsDisplay = true
+        ov.onContentChanged?()
     }
 
     @objc private func beautifyPaddingChanged(_ sender: NSSlider) {
@@ -1350,6 +1351,7 @@ class ToolOptionsRowView: NSView {
         ov.beautifyPadding = CGFloat(sender.floatValue)
         UserDefaults.standard.set(sender.doubleValue, forKey: "beautifyPadding")
         ov.needsDisplay = true
+        ov.onContentChanged?()
     }
 
     @objc private func beautifyCornerChanged(_ sender: NSSlider) {
@@ -1357,6 +1359,7 @@ class ToolOptionsRowView: NSView {
         ov.beautifyCornerRadius = CGFloat(sender.floatValue)
         UserDefaults.standard.set(sender.doubleValue, forKey: "beautifyCornerRadius")
         ov.needsDisplay = true
+        ov.onContentChanged?()
     }
 
     @objc private func beautifyShadowChanged(_ sender: NSSlider) {
@@ -1364,6 +1367,7 @@ class ToolOptionsRowView: NSView {
         ov.beautifyShadowRadius = CGFloat(sender.floatValue)
         UserDefaults.standard.set(sender.doubleValue, forKey: "beautifyShadowRadius")
         ov.needsDisplay = true
+        ov.onContentChanged?()
     }
 
     @objc private func beautifyBlurChanged(_ sender: NSSlider) {
@@ -1372,6 +1376,7 @@ class ToolOptionsRowView: NSView {
         UserDefaults.standard.set(sender.doubleValue, forKey: "beautifyBgBlur")
         ov.cachedCompositedImage = nil
         ov.needsDisplay = true
+        ov.onContentChanged?()
     }
 
     func updateBeautifySwatch(styleIndex: Int) {
@@ -1391,6 +1396,7 @@ class ToolOptionsRowView: NSView {
         ov.beautifyEnabled = sender.state == .on
         UserDefaults.standard.set(ov.beautifyEnabled, forKey: "beautifyEnabled")
         ov.needsDisplay = true
+        ov.onContentChanged?()
     }
 
     private func addHintLabel(at x: CGFloat, text: String) -> CGFloat {

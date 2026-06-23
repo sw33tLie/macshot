@@ -30,10 +30,15 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
 
     /// History entry ID — when set, "Done" button appears and commits edits back to history.
     private var historyEntryID: String?
-    /// Snapshot of undo stack depth when last saved, to detect changes.
+    /// Snapshot of undo stack depth when last saved. Every annotation/image edit
+    /// (draw, move, resize, delete, crop, flip) pushes an undo entry, so a change
+    /// here means the user edited annotations or the image.
     private var lastSavedUndoDepth: Int = 0
-    /// Snapshot of serialized editable state when last saved, to catch object mutations like drag moves.
-    private var lastSavedStateSignature: String = ""
+    /// Snapshot of the post-processing (beautify/effects) state when last saved.
+    /// Compared by value (Equatable) rather than via re-serialized bytes — the old
+    /// string signature re-encoded PNGs / float JSON, which was unstable and caused
+    /// spurious "Save changes?" prompts on close with no edits.
+    private var lastSavedEditState: CaptureEditState = CaptureEditState()
     /// True if the image has never been output (copied, saved, etc.) — closing would lose the capture.
     /// Set to false on first output action. Editors opened from files start false.
     private var screenshotNeverOutput: Bool = true
@@ -160,11 +165,12 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         container.addSubview(topBar)
         self.topBar = topBar
 
-        // Show "Done" button when editing a history entry
-        if historyEntryID != nil {
-            topBar.showDoneButton()
-            topBar.onDone = { [weak self] in self?.commitToHistory() }
-        }
+        // "Done" commits edits back to history. It's only revealed once the user
+        // actually edits something (matching the overlay → editor flow, which has
+        // no Done until you draw). Wire the action now; visibility is driven by
+        // refreshDoneButtonVisibility() via the view's onContentChanged hook.
+        topBar.onDone = { [weak self] in self?.commitToHistory() }
+        view.onContentChanged = { [weak self] in self?.refreshDoneButtonVisibility() }
         if let scale = NSScreen.main?.backingScaleFactor,
            let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) {
             topBar.updateSizeLabel(width: cg.width, height: cg.height)
@@ -186,9 +192,14 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
             view.applyCaptureEditState(editState)
         }
 
-        // Snapshot undo depth as the "clean" state for unsaved changes detection
-        lastSavedUndoDepth = view.undoStack.count
-        lastSavedStateSignature = view.editableStateSignature()
+        // Settle any deferred state before snapshotting the clean baseline, so a
+        // later draw can't mutate it and trigger a spurious "Save changes?" on
+        // close. (The custom beautify background used to lazy-load inside the
+        // beautifyConfig getter on first draw.)
+        view.ensureCustomBeautifyBackgroundLoaded()
+
+        // Snapshot the clean baseline for unsaved-changes detection.
+        captureCleanBaseline(view)
 
         win.contentView = container
         win.makeKeyAndOrderFront(nil)
@@ -227,25 +238,45 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         self.overlayView = view
     }
 
+    /// Record the current state as the "clean" baseline against which a close
+    /// prompts (or doesn't). Call after open and after every save.
+    private func captureCleanBaseline(_ view: OverlayView) {
+        lastSavedUndoDepth = view.undoStack.count
+        lastSavedEditState = view.captureEditState()
+        refreshDoneButtonVisibility()
+    }
+
+    /// True if the user has edited anything since the clean baseline.
+    private func isDirty() -> Bool {
+        guard let view = overlayView else { return false }
+        return view.undoStack.count != lastSavedUndoDepth
+            || view.captureEditState() != lastSavedEditState
+    }
+
+    /// Show the "Done" (commit-to-history) button only when there are unsaved
+    /// edits — like the overlay → editor flow, which has no Done until you draw.
+    private func refreshDoneButtonVisibility() {
+        if isDirty() {
+            topBar?.showDoneButton()
+        } else {
+            topBar?.hideDoneButton()
+        }
+    }
+
     // MARK: - NSWindowDelegate
 
     func windowShouldClose(_ sender: NSWindow) -> Bool {
         guard let view = overlayView else { return true }
 
-        // Determine if there are unsaved changes worth warning about
-        let hasChanges: Bool
-        if historyEntryID != nil {
-            // Linked to history — check if undo stack changed since last save
-            hasChanges = view.undoStack.count != lastSavedUndoDepth
-                || view.editableStateSignature() != lastSavedStateSignature
-        } else {
-            // Not in history — warn if the image has never been saved/copied
-            // (the capture would be lost entirely on close)
-            hasChanges = view.undoStack.count > lastSavedUndoDepth
-                || view.editableStateSignature() != lastSavedStateSignature
-                || view.annotations.contains(where: { $0.isMovable })
-                || screenshotNeverOutput
-        }
+        // Only warn when the user actually changed something since the editor's
+        // clean baseline (captured at open, after existing annotations + edit
+        // state were applied). Annotation/image edits bump the undo depth; beautify
+        // and effects changes show up in the edit state, compared by value. We do
+        // NOT byte-compare re-serialized state — that was unstable (re-encoded
+        // PNGs / float JSON) and nagged on a pristine close. Same rule whether or
+        // not the entry is linked to history.
+        let hasChanges = view.undoStack.count != lastSavedUndoDepth
+            || view.captureEditState() != lastSavedEditState
 
         guard hasChanges else { return true }
 
@@ -272,8 +303,7 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
                 // Discard — close without saving, suppress re-triggering the warning
                 self.historyEntryID = nil
                 self.screenshotNeverOutput = false
-                self.lastSavedUndoDepth = view.undoStack.count
-                self.lastSavedStateSignature = view.editableStateSignature()
+                self.captureCleanBaseline(view)
                 sender.close()
             default:
                 break  // Cancel
@@ -307,8 +337,7 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
             rawImage: data?.rawImage,
             annotations: data?.annotations,
             editState: data?.editState)
-        lastSavedUndoDepth = view.undoStack.count
-        lastSavedStateSignature = view.editableStateSignature()
+        captureCleanBaseline(view)
         // Update floating thumbnail if it's still visible
         (NSApp.delegate as? AppDelegate)?.refreshThumbnail(for: entryID, image: finalImage, annotationData: data)
     }
@@ -485,8 +514,8 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
             editState: data?.editState)
         historyEntryID = ScreenshotHistory.shared.entries.first?.id
         if historyEntryID != nil {
-            topBar?.showDoneButton()
             topBar?.onDone = { [weak self] in self?.commitToHistory() }
+            refreshDoneButtonVisibility()
         }
     }
     func overlayViewDidRequestUpload() {
