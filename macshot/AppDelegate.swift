@@ -2021,6 +2021,31 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         DetachedEditorWindowController.open(image: image)
     }
 
+    /// Open a history entry in the editor by its id, restoring editable annotations when
+    /// available (falls back to the flattened image, like the history overlay does). Lets
+    /// external tools re-open a specific capture for editing — `macshot://edit?id=<id>` —
+    /// without flattening it, which `open?file=` cannot do.
+    private func openHistoryEntryInEditor(id: String) {
+        guard let entry = ScreenshotHistory.shared.entries.first(where: { $0.id == id }) else { return }
+
+        if entry.hasAnnotations,
+           let rawImage = ScreenshotHistory.shared.loadRawImage(for: entry),
+           let annotations = ScreenshotHistory.shared.loadAnnotations(for: entry) {
+            let editState = ScreenshotHistory.shared.loadEditState(for: entry)
+            DetachedEditorWindowController.open(
+                image: rawImage,
+                annotations: annotations,
+                historyEntryID: id,
+                editState: editState
+            )
+            return
+        }
+
+        // Fall back to the flattened image — beautify already baked in.
+        guard let image = ScreenshotHistory.shared.loadImage(for: entry) else { return }
+        DetachedEditorWindowController.open(image: image, historyEntryID: id, disableBeautify: true)
+    }
+
     // MARK: - Open Video
 
     @objc private func openVideoFromMenu() {
@@ -2092,6 +2117,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
                let path = components.queryItems?.first(where: { $0.name == "file" })?.value {
                 openImageFile(url: URL(fileURLWithPath: path))
+            }
+        case "edit":
+            if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+               let id = components.queryItems?.first(where: { $0.name == "id" })?.value {
+                openHistoryEntryInEditor(id: id)
             }
         default: break
         }
