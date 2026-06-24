@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.2.0-beta.8] - 2026-06-24
+
+### Fixed
+
+- Fix crash on launch on macOS versions older than 12.3 where ScreenCaptureKit is unavailable (weak-link the framework).
+
 ## [4.2.0-beta.7] - 2026-06-23
 
 ### Added
