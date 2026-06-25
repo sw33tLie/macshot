@@ -196,6 +196,14 @@ macshot requires **Screen Recording** permission. macOS will prompt you on first
 
 ---
 
+## Donations
+
+Thanks for thinking about it, but macshot doesn't take donations. I make this in my free time and I'm happy to keep it that way, so there's no "buy me a coffee" or sponsorship link.
+
+If you'd like to help out, starring the repo, reporting bugs, or contributing is more than enough. Thank you! 🙏
+
+---
+
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=sw33tLie/macshot&type=Date)](https://star-history.com/#sw33tLie/macshot&Date)
