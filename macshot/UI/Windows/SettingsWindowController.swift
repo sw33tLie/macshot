@@ -2785,6 +2785,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
             ("macshot://history",             L("Open the recent captures overlay")),
             ("macshot://settings",            L("Open this settings window")),
             ("macshot://open?file=/path.png", L("Open an image file in the editor")),
+            ("macshot://edit?id=<id>",        L("Open a history entry in the editor (keeps annotations editable)")),
         ]
 
         let title = NSTextField(labelWithString: L("Supported URL Scheme Commands"))
