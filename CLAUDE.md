@@ -13,6 +13,21 @@ Native macOS screenshot & annotation tool inspired by Flameshot. Built with Swif
 - **Permissions:** Screen Recording (Info.plist has Privacy - Screen Capture Usage Description)
 - **Xcode:** File system synchronized groups — just create .swift files in `macshot/` and Xcode picks them up automatically
 
+## Build Variants
+
+macshot has two release variants:
+
+- **Normal:** product name `macshot`, bundle id `com.sw33tlie.macshot.macshot`, Sparkle feed `appcast.xml`, release asset `MacShot.dmg`.
+- **Corporate:** product name `macshot Corporate`, bundle id `com.sw33tlie.macshot.corporate`, Sparkle feed `appcast-corporate.xml`, release asset `MacShot-Corporate.dmg`.
+
+The corporate build is selected with the `CORPORATE` Swift compilation condition. Use `BuildVariant.isCorporate` / `BuildVariant.displayName` for runtime variant checks and display names. Upload and cloud storage integrations must be compiled out of the corporate build with `#if !CORPORATE`, including upload UI, upload shortcuts, upload settings, upload context menu items, and uploader implementations.
+
+The release workflow builds both variants from the same tag. It patches the corporate app's `SUFeedURL` to `appcast-corporate.xml`, removes the Google OAuth URL scheme from the corporate app, signs both apps, packages both DMGs, notarizes both DMGs, and writes both appcasts. Do not point the corporate app at the normal appcast or vice versa; Sparkle updates must stay variant-specific so corporate users never update into the normal app.
+
+Beta handling is shared: beta items get `<sparkle:channel>beta</sparkle:channel>`, and users opt in through the existing "Check for beta updates" setting. Stable corporate releases will appear to corporate users through `appcast-corporate.xml` once a stable corporate item exists.
+
+Homebrew status: beta releases skip Homebrew. Stable releases update the normal cask and generate `macshot-corporate` in the personal tap. The official Homebrew cask remains normal-only unless a separate `macshot-corporate` cask is submitted later.
+
 ## Architecture
 
 Menu bar agent app. No main window. Global hotkey (Cmd+Shift+X) or menu bar click triggers screen capture → fullscreen overlay → selection → annotation → output.

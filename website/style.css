@@ -125,7 +125,7 @@ footer .links{display:flex;gap:20px;justify-content:center;margin-top:8px}
 .faq summary{padding:16px 20px;font-weight:600;cursor:pointer;font-size:15px;list-style:none}
 .faq summary::-webkit-details-marker{display:none}
 .faq summary::after{content:"+";float:right;color:var(--muted);font-weight:400}
-.faq details[open] summary::after{content:"–"}
+.faq details[open] summary::after{content:"-"}
 .faq details p{padding:0 20px 16px;color:var(--muted);font-size:14px;margin:0}
 
 /* Lead paragraph under page H1 */

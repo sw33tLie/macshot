@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Upload Screenshots to S3 on Mac — Your Own Bucket &amp; Link | macshot</title>
+<title>Upload Screenshots to S3 on Mac - Your Own Bucket &amp; Link | macshot</title>
 <meta name="description" content="Capture a screenshot and upload it straight to your own S3 bucket (or Cloudflare R2, Backblaze B2, any S3-compatible storage) on Mac, then get a shareable link. Bring your own storage. Free and open source.">
 <meta name="theme-color" content="#211BEF">
 <link rel="canonical" href="https://macshot.io/screenshot-to-s3-mac">
-<meta property="og:title" content="Upload Screenshots to S3 on Mac — macshot">
+<meta property="og:title" content="Upload Screenshots to S3 on Mac - macshot">
 <meta property="og:description" content="Capture and upload screenshots to your own S3, R2, or B2 bucket and get a shareable link. Bring your own storage. Free and open source.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://macshot.io/screenshot-to-s3-mac">
@@ -31,7 +31,7 @@
       "name": "Does it work with Cloudflare R2 and Backblaze B2?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. macshot uses the S3-compatible API, so it works with Amazon S3, Cloudflare R2, Backblaze B2, MinIO, Wasabi, DigitalOcean Spaces, and any other S3-compatible provider — just point it at the right endpoint."
+        "text": "Yes. macshot uses the S3-compatible API, so it works with Amazon S3, Cloudflare R2, Backblaze B2, MinIO, Wasabi, DigitalOcean Spaces, and any other S3-compatible provider - just point it at the right endpoint."
       }
     },
     {
@@ -39,7 +39,7 @@
       "name": "Where are my screenshots stored?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "In your own bucket. macshot uploads straight to the storage you configure — there's no macshot server in between, no account, and no third-party host holding your images."
+        "text": "In your own bucket. macshot uploads straight to the storage you configure - there's no macshot server in between, no account, and no third-party host holding your images."
       }
     },
     {
@@ -77,9 +77,9 @@
 <section class="page-hero">
 <div class="wrap">
 <h1>Upload screenshots to S3 on Mac</h1>
-<p class="lead">Capture, then send straight to your own bucket — Amazon S3, Cloudflare R2, Backblaze B2, or any S3-compatible storage — and get a shareable link on your clipboard. Your images, your storage, no middleman.</p>
+<p class="lead">Capture, then send straight to your own bucket - Amazon S3, Cloudflare R2, Backblaze B2, or any S3-compatible storage - and get a shareable link on your clipboard. Your images, your storage, no middleman.</p>
 <div style="text-align:center;margin-top:32px">
-<img src="/assets/screenshot-to-s3-mac.png" alt="macshot's S3-compatible storage settings on macOS — endpoint, region, bucket, access keys, public URL and path prefix for uploading screenshots to your own bucket" width="1000" style="max-width:100%;height:auto;border-radius:16px;box-shadow:0 32px 80px rgba(0,0,0,.5),0 0 0 1px var(--border)" loading="lazy">
+<img src="/assets/screenshot-to-s3-mac.png" alt="macshot's S3-compatible storage settings on macOS - endpoint, region, bucket, access keys, public URL and path prefix for uploading screenshots to your own bucket" width="1000" style="max-width:100%;height:auto;border-radius:16px;box-shadow:0 32px 80px rgba(0,0,0,.5),0 0 0 1px var(--border)" loading="lazy">
 </div>
 <div class="actions" style="display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap">
 <a href="https://github.com/sw33tLie/macshot/releases/latest/download/MacShot.dmg" class="btn btn-primary btn-big">Download for macOS</a>
@@ -93,18 +93,18 @@
 <div class="wrap">
 <div class="prose">
 <h2>Bring your own storage</h2>
-<p>Most screenshot tools that offer instant links upload to <em>their</em> servers — behind an account, a subscription, and someone else's retention policy. macshot does the opposite: it uploads directly to a bucket you own, so you control where the files live, how long they stay, and who can reach them.</p>
+<p>Most screenshot tools that offer instant links upload to <em>their</em> servers - behind an account, a subscription, and someone else's retention policy. macshot does the opposite: it uploads directly to a bucket you own, so you control where the files live, how long they stay, and who can reach them.</p>
 
 <h2>How it works</h2>
 <ul>
-<li>Add your storage details once in Settings — endpoint, region, bucket, and access keys.</li>
+<li>Add your storage details once in Settings - endpoint, region, bucket, and access keys.</li>
 <li>Capture a screenshot as usual.</li>
-<li>Hit upload — macshot sends it straight to your bucket over the S3 API.</li>
+<li>Hit upload - macshot sends it straight to your bucket over the S3 API.</li>
 <li>The public link is copied to your clipboard, ready to paste anywhere.</li>
 </ul>
 
 <h2>Works with any S3-compatible provider</h2>
-<p>It speaks the standard S3 API, so the same flow works across providers — just change the endpoint:</p>
+<p>It speaks the standard S3 API, so the same flow works across providers - just change the endpoint:</p>
 <ul>
 <li>Amazon S3</li>
 <li>Cloudflare R2</li>
@@ -116,7 +116,7 @@
 <p>There's no macshot account and no macshot server in the path. Your screenshot goes from your Mac to your bucket and nowhere else. Prefer Google Drive instead? macshot can upload there too.</p>
 
 <h2>Free, native, and open source</h2>
-<p>macshot is a native Swift and AppKit app, free and open source under the GPLv3 license. The only cost is whatever your storage provider charges — often nothing for personal use on R2 or B2.</p>
+<p>macshot is a native Swift and AppKit app, free and open source under the GPLv3 license. The only cost is whatever your storage provider charges - often nothing for personal use on R2 or B2.</p>
 </div>
 </div>
 </section>
@@ -126,8 +126,8 @@
 <div class="section-label"><h2>Common questions</h2></div>
 <div class="faq">
 <details><summary>How do I upload a screenshot to S3 from my Mac?</summary><p>macshot can upload a capture directly to your own S3 bucket. Add your endpoint, bucket, and access keys once, then every screenshot can be sent to S3 and the resulting link copied to your clipboard automatically.</p></details>
-<details><summary>Does it work with Cloudflare R2 and Backblaze B2?</summary><p>Yes. macshot uses the S3-compatible API, so it works with Amazon S3, Cloudflare R2, Backblaze B2, MinIO, Wasabi, DigitalOcean Spaces, and any other S3-compatible provider — just point it at the right endpoint.</p></details>
-<details><summary>Where are my screenshots stored?</summary><p>In your own bucket. macshot uploads straight to the storage you configure — there's no macshot server in between, no account, and no third-party host holding your images.</p></details>
+<details><summary>Does it work with Cloudflare R2 and Backblaze B2?</summary><p>Yes. macshot uses the S3-compatible API, so it works with Amazon S3, Cloudflare R2, Backblaze B2, MinIO, Wasabi, DigitalOcean Spaces, and any other S3-compatible provider - just point it at the right endpoint.</p></details>
+<details><summary>Where are my screenshots stored?</summary><p>In your own bucket. macshot uploads straight to the storage you configure - there's no macshot server in between, no account, and no third-party host holding your images.</p></details>
 <details><summary>Is macshot free?</summary><p>Yes. macshot is free and open source under the GPLv3 license. You only pay your storage provider, if anything.</p></details>
 </div>
 </div>
