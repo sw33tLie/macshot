@@ -87,6 +87,7 @@ enum LaunchCleanup {
         TmpFileCleaner(),
         ScratchDirectoryCleaner(),
         ClipboardDirectoryCleaner(),
+        LegacyClipboardTmpDirectoryCleaner(),
     ]
 
     /// Run every cleaner off the main thread. Safe to call from
@@ -205,21 +206,27 @@ private struct ScratchDirectoryCleaner: LaunchCleaner {
     }
 }
 
-/// Sweeps everything in `tmp/macshot-clipboard/` older than 24 hours.
-///
-/// `ImageEncoder.copyToClipboard` writes a date-stamped PNG here and
-/// deletes the previous one on the next copy — at most one file ever
-/// lives here during normal use. This sweeper is a backstop for the
-/// case where macshot crashed or force-quit between writes, leaving an
-/// orphan. 24h TTL so we never race with a file that's currently
-/// referenced on the pasteboard.
+/// Sweeps retained clipboard backing files from Application Support.
+/// These files intentionally outlive a single pasteboard write so external
+/// clipboard history apps can read old entries after later captures.
 private struct ClipboardDirectoryCleaner: LaunchCleaner {
     let name = "ClipboardDirectoryCleaner"
+
+    func sweep() -> DirectorySweeper.Result {
+        ClipboardBackingStore.cleanup()
+    }
+}
+
+/// Sweeps the legacy `/tmp/macshot-clipboard/` folder used by older builds.
+/// Keep a 24h TTL so an update/restart does not immediately break a pasteboard
+/// item copied right before the app was relaunched.
+private struct LegacyClipboardTmpDirectoryCleaner: LaunchCleaner {
+    let name = "LegacyClipboardTmpDirectoryCleaner"
     private let ttl: TimeInterval = 24 * 60 * 60
 
     func sweep() -> DirectorySweeper.Result {
         return DirectorySweeper.sweep(
-            directory: ImageEncoder.clipboardTmpDirectory,
+            directory: FileManager.default.temporaryDirectory.appendingPathComponent("macshot-clipboard"),
             olderThan: ttl,
             shouldDelete: { _ in true }
         )
