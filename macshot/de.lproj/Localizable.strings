@@ -638,3 +638,26 @@
 
 /* Keyboard key names */
 "Space" = "Leertaste";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "Einstellungssicherung";
+"Export Settings…" = "Einstellungen exportieren…";
+"Import Settings…" = "Einstellungen importieren…";
+"Reveal Settings File in Finder" = "Einstellungsdatei im Finder anzeigen";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "Exportiere deine Einstellungen in eine Datei, um sie auf einen anderen Mac oder eine Neuinstallation zu übertragen. Upload-Zugangsdaten, dein Speicherordner und der Screenshot-Verlauf sind nicht enthalten. Die Einstellungen werden im App-Container von macshot gespeichert.";
+"Export Settings" = "Einstellungen exportieren";
+"Import Settings" = "Einstellungen importieren";
+"Import failed" = "Import fehlgeschlagen";
+"Settings exported" = "Einstellungen exportiert";
+"Settings imported" = "Einstellungen importiert";
+"Import" = "Importieren";
+"Later" = "Später";
+"Relaunch Now" = "Jetzt neu starten";
+"Replace your current settings?" = "Aktuelle Einstellungen ersetzen?";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "Beim Importieren werden deine aktuellen Einstellungen durch die in dieser Datei ersetzt. Dein Speicherordner, deine Upload-Zugangsdaten und dein Screenshot-Verlauf bleiben erhalten. Dies kann nicht rückgängig gemacht werden.";
+"%d settings were applied. Relaunch macshot to apply all changes." = "%d Einstellungen wurden übernommen. Starte macshot neu, um alle Änderungen anzuwenden.";
+"A few large items were too big to include. Everything else was saved." = "Einige große Objekte waren zu groß, um sie einzuschließen. Alles andere wurde gespeichert.";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "Dein eigenes Beautify-Hintergrundbild war zu groß, um es einzuschließen. Alles andere wurde gespeichert.";
+"This file is not a valid macshot settings file." = "Diese Datei ist keine gültige macshot-Einstellungsdatei.";
+"This settings file contains no settings." = "Diese Einstellungsdatei enthält keine Einstellungen.";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "Diese Einstellungsdatei wurde mit einer neueren Version von macshot erstellt. Bitte aktualisiere zuerst macshot.";

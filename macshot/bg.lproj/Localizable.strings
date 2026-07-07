@@ -636,3 +636,26 @@
 "Enable macshot:// URL scheme" = "Активиране на URL схемата macshot://";
 "URL scheme info" = "Информация за URL схема";
 "sec (0 = never)" = "сек (0 = никога)";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "Резервно копие на настройките";
+"Export Settings…" = "Експортиране на настройките…";
+"Import Settings…" = "Импортиране на настройките…";
+"Reveal Settings File in Finder" = "Показване на файла с настройки във Finder";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "Експортирайте предпочитанията си във файл, за да ги пренесете на друг Mac или на чиста инсталация. Данните за качване, папката ви за запазване и историята на екранните снимки не се включват. Настройките се съхраняват в контейнера на приложението macshot.";
+"Export Settings" = "Експортиране на настройките";
+"Import Settings" = "Импортиране на настройките";
+"Import failed" = "Импортирането е неуспешно";
+"Settings exported" = "Настройките са експортирани";
+"Settings imported" = "Настройките са импортирани";
+"Import" = "Импортиране";
+"Later" = "По-късно";
+"Relaunch Now" = "Рестартиране сега";
+"Replace your current settings?" = "Да се заменят ли текущите настройки?";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "Импортирането ще замени текущите ви предпочитания с тези във файла. Папката за запазване, данните за качване и историята на екранните снимки се запазват. Това действие не може да бъде отменено.";
+"%d settings were applied. Relaunch macshot to apply all changes." = "Приложени са %d настройки. Рестартирайте macshot, за да се приложат всички промени.";
+"A few large items were too big to include. Everything else was saved." = "Няколко големи елемента бяха твърде големи, за да бъдат включени. Всичко останало беше запазено.";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "Персонализираното ви фоново изображение за Beautify беше твърде голямо, за да бъде включено. Всичко останало беше запазено.";
+"This file is not a valid macshot settings file." = "Този файл не е валиден файл с настройки на macshot.";
+"This settings file contains no settings." = "Този файл с настройки не съдържа настройки.";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "Този файл с настройки е създаден от по-нова версия на macshot. Моля, първо актуализирайте macshot.";

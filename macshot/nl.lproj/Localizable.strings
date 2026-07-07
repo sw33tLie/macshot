@@ -638,3 +638,26 @@
 
 /* Keyboard key names */
 "Space" = "Spatie";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "Back-up van instellingen";
+"Export Settings…" = "Instellingen exporteren…";
+"Import Settings…" = "Instellingen importeren…";
+"Reveal Settings File in Finder" = "Instellingenbestand tonen in Finder";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "Exporteer je voorkeuren naar een bestand om ze naar een andere Mac of een schone installatie te verplaatsen. Uploadgegevens, je opslagmap en schermafbeeldingsgeschiedenis worden niet meegenomen. Instellingen worden bewaard in de app-container van macshot.";
+"Export Settings" = "Instellingen exporteren";
+"Import Settings" = "Instellingen importeren";
+"Import failed" = "Importeren mislukt";
+"Settings exported" = "Instellingen geëxporteerd";
+"Settings imported" = "Instellingen geïmporteerd";
+"Import" = "Importeer";
+"Later" = "Later";
+"Relaunch Now" = "Nu opnieuw starten";
+"Replace your current settings?" = "Je huidige instellingen vervangen?";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "Bij het importeren worden je huidige voorkeuren vervangen door die in dit bestand. Je opslagmap, uploadgegevens en schermafbeeldingsgeschiedenis blijven behouden. Dit kan niet ongedaan worden gemaakt.";
+"%d settings were applied. Relaunch macshot to apply all changes." = "%d instellingen zijn toegepast. Start macshot opnieuw om alle wijzigingen door te voeren.";
+"A few large items were too big to include. Everything else was saved." = "Een paar grote items waren te groot om mee te nemen. Al het overige is bewaard.";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "Je aangepaste Beautify-achtergrondafbeelding was te groot om mee te nemen. Al het overige is bewaard.";
+"This file is not a valid macshot settings file." = "Dit bestand is geen geldig macshot-instellingenbestand.";
+"This settings file contains no settings." = "Dit instellingenbestand bevat geen instellingen.";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "Dit instellingenbestand is gemaakt met een nieuwere versie van macshot. Werk macshot eerst bij.";

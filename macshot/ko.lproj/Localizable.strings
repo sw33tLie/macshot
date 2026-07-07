@@ -638,3 +638,26 @@
 "Custom · %@" = "사용자 지정 · %@";
 "Order history by last edit" = "마지막 편집순으로 기록 정렬";
 "Edited screenshots move to the top. Off keeps them in capture order." = "편집한 스크린샷이 맨 위로 이동합니다. 끄면 캡처 순서를 유지합니다.";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "설정 백업";
+"Export Settings…" = "설정 내보내기…";
+"Import Settings…" = "설정 가져오기…";
+"Reveal Settings File in Finder" = "Finder에서 설정 파일 보기";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "환경설정을 파일로 내보내 다른 Mac이나 새로 설치한 환경으로 옮길 수 있습니다. 업로드 자격 증명, 저장 폴더, 스크린샷 기록은 포함되지 않습니다. 설정은 macshot의 앱 컨테이너 안에 저장됩니다.";
+"Export Settings" = "설정 내보내기";
+"Import Settings" = "설정 가져오기";
+"Import failed" = "가져오기 실패";
+"Settings exported" = "설정을 내보냈습니다";
+"Settings imported" = "설정을 가져왔습니다";
+"Import" = "가져오기";
+"Later" = "나중에";
+"Relaunch Now" = "지금 다시 실행";
+"Replace your current settings?" = "현재 설정을 대체하시겠습니까?";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "가져오면 현재 환경설정이 이 파일의 설정으로 대체됩니다. 저장 폴더, 업로드 자격 증명, 스크린샷 기록은 유지됩니다. 이 작업은 실행 취소할 수 없습니다.";
+"%d settings were applied. Relaunch macshot to apply all changes." = "%d개의 설정이 적용되었습니다. 모든 변경 사항을 적용하려면 macshot을 다시 실행하십시오.";
+"A few large items were too big to include. Everything else was saved." = "일부 큰 항목은 크기가 너무 커서 포함되지 않았습니다. 나머지는 모두 저장되었습니다.";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "사용자 지정 Beautify 배경 이미지가 너무 커서 포함되지 않았습니다. 나머지는 모두 저장되었습니다.";
+"This file is not a valid macshot settings file." = "이 파일은 유효한 macshot 설정 파일이 아닙니다.";
+"This settings file contains no settings." = "이 설정 파일에는 설정이 없습니다.";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "이 설정 파일은 최신 버전의 macshot에서 만들어졌습니다. 먼저 macshot을 업데이트하십시오.";

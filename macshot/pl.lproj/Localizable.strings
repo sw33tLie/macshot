@@ -636,3 +636,26 @@
 
 /* Keyboard key names */
 "Space" = "Spacja";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "Kopia zapasowa ustawień";
+"Export Settings…" = "Eksportuj ustawienia…";
+"Import Settings…" = "Importuj ustawienia…";
+"Reveal Settings File in Finder" = "Pokaż plik ustawień w Finderze";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "Wyeksportuj swoje preferencje do pliku, aby przenieść je na innego Maca lub do czystej instalacji. Dane logowania do przesyłania, folder zapisu i historia zrzutów ekranu nie są uwzględniane. Ustawienia są przechowywane w kontenerze aplikacji macshot.";
+"Export Settings" = "Eksportuj ustawienia";
+"Import Settings" = "Importuj ustawienia";
+"Import failed" = "Import nie powiódł się";
+"Settings exported" = "Ustawienia wyeksportowane";
+"Settings imported" = "Ustawienia zaimportowane";
+"Import" = "Importuj";
+"Later" = "Później";
+"Relaunch Now" = "Uruchom ponownie teraz";
+"Replace your current settings?" = "Zastąpić bieżące ustawienia?";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "Import zastąpi bieżące preferencje tymi z tego pliku. Folder zapisu, dane logowania do przesyłania i historia zrzutów ekranu zostaną zachowane. Tej operacji nie można cofnąć.";
+"%d settings were applied. Relaunch macshot to apply all changes." = "Zastosowano ustawienia: %d. Uruchom ponownie macshot, aby zastosować wszystkie zmiany.";
+"A few large items were too big to include. Everything else was saved." = "Kilka dużych elementów było zbyt dużych, aby je uwzględnić. Wszystko inne zostało zapisane.";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "Twój niestandardowy obraz tła Beautify był zbyt duży, aby go uwzględnić. Wszystko inne zostało zapisane.";
+"This file is not a valid macshot settings file." = "Ten plik nie jest prawidłowym plikiem ustawień macshot.";
+"This settings file contains no settings." = "Ten plik ustawień nie zawiera żadnych ustawień.";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "Ten plik ustawień został utworzony w nowszej wersji macshot. Zaktualizuj najpierw macshot.";

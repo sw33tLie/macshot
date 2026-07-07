@@ -636,3 +636,26 @@
 "URL scheme info" = "Info skema URL";
 "Enable macshot:// URL scheme" = "Aktifkan skema URL macshot://";
 "sec (0 = never)" = "detik (0 = tidak pernah)";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "Cadangan Pengaturan";
+"Export Settings…" = "Ekspor Pengaturan…";
+"Import Settings…" = "Impor Pengaturan…";
+"Reveal Settings File in Finder" = "Tampilkan Berkas Pengaturan di Finder";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "Ekspor preferensi Anda ke sebuah berkas untuk memindahkannya ke Mac lain atau instalasi baru. Kredensial unggah, folder penyimpanan, dan riwayat tangkapan layar tidak disertakan. Pengaturan disimpan di dalam wadah aplikasi macshot.";
+"Export Settings" = "Ekspor Pengaturan";
+"Import Settings" = "Impor Pengaturan";
+"Import failed" = "Impor gagal";
+"Settings exported" = "Pengaturan diekspor";
+"Settings imported" = "Pengaturan diimpor";
+"Import" = "Impor";
+"Later" = "Nanti";
+"Relaunch Now" = "Luncurkan Ulang Sekarang";
+"Replace your current settings?" = "Ganti pengaturan Anda saat ini?";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "Mengimpor akan mengganti preferensi Anda saat ini dengan yang ada di berkas ini. Folder penyimpanan, kredensial unggah, dan riwayat tangkapan layar Anda tetap dipertahankan. Tindakan ini tidak dapat dibatalkan.";
+"%d settings were applied. Relaunch macshot to apply all changes." = "%d pengaturan telah diterapkan. Luncurkan ulang macshot untuk menerapkan semua perubahan.";
+"A few large items were too big to include. Everything else was saved." = "Beberapa item besar terlalu besar untuk disertakan. Selebihnya telah disimpan.";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "Gambar latar Beautify khusus Anda terlalu besar untuk disertakan. Selebihnya telah disimpan.";
+"This file is not a valid macshot settings file." = "Berkas ini bukan berkas pengaturan macshot yang valid.";
+"This settings file contains no settings." = "Berkas pengaturan ini tidak berisi pengaturan apa pun.";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "Berkas pengaturan ini dibuat oleh versi macshot yang lebih baru. Harap perbarui macshot terlebih dahulu.";

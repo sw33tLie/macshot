@@ -638,3 +638,26 @@
 "sec (0 = never)" = "से. (0 = कभी नहीं)";
 "Settings" = "सेटिंग्स";
 "Offline build: upload and cloud storage integrations are removed. Update checks may still connect to MacShot's update server. Screenshots and recordings stay local unless you share or save them yourself." = "ऑफ़लाइन बिल्ड: अपलोड और क्लाउड स्टोरेज इंटीग्रेशन हटा दिए गए हैं। अपडेट जाँच अब भी MacShot के अपडेट सर्वर से कनेक्ट हो सकती है। स्क्रीनशॉट और रिकॉर्डिंग स्थानीय रहते हैं जब तक कि आप उन्हें स्वयं साझा या सहेज न लें।";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "सेटिंग्स बैकअप";
+"Export Settings…" = "सेटिंग्स एक्सपोर्ट करें…";
+"Import Settings…" = "सेटिंग्स इम्पोर्ट करें…";
+"Reveal Settings File in Finder" = "सेटिंग्स फ़ाइल को Finder में दिखाएँ";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "अपनी प्राथमिकताओं को किसी फ़ाइल में एक्सपोर्ट करें ताकि उन्हें किसी दूसरे Mac पर या नई इंस्टॉल में ले जा सकें। अपलोड क्रेडेंशियल्स, आपका सेव फ़ोल्डर और स्क्रीनशॉट इतिहास शामिल नहीं हैं। सेटिंग्स macshot के ऐप कंटेनर के अंदर संग्रहीत होती हैं।";
+"Export Settings" = "सेटिंग्स एक्सपोर्ट करें";
+"Import Settings" = "सेटिंग्स इम्पोर्ट करें";
+"Import failed" = "इम्पोर्ट विफल रहा";
+"Settings exported" = "सेटिंग्स एक्सपोर्ट हो गईं";
+"Settings imported" = "सेटिंग्स इम्पोर्ट हो गईं";
+"Import" = "इम्पोर्ट करें";
+"Later" = "बाद में";
+"Relaunch Now" = "अभी पुनः लॉन्च करें";
+"Replace your current settings?" = "अपनी वर्तमान सेटिंग्स बदलें?";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "इम्पोर्ट करने से आपकी वर्तमान प्राथमिकताएँ इस फ़ाइल की प्राथमिकताओं से बदल जाएँगी। आपका सेव फ़ोल्डर, अपलोड क्रेडेंशियल्स और स्क्रीनशॉट इतिहास बना रहेगा। इसे पूर्ववत नहीं किया जा सकता।";
+"%d settings were applied. Relaunch macshot to apply all changes." = "%d सेटिंग्स लागू की गईं। सभी बदलाव लागू करने के लिए macshot को पुनः लॉन्च करें।";
+"A few large items were too big to include. Everything else was saved." = "कुछ बड़ी वस्तुएँ शामिल करने के लिए बहुत बड़ी थीं। बाकी सब कुछ सहेज लिया गया।";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "आपकी कस्टम Beautify बैकग्राउंड छवि शामिल करने के लिए बहुत बड़ी थी। बाकी सब कुछ सहेज लिया गया।";
+"This file is not a valid macshot settings file." = "यह फ़ाइल एक मान्य macshot सेटिंग्स फ़ाइल नहीं है।";
+"This settings file contains no settings." = "इस सेटिंग्स फ़ाइल में कोई सेटिंग्स नहीं हैं।";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "यह सेटिंग्स फ़ाइल macshot के किसी नए संस्करण द्वारा बनाई गई थी। कृपया पहले macshot को अपडेट करें।";

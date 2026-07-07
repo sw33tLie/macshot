@@ -638,3 +638,26 @@
 "Trigger macshot from Raycast, Alfred, Shortcuts, or any tool that opens URLs." = "Raycast, Alfred, Shortcuts அல்லது URL-களைத் திறக்கும் எந்தக் கருவியிலிருந்தும் macshot-ஐத் தூண்டவும்.";
 "URL scheme info" = "URL திட்ட தகவல்";
 "sec (0 = never)" = "வி (0 = ஒருபோதும் இல்லை)";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "அமைப்புகள் காப்புப்பிரதி";
+"Export Settings…" = "அமைப்புகளை ஏற்றுமதி செய்…";
+"Import Settings…" = "அமைப்புகளை இறக்குமதி செய்…";
+"Reveal Settings File in Finder" = "அமைப்புகள் கோப்பை Finder இல் காட்டு";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "உங்கள் விருப்பங்களை மற்றொரு Mac அல்லது புதிய நிறுவலுக்கு நகர்த்த ஒரு கோப்பிற்கு ஏற்றுமதி செய்யுங்கள். பதிவேற்ற சான்றுகள், உங்கள் சேமிப்புக் கோப்புறை மற்றும் திரைப்பிடிப்பு வரலாறு சேர்க்கப்படவில்லை. அமைப்புகள் macshot இன் ஆப் கன்டெய்னருக்குள் சேமிக்கப்படுகின்றன.";
+"Export Settings" = "அமைப்புகளை ஏற்றுமதி செய்";
+"Import Settings" = "அமைப்புகளை இறக்குமதி செய்";
+"Import failed" = "இறக்குமதி தோல்வியடைந்தது";
+"Settings exported" = "அமைப்புகள் ஏற்றுமதி செய்யப்பட்டன";
+"Settings imported" = "அமைப்புகள் இறக்குமதி செய்யப்பட்டன";
+"Import" = "இறக்குமதி";
+"Later" = "பிறகு";
+"Relaunch Now" = "இப்போதே மீண்டும் தொடங்கு";
+"Replace your current settings?" = "உங்கள் தற்போதைய அமைப்புகளை மாற்றவா?";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "இறக்குமதி செய்வது உங்கள் தற்போதைய விருப்பங்களை இந்தக் கோப்பில் உள்ளவற்றால் மாற்றிவிடும். உங்கள் சேமிப்புக் கோப்புறை, பதிவேற்ற சான்றுகள் மற்றும் திரைப்பிடிப்பு வரலாறு தக்கவைக்கப்படும். இதைச் செயல்தவிர்க்க முடியாது.";
+"%d settings were applied. Relaunch macshot to apply all changes." = "%d அமைப்புகள் பயன்படுத்தப்பட்டன. அனைத்து மாற்றங்களையும் பயன்படுத்த macshot ஐ மீண்டும் தொடங்குங்கள்.";
+"A few large items were too big to include. Everything else was saved." = "சில பெரிய உருப்படிகள் சேர்க்க முடியாத அளவுக்குப் பெரியதாக இருந்தன. மற்ற அனைத்தும் சேமிக்கப்பட்டன.";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "உங்கள் தனிப்பயன் Beautify பின்னணிப் படம் சேர்க்க முடியாத அளவுக்குப் பெரியதாக இருந்தது. மற்ற அனைத்தும் சேமிக்கப்பட்டன.";
+"This file is not a valid macshot settings file." = "இந்தக் கோப்பு செல்லுபடியாகும் macshot அமைப்புகள் கோப்பு அல்ல.";
+"This settings file contains no settings." = "இந்த அமைப்புகள் கோப்பில் எந்த அமைப்புகளும் இல்லை.";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "இந்த அமைப்புகள் கோப்பு macshot இன் புதிய பதிப்பால் உருவாக்கப்பட்டது. முதலில் macshot ஐப் புதுப்பிக்கவும்.";

@@ -636,3 +636,26 @@
 "URL scheme info" = "URL-skjemainformasjon";
 "Enable macshot:// URL scheme" = "Aktiver macshot://-URL-skjema";
 "sec (0 = never)" = "sek (0 = aldri)";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "Sikkerhetskopi av innstillinger";
+"Export Settings…" = "Eksporter innstillinger…";
+"Import Settings…" = "Importer innstillinger…";
+"Reveal Settings File in Finder" = "Vis innstillingsfil i Finder";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "Eksporter innstillingene dine til en fil for å flytte dem til en annen Mac eller en ren installasjon. Opplastingslegitimasjon, lagringsmappen din og skjermbildehistorikk er ikke inkludert. Innstillingene lagres i macshots appbeholder.";
+"Export Settings" = "Eksporter innstillinger";
+"Import Settings" = "Importer innstillinger";
+"Import failed" = "Importen mislyktes";
+"Settings exported" = "Innstillinger eksportert";
+"Settings imported" = "Innstillinger importert";
+"Import" = "Importer";
+"Later" = "Senere";
+"Relaunch Now" = "Start på nytt nå";
+"Replace your current settings?" = "Erstatte nåværende innstillinger?";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "Import erstatter de nåværende innstillingene dine med dem i denne filen. Lagringsmappen din, opplastingslegitimasjon og skjermbildehistorikk beholdes. Dette kan ikke angres.";
+"%d settings were applied. Relaunch macshot to apply all changes." = "%d innstillinger ble brukt. Start macshot på nytt for å bruke alle endringene.";
+"A few large items were too big to include. Everything else was saved." = "Noen få store elementer var for store til å inkluderes. Alt annet ble lagret.";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "Det egendefinerte Beautify-bakgrunnsbildet ditt var for stort til å inkluderes. Alt annet ble lagret.";
+"This file is not a valid macshot settings file." = "Denne filen er ikke en gyldig macshot-innstillingsfil.";
+"This settings file contains no settings." = "Denne innstillingsfilen inneholder ingen innstillinger.";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "Denne innstillingsfilen ble laget av en nyere versjon av macshot. Oppdater macshot først.";

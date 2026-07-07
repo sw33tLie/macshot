@@ -638,3 +638,26 @@
 "sec (0 = never)" = "seg (0 = hindi kailanman)";
 "Settings" = "Settings";
 "Offline build: upload and cloud storage integrations are removed. Update checks may still connect to MacShot's update server. Screenshots and recordings stay local unless you share or save them yourself." = "Offline build: inalis ang mga integrasyon para sa pag-upload at cloud storage. Maaaring kumonekta pa rin ang mga pagsusuri sa update sa update server ng MacShot. Nananatiling lokal ang mga screenshot at recording maliban kung ibabahagi o ise-save mo mismo ang mga ito.";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "Backup ng Mga Setting";
+"Export Settings…" = "I-export ang Mga Setting…";
+"Import Settings…" = "Mag-import ng Mga Setting…";
+"Reveal Settings File in Finder" = "Ipakita ang Settings File sa Finder";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "I-export ang iyong mga kagustuhan sa isang file para ilipat ang mga ito sa ibang Mac o sa isang malinis na install. Hindi kasama ang upload credentials, ang iyong save folder, at ang history ng mga screenshot. Naka-store ang mga setting sa loob ng app container ng macshot.";
+"Export Settings" = "I-export ang Mga Setting";
+"Import Settings" = "Mag-import ng Mga Setting";
+"Import failed" = "Nabigo ang pag-import";
+"Settings exported" = "Na-export ang mga setting";
+"Settings imported" = "Na-import ang mga setting";
+"Import" = "I-import";
+"Later" = "Mamaya";
+"Relaunch Now" = "I-relaunch Ngayon";
+"Replace your current settings?" = "Palitan ang iyong kasalukuyang mga setting?";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "Papalitan ng pag-import ang iyong kasalukuyang mga kagustuhan ng mga nasa file na ito. Mananatili ang iyong save folder, upload credentials, at history ng mga screenshot. Hindi ito maaaring i-undo.";
+"%d settings were applied. Relaunch macshot to apply all changes." = "%d na setting ang na-apply. I-relaunch ang macshot para i-apply ang lahat ng pagbabago.";
+"A few large items were too big to include. Everything else was saved." = "May ilang malalaking item na masyadong malaki para isama. Na-save ang lahat ng iba pa.";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "Masyadong malaki ang iyong custom na Beautify background image para isama. Na-save ang lahat ng iba pa.";
+"This file is not a valid macshot settings file." = "Ang file na ito ay hindi isang valid na settings file ng macshot.";
+"This settings file contains no settings." = "Walang lamang setting ang settings file na ito.";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "Ang settings file na ito ay ginawa ng mas bagong bersyon ng macshot. Mangyaring i-update muna ang macshot.";

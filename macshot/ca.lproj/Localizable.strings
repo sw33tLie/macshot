@@ -638,3 +638,26 @@
 "Freeform" = "Forma lliure";
 "Units" = "Unitats";
 "Keep ratio for next captures" = "Mantenir la relació per a les properes captures";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "Còpia de seguretat de la configuració";
+"Export Settings…" = "Exporta la configuració…";
+"Import Settings…" = "Importa la configuració…";
+"Reveal Settings File in Finder" = "Mostra el fitxer de configuració al Finder";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "Exporta les preferències a un fitxer per traslladar-les a un altre Mac o a una instal·lació nova. Les credencials de pujada, la carpeta de desament i l'historial de captures no s'hi inclouen. La configuració es desa dins del contenidor de l'app de macshot.";
+"Export Settings" = "Exporta la configuració";
+"Import Settings" = "Importa la configuració";
+"Import failed" = "La importació ha fallat";
+"Settings exported" = "Configuració exportada";
+"Settings imported" = "Configuració importada";
+"Import" = "Importa";
+"Later" = "Més tard";
+"Relaunch Now" = "Reinicia ara";
+"Replace your current settings?" = "Vols substituir la configuració actual?";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "En importar, se substituiran les preferències actuals per les d'aquest fitxer. La carpeta de desament, les credencials de pujada i l'historial de captures es conserven. Aquesta acció no es pot desfer.";
+"%d settings were applied. Relaunch macshot to apply all changes." = "S'han aplicat %d opcions de configuració. Reinicia macshot per aplicar tots els canvis.";
+"A few large items were too big to include. Everything else was saved." = "Alguns elements grans eren massa grossos per incloure'ls. La resta s'ha desat.";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "La teva imatge de fons personalitzada de Beautify era massa gran per incloure-la. La resta s'ha desat.";
+"This file is not a valid macshot settings file." = "Aquest fitxer no és un fitxer de configuració de macshot vàlid.";
+"This settings file contains no settings." = "Aquest fitxer de configuració no conté cap opció.";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "Aquest fitxer de configuració s'ha creat amb una versió més recent de macshot. Actualitza macshot primer.";

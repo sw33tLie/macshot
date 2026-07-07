@@ -638,3 +638,26 @@
 "Enable macshot:// URL scheme" = "Омогући URL шему macshot://";
 "URL scheme info" = "Информације о URL шеми";
 "sec (0 = never)" = "сек (0 = никад)";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "Rezervna kopija podešavanja";
+"Export Settings…" = "Izvezi podešavanja…";
+"Import Settings…" = "Uvezi podešavanja…";
+"Reveal Settings File in Finder" = "Prikaži datoteku podešavanja u Finderu";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "Izvezite svoja podešavanja u datoteku da biste ih preneli na drugi Mac ili čistu instalaciju. Akreditivi za otpremanje, vaša fascikla za čuvanje i istorija snimaka ekrana nisu uključeni. Podešavanja se čuvaju unutar kontejnera aplikacije macshot.";
+"Export Settings" = "Izvezi podešavanja";
+"Import Settings" = "Uvezi podešavanja";
+"Import failed" = "Uvoz nije uspeo";
+"Settings exported" = "Podešavanja su izvezena";
+"Settings imported" = "Podešavanja su uvezena";
+"Import" = "Uvezi";
+"Later" = "Kasnije";
+"Relaunch Now" = "Ponovo pokreni sada";
+"Replace your current settings?" = "Zameniti trenutna podešavanja?";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "Uvoz će zameniti vaša trenutna podešavanja onima iz ove datoteke. Vaša fascikla za čuvanje, akreditivi za otpremanje i istorija snimaka ekrana ostaju sačuvani. Ovo se ne može opozvati.";
+"%d settings were applied. Relaunch macshot to apply all changes." = "Primenjeno je %d podešavanja. Ponovo pokrenite macshot da biste primenili sve promene.";
+"A few large items were too big to include. Everything else was saved." = "Nekoliko velikih stavki je bilo preveliko da bi bilo uključeno. Sve ostalo je sačuvano.";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "Vaša prilagođena Beautify pozadinska slika je bila prevelika da bi bila uključena. Sve ostalo je sačuvano.";
+"This file is not a valid macshot settings file." = "Ova datoteka nije važeća datoteka podešavanja aplikacije macshot.";
+"This settings file contains no settings." = "Ova datoteka podešavanja ne sadrži nijedno podešavanje.";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "Ova datoteka podešavanja je napravljena novijom verzijom aplikacije macshot. Prvo ažurirajte macshot.";

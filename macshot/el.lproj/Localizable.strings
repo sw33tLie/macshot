@@ -638,3 +638,26 @@
 "Trigger macshot from Raycast, Alfred, Shortcuts, or any tool that opens URLs." = "Ενεργοποιήστε το macshot από το Raycast, το Alfred, τα Shortcuts ή οποιοδήποτε εργαλείο ανοίγει URLs.";
 "URL scheme info" = "Πληροφορίες URL scheme";
 "sec (0 = never)" = "δευτ. (0 = ποτέ)";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "Αντίγραφο ασφαλείας ρυθμίσεων";
+"Export Settings…" = "Εξαγωγή ρυθμίσεων…";
+"Import Settings…" = "Εισαγωγή ρυθμίσεων…";
+"Reveal Settings File in Finder" = "Εμφάνιση αρχείου ρυθμίσεων στο Finder";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "Εξαγάγετε τις προτιμήσεις σας σε ένα αρχείο για να τις μεταφέρετε σε άλλο Mac ή σε μια καθαρή εγκατάσταση. Τα διαπιστευτήρια μεταφόρτωσης, ο φάκελος αποθήκευσης και το ιστορικό στιγμιότυπων δεν περιλαμβάνονται. Οι ρυθμίσεις αποθηκεύονται μέσα στο app container του macshot.";
+"Export Settings" = "Εξαγωγή ρυθμίσεων";
+"Import Settings" = "Εισαγωγή ρυθμίσεων";
+"Import failed" = "Η εισαγωγή απέτυχε";
+"Settings exported" = "Οι ρυθμίσεις εξήχθησαν";
+"Settings imported" = "Οι ρυθμίσεις εισήχθησαν";
+"Import" = "Εισαγωγή";
+"Later" = "Αργότερα";
+"Relaunch Now" = "Επανεκκίνηση τώρα";
+"Replace your current settings?" = "Αντικατάσταση των τρεχουσών ρυθμίσεων;";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "Η εισαγωγή θα αντικαταστήσει τις τρέχουσες προτιμήσεις σας με αυτές του αρχείου. Ο φάκελος αποθήκευσης, τα διαπιστευτήρια μεταφόρτωσης και το ιστορικό στιγμιότυπων διατηρούνται. Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.";
+"%d settings were applied. Relaunch macshot to apply all changes." = "Εφαρμόστηκαν %d ρυθμίσεις. Κάντε επανεκκίνηση του macshot για να εφαρμοστούν όλες οι αλλαγές.";
+"A few large items were too big to include. Everything else was saved." = "Ορισμένα μεγάλα στοιχεία ήταν πολύ μεγάλα για να συμπεριληφθούν. Όλα τα υπόλοιπα αποθηκεύτηκαν.";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "Η προσαρμοσμένη εικόνα φόντου Beautify ήταν πολύ μεγάλη για να συμπεριληφθεί. Όλα τα υπόλοιπα αποθηκεύτηκαν.";
+"This file is not a valid macshot settings file." = "Αυτό το αρχείο δεν είναι έγκυρο αρχείο ρυθμίσεων του macshot.";
+"This settings file contains no settings." = "Αυτό το αρχείο ρυθμίσεων δεν περιέχει ρυθμίσεις.";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "Αυτό το αρχείο ρυθμίσεων δημιουργήθηκε από νεότερη έκδοση του macshot. Ενημερώστε πρώτα το macshot.";

@@ -638,3 +638,26 @@
 "URL scheme info" = "Maklumat skema URL";
 "Enable macshot:// URL scheme" = "Dayakan skema URL macshot://";
 "sec (0 = never)" = "saat (0 = tidak pernah)";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "Sandaran Tetapan";
+"Export Settings…" = "Eksport Tetapan…";
+"Import Settings…" = "Import Tetapan…";
+"Reveal Settings File in Finder" = "Tunjukkan Fail Tetapan dalam Finder";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "Eksport keutamaan anda ke fail untuk memindahkannya ke Mac lain atau pemasangan bersih. Kelayakan muat naik, folder simpanan anda, dan sejarah tangkapan skrin tidak disertakan. Tetapan disimpan di dalam bekas aplikasi macshot.";
+"Export Settings" = "Eksport Tetapan";
+"Import Settings" = "Import Tetapan";
+"Import failed" = "Import gagal";
+"Settings exported" = "Tetapan dieksport";
+"Settings imported" = "Tetapan diimport";
+"Import" = "Import";
+"Later" = "Kemudian";
+"Relaunch Now" = "Lancar Semula Sekarang";
+"Replace your current settings?" = "Gantikan tetapan semasa anda?";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "Mengimport akan menggantikan keutamaan semasa anda dengan yang terdapat dalam fail ini. Folder simpanan, kelayakan muat naik, dan sejarah tangkapan skrin anda dikekalkan. Tindakan ini tidak boleh dibatalkan.";
+"%d settings were applied. Relaunch macshot to apply all changes." = "%d tetapan telah digunakan. Lancar semula macshot untuk menggunakan semua perubahan.";
+"A few large items were too big to include. Everything else was saved." = "Beberapa item besar terlalu besar untuk disertakan. Selebihnya telah disimpan.";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "Imej latar Beautify tersuai anda terlalu besar untuk disertakan. Selebihnya telah disimpan.";
+"This file is not a valid macshot settings file." = "Fail ini bukan fail tetapan macshot yang sah.";
+"This settings file contains no settings." = "Fail tetapan ini tidak mengandungi sebarang tetapan.";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "Fail tetapan ini dibuat oleh versi macshot yang lebih baharu. Sila kemas kini macshot terlebih dahulu.";

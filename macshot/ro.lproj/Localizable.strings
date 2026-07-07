@@ -636,3 +636,26 @@
 "Trigger macshot from Raycast, Alfred, Shortcuts, or any tool that opens URLs." = "Declanseaza macshot din Raycast, Alfred, Shortcuts sau orice instrument care deschide URL-uri.";
 "URL scheme info" = "Informatii schema URL";
 "sec (0 = never)" = "sec (0 = niciodata)";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "Copie de rezervă a setărilor";
+"Export Settings…" = "Exportă setările…";
+"Import Settings…" = "Importă setările…";
+"Reveal Settings File in Finder" = "Afișează fișierul de setări în Finder";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "Exportă preferințele într-un fișier pentru a le muta pe alt Mac sau pe o instalare nouă. Datele de autentificare pentru încărcare, folderul de salvare și istoricul capturilor nu sunt incluse. Setările sunt stocate în containerul aplicației macshot.";
+"Export Settings" = "Exportă setările";
+"Import Settings" = "Importă setările";
+"Import failed" = "Importul a eșuat";
+"Settings exported" = "Setări exportate";
+"Settings imported" = "Setări importate";
+"Import" = "Importă";
+"Later" = "Mai târziu";
+"Relaunch Now" = "Relansează acum";
+"Replace your current settings?" = "Înlocuiești setările curente?";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "Importarea va înlocui preferințele curente cu cele din acest fișier. Folderul de salvare, datele de autentificare pentru încărcare și istoricul capturilor sunt păstrate. Această acțiune nu poate fi anulată.";
+"%d settings were applied. Relaunch macshot to apply all changes." = "%d setări au fost aplicate. Relansează macshot pentru a aplica toate modificările.";
+"A few large items were too big to include. Everything else was saved." = "Câteva elemente mari au fost prea voluminoase pentru a fi incluse. Restul a fost salvat.";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "Imaginea personalizată de fundal Beautify a fost prea mare pentru a fi inclusă. Restul a fost salvat.";
+"This file is not a valid macshot settings file." = "Acest fișier nu este un fișier de setări macshot valid.";
+"This settings file contains no settings." = "Acest fișier de setări nu conține nicio setare.";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "Acest fișier de setări a fost creat cu o versiune mai nouă de macshot. Actualizează mai întâi macshot.";

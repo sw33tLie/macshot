@@ -638,3 +638,26 @@
 "sec (0 = never)" = "ثانیه (0 = هرگز)";
 "Settings" = "تنظیمات";
 "Offline build: upload and cloud storage integrations are removed. Update checks may still connect to MacShot's update server. Screenshots and recordings stay local unless you share or save them yourself." = "نسخهٔ آفلاین: یکپارچه‌سازی‌های بارگذاری و فضای ابری حذف شده‌اند. بررسی به‌روزرسانی‌ها ممکن است همچنان به سرور به‌روزرسانی MacShot متصل شود. اسکرین‌شات‌ها و ضبط‌ها محلی می‌مانند مگر اینکه خودتان آن‌ها را به اشتراک بگذارید یا ذخیره کنید.";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "پشتیبان‌گیری تنظیمات";
+"Export Settings…" = "برون‌بری تنظیمات…";
+"Import Settings…" = "درون‌ری تنظیمات…";
+"Reveal Settings File in Finder" = "نمایش فایل تنظیمات در Finder";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "ترجیحات خود را به یک فایل برون‌بری کنید تا آن‌ها را به Mac دیگری یا یک نصب تازه منتقل کنید. اطلاعات ورود بارگذاری، پوشه‌ی ذخیره و تاریخچه‌ی اسکرین‌شات‌ها گنجانده نمی‌شوند. تنظیمات درون کانتینر برنامه‌ی macshot ذخیره می‌شوند.";
+"Export Settings" = "برون‌بری تنظیمات";
+"Import Settings" = "درون‌ری تنظیمات";
+"Import failed" = "درون‌ری ناموفق بود";
+"Settings exported" = "تنظیمات برون‌بری شد";
+"Settings imported" = "تنظیمات درون‌ری شد";
+"Import" = "درون‌ری";
+"Later" = "بعداً";
+"Relaunch Now" = "اکنون راه‌اندازی مجدد";
+"Replace your current settings?" = "تنظیمات فعلی خود را جایگزین می‌کنید؟";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "درون‌ری، ترجیحات فعلی شما را با ترجیحات موجود در این فایل جایگزین می‌کند. پوشه‌ی ذخیره، اطلاعات ورود بارگذاری و تاریخچه‌ی اسکرین‌شات‌های شما حفظ می‌شوند. این عمل قابل بازگردانی نیست.";
+"%d settings were applied. Relaunch macshot to apply all changes." = "%d تنظیم اعمال شد. برای اعمال همه‌ی تغییرات، macshot را دوباره راه‌اندازی کنید.";
+"A few large items were too big to include. Everything else was saved." = "چند مورد حجیم برای گنجاندن بسیار بزرگ بودند. باقی موارد ذخیره شدند.";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "تصویر پس‌زمینه‌ی سفارشی Beautify شما برای گنجاندن بسیار بزرگ بود. باقی موارد ذخیره شدند.";
+"This file is not a valid macshot settings file." = "این فایل یک فایل تنظیمات معتبر macshot نیست.";
+"This settings file contains no settings." = "این فایل تنظیمات حاوی هیچ تنظیمی نیست.";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "این فایل تنظیمات توسط نسخه‌ی جدیدتری از macshot ساخته شده است. لطفاً ابتدا macshot را به‌روزرسانی کنید.";

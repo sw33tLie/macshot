@@ -638,3 +638,26 @@
 "URL scheme info" = "URL scheme 資訊";
 "Enable macshot:// URL scheme" = "啟用 macshot:// URL scheme";
 "sec (0 = never)" = "秒（0 = 永不）";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "設定備份";
+"Export Settings…" = "匯出設定…";
+"Import Settings…" = "匯入設定…";
+"Reveal Settings File in Finder" = "在 Finder 中顯示設定檔案";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "將偏好設定匯出至檔案，以便移轉至另一部 Mac 或全新安裝環境。上傳認證資料、儲存資料夾及截圖記錄不會包含在內。設定儲存於 macshot 的 App 容器中。";
+"Export Settings" = "匯出設定";
+"Import Settings" = "匯入設定";
+"Import failed" = "匯入失敗";
+"Settings exported" = "設定已匯出";
+"Settings imported" = "設定已匯入";
+"Import" = "匯入";
+"Later" = "稍後";
+"Relaunch Now" = "立即重新啟動";
+"Replace your current settings?" = "要取代目前的設定嗎？";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "匯入將以此檔案中的偏好設定取代您目前的偏好設定。您的儲存資料夾、上傳認證資料及截圖記錄會保留。此操作無法復原。";
+"%d settings were applied. Relaunch macshot to apply all changes." = "已套用 %d 項設定。請重新啟動 macshot 以套用所有變更。";
+"A few large items were too big to include. Everything else was saved." = "部分較大的項目因體積過大而未包含在內。其餘項目皆已儲存。";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "您自訂的 Beautify 背景圖片因體積過大而未包含在內。其餘項目皆已儲存。";
+"This file is not a valid macshot settings file." = "此檔案不是有效的 macshot 設定檔案。";
+"This settings file contains no settings." = "此設定檔案不含任何設定。";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "此設定檔案是由較新版本的 macshot 所建立。請先更新 macshot。";

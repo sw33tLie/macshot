@@ -638,3 +638,26 @@
 
 /* Keyboard key names */
 "Space" = "Espaço";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "Cópia de segurança das definições";
+"Export Settings…" = "Exportar definições…";
+"Import Settings…" = "Importar definições…";
+"Reveal Settings File in Finder" = "Mostrar ficheiro de definições no Finder";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "Exporte as suas preferências para um ficheiro para as transferir para outro Mac ou uma instalação limpa. As credenciais de carregamento, a sua pasta de gravação e o histórico de capturas de ecrã não são incluídos. As definições são guardadas no contentor de aplicação do macshot.";
+"Export Settings" = "Exportar definições";
+"Import Settings" = "Importar definições";
+"Import failed" = "A importação falhou";
+"Settings exported" = "Definições exportadas";
+"Settings imported" = "Definições importadas";
+"Import" = "Importar";
+"Later" = "Mais tarde";
+"Relaunch Now" = "Reiniciar agora";
+"Replace your current settings?" = "Substituir as definições atuais?";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "A importação vai substituir as suas preferências atuais pelas deste ficheiro. A sua pasta de gravação, as credenciais de carregamento e o histórico de capturas de ecrã são mantidos. Esta ação não pode ser anulada.";
+"%d settings were applied. Relaunch macshot to apply all changes." = "Foram aplicadas %d definições. Reinicie o macshot para aplicar todas as alterações.";
+"A few large items were too big to include. Everything else was saved." = "Alguns itens grandes eram demasiado grandes para incluir. Tudo o resto foi guardado.";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "A sua imagem de fundo Beautify personalizada era demasiado grande para incluir. Tudo o resto foi guardado.";
+"This file is not a valid macshot settings file." = "Este ficheiro não é um ficheiro de definições do macshot válido.";
+"This settings file contains no settings." = "Este ficheiro de definições não contém definições.";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "Este ficheiro de definições foi criado por uma versão mais recente do macshot. Atualize primeiro o macshot.";

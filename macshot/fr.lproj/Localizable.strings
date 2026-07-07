@@ -636,3 +636,26 @@
 "Space" = "Espace";
 "Settings" = "Réglages";
 "Offline build: upload and cloud storage integrations are removed. Update checks may still connect to MacShot's update server. Screenshots and recordings stay local unless you share or save them yourself." = "Version hors ligne : les intégrations de téléversement et de stockage cloud sont supprimées. La recherche de mises à jour peut toujours se connecter au serveur de mise à jour de MacShot. Les captures d'écran et les enregistrements restent locaux à moins que vous ne les partagiez ou ne les enregistriez vous-même.";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "Sauvegarde des réglages";
+"Export Settings…" = "Exporter les réglages…";
+"Import Settings…" = "Importer les réglages…";
+"Reveal Settings File in Finder" = "Afficher le fichier de réglages dans le Finder";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "Exportez vos préférences dans un fichier pour les transférer vers un autre Mac ou une nouvelle installation. Les identifiants d'envoi, votre dossier d'enregistrement et l'historique des captures ne sont pas inclus. Les réglages sont stockés dans le conteneur de l'app macshot.";
+"Export Settings" = "Exporter les réglages";
+"Import Settings" = "Importer les réglages";
+"Import failed" = "Échec de l'importation";
+"Settings exported" = "Réglages exportés";
+"Settings imported" = "Réglages importés";
+"Import" = "Importer";
+"Later" = "Plus tard";
+"Relaunch Now" = "Relancer maintenant";
+"Replace your current settings?" = "Remplacer vos réglages actuels ?";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "L'importation remplacera vos préférences actuelles par celles de ce fichier. Votre dossier d'enregistrement, vos identifiants d'envoi et l'historique des captures sont conservés. Cette action est irréversible.";
+"%d settings were applied. Relaunch macshot to apply all changes." = "%d réglages ont été appliqués. Relancez macshot pour appliquer toutes les modifications.";
+"A few large items were too big to include. Everything else was saved." = "Quelques éléments volumineux étaient trop grands pour être inclus. Tout le reste a été enregistré.";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "Votre image d'arrière-plan Beautify personnalisée était trop grande pour être incluse. Tout le reste a été enregistré.";
+"This file is not a valid macshot settings file." = "Ce fichier n'est pas un fichier de réglages macshot valide.";
+"This settings file contains no settings." = "Ce fichier de réglages ne contient aucun réglage.";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "Ce fichier de réglages a été créé par une version plus récente de macshot. Veuillez d'abord mettre à jour macshot.";

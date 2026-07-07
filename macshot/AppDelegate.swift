@@ -1,6 +1,7 @@
 import Cocoa
 import Carbon
 import Sparkle
+import ServiceManagement
 import UniformTypeIdentifiers
 import AVFoundation
 import Vision
@@ -661,6 +662,45 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     func refreshStatusBarIcon() {
         guard recordingEngine == nil, let button = statusItem.button else { return }
         applyPreferredIconImage(to: button)
+    }
+
+    /// Re-apply the live side-effects of settings that were just bulk-imported
+    /// (SettingsPortability). Cheap, well-defined effects are applied immediately;
+    /// everything read once at launch takes effect after the relaunch prompt.
+    func reapplySettingsAfterImport() {
+        // Hotkeys: re-register every slot with the imported keycodes/modifiers.
+        HotkeyManager.shared.unregisterAll()
+        registerHotkey()
+
+        // Launch-at-login: sync the login item to the imported value.
+        if #available(macOS 13.0, *) {
+            let enabled = UserDefaults.standard.bool(forKey: "launchAtLogin")
+            do {
+                if enabled { try SMAppService.mainApp.register() }
+                else { try SMAppService.mainApp.unregister() }
+            } catch {
+                #if DEBUG
+                print("reapplySettingsAfterImport: login item update failed: \(error)")
+                #endif
+            }
+        }
+
+        // Menu bar icon visibility + appearance.
+        setMenuBarIconVisible(!UserDefaults.standard.bool(forKey: "hideMenuBarIcon"))
+        refreshStatusBarIcon()
+        rebuildStatusBarMenu()
+    }
+
+    /// Relaunch the app so settings read once at launch take effect. Launches a fresh
+    /// instance via NSWorkspace (no shell, no sleep), then terminates this one once the
+    /// new copy is up. `createsNewApplicationInstance` lets the replacement start before
+    /// this process exits, so there's no window where no instance is running.
+    static func relaunchApp() {
+        let config = NSWorkspace.OpenConfiguration()
+        config.createsNewApplicationInstance = true
+        NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: config) { _, _ in
+            DispatchQueue.main.async { NSApp.terminate(nil) }
+        }
     }
 
     private func rebuildStatusBarMenu() {

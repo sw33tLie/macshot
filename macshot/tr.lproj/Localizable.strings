@@ -638,3 +638,26 @@
 "Trigger macshot from Raycast, Alfred, Shortcuts, or any tool that opens URLs." = "macshot'u Raycast, Alfred, Shortcuts veya URL açan herhangi bir araçtan tetikleyin.";
 "URL scheme info" = "URL şeması bilgisi";
 "sec (0 = never)" = "sn (0 = asla)";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "Ayar Yedeği";
+"Export Settings…" = "Ayarları Dışa Aktar…";
+"Import Settings…" = "Ayarları İçe Aktar…";
+"Reveal Settings File in Finder" = "Ayar Dosyasını Finder'da Göster";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "Tercihlerinizi başka bir Mac'e ya da temiz bir kuruluma taşımak için bir dosyaya dışa aktarın. Yükleme kimlik bilgileri, kayıt klasörünüz ve ekran görüntüsü geçmişi dahil edilmez. Ayarlar macshot'un uygulama kapsayıcısında saklanır.";
+"Export Settings" = "Ayarları Dışa Aktar";
+"Import Settings" = "Ayarları İçe Aktar";
+"Import failed" = "İçe aktarma başarısız oldu";
+"Settings exported" = "Ayarlar dışa aktarıldı";
+"Settings imported" = "Ayarlar içe aktarıldı";
+"Import" = "İçe Aktar";
+"Later" = "Daha Sonra";
+"Relaunch Now" = "Şimdi Yeniden Başlat";
+"Replace your current settings?" = "Mevcut ayarlarınız değiştirilsin mi?";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "İçe aktarma, mevcut tercihlerinizi bu dosyadakilerle değiştirir. Kayıt klasörünüz, yükleme kimlik bilgileriniz ve ekran görüntüsü geçmişiniz korunur. Bu işlem geri alınamaz.";
+"%d settings were applied. Relaunch macshot to apply all changes." = "%d ayar uygulandı. Tüm değişiklikleri uygulamak için macshot'u yeniden başlatın.";
+"A few large items were too big to include. Everything else was saved." = "Birkaç büyük öğe dahil edilemeyecek kadar büyüktü. Diğer her şey kaydedildi.";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "Özel Beautify arka plan görüntünüz dahil edilemeyecek kadar büyüktü. Diğer her şey kaydedildi.";
+"This file is not a valid macshot settings file." = "Bu dosya geçerli bir macshot ayar dosyası değil.";
+"This settings file contains no settings." = "Bu ayar dosyası hiçbir ayar içermiyor.";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "Bu ayar dosyası macshot'un daha yeni bir sürümüyle oluşturulmuş. Lütfen önce macshot'u güncelleyin.";

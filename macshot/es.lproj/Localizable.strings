@@ -638,3 +638,26 @@
 "Space" = "Espacio";
 "Settings" = "Ajustes";
 "Offline build: upload and cloud storage integrations are removed. Update checks may still connect to MacShot's update server. Screenshots and recordings stay local unless you share or save them yourself." = "Versión sin conexión: se han eliminado las integraciones de subida y almacenamiento en la nube. Las comprobaciones de actualizaciones aún pueden conectarse al servidor de actualizaciones de MacShot. Las capturas de pantalla y las grabaciones permanecen locales a menos que las compartas o las guardes tú mismo.";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "Copia de seguridad de ajustes";
+"Export Settings…" = "Exportar ajustes…";
+"Import Settings…" = "Importar ajustes…";
+"Reveal Settings File in Finder" = "Mostrar archivo de ajustes en el Finder";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "Exporta tus preferencias a un archivo para trasladarlas a otro Mac o a una instalación limpia. No se incluyen las credenciales de subida, tu carpeta de guardado ni el historial de capturas. Los ajustes se almacenan dentro del contenedor de la app de macshot.";
+"Export Settings" = "Exportar ajustes";
+"Import Settings" = "Importar ajustes";
+"Import failed" = "Error al importar";
+"Settings exported" = "Ajustes exportados";
+"Settings imported" = "Ajustes importados";
+"Import" = "Importar";
+"Later" = "Más tarde";
+"Relaunch Now" = "Reiniciar ahora";
+"Replace your current settings?" = "¿Reemplazar tus ajustes actuales?";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "Al importar se reemplazarán tus preferencias actuales por las de este archivo. Se conservan tu carpeta de guardado, las credenciales de subida y el historial de capturas. Esta acción no se puede deshacer.";
+"%d settings were applied. Relaunch macshot to apply all changes." = "Se aplicaron %d ajustes. Reinicia macshot para aplicar todos los cambios.";
+"A few large items were too big to include. Everything else was saved." = "Algunos elementos grandes eran demasiado grandes para incluirlos. Todo lo demás se guardó.";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "Tu imagen de fondo personalizada de Beautify era demasiado grande para incluirla. Todo lo demás se guardó.";
+"This file is not a valid macshot settings file." = "Este archivo no es un archivo de ajustes de macshot válido.";
+"This settings file contains no settings." = "Este archivo de ajustes no contiene ningún ajuste.";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "Este archivo de ajustes se creó con una versión más reciente de macshot. Actualiza macshot primero.";

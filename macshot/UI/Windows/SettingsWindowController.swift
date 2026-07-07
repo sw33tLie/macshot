@@ -2,6 +2,7 @@ import Cocoa
 import Carbon
 import ServiceManagement
 import ScreenCaptureKit
+import UniformTypeIdentifiers
 
 /// Settings window that intercepts Cmd+Q to close itself instead of quitting the app.
 private class SettingsWindow: NSWindow {
@@ -549,8 +550,180 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         // Sync preset popup to current colors
         updateThemePresetSelection()
 
+        // ── Settings Backup ──────────────────────────────────
+        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
+        stack.addArrangedSubview(sectionHeader(L("Settings Backup")))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        let exportBtn = NSButton(title: L("Export Settings…"), target: self, action: #selector(exportSettingsClicked(_:)))
+        exportBtn.bezelStyle = .rounded
+        let importBtn = NSButton(title: L("Import Settings…"), target: self, action: #selector(importSettingsClicked(_:)))
+        importBtn.bezelStyle = .rounded
+
+        let backupButtonsRow = NSStackView(views: [exportBtn, importBtn])
+        backupButtonsRow.orientation = .horizontal
+        backupButtonsRow.spacing = 8
+        backupButtonsRow.alignment = .centerY
+        stack.addArrangedSubview(indented(backupButtonsRow))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+
+        let backupNote = NSTextField(wrappingLabelWithString: L("Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container."))
+        backupNote.font = NSFont.systemFont(ofSize: 10)
+        backupNote.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(indented(backupNote))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+
+        let revealSettingsBtn = NSButton(title: L("Reveal Settings File in Finder"), target: self, action: #selector(revealSettingsFileClicked(_:)))
+        revealSettingsBtn.bezelStyle = .inline
+        revealSettingsBtn.controlSize = .small
+        stack.addArrangedSubview(indented(revealSettingsBtn))
+
         finalizeSettingsStack(scroll: scroll, stack: stack)
         return scroll
+    }
+
+    // MARK: - Settings Backup actions
+
+    @objc private func exportSettingsClicked(_ sender: NSButton) {
+        guard let window = window else { return }
+        let result: SettingsPortability.ExportResult
+        do {
+            result = try SettingsPortability.exportData()
+        } catch {
+            presentBackupError(error, title: L("Export failed"))
+            return
+        }
+
+        let panel = NSSavePanel()
+        panel.title = L("Export Settings")
+        panel.nameFieldStringValue = SettingsPortability.suggestedExportFilename()
+        panel.allowedContentTypes = [.json]
+        panel.isExtensionHidden = false
+        panel.beginSheetModal(for: window) { [weak self] response in
+            guard response == .OK, let url = panel.url else { return }
+            do {
+                try result.data.write(to: url)
+                if !result.skippedLargeKeys.isEmpty {
+                    let message: String
+                    if result.skippedLargeKeys == ["beautifyCustomBgImageData"] {
+                        message = L("Your custom Beautify background image was too large to include. Everything else was saved.")
+                    } else {
+                        message = L("A few large items were too big to include. Everything else was saved.")
+                    }
+                    self?.presentBackupInfo(title: L("Settings exported"), message: message)
+                }
+            } catch {
+                self?.presentBackupError(error, title: L("Export failed"))
+            }
+        }
+    }
+
+    @objc private func importSettingsClicked(_ sender: NSButton) {
+        guard let window = window else { return }
+        let panel = NSOpenPanel()
+        panel.title = L("Import Settings")
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.beginSheetModal(for: window) { [weak self] response in
+            guard response == .OK, let url = panel.url else { return }
+            self?.confirmAndImport(from: url)
+        }
+    }
+
+    private func confirmAndImport(from url: URL) {
+        guard let window = window else { return }
+        let data: Data
+        do {
+            data = try Data(contentsOf: url)
+        } catch {
+            presentBackupError(error, title: L("Import failed"))
+            return
+        }
+
+        let confirm = NSAlert()
+        confirm.messageText = L("Replace your current settings?")
+        confirm.informativeText = L("Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone.")
+        confirm.addButton(withTitle: L("Import"))
+        confirm.addButton(withTitle: L("Cancel"))
+        confirm.alertStyle = .warning
+        confirm.beginSheetModal(for: window) { [weak self] resp in
+            guard resp == .alertFirstButtonReturn else { return }
+            self?.performImport(data)
+        }
+    }
+
+    private func performImport(_ data: Data) {
+        let result: SettingsPortability.ImportResult
+        do {
+            result = try SettingsPortability.importData(data)
+        } catch {
+            presentBackupError(error, title: L("Import failed"))
+            return
+        }
+
+        // Re-apply the cheap live side-effects immediately; everything else takes effect on relaunch.
+        (NSApp.delegate as? AppDelegate)?.reapplySettingsAfterImport()
+
+        // Rebuild this window's controls so the visible tabs reflect the imported values.
+        rebuildAllTabsAfterImport()
+
+        let alert = NSAlert()
+        alert.messageText = L("Settings imported")
+        alert.informativeText = String(format: L("%d settings were applied. Relaunch macshot to apply all changes."), result.appliedCount)
+        alert.addButton(withTitle: L("Relaunch Now"))
+        alert.addButton(withTitle: L("Later"))
+        guard let window = window else { return }
+        alert.beginSheetModal(for: window) { resp in
+            guard resp == .alertFirstButtonReturn else { return }
+            AppDelegate.relaunchApp()
+        }
+    }
+
+    private func rebuildAllTabsAfterImport() {
+        let previouslySelected = currentTabID
+        tabContentViews.removeAll()
+        tabContentViews["general"] = makeGeneralTabView()
+        tabContentViews["capture"] = makeCaptureTabView()
+        tabContentViews["shortcuts"] = makeShortcutsTabView()
+        tabContentViews["tools"] = makeToolsTabView()
+        tabContentViews["recording"] = makeRecordingTabView()
+        #if !OFFLINE
+        tabContentViews["uploads"] = makeUploadsTabView()
+        #endif
+        tabContentViews["about"] = makeAboutTabView()
+        showTab(id: previouslySelected)
+    }
+
+    @objc private func revealSettingsFileClicked(_ sender: NSButton) {
+        let prefsDir = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("Preferences", isDirectory: true)
+        let bundleID = Bundle.main.bundleIdentifier ?? "com.sw33tlie.macshot.macshot"
+        let plist = prefsDir.appendingPathComponent("\(bundleID).plist")
+        if FileManager.default.fileExists(atPath: plist.path) {
+            NSWorkspace.shared.activateFileViewerSelecting([plist])
+        } else {
+            NSWorkspace.shared.open(prefsDir)
+        }
+    }
+
+    private func presentBackupError(_ error: Error, title: String) {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = error.localizedDescription
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: L("OK"))
+        if let window = window { alert.beginSheetModal(for: window, completionHandler: nil) }
+        else { alert.runModal() }
+    }
+
+    private func presentBackupInfo(title: String, message: String) {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = message
+        alert.addButton(withTitle: L("OK"))
+        if let window = window { alert.beginSheetModal(for: window, completionHandler: nil) }
+        else { alert.runModal() }
     }
 
     // MARK: - Capture Tab

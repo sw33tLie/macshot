@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- Import/export settings: back up your preferences to a file and move them to another Mac or a clean install (Preferences → General → Settings Backup). Upload credentials, your save folder, and screenshot history are never included. Answers where settings are stored (issues #265, #280).
+
 ## [4.2.0-beta.10] - 2026-07-03
 
 ### Added

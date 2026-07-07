@@ -636,3 +636,26 @@
 "URL scheme info" = "Thông tin URL scheme";
 "Enable macshot:// URL scheme" = "Bật URL scheme macshot://";
 "sec (0 = never)" = "giây (0 = không bao giờ)";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "Sao lưu cài đặt";
+"Export Settings…" = "Xuất cài đặt…";
+"Import Settings…" = "Nhập cài đặt…";
+"Reveal Settings File in Finder" = "Hiện tệp cài đặt trong Finder";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "Xuất tùy chọn của bạn ra tệp để chuyển sang một máy Mac khác hoặc bản cài đặt mới. Thông tin đăng nhập tải lên, thư mục lưu và lịch sử ảnh chụp màn hình không được bao gồm. Cài đặt được lưu bên trong app container của macshot.";
+"Export Settings" = "Xuất cài đặt";
+"Import Settings" = "Nhập cài đặt";
+"Import failed" = "Nhập thất bại";
+"Settings exported" = "Đã xuất cài đặt";
+"Settings imported" = "Đã nhập cài đặt";
+"Import" = "Nhập";
+"Later" = "Để sau";
+"Relaunch Now" = "Khởi động lại ngay";
+"Replace your current settings?" = "Thay thế cài đặt hiện tại của bạn?";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "Việc nhập sẽ thay thế tùy chọn hiện tại của bạn bằng những tùy chọn trong tệp này. Thư mục lưu, thông tin đăng nhập tải lên và lịch sử ảnh chụp màn hình được giữ lại. Thao tác này không thể hoàn tác.";
+"%d settings were applied. Relaunch macshot to apply all changes." = "Đã áp dụng %d cài đặt. Khởi động lại macshot để áp dụng tất cả thay đổi.";
+"A few large items were too big to include. Everything else was saved." = "Một vài mục lớn quá dung lượng nên không được bao gồm. Mọi thứ còn lại đã được lưu.";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "Ảnh nền Beautify tùy chỉnh của bạn quá lớn nên không được bao gồm. Mọi thứ còn lại đã được lưu.";
+"This file is not a valid macshot settings file." = "Tệp này không phải là tệp cài đặt macshot hợp lệ.";
+"This settings file contains no settings." = "Tệp cài đặt này không chứa cài đặt nào.";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "Tệp cài đặt này được tạo bởi một phiên bản macshot mới hơn. Vui lòng cập nhật macshot trước.";

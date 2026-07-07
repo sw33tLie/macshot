@@ -636,3 +636,26 @@
 "sec (0 = never)" = "s (0 = ei koskaan)";
 "Settings" = "Asetukset";
 "Offline build: upload and cloud storage integrations are removed. Update checks may still connect to MacShot's update server. Screenshots and recordings stay local unless you share or save them yourself." = "Offline-versio: lähetys- ja pilvitallennusintegraatiot on poistettu. Päivitysten tarkistus voi silti muodostaa yhteyden MacShotin päivityspalvelimeen. Kuvakaappaukset ja tallenteet pysyvät paikallisina, ellet jaa tai tallenna niitä itse.";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "Asetusten varmuuskopio";
+"Export Settings…" = "Vie asetukset…";
+"Import Settings…" = "Tuo asetukset…";
+"Reveal Settings File in Finder" = "Näytä asetustiedosto Finderissa";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "Vie asetuksesi tiedostoon siirtääksesi ne toiseen Maciin tai puhtaaseen asennukseen. Latauksen tunnistetietoja, tallennuskansiotasi ja kuvakaappaushistoriaa ei sisällytetä. Asetukset tallennetaan macshotin sovellussäiliöön.";
+"Export Settings" = "Vie asetukset";
+"Import Settings" = "Tuo asetukset";
+"Import failed" = "Tuonti epäonnistui";
+"Settings exported" = "Asetukset viety";
+"Settings imported" = "Asetukset tuotu";
+"Import" = "Tuo";
+"Later" = "Myöhemmin";
+"Relaunch Now" = "Käynnistä uudelleen nyt";
+"Replace your current settings?" = "Korvataanko nykyiset asetuksesi?";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "Tuonti korvaa nykyiset asetuksesi tämän tiedoston asetuksilla. Tallennuskansiosi, latauksen tunnistetiedot ja kuvakaappaushistoria säilytetään. Tätä ei voi kumota.";
+"%d settings were applied. Relaunch macshot to apply all changes." = "%d asetusta otettiin käyttöön. Käynnistä macshot uudelleen ottaaksesi kaikki muutokset käyttöön.";
+"A few large items were too big to include. Everything else was saved." = "Muutama suuri kohde oli liian suuri sisällytettäväksi. Kaikki muu tallennettiin.";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "Mukautettu Beautify-taustakuvasi oli liian suuri sisällytettäväksi. Kaikki muu tallennettiin.";
+"This file is not a valid macshot settings file." = "Tämä tiedosto ei ole kelvollinen macshot-asetustiedosto.";
+"This settings file contains no settings." = "Tämä asetustiedosto ei sisällä asetuksia.";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "Tämä asetustiedosto on luotu uudemmalla macshot-versiolla. Päivitä macshot ensin.";

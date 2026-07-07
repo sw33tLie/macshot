@@ -638,3 +638,26 @@
 "Custom · %@" = "自定义 · %@";
 "Order history by last edit" = "按最近编辑排序历史";
 "Edited screenshots move to the top. Off keeps them in capture order." = "编辑过的截图会移到顶部。关闭后则保持捕获顺序。";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "设置备份";
+"Export Settings…" = "导出设置…";
+"Import Settings…" = "导入设置…";
+"Reveal Settings File in Finder" = "在访达中显示设置文件";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "将你的偏好设置导出为文件，以便迁移到另一台 Mac 或全新安装的系统。上传凭证、保存文件夹和截图历史不会包含在内。设置存储在 macshot 的应用容器内。";
+"Export Settings" = "导出设置";
+"Import Settings" = "导入设置";
+"Import failed" = "导入失败";
+"Settings exported" = "设置已导出";
+"Settings imported" = "设置已导入";
+"Import" = "导入";
+"Later" = "稍后";
+"Relaunch Now" = "立即重新启动";
+"Replace your current settings?" = "替换当前设置？";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "导入将用此文件中的偏好设置替换你当前的偏好设置。你的保存文件夹、上传凭证和截图历史将予以保留。此操作无法撤销。";
+"%d settings were applied. Relaunch macshot to apply all changes." = "已应用 %d 项设置。重新启动 macshot 以应用所有更改。";
+"A few large items were too big to include. Everything else was saved." = "少数较大的项目因体积过大未能包含。其余内容均已保存。";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "你自定义的 Beautify 背景图像因体积过大未能包含。其余内容均已保存。";
+"This file is not a valid macshot settings file." = "此文件不是有效的 macshot 设置文件。";
+"This settings file contains no settings." = "此设置文件不含任何设置。";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "此设置文件由更新版本的 macshot 创建。请先更新 macshot。";

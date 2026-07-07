@@ -636,3 +636,26 @@
 "URL scheme info" = "URL-skema-info";
 "Enable macshot:// URL scheme" = "Aktiv\U00E9r macshot://-URL-skema";
 "sec (0 = never)" = "sek (0 = aldrig)";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "Sikkerhedskopiering af indstillinger";
+"Export Settings…" = "Eksportér indstillinger…";
+"Import Settings…" = "Importér indstillinger…";
+"Reveal Settings File in Finder" = "Vis indstillingsfil i Finder";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "Eksportér dine præferencer til en fil for at flytte dem til en anden Mac eller en ren installation. Uploadoplysninger, din arkiveringsmappe og skærmbilledhistorik medtages ikke. Indstillinger gemmes i macshots app-container.";
+"Export Settings" = "Eksportér indstillinger";
+"Import Settings" = "Importér indstillinger";
+"Import failed" = "Import mislykkedes";
+"Settings exported" = "Indstillinger eksporteret";
+"Settings imported" = "Indstillinger importeret";
+"Import" = "Importér";
+"Later" = "Senere";
+"Relaunch Now" = "Genstart nu";
+"Replace your current settings?" = "Vil du erstatte dine nuværende indstillinger?";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "Import erstatter dine nuværende præferencer med dem i denne fil. Din arkiveringsmappe, uploadoplysninger og skærmbilledhistorik bevares. Dette kan ikke fortrydes.";
+"%d settings were applied. Relaunch macshot to apply all changes." = "%d indstillinger blev anvendt. Genstart macshot for at anvende alle ændringer.";
+"A few large items were too big to include. Everything else was saved." = "Nogle få store emner var for store til at medtage. Alt andet blev gemt.";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "Dit tilpassede Beautify-baggrundsbillede var for stort til at medtage. Alt andet blev gemt.";
+"This file is not a valid macshot settings file." = "Denne fil er ikke en gyldig macshot-indstillingsfil.";
+"This settings file contains no settings." = "Denne indstillingsfil indeholder ingen indstillinger.";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "Denne indstillingsfil blev oprettet af en nyere version af macshot. Opdater macshot først.";

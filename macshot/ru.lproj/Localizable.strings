@@ -636,3 +636,26 @@
 "Enable macshot:// URL scheme" = "Включить URL-схему macshot://";
 "URL scheme info" = "Информация об URL-схеме";
 "sec (0 = never)" = "сек. (0 = никогда)";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "Резервная копия настроек";
+"Export Settings…" = "Экспортировать настройки…";
+"Import Settings…" = "Импортировать настройки…";
+"Reveal Settings File in Finder" = "Показать файл настроек в Finder";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "Экспортируйте настройки в файл, чтобы перенести их на другой Mac или в чистую установку. Учётные данные для загрузки, папка сохранения и история скриншотов не включаются. Настройки хранятся в контейнере приложения macshot.";
+"Export Settings" = "Экспортировать настройки";
+"Import Settings" = "Импортировать настройки";
+"Import failed" = "Не удалось импортировать";
+"Settings exported" = "Настройки экспортированы";
+"Settings imported" = "Настройки импортированы";
+"Import" = "Импорт";
+"Later" = "Позже";
+"Relaunch Now" = "Перезапустить сейчас";
+"Replace your current settings?" = "Заменить текущие настройки?";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "Импорт заменит ваши текущие настройки на те, что содержатся в этом файле. Папка сохранения, учётные данные для загрузки и история скриншотов будут сохранены. Это действие нельзя отменить.";
+"%d settings were applied. Relaunch macshot to apply all changes." = "Применено настроек: %d. Перезапустите macshot, чтобы применить все изменения.";
+"A few large items were too big to include. Everything else was saved." = "Несколько крупных элементов оказались слишком большими для включения. Всё остальное было сохранено.";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "Ваше пользовательское фоновое изображение Beautify оказалось слишком большим для включения. Всё остальное было сохранено.";
+"This file is not a valid macshot settings file." = "Этот файл не является допустимым файлом настроек macshot.";
+"This settings file contains no settings." = "Этот файл настроек не содержит настроек.";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "Этот файл настроек создан более новой версией macshot. Сначала обновите macshot.";

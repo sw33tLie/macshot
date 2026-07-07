@@ -638,3 +638,26 @@
 "Trigger macshot from Raycast, Alfred, Shortcuts, or any tool that opens URLs." = "Raycast, Alfred, Shortcuts, বা URL খোলে এমন যেকোনো টুল থেকে macshot ট্রিগার করুন।";
 "URL scheme info" = "URL স্কিম তথ্য";
 "sec (0 = never)" = "সেকেন্ড (0 = কখনই না)";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "সেটিংস ব্যাকআপ";
+"Export Settings…" = "সেটিংস এক্সপোর্ট করুন…";
+"Import Settings…" = "সেটিংস ইম্পোর্ট করুন…";
+"Reveal Settings File in Finder" = "Finder-এ সেটিংস ফাইল দেখান";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "আপনার পছন্দসমূহ একটি ফাইলে এক্সপোর্ট করুন যাতে সেগুলো অন্য Mac-এ বা একটি নতুন ইনস্টলে নিতে পারেন। আপলোড ক্রেডেনশিয়াল, আপনার সেভ ফোল্ডার এবং স্ক্রিনশট ইতিহাস এতে অন্তর্ভুক্ত নয়। সেটিংস macshot-এর অ্যাপ কন্টেইনারের ভেতরে সংরক্ষিত থাকে।";
+"Export Settings" = "সেটিংস এক্সপোর্ট করুন";
+"Import Settings" = "সেটিংস ইম্পোর্ট করুন";
+"Import failed" = "ইম্পোর্ট ব্যর্থ হয়েছে";
+"Settings exported" = "সেটিংস এক্সপোর্ট করা হয়েছে";
+"Settings imported" = "সেটিংস ইম্পোর্ট করা হয়েছে";
+"Import" = "ইম্পোর্ট";
+"Later" = "পরে";
+"Relaunch Now" = "এখনই পুনরায় চালু করুন";
+"Replace your current settings?" = "আপনার বর্তমান সেটিংস প্রতিস্থাপন করবেন?";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "ইম্পোর্ট করলে আপনার বর্তমান পছন্দসমূহ এই ফাইলের পছন্দসমূহ দিয়ে প্রতিস্থাপিত হবে। আপনার সেভ ফোল্ডার, আপলোড ক্রেডেনশিয়াল এবং স্ক্রিনশট ইতিহাস অক্ষত থাকবে। এটি পূর্বাবস্থায় ফেরানো যাবে না।";
+"%d settings were applied. Relaunch macshot to apply all changes." = "%d টি সেটিংস প্রয়োগ করা হয়েছে। সব পরিবর্তন প্রয়োগ করতে macshot পুনরায় চালু করুন।";
+"A few large items were too big to include. Everything else was saved." = "কয়েকটি বড় আইটেম অন্তর্ভুক্ত করার জন্য অতিরিক্ত বড় ছিল। বাকি সবকিছু সংরক্ষণ করা হয়েছে।";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "আপনার কাস্টম Beautify ব্যাকগ্রাউন্ড ছবিটি অন্তর্ভুক্ত করার জন্য অতিরিক্ত বড় ছিল। বাকি সবকিছু সংরক্ষণ করা হয়েছে।";
+"This file is not a valid macshot settings file." = "এই ফাইলটি একটি বৈধ macshot সেটিংস ফাইল নয়।";
+"This settings file contains no settings." = "এই সেটিংস ফাইলে কোনো সেটিংস নেই।";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "এই সেটিংস ফাইলটি macshot-এর একটি নতুন সংস্করণ দিয়ে তৈরি করা হয়েছে। অনুগ্রহ করে প্রথমে macshot আপডেট করুন।";

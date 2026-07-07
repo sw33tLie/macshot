@@ -636,3 +636,26 @@
 "URL scheme info" = "ข้อมูล URL scheme";
 "Enable macshot:// URL scheme" = "เปิดใช้งาน URL scheme macshot://";
 "sec (0 = never)" = "วินาที (0 = ไม่เลย)";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "การสำรองข้อมูลการตั้งค่า";
+"Export Settings…" = "ส่งออกการตั้งค่า…";
+"Import Settings…" = "นำเข้าการตั้งค่า…";
+"Reveal Settings File in Finder" = "แสดงไฟล์การตั้งค่าใน Finder";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "ส่งออกการกำหนดค่าของคุณไปยังไฟล์เพื่อย้ายไปยัง Mac เครื่องอื่นหรือการติดตั้งใหม่ ข้อมูลรับรองการอัปโหลด โฟลเดอร์บันทึก และประวัติภาพหน้าจอจะไม่รวมอยู่ด้วย การตั้งค่าจะถูกจัดเก็บไว้ภายในคอนเทนเนอร์แอปของ macshot";
+"Export Settings" = "ส่งออกการตั้งค่า";
+"Import Settings" = "นำเข้าการตั้งค่า";
+"Import failed" = "นำเข้าไม่สำเร็จ";
+"Settings exported" = "ส่งออกการตั้งค่าแล้ว";
+"Settings imported" = "นำเข้าการตั้งค่าแล้ว";
+"Import" = "นำเข้า";
+"Later" = "ภายหลัง";
+"Relaunch Now" = "เปิดใหม่ตอนนี้";
+"Replace your current settings?" = "แทนที่การตั้งค่าปัจจุบันของคุณหรือไม่?";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "การนำเข้าจะแทนที่การกำหนดค่าปัจจุบันของคุณด้วยค่าในไฟล์นี้ โฟลเดอร์บันทึก ข้อมูลรับรองการอัปโหลด และประวัติภาพหน้าจอของคุณจะยังคงอยู่ การดำเนินการนี้ไม่สามารถเลิกทำได้";
+"%d settings were applied. Relaunch macshot to apply all changes." = "นำการตั้งค่า %d รายการไปใช้แล้ว เปิด macshot ใหม่เพื่อนำการเปลี่ยนแปลงทั้งหมดไปใช้";
+"A few large items were too big to include. Everything else was saved." = "รายการขนาดใหญ่บางรายการมีขนาดเกินกว่าที่จะรวมได้ ส่วนอื่นทั้งหมดถูกบันทึกแล้ว";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "ภาพพื้นหลัง Beautify ที่คุณกำหนดเองมีขนาดใหญ่เกินกว่าที่จะรวมได้ ส่วนอื่นทั้งหมดถูกบันทึกแล้ว";
+"This file is not a valid macshot settings file." = "ไฟล์นี้ไม่ใช่ไฟล์การตั้งค่า macshot ที่ถูกต้อง";
+"This settings file contains no settings." = "ไฟล์การตั้งค่านี้ไม่มีการตั้งค่าใดๆ";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "ไฟล์การตั้งค่านี้สร้างขึ้นโดย macshot เวอร์ชันที่ใหม่กว่า โปรดอัปเดต macshot ก่อน";

@@ -636,3 +636,26 @@
 "Custom · %@" = "カスタム · %@";
 "Order history by last edit" = "最終編集順に履歴を並べ替え";
 "Edited screenshots move to the top. Off keeps them in capture order." = "編集したスクリーンショットが先頭に移動します。オフにするとキャプチャ順のままになります。";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "設定のバックアップ";
+"Export Settings…" = "設定を書き出す…";
+"Import Settings…" = "設定を読み込む…";
+"Reveal Settings File in Finder" = "設定ファイルをFinderで表示";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "環境設定をファイルに書き出して、別のMacやクリーンインストール環境に移行できます。アップロードの認証情報、保存フォルダ、スクリーンショットの履歴は含まれません。設定はmacshotのアプリコンテナ内に保存されます。";
+"Export Settings" = "設定を書き出す";
+"Import Settings" = "設定を読み込む";
+"Import failed" = "読み込みに失敗しました";
+"Settings exported" = "設定を書き出しました";
+"Settings imported" = "設定を読み込みました";
+"Import" = "読み込む";
+"Later" = "あとで";
+"Relaunch Now" = "今すぐ再起動";
+"Replace your current settings?" = "現在の設定を置き換えますか？";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "読み込むと、現在の環境設定がこのファイルの内容に置き換わります。保存フォルダ、アップロードの認証情報、スクリーンショットの履歴は保持されます。この操作は取り消せません。";
+"%d settings were applied. Relaunch macshot to apply all changes." = "%d件の設定を適用しました。すべての変更を反映するにはmacshotを再起動してください。";
+"A few large items were too big to include. Everything else was saved." = "サイズが大きすぎて含められなかった項目がいくつかあります。それ以外はすべて保存されました。";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "カスタムのBeautify背景画像はサイズが大きすぎて含められませんでした。それ以外はすべて保存されました。";
+"This file is not a valid macshot settings file." = "このファイルは有効なmacshotの設定ファイルではありません。";
+"This settings file contains no settings." = "この設定ファイルには設定が含まれていません。";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "この設定ファイルは新しいバージョンのmacshotで作成されています。先にmacshotをアップデートしてください。";

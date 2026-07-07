@@ -636,3 +636,26 @@
 "Trigger macshot from Raycast, Alfred, Shortcuts, or any tool that opens URLs." = "Indítsd el a macshot-ot Raycast, Alfred, Shortcuts, vagy bármilyen URL-eket megnyitó eszközből.";
 "URL scheme info" = "URL séma információ";
 "sec (0 = never)" = "mp (0 = soha)";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "Beállítások mentése";
+"Export Settings…" = "Beállítások exportálása…";
+"Import Settings…" = "Beállítások importálása…";
+"Reveal Settings File in Finder" = "Beállításfájl megjelenítése a Finderben";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "Exportáld a beállításaidat egy fájlba, hogy áthelyezhesd őket egy másik Macre vagy egy tiszta telepítésbe. A feltöltési hitelesítő adatok, a mentési mappa és a képernyőképek előzményei nem szerepelnek benne. A beállítások a macshot alkalmazáskonténerében tárolódnak.";
+"Export Settings" = "Beállítások exportálása";
+"Import Settings" = "Beállítások importálása";
+"Import failed" = "Az importálás sikertelen";
+"Settings exported" = "Beállítások exportálva";
+"Settings imported" = "Beállítások importálva";
+"Import" = "Importálás";
+"Later" = "Később";
+"Relaunch Now" = "Újraindítás most";
+"Replace your current settings?" = "Lecseréled a jelenlegi beállításaidat?";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "Az importálás lecseréli a jelenlegi beállításaidat a fájlban lévőkre. A mentési mappa, a feltöltési hitelesítő adatok és a képernyőképek előzményei megmaradnak. Ez a művelet nem vonható vissza.";
+"%d settings were applied. Relaunch macshot to apply all changes." = "%d beállítás lett alkalmazva. Indítsd újra a macshotot az összes módosítás érvényesítéséhez.";
+"A few large items were too big to include. Everything else was saved." = "Néhány nagyméretű elem túl nagy volt ahhoz, hogy belekerüljön. Minden más mentésre került.";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "Az egyéni Beautify háttérképed túl nagy volt ahhoz, hogy belekerüljön. Minden más mentésre került.";
+"This file is not a valid macshot settings file." = "Ez a fájl nem érvényes macshot beállításfájl.";
+"This settings file contains no settings." = "Ez a beállításfájl nem tartalmaz beállításokat.";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "Ez a beállításfájl a macshot egy újabb verziójával készült. Kérlek, először frissítsd a macshotot.";

@@ -638,3 +638,26 @@
 "Trigger macshot from Raycast, Alfred, Shortcuts, or any tool that opens URLs." = "شغّل macshot من Raycast أو Alfred أو Shortcuts أو أي أداة تفتح روابط URL.";
 "URL scheme info" = "معلومات مخطط URL";
 "sec (0 = never)" = "ث (0 = أبدًا)";
+
+/* Settings import/export (issues #265, #280) */
+"Settings Backup" = "نسخة احتياطية للإعدادات";
+"Export Settings…" = "تصدير الإعدادات…";
+"Import Settings…" = "استيراد الإعدادات…";
+"Reveal Settings File in Finder" = "إظهار ملف الإعدادات في Finder";
+"Export your preferences to a file to move them to another Mac or a clean install. Upload credentials, your save folder, and screenshot history are not included. Settings are stored inside macshot's app container." = "صدّر تفضيلاتك إلى ملف لنقلها إلى جهاز Mac آخر أو إلى تثبيت نظيف. لا تتضمن بيانات اعتماد الرفع ومجلد الحفظ وسجل لقطات الشاشة. تُخزَّن الإعدادات داخل حاوية تطبيق macshot.";
+"Export Settings" = "تصدير الإعدادات";
+"Import Settings" = "استيراد الإعدادات";
+"Import failed" = "فشل الاستيراد";
+"Settings exported" = "تم تصدير الإعدادات";
+"Settings imported" = "تم استيراد الإعدادات";
+"Import" = "استيراد";
+"Later" = "لاحقًا";
+"Relaunch Now" = "إعادة التشغيل الآن";
+"Replace your current settings?" = "استبدال إعداداتك الحالية؟";
+"Importing will replace your current preferences with the ones in this file. Your save folder, upload credentials, and screenshot history are kept. This cannot be undone." = "سيؤدي الاستيراد إلى استبدال تفضيلاتك الحالية بالتفضيلات الموجودة في هذا الملف. سيتم الاحتفاظ بمجلد الحفظ وبيانات اعتماد الرفع وسجل لقطات الشاشة. لا يمكن التراجع عن هذا الإجراء.";
+"%d settings were applied. Relaunch macshot to apply all changes." = "تم تطبيق %d من الإعدادات. أعد تشغيل macshot لتطبيق كل التغييرات.";
+"A few large items were too big to include. Everything else was saved." = "كانت بعض العناصر الكبيرة أكبر من أن تُضمَّن. تم حفظ كل ما عدا ذلك.";
+"Your custom Beautify background image was too large to include. Everything else was saved." = "كانت صورة خلفية Beautify المخصصة أكبر من أن تُضمَّن. تم حفظ كل ما عدا ذلك.";
+"This file is not a valid macshot settings file." = "هذا الملف ليس ملف إعدادات macshot صالحًا.";
+"This settings file contains no settings." = "لا يحتوي ملف الإعدادات هذا على أي إعدادات.";
+"This settings file was made by a newer version of macshot. Please update macshot first." = "تم إنشاء ملف الإعدادات هذا بإصدار أحدث من macshot. يرجى تحديث macshot أولًا.";
