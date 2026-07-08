@@ -664,3 +664,6 @@
 
 /* URL scheme: ocr-translate (issue #283) */
 "Capture, translate, and overlay the text on the image" = "متن را ثبت، ترجمه و روی تصویر هم‌پوشانی کنید";
+
+/* URL scheme: edit (PR #272) */
+"Open a history entry in the editor (keeps annotations editable)" = "باز کردن یک مورد از تاریخچه در ویرایشگر (حاشیه‌نویسی‌ها قابل ویرایش می‌مانند)";

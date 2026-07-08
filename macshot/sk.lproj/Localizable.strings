@@ -662,3 +662,6 @@
 
 /* URL scheme: ocr-translate (issue #283) */
 "Capture, translate, and overlay the text on the image" = "Zachytiť, preložiť a prekryť text na obrázku";
+
+/* URL scheme: edit (PR #272) */
+"Open a history entry in the editor (keeps annotations editable)" = "Otvoriť položku histórie v editore (anotácie zostanú upraviteľné)";

@@ -664,3 +664,6 @@
 
 /* URL scheme: ocr-translate (issue #283) */
 "Capture, translate, and overlay the text on the image" = "Καταγράψτε, μεταφράστε και επικαλύψτε το κείμενο στην εικόνα";
+
+/* URL scheme: edit (PR #272) */
+"Open a history entry in the editor (keeps annotations editable)" = "Άνοιγμα καταχώρισης ιστορικού στον επεξεργαστή (διατηρεί τις επισημάνσεις επεξεργάσιμες)";

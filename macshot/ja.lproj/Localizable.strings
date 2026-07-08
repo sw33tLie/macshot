@@ -662,3 +662,6 @@
 
 /* URL scheme: ocr-translate (issue #283) */
 "Capture, translate, and overlay the text on the image" = "テキストをキャプチャして翻訳し、画像に重ねて表示します";
+
+/* URL scheme: edit (PR #272) */
+"Open a history entry in the editor (keeps annotations editable)" = "履歴の項目をエディタで開く（注釈を編集可能なまま維持）";

@@ -664,3 +664,6 @@
 
 /* URL scheme: ocr-translate (issue #283) */
 "Capture, translate, and overlay the text on the image" = "Captura, tradueix i superposa el text a la imatge";
+
+/* URL scheme: edit (PR #272) */
+"Open a history entry in the editor (keeps annotations editable)" = "Obre una entrada de l'historial a l'editor (manté les anotacions editables)";

@@ -664,3 +664,6 @@
 
 /* URL scheme: ocr-translate (issue #283) */
 "Capture, translate, and overlay the text on the image" = "படத்தைப் பிடித்து, மொழிபெயர்த்து, உரையைப் படத்தின் மேல் இடுக";
+
+/* URL scheme: edit (PR #272) */
+"Open a history entry in the editor (keeps annotations editable)" = "வரலாற்று உள்ளீட்டைத் தொகுப்பாளரில் திற (எழுத்துக்குறிப்புகளைத் திருத்தக்கூடியதாக வைத்திருக்கும்)";

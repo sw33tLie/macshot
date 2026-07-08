@@ -662,3 +662,6 @@
 
 /* URL scheme: ocr-translate (issue #283) */
 "Capture, translate, and overlay the text on the image" = "Ta opp, oversett og legg teksten over bildet";
+
+/* URL scheme: edit (PR #272) */
+"Open a history entry in the editor (keeps annotations editable)" = "Åpne et loggelement i editoren (beholder merknader redigerbare)";

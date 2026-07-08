@@ -664,3 +664,6 @@
 
 /* URL scheme: ocr-translate (issue #283) */
 "Capture, translate, and overlay the text on the image" = "擷取、翻譯並將文字疊加在影像上";
+
+/* URL scheme: edit (PR #272) */
+"Open a history entry in the editor (keeps annotations editable)" = "在編輯器中開啟歷史記錄項目（標註仍可編輯）";

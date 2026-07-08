@@ -664,3 +664,6 @@
 
 /* URL scheme: ocr-translate (issue #283) */
 "Capture, translate, and overlay the text on the image" = "텍스트를 캡처하고 번역하여 이미지 위에 오버레이합니다";
+
+/* URL scheme: edit (PR #272) */
+"Open a history entry in the editor (keeps annotations editable)" = "기록 항목을 편집기에서 열기 (주석을 편집 가능한 상태로 유지)";

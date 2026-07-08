@@ -664,3 +664,6 @@
 
 /* URL scheme: ocr-translate (issue #283) */
 "Capture, translate, and overlay the text on the image" = "Metni yakalayın, çevirin ve görüntünün üzerine yerleştirin";
+
+/* URL scheme: edit (PR #272) */
+"Open a history entry in the editor (keeps annotations editable)" = "Geçmiş ögesini düzenleyicide aç (açıklamalar düzenlenebilir kalır)";

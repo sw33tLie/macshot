@@ -664,3 +664,6 @@
 
 /* URL scheme: ocr-translate (issue #283) */
 "Capture, translate, and overlay the text on the image" = "टेक्स्ट को कैप्चर करें, अनुवाद करें और छवि पर ओवरले करें";
+
+/* URL scheme: edit (PR #272) */
+"Open a history entry in the editor (keeps annotations editable)" = "किसी हिस्ट्री एंट्री को एडिटर में खोलें (एनोटेशन संपादन योग्य रहते हैं)";

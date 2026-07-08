@@ -664,3 +664,6 @@
 
 /* URL scheme: ocr-translate (issue #283) */
 "Capture, translate, and overlay the text on the image" = "টেক্সট ক্যাপচার, অনুবাদ ও ছবির উপরে ওভারলে করুন";
+
+/* URL scheme: edit (PR #272) */
+"Open a history entry in the editor (keeps annotations editable)" = "এডিটরে একটি ইতিহাস এন্ট্রি খুলুন (টীকা সম্পাদনাযোগ্য থাকে)";

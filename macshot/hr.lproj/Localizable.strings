@@ -662,3 +662,6 @@
 
 /* URL scheme: ocr-translate (issue #283) */
 "Capture, translate, and overlay the text on the image" = "Snimite, prevedite i prekrijte tekst na slici";
+
+/* URL scheme: edit (PR #272) */
+"Open a history entry in the editor (keeps annotations editable)" = "Otvori stavku povijesti u uređivaču (bilješke ostaju uredive)";

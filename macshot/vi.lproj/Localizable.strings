@@ -662,3 +662,6 @@
 
 /* URL scheme: ocr-translate (issue #283) */
 "Capture, translate, and overlay the text on the image" = "Chụp, dịch và phủ văn bản lên hình ảnh";
+
+/* URL scheme: edit (PR #272) */
+"Open a history entry in the editor (keeps annotations editable)" = "Mở một mục lịch sử trong trình chỉnh sửa (giữ chú thích có thể chỉnh sửa)";
