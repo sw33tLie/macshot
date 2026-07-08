@@ -5,10 +5,10 @@
         <link>https://github.com/sw33tLie/macshot</link>
         <description>macshot Offline updates</description>
 <item>
-    <title>v4.2.0-beta.10</title>
-    <pubDate>Fri, 03 Jul 2026 16:10:03 +0000</pubDate>
-    <sparkle:version>93</sparkle:version>
-    <sparkle:shortVersionString>4.2.0-beta.10</sparkle:shortVersionString>
+    <title>v4.2.0-beta.11</title>
+    <pubDate>Wed, 08 Jul 2026 01:11:35 +0000</pubDate>
+    <sparkle:version>94</sparkle:version>
+    <sparkle:shortVersionString>4.2.0-beta.11</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
     <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
@@ -19,13 +19,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Added</h3><ul>  <li>Offline build: the no-upload variant is now `macshot Offline` with its own bundle id, Sparkle feed, DMG, and Homebrew cask naming.</li>  </ul><h3>Fixed</h3><ul>  <li>Clipboard copies now keep retained backing files so Finder paste and clipboard history apps do not point at deleted temporary files.</li> <li>Clipboard copies include both image data and a file reference for better compatibility across paste targets.</li></ul>
+      <h3>Added</h3><ul>  <li>Import/export settings: back up your preferences to a file and move them to another Mac or a clean install (Preferences → General → Settings Backup). Upload credentials, your save folder, and screenshot history are never included. Answers where settings are stored (issues #265, #280).</li> <li>URL scheme `macshot://ocr-translate?target=<lang>`: capture a region, OCR it, translate, and overlay the translation in place over the original text (WeChat-style). `target` is a language code (e.g. `zh-CN`); omit it to use your default translation language. Triggerable from Raycast, Alfred, Shortcuts, or the command line (issue #283).</li>  </ul><h3>Fixed</h3><ul>  <li>Text Recognition window no longer spawns unexpectedly on wake, unlock, or connecting a monitor after using OCR once. An OCR/record/quick-capture/scroll request made while a capture was already in flight or during recording could strand its pending mode and apply it to the next capture (issue #276).</li> <li>Closing the OCR, audio-merge, or permission-onboarding windows with the title-bar close button no longer leaks the controller. The audio-merge window's close button now still delivers the finished recording instead of silently dropping it.</li></ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v4.2.0-beta.10/MacShot-Offline.dmg"
-        length="6428785"
+        url="https://github.com/sw33tLie/macshot/releases/download/v4.2.0-beta.11/MacShot-Offline.dmg"
+        length="6515631"
         type="application/octet-stream"
-        sparkle:edSignature="SK/2Hil81+q+1Njf5VgfdRpx9Xd/3fmy67kxEC4K8OaW4VruHA/KzFJ9BDjRlhgqUDxv86ZzaEIwuOZlX4BZCA=="
+        sparkle:edSignature="PFS6uhZgYfZRonL6KSyuLXJsMYDW2mvSx/SYWKdKaATSZWIhLSzNeCsDtKvdrYoJv9f8btD3r/xvHQn6B+CAAQ=="
     />
 </item>
     </channel>
