@@ -201,6 +201,10 @@ class Annotation {
     var arrowReversed: Bool = false      // head at start instead of end
     var rectFillStyle: RectFillStyle = .stroke // rectangle fill mode
     var stampImage: NSImage?          // rendered emoji or loaded picture for stamp tool
+    /// True when the stamp is a full capture added via "Add Capture" in the editor
+    /// (as opposed to an emoji/image placed with the stamp tool). Capture stamps
+    /// don't update the remembered default stamp size when resized.
+    var isCaptureStamp: Bool = false
     var measureInPoints: Bool = false  // true = show pt, false = show px
     var censorMode: CensorMode = .pixelate
     var textBgColor: NSColor?         // background pill color (nil = no background)
@@ -263,6 +267,7 @@ class Annotation {
         c.arrowReversed = arrowReversed
         c.rectFillStyle = rectFillStyle
         c.stampImage = stampImage
+        c.isCaptureStamp = isCaptureStamp
         c.measureInPoints = measureInPoints
         c.censorMode = censorMode
         c.textBgColor = textBgColor

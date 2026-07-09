@@ -53,6 +53,7 @@ struct CodableAnnotation: Codable {
 
     // Stamp
     var stampImagePNG: Data?
+    var isCaptureStamp: Bool?  // optional: absent in captures saved before the flag existed
 
     // Censor (pixelate/blur) baked result
     var bakedBlurPNG: Data?
@@ -132,6 +133,7 @@ extension Annotation {
 
         // Stamp
         if let stamp = stampImage { c.stampImagePNG = Self.encodeImage(stamp) }
+        if isCaptureStamp { c.isCaptureStamp = true }
 
         // Baked censor result (pixelate/blur/erase) — skip loupe since it
         // needs re-baking from the editor's source image at the correct coordinates.
@@ -225,6 +227,7 @@ extension Annotation {
 
         // Stamp
         if let data = c.stampImagePNG { ann.stampImage = NSImage(data: data) }
+        ann.isCaptureStamp = c.isCaptureStamp ?? false
 
         // Baked censor result
         if let data = c.bakedBlurPNG { ann.bakedBlurNSImage = NSImage(data: data) }

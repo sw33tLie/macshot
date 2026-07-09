@@ -1137,6 +1137,44 @@ class ToolOptionsRowView: NSView {
 
     private func addStampOptions(at x: CGFloat, ov: OverlayView) -> CGFloat {
         var curX = x
+
+        // Size slider — sets the default placement size; resizes the selected stamp when
+        // editing. Skipped for capture stamps ("Add Capture" images), which are usually far
+        // larger than the slider range — those resize via their handles instead.
+        if editingAnnotation?.isCaptureStamp != true {
+            let sizeLabel = NSTextField(labelWithString: L("Size"))
+            sizeLabel.font = NSFont.systemFont(ofSize: 9.5, weight: .medium)
+            sizeLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.4)
+            sizeLabel.sizeToFit()
+            sizeLabel.frame.origin = NSPoint(x: curX, y: (rowHeight - sizeLabel.frame.height) / 2)
+            addSubview(sizeLabel)
+            curX += sizeLabel.frame.width + 4
+
+            let currentSize: CGFloat
+            if let ann = editingAnnotation, ann.tool == .stamp {
+                currentSize = max(ann.boundingRect.width, ann.boundingRect.height)
+            } else {
+                currentSize = ov.currentStampSize
+            }
+            let sizeSlider = NSSlider(value: Double(currentSize), minValue: 16, maxValue: 256,
+                                      target: self, action: #selector(stampSizeChanged(_:)))
+            sizeSlider.frame = NSRect(x: curX, y: (rowHeight - 20) / 2, width: 80, height: 20)
+            sizeSlider.isContinuous = true
+            addSubview(sizeSlider)
+            curX += 80 + 4
+
+            let sizeValLabel = NSTextField(labelWithString: "\(Int(currentSize))px")
+            sizeValLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .medium)
+            sizeValLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.6)
+            sizeValLabel.alignment = .right
+            sizeValLabel.frame = NSRect(x: curX, y: (rowHeight - 14) / 2, width: 34, height: 14)
+            sizeValLabel.tag = 989  // stamp size value label
+            addSubview(sizeValLabel)
+            curX += 34
+
+            curX = addSeparator(at: curX)
+        }
+
         // Quick emoji buttons
         for emoji in StampEmojis.common {
             let btn = NSButton(title: emoji, target: self, action: #selector(quickEmojiClicked(_:)))
@@ -1435,6 +1473,29 @@ class ToolOptionsRowView: NSView {
         if let tool = currentTool { ov.setActiveStrokeWidth(val, for: tool) }
         if let label = viewWithTag(997) as? NSTextField {
             label.stringValue = currentTool == .loupe ? "\(Int(val))" : "\(Int(val))px"
+        }
+        ov.needsDisplay = true
+    }
+
+    @objc private func stampSizeChanged(_ sender: NSSlider) {
+        guard let ov = overlayView else { return }
+        let val = min(256, max(16, CGFloat(sender.doubleValue)))
+        if let ann = editingAnnotation, ann.tool == .stamp, !ann.isCaptureStamp {
+            ensureSnapshot()
+            // Resize around the center, preserving aspect ratio.
+            let rect = ann.boundingRect
+            let center = NSPoint(x: rect.midX, y: rect.midY)
+            let aspect = rect.width / max(rect.height, 1)
+            let w = aspect >= 1 ? val : val * aspect
+            let h = aspect >= 1 ? val / aspect : val
+            ann.startPoint = NSPoint(x: center.x - w / 2, y: center.y - h / 2)
+            ann.endPoint = NSPoint(x: center.x + w / 2, y: center.y + h / 2)
+            ov.cachedCompositedImage = nil
+        }
+        // Always update the default so the next stamp is placed at this size.
+        ov.setActiveStampSize(val)
+        if let label = viewWithTag(989) as? NSTextField {
+            label.stringValue = "\(Int(val))px"
         }
         ov.needsDisplay = true
     }

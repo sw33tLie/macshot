@@ -563,6 +563,10 @@ class OverlayView: NSView {
         ?? .stroke
     var currentStampImage: NSImage?  // selected emoji/image for stamp tool
     var currentStampEmoji: String?  // emoji string for highlight tracking
+    var currentStampSize: CGFloat = {
+        let v = UserDefaults.standard.object(forKey: "stampSize") as? Double
+        return v != nil ? CGFloat(v!) : 64
+    }()
     private var stampPreviewPoint: NSPoint?  // mouse position for stamp cursor preview
     var currentRectCornerRadius: CGFloat = {
         let v = UserDefaults.standard.object(forKey: "currentRectCornerRadius") as? Double
@@ -1106,12 +1110,16 @@ class OverlayView: NSView {
             if shouldMovePreview {
                 let oldPt = stampPreviewPoint ?? .zero
                 stampPreviewPoint = previewPoint
-                invalidateCursorPreview(oldCanvas: oldPt, newCanvas: previewPoint ?? .zero, radius: 40)
+                // Radius must cover the drawn preview (centered, max side = currentStampSize)
+                invalidateCursorPreview(
+                    oldCanvas: oldPt, newCanvas: previewPoint ?? .zero,
+                    radius: max(40, currentStampSize / 2))
             }
         } else if stampPreviewPoint != nil {
             let oldPt = stampPreviewPoint!
             stampPreviewPoint = nil
-            invalidateCursorPreview(oldCanvas: oldPt, newCanvas: oldPt, radius: 40)
+            invalidateCursorPreview(
+                oldCanvas: oldPt, newCanvas: oldPt, radius: max(40, currentStampSize / 2))
         }
 
         // Update cursor on every mouse move
@@ -2111,7 +2119,7 @@ class OverlayView: NSView {
             if let previewPt = stampPreviewPoint, let img = currentStampImage,
                 currentTool == .stamp, !isRecording
             {
-                let stampSize: CGFloat = 64
+                let stampSize: CGFloat = currentStampSize
                 let aspect = img.size.width / max(img.size.height, 1)
                 let w = aspect >= 1 ? stampSize : stampSize * aspect
                 let h = aspect >= 1 ? stampSize / aspect : stampSize
@@ -3558,6 +3566,7 @@ class OverlayView: NSView {
             color: NSColor.white.withAlphaComponent(0),
             strokeWidth: 0)
         ann.stampImage = newImage
+        ann.isCaptureStamp = true
 
         annotations.append(ann)
         undoStack.append(.added(ann))
@@ -6076,6 +6085,68 @@ class OverlayView: NSView {
                             break
                         }
                         annotation.strokeWidth = side
+                    } else if annotation.tool == .stamp {
+                        // Stamps always keep their aspect ratio, whichever handle is dragged.
+                        let origW = max(origMaxX - origMinX, 1)
+                        let origH = max(origMaxY - origMinY, 1)
+                        var scale: CGFloat
+                        switch annotationResizeHandle {
+                        case .left, .right:
+                            scale = (newMaxX - newMinX) / origW
+                        case .top, .bottom:
+                            scale = (newMaxY - newMinY) / origH
+                        default:
+                            scale = max((newMaxX - newMinX) / origW, (newMaxY - newMinY) / origH)
+                        }
+                        scale = max(scale, 10 / min(origW, origH))
+                        let w = origW * scale
+                        let h = origH * scale
+                        let centerX = (origMinX + origMaxX) / 2
+                        let centerY = (origMinY + origMaxY) / 2
+                        switch annotationResizeHandle {
+                        case .topLeft:
+                            newMinX = origMaxX - w
+                            newMaxX = origMaxX
+                            newMinY = origMinY
+                            newMaxY = origMinY + h
+                        case .topRight:
+                            newMinX = origMinX
+                            newMaxX = origMinX + w
+                            newMinY = origMinY
+                            newMaxY = origMinY + h
+                        case .bottomLeft:
+                            newMinX = origMaxX - w
+                            newMaxX = origMaxX
+                            newMinY = origMaxY - h
+                            newMaxY = origMaxY
+                        case .bottomRight:
+                            newMinX = origMinX
+                            newMaxX = origMinX + w
+                            newMinY = origMaxY - h
+                            newMaxY = origMaxY
+                        case .top:
+                            newMinX = centerX - w / 2
+                            newMaxX = centerX + w / 2
+                            newMinY = origMinY
+                            newMaxY = origMinY + h
+                        case .bottom:
+                            newMinX = centerX - w / 2
+                            newMaxX = centerX + w / 2
+                            newMinY = origMaxY - h
+                            newMaxY = origMaxY
+                        case .left:
+                            newMinX = origMaxX - w
+                            newMaxX = origMaxX
+                            newMinY = centerY - h / 2
+                            newMaxY = centerY + h / 2
+                        case .right:
+                            newMinX = origMinX
+                            newMaxX = origMinX + w
+                            newMinY = centerY - h / 2
+                            newMaxY = centerY + h / 2
+                        default:
+                            break
+                        }
                     } else if shiftHeld {
                         let w = newMaxX - newMinX
                         let h = newMaxY - newMinY
@@ -6312,6 +6383,10 @@ class OverlayView: NSView {
             if let ann = selectedAnnotation {
                 if ann.tool == .loupe { ann.bakeLoupe() }
                 if ann.tool == .pixelate { ann.bakedBlurNSImage = nil; ann.bakePixelate() }
+                if ann.tool == .stamp && !ann.isCaptureStamp {
+                    // Remember the size so the next stamp is placed to match.
+                    setActiveStampSize(max(ann.boundingRect.width, ann.boundingRect.height))
+                }
                 toolOptionsRowView?.rebuild(forAnnotation: ann)
             }
             NSCursor.openHand.set()
@@ -9591,6 +9666,11 @@ class OverlayView: NSView {
             UserDefaults.standard.set(Double(value), forKey: "currentStrokeWidth")
         }
         needsDisplay = true
+    }
+
+    func setActiveStampSize(_ value: CGFloat) {
+        currentStampSize = min(256, max(16, value))
+        UserDefaults.standard.set(Double(currentStampSize), forKey: "stampSize")
     }
 
     func setActiveLoupeMagnification(_ value: CGFloat) {

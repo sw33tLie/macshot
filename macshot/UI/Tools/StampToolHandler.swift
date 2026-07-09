@@ -44,12 +44,14 @@ enum StampEmojis {
         ),
     ]
 
+    // Keep this list short — it renders inline in the tool options row next to the
+    // size slider. Everything else stays reachable via the More Emojis popover.
     static let common = [
         "👆", "👇", "👈", "👉",  // point at things
         "✅", "❌", "⚠️", "❓",  // approve / reject / warn / question
-        "🔥", "🐛", "💀", "🎉",  // reactions: hot, bug, dead, celebrate
-        "👀", "💡", "🎯", "⭐",  // look here, idea, bullseye, star
-        "❤️", "👍", "👎", "🚀",  // love, thumbs, launch
+        "🔥", "🐛", "👀", "💡",  // reactions: hot, bug, look here, idea
+        "🎯", "⭐", "❤️", "👍",  // bullseye, star, love, thumbs up
+        "👎",  // thumbs down
     ]
 
     /// Render an emoji string to an NSImage.
@@ -97,7 +99,7 @@ final class StampToolHandler: AnnotationToolHandler {
         }
         guard let img = canvas.currentStampImage else { return nil }
 
-        let stampSize: CGFloat = 64
+        let stampSize: CGFloat = canvas.currentStampSize
         let aspect = img.size.width / max(img.size.height, 1)
         let w = aspect >= 1 ? stampSize : stampSize * aspect
         let h = aspect >= 1 ? stampSize / aspect : stampSize
