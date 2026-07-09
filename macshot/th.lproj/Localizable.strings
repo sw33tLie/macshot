@@ -164,6 +164,7 @@
 "Shadow" = "เงา";
 "Right-click to add points" = "คลิกขวาเพื่อเพิ่มจุด";
 "Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "กด 1 แนวตั้งอัตโนมัติ  ·  กด 2 แนวนอนอัตโนมัติ";
+"Limit to selection" = "จำกัดในส่วนที่เลือก";
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "คลิกที่หน้าต่าง  ·  ลากเพื่อเลือกพื้นที่  ·  F เพื่อเต็มจอ";

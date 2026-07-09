@@ -162,6 +162,7 @@
 "Shadow" = "Σκιά";
 "Right-click to add points" = "Δεξί κλικ για προσθήκη σημείων";
 "Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "Κρατήστε 1 αυτόματα κατακόρυφα  ·  Κρατήστε 2 αυτόματα οριζόντια";
+"Limit to selection" = "Περιορισμός στην επιλογή";
 
 /* Aspect Ratio & Resolution Presets */
 "Aspect ratio" = "Αναλογία διαστάσεων";

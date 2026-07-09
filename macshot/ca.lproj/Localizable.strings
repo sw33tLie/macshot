@@ -158,6 +158,7 @@
 "Shadow" = "Ombra";
 "Right-click to add points" = "Clic dret per afegir punts";
 "Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "Mantenir 1 auto-vertical  ·  Mantenir 2 auto-horitzontal";
+"Limit to selection" = "Limitar a la selecció";
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Clic a una finestra  ·  Arrossegar per area personalitzada  ·  F per pantalla completa";

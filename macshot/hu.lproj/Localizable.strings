@@ -162,6 +162,7 @@
 "Shadow" = "Árnyék";
 "Right-click to add points" = "Jobb kattintás pontok hozzáadásához";
 "Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "Tartsd az 1-et automatikus függőlegeshez  ·  Tartsd a 2-t automatikus vízszinteshez";
+"Limit to selection" = "Korlátozás a kijelölésre";
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Kattints egy ablakra  ·  Húzd az egyéni területhez  ·  F a teljes képernyőhöz";

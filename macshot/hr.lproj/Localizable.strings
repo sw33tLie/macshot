@@ -178,6 +178,7 @@
 "Shadow" = "Sjena";
 "Right-click to add points" = "Desni klik za dodavanje tocaka";
 "Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "Drzi 1 auto-okomito  ·  Drzi 2 auto-vodoravno";
+"Limit to selection" = "Ograniči na odabir";
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Klikni prozor  ·  Povuci za podrucje  ·  F za cijeli zaslon";

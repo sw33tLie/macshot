@@ -178,6 +178,7 @@
 "Shadow" = "Тень";
 "Right-click to add points" = "Нажмите правую кнопку, чтобы добавить точки";
 "Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "Удерживайте 1 — авто-вертикаль  ·  Удерживайте 2 — авто-горизонталь";
+"Limit to selection" = "Ограничить выделением";
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Нажмите на окно  ·  Выделите область  ·  F для полного экрана";

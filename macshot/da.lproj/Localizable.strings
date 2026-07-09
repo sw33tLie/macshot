@@ -169,6 +169,7 @@
 "Shadow" = "Skygge";
 "Right-click to add points" = "H\U00F8jreklik for at tilf\U00F8je punkter";
 "Hold 1 auto-vertical  \U00B7  Hold 2 auto-horizontal" = "Hold 1 auto-lodret  \U00B7  Hold 2 auto-vandret";
+"Limit to selection" = "Begræns til markering";
 
 /* Overlay / Canvas */
 "Click a window  \U00B7  Drag for custom area  \U00B7  F for full screen" = "Klik p\U00E5 et vindue  \U00B7  Tr\U00E6k for tilpasset omr\U00E5de  \U00B7  F for fuld sk\U00E6rm";

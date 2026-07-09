@@ -161,6 +161,7 @@
 "Shadow" = "ছায়া";
 "Right-click to add points" = "পয়েন্ট যোগ করতে ডান-ক্লিক করুন";
 "Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "1 ধরে রাখুন স্বয়ংক্রিয়-উল্লম্ব  ·  2 ধরে রাখুন স্বয়ংক্রিয়-অনুভূমিক";
+"Limit to selection" = "নির্বাচনে সীমাবদ্ধ";
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "উইন্ডোতে ক্লিক করুন  ·  কাস্টম এলাকার জন্য টানুন  ·  পূর্ণ স্ক্রিনের জন্য F";

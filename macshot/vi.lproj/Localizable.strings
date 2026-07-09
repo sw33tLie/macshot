@@ -164,6 +164,7 @@
 "Shadow" = "Bóng";
 "Right-click to add points" = "Nhấp chuột phải để thêm điểm";
 "Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "Giữ 1 tự động dọc  ·  Giữ 2 tự động ngang";
+"Limit to selection" = "Giới hạn trong vùng chọn";
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Nhấp vào cửa sổ  ·  Kéo để chọn vùng  ·  F để toàn màn hình";

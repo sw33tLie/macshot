@@ -178,6 +178,7 @@
 "Shadow" = "Сянка";
 "Right-click to add points" = "Десен бутон за добавяне на точки";
 "Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "Задръжте 1 авто-вертикално  ·  Задръжте 2 авто-хоризонтално";
+"Limit to selection" = "Ограничаване до селекцията";
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Щракнете върху прозорец  ·  Плъзнете за произволна област  ·  F за цял екран";

@@ -165,6 +165,7 @@
 "Shadow" = "Sombra";
 "Right-click to add points" = "Clique com o botão direito para adicionar pontos";
 "Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "Segure 1 auto-vertical  ·  Segure 2 auto-horizontal";
+"Limit to selection" = "Limitar à seleção";
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Clique em uma janela  ·  Arraste para área personalizada  ·  F para tela cheia";

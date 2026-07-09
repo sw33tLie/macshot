@@ -158,6 +158,7 @@
 "Shadow" = "ظل";
 "Right-click to add points" = "انقر بزر الفأرة الأيمن لإضافة نقاط";
 "Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "اضغط 1 عمودي تلقائي  ·  اضغط 2 أفقي تلقائي";
+"Limit to selection" = "حصر في التحديد";
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "انقر على نافذة  ·  اسحب لتحديد منطقة  ·  F لملء الشاشة";

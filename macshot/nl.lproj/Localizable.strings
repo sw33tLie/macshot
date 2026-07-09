@@ -164,6 +164,7 @@
 "Shadow" = "Schaduw";
 "Right-click to add points" = "Rechtsklik om punten toe te voegen";
 "Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "Houd 1 ingedrukt auto-verticaal  ·  Houd 2 ingedrukt auto-horizontaal";
+"Limit to selection" = "Beperken tot selectie";
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Klik op een venster  ·  Sleep voor aangepast gebied  ·  F voor volledig scherm";

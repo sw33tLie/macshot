@@ -164,6 +164,7 @@
 "Shadow" = "陰影";
 "Right-click to add points" = "右鍵點按以加入控制點";
 "Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "按住 1 自動垂直  ·  按住 2 自動水平";
+"Limit to selection" = "限制在選取範圍內";
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "點按視窗  ·  拖移以自訂區域  ·  F 全螢幕";

@@ -169,6 +169,7 @@
 "Shadow" = "Varjo";
 "Right-click to add points" = "Lisaa pisteet hiiren oikealla painikkeella";
 "Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "Pida 1 automaattinen pystysuunta  ·  Pida 2 automaattinen vaakasuunta";
+"Limit to selection" = "Rajoita valintaan";
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Napsauta ikkunaa  ·  Vedä valitaksesi alue  ·  F koko ruudulle";

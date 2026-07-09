@@ -158,6 +158,7 @@
 "Shadow" = "צל";
 "Right-click to add points" = "לחץ ימני להוספת נקודות";
 "Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "החזק 1 אנכי-אוטומטי  ·  החזק 2 אופקי-אוטומטי";
+"Limit to selection" = "הגבל לבחירה";
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "לחץ על חלון  ·  גרור לאזור מותאם  ·  F למסך מלא";

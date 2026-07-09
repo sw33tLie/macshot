@@ -178,6 +178,7 @@
 "Shadow" = "Tien";
 "Right-click to add points" = "Kliknutim pravym tlacidlom pridajte body";
 "Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "Drzte 1 auto-vertikalne  ·  Drzte 2 auto-horizontalne";
+"Limit to selection" = "Obmedziť na výber";
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Kliknite na okno  ·  Potiahnite pre vlastnu oblast  ·  F pre celu obrazovku";

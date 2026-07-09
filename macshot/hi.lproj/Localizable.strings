@@ -158,6 +158,7 @@
 "Shadow" = "छाया";
 "Right-click to add points" = "बिंदु जोड़ने के लिए राइट-क्लिक करें";
 "Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "1 दबाएँ स्वतः-लंबवत  ·  2 दबाएँ स्वतः-क्षैतिज";
+"Limit to selection" = "चयन तक सीमित";
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "विंडो पर क्लिक करें  ·  कस्टम क्षेत्र के लिए खींचें  ·  पूर्ण स्क्रीन के लिए F";
