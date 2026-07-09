@@ -11,6 +11,8 @@ enum TranslationProvider: String {
 
 enum TranslationService {
 
+    private static let fixedTargetLanguage = "zh-CN"
+
     // MARK: - Provider
 
     static var provider: TranslationProvider {
@@ -35,8 +37,8 @@ enum TranslationService {
     // MARK: - Target language
 
     static var targetLanguage: String {
-        get { UserDefaults.standard.string(forKey: "translateTargetLang") ?? "en" }
-        set { UserDefaults.standard.set(newValue, forKey: "translateTargetLang") }
+        get { fixedTargetLanguage }
+        set { UserDefaults.standard.set(fixedTargetLanguage, forKey: "translateTargetLang") }
     }
 
     static let availableLanguages: [(code: String, name: String)] = [
@@ -140,10 +142,11 @@ enum TranslationService {
     // MARK: - Translate a batch of strings (auto-detect source)
 
     /// Translates multiple strings using the selected provider.
+    /// The target language is intentionally pinned to Simplified Chinese.
     /// Calls completion on the main queue.
     static func translateBatch(
         texts: [String],
-        targetLang: String,
+        targetLang _: String,
         completion: @escaping (Result<[String], Error>) -> Void
     ) {
         guard !texts.isEmpty else {
@@ -152,9 +155,9 @@ enum TranslationService {
         }
 
         if #available(macOS 15.0, *), provider == .apple {
-            translateBatchApple(texts: texts, targetLang: targetLang, completion: completion)
+            translateBatchApple(texts: texts, targetLang: fixedTargetLanguage, completion: completion)
         } else {
-            translateBatchGoogle(texts: texts, targetLang: targetLang, completion: completion)
+            translateBatchGoogle(texts: texts, targetLang: fixedTargetLanguage, completion: completion)
         }
     }
 
