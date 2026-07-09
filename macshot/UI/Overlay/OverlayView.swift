@@ -8188,8 +8188,14 @@ class OverlayView: NSView {
         // and drags always draw, even single dots).
         let isPencilOrMarker = currentTool == .pencil || currentTool == .marker
 
+        // Option = draw-through: with a drawing tool active, ignore annotations
+        // (and their controls) under the cursor so the tool draws/places over
+        // them instead of selecting/moving them. The select tool keeps its
+        // normal behavior — its whole job is annotation interaction.
+        let drawThrough = currentTool != .select && NSEvent.modifierFlags.contains(.option)
+
         // Multi-select delete button — check before single-select controls
-        if selectedAnnotations.count > 1 && multiSelectDeleteButtonRect.contains(point) {
+        if !drawThrough && selectedAnnotations.count > 1 && multiSelectDeleteButtonRect.contains(point) {
             for ann in selectedAnnotations {
                 if let idx = annotations.firstIndex(where: { $0 === ann }) {
                     annotations.remove(at: idx)
@@ -8204,7 +8210,7 @@ class OverlayView: NSView {
         }
 
         // Always check selected annotation controls (delete, resize, etc.) for all tools
-        if currentTool != .colorSampler {
+        if currentTool != .colorSampler && !drawThrough {
             if let selected = selectedAnnotation {
                 if handleSelectedAnnotationClick(selected, at: point) { return }
             }
@@ -8221,7 +8227,8 @@ class OverlayView: NSView {
         let pencilHasMultiSelection = isPencilOrMarker && selectedAnnotations.count > 1
         let textHitsAnnotation = currentTool == .text
             && annotations.reversed().contains(where: { $0.isMovable && $0.hitTest(point: point) })
-        let useInstantSelect = currentTool != .colorSampler
+        let useInstantSelect = !drawThrough
+            && currentTool != .colorSampler
             && (currentTool != .text || ctrlHeld || textHitsAnnotation)
             && (!isPencilOrMarker || ctrlHeld || pencilHasMultiSelection)
         if useInstantSelect {
@@ -8283,7 +8290,7 @@ class OverlayView: NSView {
         // Pencil/marker without Ctrl: start a long-press timer. If the user holds
         // still for 300ms on an annotation, select it. Otherwise drawing starts
         // normally (the timer is cancelled in mouseDragged when movement exceeds 3px).
-        if isPencilOrMarker && !ctrlHeld {
+        if isPencilOrMarker && !ctrlHeld && !drawThrough {
             let hasAnnotationUnder = annotations.reversed().contains(where: { $0.isMovable && $0.hitTest(point: point) })
             if hasAnnotationUnder {
                 longPressPoint = point
@@ -8360,7 +8367,7 @@ class OverlayView: NSView {
             return
         }
 
-        if currentTool == .text {
+        if currentTool == .text && !drawThrough {
             // Click on existing text annotation → select it (double-click enters edit via handleSelectedAnnotationClick)
             if let existingAnn = annotations.reversed().first(where: {
                 $0.tool == .text && $0.hitTest(point: point)
