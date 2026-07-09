@@ -1456,6 +1456,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         guard savedRect.width > 1, savedRect.height > 1 else { return }
         for controller in controllers where controller.screen.frame == savedScreenFrame {
             controller.applySelection(savedRect)
+            // The install loop made the LAST overlay it showed the key window,
+            // but keyboard handling (Cmd+C, F, Enter) is per-window and gated
+            // on that window's own selection state — so key focus must follow
+            // the overlay that received the restored selection (#281).
+            controller.showOverlay()
             break
         }
     }
