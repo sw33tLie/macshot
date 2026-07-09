@@ -1,5 +1,20 @@
 # Changelog
 
+## [4.2.1-beta.1] - 2026-07-09
+
+### Added
+
+- **Stamp size control** — a Size slider in the stamp options row sets the default stamp/emoji size (16–256px, remembered across captures). Stamps keep their aspect ratio when resized from any handle, and resizing an emoji stamp carries that size forward to the next one. (#289)
+- **Measure: "Limit to selection"** — the ruler clamps to the capture area across drag-drawing, auto-measure (hold 1/2), and endpoint handle resizing. On by default; uncheck the new toggle in the measure options row to restore whole-screen measuring. (#212)
+- **Option = draw-through** — with a drawing tool active, hold Option to draw or place right over existing annotations instead of selecting them.
+
+### Fixed
+
+- **Shortcut names on non-QWERTY layouts** — hotkey display now resolves character keys through the active keyboard layout, so Dvorak/Colemak/AZERTY users see the keys they actually press. (#214)
+- **Video editor Copy includes pending edits** — trim, cuts, speed, zoom/censor/text, and mute are exported before copying to the clipboard instead of copying the untouched source file. (#193)
+- **Multi-monitor: restored selection gets keyboard focus** — Cmd+C, F, and Enter act on the display that actually shows the restored selection. (#281)
+- Stamp hover preview no longer leaves trails at larger stamp sizes.
+
 ## [4.2.0] - 2026-07-09
 
 ### Added
