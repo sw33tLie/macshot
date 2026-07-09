@@ -56,7 +56,9 @@ final class MeasureToolHandler: AnnotationToolHandler {
     }
 }
 
-fileprivate extension NSPoint {
+// Internal (not fileprivate): OverlayView reuses these to clamp the other two
+// measure geometry paths — auto-measure (hold 1/2) and endpoint handle resize.
+extension NSPoint {
     func clampedToRect(_ rect: NSRect) -> NSPoint {
         NSPoint(x: min(max(x, rect.minX), rect.maxX),
                 y: min(max(y, rect.minY), rect.maxY))

@@ -4016,8 +4016,14 @@ class OverlayView: NSView {
                 if colorDiff(refColor, pixelAt(pixelX, py)) > threshold { break }
                 endPx = py
             }
-            let p1 = toCanvas(px: pixelX, py: startPx)
-            let p2 = toCanvas(px: pixelX, py: endPx)
+            var p1 = toCanvas(px: pixelX, py: startPx)
+            var p2 = toCanvas(px: pixelX, py: endPx)
+            // Auto-measure scans the whole screenshot; when clamping is on and the
+            // cursor is inside the selection, stop the ruler at the selection edges.
+            if currentMeasureClampToSelection && selectionRect.contains(canvasPoint) {
+                p1.y = min(max(p1.y, selectionRect.minY), selectionRect.maxY)
+                p2.y = min(max(p2.y, selectionRect.minY), selectionRect.maxY)
+            }
             let ann = Annotation(
                 tool: .measure, startPoint: p1, endPoint: p2,
                 color: annotationColor, strokeWidth: currentStrokeWidth)
@@ -4034,8 +4040,12 @@ class OverlayView: NSView {
                 if colorDiff(refColor, pixelAt(px, pixelY)) > threshold { break }
                 endPx = px
             }
-            let p1 = toCanvas(px: startPx, py: pixelY)
-            let p2 = toCanvas(px: endPx, py: pixelY)
+            var p1 = toCanvas(px: startPx, py: pixelY)
+            var p2 = toCanvas(px: endPx, py: pixelY)
+            if currentMeasureClampToSelection && selectionRect.contains(canvasPoint) {
+                p1.x = min(max(p1.x, selectionRect.minX), selectionRect.maxX)
+                p2.x = min(max(p2.x, selectionRect.minX), selectionRect.maxX)
+            }
             let ann = Annotation(
                 tool: .measure, startPoint: p1, endPoint: p2,
                 color: annotationColor, strokeWidth: currentStrokeWidth)
@@ -5953,6 +5963,11 @@ class OverlayView: NSView {
                                 x: anchor.x + dist * cos(snapped), y: anchor.y + dist * sin(snapped)
                             )
                         }
+                        if annotation.tool == .measure && currentMeasureClampToSelection {
+                            newStart = shiftHeld
+                                ? newStart.clampedAlongRay(from: annotation.endPoint, in: selectionRect)
+                                : newStart.clampedToRect(selectionRect)
+                        }
                         annotation.startPoint = newStart
                         if var anchors = annotation.anchorPoints, !anchors.isEmpty {
                             anchors[0] = newStart
@@ -5970,6 +5985,11 @@ class OverlayView: NSView {
                             newEnd = NSPoint(
                                 x: anchor.x + dist * cos(snapped), y: anchor.y + dist * sin(snapped)
                             )
+                        }
+                        if annotation.tool == .measure && currentMeasureClampToSelection {
+                            newEnd = shiftHeld
+                                ? newEnd.clampedAlongRay(from: annotation.startPoint, in: selectionRect)
+                                : newEnd.clampedToRect(selectionRect)
                         }
                         annotation.endPoint = newEnd
                         if var anchors = annotation.anchorPoints, anchors.count >= 2 {
