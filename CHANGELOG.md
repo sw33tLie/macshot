@@ -1,14 +1,49 @@
 # Changelog
 
-## [Unreleased]
+## [4.2.0] - 2026-07-09
 
 ### Added
 
-- `macshot://edit?id=<historyEntryID>` URL scheme: reopen a specific history entry in the editor with its annotations still editable (PR #272).
+- **Highlight (spotlight) tool** — drag a rectangle to keep that region bright while dimming the rest of the capture. Adjustable dim strength and a solid/dashed border.
+- **Boundary snap** — the selection's edges snap to strong color edges in the image (UI lines, window borders) while dragging, resizing, or moving it. On by default; hold Option to bypass.
+- **Settings import/export** — back up your preferences to a file and move them to another Mac or a clean install (Settings → General → Settings Backup). Upload credentials, your save folder, and screenshot history are never included. (#265, #280)
+- **macshot Offline** — a separate app variant with upload and cloud storage integrations removed, with its own DMG, update feed, and Homebrew cask.
+- **Redesigned selection size control** — split width/height fields, aspect-ratio and resolution presets, a custom ratio lock, and a pre-draw preset button for quick and scroll capture. Exact-resolution capture drags as a fixed-size frame.
+- **Loupe: rooted two-circle magnifier** — a source circle stays where you click and the magnified lens follows your drag, connected by a line. Both move and resize independently, with an outline color option. (#197)
+- **OCR detects QR codes** — with open, copy, and scan actions alongside recognized text.
+- **New URL scheme commands** — `macshot://ocr-translate?target=<lang>` captures a region, OCRs it, and overlays the translation in place over the original text (#283); `macshot://edit?id=<id>` reopens a history entry in the editor with its annotations still editable (#272).
+- **History upgrades** — right-click menu on history screenshots (copy, save, edit, pin, upload, OCR/QR, rotate, flip, open with, share, delete) and optional ordering by last edit.
+- **Paste into Editor** — Cmd+V opens a clipboard image directly in the Editor window.
+- **Native AVIF export.**
+- **Custom menu bar icon** — the default, a built-in preset, or any SF Symbol.
+- **Quick Look snapping** — window snapping can select Finder Quick Look windows.
+- **Smaller additions** — hold Space while dragging to move the selection, numpad Enter confirms, Forward Delete removes annotations, silent "Clear History" hotkey, point handles for number annotations, configurable save action, hide-shadow-outside-selection and tooltip-shortcut settings.
+
+### Changed
+
+- Removed scroll/pinch-to-zoom from the capture overlay (the editor window still zooms).
+- macshot no longer prevents idle sleep while sitting in the menu bar.
+- Selected text shows a plain selection rectangle instead of an outline tracing the letters.
+- OCR/QR results UI aligned with Translate; actions moved into the header. Text fields use the standard edit menu.
 
 ### Fixed
 
-- Text glyph stroke now draws as an outline *outside* the letter fill instead of a centered stroke that thinned the text and made it hard to read. Live editing, the committed image, resizing, and re-editing all render identically, and older captures with a stroke are converted on load (issue #257).
+- **Phantom Text Recognition window** — no longer spawns on wake, unlock, or connecting a monitor after using OCR once. (#276)
+- **Text stroke** — the glyph stroke now draws as an outline outside the letter fill instead of a centered stroke that thinned the text. Live editing, the committed image, resizing, and re-editing all render identically; older captures are converted on load. (#257)
+- **Menu bar icon freeze** — clicking the icon could hang the app and kill the global hotkey.
+- **Crash on launch** on macOS versions older than 12.3.
+- **Capture reliability on macOS 26**, including the enlarged "shake to find" cursor no longer being captured when "Capture mouse cursor" is off.
+- **Clipboard copies** keep retained backing files, so Finder paste and clipboard managers no longer point at deleted temporary files.
+- **Video editor Save** no longer deletes the user's source file.
+- **Recording reliability** — fixed a data race in the recording engine; broken or empty recordings are no longer reported as successful.
+- **Editor edit tracking** — no more false "Save changes?" when closing without edits; moving, resizing, or rotating an annotation is undoable and counts as an edit.
+- **Beautify** — removed the thin hairline around rounded screenshot edges when a drop shadow is enabled.
+- **Text boxes** — clicking outside closes the box without dropping a new empty one; text no longer clips at the minimum box height.
+- **Window close buttons** — closing the OCR, audio-merge, or onboarding windows with the red-X no longer leaks them; closing the audio-merge window still delivers the finished recording.
+- The scroll-capture HUD no longer steals focus from the window being captured.
+- Toolbar popovers close when their button is clicked again; the right toolbar stays clear of the notch.
+- Window snapping ignores hidden windows behind the frontmost one.
+- Save panels open focused; editable annotations and post-processing state are preserved when reopening captures; toolbar buttons no longer fire stale actions.
 
 ## [4.2.0-beta.11] - 2026-07-08
 
