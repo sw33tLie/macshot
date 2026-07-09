@@ -503,7 +503,11 @@ jobs:
           cp appcast.xml /tmp/appcast.xml
           cp appcast-offline.xml /tmp/appcast-offline.xml
           git fetch origin main:refs/remotes/origin/main
-          git checkout -B main origin/main
+          # Force the switch: the generated appcasts are already saved above, and
+          # a plain checkout aborts with "local changes would be overwritten" when
+          # the appcasts differ between the built ref and main (e.g. the tag was
+          # cut before the previous release's appcast commit landed on main).
+          git checkout -f -B main origin/main
           cp /tmp/appcast.xml appcast.xml
           cp /tmp/appcast-offline.xml appcast-offline.xml
           if [ "$IS_BETA" = "false" ]; then
