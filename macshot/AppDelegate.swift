@@ -1022,7 +1022,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
     /// Region-capture -> OCR -> translate -> draw the translation in place over the
     /// original text on the screenshot (macshot://ocr-translate). `target` nil
-    /// uses the fixed Simplified Chinese target.
+    /// uses the configured target resolved by TranslationService.
     private func beginCaptureTranslate(target: String?, fromMenu: Bool) {
         guard canStartCapture else { return }
         pendingTranslateOverlayMode = true
@@ -2210,7 +2210,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         case "quick-capture":       quickCapture()
         case "ocr":                 captureOCR()
         case "ocr-translate":
-            // ?target=<lang code, e.g. zh-CN>; omitted uses the fixed Simplified Chinese target.
+            // ?target=<lang code, e.g. zh-CN>; omitted uses the configured target.
             let target = URLComponents(url: url, resolvingAgainstBaseURL: false)?
                 .queryItems?.first(where: { $0.name == "target" })?.value?
                 .trimmingCharacters(in: .whitespacesAndNewlines)

@@ -11,8 +11,6 @@ enum TranslationProvider: String {
 
 enum TranslationService {
 
-    private static let fixedTargetLanguage = "zh-CN"
-
     // MARK: - Provider
 
     static var provider: TranslationProvider {
@@ -36,9 +34,31 @@ enum TranslationService {
 
     // MARK: - Target language
 
+    static var explicitTargetLanguage: String? {
+        get {
+            TranslationTargetLanguage.explicitLanguage(
+                in: UserDefaults.standard,
+                supportedCodes: supportedLanguageCodes
+            )
+        }
+        set {
+            TranslationTargetLanguage.setExplicitLanguage(
+                newValue,
+                in: UserDefaults.standard,
+                supportedCodes: supportedLanguageCodes
+            )
+        }
+    }
+
     static var targetLanguage: String {
-        get { fixedTargetLanguage }
-        set { UserDefaults.standard.set(fixedTargetLanguage, forKey: "translateTargetLang") }
+        get {
+            TranslationTargetLanguage.resolvedLanguage(
+                defaults: UserDefaults.standard,
+                preferredLanguages: Locale.preferredLanguages,
+                supportedCodes: supportedLanguageCodes
+            )
+        }
+        set { explicitTargetLanguage = newValue }
     }
 
     static let availableLanguages: [(code: String, name: String)] = [
@@ -73,6 +93,8 @@ enum TranslationService {
         ("th", "Thai"),
         ("vi", "Vietnamese"),
     ]
+
+    private static let supportedLanguageCodes: Set<String> = Set(availableLanguages.map { $0.code })
 
     /// Check which languages are available for Apple Translation.
     /// Returns a dict of language code → installed status.
@@ -142,11 +164,10 @@ enum TranslationService {
     // MARK: - Translate a batch of strings (auto-detect source)
 
     /// Translates multiple strings using the selected provider.
-    /// The target language is intentionally pinned to Simplified Chinese.
     /// Calls completion on the main queue.
     static func translateBatch(
         texts: [String],
-        targetLang _: String,
+        targetLang: String,
         completion: @escaping (Result<[String], Error>) -> Void
     ) {
         guard !texts.isEmpty else {
@@ -155,9 +176,9 @@ enum TranslationService {
         }
 
         if #available(macOS 15.0, *), provider == .apple {
-            translateBatchApple(texts: texts, targetLang: fixedTargetLanguage, completion: completion)
+            translateBatchApple(texts: texts, targetLang: targetLang, completion: completion)
         } else {
-            translateBatchGoogle(texts: texts, targetLang: fixedTargetLanguage, completion: completion)
+            translateBatchGoogle(texts: texts, targetLang: targetLang, completion: completion)
         }
     }
 

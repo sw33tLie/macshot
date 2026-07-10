@@ -303,7 +303,7 @@ class OverlayWindowController {
 
     /// Set flag so overlay runs OCR + translate + in-place overlay immediately
     /// after the user makes a selection (macshot://ocr-translate). `targetLang`
-    /// nil uses the fixed Simplified Chinese target.
+    /// nil uses the configured target resolved by TranslationService.
     func setAutoTranslateOverlayMode(targetLang: String?) {
         overlayView?.autoTranslateOverlayMode = true
         overlayView?.autoTranslateOverlayLang = targetLang
