@@ -154,6 +154,13 @@ private final class VideoEditorView: NSView {
     private var exportQuality: VideoQuality = .high
     private var qualityBtnRect: NSRect = .zero
 
+    // GIF export frame rate (5-30 fps), persisted across sessions
+    private var gifExportFPS: Int = {
+        let stored = UserDefaults.standard.integer(forKey: "gifExportFPS")
+        return stored == 0 ? 15 : min(30, max(5, stored))
+    }()
+    private var gifFPSBtnRect: NSRect = .zero
+
     // Effects band (zoom + censor segments) lives in its own NSView, hosted
     // inside an NSScrollView so it can overflow vertically when many segments
     // stack onto separate rows. The parent editor observes mutations via the
@@ -924,6 +931,23 @@ private final class VideoEditorView: NSView {
                 }
             }
 
+            // GIF frame rate dropdown (only meaningful when exporting as GIF)
+            gifFPSBtnRect = .zero
+            if exportAsGIF && x < maxLeftX {
+                let fpsAttrs: [NSAttributedString.Key: Any] = [
+                    .font: NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .medium),
+                    .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(gifExportFPS != 15 ? 0.7 : 0.4),
+                ]
+                let fpsStr = "  ·  \(gifExportFPS) fps ▼" as NSString
+                let fpsSize = fpsStr.size(withAttributes: fpsAttrs)
+                let fpsBtnW = fpsSize.width + 8
+                if x + fpsBtnW < maxLeftX {
+                    gifFPSBtnRect = NSRect(x: x, y: btnY, width: fpsBtnW, height: btnH)
+                    fpsStr.draw(at: NSPoint(x: x + 4, y: btnY + (btnH - fpsSize.height) / 2), withAttributes: fpsAttrs)
+                    x += fpsBtnW
+                }
+            }
+
             // Estimated export size — show when trim, scale, quality, or format change would affect output
             let trimRatio = duration > 0 ? (trimEnd - trimStart) / duration : 1.0
             let scaleRatio = exportScale * exportScale  // pixels scale quadratically
@@ -1353,6 +1377,11 @@ private final class VideoEditorView: NSView {
             showQualityMenu(); return
         }
 
+        // GIF frame rate dropdown
+        if gifFPSBtnRect.contains(point) && exportAsGIF {
+            showGIFFPSMenu(); return
+        }
+
         // Buttons
         if playBtnRect.contains(point) { togglePlayPause(); return }
         if muteBtnRect.contains(point) { toggleMute(); return }
@@ -1707,6 +1736,26 @@ private final class VideoEditorView: NSView {
         menu.popUp(positioning: nil, at: pos, in: self)
     }
 
+    private func showGIFFPSMenu() {
+        let menu = NSMenu()
+        for fps in 5...30 {
+            let item = NSMenuItem(title: "\(fps) fps", action: #selector(gifFPSSelected(_:)), keyEquivalent: "")
+            item.target = self
+            item.tag = fps
+            item.state = (fps == gifExportFPS) ? .on : .off
+            menu.addItem(item)
+        }
+        let pos = NSPoint(x: gifFPSBtnRect.minX, y: gifFPSBtnRect.maxY)
+        menu.popUp(positioning: nil, at: pos, in: self)
+    }
+
+    @objc private func gifFPSSelected(_ sender: NSMenuItem) {
+        gifExportFPS = min(30, max(5, sender.tag))
+        UserDefaults.standard.set(gifExportFPS, forKey: "gifExportFPS")
+        savedURL = nil
+        needsDisplay = true
+    }
+
     @objc private func qualitySelected(_ sender: NSMenuItem) {
         if let raw = sender.representedObject as? String, let q = VideoQuality(rawValue: raw) {
             exportQuality = q
@@ -1722,8 +1771,10 @@ private final class VideoEditorView: NSView {
         let startTime = CMTime(seconds: trimStart, preferredTimescale: 600)
         let endTime = CMTime(seconds: trimEnd, preferredTimescale: 600)
         let timeRange = CMTimeRange(start: startTime, end: endTime)
-        // GIF capped at 15fps
-        let gifFPS = min(15, asset.tracks(withMediaType: .video).first.map { Int($0.nominalFrameRate.rounded()) } ?? 15)
+        // User-selected GIF frame rate (5-30), capped at the source frame rate
+        // so playback speed stays true to real time.
+        let sourceNominalFPS = asset.tracks(withMediaType: .video).first.map { Int($0.nominalFrameRate.rounded()) } ?? 30
+        let gifFPS = min(max(5, min(30, gifExportFPS)), max(5, sourceNominalFPS))
         let scale = exportScale
         let hasEffects = !zoomSegments.isEmpty || !censorSegments.isEmpty || !textSegments.isEmpty
 
@@ -1763,7 +1814,12 @@ private final class VideoEditorView: NSView {
             }
         }
 
-        DispatchQueue.global(qos: .background).async { [weak self] in
+        // .userInitiated instead of .background: on Apple Silicon, background QoS
+        // is confined to efficiency cores and heavily throttled, making GIF
+        // conversion many times slower than the hardware allows. The MP4 export
+        // path already uses .userInitiated; UI stays responsive either way since
+        // the work is off the main thread.
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             do {
                 let reader = try AVAssetReader(asset: readerAsset)
                 guard let videoTrack = readerVideoTrackOpt else {
@@ -1807,38 +1863,58 @@ private final class VideoEditorView: NSView {
 
                 let tmpURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".gif")
                 let sourceFPS = Int(videoTrack.nominalFrameRate.rounded())
-                let encoder = GIFEncoder(url: tmpURL, fps: gifFPS, sourceFPS: max(sourceFPS, gifFPS))
-                reader.startReading()
-
                 let durationSec = CMTimeGetSeconds(readerTimeRange.duration)
                 let estimatedFrames = max(1, Int(durationSec * Double(sourceFPS)))
-                var framesRead = 0
-                var lastReportedPct = -1
 
-                while reader.status == .reading {
-                    autoreleasepool {
-                        if let sampleBuffer = readerOutput.copyNextSampleBuffer(),
-                           let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
-                            encoder.addFrame(pixelBuffer)
-                            framesRead += 1
-                        }
-                    }
-                    // Update progress on main thread (reading = 0–50%, finalize = 50–100%)
-                    let pct = min(50, framesRead * 50 / estimatedFrames)
-                    if pct != lastReportedPct {
-                        lastReportedPct = pct
+                if let gifskiBinary = GifskiExporter.locateBinary() {
+                    // Parallel all-core encoder; streams frames via disk instead
+                    // of holding every frame in memory (ImageIO keeps all frames
+                    // until finalize and crashes on long recordings).
+                    try GifskiExporter.export(
+                        binary: gifskiBinary,
+                        reader: reader,
+                        readerOutput: readerOutput,
+                        fps: gifFPS,
+                        sourceFPS: max(sourceFPS, gifFPS),
+                        estimatedFrames: estimatedFrames,
+                        to: tmpURL
+                    ) { fraction in
+                        let pct = Int(fraction * 100)
                         DispatchQueue.main.async {
                             self?.showStatus(String(format: L("Processing GIF…") + " %d%%", pct), persist: true)
                         }
                     }
-                }
+                } else {
+                    let encoder = GIFEncoder(url: tmpURL, fps: gifFPS, sourceFPS: max(sourceFPS, gifFPS))
+                    reader.startReading()
+                    var framesRead = 0
+                    var lastReportedPct = -1
 
-                DispatchQueue.main.async {
-                    self?.showStatus(L("Processing GIF…") + " 50%", persist: true)
-                }
-                encoder.finish()
-                DispatchQueue.main.async {
-                    self?.showStatus(L("Processing GIF…") + " 100%", persist: true)
+                    while reader.status == .reading {
+                        autoreleasepool {
+                            if let sampleBuffer = readerOutput.copyNextSampleBuffer(),
+                               let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
+                                encoder.addFrame(pixelBuffer)
+                                framesRead += 1
+                            }
+                        }
+                        // Update progress on main thread (reading = 0–50%, finalize = 50–100%)
+                        let pct = min(50, framesRead * 50 / estimatedFrames)
+                        if pct != lastReportedPct {
+                            lastReportedPct = pct
+                            DispatchQueue.main.async {
+                                self?.showStatus(String(format: L("Processing GIF…") + " %d%%", pct), persist: true)
+                            }
+                        }
+                    }
+
+                    DispatchQueue.main.async {
+                        self?.showStatus(L("Processing GIF…") + " 50%", persist: true)
+                    }
+                    encoder.finish()
+                    DispatchQueue.main.async {
+                        self?.showStatus(L("Processing GIF…") + " 100%", persist: true)
+                    }
                 }
 
                 // Move to destination
