@@ -35,7 +35,7 @@ enum TranslationTargetLanguage {
         defaults: UserDefaults,
         preferredLanguages: [String],
         supportedCodes: Set<String>,
-        fallback: String
+        fallback: String = "en"
     ) -> String {
         explicitLanguage(in: defaults, supportedCodes: supportedCodes)
             ?? systemLanguage(
@@ -48,7 +48,7 @@ enum TranslationTargetLanguage {
     static func systemLanguage(
         preferredLanguages: [String],
         supportedCodes: Set<String>,
-        fallback: String
+        fallback: String = "en"
     ) -> String {
         guard let preferredLanguage = preferredLanguages.first else { return fallback }
 

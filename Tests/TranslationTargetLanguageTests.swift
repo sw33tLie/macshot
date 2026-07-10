@@ -24,6 +24,7 @@ private enum TranslationTargetLanguageTests {
     static func main() {
         do {
             try testSystemLanguageResolution()
+            try testDefaultFallback()
             try testExplicitLanguageOverridesSystemLanguage()
             try testClearingExplicitLanguageRestoresSystemResolution()
             try testInvalidStoredLanguageIsIgnoredAndPreserved()
@@ -65,6 +66,29 @@ private enum TranslationTargetLanguageTests {
             "en",
             "empty preferred languages should use the fallback"
         )
+    }
+
+    private static func testDefaultFallback() throws {
+        try expectEqual(
+            TranslationTargetLanguage.systemLanguage(
+                preferredLanguages: ["fr-FR"],
+                supportedCodes: supportedCodes
+            ),
+            "en",
+            "system language should default to the English fallback"
+        )
+
+        try withIsolatedDefaults { defaults in
+            try expectEqual(
+                TranslationTargetLanguage.resolvedLanguage(
+                    defaults: defaults,
+                    preferredLanguages: ["fr-FR"],
+                    supportedCodes: supportedCodes
+                ),
+                "en",
+                "resolved language should default to the English fallback"
+            )
+        }
     }
 
     private static func testExplicitLanguageOverridesSystemLanguage() throws {
