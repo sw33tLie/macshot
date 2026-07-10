@@ -227,13 +227,25 @@ class ScreenCaptureManager {
         }
 
         timing?("SCK rect immediate: begin screens=\(screens.count)")
+        // SCScreenshotManager.captureScreenshot(rect:) takes CoreGraphics display
+        // space: origin at the TOP-left of the primary display, y down. NSScreen
+        // frames are AppKit space: origin at the BOTTOM-left of the primary, y up.
+        // The two only coincide for the primary display — non-primary screens
+        // captured with the raw AppKit frame come back vertically shifted with a
+        // black stripe where the rect fell off the display (#291, #294).
+        let primaryHeight = screens[0].frame.maxY
         let captures = await withTaskGroup(
             of: ScreenCapture?.self,
             returning: [ScreenCapture].self
         ) { group in
             for (index, screen) in screens.enumerated() {
                 group.addTask {
-                    let rect = screen.frame
+                    let appKitFrame = screen.frame
+                    let rect = CGRect(
+                        x: appKitFrame.origin.x,
+                        y: primaryHeight - appKitFrame.maxY,
+                        width: appKitFrame.width,
+                        height: appKitFrame.height)
                     let config = SCScreenshotConfiguration()
                     config.width = Int(rect.width * screen.backingScaleFactor)
                     config.height = Int(rect.height * screen.backingScaleFactor)
