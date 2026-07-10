@@ -1,5 +1,22 @@
 # Changelog
 
+## [4.2.1] - 2026-07-10
+
+### Added
+
+- **Stamp size control** — a Size slider in the stamp options row sets the default stamp/emoji size (remembered across captures). Stamps keep their aspect ratio when resized from any handle, and resizing an emoji stamp carries that size forward to the next one. (#289)
+- **Measure: "Limit to selection"** — the ruler clamps to the capture area across drag-drawing, auto-measure (hold 1/2), and endpoint handle resizing. On by default; toggle in the measure options row. (#212)
+- **Option = draw-through** — with a drawing tool active, hold Option to draw or place right over existing annotations instead of selecting them.
+
+### Fixed
+
+- **Multi-monitor capture on macOS 26** — external displays no longer capture shifted upward with a black bar at the bottom. (#291, #294)
+- **Shortcuts bound to Space work again** — actions like Copy on the Space key were swallowed by 4.2.0's hold-Space-to-reposition feature. (#292)
+- **Shortcut names on non-QWERTY layouts** — hotkey display resolves keys through the active keyboard layout, so Dvorak/Colemak/AZERTY users see the keys they actually press. (#214)
+- **Video editor Copy includes pending edits** — trim, cuts, speed, zoom/censor/text, and mute are applied before copying to the clipboard. (#193)
+- **Multi-monitor: restored selection gets keyboard focus** — Cmd+C, F, and Enter act on the display that shows the restored selection. (#281)
+- Stamp hover preview no longer leaves trails at larger stamp sizes.
+
 ## [4.2.1-beta.1] - 2026-07-09
 
 ### Added
