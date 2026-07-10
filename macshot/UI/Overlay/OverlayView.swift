@@ -8973,12 +8973,27 @@ class OverlayView: NSView {
                     return
                 }
             }
-            if eventMatchesToolShortcut(event, action: .moveSelection) {
-                if !isKeyboardMoveSelectionActive {
-                    _ = startKeyboardMoveSelection()
+            // Space may be a user-configured action shortcut (Copy, Save, Pin, …).
+            // The reposition feature only owns Space during an active drag, so an
+            // idle press must go through the same dispatch as every other key (#292).
+            if !event.isARepeat, state == .selected,
+               let action = ToolShortcutManager.lookupAction(for: " ") {
+                switch action {
+                case .moveSelection:
+                    if !isKeyboardMoveSelectionActive {
+                        _ = startKeyboardMoveSelection()
+                    }
+                case .detach:
+                    if shouldAllowDetach() { handleToolbarAction(.detach) }
+                case .pin, .scrollCapture:
+                    if !isEditorMode { handleToolbarAction(action) }
+                default:
+                    handleToolbarAction(action)
                 }
                 return
             }
+            // Unbound Space is still consumed so key repeat never falls through
+            // to AppKit's "unhandled key" beep while the overlay is focused.
             return
         }
 
