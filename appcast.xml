@@ -4,13 +4,32 @@
         <title>macshot</title>
         <link>https://github.com/sw33tLie/macshot</link>
         <description>macshot updates</description>
-<item>
+<item xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
     <title>v4.2.1</title>
     <pubDate>Fri, 10 Jul 2026 17:51:12 +0000</pubDate>
     <sparkle:version>99</sparkle:version>
     <sparkle:shortVersionString>4.2.1</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
 
+    <description>
+      &lt;style&gt;
+        body { font-family: -apple-system, sans-serif; font-size: 13px; padding: 12px; }
+        h3 { font-size: 14px; margin: 12px 0 6px 0; }
+        h3:first-child { margin-top: 0; }
+        ul { padding-left: 18px; margin: 4px 0; }
+        li { margin: 4px 0; line-height: 1.5; }
+      &lt;/style&gt;
+      &lt;h3&gt;Added&lt;/h3&gt;&lt;ul&gt;  &lt;li&gt;&lt;b&gt;Stamp size control&lt;/b&gt; — a Size slider in the stamp options row sets the default stamp/emoji size (remembered across captures). Stamps keep their aspect ratio when resized from any handle, and resizing an emoji stamp carries that size forward to the next one. (#289)&lt;/li&gt; &lt;li&gt;&lt;b&gt;Measure: "Limit to selection"&lt;/b&gt; — the ruler clamps to the capture area across drag-drawing, auto-measure (hold 1/2), and endpoint handle resizing. On by default; toggle in the measure options row. (#212)&lt;/li&gt; &lt;li&gt;&lt;b&gt;Option = draw-through&lt;/b&gt; — with a drawing tool active, hold Option to draw or place right over existing annotations instead of selecting them.&lt;/li&gt;  &lt;/ul&gt;&lt;h3&gt;Fixed&lt;/h3&gt;&lt;ul&gt;  &lt;li&gt;&lt;b&gt;Multi-monitor capture on macOS 26&lt;/b&gt; — external displays no longer capture shifted upward with a black bar at the bottom. (#291, #294)&lt;/li&gt; &lt;li&gt;&lt;b&gt;Shortcuts bound to Space work again&lt;/b&gt; — actions like Copy on the Space key were swallowed by 4.2.0's hold-Space-to-reposition feature. (#292)&lt;/li&gt; &lt;li&gt;&lt;b&gt;Shortcut names on non-QWERTY layouts&lt;/b&gt; — hotkey display resolves keys through the active keyboard layout, so Dvorak/Colemak/AZERTY users see the keys they actually press. (#214)&lt;/li&gt; &lt;li&gt;&lt;b&gt;Video editor Copy includes pending edits&lt;/b&gt; — trim, cuts, speed, zoom/censor/text, and mute are applied before copying to the clipboard. (#193)&lt;/li&gt; &lt;li&gt;&lt;b&gt;Multi-monitor: restored selection gets keyboard focus&lt;/b&gt; — Cmd+C, F, and Enter act on the display that shows the restored selection. (#281)&lt;/li&gt; &lt;li&gt;Stamp hover preview no longer leaves trails at larger stamp sizes.&lt;/li&gt;&lt;/ul&gt;
+    </description>
+    <enclosure url="https://github.com/sw33tLie/macshot/releases/download/v4.2.1/MacShot.dmg" length="6747619" type="application/octet-stream" sparkle:edSignature="hVBqpp6GDMI7MmpHxkPsr1edooUjddMcqhalz8gKXEM4+tJ36rw0n1wBR/bZECQcIBaGmo2Ijh6zpuDs/h42BA==" />
+</item>
+<item>
+    <title>v4.2.2-beta.1</title>
+    <pubDate>Sat, 11 Jul 2026 13:06:05 +0000</pubDate>
+    <sparkle:version>100</sparkle:version>
+    <sparkle:shortVersionString>4.2.2-beta.1</sparkle:shortVersionString>
+    <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
+    <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
       <style>
         body { font-family: -apple-system, sans-serif; font-size: 13px; padding: 12px; }
@@ -19,13 +38,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Added</h3><ul>  <li><b>Stamp size control</b> — a Size slider in the stamp options row sets the default stamp/emoji size (remembered across captures). Stamps keep their aspect ratio when resized from any handle, and resizing an emoji stamp carries that size forward to the next one. (#289)</li> <li><b>Measure: "Limit to selection"</b> — the ruler clamps to the capture area across drag-drawing, auto-measure (hold 1/2), and endpoint handle resizing. On by default; toggle in the measure options row. (#212)</li> <li><b>Option = draw-through</b> — with a drawing tool active, hold Option to draw or place right over existing annotations instead of selecting them.</li>  </ul><h3>Fixed</h3><ul>  <li><b>Multi-monitor capture on macOS 26</b> — external displays no longer capture shifted upward with a black bar at the bottom. (#291, #294)</li> <li><b>Shortcuts bound to Space work again</b> — actions like Copy on the Space key were swallowed by 4.2.0's hold-Space-to-reposition feature. (#292)</li> <li><b>Shortcut names on non-QWERTY layouts</b> — hotkey display resolves keys through the active keyboard layout, so Dvorak/Colemak/AZERTY users see the keys they actually press. (#214)</li> <li><b>Video editor Copy includes pending edits</b> — trim, cuts, speed, zoom/censor/text, and mute are applied before copying to the clipboard. (#193)</li> <li><b>Multi-monitor: restored selection gets keyboard focus</b> — Cmd+C, F, and Enter act on the display that shows the restored selection. (#281)</li> <li>Stamp hover preview no longer leaves trails at larger stamp sizes.</li></ul>
+      <h3>Added</h3><ul>  <li><b>Cmd+D duplicates the selected annotations</b> in place — one keystroke instead of copy+paste, and your clipboard stays untouched.</li> <li><b>GIF frame rate picker</b> in the video editor (5–30 fps, persisted), replacing the fixed 15 fps cap. (#296)</li>  </ul><h3>Changed</h3><ul>  <li><b>GIF export uses gifski when available</b> (app bundle, `/opt/homebrew/bin`, or `/usr/local/bin`) — encodes on all cores and streams frames to disk, so memory stays flat and long recordings no longer crash at finalize. Smaller, better-looking GIFs; falls back to the built-in encoder when gifski is absent. Thanks @anten-ka! (#295, #296)</li> <li>GIF conversion runs at user-initiated priority instead of background — several times faster on Apple Silicon, where background QoS is confined to efficiency cores. (#296)</li></ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v4.2.1/MacShot.dmg"
-        length="6747619"
+        url="https://github.com/sw33tLie/macshot/releases/download/v4.2.2-beta.1/MacShot.dmg"
+        length="6775120"
         type="application/octet-stream"
-        sparkle:edSignature="hVBqpp6GDMI7MmpHxkPsr1edooUjddMcqhalz8gKXEM4+tJ36rw0n1wBR/bZECQcIBaGmo2Ijh6zpuDs/h42BA=="
+        sparkle:edSignature="c3N2/egZSomhvlDDVHtQ53O2OovU+NJ5G6Tr1rrkDdQJykRVi8JbtKBlMhQm6wuPXc2m66wg9qbRy+bg9qEUDA=="
     />
 </item>
     </channel>
