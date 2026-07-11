@@ -8908,6 +8908,11 @@ class OverlayView: NSView {
                     if pasteImageFromClipboard() {
                         return true
                     }
+                case 2:  // D — duplicate in place, without touching the clipboard
+                    if !selectedAnnotations.isEmpty {
+                        duplicateSelectedAnnotations()
+                        return true
+                    }
                 default: break
                 }
             }
@@ -9203,6 +9208,30 @@ class OverlayView: NSView {
         var newAnnotations: [Annotation] = []
         for ann in pasted {
             let copy = ann.clone()
+            copy.move(dx: 15, dy: -15)
+            annotations.append(copy)
+            undoStack.append(.added(copy))
+            newAnnotations.append(copy)
+        }
+        redoStack.removeAll()
+        selectedAnnotations = newAnnotations
+        cachedCompositedImage = nil
+        needsDisplay = true
+    }
+
+    /// Duplicate the selected annotations in place (Cmd+D) — same offset behavior
+    /// as copy+paste, but the user's clipboard is left untouched.
+    func duplicateSelectedAnnotations() {
+        let toDuplicate = selectedAnnotations
+        guard !toDuplicate.isEmpty else { return }
+        // Fresh groupID per action: a multi-duplicate undoes as one step, and the
+        // clone doesn't inherit the source's groupID (which would batch its undo
+        // with unrelated entries, e.g. auto-redact groups).
+        let groupID = toDuplicate.count > 1 ? UUID() : nil
+        var newAnnotations: [Annotation] = []
+        for ann in toDuplicate {
+            let copy = ann.clone()
+            copy.groupID = groupID
             copy.move(dx: 15, dy: -15)
             annotations.append(copy)
             undoStack.append(.added(copy))
