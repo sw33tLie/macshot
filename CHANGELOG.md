@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.2.2-beta.1] - 2026-07-11
+
+### Added
+
+- **Cmd+D duplicates the selected annotations** in place — one keystroke instead of copy+paste, and your clipboard stays untouched.
+- **GIF frame rate picker** in the video editor (5–30 fps, persisted), replacing the fixed 15 fps cap. (#296)
+
+### Changed
+
+- **GIF export uses gifski when available** (app bundle, `/opt/homebrew/bin`, or `/usr/local/bin`) — encodes on all cores and streams frames to disk, so memory stays flat and long recordings no longer crash at finalize. Smaller, better-looking GIFs; falls back to the built-in encoder when gifski is absent. Thanks @anten-ka! (#295, #296)
+- GIF conversion runs at user-initiated priority instead of background — several times faster on Apple Silicon, where background QoS is confined to efficiency cores. (#296)
+
 ## [4.2.1] - 2026-07-10
 
 ### Added
