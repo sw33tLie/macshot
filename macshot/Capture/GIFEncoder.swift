@@ -25,8 +25,8 @@ final class GIFEncoder {
     init(url: URL, fps: Int, sourceFPS: Int) {
         self.url = url
         self.sourceEstimatedFPS = max(sourceFPS, fps)
-        // Cap GIF at 15fps for reasonable file size
-        let gifFPS = min(fps, 15)
+        // Cap GIF at 30fps for reasonable file size
+        let gifFPS = min(fps, 30)
         self.targetFPS = gifFPS
         self.delayTime = 1.0 / Float(gifFPS)
 
@@ -70,32 +70,31 @@ final class GIFEncoder {
             return
         }
 
-        // Wrap the pixel buffer in a CGContext to get a CGImage reference,
-        // then copy into an owned context so the image survives after unlock.
-        // CGImageDestinationFinalize reads all frames later — each CGImage
-        // must own its pixel data independently.
+        // Copy pixel rows straight into an owned context (single memcpy per row)
+        // instead of wrapping the buffer in a CGContext and blend-drawing it —
+        // the draw path did an extra full-frame copy plus format conversion per
+        // frame. Source is 32BGRA which matches the context's bitmapInfo, so a
+        // raw byte copy is safe. The owned copy itself is still required:
+        // CGImageDestinationFinalize reads all frames after the pixel buffer
+        // has been recycled (alwaysCopiesSampleData=false).
         let colorSpace = CGColorSpace(name: CGColorSpace.sRGB)!
         let bitmapInfo = CGImageAlphaInfo.noneSkipFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue
-        guard let srcCtx = CGContext(
-            data: baseAddress,
-            width: width, height: height,
-            bitsPerComponent: 8, bytesPerRow: bytesPerRow,
-            space: colorSpace, bitmapInfo: bitmapInfo
-        ), let srcImage = srcCtx.makeImage() else {
-            CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly)
-            return
-        }
-
         guard let ownedCtx = CGContext(
             data: nil,
             width: width, height: height,
             bitsPerComponent: 8, bytesPerRow: width * 4,
             space: colorSpace, bitmapInfo: bitmapInfo
-        ) else {
+        ), let dstAddress = ownedCtx.data else {
             CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly)
             return
         }
-        ownedCtx.draw(srcImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+        let dstBytesPerRow = ownedCtx.bytesPerRow
+        let copyBytes = min(width * 4, min(bytesPerRow, dstBytesPerRow))
+        for row in 0..<height {
+            memcpy(dstAddress + row * dstBytesPerRow,
+                   baseAddress + row * bytesPerRow,
+                   copyBytes)
+        }
         CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly)
 
         guard let cgImage = ownedCtx.makeImage() else { return }
