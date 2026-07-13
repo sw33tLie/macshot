@@ -528,6 +528,8 @@
 "Stop Recording" = "إيقاف التسجيل";
 "Pause" = "إيقاف مؤقت";
 "Resume" = "استئناف";
+"Follow System" = "اتباع لغة النظام";
+"Target language:" = "اللغة المستهدفة:";
 "Engine:" = "المحرك:";
 "Google Translate" = "Google Translate";
 "Apple (on-device)" = "Apple (على الجهاز)";

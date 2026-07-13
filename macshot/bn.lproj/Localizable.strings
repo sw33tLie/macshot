@@ -536,6 +536,8 @@
 "Stop Recording" = "রেকর্ডিং বন্ধ করুন";
 "Pause" = "বিরতি";
 "Resume" = "পুনরায় শুরু";
+"Follow System" = "সিস্টেমের ভাষা ব্যবহার করুন";
+"Target language:" = "লক্ষ্য ভাষা:";
 "Engine:" = "ইঞ্জিন:";
 "Google Translate" = "Google Translate";
 "Apple (on-device)" = "Apple (ডিভাইসে)";

@@ -526,6 +526,8 @@
 "Stop Recording" = "Opreste inregistrarea";
 "Pause" = "Pauza";
 "Resume" = "Reia";
+"Follow System" = "Folosește limba sistemului";
+"Target language:" = "Limba țintă:";
 "Engine:" = "Motor:";
 "Google Translate" = "Google Translate";
 "Apple (on-device)" = "Apple (pe dispozitiv)";

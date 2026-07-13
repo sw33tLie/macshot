@@ -534,6 +534,8 @@
 "Stop Recording" = "Zaustavi snimanje";
 "Pause" = "Pauziraj";
 "Resume" = "Nastavi";
+"Follow System" = "Koristi jezik sustava";
+"Target language:" = "Ciljni jezik:";
 "Engine:" = "Pokretac:";
 "Google Translate" = "Google Translate";
 "Apple (on-device)" = "Apple (na uredaju)";

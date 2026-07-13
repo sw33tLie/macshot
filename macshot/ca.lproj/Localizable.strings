@@ -528,6 +528,8 @@
 "Stop Recording" = "Aturar gravacio";
 "Pause" = "Pausa";
 "Resume" = "Reprendre";
+"Follow System" = "Utilitza l'idioma del sistema";
+"Target language:" = "Idioma de destinació:";
 "Engine:" = "Motor:";
 "Google Translate" = "Google Translate";
 "Apple (on-device)" = "Apple (al dispositiu)";

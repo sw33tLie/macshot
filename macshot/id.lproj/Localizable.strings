@@ -534,6 +534,8 @@
 "Stop Recording" = "Hentikan Rekaman";
 "Pause" = "Jeda";
 "Resume" = "Lanjutkan";
+"Follow System" = "Gunakan bahasa sistem";
+"Target language:" = "Bahasa tujuan:";
 "Engine:" = "Mesin:";
 "Google Translate" = "Google Translate";
 "Apple (on-device)" = "Apple (di perangkat)";

@@ -515,6 +515,8 @@
 "Stop Recording" = "Interrompi registrazione";
 "Pause" = "Pausa";
 "Resume" = "Riprendi";
+"Follow System" = "Usa la lingua di sistema";
+"Target language:" = "Lingua di destinazione:";
 "Engine:" = "Motore:";
 "Google Translate" = "Google Translate";
 "Apple (on-device)" = "Apple (sul dispositivo)";

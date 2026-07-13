@@ -534,6 +534,8 @@
 "Stop Recording" = "Stoppa inspelning";
 "Pause" = "Pausa";
 "Resume" = "\U00C5teruppta";
+"Follow System" = "F\U00F6lj systemspr\U00E5ket";
+"Target language:" = "M\U00E5lspr\U00E5k:";
 "Engine:" = "Motor:";
 "Google Translate" = "Google Translate";
 "Apple (on-device)" = "Apple (p\U00E5 enheten)";

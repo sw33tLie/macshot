@@ -535,6 +535,8 @@
 "Stop Recording" = "Felvétel leállítása";
 "Pause" = "Szünet";
 "Resume" = "Folytatás";
+"Follow System" = "Rendszernyelv használata";
+"Target language:" = "Célnyelv:";
 "Engine:" = "Motor:";
 "Google Translate" = "Google Translate";
 "Apple (on-device)" = "Apple (eszközön)";

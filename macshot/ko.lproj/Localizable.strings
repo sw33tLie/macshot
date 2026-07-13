@@ -525,6 +525,8 @@
 "Stop Recording" = "녹화 중지";
 "Pause" = "일시정지";
 "Resume" = "재개";
+"Follow System" = "시스템 언어 사용";
+"Target language:" = "대상 언어:";
 "Engine:" = "엔진:";
 "Google Translate" = "Google Translate";
 "Apple (on-device)" = "Apple (기기 내)";

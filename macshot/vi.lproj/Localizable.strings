@@ -533,6 +533,8 @@
 "Stop Recording" = "Dừng quay";
 "Pause" = "Tạm dừng";
 "Resume" = "Tiếp tục";
+"Follow System" = "Dùng ngôn ngữ hệ thống";
+"Target language:" = "Ngôn ngữ đích:";
 "Engine:" = "Công cụ:";
 "Google Translate" = "Google Translate";
 "Apple (on-device)" = "Apple (trên thiết bị)";

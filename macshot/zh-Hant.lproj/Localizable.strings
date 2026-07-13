@@ -535,6 +535,8 @@
 "Stop Recording" = "停止錄製";
 "Pause" = "暫停";
 "Resume" = "繼續";
+"Follow System" = "跟隨系統";
+"Target language:" = "目標語言：";
 "Engine:" = "引擎：";
 "Google Translate" = "Google Translate";
 "Apple (on-device)" = "Apple（裝置端）";

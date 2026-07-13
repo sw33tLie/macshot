@@ -536,6 +536,8 @@
 "Stop Recording" = "பதிவை நிறுத்து";
 "Pause" = "இடைநிறுத்தம்";
 "Resume" = "தொடரவும்";
+"Follow System" = "கணினி அமைப்பின் மொழியைப் பயன்படுத்து";
+"Target language:" = "இலக்கு மொழி:";
 "Engine:" = "இயந்திரம்:";
 "Google Translate" = "Google Translate";
 "Apple (on-device)" = "Apple (சாதனத்தில்)";

@@ -534,6 +534,8 @@
 "Stop Recording" = "Ihinto ang Pag-record";
 "Pause" = "I-pause";
 "Resume" = "Ipagpatuloy";
+"Follow System" = "Gamitin ang wika ng sistema";
+"Target language:" = "Wikang patutunguhan:";
 "Engine:" = "Engine:";
 "Google Translate" = "Google Translate";
 "Apple (on-device)" = "Apple (sa device)";

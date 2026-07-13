@@ -533,6 +533,8 @@
 "Stop Recording" = "Остановить запись";
 "Pause" = "Пауза";
 "Resume" = "Продолжить";
+"Follow System" = "Использовать язык системы";
+"Target language:" = "Целевой язык:";
 "Engine:" = "Движок:";
 "Google Translate" = "Google Translate";
 "Apple (on-device)" = "Apple (на устройстве)";

@@ -527,6 +527,8 @@
 "Stop Recording" = "توقف ضبط ویدیو";
 "Pause" = "مکث";
 "Resume" = "ادامه";
+"Follow System" = "پیروی از زبان سیستم";
+"Target language:" = "زبان مقصد:";
 "Engine:" = "موتور:";
 "Google Translate" = "Google Translate";
 "Apple (on-device)" = "Apple (روی دستگاه)";

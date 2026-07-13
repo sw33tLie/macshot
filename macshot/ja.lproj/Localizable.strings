@@ -523,6 +523,8 @@
 "Stop Recording" = "録画を停止";
 "Pause" = "一時停止";
 "Resume" = "再開";
+"Follow System" = "システム設定に従う";
+"Target language:" = "翻訳先の言語:";
 "Engine:" = "エンジン:";
 "Google Translate" = "Google Translate";
 "Apple (on-device)" = "Apple (オンデバイス)";

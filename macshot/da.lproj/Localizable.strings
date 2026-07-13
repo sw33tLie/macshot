@@ -534,6 +534,8 @@
 "Stop Recording" = "Stop optagelse";
 "Pause" = "Pause";
 "Resume" = "Genoptag";
+"Follow System" = "F\U00F8lg systemsproget";
+"Target language:" = "M\U00E5lsprog:";
 "Engine:" = "Motor:";
 "Google Translate" = "Google Translate";
 "Apple (on-device)" = "Apple (p\U00E5 enheden)";

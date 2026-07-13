@@ -524,6 +524,8 @@
 "Stop Recording" = "Aufzeichnung beenden";
 "Pause" = "Pause";
 "Resume" = "Fortsetzen";
+"Follow System" = "Systemsprache verwenden";
+"Target language:" = "Zielsprache:";
 "Engine:" = "Engine:";
 "Google Translate" = "Google Translate";
 "Apple (on-device)" = "Apple (auf dem Gerät)";

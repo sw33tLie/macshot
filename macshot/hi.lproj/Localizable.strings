@@ -535,6 +535,8 @@
 "Stop Recording" = "रिकॉर्डिंग रोकें";
 "Pause" = "विराम";
 "Resume" = "फिर से शुरू करें";
+"Follow System" = "सिस्टम की भाषा का उपयोग करें";
+"Target language:" = "लक्षित भाषा:";
 "Engine:" = "इंजन:";
 "Google Translate" = "Google Translate";
 "Apple (on-device)" = "Apple (डिवाइस पर)";

@@ -724,7 +724,7 @@ class OverlayView: NSView {
     var autoEnterRecordingMode: Bool = false  // set by "Record Screen" menu — enters recording mode after selection
     var autoOCRMode: Bool = false  // set by "Capture OCR & QR" menu — triggers OCR immediately after selection
     var autoTranslateOverlayMode: Bool = false  // set by macshot://ocr-translate — OCR + translate + overlay after selection
-    var autoTranslateOverlayLang: String?  // target language for autoTranslateOverlayMode (nil = saved default)
+    var autoTranslateOverlayLang: String?  // target language for autoTranslateOverlayMode (nil = configured target)
     var autoQuickSaveMode: Bool = false  // set by "Quick Capture" menu — quick-saves immediately after selection
     var autoScrollCaptureMode: Bool = false  // set by "Scroll Capture" menu — triggers scroll capture immediately after selection
     var autoConfirmMode: Bool = false  // set by "Add Capture" — auto-confirms selection (no toolbars, no save)

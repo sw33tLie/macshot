@@ -523,6 +523,8 @@
 "Stop Recording" = "Opname stoppen";
 "Pause" = "Pauzeren";
 "Resume" = "Hervatten";
+"Follow System" = "Systeemtaal gebruiken";
+"Target language:" = "Doeltaal:";
 "Engine:" = "Engine:";
 "Google Translate" = "Google Translate";
 "Apple (on-device)" = "Apple (op het apparaat)";
