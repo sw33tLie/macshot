@@ -35,6 +35,7 @@ final class VideoTextSegment: Codable {
         var a: Double
 
         static let white = RGBA(r: 1, g: 1, b: 1, a: 1)
+        static let black = RGBA(r: 0, g: 0, b: 0, a: 1)
         static let blackTransparent = RGBA(r: 0, g: 0, b: 0, a: 0.7)
     }
 
@@ -52,9 +53,20 @@ final class VideoTextSegment: Codable {
     var bold: Bool
     var italic: Bool
 
+    /// Font family name. The sentinel "System" selects the system UI font;
+    /// anything else is resolved by name at raster time (with a system-font
+    /// fallback when the family is not installed).
+    var fontFamily: String
+
     var textColor: RGBA
     var bgStyle: BackgroundStyle
     var bgColor: RGBA
+
+    /// Per-glyph outline stroked behind the text fill. `outlineWidth` is in
+    /// points at the same 1080p reference scale as `fontSize`.
+    var outlineEnabled: Bool
+    var outlineColor: RGBA
+    var outlineWidth: CGFloat
 
     var alignment: Alignment
 
@@ -69,9 +81,13 @@ final class VideoTextSegment: Codable {
          fontSize: CGFloat = 48,
          bold: Bool = true,
          italic: Bool = false,
+         fontFamily: String = "System",
          textColor: RGBA = .white,
          bgStyle: BackgroundStyle = .rounded,
          bgColor: RGBA = .blackTransparent,
+         outlineEnabled: Bool = false,
+         outlineColor: RGBA = .black,
+         outlineWidth: CGFloat = 2,
          alignment: Alignment = .center,
          fadeIn: Double = defaultFade,
          fadeOut: Double = defaultFade) {
@@ -83,12 +99,76 @@ final class VideoTextSegment: Codable {
         self.fontSize = fontSize
         self.bold = bold
         self.italic = italic
+        self.fontFamily = fontFamily
         self.textColor = textColor
         self.bgStyle = bgStyle
         self.bgColor = bgColor
+        self.outlineEnabled = outlineEnabled
+        self.outlineColor = outlineColor
+        self.outlineWidth = outlineWidth
         self.alignment = alignment
         self.fadeIn = fadeIn
         self.fadeOut = fadeOut
+    }
+
+    // MARK: - Codable
+    //
+    // Explicit implementation (instead of the synthesized one) so segments
+    // serialized by older versions — which lack the font-family and outline
+    // keys — keep decoding: the new keys use `decodeIfPresent` + defaults.
+    // All pre-existing keys and their encoded shapes are unchanged.
+
+    private enum CodingKeys: String, CodingKey {
+        case id, startTime, endTime, rect, text
+        case fontSize, bold, italic, fontFamily
+        case textColor, bgStyle, bgColor
+        case outlineEnabled, outlineColor, outlineWidth
+        case alignment, fadeIn, fadeOut
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        startTime = try c.decode(Double.self, forKey: .startTime)
+        endTime = try c.decode(Double.self, forKey: .endTime)
+        rect = try c.decode(CGRect.self, forKey: .rect)
+        text = try c.decode(String.self, forKey: .text)
+        fontSize = try c.decode(CGFloat.self, forKey: .fontSize)
+        bold = try c.decode(Bool.self, forKey: .bold)
+        italic = try c.decode(Bool.self, forKey: .italic)
+        textColor = try c.decode(RGBA.self, forKey: .textColor)
+        bgStyle = try c.decode(BackgroundStyle.self, forKey: .bgStyle)
+        bgColor = try c.decode(RGBA.self, forKey: .bgColor)
+        alignment = try c.decode(Alignment.self, forKey: .alignment)
+        fadeIn = try c.decode(Double.self, forKey: .fadeIn)
+        fadeOut = try c.decode(Double.self, forKey: .fadeOut)
+        // Added later — absent in old archives, so fall back to defaults.
+        fontFamily = try c.decodeIfPresent(String.self, forKey: .fontFamily) ?? "System"
+        outlineEnabled = try c.decodeIfPresent(Bool.self, forKey: .outlineEnabled) ?? false
+        outlineColor = try c.decodeIfPresent(RGBA.self, forKey: .outlineColor) ?? .black
+        outlineWidth = try c.decodeIfPresent(CGFloat.self, forKey: .outlineWidth) ?? 2
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encode(startTime, forKey: .startTime)
+        try c.encode(endTime, forKey: .endTime)
+        try c.encode(rect, forKey: .rect)
+        try c.encode(text, forKey: .text)
+        try c.encode(fontSize, forKey: .fontSize)
+        try c.encode(bold, forKey: .bold)
+        try c.encode(italic, forKey: .italic)
+        try c.encode(fontFamily, forKey: .fontFamily)
+        try c.encode(textColor, forKey: .textColor)
+        try c.encode(bgStyle, forKey: .bgStyle)
+        try c.encode(bgColor, forKey: .bgColor)
+        try c.encode(outlineEnabled, forKey: .outlineEnabled)
+        try c.encode(outlineColor, forKey: .outlineColor)
+        try c.encode(outlineWidth, forKey: .outlineWidth)
+        try c.encode(alignment, forKey: .alignment)
+        try c.encode(fadeIn, forKey: .fadeIn)
+        try c.encode(fadeOut, forKey: .fadeOut)
     }
 
     var duration: Double { max(0, endTime - startTime) }
@@ -145,5 +225,43 @@ final class VideoTextSegment: Codable {
         if x + w > 1 { x = 1 - w }
         if y + h > 1 { y = 1 - h }
         return CGRect(x: x, y: y, width: w, height: h)
+    }
+}
+
+
+// MARK: - Last-used style memory
+
+extension VideoTextSegment {
+    private static let lastStyleKey = "videoTextLastUsedStyle"
+
+    /// A new segment that starts with the style of the last edited text
+    /// segment (color, background, font family/size, bold/italic, outline,
+    /// alignment), so users don't have to re-apply the same styling for
+    /// every new segment.
+    static func withLastUsedStyle(startTime: Double, endTime: Double) -> VideoTextSegment {
+        let seg = VideoTextSegment(startTime: startTime, endTime: endTime)
+        guard let data = UserDefaults.standard.data(forKey: lastStyleKey),
+              let saved = try? JSONDecoder().decode(VideoTextSegment.self, from: data) else {
+            return seg
+        }
+        seg.fontSize = saved.fontSize
+        seg.bold = saved.bold
+        seg.italic = saved.italic
+        seg.fontFamily = saved.fontFamily
+        seg.textColor = saved.textColor
+        seg.bgStyle = saved.bgStyle
+        seg.bgColor = saved.bgColor
+        seg.outlineEnabled = saved.outlineEnabled
+        seg.outlineColor = saved.outlineColor
+        seg.outlineWidth = saved.outlineWidth
+        seg.alignment = saved.alignment
+        return seg
+    }
+
+    /// Persist this segment's style as the default for future segments.
+    func rememberStyle() {
+        if let data = try? JSONEncoder().encode(self) {
+            UserDefaults.standard.set(data, forKey: Self.lastStyleKey)
+        }
     }
 }
