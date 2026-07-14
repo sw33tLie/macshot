@@ -285,8 +285,8 @@ class TextEditingController {
         layoutManager.addTextContainer(textContainer)
         textStorage.addLayoutManager(layoutManager)
 
-        let tv = NSTextView(frame: NSRect(origin: .zero, size: viewFrame.size),
-                            textContainer: textContainer)
+        let tv = LocalUndoTextView(frame: NSRect(origin: .zero, size: viewFrame.size),
+                                   textContainer: textContainer)
         tv.isRichText = true
         tv.allowsUndo = true
         tv.drawsBackground = false
@@ -434,6 +434,9 @@ class TextEditingController {
     }
 
     func dismiss() {
+        // Drop any undo operations recorded during this editing session so
+        // nothing can reference the text view after it is gone.
+        textView?.undoManager?.removeAllActions()
         scrollView?.removeFromSuperview()
         scrollView = nil
         textView = nil
@@ -477,4 +480,20 @@ class TextEditingController {
         if let gs = annotation.textGlyphStrokeColor { glyphStrokeColor = gs }
     }
 
+}
+
+
+/// An `NSTextView` whose undo operations are recorded into a private
+/// `UndoManager` owned by the view itself instead of the window's shared one.
+///
+/// With `allowsUndo = true`, a plain `NSTextView` registers its text undo
+/// operations (`_undoRedoTextOperation:`) in the undo manager it finds via the
+/// responder chain — the editor window's. Those operations target the text
+/// view but are NOT retained with it, so once editing ends and the view is
+/// torn down, a later Cmd+Z in the still-alive editor window invokes a
+/// dangling target and crashes (SIGSEGV in `-[_NSUndoStack popAndInvoke]`).
+/// Scoping the undo manager to the view makes the operations die with it.
+private final class LocalUndoTextView: NSTextView {
+    private let localUndoManager = UndoManager()
+    override var undoManager: UndoManager? { localUndoManager }
 }
