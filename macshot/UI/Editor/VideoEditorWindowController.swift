@@ -161,6 +161,15 @@ private final class VideoEditorView: NSView {
     }()
     private var gifFPSBtnRect: NSRect = .zero
 
+    // "+ Effect" toolbar button and the selected-text-segment state that
+    // drives the bottom text-options panel.
+    private var addEffectBtnRect: NSRect = .zero
+    private var selectedTextSegmentID: UUID?
+    private var selectedTextSegment: VideoTextSegment? {
+        guard let id = selectedTextSegmentID else { return nil }
+        return textSegments.first(where: { $0.id == id })
+    }
+
     // Effects band (zoom + censor segments) lives in its own NSView, hosted
     // inside an NSScrollView so it can overflow vertically when many segments
     // stack onto separate rows. The parent editor observes mutations via the
@@ -169,6 +178,15 @@ private final class VideoEditorView: NSView {
     private var effectsScrollView: NSScrollView?
     private var effectsBandHeightConstraint: NSLayoutConstraint?
     private var playerBottomConstraint: NSLayoutConstraint?
+
+    // Bottom options panel for the selected text segment. Sits between the
+    // (drawn) trim timeline and the effects band; collapsed to height 0
+    // while no text segment is selected.
+    private var textOptionsPanel: VideoTextOptionsPanel?
+    private var textOptionsPanelHeightConstraint: NSLayoutConstraint?
+    /// Height currently occupied by the panel (0 when hidden). Folded into
+    /// `controlsH` so the drawn chrome above it shifts up when it appears.
+    private var textOptionsPanelH: CGFloat = 0
 
     // Convenience accessors so call sites don't have to guard the optional.
     private var zoomSegments: [VideoZoomSegment] { effectsBand?.zoomSegments ?? [] }
@@ -192,8 +210,9 @@ private final class VideoEditorView: NSView {
     private var pausedForTextEdit: Bool = false
 
     // NSColorPanel binding state for the "Custom…" color menu action.
+    fileprivate enum TextColorPickTarget { case text, background, outline }
     fileprivate var textColorPickerSegmentID: UUID?
-    fileprivate var textColorPickerIsBackground: Bool = false
+    fileprivate var textColorPickerTarget: TextColorPickTarget = .text
 
     // Button rects
     private var playBtnRect: NSRect = .zero
@@ -244,6 +263,7 @@ private final class VideoEditorView: NSView {
     private var controlsH: CGFloat {
         return buttonsAreaH
              + effectsScrollViewHeight(forRowCount: currentEffectRowCount)
+             + textOptionsPanelH
              + scrollToLabelsGap
              + trimBarH
              + labelsAboveTrimGap
@@ -470,6 +490,27 @@ private final class VideoEditorView: NSView {
         self.effectsBand = band
         self.effectsBandHeightConstraint = heightC
 
+        // Text options panel — real-controls inspector for the selected text
+        // segment. Pinned to the same horizontal region as the effects band
+        // and to the band's top edge; its height constraint animates between
+        // 0 and preferredHeight in `updateTextOptionsPanelVisibility()`.
+        let textPanel = VideoTextOptionsPanel()
+        textPanel.translatesAutoresizingMaskIntoConstraints = false
+        textPanel.isHidden = true
+        textPanel.onChange = { [weak self] change in
+            self?.handleTextOptionsChange(change)
+        }
+        addSubview(textPanel)
+        let textPanelHeightC = textPanel.heightAnchor.constraint(equalToConstant: 0)
+        NSLayoutConstraint.activate([
+            textPanel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: timelinePad - 4),
+            textPanel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -(timelinePad - 4)),
+            textPanel.bottomAnchor.constraint(equalTo: scrollView.topAnchor),
+            textPanelHeightC,
+        ])
+        self.textOptionsPanel = textPanel
+        self.textOptionsPanelHeightConstraint = textPanelHeightC
+
         // Observe playback position
         timeObserver = player.addPeriodicTimeObserver(forInterval: CMTime(value: 1, timescale: 30), queue: .main) { [weak self] time in
             guard let self = self, !self.isDraggingScrubber else { return }
@@ -624,10 +665,11 @@ private final class VideoEditorView: NSView {
         // scroll view grows to show more rows.
         let tlH: CGFloat = trimBarH
         let scrollH = effectsScrollViewHeight(forRowCount: currentEffectRowCount)
-        // Trim bar sits directly above the effects scroll view (with just
-        // the `scrollToLabelsGap` for breathing room). Time labels now sit
+        // Trim bar sits directly above the effects scroll view and the
+        // text options panel (when visible), with just the
+        // `scrollToLabelsGap` for breathing room. Time labels now sit
         // ABOVE the trim bar — see `timeLabelY`.
-        let tlY: CGFloat = buttonsAreaH + scrollH + scrollToLabelsGap
+        let tlY: CGFloat = buttonsAreaH + scrollH + textOptionsPanelH + scrollToLabelsGap
         timelineRect = NSRect(x: tlX, y: tlY, width: tlW, height: tlH)
 
         // Regenerate thumbnails if width changed significantly
@@ -775,7 +817,7 @@ private final class VideoEditorView: NSView {
         // (y=0→buttonsAreaH) so SF-Symbol rendering stays off the 30Hz
         // path — that was eating ~1s/10s on the main thread.
         let scrollH = effectsScrollViewHeight(forRowCount: currentEffectRowCount)
-        let tlY = buttonsAreaH + scrollH + scrollToLabelsGap
+        let tlY = buttonsAreaH + scrollH + textOptionsPanelH + scrollToLabelsGap
         let playheadBandMinY = tlY - 12                                              // below trim bar (circle + padding)
         let playheadBandMaxY = tlY + trimBarH + labelsAboveTrimGap + labelsRowH + 2  // through label row
 
@@ -945,6 +987,23 @@ private final class VideoEditorView: NSView {
                     gifFPSBtnRect = NSRect(x: x, y: btnY, width: fpsBtnW, height: btnH)
                     fpsStr.draw(at: NSPoint(x: x + 4, y: btnY + (btnH - fpsSize.height) / 2), withAttributes: fpsAttrs)
                     x += fpsBtnW
+                }
+            }
+
+            // "+ Effect" button — add zoom/censor/cut/speed/freeze/text at the playhead
+            addEffectBtnRect = .zero
+            if effectsBand != nil && x < maxLeftX {
+                let addAttrs: [NSAttributedString.Key: Any] = [
+                    .font: NSFont.systemFont(ofSize: 10, weight: .medium),
+                    .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(0.7),
+                ]
+                let addStr = "  ·  + \(L("Effect")) ▼" as NSString
+                let addSize = addStr.size(withAttributes: addAttrs)
+                let addBtnW = addSize.width + 8
+                if x + addBtnW < maxLeftX {
+                    addEffectBtnRect = NSRect(x: x, y: btnY, width: addBtnW, height: btnH)
+                    addStr.draw(at: NSPoint(x: x + 4, y: btnY + (btnH - addSize.height) / 2), withAttributes: addAttrs)
+                    x += addBtnW
                 }
             }
 
@@ -1172,7 +1231,7 @@ private final class VideoEditorView: NSView {
         // Bottom of the labels row sits slightly above the top of the
         // trim bar — `labelsAboveTrimGap` gives the text a little
         // breathing room so it doesn't look pasted onto the bar.
-        let labelsRowBottom = buttonsAreaH + scrollH + scrollToLabelsGap + trimBarH + labelsAboveTrimGap
+        let labelsRowBottom = buttonsAreaH + scrollH + textOptionsPanelH + scrollToLabelsGap + trimBarH + labelsAboveTrimGap
         return labelsRowBottom + (labelsRowH - sampleHeight) / 2
     }
 
@@ -1380,6 +1439,13 @@ private final class VideoEditorView: NSView {
         // GIF frame rate dropdown
         if gifFPSBtnRect.contains(point) && exportAsGIF {
             showGIFFPSMenu(); return
+        }
+
+        // "+ Effect" button — reuse the band's add-effect menu at the playhead
+        if addEffectBtnRect.contains(point), let band = effectsBand {
+            let menu = band.addEffectMenu(clickTime: currentPlaybackTime)
+            menu.popUp(positioning: nil, at: NSPoint(x: addEffectBtnRect.minX, y: addEffectBtnRect.maxY), in: self)
+            return
         }
 
         // Buttons
@@ -1734,6 +1800,80 @@ private final class VideoEditorView: NSView {
         }
         let pos = NSPoint(x: qualityBtnRect.minX, y: qualityBtnRect.maxY)
         menu.popUp(positioning: nil, at: pos, in: self)
+    }
+
+    // MARK: - Text options panel (selected text segment)
+
+    /// Mutate the selected text segment and refresh everything that renders it.
+    private func mutateSelectedTextSegment(_ mutate: (VideoTextSegment) -> Void) {
+        guard let seg = selectedTextSegment else { return }
+        mutate(seg)
+        seg.rememberStyle()
+        textRasterCache.removeValue(forKey: seg.id)
+        savedURL = nil
+        applyZoomTransformForCurrentTime()
+        forcePreviewRedisplayIfPaused()
+        effectsBand?.refreshAfterParentEdit()
+        needsDisplay = true
+    }
+
+    /// AVFoundation does not reliably re-render a paused frame when the
+    /// player item's videoComposition is swapped in place, so style changes
+    /// made while paused would not show until the next seek or play. A
+    /// zero-tolerance seek to the current time forces the compositor to
+    /// re-render the visible frame.
+    fileprivate func forcePreviewRedisplayIfPaused() {
+        guard let player = player, player.rate == 0 else { return }
+        let t = player.currentTime()
+        player.seek(to: t, toleranceBefore: .zero, toleranceAfter: .zero)
+    }
+
+    /// Apply one panel edit to the selected segment, then re-sync the panel
+    /// so dependent controls (size label, swatches, enabled states) update.
+    private func handleTextOptionsChange(_ change: VideoTextOptionsPanel.Change) {
+        guard let seg = selectedTextSegment else { return }
+        switch change {
+        case .fontFamily(let family):
+            mutateSelectedTextSegment { $0.fontFamily = family }
+        case .fontSize(let size):
+            mutateSelectedTextSegment { $0.fontSize = size }
+        case .bold(let flag):
+            mutateSelectedTextSegment { $0.bold = flag }
+        case .italic(let flag):
+            mutateSelectedTextSegment { $0.italic = flag }
+        case .bgStyle(let style):
+            mutateSelectedTextSegment { $0.bgStyle = style }
+        case .alignment(let alignment):
+            mutateSelectedTextSegment { $0.alignment = alignment }
+        case .outlineEnabled(let flag):
+            mutateSelectedTextSegment { $0.outlineEnabled = flag }
+        case .outlineWidth(let width):
+            mutateSelectedTextSegment { $0.outlineWidth = width }
+        case .pickTextColor:
+            presentTextColorPicker(segmentID: seg.id, target: .text)
+        case .pickBgColor:
+            presentTextColorPicker(segmentID: seg.id, target: .background)
+        case .pickOutlineColor:
+            presentTextColorPicker(segmentID: seg.id, target: .outline)
+        }
+        textOptionsPanel?.configure(with: seg)
+    }
+
+    /// Show the panel (configured for the selection) or collapse it. Follows
+    /// the `effectsBand(_:didChangeRowCount:)` pattern: the panel's height
+    /// constraint and the player's bottom constraint animate together, and
+    /// the custom-drawn chrome above re-lays out via `textOptionsPanelH`.
+    private func updateTextOptionsPanelVisibility() {
+        if let seg = selectedTextSegment {
+            textOptionsPanel?.configure(with: seg)
+        }
+        let targetH: CGFloat = selectedTextSegment != nil ? VideoTextOptionsPanel.preferredHeight : 0
+        guard textOptionsPanelH != targetH else { return }
+        textOptionsPanelH = targetH
+        textOptionsPanel?.isHidden = (targetH == 0)
+        textOptionsPanelHeightConstraint?.animator().constant = targetH
+        playerBottomConstraint?.animator().constant = -controlsH
+        needsDisplay = true
     }
 
     private func showGIFFPSMenu() {
@@ -3112,20 +3252,27 @@ private final class VideoEditorView: NSView {
 
     // MARK: - Custom color picker
 
-    /// Open NSColorPanel and bind it to the given segment's text or bg
-    /// color field. The panel stays modal-less so the user can keep
+    /// Open NSColorPanel and bind it to the given segment's text, background,
+    /// or outline color field. The panel stays modal-less so the user can keep
     /// editing other things; we observe `colorDidChange` notifications
     /// while it's relevant and unbind on close.
     fileprivate func presentTextColorPicker(segmentID: UUID, isBackground: Bool) {
-        guard textSegments.contains(where: { $0.id == segmentID }) else { return }
+        presentTextColorPicker(segmentID: segmentID, target: isBackground ? .background : .text)
+    }
+
+    fileprivate func presentTextColorPicker(segmentID: UUID, target: TextColorPickTarget) {
+        guard let seg = textSegments.first(where: { $0.id == segmentID }) else { return }
         textColorPickerSegmentID = segmentID
-        textColorPickerIsBackground = isBackground
+        textColorPickerTarget = target
         let panel = NSColorPanel.shared
         panel.showsAlpha = true
-        if let seg = textSegments.first(where: { $0.id == segmentID }) {
-            let rgba = isBackground ? seg.bgColor : seg.textColor
-            panel.color = NSColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
+        let rgba: VideoTextSegment.RGBA
+        switch target {
+        case .text: rgba = seg.textColor
+        case .background: rgba = seg.bgColor
+        case .outline: rgba = seg.outlineColor
         }
+        panel.color = NSColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
         // Hook up the action target. Reuse a single observer per editor.
         panel.setTarget(self)
         panel.setAction(#selector(textColorPanelDidChange(_:)))
@@ -3141,15 +3288,21 @@ private final class VideoEditorView: NSView {
             g: Double(c.greenComponent),
             b: Double(c.blueComponent),
             a: Double(c.alphaComponent))
-        if textColorPickerIsBackground {
-            seg.bgColor = rgba
-        } else {
-            seg.textColor = rgba
+        switch textColorPickerTarget {
+        case .text: seg.textColor = rgba
+        case .background: seg.bgColor = rgba
+        case .outline: seg.outlineColor = rgba
         }
+        seg.rememberStyle()
         textRasterCache.removeValue(forKey: id)
         savedURL = nil
         applyZoomTransformForCurrentTime()
+        forcePreviewRedisplayIfPaused()
         effectsBand?.refreshAfterParentEdit()
+        // Keep the bottom panel's swatches in sync with live color edits.
+        if seg.id == selectedTextSegmentID, let selected = selectedTextSegment {
+            textOptionsPanel?.configure(with: selected)
+        }
     }
 }
 
@@ -3161,7 +3314,15 @@ extension VideoEditorView: EffectsBandViewDelegate {
     }
 
     func effectsBand(_ view: EffectsBandView, didSelectSegment segmentID: UUID?) {
+        // Show the bottom text-options panel when a text segment is selected.
+        if let id = segmentID, textSegments.contains(where: { $0.id == id }) {
+            selectedTextSegmentID = id
+        } else {
+            selectedTextSegmentID = nil
+        }
+        updateTextOptionsPanelVisibility()
         updateEffectsOverlay()
+        needsDisplay = true
     }
 
     func effectsBand(_ view: EffectsBandView, didChangeRowCount rowCount: Int) {

@@ -1410,6 +1410,14 @@ final class EffectsBandView: NSView {
     }
 
     private func showAddEffectMenu(at point: NSPoint, clickTime: Double) {
+        let menu = addEffectMenu(clickTime: clickTime)
+        menu.popUp(positioning: nil, at: point, in: self)
+    }
+
+    /// The same "add effect" menu as the band's context menu, reusable by the
+    /// editor toolbar's "+" button. Items insert at `clickTime` and are
+    /// enabled/disabled based on available gaps, exactly like the band menu.
+    func addEffectMenu(clickTime: Double) -> NSMenu {
         let menu = NSMenu()
         let zoomItem = NSMenuItem(title: L("Add Zoom"),
                                   action: #selector(handleAddZoomFromMenu(_:)),
@@ -1469,7 +1477,7 @@ final class EffectsBandView: NSView {
         textItem.representedObject = AddEffectContext(clickTime: clickTime, gapStart: 0, gapEnd: duration)
         menu.addItem(textItem)
 
-        menu.popUp(positioning: nil, at: point, in: self)
+        return menu
     }
 
     private func attachAddEffectSubmenu(to menu: NSMenu, event: NSEvent) {
@@ -1659,6 +1667,7 @@ final class EffectsBandView: NSView {
         guard let ctx = sender.representedObject as? TextSizeMenuContext,
               let seg = textSegments.first(where: { $0.id == ctx.segmentID }) else { return }
         seg.fontSize = ctx.fontSize
+        seg.rememberStyle()
         delegate?.effectsBandDidMutate(self)
         needsDisplay = true
     }
@@ -1667,6 +1676,7 @@ final class EffectsBandView: NSView {
         guard let ctx = sender.representedObject as? TextSegmentRefContext,
               let seg = textSegments.first(where: { $0.id == ctx.segmentID }) else { return }
         seg.bold.toggle()
+        seg.rememberStyle()
         delegate?.effectsBandDidMutate(self)
         needsDisplay = true
     }
@@ -1675,6 +1685,7 @@ final class EffectsBandView: NSView {
         guard let ctx = sender.representedObject as? TextSegmentRefContext,
               let seg = textSegments.first(where: { $0.id == ctx.segmentID }) else { return }
         seg.italic.toggle()
+        seg.rememberStyle()
         delegate?.effectsBandDidMutate(self)
         needsDisplay = true
     }
@@ -1683,6 +1694,7 @@ final class EffectsBandView: NSView {
         guard let ctx = sender.representedObject as? TextAlignmentMenuContext,
               let seg = textSegments.first(where: { $0.id == ctx.segmentID }) else { return }
         seg.alignment = ctx.alignment
+        seg.rememberStyle()
         delegate?.effectsBandDidMutate(self)
         needsDisplay = true
     }
@@ -1691,6 +1703,7 @@ final class EffectsBandView: NSView {
         guard let ctx = sender.representedObject as? TextBgStyleMenuContext,
               let seg = textSegments.first(where: { $0.id == ctx.segmentID }) else { return }
         seg.bgStyle = ctx.style
+        seg.rememberStyle()
         delegate?.effectsBandDidMutate(self)
         needsDisplay = true
     }
@@ -1703,6 +1716,7 @@ final class EffectsBandView: NSView {
         } else {
             seg.textColor = ctx.color
         }
+        seg.rememberStyle()
         delegate?.effectsBandDidMutate(self)
         needsDisplay = true
     }
@@ -1817,7 +1831,7 @@ final class EffectsBandView: NSView {
         let segDuration = min(3.0, max(VideoTextSegment.minDuration, duration))
         var start = clickTime - segDuration / 2
         start = max(0, min(duration - segDuration, start))
-        let seg = VideoTextSegment(startTime: start, endTime: start + segDuration)
+        let seg = VideoTextSegment.withLastUsedStyle(startTime: start, endTime: start + segDuration)
         textSegments.append(seg)
         selectedSegmentID = seg.id
         relayoutAndNotify()
