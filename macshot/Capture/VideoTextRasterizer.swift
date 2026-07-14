@@ -5,9 +5,10 @@ import AppKit
 /// wrapped in a `CIImage` and composited per-frame by the video compositor.
 ///
 /// The rasterizer is called only when something visible changes (text,
-/// font size, weight, color, bg style/color, alignment, or the rect's
-/// pixel size). At per-frame time the compositor reuses the cached CGImage,
-/// so font shaping and glyph drawing do not run at video frame rate.
+/// font family/size, weight, color, bg style/color, outline, alignment,
+/// or the rect's pixel size). At per-frame time the compositor reuses the
+/// cached CGImage, so font shaping and glyph drawing do not run at video
+/// frame rate.
 enum VideoTextRasterizer {
 
     /// Snapshot of inputs that affect the rendered pixels. Two specs that
@@ -18,9 +19,16 @@ enum VideoTextRasterizer {
         let fontSize: CGFloat       // logical pt at 1080p reference
         let bold: Bool
         let italic: Bool
+        /// Font family name; "System" = the system UI font.
+        let fontFamily: String
         let textColor: VideoTextSegment.RGBA
         let bgStyle: VideoTextSegment.BackgroundStyle
         let bgColor: VideoTextSegment.RGBA
+        /// Glyph outline (stroke rendered behind the fill). Width is
+        /// logical pt at the same 1080p reference as `fontSize`.
+        let outlineEnabled: Bool
+        let outlineColor: VideoTextSegment.RGBA
+        let outlineWidth: CGFloat
         let alignment: VideoTextSegment.Alignment
         /// Pixel width of the target rect in render space.
         let pixelWidth: Int
@@ -43,9 +51,13 @@ enum VideoTextRasterizer {
              fontSize: segment.fontSize,
              bold: segment.bold,
              italic: segment.italic,
+             fontFamily: segment.fontFamily,
              textColor: segment.textColor,
              bgStyle: segment.bgStyle,
              bgColor: segment.bgColor,
+             outlineEnabled: segment.outlineEnabled,
+             outlineColor: segment.outlineColor,
+             outlineWidth: segment.outlineWidth,
              alignment: segment.alignment,
              pixelWidth: pixelWidth,
              pixelHeight: pixelHeight,
@@ -126,6 +138,21 @@ enum VideoTextRasterizer {
         if spec.bold { traits.insert(.bold) }
         if spec.italic { traits.insert(.italic) }
         let font: NSFont = {
+            // Custom family: resolve by name (NSFont accepts family names
+            // for most installed fonts), falling back to an explicit family
+            // lookup, then apply bold/italic via NSFontManager — descriptor
+            // trait synthesis is unreliable for third-party families.
+            // Missing families fall through to the system-font path below.
+            if spec.fontFamily != "System" {
+                let fm = NSFontManager.shared
+                let named = NSFont(name: spec.fontFamily, size: pxFontSize)
+                    ?? fm.font(withFamily: spec.fontFamily, traits: [], weight: 5, size: pxFontSize)
+                if var f = named {
+                    if spec.bold { f = fm.convert(f, toHaveTrait: .boldFontMask) }
+                    if spec.italic { f = fm.convert(f, toHaveTrait: .italicFontMask) }
+                    return f
+                }
+            }
             // Start from the system font so we get SF/the default UI font,
             // then apply traits via descriptor. Fall back to plain system
             // font of the same weight if descriptor synthesis fails.
@@ -175,6 +202,24 @@ enum VideoTextRasterizer {
                               y: max(textRect.minY, drawY),
                               width: textRect.width,
                               height: min(textRect.height, bounding.height + 2))
+
+        // Glyph outline — a stroke-only pass drawn *under* the fill. A
+        // positive .strokeWidth strokes the glyph path without filling; the
+        // fill pass on top then covers the inner half of the stroke, leaving
+        // a clean outer rim. .strokeWidth is expressed in percent of the
+        // font size, so convert the logical width (1080p-reference points,
+        // scaled like fontSize, doubled because half of the centered stroke
+        // hides under the fill) to a percentage.
+        if spec.outlineEnabled, spec.outlineWidth > 0 {
+            let pxOutline = max(0.5, spec.outlineWidth * scale)
+            let strokePercent = (pxOutline * 2 / pxFontSize) * 100
+            var strokeAttrs = attrs
+            strokeAttrs[.strokeColor] = nsColor(spec.outlineColor)
+            strokeAttrs[.strokeWidth] = strokePercent
+            NSAttributedString(string: spec.text, attributes: strokeAttrs)
+                .draw(with: drawRect,
+                      options: [.usesLineFragmentOrigin, .usesFontLeading])
+        }
 
         attributed.draw(with: drawRect,
                         options: [.usesLineFragmentOrigin, .usesFontLeading])
