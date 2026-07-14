@@ -42,6 +42,9 @@ final class EffectsPreviewOverlayView: NSView {
     /// is responsible for clamping, writing to the model, and triggering a
     /// composition rebuild.
     var onChange: ((CGRect) -> Void)?
+    /// Fired when an interactive drag (move/resize) finishes, so the owner
+    /// can re-sync the displayed rect with the model's clamped state.
+    var onDragEnded: (() -> Void)?
 
     /// Fires when the user double-clicks inside a text selection's rect.
     /// Reports the **view-space** rect of the selection so the controller
@@ -188,12 +191,23 @@ final class EffectsPreviewOverlayView: NSView {
 
         case .resize(let corner):
             newRect = resizedRect(from: originalView, corner: corner, to: p)
+            // Zoom windows always show a region with the video's aspect
+            // ratio — lock the rect to it while resizing so what the user
+            // draws is exactly what the zoom will show.
+            if case .zoom = selection.kind {
+                newRect = zoomAspectConstrained(newRect, in: videoR)
+            }
             // Clamp to video bounds
             let xLo = max(videoR.minX, newRect.minX)
             let yLo = max(videoR.minY, newRect.minY)
             let xHi = min(videoR.maxX, newRect.maxX)
             let yHi = min(videoR.maxY, newRect.maxY)
             newRect = NSRect(x: xLo, y: yLo, width: max(0, xHi - xLo), height: max(0, yHi - yLo))
+            if case .zoom = selection.kind {
+                // Bounds clamping can break the aspect again at the frame
+                // edge; restore it by shrinking around the clamped center.
+                newRect = zoomAspectConstrained(newRect, in: videoR, shrinkOnly: true)
+            }
         }
 
         let normalized = normalize(newRect)
@@ -205,7 +219,29 @@ final class EffectsPreviewOverlayView: NSView {
     }
 
     override func mouseUp(with event: NSEvent) {
+        let wasDragging = dragMode != nil
         dragMode = nil
+        if wasDragging { onDragEnded?() }
+    }
+
+    /// Force `rect` to the video's aspect ratio (the shape a zoom window
+    /// actually shows), anchored at its center. Grows the shorter dimension
+    /// unless `shrinkOnly`, in which case the longer one shrinks. The result
+    /// is nudged back inside `videoR` when growth would cross an edge.
+    private func zoomAspectConstrained(_ rect: NSRect, in videoR: NSRect, shrinkOnly: Bool = false) -> NSRect {
+        guard videoR.width > 0, videoR.height > 0, rect.width > 0 || rect.height > 0 else { return rect }
+        let fw = rect.width / videoR.width
+        let fh = rect.height / videoR.height
+        var f = shrinkOnly ? min(fw, fh) : max(fw, fh)
+        // Keep the implied zoom inside the model's allowed range.
+        f = min(max(f, 1.0 / VideoZoomSegment.maxZoom), 1.0 / VideoZoomSegment.minZoom)
+        let w = f * videoR.width
+        let h = f * videoR.height
+        var x = rect.midX - w / 2
+        var y = rect.midY - h / 2
+        x = max(videoR.minX, min(videoR.maxX - w, x))
+        y = max(videoR.minY, min(videoR.maxY - h, y))
+        return NSRect(x: x, y: y, width: w, height: h)
     }
 
     // MARK: - Geometry

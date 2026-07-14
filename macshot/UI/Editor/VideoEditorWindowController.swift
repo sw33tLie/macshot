@@ -431,6 +431,11 @@ private final class VideoEditorView: NSView {
             let size = track.naturalSize.applying(track.preferredTransform)
             overlay.videoSize = CGSize(width: abs(size.width), height: abs(size.height))
         }
+        overlay.onDragEnded = { [weak self] in
+            // Snap the displayed rect to the segment's actual state (zoom
+            // clamping may have adjusted center/level during the drag).
+            self?.refreshOverlaySelection()
+        }
         overlay.onChange = { [weak self] newRect in
             self?.overlayRectChanged(newRect)
         }
@@ -930,6 +935,23 @@ private final class VideoEditorView: NSView {
                 x += infoSize.width + 12
             }
 
+            // "+ Effect" button — add zoom/censor/cut/speed/freeze/text at the playhead
+            addEffectBtnRect = .zero
+            if effectsBand != nil && x < maxLeftX {
+                let addAttrs: [NSAttributedString.Key: Any] = [
+                    .font: NSFont.systemFont(ofSize: 10, weight: .medium),
+                    .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(0.7),
+                ]
+                let addStr = "  ·  + \(L("Effect")) ▼" as NSString
+                let addSize = addStr.size(withAttributes: addAttrs)
+                let addBtnW = addSize.width + 8
+                if x + addBtnW < maxLeftX {
+                    addEffectBtnRect = NSRect(x: x, y: btnY, width: addBtnW, height: btnH)
+                    addStr.draw(at: NSPoint(x: x + 4, y: btnY + (btnH - addSize.height) / 2), withAttributes: addAttrs)
+                    x += addBtnW
+                }
+            }
+
             // Dimensions dropdown button
             dimensionsBtnRect = .zero
             if originalWidth > 0 && x < maxLeftX {
@@ -987,23 +1009,6 @@ private final class VideoEditorView: NSView {
                     gifFPSBtnRect = NSRect(x: x, y: btnY, width: fpsBtnW, height: btnH)
                     fpsStr.draw(at: NSPoint(x: x + 4, y: btnY + (btnH - fpsSize.height) / 2), withAttributes: fpsAttrs)
                     x += fpsBtnW
-                }
-            }
-
-            // "+ Effect" button — add zoom/censor/cut/speed/freeze/text at the playhead
-            addEffectBtnRect = .zero
-            if effectsBand != nil && x < maxLeftX {
-                let addAttrs: [NSAttributedString.Key: Any] = [
-                    .font: NSFont.systemFont(ofSize: 10, weight: .medium),
-                    .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(0.7),
-                ]
-                let addStr = "  ·  + \(L("Effect")) ▼" as NSString
-                let addSize = addStr.size(withAttributes: addAttrs)
-                let addBtnW = addSize.width + 8
-                if x + addBtnW < maxLeftX {
-                    addEffectBtnRect = NSRect(x: x, y: btnY, width: addBtnW, height: btnH)
-                    addStr.draw(at: NSPoint(x: x + 4, y: btnY + (btnH - addSize.height) / 2), withAttributes: addAttrs)
-                    x += addBtnW
                 }
             }
 
@@ -1355,8 +1360,11 @@ private final class VideoEditorView: NSView {
     /// (center, zoomLevel) as its source of truth.
     private func rectForZoom(_ seg: VideoZoomSegment) -> CGRect {
         let side = 1.0 / max(seg.zoomLevel, 0.0001)
-        let x = seg.center.x - side / 2
-        let y = seg.center.y - side / 2
+        // Clamp so the displayed rect always matches the actually-visible
+        // zoom window (the compositor cannot pan past the frame edge).
+        let c = VideoZoomSegment.clampedCenter(seg.center, zoom: seg.zoomLevel)
+        let x = c.x - side / 2
+        let y = c.y - side / 2
         return CGRect(x: x, y: y, width: side, height: side)
     }
 
@@ -1372,8 +1380,11 @@ private final class VideoEditorView: NSView {
             let desiredZoom = 1.0 / side
             seg.zoomLevel = max(VideoZoomSegment.minZoom,
                                  min(VideoZoomSegment.maxZoom, desiredZoom))
-            // Center on the rect midpoint
-            seg.center = CGPoint(x: rect.midX, y: rect.midY)
+            // Center on the rect midpoint, clamped so the zoom window stays
+            // fully inside the frame — otherwise the compositor's edge clamp
+            // would show a different region than the drawn rect.
+            seg.center = VideoZoomSegment.clampedCenter(
+                CGPoint(x: rect.midX, y: rect.midY), zoom: seg.zoomLevel)
         } else if let seg = censorSegments.first(where: { $0.id == id }) {
             seg.rect = VideoCensorSegment.clampedRect(rect)
         } else if let seg = textSegments.first(where: { $0.id == id }) {
