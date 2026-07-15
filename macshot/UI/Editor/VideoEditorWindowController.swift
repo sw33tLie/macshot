@@ -165,6 +165,11 @@ private final class VideoEditorView: NSView {
     // drives the bottom text-options panel.
     private var addEffectBtnRect: NSRect = .zero
     private var selectedTextSegmentID: UUID?
+    /// While a text/censor segment is selected, the preview composition is
+    /// built without zoom so the selection rect and the rendered content
+    /// match 1:1 (zoom would transform the content but not the overlay).
+    /// Exports are never affected.
+    private var previewSuspendsZoom = false
     private var selectedTextSegment: VideoTextSegment? {
         guard let id = selectedTextSegmentID else { return nil }
         return textSegments.first(where: { $0.id == id })
@@ -919,39 +924,6 @@ private final class VideoEditorView: NSView {
             x += segW + 12
         }
 
-        do {
-            let infoAttrs: [NSAttributedString.Key: Any] = [
-                .font: NSFont.systemFont(ofSize: 10, weight: .regular),
-                .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(0.4),
-            ]
-            let sourceFileSize = (try? FileManager.default.attributesOfItem(atPath: videoURL.path)[.size] as? Int) ?? 0
-            let sizeStr = ByteCountFormatter.string(fromByteCount: Int64(sourceFileSize), countStyle: .file)
-            let fpsValue = asset?.tracks(withMediaType: .video).first?.nominalFrameRate ?? 0
-            let fpsStr = fpsValue > 0 ? "\(Int(fpsValue.rounded()))fps" : ""
-            let infoStr = "\(sizeStr)  ·  \(fpsStr)" as NSString
-            let infoSize = infoStr.size(withAttributes: infoAttrs)
-            if x + infoSize.width < maxLeftX {
-                infoStr.draw(at: NSPoint(x: x + 4, y: btnY + (btnH - infoSize.height) / 2), withAttributes: infoAttrs)
-                x += infoSize.width + 12
-            }
-
-            // "+ Effect" button — add zoom/censor/cut/speed/freeze/text at the playhead
-            addEffectBtnRect = .zero
-            if effectsBand != nil && x < maxLeftX {
-                let addAttrs: [NSAttributedString.Key: Any] = [
-                    .font: NSFont.systemFont(ofSize: 10, weight: .medium),
-                    .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(0.7),
-                ]
-                let addStr = "  ·  + \(L("Effect")) ▼" as NSString
-                let addSize = addStr.size(withAttributes: addAttrs)
-                let addBtnW = addSize.width + 8
-                if x + addBtnW < maxLeftX {
-                    addEffectBtnRect = NSRect(x: x, y: btnY, width: addBtnW, height: btnH)
-                    addStr.draw(at: NSPoint(x: x + 4, y: btnY + (btnH - addSize.height) / 2), withAttributes: addAttrs)
-                    x += addBtnW
-                }
-            }
-
             // Dimensions dropdown button
             dimensionsBtnRect = .zero
             if originalWidth > 0 && x < maxLeftX {
@@ -1010,6 +982,39 @@ private final class VideoEditorView: NSView {
                     fpsStr.draw(at: NSPoint(x: x + 4, y: btnY + (btnH - fpsSize.height) / 2), withAttributes: fpsAttrs)
                     x += fpsBtnW
                 }
+            }
+
+            // "+ Effect" button — add zoom/censor/cut/speed/freeze/text at the playhead
+            addEffectBtnRect = .zero
+            if effectsBand != nil && x < maxLeftX {
+                let addAttrs: [NSAttributedString.Key: Any] = [
+                    .font: NSFont.systemFont(ofSize: 10, weight: .medium),
+                    .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(0.7),
+                ]
+                let addStr = "  ·  + \(L("Effect")) ▼" as NSString
+                let addSize = addStr.size(withAttributes: addAttrs)
+                let addBtnW = addSize.width + 8
+                if x + addBtnW < maxLeftX {
+                    addEffectBtnRect = NSRect(x: x, y: btnY, width: addBtnW, height: btnH)
+                    addStr.draw(at: NSPoint(x: x + 4, y: btnY + (btnH - addSize.height) / 2), withAttributes: addAttrs)
+                    x += addBtnW
+                }
+            }
+
+        do {
+            let infoAttrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 10, weight: .regular),
+                .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(0.4),
+            ]
+            let sourceFileSize = (try? FileManager.default.attributesOfItem(atPath: videoURL.path)[.size] as? Int) ?? 0
+            let sizeStr = ByteCountFormatter.string(fromByteCount: Int64(sourceFileSize), countStyle: .file)
+            let fpsValue = asset?.tracks(withMediaType: .video).first?.nominalFrameRate ?? 0
+            let fpsStr = fpsValue > 0 ? "\(Int(fpsValue.rounded()))fps" : ""
+            let infoStr = "\(sizeStr)  ·  \(fpsStr)" as NSString
+            let infoSize = infoStr.size(withAttributes: infoAttrs)
+            if x + infoSize.width < maxLeftX {
+                infoStr.draw(at: NSPoint(x: x + 4, y: btnY + (btnH - infoSize.height) / 2), withAttributes: infoAttrs)
+                x += infoSize.width + 12
             }
 
             // Estimated export size — show when trim, scale, quality, or format change would affect output
@@ -2532,7 +2537,8 @@ private final class VideoEditorView: NSView {
                 videoTrack: asset.tracks(withMediaType: .video).first,
                 renderSize: nil,
                 timeMap: singleShiftTimeMap(shift: 0, duration: CMTimeGetSeconds(asset.duration)),
-                timeRangeDuration: CMTimeGetSeconds(asset.duration)
+                timeRangeDuration: CMTimeGetSeconds(asset.duration),
+                suspendZoom: previewSuspendsZoom
             )
             return
         }
@@ -2557,7 +2563,8 @@ private final class VideoEditorView: NSView {
                     videoTrack: cvt,
                     renderSize: nil,
                     timeMap: piecesToTimeMap(pieces: pieces),
-                    timeRangeDuration: CMTimeGetSeconds(compAsset.duration)
+                    timeRangeDuration: CMTimeGetSeconds(compAsset.duration),
+                    suspendZoom: previewSuspendsZoom
                 )
             } else {
                 currentItem.videoComposition = nil
@@ -2583,7 +2590,8 @@ private final class VideoEditorView: NSView {
                 videoTrack: processed.videoTrack,
                 renderSize: nil,
                 timeMap: processed.timeMap,
-                timeRangeDuration: processed.duration
+                timeRangeDuration: processed.duration,
+                suspendZoom: previewSuspendsZoom
             )
         }
         swapPreviewPlayerItem(asset: processed.composition, videoComposition: videoComp)
@@ -2744,7 +2752,7 @@ private final class VideoEditorView: NSView {
     ///     without cuts pass a single entry spanning the whole composition.
     ///   - timeRangeDuration: total length (in composition time) of the
     ///     instruction's timeRange.
-    private func buildEffectsVideoComposition(for asset: AVAsset, videoTrack: AVAssetTrack?, renderSize: CGSize?, timeMap: [EffectsCompositionInstruction.TimeMapEntry], timeRangeDuration: Double) -> AVMutableVideoComposition? {
+    private func buildEffectsVideoComposition(for asset: AVAsset, videoTrack: AVAssetTrack?, renderSize: CGSize?, timeMap: [EffectsCompositionInstruction.TimeMapEntry], timeRangeDuration: Double, suspendZoom: Bool = false) -> AVMutableVideoComposition? {
         let track = videoTrack ?? asset.tracks(withMediaType: .video).first
         guard let videoTrack = track else { return nil }
         let natSize = videoTrack.naturalSize.applying(videoTrack.preferredTransform)
@@ -2775,7 +2783,7 @@ private final class VideoEditorView: NSView {
 
         // Snapshot segments *by value* into plain arrays. The compositor runs
         // on background queues; we must not share main-actor state with it.
-        let zoomSnapshot = zoomSegments
+        let zoomSnapshot = suspendZoom ? [] : zoomSegments
             .filter { $0.endTime > $0.startTime }
             .sorted { $0.startTime < $1.startTime }
         let censorSnapshot = censorSegments
@@ -3330,6 +3338,18 @@ extension VideoEditorView: EffectsBandViewDelegate {
             selectedTextSegmentID = id
         } else {
             selectedTextSegmentID = nil
+        }
+        // Suspend zoom in the preview while positioning content that the
+        // zoom would visually displace relative to the selection overlay.
+        let shouldSuspend: Bool = {
+            guard let id = segmentID else { return false }
+            return textSegments.contains(where: { $0.id == id })
+                || censorSegments.contains(where: { $0.id == id })
+        }()
+        if previewSuspendsZoom != shouldSuspend {
+            previewSuspendsZoom = shouldSuspend
+            applyZoomTransformForCurrentTime()
+            forcePreviewRedisplayIfPaused()
         }
         updateTextOptionsPanelVisibility()
         updateEffectsOverlay()
