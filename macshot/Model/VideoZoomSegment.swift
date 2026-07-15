@@ -96,6 +96,17 @@ final class VideoZoomSegment: Codable {
     /// center when applying `scale(zoom).translate(tx, ty)` to a frame of
     /// `videoSize`. Clamped so the zoom window never shows area outside the
     /// video's bounds (no black bars at edges from over-pan).
+    /// Clamp a normalized center so the visible zoom window (1/zoom of each
+    /// dimension) stays fully inside the frame. Keeping the center in this
+    /// range means `translation`'s edge clamping never has to shift the view,
+    /// so the region the user drew and the region actually shown stay
+    /// identical (fixes zooming into "the wrong area" near frame edges).
+    static func clampedCenter(_ c: CGPoint, zoom: CGFloat) -> CGPoint {
+        let half = 1.0 / (2 * max(zoom, 1.0001))
+        return CGPoint(x: min(max(c.x, half), 1 - half),
+                       y: min(max(c.y, half), 1 - half))
+    }
+
     func translation(zoom: CGFloat, videoSize: CGSize) -> CGPoint {
         guard zoom > 1.0001 else { return .zero }
         // Pixel coords of the chosen center
