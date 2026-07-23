@@ -138,6 +138,11 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var scrollMaxHeightStepper: NSStepper!
     private var scrollFrozenDetectionCheckbox: NSButton!
     private var languagePopup: NSPopUpButton!
+    private var translationProviderPopup: NSPopUpButton!
+    private var translationTargetPopup: NSPopUpButton!
+    private var baiduAppIDField: NSTextField!
+    private var baiduSecretKeyField: NSSecureTextField!
+    private var baiduSettingsViews: [NSView] = []
 
     var onHotkeyChanged: (() -> Void)?
 
@@ -991,35 +996,96 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // ── Translation ──────────────────────────────────────
+        stack.addArrangedSubview(sectionHeader(L("Translation")))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        translationProviderPopup = NSPopUpButton()
+        func addTranslationProvider(_ provider: TranslationProvider, title: String) {
+            translationProviderPopup.addItem(withTitle: title)
+            translationProviderPopup.lastItem?.representedObject = provider.rawValue
+        }
         if TranslationService.appleTranslationAvailable {
-            stack.addArrangedSubview(sectionHeader(L("Translation")))
-            stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+            addTranslationProvider(.apple, title: L("Apple (on-device)"))
+        }
+        addTranslationProvider(.google, title: L("Google Translate"))
+        addTranslationProvider(.baidu, title: L("Baidu Translate"))
+        selectTranslationProvider()
+        translationProviderPopup.target = self
+        translationProviderPopup.action = #selector(translationProviderChanged(_:))
+        stack.addArrangedSubview(labeledRow(L("Engine:"), controls: [translationProviderPopup]))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
-            let translationProviderPopup = NSPopUpButton()
-            translationProviderPopup.addItems(withTitles: [
-                L("Apple (on-device)"),
-                L("Google Translate"),
-            ])
-            translationProviderPopup.selectItem(at: TranslationService.provider == .apple ? 0 : 1)
-            translationProviderPopup.target = self
-            translationProviderPopup.action = #selector(translationProviderChanged(_:))
-            stack.addArrangedSubview(labeledRow(L("Engine:"), controls: [translationProviderPopup]))
-            stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+        translationTargetPopup = NSPopUpButton()
+        for language in TranslationService.availableLanguages {
+            translationTargetPopup.addItem(withTitle: language.name)
+            translationTargetPopup.lastItem?.representedObject = language.code
+        }
+        selectTranslationTarget()
+        translationTargetPopup.target = self
+        translationTargetPopup.action = #selector(translationTargetChanged(_:))
+        translationTargetPopup.widthAnchor.constraint(equalToConstant: 180).isActive = true
+        stack.addArrangedSubview(labeledRow(L("Translate to:"), controls: [translationTargetPopup]))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
-            let providerNote = NSTextField(wrappingLabelWithString: L("Apple translation is faster and works offline. Google Translate supports more languages."))
-            providerNote.font = NSFont.systemFont(ofSize: 10)
-            providerNote.textColor = .secondaryLabelColor
-            stack.addArrangedSubview(indented(providerNote))
-            stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+        let providerNote = NSTextField(wrappingLabelWithString: L("Apple translation is faster and works offline. Google Translate supports more languages."))
+        providerNote.font = NSFont.systemFont(ofSize: 10)
+        providerNote.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(indented(providerNote))
+        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
 
-            let downloadLink = NSButton(title: L("Download language packs in System Settings…"), target: self, action: #selector(openTranslationSettings))
+        if TranslationService.appleTranslationAvailable {
+            let downloadLink = NSButton(
+                title: L("Download language packs in System Settings…"),
+                target: self,
+                action: #selector(openTranslationSettings)
+            )
             downloadLink.bezelStyle = .inline
             downloadLink.isBordered = false
             downloadLink.contentTintColor = .linkColor
             downloadLink.font = NSFont.systemFont(ofSize: 10)
             stack.addArrangedSubview(indented(downloadLink))
-            stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
+            stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
         }
+
+        baiduAppIDField = NSTextField()
+        baiduAppIDField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        baiduAppIDField.stringValue = TranslationService.baiduAppID
+        baiduAppIDField.delegate = self
+        baiduAppIDField.widthAnchor.constraint(equalToConstant: 240).isActive = true
+        let baiduAppIDRow = labeledRow(L("APP ID:"), controls: [baiduAppIDField])
+        stack.addArrangedSubview(baiduAppIDRow)
+
+        baiduSecretKeyField = NSSecureTextField()
+        baiduSecretKeyField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        baiduSecretKeyField.stringValue = TranslationService.baiduSecretKey
+        baiduSecretKeyField.delegate = self
+        baiduSecretKeyField.widthAnchor.constraint(equalToConstant: 240).isActive = true
+        let baiduSecretRow = labeledRow(L("Secret Key:"), controls: [baiduSecretKeyField])
+        stack.addArrangedSubview(baiduSecretRow)
+
+        let baiduNote = NSTextField(wrappingLabelWithString: L("Baidu APP ID and Secret Key are stored in this Mac's app preferences."))
+        baiduNote.font = NSFont.systemFont(ofSize: 10)
+        baiduNote.textColor = .secondaryLabelColor
+        let baiduNoteRow = indented(baiduNote)
+        stack.addArrangedSubview(baiduNoteRow)
+
+        let baiduConsoleLink = NSButton(
+            title: L("Open Baidu Translate console…"),
+            target: self,
+            action: #selector(openBaiduTranslationConsole)
+        )
+        baiduConsoleLink.bezelStyle = .inline
+        baiduConsoleLink.isBordered = false
+        baiduConsoleLink.contentTintColor = .linkColor
+        baiduConsoleLink.font = NSFont.systemFont(ofSize: 10)
+        let baiduConsoleRow = indented(baiduConsoleLink)
+        stack.addArrangedSubview(baiduConsoleRow)
+        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
+
+        baiduSettingsViews = [
+            baiduAppIDRow, baiduSecretRow, baiduNoteRow, baiduConsoleRow,
+        ]
+        updateBaiduSettingsVisibility()
 
         // ── Menu Bar Order ──────────────────────────────────
         stack.addArrangedSubview(sectionHeader(L("Menu Bar Order")))
@@ -2473,6 +2539,12 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         downscaleRetinaCheckbox.state = ImageEncoder.downscaleRetina ? .on : .off
         updateQualityVisibility()
 
+        selectTranslationProvider()
+        selectTranslationTarget()
+        baiduAppIDField.stringValue = TranslationService.baiduAppID
+        baiduSecretKeyField.stringValue = TranslationService.baiduSecretKey
+        updateBaiduSettingsVisibility()
+
         #if !OFFLINE
         imgbbKeyField.stringValue = UserDefaults.standard.string(forKey: "imgbbAPIKey") ?? ""
         #endif
@@ -3103,11 +3175,59 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     }
 
     @objc private func translationProviderChanged(_ sender: NSPopUpButton) {
-        TranslationService.provider = sender.indexOfSelectedItem == 0 ? .apple : .google
+        guard let rawValue = sender.selectedItem?.representedObject as? String,
+              let provider = TranslationProvider(rawValue: rawValue) else { return }
+        TranslationService.provider = provider
+        updateBaiduSettingsVisibility()
+    }
+
+    @objc private func translationTargetChanged(_ sender: NSPopUpButton) {
+        guard let code = sender.selectedItem?.representedObject as? String else { return }
+        TranslationService.targetLanguage = code
+    }
+
+    private func selectTranslationProvider() {
+        guard translationProviderPopup != nil else { return }
+        let rawValue = TranslationService.provider.rawValue
+        if let item = translationProviderPopup.itemArray.first(where: {
+            $0.representedObject as? String == rawValue
+        }) {
+            translationProviderPopup.select(item)
+        } else if let google = translationProviderPopup.itemArray.first(where: {
+            $0.representedObject as? String == TranslationProvider.google.rawValue
+        }) {
+            translationProviderPopup.select(google)
+            TranslationService.provider = .google
+        }
+    }
+
+    private func selectTranslationTarget() {
+        guard translationTargetPopup != nil else { return }
+        let code = TranslationService.targetLanguage
+        if let item = translationTargetPopup.itemArray.first(where: {
+            $0.representedObject as? String == code
+        }) {
+            translationTargetPopup.select(item)
+        }
+    }
+
+    private func updateBaiduSettingsVisibility() {
+        guard translationProviderPopup != nil else { return }
+        let isBaidu = translationProviderPopup.selectedItem?.representedObject as? String
+            == TranslationProvider.baidu.rawValue
+        for view in baiduSettingsViews {
+            view.isHidden = !isBaidu
+        }
     }
 
     @objc private func openTranslationSettings() {
         if let url = URL(string: "x-apple.systempreferences:com.apple.Localization.Settings.extension?Translation") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    @objc private func openBaiduTranslationConsole() {
+        if let url = URL(string: "https://fanyi-api.baidu.com/") {
             NSWorkspace.shared.open(url)
         }
     }
@@ -3141,6 +3261,10 @@ extension SettingsWindowController: NSTextFieldDelegate {
             updateRecordingFilenamePreview()
         } else if field === menuBarIconSymbolField {
             applyMenuBarIconSymbol(field.stringValue)
+        } else if field === baiduAppIDField {
+            TranslationService.baiduAppID = field.stringValue
+        } else if field === baiduSecretKeyField {
+            TranslationService.baiduSecretKey = field.stringValue
         }
     }
 

@@ -668,3 +668,9 @@
 
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "在编辑器中打开历史记录（保持标注可编辑）";
+
+/* Baidu translation */
+"Baidu Translate" = "百度翻译";
+"APP ID:" = "APP ID:";
+"Open Baidu Translate console…" = "打开百度翻译控制台…";
+"Baidu APP ID and Secret Key are stored in this Mac's app preferences." = "百度 APP ID 和密钥会存储在这台 Mac 的应用偏好设置中。";

@@ -670,3 +670,9 @@
 
 /* Measure tool: clamp toggle (#212) */
 "Limit to selection" = "Limit to selection";
+
+/* Baidu translation */
+"Baidu Translate" = "Baidu Translate";
+"APP ID:" = "APP ID:";
+"Open Baidu Translate console…" = "Open Baidu Translate console…";
+"Baidu APP ID and Secret Key are stored in this Mac's app preferences." = "Baidu APP ID and Secret Key are stored in this Mac's app preferences.";

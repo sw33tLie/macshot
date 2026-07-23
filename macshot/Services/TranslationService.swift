@@ -4,11 +4,6 @@ import Combine
 import SwiftUI
 @preconcurrency import Translation
 
-enum TranslationProvider: String {
-    case apple = "apple"
-    case google = "google"
-}
-
 enum TranslationService {
 
     // MARK: - Provider
@@ -37,6 +32,16 @@ enum TranslationService {
     static var targetLanguage: String {
         get { UserDefaults.standard.string(forKey: "translateTargetLang") ?? "en" }
         set { UserDefaults.standard.set(newValue, forKey: "translateTargetLang") }
+    }
+
+    static var baiduAppID: String {
+        get { UserDefaults.standard.string(forKey: "baiduTranslateAppID") ?? "" }
+        set { UserDefaults.standard.set(newValue, forKey: "baiduTranslateAppID") }
+    }
+
+    static var baiduSecretKey: String {
+        get { UserDefaults.standard.string(forKey: "baiduTranslateSecretKey") ?? "" }
+        set { UserDefaults.standard.set(newValue, forKey: "baiduTranslateSecretKey") }
     }
 
     static let availableLanguages: [(code: String, name: String)] = [
@@ -151,10 +156,23 @@ enum TranslationService {
             return
         }
 
-        if #available(macOS 15.0, *), provider == .apple {
-            translateBatchApple(texts: texts, targetLang: targetLang, completion: completion)
-        } else {
+        switch provider {
+        case .apple:
+            if #available(macOS 15.0, *) {
+                translateBatchApple(texts: texts, targetLang: targetLang, completion: completion)
+            } else {
+                translateBatchGoogle(texts: texts, targetLang: targetLang, completion: completion)
+            }
+        case .google:
             translateBatchGoogle(texts: texts, targetLang: targetLang, completion: completion)
+        case .baidu:
+            BaiduTranslationClient.translateBatch(
+                texts: texts,
+                targetLang: targetLang,
+                appID: baiduAppID,
+                secret: baiduSecretKey,
+                completion: completion
+            )
         }
     }
 
