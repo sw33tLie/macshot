@@ -121,6 +121,21 @@ struct BaiduTranslationClientTests {
         expect(chunks.map { $0.map(\.index) } == [[0, 1], [2]],
                "chunks at source item boundaries")
 
+        do {
+            let settingsSource = try String(
+                contentsOfFile: "macshot/UI/Windows/SettingsWindowController.swift",
+                encoding: .utf8
+            )
+            expect(
+                settingsSource.contains(
+                    "stack.setCustomSpacing(6, after: baiduAppIDRow)"
+                ),
+                "separates the Baidu APP ID and Secret Key rows"
+            )
+        } catch {
+            fail("reads settings source for Baidu row spacing: \(error)")
+        }
+
         if failures == 0 {
             print("BaiduTranslationClientTests: all checks passed")
         } else {

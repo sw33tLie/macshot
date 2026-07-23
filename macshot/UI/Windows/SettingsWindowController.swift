@@ -1054,6 +1054,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         baiduAppIDField.widthAnchor.constraint(equalToConstant: 240).isActive = true
         let baiduAppIDRow = labeledRow(L("APP ID:"), controls: [baiduAppIDField])
         stack.addArrangedSubview(baiduAppIDRow)
+        stack.setCustomSpacing(6, after: baiduAppIDRow)
 
         baiduSecretKeyField = NSSecureTextField()
         baiduSecretKeyField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
