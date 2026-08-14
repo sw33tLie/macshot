@@ -111,6 +111,12 @@ private let sigtermHandler: @convention(c) (Int32) -> Void = { _ in
     kill(getpid(), SIGTERM)
 }
 
+/// Tracks whether the first (cursor-display) overlay has already been shown,
+/// so only that one marks the capture INTERACTIVE.
+private final class ProgressiveOverlayState {
+    var shownAny = false
+}
+
 private final class CaptureTimingTrace: @unchecked Sendable {
     private struct Entry {
         let label: String
@@ -1335,12 +1341,36 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // transient UI (menus, Spotlight) is preserved. If SCK fails or can't
         // cover every display, fall back to the synchronous CGWindowListCreateImage
         // path (which manually composites the cursor from the prebuilt context).
+        let progressive = ProgressiveOverlayState()
         Task { [weak self] in
             trace?.mark("background screenshot begin")
             var captures: [ScreenCapture]? = nil
             if #available(macOS 14.0, *) {
+                // Install each display's overlay as soon as its own capture
+                // lands, cursor display first, instead of waiting for all of them.
                 captures = await ScreenCaptureManager.captureAllScreensImmediatelySCK(
-                    timing: { label in trace?.mark(label) })
+                    priorityScreen: mouseScreen,
+                    timing: { label in trace?.mark(label) },
+                    onCapture: { capture in
+                        guard let self = self, self.isCapturing,
+                              self.captureSessionID == sessionID else { return }
+                        guard let controller = controllers.first(where: { $0.screen === capture.screen })
+                        else { return }
+                        let isFirst = !progressive.shownAny
+                        progressive.shownAny = true
+                        self.installAndShowOverlays(
+                            captures: [capture],
+                            controllers: [controller],
+                            mouseScreen: mouseScreen,
+                            applyFullScreen: didApplyFullScreen,
+                            applyFullScreenRecord: didApplyFullScreenRecord,
+                            autoStartRecord: didApplyFullScreenRecordAutoStart,
+                            markInteractive: isFirst)
+                    })
+            }
+            if let captures, progressive.shownAny {
+                trace?.mark("background screenshot end count=\(captures.count) (progressive)")
+                return
             }
             let finalCaptures = captures ?? ScreenCaptureManager.captureAllScreensImmediately(
                 context: captureContext,
@@ -1368,7 +1398,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         mouseScreen: NSScreen?,
         applyFullScreen: Bool,
         applyFullScreenRecord: Bool,
-        autoStartRecord: Bool
+        autoStartRecord: Bool,
+        markInteractive: Bool = true
     ) {
         if captures.isEmpty {
             captureTimingTrace?.mark("no captures returned — bailing out")
@@ -1408,6 +1439,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             }
         }
 
+        guard markInteractive else { return }
         captureTimingTrace?.mark("overlays installed and shown — INTERACTIVE")
         // Beacon: schedule periodic main-runloop marks so we can see if the
         // runloop is alive between INTERACTIVE and the first user event.
