@@ -120,6 +120,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var s3SecretKeyField: NSSecureTextField!
     private var s3PublicURLField: NSTextField!
     private var s3PathPrefixField: NSTextField!
+    private var s3PublicReadCheckbox: NSButton!
     private var s3TestBtn: NSButton!
     private var s3StatusLabel: NSTextField!
     #endif
@@ -1832,6 +1833,17 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.addArrangedSubview(labeledRow(L("Path Prefix:"), controls: [s3PathPrefixField]))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
+        s3PublicReadCheckbox = NSButton(checkboxWithTitle: L("Make uploads publicly readable"), target: self, action: #selector(s3PublicReadChanged(_:)))
+        s3PublicReadCheckbox.state = UserDefaults.standard.bool(forKey: "s3PublicRead") ? .on : .off
+        stack.addArrangedSubview(indented(s3PublicReadCheckbox))
+        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+
+        let publicReadNote = NSTextField(wrappingLabelWithString: L("Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header."))
+        publicReadNote.font = NSFont.systemFont(ofSize: 10)
+        publicReadNote.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(indented(publicReadNote))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
         s3TestBtn = NSButton(title: L("Test Connection"), target: self, action: #selector(s3TestTapped(_:)))
         s3TestBtn.bezelStyle = .rounded
 
@@ -2105,6 +2117,10 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         UserDefaults.standard.set(s3SecretKeyField.stringValue, forKey: "s3SecretAccessKey")
         UserDefaults.standard.set(s3PublicURLField.stringValue, forKey: "s3PublicURLBase")
         UserDefaults.standard.set(s3PathPrefixField.stringValue, forKey: "s3PathPrefix")
+    }
+
+    @objc private func s3PublicReadChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: "s3PublicRead")
     }
 
     @objc private func s3TestTapped(_ sender: NSButton) {
