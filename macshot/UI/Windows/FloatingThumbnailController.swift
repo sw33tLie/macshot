@@ -708,6 +708,7 @@ private class ThumbnailView: NSView {
 
     private var image: NSImage
     private let thumbSize: NSSize
+    private let fitsImageInPreview = UserDefaults.standard.bool(forKey: "thumbnailLetterbox")
     private var dragStartScreenPoint: NSPoint?
     private var dragMode: DragMode = .idle
     private var dismissDragOffset: CGFloat = 0
@@ -845,24 +846,15 @@ private class ThumbnailView: NSView {
         let path = NSBezierPath(roundedRect: r, xRadius: cr, yRadius: cr)
         path.addClip()
 
-        // Dark background (visible as letterbox bars for extreme aspect ratios)
+        // Dark background doubles as the letterbox surface when fitting the image.
         NSColor(white: 0.12, alpha: 1.0).setFill()
         NSBezierPath(roundedRect: r, xRadius: cr, yRadius: cr).fill()
 
-        // Draw image with aspect fill (cropped to fill, no letterboxing)
-        let imgAspect = image.size.width / image.size.height
-        let viewAspect = r.width / r.height
-        var drawW: CGFloat
-        var drawH: CGFloat
-        if imgAspect > viewAspect {
-            // Image is wider than view — fill height, crop sides
-            drawH = r.height
-            drawW = drawH * imgAspect
-        } else {
-            // Image is taller than view — fill width, crop top/bottom
-            drawW = r.width
-            drawH = drawW / imgAspect
-        }
+        let scale = fitsImageInPreview
+            ? min(r.width / image.size.width, r.height / image.size.height)
+            : max(r.width / image.size.width, r.height / image.size.height)
+        let drawW = image.size.width * scale
+        let drawH = image.size.height * scale
         let drawRect = NSRect(
             x: r.midX - drawW / 2,
             y: r.midY - drawH / 2,
