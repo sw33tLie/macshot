@@ -543,6 +543,7 @@
 "Shape:" = "Shape:";
 "Same as screenshots" = "Same as screenshots";
 "  Preview size:" = "  Preview size:";
+"Fit image in preview (letterbox)" = "Fit image in preview (letterbox)";
 "(0 = off)" = "(0 = off)";
 "Clear All" = "Clear All";
 "Clear History?" = "Clear History?";

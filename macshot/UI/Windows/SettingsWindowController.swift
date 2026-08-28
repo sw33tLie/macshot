@@ -65,6 +65,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var thumbnailAutoDismissField: NSTextField!
     private var thumbnailStackingPopup: NSPopUpButton!
     private var thumbnailCornerPopup: NSPopUpButton!
+    private var thumbnailLetterboxCheckbox: NSButton!
     private var historyUnlimitedCheckbox: NSButton!
     private var historyOrderByLastEditCheckbox: NSButton!
     private var thumbnailScaleLabel: NSTextField!
@@ -840,6 +841,14 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         thumbnailScaleLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .regular)
         thumbnailScaleLabel.textColor = .secondaryLabelColor
         stack.addArrangedSubview(indented(labeledRow(L("  Preview size:"), controls: [sizeSlider, thumbnailScaleLabel])))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        thumbnailLetterboxCheckbox = NSButton(
+            checkboxWithTitle: L("Fit image in preview (letterbox)"),
+            target: self,
+            action: #selector(thumbnailLetterboxChanged(_:))
+        )
+        stack.addArrangedSubview(indented(thumbnailLetterboxCheckbox))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         stack.addArrangedSubview(indented(snapGuidesCheckbox))
@@ -2538,6 +2547,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
         let thumbnail = UserDefaults.standard.object(forKey: "showFloatingThumbnail") as? Bool ?? true
         thumbnailCheckbox.state = thumbnail ? .on : .off
+        thumbnailLetterboxCheckbox.state = UserDefaults.standard.bool(forKey: "thumbnailLetterbox") ? .on : .off
 
         let autoDismiss = UserDefaults.standard.object(forKey: "thumbnailAutoDismiss") as? Int ?? 5
         thumbnailAutoDismissField.integerValue = autoDismiss
@@ -2735,6 +2745,9 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     @objc private func thumbnailScaleChanged(_ sender: NSSlider) {
         UserDefaults.standard.set(sender.doubleValue, forKey: "thumbnailScale")
         thumbnailScaleLabel?.stringValue = scalePercentString(sender.doubleValue)
+    }
+    @objc private func thumbnailLetterboxChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: "thumbnailLetterbox")
     }
 
     private func scalePercentString(_ scale: Double) -> String {
