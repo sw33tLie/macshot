@@ -3,10 +3,53 @@ import Foundation
 @main
 struct AppShotCaptureCoordinatorTests {
     static func main() async {
+        await presentsImageBeforeRecognitionCompletes()
         await publishesCompletedCapture()
         await reportsClipboardPublicationFailure()
         await resetsAdmissionAfterCaptureFailure()
         await rejectsOverlappingCapture()
+    }
+
+    @MainActor
+    private static func presentsImageBeforeRecognitionCompletes() async {
+        let recognitionGate = AsyncGate()
+        var events: [String] = []
+        let coordinator = AppShotCaptureCoordinator<Int, String>(
+            captureImage: { _ in
+                events.append("captured")
+                return "pixels"
+            },
+            onImageCaptured: { target, image in
+                precondition(target == 42)
+                precondition(image == "pixels")
+                events.append("presented")
+            },
+            recognizeText: { _ in
+                events.append("recognition started")
+                await recognitionGate.wait()
+                events.append("recognition finished")
+                return "visible text"
+            },
+            publish: { _ in
+                events.append("published")
+                return true
+            }
+        )
+
+        let capture = Task { await coordinator.capture(target: 42) }
+        await Task.yield()
+
+        precondition(events == ["captured", "presented", "recognition started"])
+        await recognitionGate.open()
+        let result = await capture.value
+        precondition(result == .completed)
+        precondition(events == [
+            "captured",
+            "presented",
+            "recognition started",
+            "recognition finished",
+            "published",
+        ])
     }
 
     @MainActor

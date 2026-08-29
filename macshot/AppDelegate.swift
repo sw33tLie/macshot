@@ -935,6 +935,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                 screen: target.screen
             )
         },
+        onImageCaptured: { [weak self] target, capturedImage in
+            guard let self else { return }
+            let image = self.appShotImage(from: capturedImage, target: target)
+            let entryID = ScreenshotHistory.shared.add(
+                image: image,
+                pixelWidth: capturedImage.width,
+                pixelHeight: capturedImage.height
+            )
+            self.showFloatingThumbnail(image: image, historyEntryID: entryID)
+            self.playCopySound()
+        },
         recognizeText: { image in
             await withCheckedContinuation { continuation in
                 DispatchQueue.global(qos: .userInitiated).async {
@@ -946,14 +957,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         },
         publish: { [weak self] content in
             guard let self else { return false }
-            let scale = content.target.screen.backingScaleFactor
-            let image = NSImage(
-                cgImage: content.image,
-                size: NSSize(
-                    width: CGFloat(content.image.width) / scale,
-                    height: CGFloat(content.image.height) / scale
-                )
-            )
+            let image = self.appShotImage(from: content.image, target: content.target)
             let payload = ContextCapturePayload(
                 applicationName: content.target.applicationName,
                 bundleIdentifier: content.target.bundleIdentifier,
@@ -962,19 +966,26 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                 recognizedText: content.recognizedText
             )
 
-            let entryID = ScreenshotHistory.shared.add(
-                image: image,
-                pixelWidth: content.image.width,
-                pixelHeight: content.image.height
-            )
-            self.showFloatingThumbnail(image: image, historyEntryID: entryID)
-            self.playCopySound()
             return await ImageEncoder.copyContextCaptureToClipboard(
                 image,
                 markdown: payload.markdown
             )
         }
     )
+
+    private func appShotImage(
+        from capturedImage: CGImage,
+        target: FrontmostWindowTarget
+    ) -> NSImage {
+        let scale = target.screen.backingScaleFactor
+        return NSImage(
+            cgImage: capturedImage,
+            size: NSSize(
+                width: CGFloat(capturedImage.width) / scale,
+                height: CGFloat(capturedImage.height) / scale
+            )
+        )
+    }
     private var capturedWindowTitle: String?
     /// The app that was active before the overlay appeared — re-activated on dismiss.
     /// The app that was active before macshot showed its overlay.

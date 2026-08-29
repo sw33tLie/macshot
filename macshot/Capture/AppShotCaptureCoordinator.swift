@@ -1,7 +1,8 @@
 import Foundation
 
 /// Owns admission and the asynchronous steps for one no-overlay App Shot.
-/// UI side effects stay behind `publish`, which keeps the capture path testable.
+/// Early image feedback and completed publication stay behind injected callbacks,
+/// which keeps their ordering testable without coupling this type to AppKit.
 @MainActor
 final class AppShotCaptureCoordinator<Target, Image> {
     struct Content {
@@ -19,6 +20,7 @@ final class AppShotCaptureCoordinator<Target, Image> {
     }
 
     private let captureImage: (Target) async -> Image?
+    private let onImageCaptured: (Target, Image) async -> Void
     private let recognizeText: (Image) async -> String
     private let publish: (Content) async -> Bool
 
@@ -26,10 +28,12 @@ final class AppShotCaptureCoordinator<Target, Image> {
 
     init(
         captureImage: @escaping (Target) async -> Image?,
+        onImageCaptured: @escaping (Target, Image) async -> Void = { _, _ in },
         recognizeText: @escaping (Image) async -> String,
         publish: @escaping (Content) async -> Bool
     ) {
         self.captureImage = captureImage
+        self.onImageCaptured = onImageCaptured
         self.recognizeText = recognizeText
         self.publish = publish
     }
@@ -48,6 +52,7 @@ final class AppShotCaptureCoordinator<Target, Image> {
         guard let image = await captureImage(target) else {
             return .imageCaptureFailed
         }
+        await onImageCaptured(target, image)
         let recognizedText = await recognizeText(image)
         guard await publish(Content(
             target: target,
