@@ -531,6 +531,8 @@
 "Stop Recording" = "Stop Recording";
 "Pause" = "Pause";
 "Resume" = "Resume";
+"Follow System" = "Follow System";
+"Target language:" = "Target language:";
 "Engine:" = "Engine:";
 "Google Translate" = "Google Translate";
 "Apple (on-device)" = "Apple (on-device)";

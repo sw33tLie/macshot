@@ -34,9 +34,31 @@ enum TranslationService {
 
     // MARK: - Target language
 
+    static var explicitTargetLanguage: String? {
+        get {
+            TranslationTargetLanguage.explicitLanguage(
+                in: UserDefaults.standard,
+                supportedCodes: supportedLanguageCodes
+            )
+        }
+        set {
+            TranslationTargetLanguage.setExplicitLanguage(
+                newValue,
+                in: UserDefaults.standard,
+                supportedCodes: supportedLanguageCodes
+            )
+        }
+    }
+
     static var targetLanguage: String {
-        get { UserDefaults.standard.string(forKey: "translateTargetLang") ?? "en" }
-        set { UserDefaults.standard.set(newValue, forKey: "translateTargetLang") }
+        get {
+            TranslationTargetLanguage.resolvedLanguage(
+                defaults: UserDefaults.standard,
+                preferredLanguages: Locale.preferredLanguages,
+                supportedCodes: supportedLanguageCodes
+            )
+        }
+        set { explicitTargetLanguage = newValue }
     }
 
     static let availableLanguages: [(code: String, name: String)] = [
@@ -71,6 +93,8 @@ enum TranslationService {
         ("th", "Thai"),
         ("vi", "Vietnamese"),
     ]
+
+    private static let supportedLanguageCodes: Set<String> = Set(availableLanguages.map { $0.code })
 
     /// Check which languages are available for Apple Translation.
     /// Returns a dict of language code → installed status.
