@@ -347,6 +347,7 @@
 "Sign Out" = "Sign Out";
 "Signed in" = "Signed in";
 "Not signed in" = "Not signed in";
+"Folder:" = "Folder:";
 "Account:" = "Account:";
 "Test Connection" = "Test Connection";
 "Fill in endpoint, bucket, and credentials first" = "Fill in endpoint, bucket, and credentials first";
@@ -548,7 +549,7 @@
 "Clear History?" = "Clear History?";
 "This will permanently delete all screenshots from history." = "This will permanently delete all screenshots from history.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly.";
+"Files are uploaded to the folder above in your Google Drive, created automatically if it doesn't exist. Leave empty to use \"macshot\". Everything stays private — nothing is shared publicly." = "Files are uploaded to the folder above in your Google Drive, created automatically if it doesn't exist. Leave empty to use \"macshot\". Everything stays private — nothing is shared publicly.";
 
 "Pressure" = "Pressure";
 

@@ -5,7 +5,8 @@ import CryptoKit
 import AuthenticationServices
 
 /// Google Drive uploader using OAuth2 with PKCE.
-/// Files are uploaded to a "macshot" folder in the user's Drive, kept private (not shared).
+/// Files are uploaded to a configurable folder (default "macshot") in the user's Drive,
+/// kept private (not shared).
 final class GoogleDriveUploader: NSObject, ASWebAuthenticationPresentationContextProviding {
 
     static let shared = GoogleDriveUploader()
@@ -22,7 +23,8 @@ final class GoogleDriveUploader: NSObject, ASWebAuthenticationPresentationContex
     private let uploadURL = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart"
     private let filesURL = "https://www.googleapis.com/drive/v3/files"
 
-    private var macShotFolderID: String?
+    private var cachedFolderID: String?
+    private var cachedFolderName: String?
     private var authSession: ASWebAuthenticationSession?
     private weak var presentationWindow: NSWindow?
 
@@ -42,6 +44,13 @@ final class GoogleDriveUploader: NSObject, ASWebAuthenticationPresentationContex
 
     var userEmail: String? {
         UserDefaults.standard.string(forKey: "gdriveUserEmail")
+    }
+
+    /// User-configured destination folder name in Drive. Falls back to "macshot" when empty.
+    private var folderName: String {
+        let raw = UserDefaults.standard.string(forKey: "gdriveFolderName")?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return (raw?.isEmpty == false) ? raw! : "macshot"
     }
 
     /// Start the OAuth2 sign-in flow using ASWebAuthenticationSession.
@@ -92,20 +101,21 @@ final class GoogleDriveUploader: NSObject, ASWebAuthenticationPresentationContex
     func signOut() {
         deleteTokens()
         UserDefaults.standard.removeObject(forKey: "gdriveUserEmail")
-        macShotFolderID = nil
+        cachedFolderID = nil
+        cachedFolderName = nil
     }
 
     /// Progress callback: percentage 0.0–1.0
     var onProgress: ((Double) -> Void)?
 
-    /// Upload a file (image or video) to the macshot folder.
+    /// Upload a file (image or video) to the configured destination folder.
     func upload(data: Data, filename: String, mimeType: String, completion: @escaping (Result<String, Error>) -> Void) {
         ensureValidToken { [weak self] success in
             guard let self = self, success else {
                 completion(.failure(Self.error("Not signed in")))
                 return
             }
-            self.ensureMacShotFolder { result in
+            self.ensureDestinationFolder { result in
                 switch result {
                 case .success(let folderID):
                     self.uploadFile(data: data, filename: filename, mimeType: mimeType, folderID: folderID, completion: completion)
@@ -262,16 +272,17 @@ final class GoogleDriveUploader: NSObject, ASWebAuthenticationPresentationContex
 
     // MARK: - Drive Operations
 
-    private func ensureMacShotFolder(completion: @escaping (Result<String, Error>) -> Void) {
-        if let id = macShotFolderID { completion(.success(id)); return }
+    private func ensureDestinationFolder(completion: @escaping (Result<String, Error>) -> Void) {
+        let name = folderName
+        if let id = cachedFolderID, cachedFolderName == name { completion(.success(id)); return }
 
         guard let token = loadAccessToken() else {
             completion(.failure(Self.error("No access token")))
             return
         }
 
-        // Search for existing macshot folder
-        let query = "name='macshot' and mimeType='application/vnd.google-apps.folder' and trashed=false"
+        // Search for existing destination folder
+        let query = "name='\(escapeForDriveQuery(name))' and mimeType='application/vnd.google-apps.folder' and trashed=false"
         var searchURL = URLComponents(string: filesURL)!
         searchURL.queryItems = [URLQueryItem(name: "q", value: query), URLQueryItem(name: "fields", value: "files(id)")]
 
@@ -307,22 +318,23 @@ final class GoogleDriveUploader: NSObject, ASWebAuthenticationPresentationContex
             }
 
             if let existing = files.first, let id = existing["id"] as? String {
-                self.macShotFolderID = id
+                self.cachedFolderID = id
+                self.cachedFolderName = name
                 DispatchQueue.main.async { completion(.success(id)) }
             } else {
-                self.createMacShotFolder(token: token, completion: completion)
+                self.createDestinationFolder(name: name, token: token, completion: completion)
             }
         }.resume()
     }
 
-    private func createMacShotFolder(token: String, completion: @escaping (Result<String, Error>) -> Void) {
+    private func createDestinationFolder(name: String, token: String, completion: @escaping (Result<String, Error>) -> Void) {
         var request = URLRequest(url: URL(string: filesURL)!)
         request.httpMethod = "POST"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         let metadata: [String: Any] = [
-            "name": "macshot",
+            "name": name,
             "mimeType": "application/vnd.google-apps.folder",
         ]
         request.httpBody = try? JSONSerialization.data(withJSONObject: metadata)
@@ -353,7 +365,8 @@ final class GoogleDriveUploader: NSObject, ASWebAuthenticationPresentationContex
                 DispatchQueue.main.async { completion(.failure(Self.error("Create folder: missing folder ID in response (HTTP \(statusCode))"))) }
                 return
             }
-            self?.macShotFolderID = id
+            self?.cachedFolderID = id
+            self?.cachedFolderName = name
             DispatchQueue.main.async { completion(.success(id)) }
         }.resume()
     }
@@ -530,6 +543,12 @@ final class GoogleDriveUploader: NSObject, ASWebAuthenticationPresentationContex
     private func loadExpiry() -> Double? { loadTokens().expiry }
 
     // MARK: - Helpers
+
+    /// Escapes a value for safe interpolation into a Drive API `q` query string.
+    private func escapeForDriveQuery(_ value: String) -> String {
+        value.replacingOccurrences(of: "\\", with: "\\\\")
+             .replacingOccurrences(of: "'", with: "\\'")
+    }
 
     private static func error(_ msg: String) -> NSError {
         NSError(domain: "GoogleDriveUploader", code: 1, userInfo: [NSLocalizedDescriptionKey: msg])
