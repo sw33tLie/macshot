@@ -115,6 +115,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var providerPopup: NSPopUpButton!
     private var gdriveSignInBtn: NSButton!
     private var gdriveStatusLabel: NSTextField!
+    private var gdriveFolderField: NSTextField!
     // S3 tab controls
     private var s3EndpointField: NSTextField!
     private var s3RegionField: NSTextField!
@@ -1894,9 +1895,18 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
         stack.addArrangedSubview(labeledRow(L("Account:"), controls: [gdriveStatusLabel]))
         stack.addArrangedSubview(indented(gdriveSignInBtn))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        gdriveFolderField = NSTextField()
+        gdriveFolderField.placeholderString = "macshot"
+        gdriveFolderField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        gdriveFolderField.stringValue = UserDefaults.standard.string(forKey: "gdriveFolderName") ?? ""
+        gdriveFolderField.target = self
+        gdriveFolderField.action = #selector(gdriveFolderChanged(_:))
+        stack.addArrangedSubview(labeledRow(L("Folder:"), controls: [gdriveFolderField]))
         stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
 
-        let gdriveNote = NSTextField(wrappingLabelWithString: L("Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly."))
+        let gdriveNote = NSTextField(wrappingLabelWithString: L("Files are uploaded to the folder above in your Google Drive, created automatically if it doesn't exist. Leave empty to use \"macshot\". Everything stays private — nothing is shared publicly."))
         gdriveNote.font = NSFont.systemFont(ofSize: 10)
         gdriveNote.textColor = .secondaryLabelColor
         stack.addArrangedSubview(indented(gdriveNote))
@@ -2232,6 +2242,10 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
                 }
             }
         }
+    }
+
+    @objc private func gdriveFolderChanged(_ sender: NSTextField) {
+        UserDefaults.standard.set(gdriveFolderField.stringValue, forKey: "gdriveFolderName")
     }
 
     @objc private func s3FieldChanged(_ sender: NSTextField) {

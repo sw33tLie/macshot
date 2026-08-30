@@ -98,7 +98,7 @@ brew install --cask macshot
 
 ### Output & Upload
 - **Formats** — PNG, JPEG, HEIC, WebP, AVIF with quality slider
-- **Google Drive** — sign in once, uploads to a private "macshot" folder
+- **Google Drive** — sign in once, uploads to a private folder (defaults to "macshot", configurable in Settings)
 - **imgbb** — anonymous image hosting with shareable links
 - **S3-compatible** — upload to Cloudflare R2, AWS S3, MinIO, DigitalOcean Spaces, Backblaze B2, etc.
 - **Retina downscale** — optional 1x export for smaller files
