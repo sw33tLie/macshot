@@ -682,3 +682,21 @@
 "Selection is already aligned" = "चयन पहले से संरेखित है";
 "Space to move. Release to annotate and edit" = "स्थानांतरित करने के लिए Spacebar दबाए रखें। एनोटेट और संपादित करने के लिए छोड़ें";
 "Space to move. Release to finish" = "स्थानांतरित करने के लिए Spacebar दबाए रखें। समाप्त करने के लिए छोड़ें";
+
+/* Table Recognition Window */
+"Table Recognition" = "तालिका पहचान";
+"Table recognition succeeded" = "तालिका सफलतापूर्वक पहचानी गई";
+"%d rows · %d columns" = "%d पंक्तियाँ · %d कॉलम";
+"Open Excel File" = "Excel फ़ाइल खोलें";
+"Copy Excel File" = "Excel फ़ाइल कॉपी करें";
+"Copy as TSV" = "TSV के रूप में कॉपी करें";
+"Save Recognized Table" = "पहचानी गई तालिका सहेजें";
+"Recognized Table.xlsx" = "पहचानी गई तालिका.xlsx";
+"Table Recognition Failed" = "तालिका पहचान विफल";
+"No text was detected in the selected area." = "चुने गए क्षेत्र में कोई टेक्स्ट नहीं मिला।";
+"No table structure was detected. Select a table with at least two rows and two columns." = "तालिका की संरचना नहीं मिली। कम से कम दो पंक्तियों और दो कॉलम वाली तालिका चुनें।";
+"The recognized table is too large to create an Excel file." = "पहचानी गई तालिका Excel फ़ाइल बनाने के लिए बहुत बड़ी है।";
+"Could Not Create Excel File" = "Excel फ़ाइल नहीं बनाई जा सकी";
+"The Excel file could not be written. Please try again." = "Excel फ़ाइल लिखी नहीं जा सकी। फिर से कोशिश करें।";
+"Could Not Open Excel File" = "Excel फ़ाइल नहीं खोली जा सकी";
+"No application is available to open Excel files." = "Excel फ़ाइलें खोलने के लिए कोई ऐप उपलब्ध नहीं है।";

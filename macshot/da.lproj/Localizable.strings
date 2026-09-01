@@ -680,3 +680,21 @@
 "Selection is already aligned" = "Markeringen flugter allerede med kanterne";
 "Space to move. Release to annotate and edit" = "Hold mellemrumstasten nede for at flytte. Slip for at annotere og redigere";
 "Space to move. Release to finish" = "Hold mellemrumstasten nede for at flytte. Slip for at afslutte";
+
+/* Table Recognition Window */
+"Table Recognition" = "Tabelgenkendelse";
+"Table recognition succeeded" = "Tabellen blev genkendt";
+"%d rows · %d columns" = "%d rækker · %d kolonner";
+"Open Excel File" = "Åbn Excel-fil";
+"Copy Excel File" = "Kopiér Excel-fil";
+"Copy as TSV" = "Kopiér som TSV";
+"Save Recognized Table" = "Gem genkendt tabel";
+"Recognized Table.xlsx" = "Genkendt tabel.xlsx";
+"Table Recognition Failed" = "Tabelgenkendelse mislykkedes";
+"No text was detected in the selected area." = "Der blev ikke fundet tekst i det valgte område.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "Der blev ikke fundet en tabelstruktur. Vælg en tabel med mindst to rækker og to kolonner.";
+"The recognized table is too large to create an Excel file." = "Den genkendte tabel er for stor til at oprette en Excel-fil.";
+"Could Not Create Excel File" = "Kunne ikke oprette Excel-fil";
+"The Excel file could not be written. Please try again." = "Excel-filen kunne ikke skrives. Prøv igen.";
+"Could Not Open Excel File" = "Kunne ikke åbne Excel-fil";
+"No application is available to open Excel files." = "Der er ingen tilgængelig app til at åbne Excel-filer.";

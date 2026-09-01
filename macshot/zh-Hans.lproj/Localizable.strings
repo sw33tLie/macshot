@@ -391,6 +391,24 @@
 "Translation" = "翻译";
 "(No text detected in the selected area)" = "（未在选定区域中检测到文字）";
 
+/* Table Recognition Window */
+"Table Recognition" = "表格识别";
+"Table recognition succeeded" = "表格识别成功";
+"%d rows · %d columns" = "%d 行 · %d 列";
+"Open Excel File" = "打开 Excel 文件";
+"Copy Excel File" = "复制 Excel 文件";
+"Copy as TSV" = "复制为 Tab 分隔表格";
+"Save Recognized Table" = "存储识别的表格";
+"Recognized Table.xlsx" = "识别的表格.xlsx";
+"Table Recognition Failed" = "表格识别失败";
+"No text was detected in the selected area." = "未在选定区域中检测到文字。";
+"No table structure was detected. Select a table with at least two rows and two columns." = "未检测到表格结构。请选择至少包含两行两列的表格。";
+"The recognized table is too large to create an Excel file." = "识别的表格过大，无法创建 Excel 文件。";
+"Could Not Create Excel File" = "无法创建 Excel 文件";
+"The Excel file could not be written. Please try again." = "无法写入 Excel 文件，请重试。";
+"Could Not Open Excel File" = "无法打开 Excel 文件";
+"No application is available to open Excel files." = "没有可用于打开 Excel 文件的应用。";
+
 /* Upload Toast */
 "URL copied to the clipboard" = "URL 已拷贝到剪贴板";
 "Uploading... %d%%" = "上传中... %d%%";

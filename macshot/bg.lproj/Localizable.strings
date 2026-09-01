@@ -680,3 +680,21 @@
 "Selection is already aligned" = "Селекцията вече е подравнена";
 "Space to move. Release to annotate and edit" = "Задръжте интервала за преместване. Отпуснете за анотиране и редактиране";
 "Space to move. Release to finish" = "Задръжте интервала за преместване. Отпуснете за завършване";
+
+/* Table Recognition Window */
+"Table Recognition" = "Разпознаване на таблица";
+"Table recognition succeeded" = "Таблицата е разпозната успешно";
+"%d rows · %d columns" = "%d реда · %d колони";
+"Open Excel File" = "Отваряне на Excel файл";
+"Copy Excel File" = "Копиране на Excel файл";
+"Copy as TSV" = "Копиране като TSV";
+"Save Recognized Table" = "Запазване на разпознатата таблица";
+"Recognized Table.xlsx" = "Разпозната таблица.xlsx";
+"Table Recognition Failed" = "Неуспешно разпознаване на таблица";
+"No text was detected in the selected area." = "В избраната област не беше открит текст.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "Не беше открита структура на таблица. Изберете таблица с поне два реда и две колони.";
+"The recognized table is too large to create an Excel file." = "Разпознатата таблица е твърде голяма за създаване на Excel файл.";
+"Could Not Create Excel File" = "Excel файлът не можа да бъде създаден";
+"The Excel file could not be written. Please try again." = "Excel файлът не можа да бъде записан. Опитайте отново.";
+"Could Not Open Excel File" = "Excel файлът не можа да бъде отворен";
+"No application is available to open Excel files." = "Няма налично приложение за отваряне на Excel файлове.";

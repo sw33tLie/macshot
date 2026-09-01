@@ -680,3 +680,21 @@
 "Selection is already aligned" = "Виділення вже вирівняно";
 "Space to move. Release to annotate and edit" = "Утримуйте Пробіл, щоб перемістити. Відпустіть, щоб додати анотацію та редагувати";
 "Space to move. Release to finish" = "Утримуйте Пробіл, щоб перемістити. Відпустіть, щоб завершити";
+
+/* Table Recognition Window */
+"Table Recognition" = "Розпізнавання таблиці";
+"Table recognition succeeded" = "Таблицю успішно розпізнано";
+"%d rows · %d columns" = "%d рядків · %d стовпців";
+"Open Excel File" = "Відкрити файл Excel";
+"Copy Excel File" = "Копіювати файл Excel";
+"Copy as TSV" = "Копіювати як TSV";
+"Save Recognized Table" = "Зберегти розпізнану таблицю";
+"Recognized Table.xlsx" = "Розпізнана таблиця.xlsx";
+"Table Recognition Failed" = "Не вдалося розпізнати таблицю";
+"No text was detected in the selected area." = "У вибраній області текст не виявлено.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "Структуру таблиці не виявлено. Виберіть таблицю, що містить принаймні два рядки та два стовпці.";
+"The recognized table is too large to create an Excel file." = "Розпізнана таблиця завелика для створення файлу Excel.";
+"Could Not Create Excel File" = "Не вдалося створити файл Excel";
+"The Excel file could not be written. Please try again." = "Не вдалося записати файл Excel. Спробуйте ще раз.";
+"Could Not Open Excel File" = "Не вдалося відкрити файл Excel";
+"No application is available to open Excel files." = "Немає програми для відкриття файлів Excel.";

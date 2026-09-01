@@ -682,3 +682,21 @@
 "Selection is already aligned" = "הבחירה כבר מיושרת";
 "Space to move. Release to annotate and edit" = "החזיקו את מקש הרווח כדי להזיז. שחררו כדי להוסיף הערות ולערוך";
 "Space to move. Release to finish" = "החזיקו את מקש הרווח כדי להזיז. שחררו כדי לסיים";
+
+/* Table Recognition Window */
+"Table Recognition" = "זיהוי טבלה";
+"Table recognition succeeded" = "הטבלה זוהתה בהצלחה";
+"%d rows · %d columns" = "%d שורות · %d עמודות";
+"Open Excel File" = "פתח קובץ Excel";
+"Copy Excel File" = "העתק קובץ Excel";
+"Copy as TSV" = "העתק כ-TSV";
+"Save Recognized Table" = "שמור את הטבלה שזוהתה";
+"Recognized Table.xlsx" = "טבלה שזוהתה.xlsx";
+"Table Recognition Failed" = "זיהוי הטבלה נכשל";
+"No text was detected in the selected area." = "לא זוהה טקסט באזור שנבחר.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "לא זוהה מבנה טבלה. יש לבחור טבלה עם לפחות שתי שורות ושתי עמודות.";
+"The recognized table is too large to create an Excel file." = "הטבלה שזוהתה גדולה מדי ליצירת קובץ Excel.";
+"Could Not Create Excel File" = "לא ניתן ליצור את קובץ ה-Excel";
+"The Excel file could not be written. Please try again." = "לא ניתן לכתוב את קובץ ה-Excel. יש לנסות שוב.";
+"Could Not Open Excel File" = "לא ניתן לפתוח את קובץ ה-Excel";
+"No application is available to open Excel files." = "אין יישום זמין לפתיחת קובצי Excel.";

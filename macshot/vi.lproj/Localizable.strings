@@ -680,3 +680,21 @@
 "Selection is already aligned" = "Vùng chọn đã được căn chỉnh";
 "Space to move. Release to annotate and edit" = "Giữ phím cách để di chuyển. Thả ra để chú thích và chỉnh sửa";
 "Space to move. Release to finish" = "Giữ phím cách để di chuyển. Thả ra để hoàn tất";
+
+/* Table Recognition Window */
+"Table Recognition" = "Nhận dạng bảng";
+"Table recognition succeeded" = "Đã nhận dạng bảng thành công";
+"%d rows · %d columns" = "%d hàng · %d cột";
+"Open Excel File" = "Mở tệp Excel";
+"Copy Excel File" = "Sao chép tệp Excel";
+"Copy as TSV" = "Sao chép dưới dạng TSV";
+"Save Recognized Table" = "Lưu bảng đã nhận dạng";
+"Recognized Table.xlsx" = "Bảng đã nhận dạng.xlsx";
+"Table Recognition Failed" = "Không thể nhận dạng bảng";
+"No text was detected in the selected area." = "Không phát hiện thấy văn bản trong vùng đã chọn.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "Không phát hiện thấy cấu trúc bảng. Hãy chọn bảng có ít nhất hai hàng và hai cột.";
+"The recognized table is too large to create an Excel file." = "Bảng đã nhận dạng quá lớn để tạo tệp Excel.";
+"Could Not Create Excel File" = "Không thể tạo tệp Excel";
+"The Excel file could not be written. Please try again." = "Không thể ghi tệp Excel. Vui lòng thử lại.";
+"Could Not Open Excel File" = "Không thể mở tệp Excel";
+"No application is available to open Excel files." = "Không có ứng dụng nào để mở tệp Excel.";

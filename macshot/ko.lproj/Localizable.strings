@@ -682,3 +682,21 @@
 "Selection is already aligned" = "선택 영역이 이미 정렬되어 있습니다";
 "Space to move. Release to annotate and edit" = "스페이스바로 이동. 놓으면 주석 및 편집";
 "Space to move. Release to finish" = "스페이스바로 이동. 놓으면 완료";
+
+/* Table Recognition Window */
+"Table Recognition" = "표 인식";
+"Table recognition succeeded" = "표를 인식했습니다";
+"%d rows · %d columns" = "%d행 · %d열";
+"Open Excel File" = "Excel 파일 열기";
+"Copy Excel File" = "Excel 파일 복사";
+"Copy as TSV" = "TSV로 복사";
+"Save Recognized Table" = "인식한 표 저장";
+"Recognized Table.xlsx" = "인식한 표.xlsx";
+"Table Recognition Failed" = "표 인식 실패";
+"No text was detected in the selected area." = "선택한 영역에서 텍스트가 감지되지 않았습니다.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "표 구조가 감지되지 않았습니다. 행과 열이 각각 두 개 이상인 표를 선택하십시오.";
+"The recognized table is too large to create an Excel file." = "인식한 표가 너무 커서 Excel 파일을 만들 수 없습니다.";
+"Could Not Create Excel File" = "Excel 파일을 만들 수 없음";
+"The Excel file could not be written. Please try again." = "Excel 파일을 쓸 수 없습니다. 다시 시도하십시오.";
+"Could Not Open Excel File" = "Excel 파일을 열 수 없음";
+"No application is available to open Excel files." = "Excel 파일을 열 수 있는 앱이 없습니다.";

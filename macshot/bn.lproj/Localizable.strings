@@ -682,3 +682,21 @@
 "Selection is already aligned" = "নির্বাচন ইতিমধ্যে সারিবদ্ধ";
 "Space to move. Release to annotate and edit" = "সরাতে স্পেস চেপে ধরুন। টীকা যোগ ও সম্পাদনা করতে ছেড়ে দিন";
 "Space to move. Release to finish" = "সরাতে স্পেস চেপে ধরুন। শেষ করতে ছেড়ে দিন";
+
+/* Table Recognition Window */
+"Table Recognition" = "টেবিল শনাক্তকরণ";
+"Table recognition succeeded" = "টেবিল সফলভাবে শনাক্ত হয়েছে";
+"%d rows · %d columns" = "%dটি সারি · %dটি কলাম";
+"Open Excel File" = "Excel ফাইল খুলুন";
+"Copy Excel File" = "Excel ফাইল কপি করুন";
+"Copy as TSV" = "TSV হিসেবে কপি করুন";
+"Save Recognized Table" = "শনাক্ত করা টেবিল সংরক্ষণ করুন";
+"Recognized Table.xlsx" = "শনাক্ত করা টেবিল.xlsx";
+"Table Recognition Failed" = "টেবিল শনাক্তকরণ ব্যর্থ";
+"No text was detected in the selected area." = "নির্বাচিত এলাকায় কোনো টেক্সট শনাক্ত হয়নি।";
+"No table structure was detected. Select a table with at least two rows and two columns." = "কোনো টেবিলের কাঠামো শনাক্ত হয়নি। কমপক্ষে দুইটি সারি ও দুইটি কলামযুক্ত একটি টেবিল নির্বাচন করুন।";
+"The recognized table is too large to create an Excel file." = "শনাক্ত করা টেবিলটি Excel ফাইল তৈরির জন্য অত্যন্ত বড়।";
+"Could Not Create Excel File" = "Excel ফাইল তৈরি করা যায়নি";
+"The Excel file could not be written. Please try again." = "Excel ফাইলটি লেখা যায়নি। আবার চেষ্টা করুন।";
+"Could Not Open Excel File" = "Excel ফাইল খোলা যায়নি";
+"No application is available to open Excel files." = "Excel ফাইল খোলার জন্য কোনো অ্যাপ্লিকেশন উপলভ্য নেই।";

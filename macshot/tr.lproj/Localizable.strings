@@ -682,3 +682,21 @@
 "Selection is already aligned" = "Seçim zaten hizalı";
 "Space to move. Release to annotate and edit" = "Taşımak için Boşluk tuşunu basılı tutun. Açıklama eklemek ve düzenlemek için bırakın";
 "Space to move. Release to finish" = "Taşımak için Boşluk tuşunu basılı tutun. Bitirmek için bırakın";
+
+/* Table Recognition Window */
+"Table Recognition" = "Tablo Tanıma";
+"Table recognition succeeded" = "Tablo başarıyla tanındı";
+"%d rows · %d columns" = "%d satır · %d sütun";
+"Open Excel File" = "Excel Dosyasını Aç";
+"Copy Excel File" = "Excel Dosyasını Kopyala";
+"Copy as TSV" = "TSV Olarak Kopyala";
+"Save Recognized Table" = "Tanınan Tabloyu Kaydet";
+"Recognized Table.xlsx" = "Tanınan Tablo.xlsx";
+"Table Recognition Failed" = "Tablo Tanıma Başarısız";
+"No text was detected in the selected area." = "Seçilen alanda metin algılanmadı.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "Tablo yapısı algılanmadı. En az iki satır ve iki sütun içeren bir tablo seçin.";
+"The recognized table is too large to create an Excel file." = "Tanınan tablo bir Excel dosyası oluşturmak için çok büyük.";
+"Could Not Create Excel File" = "Excel Dosyası Oluşturulamadı";
+"The Excel file could not be written. Please try again." = "Excel dosyası yazılamadı. Lütfen tekrar deneyin.";
+"Could Not Open Excel File" = "Excel Dosyası Açılamadı";
+"No application is available to open Excel files." = "Excel dosyalarını açabilecek bir uygulama yok.";

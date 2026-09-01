@@ -680,3 +680,21 @@
 "Selection is already aligned" = "選択範囲はすでに揃っています";
 "Space to move. Release to annotate and edit" = "スペースバーを押している間は移動できます。離すと注釈の追加と編集に戻ります";
 "Space to move. Release to finish" = "スペースバーを押している間は移動できます。離すと完了します";
+
+/* Table Recognition Window */
+"Table Recognition" = "表の認識";
+"Table recognition succeeded" = "表を認識しました";
+"%d rows · %d columns" = "%d行 · %d列";
+"Open Excel File" = "Excelファイルを開く";
+"Copy Excel File" = "Excelファイルをコピー";
+"Copy as TSV" = "TSVとしてコピー";
+"Save Recognized Table" = "認識した表を保存";
+"Recognized Table.xlsx" = "認識した表.xlsx";
+"Table Recognition Failed" = "表の認識に失敗しました";
+"No text was detected in the selected area." = "選択範囲にテキストが検出されませんでした。";
+"No table structure was detected. Select a table with at least two rows and two columns." = "表の構造が検出されませんでした。2行2列以上の表を選択してください。";
+"The recognized table is too large to create an Excel file." = "認識した表が大きすぎるため、Excelファイルを作成できません。";
+"Could Not Create Excel File" = "Excelファイルを作成できませんでした";
+"The Excel file could not be written. Please try again." = "Excelファイルを書き込めませんでした。もう一度お試しください。";
+"Could Not Open Excel File" = "Excelファイルを開けませんでした";
+"No application is available to open Excel files." = "Excelファイルを開けるアプリケーションがありません。";

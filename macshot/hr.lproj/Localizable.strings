@@ -680,3 +680,21 @@
 "Selection is already aligned" = "Odabir je već poravnat";
 "Space to move. Release to annotate and edit" = "Držite razmaknicu za pomicanje. Otpustite za dodavanje bilješki i uređivanje";
 "Space to move. Release to finish" = "Držite razmaknicu za pomicanje. Otpustite za završetak";
+
+/* Table Recognition Window */
+"Table Recognition" = "Prepoznavanje tablice";
+"Table recognition succeeded" = "Tablica je uspješno prepoznata";
+"%d rows · %d columns" = "%d redaka · %d stupaca";
+"Open Excel File" = "Otvori Excel datoteku";
+"Copy Excel File" = "Kopiraj Excel datoteku";
+"Copy as TSV" = "Kopiraj kao TSV";
+"Save Recognized Table" = "Spremi prepoznatu tablicu";
+"Recognized Table.xlsx" = "Prepoznata tablica.xlsx";
+"Table Recognition Failed" = "Prepoznavanje tablice nije uspjelo";
+"No text was detected in the selected area." = "U odabranom području nije pronađen tekst.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "Struktura tablice nije pronađena. Odaberite tablicu s najmanje dva retka i dva stupca.";
+"The recognized table is too large to create an Excel file." = "Prepoznata tablica prevelika je za izradu Excel datoteke.";
+"Could Not Create Excel File" = "Nije moguće izraditi Excel datoteku";
+"The Excel file could not be written. Please try again." = "Nije moguće zapisati Excel datoteku. Pokušajte ponovno.";
+"Could Not Open Excel File" = "Nije moguće otvoriti Excel datoteku";
+"No application is available to open Excel files." = "Nije dostupna aplikacija za otvaranje Excel datoteka.";

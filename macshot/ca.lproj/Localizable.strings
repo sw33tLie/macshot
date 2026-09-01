@@ -682,3 +682,21 @@
 "Selection is already aligned" = "La selecció ja està alineada";
 "Space to move. Release to annotate and edit" = "Mantén premuda la barra espai per moure. Deixa-la anar per anotar i editar";
 "Space to move. Release to finish" = "Mantén premuda la barra espai per moure. Deixa-la anar per acabar";
+
+/* Table Recognition Window */
+"Table Recognition" = "Reconeixement de taules";
+"Table recognition succeeded" = "La taula s'ha reconegut correctament";
+"%d rows · %d columns" = "%d files · %d columnes";
+"Open Excel File" = "Obrir el fitxer d'Excel";
+"Copy Excel File" = "Copiar el fitxer d'Excel";
+"Copy as TSV" = "Copiar com a TSV";
+"Save Recognized Table" = "Desar la taula reconeguda";
+"Recognized Table.xlsx" = "Taula reconeguda.xlsx";
+"Table Recognition Failed" = "Ha fallat el reconeixement de la taula";
+"No text was detected in the selected area." = "No s'ha detectat text a l'àrea seleccionada.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "No s'ha detectat cap estructura de taula. Seleccioneu una taula amb almenys dues files i dues columnes.";
+"The recognized table is too large to create an Excel file." = "La taula reconeguda és massa gran per crear un fitxer d'Excel.";
+"Could Not Create Excel File" = "No s'ha pogut crear el fitxer d'Excel";
+"The Excel file could not be written. Please try again." = "No s'ha pogut escriure el fitxer d'Excel. Torneu-ho a provar.";
+"Could Not Open Excel File" = "No s'ha pogut obrir el fitxer d'Excel";
+"No application is available to open Excel files." = "No hi ha cap aplicació disponible per obrir fitxers d'Excel.";

@@ -26,7 +26,11 @@ enum ClipboardBackingStore {
     }()
 
     static func writeImageData(_ data: Data) -> URL? {
-        let url = makeUniqueURL(fileExtension: "png")
+        writeFileData(data, fileExtension: "png")
+    }
+
+    static func writeFileData(_ data: Data, fileExtension: String) -> URL? {
+        let url = makeUniqueURL(fileExtension: fileExtension)
         do {
             try data.write(to: url, options: .atomic)
             return url

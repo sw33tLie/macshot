@@ -682,3 +682,21 @@
 "Selection is already aligned" = "Pilihan sudah sejajar";
 "Space to move. Release to annotate and edit" = "Space untuk alih. Lepaskan untuk anotasi dan sunting";
 "Space to move. Release to finish" = "Space untuk alih. Lepaskan untuk selesai";
+
+/* Table Recognition Window */
+"Table Recognition" = "Pengecaman Jadual";
+"Table recognition succeeded" = "Jadual berjaya dicam";
+"%d rows · %d columns" = "%d baris · %d lajur";
+"Open Excel File" = "Buka Fail Excel";
+"Copy Excel File" = "Salin Fail Excel";
+"Copy as TSV" = "Salin sebagai TSV";
+"Save Recognized Table" = "Simpan Jadual yang Dicam";
+"Recognized Table.xlsx" = "Jadual yang Dicam.xlsx";
+"Table Recognition Failed" = "Pengecaman Jadual Gagal";
+"No text was detected in the selected area." = "Tiada teks dikesan dalam kawasan yang dipilih.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "Tiada struktur jadual dikesan. Pilih jadual dengan sekurang-kurangnya dua baris dan dua lajur.";
+"The recognized table is too large to create an Excel file." = "Jadual yang dicam terlalu besar untuk mencipta fail Excel.";
+"Could Not Create Excel File" = "Fail Excel Tidak Dapat Dicipta";
+"The Excel file could not be written. Please try again." = "Fail Excel tidak dapat ditulis. Cuba lagi.";
+"Could Not Open Excel File" = "Fail Excel Tidak Dapat Dibuka";
+"No application is available to open Excel files." = "Tiada aplikasi tersedia untuk membuka fail Excel.";

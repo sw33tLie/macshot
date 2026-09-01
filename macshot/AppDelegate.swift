@@ -193,6 +193,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     private var pinControllers: [PinWindowController] = []
     private var thumbnailControllers: [FloatingThumbnailController] = []
     private var ocrController: OCRResultController?
+    private var tableRecognitionController: TableRecognitionResultController?
     private var historyMenu: NSMenu?
     private var historyOverlayController: HistoryOverlayController?
     private var isCapturing = false
@@ -2454,6 +2455,43 @@ extension AppDelegate: OverlayWindowControllerDelegate {
             ocrController = ocr
             ocr.show()
         }
+    }
+
+    func overlayDidRequestTableRecognition(
+        _ controller: OverlayWindowController,
+        result: Result<RecognizedTable, Error>
+    ) {
+        dismissOverlays(refocusPreviousApp: false)
+
+        switch result {
+        case .success(let table):
+            do {
+                let resultController = try TableRecognitionResultController(table: table)
+                tableRecognitionController?.close()
+                resultController.onClose = { [weak self, weak resultController] in
+                    if self?.tableRecognitionController === resultController {
+                        self?.tableRecognitionController = nil
+                    }
+                }
+                tableRecognitionController = resultController
+                resultController.show()
+            } catch {
+                showTableRecognitionError(error)
+            }
+
+        case .failure(let error):
+            showTableRecognitionError(error)
+        }
+    }
+
+    private func showTableRecognitionError(_ error: Error) {
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.messageText = L("Table Recognition Failed")
+        alert.informativeText = error.localizedDescription
+        alert.alertStyle = .warning
+        alert.runModal()
+        returnFocusIfNeeded()
     }
 
     func overlayDidRequestUpload(_ controller: OverlayWindowController, image: NSImage, annotationData: CaptureAnnotationData?) {

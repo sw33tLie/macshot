@@ -680,3 +680,21 @@
 "Selection is already aligned" = "Valinta on jo kohdistettu";
 "Space to move. Release to annotate and edit" = "Siirrä pitämällä välilyöntiä painettuna. Vapauta lisätäksesi merkintöjä ja muokataksesi";
 "Space to move. Release to finish" = "Siirrä pitämällä välilyöntiä painettuna. Vapauta lopettaaksesi";
+
+/* Table Recognition Window */
+"Table Recognition" = "Taulukon tunnistus";
+"Table recognition succeeded" = "Taulukko tunnistettiin onnistuneesti";
+"%d rows · %d columns" = "%d riviä · %d saraketta";
+"Open Excel File" = "Avaa Excel-tiedosto";
+"Copy Excel File" = "Kopioi Excel-tiedosto";
+"Copy as TSV" = "Kopioi TSV-muodossa";
+"Save Recognized Table" = "Tallenna tunnistettu taulukko";
+"Recognized Table.xlsx" = "Tunnistettu taulukko.xlsx";
+"Table Recognition Failed" = "Taulukon tunnistus epäonnistui";
+"No text was detected in the selected area." = "Valitulla alueella ei havaittu tekstiä.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "Taulukkorakennetta ei havaittu. Valitse taulukko, jossa on vähintään kaksi riviä ja kaksi saraketta.";
+"The recognized table is too large to create an Excel file." = "Tunnistettu taulukko on liian suuri Excel-tiedoston luomiseen.";
+"Could Not Create Excel File" = "Excel-tiedostoa ei voitu luoda";
+"The Excel file could not be written. Please try again." = "Excel-tiedostoa ei voitu kirjoittaa. Yritä uudelleen.";
+"Could Not Open Excel File" = "Excel-tiedostoa ei voitu avata";
+"No application is available to open Excel files." = "Excel-tiedostojen avaamiseen ei ole käytettävissä sovellusta.";

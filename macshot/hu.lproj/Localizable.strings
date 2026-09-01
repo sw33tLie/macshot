@@ -680,3 +680,21 @@
 "Selection is already aligned" = "A kijelölés már igazítva van";
 "Space to move. Release to annotate and edit" = "Tartsd lenyomva a szóközt a mozgatáshoz. Engedd fel a jegyzeteléshez és szerkesztéshez";
 "Space to move. Release to finish" = "Tartsd lenyomva a szóközt a mozgatáshoz. Engedd fel a befejezéshez";
+
+/* Table Recognition Window */
+"Table Recognition" = "Táblázatfelismerés";
+"Table recognition succeeded" = "A táblázat felismerése sikerült";
+"%d rows · %d columns" = "%d sor · %d oszlop";
+"Open Excel File" = "Excel-fájl megnyitása";
+"Copy Excel File" = "Excel-fájl másolása";
+"Copy as TSV" = "Másolás TSV-ként";
+"Save Recognized Table" = "Felismert táblázat mentése";
+"Recognized Table.xlsx" = "Felismert táblázat.xlsx";
+"Table Recognition Failed" = "A táblázatfelismerés sikertelen";
+"No text was detected in the selected area." = "A kijelölt területen nem található szöveg.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "Nem található táblázatszerkezet. Jelöljön ki egy legalább két sorból és két oszlopból álló táblázatot.";
+"The recognized table is too large to create an Excel file." = "A felismert táblázat túl nagy Excel-fájl létrehozásához.";
+"Could Not Create Excel File" = "Az Excel-fájl nem hozható létre";
+"The Excel file could not be written. Please try again." = "Az Excel-fájl nem írható. Próbálja újra.";
+"Could Not Open Excel File" = "Az Excel-fájl nem nyitható meg";
+"No application is available to open Excel files." = "Nem érhető el alkalmazás az Excel-fájlok megnyitásához.";

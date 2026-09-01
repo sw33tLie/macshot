@@ -680,3 +680,21 @@
 "Selection is already aligned" = "Область уже выровнена";
 "Space to move. Release to annotate and edit" = "Пробел — перемещение. Отпустите, чтобы добавить аннотации и перейти к редактированию";
 "Space to move. Release to finish" = "Пробел — перемещение. Отпустите, чтобы завершить";
+
+/* Table Recognition Window */
+"Table Recognition" = "Распознавание таблицы";
+"Table recognition succeeded" = "Таблица успешно распознана";
+"%d rows · %d columns" = "%d строк · %d столбцов";
+"Open Excel File" = "Открыть файл Excel";
+"Copy Excel File" = "Копировать файл Excel";
+"Copy as TSV" = "Копировать как TSV";
+"Save Recognized Table" = "Сохранить распознанную таблицу";
+"Recognized Table.xlsx" = "Распознанная таблица.xlsx";
+"Table Recognition Failed" = "Не удалось распознать таблицу";
+"No text was detected in the selected area." = "В выбранной области текст не обнаружен.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "Структура таблицы не обнаружена. Выберите таблицу, содержащую не менее двух строк и двух столбцов.";
+"The recognized table is too large to create an Excel file." = "Распознанная таблица слишком велика для создания файла Excel.";
+"Could Not Create Excel File" = "Не удалось создать файл Excel";
+"The Excel file could not be written. Please try again." = "Не удалось записать файл Excel. Повторите попытку.";
+"Could Not Open Excel File" = "Не удалось открыть файл Excel";
+"No application is available to open Excel files." = "Нет приложения для открытия файлов Excel.";

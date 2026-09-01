@@ -406,6 +406,24 @@
 "Translation" = "翻譯";
 "(No text detected in the selected area)" = "（在選取區域中未偵測到文字）";
 
+/* Table Recognition Window */
+"Table Recognition" = "表格辨識";
+"Table recognition succeeded" = "表格辨識成功";
+"%d rows · %d columns" = "%d 列 · %d 欄";
+"Open Excel File" = "開啟 Excel 檔案";
+"Copy Excel File" = "拷貝 Excel 檔案";
+"Copy as TSV" = "拷貝為 Tab 分隔表格";
+"Save Recognized Table" = "儲存辨識的表格";
+"Recognized Table.xlsx" = "辨識的表格.xlsx";
+"Table Recognition Failed" = "表格辨識失敗";
+"No text was detected in the selected area." = "在所選區域中未偵測到文字。";
+"No table structure was detected. Select a table with at least two rows and two columns." = "未偵測到表格結構。請選取至少包含兩列兩欄的表格。";
+"The recognized table is too large to create an Excel file." = "辨識的表格過大，無法建立 Excel 檔案。";
+"Could Not Create Excel File" = "無法建立 Excel 檔案";
+"The Excel file could not be written. Please try again." = "無法寫入 Excel 檔案，請再試一次。";
+"Could Not Open Excel File" = "無法開啟 Excel 檔案";
+"No application is available to open Excel files." = "沒有可用來開啟 Excel 檔案的應用程式。";
+
 /* Upload Toast */
 "URL copied to the clipboard" = "URL 已拷貝至剪貼簿";
 "Uploading... %d%%" = "上傳中⋯ %d%%";
