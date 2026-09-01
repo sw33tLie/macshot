@@ -19,6 +19,7 @@ final class S3Uploader {
         let secretAccessKey: String
         let publicURLBase: String // e.g. "https://cdn.example.com" — used for the final link
         let pathPrefix: String    // e.g. "screenshots/" — optional prefix within bucket
+        let publicRead: Bool      // send `x-amz-acl: public-read` so the object is world-readable
 
         var isValid: Bool {
             !endpoint.isEmpty && !bucket.isEmpty && !accessKeyID.isEmpty && !secretAccessKey.isEmpty
@@ -34,7 +35,8 @@ final class S3Uploader {
             accessKeyID: ud.string(forKey: "s3AccessKeyID") ?? "",
             secretAccessKey: ud.string(forKey: "s3SecretAccessKey") ?? "",
             publicURLBase: ud.string(forKey: "s3PublicURLBase") ?? "",
-            pathPrefix: ud.string(forKey: "s3PathPrefix") ?? ""
+            pathPrefix: ud.string(forKey: "s3PathPrefix") ?? "",
+            publicRead: ud.bool(forKey: "s3PublicRead")
         )
     }
 
@@ -114,6 +116,12 @@ final class S3Uploader {
         request.httpMethod = "PUT"
         request.setValue(contentType, forHTTPHeaderField: "Content-Type")
         request.setValue("\(host)\(port)", forHTTPHeaderField: "Host")
+        // Providers that honour object ACLs (AWS S3, DigitalOcean Spaces, MinIO, Backblaze B2)
+        // store objects privately by default, so the public link 403s. Opt-in because R2 has
+        // no ACLs and rejects the header outright.
+        if cfg.publicRead {
+            request.setValue("public-read", forHTTPHeaderField: "x-amz-acl")
+        }
 
         // Sign the request
         let now = Date()
@@ -202,8 +210,13 @@ final class S3Uploader {
             .joined(separator: "/")
         let canonicalQueryString = url.query ?? ""
 
-        // Signed headers (sorted)
-        let signedHeaderNames = ["content-type", "host", "x-amz-content-sha256", "x-amz-date"]
+        // Signed headers (sorted). x-amz-acl is only present when the user opted into
+        // public-read; sending it unsigned would fail the signature check.
+        var signedHeaderNames = ["content-type", "host", "x-amz-content-sha256", "x-amz-date"]
+        if request.value(forHTTPHeaderField: "x-amz-acl") != nil {
+            signedHeaderNames.append("x-amz-acl")
+            signedHeaderNames.sort()
+        }
         let signedHeadersString = signedHeaderNames.joined(separator: ";")
 
         var canonicalHeaders = ""
