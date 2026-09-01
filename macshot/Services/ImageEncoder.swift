@@ -29,6 +29,26 @@ enum ImageEncoder {
             case .avif: return "AVIF"
             }
         }
+
+        nonisolated var fileExtension: String {
+            switch self {
+            case .png: return "png"
+            case .jpeg: return "jpg"
+            case .heic: return "heic"
+            case .webp: return "webp"
+            case .avif: return "avif"
+            }
+        }
+
+        nonisolated var utType: UTType {
+            switch self {
+            case .png: return .png
+            case .jpeg: return .jpeg
+            case .heic: return .heic
+            case .webp: return .webP
+            case .avif: return UTType("public.avif") ?? .image
+            }
+        }
     }
 
     static var format: Format {
@@ -54,23 +74,11 @@ enum ImageEncoder {
     }
 
     static var fileExtension: String {
-        switch format {
-        case .png: return "png"
-        case .jpeg: return "jpg"
-        case .heic: return "heic"
-        case .webp: return "webp"
-        case .avif: return "avif"
-        }
+        format.fileExtension
     }
 
     static var utType: UTType {
-        switch format {
-        case .png: return .png
-        case .jpeg: return .jpeg
-        case .heic: return .heic
-        case .webp: return .webP
-        case .avif: return UTType("public.avif") ?? .image
-        }
+        format.utType
     }
 
     nonisolated static var availableFormats: [Format] {
@@ -97,7 +105,7 @@ enum ImageEncoder {
     /// This is the single conversion point — all encode paths go through here.
     /// Uses cgImage(forProposedRect:) instead of tiffRepresentation to preserve
     /// exact pixel data regardless of the current display's backing scale factor.
-    private static func makeBitmap(_ image: NSImage) -> NSBitmapImageRep? {
+    private static func makeBitmap(_ image: NSImage, downscaleRetina: Bool) -> NSBitmapImageRep? {
         guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
             // Fallback for images without a CGImage backing (e.g. PDF/EPS vectors)
             guard let tiffData = image.tiffRepresentation,
@@ -137,8 +145,15 @@ enum ImageEncoder {
 
     /// Encode an NSImage to Data in the configured format.
     static func encode(_ image: NSImage) -> Data? {
-        guard let bitmap = makeBitmap(image) else { return nil }
+        let selectedFormat = format
+        let selectedQuality = quality
+        let shouldDownscale = downscaleRetina
+        guard let bitmap = makeBitmap(image, downscaleRetina: shouldDownscale) else { return nil }
 
+        return encode(bitmap, as: selectedFormat, quality: selectedQuality)
+    }
+
+    private static func encode(_ bitmap: NSBitmapImageRep, as format: Format, quality: CGFloat) -> Data? {
         switch format {
         case .png:
             return encodePNG(bitmap: bitmap)
@@ -224,20 +239,25 @@ enum ImageEncoder {
     private static let clipboardGenerationLock = NSLock()
     private static var clipboardGeneration = 0
 
-    /// Copy image to pasteboard as PNG.
-    /// Explicitly sets PNG data so receiving apps (browsers, editors) get
-    /// a lossless PNG instead of the TIFF that NSImage.writeObjects provides.
+    /// Copy image to pasteboard as PNG by default, or in the configured format
+    /// when opted in. Configured-format failures fall back to PNG compatibility.
     /// Also writes a retained backing file so Finder paste works and clipboard
     /// history tools do not keep references to deleted `/tmp` files.
     static func copyToClipboard(_ image: NSImage, sourceFileURL: URL? = nil) {
         let pasteboard = NSPasteboard.general
         let generation = beginClipboardCopy()
+        let usesConfiguredFormat = UserDefaults.standard.bool(forKey: "clipboardUsesImageFormat")
+        let selectedFormat = usesConfiguredFormat ? format : .png
+        let selectedQuality = quality
+        let shouldDownscale = downscaleRetina
 
         DispatchQueue.global(qos: .userInitiated).async {
-            let validSourceURL = reusableSourceURL(sourceFileURL)
-            guard let bitmap = makeBitmap(image),
-                  let pngData = bitmap.representation(using: .png, properties: [:]) else {
-                if let validSourceURL {
+            guard let bitmap = makeBitmap(image, downscaleRetina: shouldDownscale) else {
+                if let validSourceURL = reusableSourceURL(
+                    sourceFileURL,
+                    format: selectedFormat,
+                    downscaleRetina: shouldDownscale
+                ) {
                     DispatchQueue.main.async {
                         guard isCurrentClipboardCopy(generation) else { return }
                         pasteboard.clearContents()
@@ -247,15 +267,35 @@ enum ImageEncoder {
                 return
             }
 
-            let backingURL = validSourceURL ?? ClipboardBackingStore.writeImageData(pngData)
-            let tiffData = bitmap.representation(using: .tiff, properties: [:])
+            let output: (data: Data, format: Format, includeTIFF: Bool)
+            if usesConfiguredFormat,
+               let configuredData = encode(bitmap, as: selectedFormat, quality: selectedQuality) {
+                output = (configuredData, selectedFormat, false)
+            } else {
+                guard let pngData = bitmap.representation(using: .png, properties: [:]) else { return }
+                output = (pngData, .png, true)
+            }
+
+            let validSourceURL = reusableSourceURL(
+                sourceFileURL,
+                format: output.format,
+                downscaleRetina: shouldDownscale
+            )
+            let backingURL = validSourceURL ?? ClipboardBackingStore.writeImageData(
+                output.data,
+                fileExtension: output.format.fileExtension
+            )
+            let tiffData = output.includeTIFF
+                ? bitmap.representation(using: .tiff, properties: [:])
+                : nil
 
             DispatchQueue.main.async {
                 guard isCurrentClipboardCopy(generation) else { return }
                 writeImagePasteboard(
                     pasteboard,
                     backingURL: backingURL,
-                    pngData: pngData,
+                    imageData: output.data,
+                    imageType: NSPasteboard.PasteboardType(output.format.utType.identifier),
                     tiffData: tiffData
                 )
             }
@@ -275,10 +315,14 @@ enum ImageEncoder {
         return generation == clipboardGeneration
     }
 
-    private static func reusableSourceURL(_ url: URL?) -> URL? {
+    private static func reusableSourceURL(
+        _ url: URL?,
+        format: Format,
+        downscaleRetina: Bool
+    ) -> URL? {
         guard let url else { return nil }
         guard !downscaleRetina else { return nil }
-        guard url.pathExtension.lowercased() == "png" else { return nil }
+        guard url.pathExtension.lowercased() == format.fileExtension else { return nil }
         guard FileManager.default.fileExists(atPath: url.path) else { return nil }
         return url
     }
@@ -286,30 +330,31 @@ enum ImageEncoder {
     private static func writeImagePasteboard(
         _ pasteboard: NSPasteboard,
         backingURL: URL?,
-        pngData: Data,
+        imageData: Data,
+        imageType: NSPasteboard.PasteboardType,
         tiffData: Data?
     ) {
         pasteboard.clearContents()
 
         if let backingURL, pasteboard.writeObjects([backingURL as NSURL]) {
-            var extraTypes: [NSPasteboard.PasteboardType] = [.png]
+            var extraTypes: [NSPasteboard.PasteboardType] = [imageType]
             if tiffData != nil {
                 extraTypes.append(.tiff)
             }
             pasteboard.addTypes(extraTypes, owner: nil)
-            pasteboard.setData(pngData, forType: .png)
+            pasteboard.setData(imageData, forType: imageType)
             if let tiffData {
                 pasteboard.setData(tiffData, forType: .tiff)
             }
             return
         }
 
-        var types: [NSPasteboard.PasteboardType] = [.png]
+        var types: [NSPasteboard.PasteboardType] = [imageType]
         if tiffData != nil {
             types.append(.tiff)
         }
         pasteboard.declareTypes(types, owner: nil)
-        pasteboard.setData(pngData, forType: .png)
+        pasteboard.setData(imageData, forType: imageType)
         if let tiffData {
             pasteboard.setData(tiffData, forType: .tiff)
         }

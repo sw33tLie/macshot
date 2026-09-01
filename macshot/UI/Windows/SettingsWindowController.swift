@@ -101,6 +101,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var quickModePopup: NSPopUpButton!
     private var quickCaptureOpenEditorCheckbox: NSButton!
     private var imageFormatPopup: NSPopUpButton!
+    private var clipboardUsesImageFormatCheckbox: NSButton!
     private var qualitySlider: NSSlider!
     private var qualityLabel: NSTextField!
     private var qualityRowLabel: NSTextField!
@@ -916,6 +917,14 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         imageFormatPopup.action = #selector(imageFormatChanged(_:))
 
         stack.addArrangedSubview(labeledRow(L("Image format:"), controls: [imageFormatPopup]))
+        stack.setCustomSpacing(2, after: stack.arrangedSubviews.last!)
+
+        clipboardUsesImageFormatCheckbox = NSButton(
+            checkboxWithTitle: L("Use image format for clipboard copies"),
+            target: self,
+            action: #selector(clipboardUsesImageFormatChanged(_:))
+        )
+        stack.addArrangedSubview(indented(clipboardUsesImageFormatCheckbox))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         // Quality (applies to lossy formats: JPEG, HEIC, WebP, AVIF)
@@ -2609,6 +2618,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         quickCaptureOpenEditorCheckbox.state = UserDefaults.standard.bool(forKey: "quickCaptureOpenEditor") ? .on : .off
 
         selectImageFormat(ImageEncoder.format)
+        clipboardUsesImageFormatCheckbox.state = UserDefaults.standard.bool(forKey: "clipboardUsesImageFormat") ? .on : .off
 
         let quality = Int(ImageEncoder.quality * 100)
         qualitySlider.integerValue = quality
@@ -2770,6 +2780,9 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         else { return }
         UserDefaults.standard.set(raw, forKey: "imageFormat")
         updateQualityVisibility()
+    }
+    @objc private func clipboardUsesImageFormatChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: "clipboardUsesImageFormat")
     }
     @objc private func qualityChanged(_ sender: NSSlider) {
         qualityLabel.stringValue = String(format: L("%d%%"), sender.integerValue)
