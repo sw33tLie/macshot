@@ -83,6 +83,11 @@ protocol OverlayWindowControllerDelegate: AnyObject {
     func overlayDidFinishRemoteResize(_ controller: OverlayWindowController, globalRect: NSRect)
     func overlayCrossScreenImage(_ controller: OverlayWindowController) -> NSImage?
     func overlayDidChangeWindowSnapState(_ controller: OverlayWindowController)
+    func overlayDidRequestRestoreLastSelection(_ controller: OverlayWindowController)
+}
+
+extension OverlayWindowControllerDelegate {
+    func overlayDidRequestRestoreLastSelection(_ controller: OverlayWindowController) {}
 }
 
 /// Manages one fullscreen overlay per screen.
@@ -526,6 +531,10 @@ class OverlayWindowController {
 // MARK: - OverlayViewDelegate
 
 extension OverlayWindowController: OverlayViewDelegate {
+    func overlayViewDidRequestRestoreLastSelection() {
+        overlayDelegate?.overlayDidRequestRestoreLastSelection(self)
+    }
+
     func overlayViewDidFinishSelection(_ rect: NSRect) {
         // No-op: window is already key (.nonactivatingPanel + makeKeyAndOrderFront).
     }

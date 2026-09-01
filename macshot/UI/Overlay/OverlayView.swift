@@ -33,6 +33,11 @@ protocol OverlayViewDelegate: AnyObject {
     func overlayViewDidChangeWindowSnapState()
     func overlayViewRemoteSelectionDidFinish(_ rect: NSRect)
     func overlayViewDidRequestAddCapture()
+    func overlayViewDidRequestRestoreLastSelection()
+}
+
+extension OverlayViewDelegate {
+    func overlayViewDidRequestRestoreLastSelection() {}
 }
 
 /// An entry in the undo/redo history.
@@ -9064,6 +9069,15 @@ class OverlayView: NSView {
                 overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
                 needsDisplay = true
             }
+            return
+        }
+
+        // R restores the previous capture region while the overlay is still
+        // waiting for a selection. Once selected, R keeps its normal Rectangle
+        // tool shortcut behavior.
+        if state == .idle, !isEditorMode, textEditView == nil,
+           KeyboardShortcutMatcher.matches(event, character: "r", modifiers: []) {
+            overlayDelegate?.overlayViewDidRequestRestoreLastSelection()
             return
         }
 
