@@ -165,6 +165,7 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "윈도우 클릭  ·  드래그하여 영역 선택  ·  F 전체 화면";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "요소 클릭  ·  드래그하여 영역 선택  ·  F 전체 화면";
 "Drag to select  ·  Click for full screen" = "드래그하여 선택  ·  클릭하여 전체 화면";
 "Release to annotate and edit" = "놓으면 주석 및 편집";
 "Release to finish" = "놓으면 완료";
@@ -172,9 +173,13 @@
 "Hold Space to move. Release to finish" = "스페이스바를 누른 채로 이동. 놓으면 완료";
 "Space" = "스페이스";
 "Window snap: " = "윈도우 스냅: ";
+"Snap mode: " = "스냅 모드: ";
 "ON" = "켜짐";
 "OFF" = "꺼짐";
+"WINDOW" = "창";
+"ELEMENT" = "요소";
 "  (Tab to toggle)" = "  (Tab으로 전환)";
+"  (Tab to switch)" = "  (Tab으로 전환)";
 "Right-click to copy" = "우클릭하여 복사";
 "Copied %@" = "%@ 복사됨";
 "Set color %@" = "색상 %@ 설정됨";
@@ -208,6 +213,8 @@
 "Launch at login" = "로그인 시 실행";
 "Show snap alignment guides" = "스냅 정렬 가이드 표시";
 "Snap selection edges to image boundaries" = "선택 영역 가장자리를 이미지 경계에 스냅";
+"Enhance browser and Electron element snapping" = "브라우저 및 Electron 요소 스냅 향상";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "요소 모드에서 대상 앱의 접근성 트리를 구축합니다. 브라우저 또는 Electron 앱이 느려지거나 입력 문제가 있는 경우 비활성화하세요.";
 "Capture mouse cursor in screenshot" = "스크린샷에 마우스 커서 포함";
 "Double-click selection to copy" = "선택 영역 더블 클릭으로 복사";
 "Hide capture instructions" = "캡처 안내 숨기기";

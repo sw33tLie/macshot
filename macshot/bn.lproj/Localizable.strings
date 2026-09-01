@@ -177,6 +177,13 @@
 "ON" = "চালু";
 "OFF" = "বন্ধ";
 "  (Tab to toggle)" = "  (Tab টগল করতে)";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "একটি উপাদানে ক্লিক করুন  ·  কাস্টম এরিয়ার জন্য টানুন  ·  পূর্ণ স্ক্রিনের জন্য F";
+"Snap mode: " = "স্ন্যাপ মোড: ";
+"WINDOW" = "উইন্ডো";
+"ELEMENT" = "উপাদান";
+"  (Tab to switch)" = "  (Tab স্যুইচ করতে)";
+"Enhance browser and Electron element snapping" = "ব্রাউজার এবং ইলেক্ট্রন উপাদান স্ন্যাপিং বর্ধিত করুন";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "এলিমেন্ট মোডে টার্গেট অ্যাপের অ্যাক্সেসিবিলিটি ট্রি তৈরি করে। একটি ব্রাউজার বা ইলেক্ট্রন অ্যাপ ধীর হয়ে গেলে বা ইনপুট সমস্যা হলে এটি অক্ষম করুন।";
 "Right-click to copy" = "কপি করতে ডান-ক্লিক করুন";
 "Copied %@" = "%@ কপি হয়েছে";
 "Set color %@" = "রং সেট করুন %@";

@@ -171,6 +171,7 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Nhấp vào cửa sổ  ·  Kéo để chọn vùng  ·  F để toàn màn hình";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Nhấp vào phần tử  ·  Kéo để chọn vùng  ·  F để toàn màn hình";
 "Drag to select  ·  Click for full screen" = "Kéo để chọn  ·  Nhấp để toàn màn hình";
 "Release to annotate and edit" = "Thả chuột để chú thích và chỉnh sửa";
 "Release to finish" = "Thả chuột để hoàn tất";
@@ -178,9 +179,13 @@
 "Hold Space to move. Release to finish" = "Giữ Space để di chuyển. Thả chuột để hoàn tất";
 "Space" = "Space";
 "Window snap: " = "Bắt cửa sổ: ";
+"Snap mode: " = "Chế độ bắt: ";
 "ON" = "BẬT";
 "OFF" = "TẮT";
+"WINDOW" = "CỬA SỔ";
+"ELEMENT" = "PHẦN TỬ";
 "  (Tab to toggle)" = "  (Tab để chuyển)";
+"  (Tab to switch)" = "  (Tab để chuyển đổi)";
 "Right-click to copy" = "Nhấp chuột phải để sao chép";
 "Copied %@" = "Đã sao chép %@";
 "Set color %@" = "Đặt màu %@";
@@ -225,6 +230,8 @@
 "Launch at login" = "Khởi chạy khi đăng nhập";
 "Show snap alignment guides" = "Hiển thị đường căn chỉnh bắt dính";
 "Snap selection edges to image boundaries" = "Bắt dính cạnh vùng chọn vào ranh giới ảnh";
+"Enhance browser and Electron element snapping" = "Nâng cao bắt dính phần tử trình duyệt và Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Xây dựng cây khả năng truy cập của ứng dụng đích trong Chế độ phần tử. Tắt tính năng này nếu trình duyệt hoặc ứng dụng Electron trở nên chậm hoặc gặp sự cố nhập liệu.";
 "Capture mouse cursor in screenshot" = "Chụp con trỏ chuột trong ảnh";
 "Double-click selection to copy" = "Nhấp đúp vào vùng chọn để sao chép";
 "Hide capture instructions" = "Ẩn hướng dẫn chụp màn hình";

@@ -165,6 +165,7 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "点按窗口  ·  拖拽自定义区域  ·  F 全屏";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "点按元素  ·  拖拽自定义区域  ·  F 全屏";
 "Drag to select  ·  Click for full screen" = "拖拽选择  ·  点按全屏捕获";
 "Release to annotate and edit" = "松开以标注和编辑";
 "Release to finish" = "松开以完成";
@@ -172,9 +173,13 @@
 "Hold Space to move. Release to finish" = "按住空格键移动。松开以完成";
 "Space" = "空格";
 "Window snap: " = "窗口吸附: ";
+"Snap mode: " = "吸附模式: ";
 "ON" = "开";
 "OFF" = "关";
+"WINDOW" = "窗口";
+"ELEMENT" = "元素";
 "  (Tab to toggle)" = "  (Tab 切换)";
+"  (Tab to switch)" = "  (Tab 切换)";
 "Right-click to copy" = "右键点按拷贝";
 "Copied %@" = "已拷贝 %@";
 "Set color %@" = "设置颜色 %@";
@@ -208,6 +213,8 @@
 "Launch at login" = "登录时启动";
 "Show snap alignment guides" = "显示对齐辅助线";
 "Snap selection edges to image boundaries" = "将选区边缘吸附到图像边界";
+"Enhance browser and Electron element snapping" = "增强浏览器和 Electron 元素吸附";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "在元素模式下构建目标应用的辅助功能树。如果浏览器或 Electron 应用变慢或出现输入问题，请关闭此选项。";
 "Capture mouse cursor in screenshot" = "在截图中捕获鼠标指针";
 "Double-click selection to copy" = "双击选区以复制";
 "Hide capture instructions" = "隐藏截图操作提示";

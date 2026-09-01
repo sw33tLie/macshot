@@ -178,6 +178,13 @@
 "ON" = "இயக்கு";
 "OFF" = "நிறுத்து";
 "  (Tab to toggle)" = "  (மாற்ற Tab)";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "ஒரு உறுப்பொருளைக் கிளிக் செய்  ·  தனிப்பயன் பகுதிக்கு இழு  ·  முழுத்திரைக்கு F";
+"Snap mode: " = "ஒட்டு முறை: ";
+"WINDOW" = "சாளரம்";
+"ELEMENT" = "உறுப்பொருள்";
+"  (Tab to switch)" = "  (மாற்ற Tab)";
+"Enhance browser and Electron element snapping" = "உலாவி மற்றும் எலக்ட்ரான் உறுப்பொருள் ஒட்டுதலை மேம்படுத்து";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "உறுப்பொருள் பயன்முறையில் இலக்கு செயலியின் அணுகல்தன்மை மரத்தை உருவாக்குகிறது. உலாவி அல்லது எலக்ட்ரான் செயலி மெதுவாகும் அல்லது உள்ளீட்டுச் சிக்கல்கள் இருந்தால் இதை முடக்கவும்.";
 "Right-click to copy" = "நகலெடுக்க வலது கிளிக் செய்";
 "Copied %@" = "%@ நகலெடுக்கப்பட்டது";
 "Set color %@" = "நிறம் %@ அமைக்கப்பட்டது";

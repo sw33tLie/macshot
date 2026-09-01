@@ -30,7 +30,7 @@ protocol OverlayViewDelegate: AnyObject {
     func overlayViewDidRequestInputMonitoringPermission()
     func overlayViewDidBeginSelection()
     func overlayViewRemoteSelectionDidChange(_ rect: NSRect)
-    func overlayViewDidChangeWindowSnapState()
+    func overlayViewDidChangeSnapMode()
     func overlayViewRemoteSelectionDidFinish(_ rect: NSRect)
     func overlayViewDidRequestAddCapture()
 }
@@ -120,8 +120,8 @@ class OverlayView: NSView {
             if screenshotImage != nil && windowSnapCooldown {
                 windowSnapCooldown = false
                 if window?.isVisible == true,
-                   state == .idle && windowSnapEnabled && !windowSnapQueryInFlight {
-                    queryWindowSnap(at: NSEvent.mouseLocation)
+                   state == .idle && snapMode != .off && !snapQueryInFlight {
+                    querySnapTarget(at: NSEvent.mouseLocation)
                 }
             }
             // Build (or invalidate) the boundary-snap edge index off the main thread.
@@ -889,10 +889,21 @@ class OverlayView: NSView {
         }
     }
 
-    // Window snapping
-    var windowSnapEnabled: Bool {
-        get { UserDefaults.standard.object(forKey: "windowSnapEnabled") as? Bool ?? true }
-        set { UserDefaults.standard.set(newValue, forKey: "windowSnapEnabled") }
+    // Capture-target snapping. Preserve the old Boolean preference as a
+    // migration fallback for existing users.
+    var snapMode: SnapMode {
+        get {
+            let defaults = UserDefaults.standard
+            if defaults.object(forKey: "captureSnapMode") != nil,
+               let mode = SnapMode(rawValue: defaults.integer(forKey: "captureSnapMode")) {
+                return mode
+            }
+            return (defaults.object(forKey: "windowSnapEnabled") as? Bool ?? true) ? .window : .off
+        }
+        set {
+            UserDefaults.standard.set(newValue.rawValue, forKey: "captureSnapMode")
+            UserDefaults.standard.set(newValue != .off, forKey: "windowSnapEnabled")
+        }
     }
 
     // Boundary snapping — snap the selection's dragged edges to strong color
@@ -910,8 +921,8 @@ class OverlayView: NSView {
     /// line feedback. nil when not snapping that axis.
     private var boundarySnapGuideX: CGFloat?
     private var boundarySnapGuideY: CGFloat?
-    var hoveredWindowRect: NSRect? = nil
-    var hoveredWindowID: CGWindowID? = nil
+    var hoveredSnapRect: NSRect? = nil
+    var hoveredSnapWindowID: CGWindowID? = nil
     private var windowSnapCooldown: Bool = true  // true until overlay has rendered
     /// True when the current selection was made via window snap (click without drag).
     /// Cleared when the user manually resizes the selection.
@@ -948,38 +959,90 @@ class OverlayView: NSView {
     var snappedWindowID: CGWindowID? = nil
     /// Independently captured window image (with transparent corners) for beautify snap mode.
     var snappedWindowImage: NSImage? = nil
-    private var windowSnapQueryInFlight: Bool = false
+    private var snapQueryInFlight: Bool = false
+    private var pendingSnapQueryPoint: NSPoint?
+    private var browserAccessibilityRetryWorkItems: [DispatchWorkItem] = []
 
-    /// Perform a window snap query at the given screen point (AppKit screen coordinates).
-    private func queryWindowSnap(at screenPoint: NSPoint) {
-        guard !windowSnapQueryInFlight,
-            state == .idle && windowSnapEnabled,
+    /// Find the window or accessibility element under the given AppKit screen point.
+    private func querySnapTarget(at screenPoint: NSPoint) {
+        let requestedMode = snapMode
+        guard state == .idle && requestedMode != .off,
             !(remoteSelectionRect.width >= 1 && remoteSelectionRect.height >= 1),
             let viewWindow = window
         else { return }
+        if snapQueryInFlight {
+            pendingSnapQueryPoint = screenPoint
+            return
+        }
         let overlayWindowNumber = viewWindow.windowNumber
         let windowOrigin = viewWindow.frame.origin
         let viewBounds = bounds
         let screenH = NSScreen.screens.first?.frame.height ?? NSScreen.main?.frame.height ?? 0
-        windowSnapQueryInFlight = true
+        let accessibilitySessionToken = requestedMode == .element
+            ? Self.currentBrowserAccessibilitySessionToken()
+            : 0
+        snapQueryInFlight = true
         DispatchQueue.global(qos: .userInteractive).async { [weak self] in
-            let result = Self.windowRectOnBackground(
+            let windowResult = Self.windowRectOnBackground(
                 screenPoint: screenPoint,
                 overlayWindowNumber: overlayWindowNumber,
                 windowOrigin: windowOrigin,
                 viewBounds: viewBounds,
                 screenH: screenH
             )
+            let result: WindowSnapResult?
+            var didPrepareBrowserAccessibility = false
+            if requestedMode == .element, let windowResult {
+                let elementResult = Self.elementSnapResult(
+                    screenPoint: screenPoint,
+                    windowResult: windowResult,
+                    windowOrigin: windowOrigin,
+                    viewBounds: viewBounds,
+                    screenH: screenH,
+                    accessibilitySessionToken: accessibilitySessionToken)
+                result = elementResult.result
+                didPrepareBrowserAccessibility = elementResult.didPrepareBrowserAccessibility
+            } else {
+                result = windowResult
+            }
             DispatchQueue.main.async {
                 guard let self = self else { return }
-                self.windowSnapQueryInFlight = false
-                let newRect = result?.rect
-                if newRect != self.hoveredWindowRect {
-                    self.hoveredWindowRect = newRect
-                    self.hoveredWindowID = result?.windowID
-                    self.needsDisplay = true
+                self.snapQueryInFlight = false
+                if self.snapMode == requestedMode {
+                    let newRect = result?.rect
+                    let newWindowID = result?.windowID
+                    if newRect != self.hoveredSnapRect || newWindowID != self.hoveredSnapWindowID {
+                        self.hoveredSnapRect = newRect
+                        self.hoveredSnapWindowID = newWindowID
+                        self.needsDisplay = true
+                    }
+                }
+                if didPrepareBrowserAccessibility {
+                    self.scheduleBrowserAccessibilityRetry()
+                }
+                if let pendingPoint = self.pendingSnapQueryPoint {
+                    self.pendingSnapQueryPoint = nil
+                    self.querySnapTarget(at: pendingPoint)
+                } else if self.snapMode != requestedMode {
+                    self.querySnapTarget(at: NSEvent.mouseLocation)
                 }
             }
+        }
+    }
+
+    private func scheduleBrowserAccessibilityRetry() {
+        for workItem in browserAccessibilityRetryWorkItems {
+            workItem.cancel()
+        }
+        browserAccessibilityRetryWorkItems = [0.1, 0.5, 2.1].map { delay in
+            let workItem = DispatchWorkItem { [weak self] in
+                guard let self, self.state == .idle, self.snapMode == .element,
+                      self.window?.isVisible == true
+                else { return }
+                self.querySnapTarget(at: NSEvent.mouseLocation)
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: workItem)
+            return workItem
         }
     }
 
@@ -1135,13 +1198,13 @@ class OverlayView: NSView {
             updateAutoMeasurePreview()
         }
 
-        // Window snap: highlight hovered window in idle state.
+        // Snap highlight for the hovered window or accessibility element.
         // CGWindowListCopyWindowInfo is expensive — run it on a background thread,
         // skipping new queries while one is already in flight.
         // Delay window snap queries briefly after overlay appears so the overlay
         // renders without competing with CGWindowListCopyWindowInfo for the window server
         if windowSnapCooldown { return }
-        if state == .idle && windowSnapEnabled && !windowSnapQueryInFlight
+        if state == .idle && snapMode != .off
             && !(remoteSelectionRect.width >= 1 && remoteSelectionRect.height >= 1)
         {
             guard
@@ -1149,7 +1212,7 @@ class OverlayView: NSView {
                     NSPoint(x: $0.frame.origin.x + point.x, y: $0.frame.origin.y + point.y)
                 })
             else { return }
-            queryWindowSnap(at: screenPoint)
+            querySnapTarget(at: screenPoint)
         }
 
         // Track cursor for loupe live preview (use canvas space for zoom correctness)
@@ -1651,8 +1714,8 @@ class OverlayView: NSView {
             }
         }
 
-        // Window snap highlight (drawn before helper text so text appears on top)
-        drawWindowSnapHighlight()
+        // Snap-target highlight (drawn before helper text so text appears on top)
+        drawSnapHighlight()
 
         // Helper text (capture instructions). Suppressed when the user has
         // enabled "Hide capture instructions" in Settings (issue #226).
@@ -2209,16 +2272,23 @@ class OverlayView: NSView {
     private static let helperDimColor = NSColor.white.withAlphaComponent(0.7)
 
     private func drawIdleHelperText() {
-        let line1 =
-            windowSnapEnabled
-            ? L("Click a window  ·  Drag for custom area  ·  F for full screen")
-            : L("Drag to select  ·  Click for full screen")
-        let snapOn = windowSnapEnabled
-        let line3prefix = L("Window snap: ")
-        let line3state = snapOn ? L("ON") : L("OFF")
-        let line3suffix = L("  (Tab to toggle)")
+        let line1: String
+        let line3state: String
+        switch snapMode {
+        case .window:
+            line1 = L("Click a window  ·  Drag for custom area  ·  F for full screen")
+            line3state = L("WINDOW")
+        case .element:
+            line1 = L("Click an element  ·  Drag for custom area  ·  F for full screen")
+            line3state = L("ELEMENT")
+        case .off:
+            line1 = L("Drag to select  ·  Click for full screen")
+            line3state = L("OFF")
+        }
+        let line3prefix = L("Snap mode: ")
+        let line3suffix = L("  (Tab to switch)")
 
-        let snapColor = snapOn ? NSColor.systemGreen : NSColor.systemOrange
+        let snapColor = snapMode == .off ? NSColor.systemOrange : NSColor.systemGreen
 
         let attrs1: [NSAttributedString.Key: Any] = [.font: Self.helperFont, .foregroundColor: NSColor.white]
         let attrs2prefix: [NSAttributedString.Key: Any] = [
@@ -6621,13 +6691,14 @@ class OverlayView: NSView {
             applyPreSelectionLockAfterSelection()
             if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode { showToolbars = true }
             overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
-        } else if windowSnapEnabled, let snapRect = hoveredWindowRect, !snapRect.isEmpty {
-            // Click (no drag) with snap on — snap to hovered window
+        } else if snapMode != .off, let snapRect = hoveredSnapRect, !snapRect.isEmpty {
+            // Click (no drag) with snap on — select the hovered target.
             selectionRect = snapRect
-            selectionIsWindowSnap = true
-            snappedWindowID = hoveredWindowID
-            // Capture the window independently for beautify (transparent corners)
-            if let wid = hoveredWindowID, let screen = window?.screen {
+            selectionIsWindowSnap = snapMode == .window
+            snappedWindowID = selectionIsWindowSnap ? hoveredSnapWindowID : nil
+            // Only whole-window snaps use the independent capture that preserves
+            // transparent corners. Element snaps are ordinary screen crops.
+            if selectionIsWindowSnap, let wid = hoveredSnapWindowID, let screen = window?.screen {
                 Task {
                     if let cgImage = await ScreenCaptureManager.captureWindow(windowID: wid, screen: screen) {
                         self.snappedWindowImage = NSImage(cgImage: cgImage,
@@ -6647,7 +6718,7 @@ class OverlayView: NSView {
             if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode { showToolbars = true }
             overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
         }
-        hoveredWindowRect = nil
+        hoveredSnapRect = nil
         // Update cursor to match the selected tool (replaces resize cursor from dragging)
         if let win = window {
             let point = convert(win.mouseLocationOutsideOfEventStream, from: nil)
@@ -6809,11 +6880,11 @@ class OverlayView: NSView {
                 showToolbars = true
             }
             overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
-        } else if windowSnapEnabled, let snapRect = hoveredWindowRect, !snapRect.isEmpty {
+        } else if snapMode != .off, let snapRect = hoveredSnapRect, !snapRect.isEmpty {
             selectionRect = snapRect
-            selectionIsWindowSnap = true
-            snappedWindowID = hoveredWindowID
-            if let wid = hoveredWindowID, let screen = window?.screen {
+            selectionIsWindowSnap = snapMode == .window
+            snappedWindowID = selectionIsWindowSnap ? hoveredSnapWindowID : nil
+            if selectionIsWindowSnap, let wid = hoveredSnapWindowID, let screen = window?.screen {
                 Task {
                     if let cgImage = await ScreenCaptureManager.captureWindow(windowID: wid, screen: screen) {
                         self.snappedWindowImage = NSImage(
@@ -6838,7 +6909,7 @@ class OverlayView: NSView {
             }
             overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
         }
-        hoveredWindowRect = nil
+        hoveredSnapRect = nil
         if let win = window {
             updateCursorForPoint(convert(win.mouseLocationOutsideOfEventStream, from: nil))
         }
@@ -9050,12 +9121,12 @@ class OverlayView: NSView {
         }
 
         // Character-based so the shortcut follows QWERTZ/AZERTY/Dvorak.
-        if state == .idle && windowSnapEnabled
+        if state == .idle && snapMode != .off
             && KeyboardShortcutMatcher.matches(event, character: "f", modifiers: [])
         {
             selectionRect = bounds
             state = .selected
-            hoveredWindowRect = nil
+            hoveredSnapRect = nil
             if autoQuickSaveMode {
                 autoQuickSaveMode = false
                 overlayDelegate?.overlayViewDidRequestQuickSave()
@@ -9151,12 +9222,21 @@ class OverlayView: NSView {
             }
         case 48:  // Tab
             if state == .idle {
-                // Toggle window snapping in idle state
-                windowSnapEnabled = !windowSnapEnabled
-                hoveredWindowRect = nil
+                // Cycle capture snapping: window -> element -> off.
+                snapMode = snapMode.next
+                hoveredSnapRect = nil
+                hoveredSnapWindowID = nil
+                if snapMode == .element && !AXIsProcessTrusted() {
+                    let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
+                    AXIsProcessTrustedWithOptions(options)
+                    showOverlayError(L("Accessibility Access Required"))
+                }
                 needsDisplay = true
                 // Notify other overlays to redraw (for multi-monitor setups)
-                overlayDelegate?.overlayViewDidChangeWindowSnapState()
+                overlayDelegate?.overlayViewDidChangeSnapMode()
+                if snapMode != .off {
+                    querySnapTarget(at: NSEvent.mouseLocation)
+                }
             }
         case 36, 76:  // Return / numpad Enter — quick capture (respects quickCaptureMode setting)
             if textEditView == nil, state == .selected {
@@ -10068,7 +10148,13 @@ class OverlayView: NSView {
         overlayErrorTimer?.invalidate()
         overlayErrorTimer = nil
         overlayErrorMessage = nil
-        hoveredWindowRect = nil
+        hoveredSnapRect = nil
+        pendingSnapQueryPoint = nil
+        for workItem in browserAccessibilityRetryWorkItems {
+            workItem.cancel()
+        }
+        browserAccessibilityRetryWorkItems.removeAll()
+        Self.resetBrowserAccessibilityPreparation()
         isRecording = false
         // Webcam setup preview (if any) — clear so a reused overlay doesn't
         // show a stale camera feed on the next session.

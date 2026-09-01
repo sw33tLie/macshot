@@ -186,6 +186,13 @@
 "ON" = "ON";
 "OFF" = "OFF";
 "  (Tab to toggle)" = "  (Tab για εναλλαγή)";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Κλικ σε στοιχείο  ·  Σύρσιμο για προσαρμοσμένη περιοχή  ·  F για πλήρη οθόνη";
+"Snap mode: " = "Λειτουργία κουμπώματος: ";
+"WINDOW" = "ΠΑΡΑΘΥΡΟ";
+"ELEMENT" = "ΣΤΟΙΧΕΙΟ";
+"  (Tab to switch)" = "  (Tab για εναλλαγή)";
+"Enhance browser and Electron element snapping" = "Βελτίωση της κούμπωσης στοιχείων σε προγράμματα περιήγησης και Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Κατασκευάζει το δέντρο προσβασιμότητας της εφαρμογής-στόχου στη λειτουργία Στοιχείο. Απενεργοποιήστε το αν ένα πρόγραμμα περιήγησης ή Electron γίνει αργό ή έχει προβλήματα εισαγωγής.";
 "Right-click to copy" = "Δεξί κλικ για αντιγραφή";
 "Copied %@" = "Αντιγράφηκε %@";
 "Set color %@" = "Ορισμός χρώματος %@";

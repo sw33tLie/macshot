@@ -172,15 +172,20 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Clique em uma janela  ·  Arraste para área personalizada  ·  F para tela cheia";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Clique em um elemento  ·  Arraste para área personalizada  ·  F para tela cheia";
 "Drag to select  ·  Click for full screen" = "Arraste para selecionar  ·  Clique para tela cheia";
 "Release to annotate and edit" = "Solte para anotar e editar";
 "Release to finish" = "Solte para concluir";
 "Hold Space to move. Release to annotate and edit" = "Segure Espaço para mover. Solte para anotar e editar";
 "Hold Space to move. Release to finish" = "Segure Espaço para mover. Solte para concluir";
 "Window snap: " = "Encaixe de janela: ";
+"Snap mode: " = "Modo de encaixe: ";
 "ON" = "LIGADO";
 "OFF" = "DESLIGADO";
+"WINDOW" = "JANELA";
+"ELEMENT" = "ELEMENTO";
 "  (Tab to toggle)" = "  (Tab para alternar)";
+"  (Tab to switch)" = "  (Tab para mudar)";
 "Right-click to copy" = "Clique com o botão direito para copiar";
 "Copied %@" = "Copiado %@";
 "Set color %@" = "Cor definida %@";
@@ -214,6 +219,8 @@
 "Launch at login" = "Abrir ao iniciar sessão";
 "Show snap alignment guides" = "Mostrar guias de alinhamento";
 "Snap selection edges to image boundaries" = "Ajustar as bordas da seleção aos limites da imagem";
+"Enhance browser and Electron element snapping" = "Aprimorar encaixe de elementos de navegador e Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Constrói a árvore de acessibilidade do app alvo no modo Elemento. Desative se um navegador ou app Electron ficar lento ou tiver problemas de entrada.";
 "Capture mouse cursor in screenshot" = "Capturar cursor do mouse na captura de tela";
 "Double-click selection to copy" = "Clique duplo na seleção para copiar";
 "Hide capture instructions" = "Ocultar instruções de captura";

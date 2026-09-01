@@ -176,6 +176,7 @@
 
 /* Overlay / Canvas */
 "Click a window  \U00B7  Drag for custom area  \U00B7  F for full screen" = "Klik p\U00E5 et vindue  \U00B7  Tr\U00E6k for tilpasset omr\U00E5de  \U00B7  F for fuld sk\U00E6rm";
+"Click an element  \U00B7  Drag for custom area  \U00B7  F for full screen" = "Klik p\U00E5 et element  \U00B7  Tr\U00E6k for tilpasset omr\U00E5de  \U00B7  F for fuld sk\U00E6rm";
 "Drag to select  \U00B7  Click for full screen" = "Tr\U00E6k for at v\U00E6lge  \U00B7  Klik for fuld sk\U00E6rm";
 "Release to annotate and edit" = "Slip for at annotere og redigere";
 "Release to finish" = "Slip for at afslutte";
@@ -183,9 +184,13 @@
 "Hold Space to move. Release to finish" = "Hold mellemrum for at flytte. Slip for at afslutte";
 "Space" = "Mellemrum";
 "Window snap: " = "Vinduesfang: ";
+"Snap mode: " = "Snapp-tilstand: ";
 "ON" = "TIL";
 "OFF" = "FRA";
+"WINDOW" = "VINDUE";
+"ELEMENT" = "ELEMENT";
 "  (Tab to toggle)" = "  (Tab for at skifte)";
+"  (Tab to switch)" = "  (Tab for at skifte)";
 "Right-click to copy" = "H\U00F8jreklik for at kopiere";
 "Copied %@" = "Kopieret %@";
 "Set color %@" = "Indstil farve %@";
@@ -222,6 +227,8 @@
 "Launch at login" = "Start ved login";
 "Show snap alignment guides" = "Vis fastg\U00F8relses-hj\U00E6lpelinjer";
 "Snap selection edges to image boundaries" = "Fastg\U00F8r markeringskanter til billedgr\U00E6nser";
+"Enhance browser and Electron element snapping" = "Forbedr browser- og Electron-elementfangst";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Opbygger m\U00E5lappens tilg\U00E6ngelighedstr\U00E6 i Element-tilstand. Deaktiv\U00E9r dette, hvis en browser- eller Electron-app bliver langsom eller har input-problemer.";
 "Capture mouse cursor in screenshot" = "Inkluder musemark\U00F8r i sk\U00E6rmbillede";
 "Double-click selection to copy" = "Dobbeltklik p\U00E5 markeringen for at kopiere";
 "Hide capture instructions" = "Skjul vejledning ved optagelse";

@@ -158,6 +158,7 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Clicca una finestra  ·  Trascina per area personalizzata  ·  F per schermo intero";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Clicca un elemento  ·  Trascina per area personalizzata  ·  F per schermo intero";
 "Drag to select  ·  Click for full screen" = "Trascina per selezionare  ·  Clicca per schermo intero";
 "Release to annotate and edit" = "Rilascia per annotare e modificare";
 "Release to finish" = "Rilascia per completare";
@@ -171,9 +172,13 @@
 "Units" = "Unità";
 "Keep ratio for next captures" = "Mantieni le proporzioni per le prossime catture";
 "Window snap: " = "Aggancio finestra: ";
+"Snap mode: " = "Modalità aggancio: ";
 "ON" = "ON";
 "OFF" = "OFF";
+"WINDOW" = "FINESTRA";
+"ELEMENT" = "ELEMENTO";
 "  (Tab to toggle)" = "  (Tab per alternare)";
+"  (Tab to switch)" = "  (Tab per cambiare)";
 "Right-click to copy" = "Clic destro per copiare";
 "Copied %@" = "Copiato %@";
 "Set color %@" = "Imposta colore %@";
@@ -207,6 +212,8 @@
 "Launch at login" = "Avvia al login";
 "Show snap alignment guides" = "Mostra guide di allineamento";
 "Snap selection edges to image boundaries" = "Allinea i bordi della selezione ai contorni dell’immagine";
+"Enhance browser and Electron element snapping" = "Migliora lo scatto degli elementi di browser ed Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Costruisce l’albero di accessibilità dell’app target in modalità Elemento. Disabilita se un browser o un’app Electron diventa lento o ha problemi di input.";
 "Capture mouse cursor in screenshot" = "Cattura il cursore del mouse nello screenshot";
 "Double-click selection to copy" = "Doppio clic sulla selezione per copiare";
 "Hide capture instructions" = "Nascondi istruzioni di cattura";

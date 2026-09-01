@@ -174,6 +174,13 @@
 "ON" = "تشغيل";
 "OFF" = "إيقاف";
 "  (Tab to toggle)" = "  (Tab للتبديل)";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "انقر على عنصر  ·  اسحب لتحديد منطقة  ·  F لملء الشاشة";
+"Snap mode: " = "وضع التقاط: ";
+"WINDOW" = "نافذة";
+"ELEMENT" = "عنصر";
+"  (Tab to switch)" = "  (Tab للتبديل)";
+"Enhance browser and Electron element snapping" = "تحسين التقاط عناصر المتصفح وتطبيقات Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "يبني شجرة إمكانية الوصول لتطبيق الهدف في وضع العنصر. قم بإيقاف تشغيله إذا أصبح المتصفح أو تطبيق Electron بطيئًا أو كانت لديه مشاكل في الإدخال.";
 "Right-click to copy" = "انقر بزر الفأرة الأيمن للنسخ";
 "Copied %@" = "تم نسخ %@";
 "Set color %@" = "تعيين اللون %@";

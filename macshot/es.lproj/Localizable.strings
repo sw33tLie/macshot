@@ -172,15 +172,20 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Clic en una ventana  ·  Arrastra para area personalizada  ·  F para pantalla completa";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Clic en un elemento  ·  Arrastra para area personalizada  ·  F para pantalla completa";
 "Drag to select  ·  Click for full screen" = "Arrastra para seleccionar  ·  Clic para pantalla completa";
 "Release to annotate and edit" = "Suelta para anotar y editar";
 "Release to finish" = "Suelta para terminar";
 "Hold Space to move. Release to annotate and edit" = "Mantén Espacio para mover. Suelta para anotar y editar";
 "Hold Space to move. Release to finish" = "Mantén Espacio para mover. Suelta para terminar";
 "Window snap: " = "Ajuste a ventana: ";
+"Snap mode: " = "Modo de ajuste: ";
 "ON" = "SI";
 "OFF" = "NO";
+"WINDOW" = "VENTANA";
+"ELEMENT" = "ELEMENTO";
 "  (Tab to toggle)" = "  (Tab para alternar)";
+"  (Tab to switch)" = "  (Tab para cambiar)";
 "Right-click to copy" = "Clic derecho para copiar";
 "Copied %@" = "Copiado %@";
 "Set color %@" = "Color establecido %@";
@@ -214,6 +219,8 @@
 "Launch at login" = "Abrir al iniciar sesion";
 "Show snap alignment guides" = "Mostrar guias de alineacion";
 "Snap selection edges to image boundaries" = "Ajustar los bordes de la selección a los límites de la imagen";
+"Enhance browser and Electron element snapping" = "Mejorar el ajuste de elementos de navegador y Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Construye el árbol de accesibilidad de la app objetivo en modo Elemento. Desactívalo si un navegador o app de Electron se vuelve lento o tiene problemas de entrada.";
 "Capture mouse cursor in screenshot" = "Capturar cursor del mouse en la captura";
 "Double-click selection to copy" = "Doble clic en la seleccion para copiar";
 "Hide capture instructions" = "Ocultar instrucciones de captura";

@@ -171,6 +171,7 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "คลิกที่หน้าต่าง  ·  ลากเพื่อเลือกพื้นที่  ·  F เพื่อเต็มจอ";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "คลิกที่องค์ประกอบ  ·  ลากเพื่อเลือกพื้นที่  ·  F เพื่อเต็มจอ";
 "Drag to select  ·  Click for full screen" = "ลากเพื่อเลือก  ·  คลิกเพื่อเต็มจอ";
 "Release to annotate and edit" = "ปล่อยเพื่อใส่คำอธิบายและแก้ไข";
 "Release to finish" = "ปล่อยเพื่อเสร็จสิ้น";
@@ -178,9 +179,13 @@
 "Hold Space to move. Release to finish" = "กด Space ค้างเพื่อย้าย ปล่อยเพื่อเสร็จสิ้น";
 "Space" = "Space";
 "Window snap: " = "จับหน้าต่าง: ";
+"Snap mode: " = "โหมดจับ: ";
 "ON" = "เปิด";
 "OFF" = "ปิด";
+"WINDOW" = "หน้าต่าง";
+"ELEMENT" = "องค์ประกอบ";
 "  (Tab to toggle)" = "  (Tab เพื่อสลับ)";
+"  (Tab to switch)" = "  (Tab เพื่อสลับ)";
 "Right-click to copy" = "คลิกขวาเพื่อคัดลอก";
 "Copied %@" = "คัดลอก %@ แล้ว";
 "Set color %@" = "ตั้งสี %@";
@@ -225,6 +230,8 @@
 "Launch at login" = "เปิดเมื่อเข้าสู่ระบบ";
 "Show snap alignment guides" = "แสดงเส้นจัดแนว";
 "Snap selection edges to image boundaries" = "ดูดขอบพื้นที่เลือกเข้ากับขอบเขตของภาพ";
+"Enhance browser and Electron element snapping" = "เพิ่มการจับองค์ประกอบของเบราว์เซอร์และ Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "สร้าง accessibility tree ของแอปเป้าหมายในโหมดองค์ประกอบ ปิดการใช้งานนี้หากเบราว์เซอร์หรือแอป Electron ทำงานช้ากว่าปกติหรือมีปัญหาในการรับข้อมูล";
 "Capture mouse cursor in screenshot" = "จับภาพเคอร์เซอร์เมาส์ในภาพหน้าจอ";
 "Double-click selection to copy" = "ดับเบิลคลิกที่พื้นที่ที่เลือกเพื่อคัดลอก";
 "Hide capture instructions" = "ซ่อนคำแนะนำการจับภาพหน้าจอ";

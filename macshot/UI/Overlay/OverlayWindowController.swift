@@ -82,7 +82,7 @@ protocol OverlayWindowControllerDelegate: AnyObject {
     func overlayDidRemoteResizeSelection(_ controller: OverlayWindowController, globalRect: NSRect)
     func overlayDidFinishRemoteResize(_ controller: OverlayWindowController, globalRect: NSRect)
     func overlayCrossScreenImage(_ controller: OverlayWindowController) -> NSImage?
-    func overlayDidChangeWindowSnapState(_ controller: OverlayWindowController)
+    func overlayDidChangeSnapMode(_ controller: OverlayWindowController)
 }
 
 /// Manages one fullscreen overlay per screen.
@@ -274,7 +274,9 @@ class OverlayWindowController {
         overlayView?.clearSelection()
     }
 
-    func triggerRedraw() {
+    func refreshSnapMode() {
+        overlayView?.hoveredSnapRect = nil
+        overlayView?.hoveredSnapWindowID = nil
         overlayView?.needsDisplay = true
     }
 
@@ -282,7 +284,7 @@ class OverlayWindowController {
         overlayView?.remoteSelectionRect = rect
         overlayView?.remoteSelectionFullRect = fullRect.width >= 1 ? fullRect : rect
         if rect.width >= 1 && rect.height >= 1 {
-            overlayView?.hoveredWindowRect = nil
+            overlayView?.hoveredSnapRect = nil
         }
         overlayView?.needsDisplay = true
     }
@@ -761,8 +763,8 @@ extension OverlayWindowController: OverlayViewDelegate {
         overlayDelegate?.overlayDidBeginSelection(self)
     }
 
-    func overlayViewDidChangeWindowSnapState() {
-        overlayDelegate?.overlayDidChangeWindowSnapState(self)
+    func overlayViewDidChangeSnapMode() {
+        overlayDelegate?.overlayDidChangeSnapMode(self)
     }
 
     func overlayViewDidRequestAddCapture() {}  // editor-only

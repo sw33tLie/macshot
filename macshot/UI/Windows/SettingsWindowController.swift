@@ -84,6 +84,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var historySizeStepper: NSStepper!
     private var snapGuidesCheckbox: NSButton!
     private var boundarySnapCheckbox: NSButton!
+    private var browserElementSnapCheckbox: NSButton!
     private var captureCursorCheckbox: NSButton!
     private var doubleClickToCopyCheckbox: NSButton!
     private var hideCaptureInstructionsCheckbox: NSButton!
@@ -772,6 +773,10 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         thumbnailCheckbox = NSButton(checkboxWithTitle: L("Show floating thumbnail after capture"), target: self, action: #selector(thumbnailChanged(_:)))
         snapGuidesCheckbox = NSButton(checkboxWithTitle: L("Show snap alignment guides"), target: self, action: #selector(snapGuidesChanged(_:)))
         boundarySnapCheckbox = NSButton(checkboxWithTitle: L("Snap selection edges to image boundaries"), target: self, action: #selector(boundarySnapChanged(_:)))
+        browserElementSnapCheckbox = NSButton(
+            checkboxWithTitle: L("Enhance browser and Electron element snapping"),
+            target: self,
+            action: #selector(browserElementSnapChanged(_:)))
         captureCursorCheckbox = NSButton(checkboxWithTitle: L("Capture mouse cursor in screenshot"), target: self, action: #selector(captureCursorChanged(_:)))
         doubleClickToCopyCheckbox = NSButton(checkboxWithTitle: L("Double-click selection to copy"), target: self, action: #selector(doubleClickToCopyChanged(_:)))
         hideCaptureInstructionsCheckbox = NSButton(checkboxWithTitle: L("Hide capture instructions"), target: self, action: #selector(hideCaptureInstructionsChanged(_:)))
@@ -845,6 +850,14 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.addArrangedSubview(indented(snapGuidesCheckbox))
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
         stack.addArrangedSubview(indented(boundarySnapCheckbox))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+
+        stack.addArrangedSubview(indented(browserElementSnapCheckbox))
+        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+        let browserElementSnapNote = NSTextField(wrappingLabelWithString: L("Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues."))
+        browserElementSnapNote.font = NSFont.systemFont(ofSize: 10)
+        browserElementSnapNote.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(indented(browserElementSnapNote))
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
         stack.addArrangedSubview(indented(captureCursorCheckbox))
@@ -2568,6 +2581,9 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         snapGuidesCheckbox.state = snapGuides ? .on : .off
         let boundarySnap = UserDefaults.standard.object(forKey: "boundarySnapEnabled") as? Bool ?? true
         boundarySnapCheckbox.state = boundarySnap ? .on : .off
+        let browserElementSnap = UserDefaults.standard.object(
+            forKey: OverlayView.browserElementSnapEnabledKey) as? Bool ?? true
+        browserElementSnapCheckbox.state = browserElementSnap ? .on : .off
         showToolShortcutsInTooltipsCheckbox.state = UserDefaults.standard.bool(forKey: "showToolShortcutsInTooltips") ? .on : .off
 
         captureCursorCheckbox.state = UserDefaults.standard.bool(forKey: "captureCursor") ? .on : .off
@@ -3011,6 +3027,11 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     }
     @objc private func boundarySnapChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "boundarySnapEnabled")
+    }
+    @objc private func browserElementSnapChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(
+            sender.state == .on,
+            forKey: OverlayView.browserElementSnapEnabledKey)
     }
     @objc private func captureCursorChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "captureCursor")

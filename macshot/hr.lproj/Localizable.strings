@@ -185,15 +185,20 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Klikni prozor  ·  Povuci za podrucje  ·  F za cijeli zaslon";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Klikni element  ·  Povuci za podrucje  ·  F za cijeli zaslon";
 "Drag to select  ·  Click for full screen" = "Povuci za odabir  ·  Klikni za cijeli zaslon";
 "Release to annotate and edit" = "Pusti za oznacavanje i uredivanje";
 "Release to finish" = "Pusti za završetak";
 "Hold Space to move. Release to annotate and edit" = "Držite Razmaknicu za pomicanje. Pustite za označavanje i uređivanje";
 "Hold Space to move. Release to finish" = "Držite Razmaknicu za pomicanje. Pustite za završetak";
 "Window snap: " = "Hvatanje prozora: ";
+"Snap mode: " = "Režim hvatanja: ";
 "ON" = "UKLJ.";
 "OFF" = "ISKLJ.";
+"WINDOW" = "PROZOR";
+"ELEMENT" = "ELEMENT";
 "  (Tab to toggle)" = "  (Tab za prebacivanje)";
+"  (Tab to switch)" = "  (Tab za prebacivanje)";
 "Space" = "Razmaknica";
 "Right-click to copy" = "Desni klik za kopiranje";
 "Copied %@" = "Kopirano %@";
@@ -228,6 +233,8 @@
 "Launch at login" = "Pokreni pri prijavi";
 "Show snap alignment guides" = "Prikazi vodilice za poravnanje";
 "Snap selection edges to image boundaries" = "Privezi rubove odabira uz granice slike";
+"Enhance browser and Electron element snapping" = "Poboljšaj hvatanje elemenata u pregledniku i Electron-u";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Izgrađuje stablo pristupačnosti ciljne aplikacije u načinu elemenata. Onemogućite ako preglednik ili Electron aplikacija postane spora ili ima problema s unosom.";
 "Capture mouse cursor in screenshot" = "Snimi kursor misa na snimci zaslona";
 "Double-click selection to copy" = "Kopiraj dvostrukim klikom na odabir";
 "Hide capture instructions" = "Sakrij upute pri snimanju";

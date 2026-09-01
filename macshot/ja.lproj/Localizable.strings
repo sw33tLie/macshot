@@ -165,6 +165,7 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "ウインドウをクリック · ドラッグで範囲選択 · F でフルスクリーン";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "要素をクリック · ドラッグで範囲選択 · F でフルスクリーン";
 "Drag to select  ·  Click for full screen" = "ドラッグで選択 · クリックでフルスクリーン";
 "Release to annotate and edit" = "離して注釈・編集";
 "Release to finish" = "離して完了";
@@ -172,9 +173,13 @@
 "Hold Space to move. Release to finish" = "スペースキー長押しで移動。離して完了";
 "Space" = "スペース";
 "Window snap: " = "ウインドウスナップ: ";
+"Snap mode: " = "スナップモード: ";
 "ON" = "オン";
 "OFF" = "オフ";
+"WINDOW" = "ウインドウ";
+"ELEMENT" = "要素";
 "  (Tab to toggle)" = "  (Tab で切替)";
+"  (Tab to switch)" = "  (Tab で切り替え)";
 "Right-click to copy" = "右クリックでコピー";
 "Copied %@" = "%@ をコピーしました";
 "Set color %@" = "カラーを %@ に設定";
@@ -208,6 +213,8 @@
 "Launch at login" = "ログイン時に起動";
 "Show snap alignment guides" = "スナップ整列ガイドを表示";
 "Snap selection edges to image boundaries" = "選択範囲の端を画像の境界にスナップ";
+"Enhance browser and Electron element snapping" = "ブラウザと Electron の要素スナップを強化";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "要素モードで対象アプリのアクセシビリティツリーを構築します。ブラウザまたは Electron アプリが動作中に遅くなる場合や入力に問題がある場合は無効にしてください。";
 "Capture mouse cursor in screenshot" = "スクリーンショットにマウスカーソルを含める";
 "Double-click selection to copy" = "選択範囲をダブルクリックでコピー";
 "Hide capture instructions" = "撮影時の操作説明を非表示";

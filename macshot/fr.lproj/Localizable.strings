@@ -172,15 +172,20 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Cliquer sur une fenêtre  ·  Glisser pour une zone  ·  F pour plein écran";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Cliquer sur un élément  ·  Glisser pour une zone  ·  F pour plein écran";
 "Drag to select  ·  Click for full screen" = "Glisser pour sélectionner  ·  Cliquer pour plein écran";
 "Release to annotate and edit" = "Relâcher pour annoter et modifier";
 "Release to finish" = "Relâcher pour terminer";
 "Hold Space to move. Release to annotate and edit" = "Maintenir Espace pour déplacer. Relâcher pour annoter et modifier";
 "Hold Space to move. Release to finish" = "Maintenir Espace pour déplacer. Relâcher pour terminer";
 "Window snap: " = "Accrochage fenêtre : ";
+"Snap mode: " = "Mode d'accrochage : ";
 "ON" = "OUI";
 "OFF" = "NON";
+"WINDOW" = "FENÊTRE";
+"ELEMENT" = "ÉLÉMENT";
 "  (Tab to toggle)" = "  (Tab pour basculer)";
+"  (Tab to switch)" = "  (Tab pour changer)";
 "Right-click to copy" = "Clic droit pour copier";
 "Aspect ratio & resolution presets" = "Préréglages de ratio et de résolution";
 "Aspect ratio" = "Ratio d'aspect";
@@ -221,6 +226,8 @@
 "Launch at login" = "Lancer au démarrage";
 "Show snap alignment guides" = "Afficher les guides d'alignement";
 "Snap selection edges to image boundaries" = "Aligner les bords de la sélection sur les limites de l'image";
+"Enhance browser and Electron element snapping" = "Améliorer l'accrochage des éléments des navigateurs et apps Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Construit l'arbre d'accessibilité de l'app cible en mode Élément. Désactivez si un navigateur ou une app Electron devient lent ou a des problèmes de saisie.";
 "Capture mouse cursor in screenshot" = "Capturer le curseur dans la capture d'écran";
 "Double-click selection to copy" = "Double-cliquer sur la sélection pour copier";
 "Hide capture instructions" = "Masquer les instructions de capture";

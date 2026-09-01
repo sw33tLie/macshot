@@ -174,6 +174,13 @@
 "ON" = "चालू";
 "OFF" = "बंद";
 "  (Tab to toggle)" = "  (टॉगल के लिए Tab)";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "किसी तत्व पर क्लिक करें  ·  कस्टम क्षेत्र के लिए खींचें  ·  पूर्ण स्क्रीन के लिए F";
+"Snap mode: " = "स्नैप मोड: ";
+"WINDOW" = "विंडो";
+"ELEMENT" = "तत्व";
+"  (Tab to switch)" = "  (स्विच करने के लिए Tab)";
+"Enhance browser and Electron element snapping" = "ब्राउज़र और इलेक्ट्रॉन तत्व स्नैपिंग को बेहतर करें";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "तत्व मोड में लक्ष्य ऐप की ऐक्सेसिबिलिटी ट्री बनाता है। यदि कोई ब्राउज़र या इलेक्ट्रॉन ऐप धीमा हो जाता है या इनपुट समस्याएं होती हैं, तो इसे अक्षम करें।";
 "Right-click to copy" = "कॉपी करने के लिए राइट-क्लिक करें";
 "Copied %@" = "%@ कॉपी किया";
 "Set color %@" = "रंग सेट किया %@";

@@ -185,15 +185,20 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Нажмите на окно  ·  Выделите область  ·  F для полного экрана";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Нажмите на элемент  ·  Выделите область  ·  F для полного экрана";
 "Drag to select  ·  Click for full screen" = "Выделите область  ·  Нажмите для полного экрана";
 "Release to annotate and edit" = "Отпустите для аннотации и редактирования";
 "Release to finish" = "Отпустите для завершения";
 "Hold Space to move. Release to annotate and edit" = "Удерживайте Пробел для перемещения. Отпустите для аннотации и редактирования";
 "Hold Space to move. Release to finish" = "Удерживайте Пробел для перемещения. Отпустите для завершения";
 "Window snap: " = "Привязка к окнам: ";
+"Snap mode: " = "Режим привязки: ";
 "ON" = "ВКЛ";
 "OFF" = "ВЫКЛ";
+"WINDOW" = "ОКНО";
+"ELEMENT" = "ЭЛЕМЕНТ";
 "  (Tab to toggle)" = "  (Tab для переключения)";
+"  (Tab to switch)" = "  (Tab для переключения)";
 "Space" = "Пробел";
 "Right-click to copy" = "Нажмите правой кнопкой, чтобы скопировать";
 "Copied %@" = "Скопировано: %@";
@@ -228,6 +233,8 @@
 "Launch at login" = "Запускать при входе в систему";
 "Show snap alignment guides" = "Показывать направляющие привязки";
 "Snap selection edges to image boundaries" = "Привязывать края выделения к границам изображения";
+"Enhance browser and Electron element snapping" = "Улучшить привязку элементов в браузере и Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Строит дерево доступности целевого приложения в режиме элементов. Отключите, если браузер или Electron-приложение начинает медленно работать или возникают проблемы с вводом.";
 "Capture mouse cursor in screenshot" = "Захватывать курсор мыши на снимке экрана";
 "Double-click selection to copy" = "Копировать двойным щелчком по выделению";
 "Hide capture instructions" = "Скрывать подсказки при захвате";

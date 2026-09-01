@@ -176,6 +176,7 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Napsauta ikkunaa  ·  Vedä valitaksesi alue  ·  F koko ruudulle";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Napsauta elementtiä  ·  Vedä valitaksesi alue  ·  F koko ruudulle";
 "Drag to select  ·  Click for full screen" = "Vedä valitaksesi  ·  Napsauta koko ruudulle";
 "Release to annotate and edit" = "Vapauta merkintoja ja muokkausta varten";
 "Release to finish" = "Vapauta lopettaaksesi";
@@ -183,9 +184,13 @@
 "Hold Space to move. Release to finish" = "Pida valilyontia siirtaaksesi. Vapauta lopettaaksesi";
 "Space" = "V\U00E4lily\U00F6nti";
 "Window snap: " = "Ikkunan tarttuminen: ";
+"Snap mode: " = "Tartuntitila: ";
 "ON" = "PAALLA";
 "OFF" = "POIS";
+"WINDOW" = "IKKUNA";
+"ELEMENT" = "ELEMENTTI";
 "  (Tab to toggle)" = "  (Tab vaihtaaksesi)";
+"  (Tab to switch)" = "  (Tab vaihtaaksesi)";
 "Right-click to copy" = "Kopioi oikealla napsautuksella";
 "Copied %@" = "Kopioitu %@";
 "Set color %@" = "Aseta vari %@";
@@ -222,6 +227,8 @@
 "Launch at login" = "Kaynnista kirjautumisen yhteydessa";
 "Show snap alignment guides" = "Nayta kohdistusoppaat";
 "Snap selection edges to image boundaries" = "Kohdista valinnan reunat kuvan rajoihin";
+"Enhance browser and Electron element snapping" = "Paranna selaimen ja Electronin elementt tartuntaa";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Rakentaa kohdeohjelman saavutettavuuspuun Element-tilassa. Poista tämä käytöstä, jos selain tai Electron-sovellus hidastuu tai sillä on input-ongelmia.";
 "Capture mouse cursor in screenshot" = "Kaappaa hiiren osoitin kuvakaappaukseen";
 "Double-click selection to copy" = "Kopioi kaksoisnapsauttamalla valintaa";
 "Hide capture instructions" = "Piilota kuvakaappausohjeet";

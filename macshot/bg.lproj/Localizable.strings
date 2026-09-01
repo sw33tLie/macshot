@@ -185,15 +185,20 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Щракнете върху прозорец  ·  Плъзнете за произволна област  ·  F за цял екран";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Щракнете върху елемент  ·  Плъзнете за произволна област  ·  F за цял екран";
 "Drag to select  ·  Click for full screen" = "Плъзнете за избиране  ·  Щракнете за цял екран";
 "Release to annotate and edit" = "Отпуснете за анотиране и редактиране";
 "Release to finish" = "Отпуснете за завършване";
 "Hold Space to move. Release to annotate and edit" = "Задръжте Интервал за преместване. Отпуснете за анотиране и редактиране";
 "Hold Space to move. Release to finish" = "Задръжте Интервал за преместване. Отпуснете за завършване";
 "Window snap: " = "Прилепване към прозорец: ";
+"Snap mode: " = "Режим на прилепване: ";
 "ON" = "ВКЛ.";
 "OFF" = "ИЗКЛ.";
+"WINDOW" = "ПРОЗОРЕЦ";
+"ELEMENT" = "ЕЛЕМЕНТ";
 "  (Tab to toggle)" = "  (Tab за превключване)";
+"  (Tab to switch)" = "  (Tab за превключване)";
 "Space" = "Интервал";
 "Right-click to copy" = "Десен бутон за копиране";
 "Copied %@" = "Копирано %@";
@@ -228,6 +233,8 @@
 "Launch at login" = "Стартиране при вход";
 "Show snap alignment guides" = "Показване на водачи за подравняване";
 "Snap selection edges to image boundaries" = "Прилепване на ръбовете на селекцията към границите на изображението";
+"Enhance browser and Electron element snapping" = "Подобряване на прилепването на елементи в браузър и Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Изгражда дървото на достъпност на целевото приложение в режим на елементи. Деактивирайте, ако браузър или Electron приложение се забави или има проблеми с въвеждането.";
 "Capture mouse cursor in screenshot" = "Заснемане на курсора в екранната снимка";
 "Double-click selection to copy" = "Копиране с двойно щракване върху селекцията";
 "Hide capture instructions" = "Скриване на указанията при заснемане";

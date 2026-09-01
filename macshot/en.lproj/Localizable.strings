@@ -177,15 +177,20 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Click a window  ·  Drag for custom area  ·  F for full screen";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Click an element  ·  Drag for custom area  ·  F for full screen";
 "Drag to select  ·  Click for full screen" = "Drag to select  ·  Click for full screen";
 "Release to annotate and edit" = "Release to annotate and edit";
 "Release to finish" = "Release to finish";
 "Space to move. Release to annotate and edit" = "Space to move. Release to annotate and edit";
 "Space to move. Release to finish" = "Space to move. Release to finish";
 "Window snap: " = "Window snap: ";
+"Snap mode: " = "Snap mode: ";
 "ON" = "ON";
 "OFF" = "OFF";
+"WINDOW" = "WINDOW";
+"ELEMENT" = "ELEMENT";
 "  (Tab to toggle)" = "  (Tab to toggle)";
+"  (Tab to switch)" = "  (Tab to switch)";
 "Right-click to copy" = "Right-click to copy";
 "Copied %@" = "Copied %@";
 "Set color %@" = "Set color %@";
@@ -218,6 +223,8 @@
 "Launch at login" = "Launch at login";
 "Show snap alignment guides" = "Show snap alignment guides";
 "Snap selection edges to image boundaries" = "Snap selection edges to image boundaries";
+"Enhance browser and Electron element snapping" = "Enhance browser and Electron element snapping";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues.";
 "Capture mouse cursor in screenshot" = "Capture mouse cursor in screenshot";
 "Double-click selection to copy" = "Double-click selection to copy";
 "Hide capture instructions" = "Hide capture instructions";

@@ -176,6 +176,7 @@
 
 /* Overlay / Canvas */
 "Click a window  \U00B7  Drag for custom area  \U00B7  F for full screen" = "Klikk et vindu  \U00B7  Dra for egendefinert omr\U00E5de  \U00B7  F for fullskjerm";
+"Click an element  \U00B7  Drag for custom area  \U00B7  F for full screen" = "Klikk et element  \U00B7  Dra for egendefinert omr\U00E5de  \U00B7  F for fullskjerm";
 "Drag to select  \U00B7  Click for full screen" = "Dra for \U00E5 velge  \U00B7  Klikk for fullskjerm";
 "Release to annotate and edit" = "Slipp for \U00E5 kommentere og redigere";
 "Release to finish" = "Slipp for \U00E5 fullf\U00F8re";
@@ -183,9 +184,13 @@
 "Hold Space to move. Release to finish" = "Hold mellomrom for \U00E5 flytte. Slipp for \U00E5 fullf\U00F8re";
 "Space" = "Mellomrom";
 "Window snap: " = "Vindussnapping: ";
+"Snap mode: " = "Snappemodus: ";
 "ON" = "P\U00C5";
 "OFF" = "AV";
+"WINDOW" = "VINDU";
+"ELEMENT" = "ELEMENT";
 "  (Tab to toggle)" = "  (Tab for \U00E5 veksle)";
+"  (Tab to switch)" = "  (Tab for \U00E5 bytte)";
 "Right-click to copy" = "H\U00F8yreklikk for \U00E5 kopiere";
 "Copied %@" = "Kopierte %@";
 "Set color %@" = "Sett farge %@";
@@ -222,6 +227,8 @@
 "Launch at login" = "Start ved innlogging";
 "Show snap alignment guides" = "Vis hjelpelinje for justering";
 "Snap selection edges to image boundaries" = "Fest markeringskanter til bildegrenser";
+"Enhance browser and Electron element snapping" = "Forbedre elementfangst for nettleser og Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Bygger tilgangstr\U00E6t i m\U00E5lappen i Element-modus. Deaktiver dette hvis en nettleser eller Electron-app blir treg eller har innproblemer.";
 "Capture mouse cursor in screenshot" = "Ta med musepeker i skjermbilde";
 "Double-click selection to copy" = "Dobbeltklikk p\U00E5 utvalget for \U00E5 kopiere";
 "Hide capture instructions" = "Skjul instruksjoner ved skjermbilde";

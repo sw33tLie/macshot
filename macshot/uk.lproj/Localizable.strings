@@ -185,15 +185,20 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Клацніть вікно  ·  Перетягніть для довільної області  ·  F для повного екрана";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Клацніть елемент  ·  Перетягніть для довільної області  ·  F для повного екрана";
 "Drag to select  ·  Click for full screen" = "Перетягніть для вибору  ·  Клацніть для повного екрана";
 "Release to annotate and edit" = "Відпустіть для анотації та редагування";
 "Release to finish" = "Відпустіть для завершення";
 "Hold Space to move. Release to annotate and edit" = "Утримуйте Пробіл для переміщення. Відпустіть для анотації та редагування";
 "Hold Space to move. Release to finish" = "Утримуйте Пробіл для переміщення. Відпустіть для завершення";
 "Window snap: " = "Прилипання до вікна: ";
+"Snap mode: " = "Режим прилипання: ";
 "ON" = "УВІМК.";
 "OFF" = "ВИМК.";
+"WINDOW" = "ВІКНО";
+"ELEMENT" = "ЕЛЕМЕНТ";
 "  (Tab to toggle)" = "  (Tab для перемикання)";
+"  (Tab to switch)" = "  (Tab для перемикання)";
 "Space" = "Пробіл";
 "Right-click to copy" = "Клацніть правою кнопкою, щоб копіювати";
 "Copied %@" = "Скопійовано %@";
@@ -228,6 +233,8 @@
 "Launch at login" = "Запускати при вході в систему";
 "Show snap alignment guides" = "Показувати напрямні вирівнювання";
 "Snap selection edges to image boundaries" = "Прив'язувати краї виділення до меж зображення";
+"Enhance browser and Electron element snapping" = "Покращення прилипання елементів у браузері та Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Будує дерево доступності цільової програми в режимі елементів. Вимкніть, якщо браузер або Electron-програма працює повільно або має проблеми з введенням.";
 "Capture mouse cursor in screenshot" = "Захоплювати курсор миші на знімку екрана";
 "Double-click selection to copy" = "Копіювати подвійним клацанням по виділенню";
 "Hide capture instructions" = "Приховувати підказки під час захоплення";

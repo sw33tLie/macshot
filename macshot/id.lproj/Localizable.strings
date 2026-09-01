@@ -172,6 +172,7 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Klik jendela  ·  Seret untuk area kustom  ·  F untuk layar penuh";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Klik elemen  ·  Seret untuk area kustom  ·  F untuk layar penuh";
 "Drag to select  ·  Click for full screen" = "Seret untuk memilih  ·  Klik untuk layar penuh";
 "Release to annotate and edit" = "Lepaskan untuk menganotasi dan mengedit";
 "Release to finish" = "Lepaskan untuk menyelesaikan";
@@ -179,9 +180,13 @@
 "Hold Space to move. Release to finish" = "Tahan Spasi untuk memindahkan. Lepaskan untuk menyelesaikan";
 "Space" = "Spasi";
 "Window snap: " = "Jepret jendela: ";
+"Snap mode: " = "Mode jepret: ";
 "ON" = "AKTIF";
 "OFF" = "NONAKTIF";
+"WINDOW" = "JENDELA";
+"ELEMENT" = "ELEMEN";
 "  (Tab to toggle)" = "  (Tab untuk beralih)";
+"  (Tab to switch)" = "  (Tab untuk berpindah)";
 "Right-click to copy" = "Klik kanan untuk menyalin";
 "Copied %@" = "Disalin %@";
 "Set color %@" = "Atur warna %@";
@@ -226,6 +231,8 @@
 "Launch at login" = "Jalankan saat masuk";
 "Show snap alignment guides" = "Tampilkan panduan perataan jepret";
 "Snap selection edges to image boundaries" = "Jepretkan tepi pilihan ke batas gambar";
+"Enhance browser and Electron element snapping" = "Tingkatkan penjepretan elemen browser dan Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Membangun pohon aksesibilitas aplikasi target dalam Mode Elemen. Nonaktifkan ini jika browser atau aplikasi Electron menjadi lambat atau memiliki masalah input.";
 "Capture mouse cursor in screenshot" = "Tangkap kursor mouse di tangkapan layar";
 "Double-click selection to copy" = "Klik dua kali pilihan untuk menyalin";
 "Hide capture instructions" = "Sembunyikan petunjuk pengambilan tangkapan layar";

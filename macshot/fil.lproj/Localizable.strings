@@ -172,6 +172,7 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "I-click ang window  ·  I-drag para sa custom na lugar  ·  F para sa buong screen";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "I-click ang elemento  ·  I-drag para sa custom na lugar  ·  F para sa buong screen";
 "Drag to select  ·  Click for full screen" = "I-drag upang pumili  ·  I-click para sa buong screen";
 "Release to annotate and edit" = "Bitawan upang mag-annotate at mag-edit";
 "Release to finish" = "Bitawan upang tapusin";
@@ -179,9 +180,13 @@
 "Hold Space to move. Release to finish" = "Pindutin ang Space upang ilipat. Bitawan upang tapusin";
 "Space" = "Space";
 "Window snap: " = "Window snap: ";
+"Snap mode: " = "Snap mode: ";
 "ON" = "ON";
 "OFF" = "OFF";
+"WINDOW" = "WINDOW";
+"ELEMENT" = "ELEMENT";
 "  (Tab to toggle)" = "  (Tab upang i-toggle)";
+"  (Tab to switch)" = "  (Tab upang magpalit)";
 "Right-click to copy" = "I-right-click upang kopyahin";
 "Copied %@" = "Nakopya ang %@";
 "Set color %@" = "Itakda ang kulay %@";
@@ -226,6 +231,8 @@
 "Launch at login" = "Buksan kapag nag-login";
 "Show snap alignment guides" = "Ipakita ang mga gabay sa pagkakahanay";
 "Snap selection edges to image boundaries" = "I-snap ang mga gilid ng seleksiyon sa hangganan ng imahe";
+"Enhance browser and Electron element snapping" = "Pahusayin ang element snapping ng browser at Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Gumagawa ng accessibility tree ng target app sa Element mode. I-disable ito kung mabagal ang browser o Electron app o may mga problema sa input.";
 "Capture mouse cursor in screenshot" = "Isama ang cursor ng mouse sa screenshot";
 "Double-click selection to copy" = "I-double-click ang pinili upang kopyahin";
 "Hide capture instructions" = "Itago ang mga tagubilin sa pagkuha ng screenshot";

@@ -176,6 +176,7 @@
 
 /* Overlay / Canvas */
 "Click a window  \U00B7  Drag for custom area  \U00B7  F for full screen" = "Klicka p\U00E5 ett f\U00F6nster  \U00B7  Dra f\U00F6r eget omr\U00E5de  \U00B7  F f\U00F6r helsk\U00E4rm";
+"Click an element  \U00B7  Drag for custom area  \U00B7  F for full screen" = "Klicka p\U00E5 ett element  \U00B7  Dra f\U00F6r eget omr\U00E5de  \U00B7  F f\U00F6r helsk\U00E4rm";
 "Drag to select  \U00B7  Click for full screen" = "Dra f\U00F6r att markera  \U00B7  Klicka f\U00F6r helsk\U00E4rm";
 "Release to annotate and edit" = "Sl\U00E4pp f\U00F6r att anteckna och redigera";
 "Release to finish" = "Sl\U00E4pp f\U00F6r att avsluta";
@@ -183,9 +184,13 @@
 "Hold Space to move. Release to finish" = "H\U00E5ll mellanslag f\U00F6r att flytta. Sl\U00E4pp f\U00F6r att avsluta";
 "Space" = "Blanksteg";
 "Window snap: " = "F\U00F6nsterf\U00E5ngst: ";
+"Snap mode: " = "F\U00E5ngstl\U00E4ge: ";
 "ON" = "P\U00C5";
 "OFF" = "AV";
+"WINDOW" = "F\U00D6NSTER";
+"ELEMENT" = "ELEMENT";
 "  (Tab to toggle)" = "  (Tab f\U00F6r att v\U00E4xla)";
+"  (Tab to switch)" = "  (Tab f\U00F6r att v\U00E4xla)";
 "Right-click to copy" = "H\U00F6gerklicka f\U00F6r att kopiera";
 "Copied %@" = "Kopierade %@";
 "Set color %@" = "Valde f\U00E4rg %@";
@@ -222,6 +227,8 @@
 "Launch at login" = "Starta vid inloggning";
 "Show snap alignment guides" = "Visa f\U00E4stlinjer";
 "Snap selection edges to image boundaries" = "F\U00E4st markeringskanter mot bildgr\U00E4nser";
+"Enhance browser and Electron element snapping" = "F\U00F6rb\U00E4ttra elementf\U00E5ngst f\U00F6r webbl\U00E4sare och Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Bygger m\U00E5lappens tr\U00E4d f\U00F6r hj\U00E4lpmedel i Element-l\U00E4ge. Inaktivera detta om en webbl\U00E4sare eller Electron-app blir långsam eller har inmatningsproblem.";
 "Capture mouse cursor in screenshot" = "F\U00E5nga muspekaren i sk\U00E4rmbild";
 "Double-click selection to copy" = "Dubbelklicka p\U00E5 markeringen f\U00F6r att kopiera";
 "Hide capture instructions" = "D\U00F6lj instruktioner vid sk\U00E4rmbild";

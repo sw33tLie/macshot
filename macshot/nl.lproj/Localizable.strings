@@ -171,15 +171,20 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Klik op een venster  ·  Sleep voor aangepast gebied  ·  F voor volledig scherm";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Klik op een element  ·  Sleep voor aangepast gebied  ·  F voor volledig scherm";
 "Drag to select  ·  Click for full screen" = "Sleep om te selecteren  ·  Klik voor volledig scherm";
 "Release to annotate and edit" = "Laat los om te annoteren en bewerken";
 "Release to finish" = "Laat los om te voltooien";
 "Hold Space to move. Release to annotate and edit" = "Houd Spatie ingedrukt om te verplaatsen. Laat los om te annoteren en bewerken";
 "Hold Space to move. Release to finish" = "Houd Spatie ingedrukt om te verplaatsen. Laat los om te voltooien";
 "Window snap: " = "Venster-snap: ";
+"Snap mode: " = "Snap-modus: ";
 "ON" = "AAN";
 "OFF" = "UIT";
+"WINDOW" = "VENSTER";
+"ELEMENT" = "ELEMENT";
 "  (Tab to toggle)" = "  (Tab om te wisselen)";
+"  (Tab to switch)" = "  (Tab om te schakelen)";
 "Right-click to copy" = "Rechtsklik om te kopieren";
 "Copied %@" = "%@ gekopieerd";
 "Set color %@" = "Kleur %@ ingesteld";
@@ -213,6 +218,8 @@
 "Launch at login" = "Open bij inloggen";
 "Show snap alignment guides" = "Uitlijnhulplijnen tonen";
 "Snap selection edges to image boundaries" = "Selectieranden uitlijnen op afbeeldingsgrenzen";
+"Enhance browser and Electron element snapping" = "Verbeter browser- en Electron-element-snap";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Bouwt de toegankelijkheidsboom van de doel-app op in Element-modus. Schakel dit uit als een browser of Electron-app traag wordt of invoerproblemen heeft.";
 "Capture mouse cursor in screenshot" = "Muiscursor vastleggen in schermafbeelding";
 "Double-click selection to copy" = "Dubbelklik op selectie om te kopiëren";
 "Hide capture instructions" = "Opname-instructies verbergen";

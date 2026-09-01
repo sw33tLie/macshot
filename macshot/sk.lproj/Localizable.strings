@@ -185,15 +185,20 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Kliknite na okno  ·  Potiahnite pre vlastnu oblast  ·  F pre celu obrazovku";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Kliknite na prvok  ·  Potiahnite pre vlastnu oblast  ·  F pre celu obrazovku";
 "Drag to select  ·  Click for full screen" = "Potiahnite pre vyber  ·  Kliknite pre celu obrazovku";
 "Release to annotate and edit" = "Pustite pre anotaciu a upravu";
 "Release to finish" = "Pustite pre dokončenie";
 "Hold Space to move. Release to annotate and edit" = "Podržte Medzerník pre presun. Pustite pre anotáciu a úpravu";
 "Hold Space to move. Release to finish" = "Podržte Medzerník pre presun. Pustite pre dokončenie";
 "Window snap: " = "Prichytenie okna: ";
+"Snap mode: " = "Režim prichytenia: ";
 "ON" = "ZAP";
 "OFF" = "VYP";
+"WINDOW" = "OKNO";
+"ELEMENT" = "PRVOK";
 "  (Tab to toggle)" = "  (Tab pre prepnutie)";
+"  (Tab to switch)" = "  (Tab pre prepnutie)";
 "Space" = "Medzerník";
 "Right-click to copy" = "Kliknite pravym tlacidlom pre kopirovanie";
 "Copied %@" = "Skopirovane %@";
@@ -228,6 +233,8 @@
 "Launch at login" = "Spustit pri prihlaseni";
 "Show snap alignment guides" = "Zobrazit vodiace ciary zarovnania";
 "Snap selection edges to image boundaries" = "Prichytit okraje vyberu k hraniciam obrazka";
+"Enhance browser and Electron element snapping" = "Zlepšiť prichytenie prvkov v prehliadači a Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Vytvára strom dostupnosti cieľovej aplikácie v režime prvkov. Zakážte, ak sa prehliadač alebo Electron aplikácia stane pomalým alebo má problémy s vstupom.";
 "Capture mouse cursor in screenshot" = "Zachytit kurzor mysi na snimke obrazovky";
 "Double-click selection to copy" = "Kopirovat dvojklikom na vyber";
 "Hide capture instructions" = "Skryt pokyny pri snimani";

@@ -178,6 +178,13 @@
 "ON" = "BE";
 "OFF" = "KI";
 "  (Tab to toggle)" = "  (Tab a váltáshoz)";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Kattintson egy elemre  ·  Húzzon egyéni területhez  ·  F a teljes képernyőhöz";
+"Snap mode: " = "Illesztés mód: ";
+"WINDOW" = "ABLAK";
+"ELEMENT" = "ELEM";
+"  (Tab to switch)" = "  (Tab a váltáshoz)";
+"Enhance browser and Electron element snapping" = "Böngésző és Electron elem illesztésének javítása";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Építi a célalkalmazás akadálymentesítési fastruktúráját Elem módban. Tiltsa le, ha egy böngésző vagy Electron alkalmazás lassúvá válik vagy bemeneti problémái vannak.";
 "Right-click to copy" = "Jobb kattintás a másoláshoz";
 "Copied %@" = "%@ másolva";
 "Set color %@" = "Szín beállítva: %@";
