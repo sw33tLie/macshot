@@ -147,11 +147,29 @@ private final class VideoEditorView: NSView {
     // Export dimensions
     private var originalWidth: Int = 0
     private var originalHeight: Int = 0
-    private var exportScale: CGFloat = 1.0  // 1.0 = original, 0.5 = 50%, etc.
+    // Persisted across exports: defaults to 1.0/.high on first use, then remembers
+    // whatever the user picked last via dimensionSelected/qualitySelected below.
+    private var exportScale: CGFloat = VideoEditorView.loadExportScale()
     private var dimensionsBtnRect: NSRect = .zero
 
     // Export quality (controls bitrate when re-encoding for MP4 export)
-    private var exportQuality: VideoQuality = .high
+    private var exportQuality: VideoQuality = VideoEditorView.loadExportQuality()
+
+    private static let exportScaleDefaultsKey = "lastExportScale"
+    private static let exportQualityDefaultsKey = "lastExportQuality"
+
+    private static func loadExportScale() -> CGFloat {
+        let stored = UserDefaults.standard.object(forKey: exportScaleDefaultsKey) as? Double ?? 1.0
+        return CGFloat(stored)
+    }
+
+    private static func loadExportQuality() -> VideoQuality {
+        guard let raw = UserDefaults.standard.string(forKey: exportQualityDefaultsKey),
+              let quality = VideoQuality(rawValue: raw) else {
+            return .high
+        }
+        return quality
+    }
     private var qualityBtnRect: NSRect = .zero
 
     // GIF export frame rate (5-30 fps), persisted across sessions
@@ -1871,6 +1889,7 @@ private final class VideoEditorView: NSView {
 
     @objc private func dimensionSelected(_ sender: NSMenuItem) {
         exportScale = CGFloat(sender.tag) / 100.0
+        UserDefaults.standard.set(Double(exportScale), forKey: Self.exportScaleDefaultsKey)
         savedURL = nil
         needsDisplay = true
     }
@@ -1990,6 +2009,7 @@ private final class VideoEditorView: NSView {
     @objc private func qualitySelected(_ sender: NSMenuItem) {
         if let raw = sender.representedObject as? String, let q = VideoQuality(rawValue: raw) {
             exportQuality = q
+            UserDefaults.standard.set(raw, forKey: Self.exportQualityDefaultsKey)
             savedURL = nil
             needsDisplay = true
         }
