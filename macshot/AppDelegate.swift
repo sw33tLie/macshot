@@ -14,6 +14,7 @@ enum CaptureMenuItemID: String, CaseIterable {
     case quickCapture = "quickCapture"
     case captureLastArea = "captureLastArea"
     case scrollCapture = "scrollCapture"
+    case contextCapture = "contextCapture"
 
     static let userDefaultsKey = "captureMenuItemOrder"
     static let defaultOrder: [CaptureMenuItemID] = [
@@ -23,6 +24,7 @@ enum CaptureMenuItemID: String, CaseIterable {
         .quickCapture,
         .captureLastArea,
         .scrollCapture,
+        .contextCapture,
     ]
 
     var title: String {
@@ -33,6 +35,7 @@ enum CaptureMenuItemID: String, CaseIterable {
         case .quickCapture: return L("Quick Capture")
         case .captureLastArea: return L("Capture Last Area")
         case .scrollCapture: return L("Scroll Capture")
+        case .contextCapture: return L("App Shot")
         }
     }
 
@@ -44,6 +47,7 @@ enum CaptureMenuItemID: String, CaseIterable {
         case .quickCapture: return "square.and.arrow.down"
         case .captureLastArea: return "arrow.counterclockwise.circle"
         case .scrollCapture: return "scroll"
+        case .contextCapture: return "doc.text.viewfinder"
         }
     }
 
@@ -55,6 +59,7 @@ enum CaptureMenuItemID: String, CaseIterable {
         case .quickCapture: return .quickCapture
         case .captureLastArea: return .captureLastArea
         case .scrollCapture: return .scrollCapture
+        case .contextCapture: return .contextCapture
         }
     }
 
@@ -889,6 +894,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         case .quickCapture: action = #selector(quickCapture)
         case .captureLastArea: action = #selector(captureLastArea)
         case .scrollCapture: action = #selector(scrollCapture)
+        case .contextCapture: action = #selector(contextCapture)
         }
 
         let item = NSMenuItem(title: itemID.title, action: action, keyEquivalent: "")
@@ -952,6 +958,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             },
             clearHistory: { [weak self] in
                 DispatchQueue.main.async { self?.clearHistorySilently() }
+            },
+            contextCapture: { [weak self] in
+                self?.perform(#selector(AppDelegate.contextCaptureFromHotkey))
             }
         )
     }
@@ -965,6 +974,64 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     private var pendingTranslateOverlayLang: String?
     private var pendingQuickCaptureMode: Bool = false
     private var pendingScrollCaptureMode: Bool = false
+    private lazy var appShotCaptureCoordinator = AppShotCaptureCoordinator<FrontmostWindowTarget, CGImage>(
+        captureImage: { target in
+            await ScreenCaptureManager.captureWindow(
+                windowID: target.windowID,
+                screen: target.screen
+            )
+        },
+        onImageCaptured: { [weak self] target, capturedImage in
+            guard let self else { return }
+            let image = self.appShotImage(from: capturedImage, target: target)
+            let entryID = ScreenshotHistory.shared.add(
+                image: image,
+                pixelWidth: capturedImage.width,
+                pixelHeight: capturedImage.height
+            )
+            self.showFloatingThumbnail(image: image, historyEntryID: entryID)
+            self.playCopySound()
+        },
+        recognizeText: { image in
+            await withCheckedContinuation { continuation in
+                DispatchQueue.global(qos: .userInitiated).async {
+                    VisionOCR.performTextRecognition(cgImage: image) { request, _ in
+                        continuation.resume(returning: VisionOCR.recognizedText(from: request))
+                    }
+                }
+            }
+        },
+        publish: { [weak self] content in
+            guard let self else { return false }
+            let image = self.appShotImage(from: content.image, target: content.target)
+            let payload = ContextCapturePayload(
+                applicationName: content.target.applicationName,
+                bundleIdentifier: content.target.bundleIdentifier,
+                windowTitle: content.target.windowTitle,
+                capturedAt: content.capturedAt,
+                recognizedText: content.recognizedText
+            )
+
+            return await ImageEncoder.copyContextCaptureToClipboard(
+                image,
+                markdown: payload.markdown
+            )
+        }
+    )
+
+    private func appShotImage(
+        from capturedImage: CGImage,
+        target: FrontmostWindowTarget
+    ) -> NSImage {
+        let scale = target.screen.backingScaleFactor
+        return NSImage(
+            cgImage: capturedImage,
+            size: NSSize(
+                width: CGFloat(capturedImage.width) / scale,
+                height: CGFloat(capturedImage.height) / scale
+            )
+        )
+    }
     private var capturedWindowTitle: String?
     /// The app that was active before the overlay appeared — re-activated on dismiss.
     /// The app that was active before macshot showed its overlay.
@@ -1041,6 +1108,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func beginCaptureArea(fromMenu: Bool) {
+        guard canStartCapture else { return }
         startCapture(fromMenu: fromMenu)
     }
 
@@ -1108,6 +1176,41 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         guard canStartCapture else { return }
         pendingQuickCaptureMode = true
         startCapture(fromMenu: fromMenu)
+    }
+
+    @objc private func contextCapture() {
+        beginContextCapture()
+    }
+
+    @objc private func contextCaptureFromHotkey() {
+        beginContextCapture()
+    }
+
+    /// Captures the frontmost window directly, enriches it with local OCR, and
+    /// publishes the image plus Markdown context without showing the overlay.
+    private func beginContextCapture() {
+        guard canStartCapture else { return }
+        guard CGPreflightScreenCaptureAccess() else {
+            showOnboarding()
+            return
+        }
+        guard let target = FrontmostWindowResolver.resolve() else {
+            NSSound.beep()
+            return
+        }
+        let capturedAt = Date()
+        Task { [weak self] in
+            guard let self else { return }
+            switch await self.appShotCaptureCoordinator.capture(
+                target: target,
+                capturedAt: capturedAt
+            ) {
+            case .completed, .captureInProgress:
+                break
+            case .imageCaptureFailed, .clipboardPublicationFailed:
+                NSSound.beep()
+            }
+        }
     }
 
     @objc private func scrollCapture() {
@@ -1193,13 +1296,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     /// delay-capture countdown `isCapturing` is already true and the pending mode
     /// belongs to that accepted (not-yet-consumed) capture.
     private var canStartCapture: Bool {
-        !isCapturing && recordingEngine == nil
+        !isCapturing && recordingEngine == nil && !appShotCaptureCoordinator.isCapturing
     }
 
     private func startCapture(fromMenu: Bool = false) {
         guard !isCapturing else { return }
         // Don't allow captures while recording
         guard recordingEngine == nil else { return }
+        guard !appShotCaptureCoordinator.isCapturing else { return }
         let trace = makeCaptureTimingTrace()
         captureTimingTrace = trace
         trace?.mark("startCapture entered fromMenu=\(fromMenu)")

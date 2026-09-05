@@ -95,9 +95,17 @@ class ScreenshotHistory {
     ///   - rawImage: The raw screenshot without annotations (optional — for editable history).
     ///   - annotations: Live annotation objects (optional — serialized to JSON for editable history).
     ///   - editState: Live post-processing settings (optional — serialized for non-destructive editing).
-    func add(image: NSImage, rawImage: NSImage? = nil, annotations: [Annotation]? = nil, editState: CaptureEditState? = nil) {
+    @discardableResult
+    func add(
+        image: NSImage,
+        rawImage: NSImage? = nil,
+        annotations: [Annotation]? = nil,
+        editState: CaptureEditState? = nil,
+        pixelWidth: Int? = nil,
+        pixelHeight: Int? = nil
+    ) -> String? {
         let max = maxEntries
-        guard max > 0 else { return }
+        guard max > 0 else { return nil }
 
         let id = UUID().uuidString
         let ext = "png"
@@ -115,8 +123,8 @@ class ScreenshotHistory {
             id: id,
             fileExtension: ext,
             timestamp: Date(),
-            pixelWidth: Int(size.width * scale),
-            pixelHeight: Int(size.height * scale),
+            pixelWidth: pixelWidth ?? Int(size.width * scale),
+            pixelHeight: pixelHeight ?? Int(size.height * scale),
             hasAnnotations: hasEditableData,
             thumbnail: NSImage(size: NSSize(width: 1, height: 1))
         )
@@ -198,6 +206,7 @@ class ScreenshotHistory {
                 }
             }
         }
+        return id
     }
 
     /// Update an existing history entry in-place (for "Done" in editor).
