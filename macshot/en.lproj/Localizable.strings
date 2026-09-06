@@ -240,6 +240,7 @@
 "Move down" = "Move down";
 "Output" = "Output";
 "Image format:" = "Image format:";
+"Use image format for clipboard copies" = "Use image format for clipboard copies";
 "Quality:" = "Quality:";
 "%d%%" = "%d%%";
 "Save at standard resolution (1x)" = "Save at standard resolution (1x)";
