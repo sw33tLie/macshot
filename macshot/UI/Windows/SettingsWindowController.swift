@@ -73,6 +73,20 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var menuBarIconModePopup: NSPopUpButton!
     private var menuBarIconPresetPopup: NSPopUpButton!
     private var menuBarIconSymbolField: NSTextField!
+    private var translationProviderPopup: NSPopUpButton!
+    private var translationEndpointField: NSTextField!
+    private var translationModelField: NSTextField!
+    private var translationAPIKeyField: NSSecureTextField!
+    private var translationEndpointRow: NSView!
+    private var translationModelRow: NSView!
+    private var translationAPIKeyRow: NSView!
+    private var translationDownloadRow: NSView!
+    private var translationProviderNote: NSTextField!
+    private var translationTestButton: NSButton!
+    private var translationTestStatus: NSTextField!
+    private var displayedTranslationProvider: TranslationProvider = .google
+    private var translationTestID: UInt = 0
+    private let translationTestScope = UUID()
 
     /// Curated SF Symbol quick-picks for the menu bar icon. Free text is still allowed.
     private static let menuBarIconPresetSymbols = [
@@ -996,35 +1010,99 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // ── Translation ──────────────────────────────────────
-        if TranslationService.appleTranslationAvailable {
-            stack.addArrangedSubview(sectionHeader(L("Translation")))
-            stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+        stack.addArrangedSubview(sectionHeader(L("Translation")))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
-            let translationProviderPopup = NSPopUpButton()
-            translationProviderPopup.addItems(withTitles: [
-                L("Apple (on-device)"),
-                L("Google Translate"),
-            ])
-            translationProviderPopup.selectItem(at: TranslationService.provider == .apple ? 0 : 1)
-            translationProviderPopup.target = self
-            translationProviderPopup.action = #selector(translationProviderChanged(_:))
-            stack.addArrangedSubview(labeledRow(L("Engine:"), controls: [translationProviderPopup]))
-            stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
-
-            let providerNote = NSTextField(wrappingLabelWithString: L("Apple translation is faster and works offline. Google Translate supports more languages."))
-            providerNote.font = NSFont.systemFont(ofSize: 10)
-            providerNote.textColor = .secondaryLabelColor
-            stack.addArrangedSubview(indented(providerNote))
-            stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
-
-            let downloadLink = NSButton(title: L("Download language packs in System Settings…"), target: self, action: #selector(openTranslationSettings))
-            downloadLink.bezelStyle = .inline
-            downloadLink.isBordered = false
-            downloadLink.contentTintColor = .linkColor
-            downloadLink.font = NSFont.systemFont(ofSize: 10)
-            stack.addArrangedSubview(indented(downloadLink))
-            stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
+        translationProviderPopup = NSPopUpButton()
+        let providers = TranslationProvider.allCases.filter {
+            $0 != .apple || TranslationService.appleTranslationAvailable
         }
+        for provider in providers {
+            translationProviderPopup.addItem(withTitle: L(provider.displayNameKey))
+            translationProviderPopup.lastItem?.representedObject = provider.rawValue
+        }
+        var selectedProvider = TranslationService.provider
+        if selectedProvider == .apple && !TranslationService.appleTranslationAvailable {
+            selectedProvider = .google
+            TranslationService.provider = .google
+        }
+        displayedTranslationProvider = selectedProvider
+        if let item = translationProviderPopup.itemArray.first(where: {
+            $0.representedObject as? String == selectedProvider.rawValue
+        }) {
+            translationProviderPopup.select(item)
+        }
+        translationProviderPopup.target = self
+        translationProviderPopup.action = #selector(translationProviderChanged(_:))
+        stack.addArrangedSubview(labeledRow(L("Engine:"), controls: [translationProviderPopup]))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+
+        translationEndpointField = NSTextField()
+        translationEndpointField.delegate = self
+        translationEndpointField.placeholderString = "https://..."
+        translationEndpointField.widthAnchor.constraint(equalToConstant: 330).isActive = true
+        translationEndpointRow = labeledRow(L("Endpoint:"), controls: [translationEndpointField])
+        stack.addArrangedSubview(translationEndpointRow)
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+
+        translationModelField = NSTextField()
+        translationModelField.delegate = self
+        translationModelField.placeholderString = L("Required")
+        translationModelField.widthAnchor.constraint(equalToConstant: 250).isActive = true
+        translationModelRow = labeledRow(L("Model:"), controls: [translationModelField])
+        stack.addArrangedSubview(translationModelRow)
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+
+        translationAPIKeyField = NSSecureTextField()
+        translationAPIKeyField.delegate = self
+        translationAPIKeyField.placeholderString = L("Optional for local endpoints")
+        translationAPIKeyField.widthAnchor.constraint(equalToConstant: 250).isActive = true
+        translationAPIKeyRow = labeledRow(L("API Key:"), controls: [translationAPIKeyField])
+        stack.addArrangedSubview(translationAPIKeyRow)
+        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+
+        for field in [translationEndpointField!, translationModelField!, translationAPIKeyField!] {
+            field.usesSingleLineMode = true
+            field.cell?.wraps = false
+            field.cell?.isScrollable = true
+            field.lineBreakMode = .byClipping
+        }
+
+        translationProviderNote = NSTextField(wrappingLabelWithString: "")
+        translationProviderNote.font = NSFont.systemFont(ofSize: 10)
+        translationProviderNote.textColor = .secondaryLabelColor
+        translationProviderNote.maximumNumberOfLines = 3
+        translationProviderNote.preferredMaxLayoutWidth = 360
+        stack.addArrangedSubview(indented(translationProviderNote))
+        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+
+        translationTestButton = NSButton(
+            title: L("Test Translation"), target: self,
+            action: #selector(testTranslationProvider(_:)))
+        translationTestButton.bezelStyle = .rounded
+        translationTestStatus = NSTextField(labelWithString: "")
+        translationTestStatus.font = NSFont.systemFont(ofSize: 10)
+        translationTestStatus.textColor = .secondaryLabelColor
+        translationTestStatus.lineBreakMode = .byTruncatingTail
+        translationTestStatus.widthAnchor.constraint(lessThanOrEqualToConstant: 245).isActive = true
+        let translationTestRow = NSStackView(views: [translationTestButton, translationTestStatus])
+        translationTestRow.orientation = .horizontal
+        translationTestRow.spacing = 8
+        translationTestRow.alignment = .centerY
+        stack.addArrangedSubview(indented(translationTestRow))
+        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+
+        let downloadLink = NSButton(
+            title: L("Download language packs in System Settings…"),
+            target: self, action: #selector(openTranslationSettings))
+        downloadLink.bezelStyle = .inline
+        downloadLink.isBordered = false
+        downloadLink.contentTintColor = .linkColor
+        downloadLink.font = NSFont.systemFont(ofSize: 10)
+        translationDownloadRow = indented(downloadLink)
+        stack.addArrangedSubview(translationDownloadRow)
+        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
+        updateTranslationConfigurationUI()
 
         // ── Menu Bar Order ──────────────────────────────────
         stack.addArrangedSubview(sectionHeader(L("Menu Bar Order")))
@@ -2528,6 +2606,19 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         captureMenuOrder = CaptureMenuItemID.orderedItems()
         rebuildCaptureMenuOrderRows()
 
+        var translationProvider = TranslationService.provider
+        if translationProvider == .apple && !TranslationService.appleTranslationAvailable {
+            translationProvider = .google
+            TranslationService.provider = .google
+        }
+        displayedTranslationProvider = translationProvider
+        if let item = translationProviderPopup?.itemArray.first(where: {
+            $0.representedObject as? String == translationProvider.rawValue
+        }) {
+            translationProviderPopup.select(item)
+        }
+        updateTranslationConfigurationUI()
+
         let copySound = UserDefaults.standard.object(forKey: "playCopySound") as? Bool ?? true
         copySoundCheckbox.state = copySound ? .on : .off
 
@@ -3246,7 +3337,98 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     }
 
     @objc private func translationProviderChanged(_ sender: NSPopUpButton) {
-        TranslationService.provider = sender.indexOfSelectedItem == 0 ? .apple : .google
+        guard let rawValue = sender.selectedItem?.representedObject as? String,
+              let provider = TranslationProvider(rawValue: rawValue) else { return }
+        translationTestID &+= 1
+        displayedTranslationProvider = provider
+        TranslationService.cancelTranslations(requestScope: translationTestScope)
+        TranslationService.provider = provider
+        translationTestButton?.isEnabled = true
+        updateTranslationConfigurationUI()
+    }
+
+    private func updateTranslationConfigurationUI() {
+        let provider = displayedTranslationProvider
+        translationEndpointRow?.isHidden = !provider.usesEndpoint
+        translationModelRow?.isHidden = !provider.usesModel
+        translationAPIKeyRow?.isHidden = !provider.usesAPIKey
+        translationDownloadRow?.isHidden = provider != .apple
+        translationTestStatus?.stringValue = ""
+
+        if provider.usesEndpoint {
+            translationEndpointField?.stringValue = TranslationService.endpoint(for: provider)
+        }
+        if provider.usesModel {
+            translationModelField?.stringValue = TranslationService.model(for: provider)
+        }
+        if provider.usesAPIKey {
+            translationAPIKeyField?.stringValue = TranslationService.apiKey(for: provider)
+        }
+
+        switch provider {
+        case .apple:
+            translationProviderNote?.stringValue = L("Apple translation runs on-device with installed language packs.")
+        case .google:
+            translationProviderNote?.stringValue = L("Google Translate uses the existing unofficial translation endpoint.")
+        case .deepLX:
+            translationProviderNote?.stringValue = L("Enter the full DeepLX /translate endpoint. Use {{apiKey}} in the URL, or the key is sent as a Bearer token.")
+        case .openAICompletions:
+            translationProviderNote?.stringValue = L("Uses the OpenAI Chat Completions messages protocol.")
+        case .openAIResponses:
+            translationProviderNote?.stringValue = L("Uses the OpenAI Responses input and instructions protocol.")
+        case .anthropicMessages:
+            translationProviderNote?.stringValue = L("Uses the Anthropic Messages protocol with an optional x-api-key.")
+        }
+    }
+
+    @objc private func testTranslationProvider(_ sender: NSButton) {
+        let provider = displayedTranslationProvider
+        if provider.usesEndpoint {
+            TranslationService.setEndpoint(
+                translationEndpointField.stringValue, for: provider)
+        }
+        if provider.usesModel {
+            TranslationService.setModel(
+                translationModelField.stringValue, for: provider)
+        }
+        if provider.usesAPIKey {
+            do {
+                try TranslationService.setAPIKey(
+                    translationAPIKeyField.stringValue, for: provider)
+            } catch {
+                translationTestStatus.stringValue = error.localizedDescription
+                translationTestStatus.textColor = .systemRed
+                return
+            }
+        }
+
+        translationTestID &+= 1
+        let activeTestID = translationTestID
+        translationTestButton.isEnabled = false
+        translationTestStatus.stringValue = L("Testing...")
+        translationTestStatus.textColor = .secondaryLabelColor
+        let targetLanguage = TranslationService.targetLanguage
+        let testText = targetLanguage == "en" ? "你好" : "Hello"
+        TranslationService.translateBatch(
+            texts: [testText], targetLang: targetLanguage, provider: provider,
+            requestScope: translationTestScope
+        ) { [weak self] result in
+            guard let self,
+                  self.translationTestID == activeTestID,
+                  self.displayedTranslationProvider == provider else { return }
+            self.translationTestButton.isEnabled = true
+            switch result {
+            case .success(let translations):
+                let output = translations.first?.trimmingCharacters(
+                    in: .whitespacesAndNewlines) ?? ""
+                self.translationTestStatus.stringValue = output.isEmpty
+                    ? L("Empty response") : String(output.prefix(80))
+                self.translationTestStatus.textColor = output.isEmpty ? .systemRed : .systemGreen
+            case .failure(let error):
+                self.translationTestStatus.stringValue = error.localizedDescription
+                self.translationTestStatus.textColor = .systemRed
+            }
+        }
     }
 
     @objc private func openTranslationSettings() {
@@ -3264,6 +3446,9 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     }
 
     func windowWillClose(_ notification: Notification) {
+        translationTestID &+= 1
+        TranslationService.cancelTranslations(requestScope: translationTestScope)
+        translationTestButton?.isEnabled = true
         stopShortcutRecording()
         stopCommandShortcutRecording()
         stopToolShortcutRecording()
@@ -3287,6 +3472,12 @@ extension SettingsWindowController: NSTextFieldDelegate {
             updateRecordingFilenamePreview()
         } else if field === menuBarIconSymbolField {
             applyMenuBarIconSymbol(field.stringValue)
+        } else if field === translationEndpointField {
+            TranslationService.setEndpoint(
+                field.stringValue, for: displayedTranslationProvider)
+        } else if field === translationModelField {
+            TranslationService.setModel(
+                field.stringValue, for: displayedTranslationProvider)
         }
     }
 
@@ -3303,6 +3494,13 @@ extension SettingsWindowController: NSTextFieldDelegate {
             field.stringValue = FilenameFormatter.defaultRecordingTemplate
             UserDefaults.standard.set(FilenameFormatter.defaultRecordingTemplate, forKey: FilenameFormatter.recordingUserDefaultsKey)
             updateRecordingFilenamePreview()
+        } else if field === translationAPIKeyField {
+            do {
+                try TranslationService.setAPIKey(trimmed, for: displayedTranslationProvider)
+            } catch {
+                translationTestStatus?.stringValue = error.localizedDescription
+                translationTestStatus?.textColor = .systemRed
+            }
         }
     }
 }

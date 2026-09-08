@@ -13,6 +13,9 @@ class OCRResultController: NSObject {
     private var originalText: String
     private var qrCodes: [QRCodePayload]
     private var isShowingTranslation = false
+    private let translationRequestScope = UUID()
+    private var translationRequestID: UInt = 0
+    private var isTranslating = false
 
     /// Invoked once when the window closes (either close button or title-bar
     /// red-X), so the owner can drop its reference to this controller.
@@ -330,6 +333,7 @@ class OCRResultController: NSObject {
     }
 
     private func tearDown() {
+        cancelTranslation()
         textView?.discardUndoHistory()
         textView = nil
         window?.delegate = nil
@@ -376,8 +380,8 @@ class OCRResultController: NSObject {
     @objc private func languageChanged(_ sender: NSPopUpButton) {
         guard let code = sender.selectedItem?.representedObject as? String else { return }
         TranslationService.targetLanguage = code
-        // If currently showing translation, re-translate with new language
-        if isShowingTranslation {
+        // Replace an in-flight request as well as an already displayed translation.
+        if isShowingTranslation || isTranslating {
             performTranslation(targetLang: code)
         }
     }
@@ -393,6 +397,7 @@ class OCRResultController: NSObject {
     }
 
     @objc private func restoreOriginal() {
+        cancelTranslation()
         isShowingTranslation = false
         setTextViewString(originalText)  // registers undo back to translated state
         translateButton?.title = L("Translate")
@@ -419,12 +424,24 @@ class OCRResultController: NSObject {
         um.setActionName(L("Translation"))
     }
 
+    private func cancelTranslation() {
+        translationRequestID &+= 1
+        isTranslating = false
+        TranslationService.cancelTranslations(requestScope: translationRequestScope)
+        spinnerView?.stopAnimation(nil)
+        spinnerView?.isHidden = true
+        translateButton?.isEnabled = true
+    }
+
     private func performTranslation(targetLang: String) {
         guard let tv = textView else { return }
         let sourceText = isShowingTranslation ? originalText : tv.string
         guard !sourceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
               !sourceText.hasPrefix("(No text") else { return }
 
+        cancelTranslation()
+        let activeRequestID = translationRequestID
+        isTranslating = true
         translateButton?.isEnabled = false
         spinnerView?.isHidden = false
         spinnerView?.startAnimation(nil)
@@ -433,8 +450,12 @@ class OCRResultController: NSObject {
         let lines = sourceText.components(separatedBy: "\n")
         let nonEmpty = lines.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
 
-        TranslationService.translateBatch(texts: nonEmpty, targetLang: targetLang) { [weak self] result in
-            guard let self = self else { return }
+        TranslationService.translateBatch(
+            texts: nonEmpty, targetLang: targetLang, requestScope: translationRequestScope
+        ) { [weak self] result in
+            guard let self, self.translationRequestID == activeRequestID,
+                  self.window != nil else { return }
+            self.isTranslating = false
             self.spinnerView?.stopAnimation(nil)
             self.spinnerView?.isHidden = true
             self.translateButton?.isEnabled = true

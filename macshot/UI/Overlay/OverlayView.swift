@@ -12,6 +12,7 @@ protocol OverlayViewDelegate: AnyObject {
     func overlayViewDidRequestSaveAs()
     func overlayViewDidRequestPin()
     func overlayViewDidRequestOCR()
+    func overlayViewDidRequestQuickTranslation()
     func overlayViewDidRequestQuickSave()
     func overlayViewDidRequestFileSave()
     func overlayViewDidRequestUpload()
@@ -650,6 +651,8 @@ class OverlayView: NSView {
     private var cachedOpaqueRect: NSRect?  // cached opaque content bounds of screenshotImage
 
     var isTranslating: Bool = false
+    let translationRequestScope = UUID()
+    var translationRequestID: UInt = 0
     var translateEnabled: Bool = false
 
     // Crop tool state
@@ -725,6 +728,7 @@ class OverlayView: NSView {
     }
     var autoEnterRecordingMode: Bool = false  // set by "Record Screen" menu — enters recording mode after selection
     var autoOCRMode: Bool = false  // set by "Capture OCR & QR" menu — triggers OCR immediately after selection
+    var autoQuickTranslationMode: Bool = false  // set by "Capture Translate" — OCR + translate in a compact panel
     var autoTranslateOverlayMode: Bool = false  // set by macshot://ocr-translate — OCR + translate + overlay after selection
     var autoTranslateOverlayLang: String?  // target language for autoTranslateOverlayMode (nil = saved default)
     var autoQuickSaveMode: Bool = false  // set by "Quick Capture" menu — quick-saves immediately after selection
@@ -2754,6 +2758,7 @@ class OverlayView: NSView {
             && !isEditorMode
             && !isRecording
             && !autoOCRMode
+            && !autoQuickTranslationMode
             && remoteSelectionRect.width < 1
             && remoteSelectionRect.height < 1
     }
@@ -6619,7 +6624,8 @@ class OverlayView: NSView {
             // Real drag — use drawn rect as-is
             state = .selected
             applyPreSelectionLockAfterSelection()
-            if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode { showToolbars = true }
+            if !autoOCRMode && !autoQuickTranslationMode && !autoQuickSaveMode
+                && !autoScrollCaptureMode && !autoConfirmMode { showToolbars = true }
             overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
         } else if windowSnapEnabled, let snapRect = hoveredWindowRect, !snapRect.isEmpty {
             // Click (no drag) with snap on — snap to hovered window
@@ -6638,13 +6644,15 @@ class OverlayView: NSView {
                 }
             }
             state = .selected
-            if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode { showToolbars = true }
+            if !autoOCRMode && !autoQuickTranslationMode && !autoQuickSaveMode
+                && !autoScrollCaptureMode && !autoConfirmMode { showToolbars = true }
             overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
         } else {
             // Click (no drag), snap off — expand to full screen
             selectionRect = bounds
             state = .selected
-            if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode { showToolbars = true }
+            if !autoOCRMode && !autoQuickTranslationMode && !autoQuickSaveMode
+                && !autoScrollCaptureMode && !autoConfirmMode { showToolbars = true }
             overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
         }
         hoveredWindowRect = nil
@@ -6662,6 +6670,11 @@ class OverlayView: NSView {
         if autoOCRMode {
             autoOCRMode = false
             overlayDelegate?.overlayViewDidRequestOCR()
+        }
+        // Auto-trigger OCR + translation in the lightweight result panel.
+        if autoQuickTranslationMode {
+            autoQuickTranslationMode = false
+            overlayDelegate?.overlayViewDidRequestQuickTranslation()
         }
         // Auto-trigger OCR + translate + in-place overlay (macshot://ocr-translate).
         // Unlike OCR, this keeps the overlay open so the translated result can be
@@ -6805,7 +6818,8 @@ class OverlayView: NSView {
         if selectionRect.width > 5 || selectionRect.height > 5 {
             state = .selected
             applyPreSelectionLockAfterSelection()
-            if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode {
+            if !autoOCRMode && !autoQuickTranslationMode && !autoQuickSaveMode
+                && !autoScrollCaptureMode && !autoConfirmMode {
                 showToolbars = true
             }
             overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
@@ -6826,14 +6840,16 @@ class OverlayView: NSView {
                 }
             }
             state = .selected
-            if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode {
+            if !autoOCRMode && !autoQuickTranslationMode && !autoQuickSaveMode
+                && !autoScrollCaptureMode && !autoConfirmMode {
                 showToolbars = true
             }
             overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
         } else {
             selectionRect = bounds
             state = .selected
-            if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode {
+            if !autoOCRMode && !autoQuickTranslationMode && !autoQuickSaveMode
+                && !autoScrollCaptureMode && !autoConfirmMode {
                 showToolbars = true
             }
             overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
@@ -6843,6 +6859,10 @@ class OverlayView: NSView {
             updateCursorForPoint(convert(win.mouseLocationOutsideOfEventStream, from: nil))
         }
         needsDisplay = true
+        if autoQuickTranslationMode {
+            autoQuickTranslationMode = false
+            overlayDelegate?.overlayViewDidRequestQuickTranslation()
+        }
     }
 
     /// Cancel anchored-selection mode (ESC). Resets back to idle without
@@ -8180,6 +8200,7 @@ class OverlayView: NSView {
         case .translate:
             if translateEnabled {
                 // Toggle off: remove overlays, restore original
+                cancelTranslation()
                 translateEnabled = false
                 annotations.removeAll { $0.tool == .translateOverlay }
                 isTranslating = false
@@ -9994,6 +10015,7 @@ class OverlayView: NSView {
     }
 
     func reset() {
+        cancelTranslation()
         state = .idle
         selectionRect = .zero
         selectionIsWindowSnap = false
@@ -10079,6 +10101,7 @@ class OverlayView: NSView {
         // must NOT leak into the next session.
         autoEnterRecordingMode = false
         autoOCRMode = false
+        autoQuickTranslationMode = false
         autoTranslateOverlayMode = false
         autoTranslateOverlayLang = nil
         autoQuickSaveMode = false
