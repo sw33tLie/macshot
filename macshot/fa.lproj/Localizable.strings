@@ -682,3 +682,21 @@
 "Selection is already aligned" = "محدودهٔ انتخاب از قبل تراز است";
 "Space to move. Release to annotate and edit" = "برای جابه‌جایی، کلید فاصله را نگه دارید. برای حاشیه‌نویسی و ویرایش رها کنید";
 "Space to move. Release to finish" = "برای جابه‌جایی، کلید فاصله را نگه دارید. برای پایان دادن رها کنید";
+
+/* Table Recognition Window */
+"Table Recognition" = "تشخیص جدول";
+"Table recognition succeeded" = "جدول با موفقیت تشخیص داده شد";
+"%d rows · %d columns" = "%d ردیف · %d ستون";
+"Open Excel File" = "باز کردن فایل Excel";
+"Copy Excel File" = "کپی فایل Excel";
+"Copy as TSV" = "کپی به‌صورت TSV";
+"Save Recognized Table" = "ذخیره جدول تشخیص‌داده‌شده";
+"Recognized Table.xlsx" = "جدول تشخیص‌داده‌شده.xlsx";
+"Table Recognition Failed" = "تشخیص جدول ناموفق بود";
+"No text was detected in the selected area." = "هیچ متنی در ناحیه انتخاب‌شده تشخیص داده نشد.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "هیچ ساختار جدولی تشخیص داده نشد. جدولی با حداقل دو ردیف و دو ستون انتخاب کنید.";
+"The recognized table is too large to create an Excel file." = "جدول تشخیص‌داده‌شده برای ایجاد فایل Excel بیش از حد بزرگ است.";
+"Could Not Create Excel File" = "فایل Excel ایجاد نشد";
+"The Excel file could not be written. Please try again." = "فایل Excel نوشته نشد. دوباره تلاش کنید.";
+"Could Not Open Excel File" = "فایل Excel باز نشد";
+"No application is available to open Excel files." = "هیچ برنامه‌ای برای باز کردن فایل‌های Excel در دسترس نیست.";

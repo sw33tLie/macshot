@@ -682,3 +682,21 @@
 "Selection is already aligned" = "Naka-align na ang pinili";
 "Space to move. Release to annotate and edit" = "Pindutin nang matagal ang Space para ilipat. Bitawan para mag-anotate at mag-edit";
 "Space to move. Release to finish" = "Pindutin nang matagal ang Space para ilipat. Bitawan para tapusin";
+
+/* Table Recognition Window */
+"Table Recognition" = "Pagkilala ng Talahanayan";
+"Table recognition succeeded" = "Matagumpay na nakilala ang talahanayan";
+"%d rows · %d columns" = "%d hilera · %d column";
+"Open Excel File" = "Buksan ang Excel File";
+"Copy Excel File" = "Kopyahin ang Excel File";
+"Copy as TSV" = "Kopyahin bilang TSV";
+"Save Recognized Table" = "I-save ang Nakilalang Talahanayan";
+"Recognized Table.xlsx" = "Nakilalang Talahanayan.xlsx";
+"Table Recognition Failed" = "Nabigo ang Pagkilala ng Talahanayan";
+"No text was detected in the selected area." = "Walang text na natukoy sa napiling bahagi.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "Walang natukoy na istruktura ng talahanayan. Pumili ng talahanayan na may hindi bababa sa dalawang hilera at dalawang column.";
+"The recognized table is too large to create an Excel file." = "Masyadong malaki ang nakilalang talahanayan para gumawa ng Excel file.";
+"Could Not Create Excel File" = "Hindi Magawa ang Excel File";
+"The Excel file could not be written. Please try again." = "Hindi maisulat ang Excel file. Pakisubukang muli.";
+"Could Not Open Excel File" = "Hindi Mabuksan ang Excel File";
+"No application is available to open Excel files." = "Walang available na application para magbukas ng mga Excel file.";

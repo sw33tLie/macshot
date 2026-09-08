@@ -680,3 +680,21 @@
 "Selection is already aligned" = "Markeringen er allerede justert etter kantene";
 "Space to move. Release to annotate and edit" = "Mellomrom for å flytte. Slipp for å kommentere og redigere";
 "Space to move. Release to finish" = "Mellomrom for å flytte. Slipp for å fullføre";
+
+/* Table Recognition Window */
+"Table Recognition" = "Tabellgjenkjenning";
+"Table recognition succeeded" = "Tabellen ble gjenkjent";
+"%d rows · %d columns" = "%d rader · %d kolonner";
+"Open Excel File" = "Åpne Excel-fil";
+"Copy Excel File" = "Kopier Excel-fil";
+"Copy as TSV" = "Kopier som TSV";
+"Save Recognized Table" = "Lagre gjenkjent tabell";
+"Recognized Table.xlsx" = "Gjenkjent tabell.xlsx";
+"Table Recognition Failed" = "Tabellgjenkjenning mislyktes";
+"No text was detected in the selected area." = "Ingen tekst ble funnet i det valgte området.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "Ingen tabellstruktur ble funnet. Velg en tabell med minst to rader og to kolonner.";
+"The recognized table is too large to create an Excel file." = "Den gjenkjente tabellen er for stor til å opprette en Excel-fil.";
+"Could Not Create Excel File" = "Kunne ikke opprette Excel-fil";
+"The Excel file could not be written. Please try again." = "Excel-filen kunne ikke skrives. Prøv igjen.";
+"Could Not Open Excel File" = "Kunne ikke åpne Excel-filen";
+"No application is available to open Excel files." = "Ingen tilgjengelig app kan åpne Excel-filer.";

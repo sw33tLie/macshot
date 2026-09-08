@@ -680,3 +680,21 @@
 "Selection is already aligned" = "Pilihan sudah sejajar";
 "Space to move. Release to annotate and edit" = "Tahan Spacebar untuk memindahkan. Lepaskan untuk membuat anotasi dan mengedit";
 "Space to move. Release to finish" = "Tahan Spacebar untuk memindahkan. Lepaskan untuk selesai";
+
+/* Table Recognition Window */
+"Table Recognition" = "Pengenalan Tabel";
+"Table recognition succeeded" = "Tabel berhasil dikenali";
+"%d rows · %d columns" = "%d baris · %d kolom";
+"Open Excel File" = "Buka File Excel";
+"Copy Excel File" = "Salin File Excel";
+"Copy as TSV" = "Salin sebagai TSV";
+"Save Recognized Table" = "Simpan Tabel yang Dikenali";
+"Recognized Table.xlsx" = "Tabel yang Dikenali.xlsx";
+"Table Recognition Failed" = "Pengenalan Tabel Gagal";
+"No text was detected in the selected area." = "Tidak ada teks yang terdeteksi di area yang dipilih.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "Struktur tabel tidak terdeteksi. Pilih tabel dengan setidaknya dua baris dan dua kolom.";
+"The recognized table is too large to create an Excel file." = "Tabel yang dikenali terlalu besar untuk membuat file Excel.";
+"Could Not Create Excel File" = "File Excel Tidak Dapat Dibuat";
+"The Excel file could not be written. Please try again." = "File Excel tidak dapat ditulis. Coba lagi.";
+"Could Not Open Excel File" = "File Excel Tidak Dapat Dibuka";
+"No application is available to open Excel files." = "Tidak ada aplikasi yang tersedia untuk membuka file Excel.";

@@ -680,3 +680,21 @@
 "Selection is already aligned" = "Výběr je již zarovnán";
 "Space to move. Release to annotate and edit" = "Podržením mezerníku přesunete. Uvolněním můžete přidávat anotace a upravovat";
 "Space to move. Release to finish" = "Podržením mezerníku přesunete. Uvolněním dokončíte";
+
+/* Table Recognition Window */
+"Table Recognition" = "Rozpoznávání tabulky";
+"Table recognition succeeded" = "Tabulka byla úspěšně rozpoznána";
+"%d rows · %d columns" = "%d řádků · %d sloupců";
+"Open Excel File" = "Otevřít soubor Excel";
+"Copy Excel File" = "Kopírovat soubor Excel";
+"Copy as TSV" = "Kopírovat jako TSV";
+"Save Recognized Table" = "Uložit rozpoznanou tabulku";
+"Recognized Table.xlsx" = "Rozpoznaná tabulka.xlsx";
+"Table Recognition Failed" = "Rozpoznání tabulky se nezdařilo";
+"No text was detected in the selected area." = "Ve vybrané oblasti nebyl zjištěn žádný text.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "Nebyla zjištěna struktura tabulky. Vyberte tabulku s alespoň dvěma řádky a dvěma sloupci.";
+"The recognized table is too large to create an Excel file." = "Rozpoznaná tabulka je příliš velká pro vytvoření souboru Excel.";
+"Could Not Create Excel File" = "Soubor Excel se nepodařilo vytvořit";
+"The Excel file could not be written. Please try again." = "Soubor Excel se nepodařilo zapsat. Zkuste to znovu.";
+"Could Not Open Excel File" = "Soubor Excel se nepodařilo otevřít";
+"No application is available to open Excel files." = "Pro otevírání souborů Excel není k dispozici žádná aplikace.";

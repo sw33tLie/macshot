@@ -682,3 +682,21 @@
 "Selection is already aligned" = "Selectie is al uitgelijnd";
 "Space to move. Release to annotate and edit" = "Spatie om te verplaatsen. Laat los om te annoteren en bewerken";
 "Space to move. Release to finish" = "Spatie om te verplaatsen. Laat los om te voltooien";
+
+/* Table Recognition Window */
+"Table Recognition" = "Tabelherkenning";
+"Table recognition succeeded" = "Tabel is herkend";
+"%d rows · %d columns" = "%d rijen · %d kolommen";
+"Open Excel File" = "Excel-bestand openen";
+"Copy Excel File" = "Excel-bestand kopiëren";
+"Copy as TSV" = "Kopieer als TSV";
+"Save Recognized Table" = "Herkende tabel bewaren";
+"Recognized Table.xlsx" = "Herkende tabel.xlsx";
+"Table Recognition Failed" = "Tabelherkenning mislukt";
+"No text was detected in the selected area." = "Er is geen tekst gedetecteerd in het geselecteerde gebied.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "Er is geen tabelstructuur gedetecteerd. Selecteer een tabel met minstens twee rijen en twee kolommen.";
+"The recognized table is too large to create an Excel file." = "De herkende tabel is te groot om een Excel-bestand te maken.";
+"Could Not Create Excel File" = "Excel-bestand kon niet worden gemaakt";
+"The Excel file could not be written. Please try again." = "Excel-bestand kon niet worden geschreven. Probeer het opnieuw.";
+"Could Not Open Excel File" = "Excel-bestand kon niet worden geopend";
+"No application is available to open Excel files." = "Er is geen app beschikbaar om Excel-bestanden te openen.";

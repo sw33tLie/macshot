@@ -682,3 +682,21 @@
 "Selection is already aligned" = "التحديد محاذى بالفعل";
 "Space to move. Release to annotate and edit" = "اضغط على مفتاح المسافة للتحريك. حرّره لإضافة التعليقات التوضيحية والتحرير";
 "Space to move. Release to finish" = "اضغط على مفتاح المسافة للتحريك. حرّره للإنهاء";
+
+/* Table Recognition Window */
+"Table Recognition" = "التعرف على الجداول";
+"Table recognition succeeded" = "تم التعرف على الجدول بنجاح";
+"%d rows · %d columns" = "%d صفوف · %d أعمدة";
+"Open Excel File" = "فتح ملف Excel";
+"Copy Excel File" = "نسخ ملف Excel";
+"Copy as TSV" = "نسخ بصيغة TSV";
+"Save Recognized Table" = "حفظ الجدول الذي تم التعرف عليه";
+"Recognized Table.xlsx" = "الجدول الذي تم التعرف عليه.xlsx";
+"Table Recognition Failed" = "فشل التعرف على الجدول";
+"No text was detected in the selected area." = "لم يتم اكتشاف أي نص في المنطقة المحددة.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "لم يتم اكتشاف بنية جدول. حدد جدولاً يحتوي على صفين وعمودين على الأقل.";
+"The recognized table is too large to create an Excel file." = "الجدول الذي تم التعرف عليه كبير جدًا بحيث يتعذر إنشاء ملف Excel.";
+"Could Not Create Excel File" = "تعذّر إنشاء ملف Excel";
+"The Excel file could not be written. Please try again." = "تعذّرت كتابة ملف Excel. يرجى المحاولة مرة أخرى.";
+"Could Not Open Excel File" = "تعذّر فتح ملف Excel";
+"No application is available to open Excel files." = "لا يتوفر تطبيق لفتح ملفات Excel.";

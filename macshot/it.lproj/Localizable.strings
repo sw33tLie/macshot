@@ -663,3 +663,21 @@
 "Selection is already aligned" = "La selezione è già allineata";
 "Space to move. Release to annotate and edit" = "Tieni premuta la barra spaziatrice per spostare. Rilascia per annotare e modificare";
 "Space to move. Release to finish" = "Tieni premuta la barra spaziatrice per spostare. Rilascia per terminare";
+
+/* Table Recognition Window */
+"Table Recognition" = "Riconoscimento tabella";
+"Table recognition succeeded" = "Tabella riconosciuta correttamente";
+"%d rows · %d columns" = "%d righe · %d colonne";
+"Open Excel File" = "Apri file Excel";
+"Copy Excel File" = "Copia file Excel";
+"Copy as TSV" = "Copia come TSV";
+"Save Recognized Table" = "Salva tabella riconosciuta";
+"Recognized Table.xlsx" = "Tabella riconosciuta.xlsx";
+"Table Recognition Failed" = "Riconoscimento tabella non riuscito";
+"No text was detected in the selected area." = "Non è stato rilevato testo nell’area selezionata.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "Non è stata rilevata una struttura di tabella. Seleziona una tabella con almeno due righe e due colonne.";
+"The recognized table is too large to create an Excel file." = "La tabella riconosciuta è troppo grande per creare un file Excel.";
+"Could Not Create Excel File" = "Impossibile creare il file Excel";
+"The Excel file could not be written. Please try again." = "Impossibile scrivere il file Excel. Riprova.";
+"Could Not Open Excel File" = "Impossibile aprire il file Excel";
+"No application is available to open Excel files." = "Non è disponibile alcuna applicazione per aprire i file Excel.";

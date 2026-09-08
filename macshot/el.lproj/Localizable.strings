@@ -682,3 +682,21 @@
 "Selection is already aligned" = "Η επιλογή είναι ήδη ευθυγραμμισμένη";
 "Space to move. Release to annotate and edit" = "Κρατήστε πατημένο το πλήκτρο διαστήματος για μετακίνηση. Αφήστε το για σχολιασμό και επεξεργασία";
 "Space to move. Release to finish" = "Κρατήστε πατημένο το πλήκτρο διαστήματος για μετακίνηση. Αφήστε το για ολοκλήρωση";
+
+/* Table Recognition Window */
+"Table Recognition" = "Αναγνώριση πίνακα";
+"Table recognition succeeded" = "Ο πίνακας αναγνωρίστηκε επιτυχώς";
+"%d rows · %d columns" = "%d γραμμές · %d στήλες";
+"Open Excel File" = "Άνοιγμα αρχείου Excel";
+"Copy Excel File" = "Αντιγραφή αρχείου Excel";
+"Copy as TSV" = "Αντιγραφή ως TSV";
+"Save Recognized Table" = "Αποθήκευση αναγνωρισμένου πίνακα";
+"Recognized Table.xlsx" = "Αναγνωρισμένος πίνακας.xlsx";
+"Table Recognition Failed" = "Η αναγνώριση πίνακα απέτυχε";
+"No text was detected in the selected area." = "Δεν εντοπίστηκε κείμενο στην επιλεγμένη περιοχή.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "Δεν εντοπίστηκε δομή πίνακα. Επιλέξτε έναν πίνακα με τουλάχιστον δύο γραμμές και δύο στήλες.";
+"The recognized table is too large to create an Excel file." = "Ο αναγνωρισμένος πίνακας είναι πολύ μεγάλος για τη δημιουργία αρχείου Excel.";
+"Could Not Create Excel File" = "Δεν ήταν δυνατή η δημιουργία του αρχείου Excel";
+"The Excel file could not be written. Please try again." = "Δεν ήταν δυνατή η εγγραφή του αρχείου Excel. Δοκιμάστε ξανά.";
+"Could Not Open Excel File" = "Δεν ήταν δυνατό το άνοιγμα του αρχείου Excel";
+"No application is available to open Excel files." = "Δεν υπάρχει διαθέσιμη εφαρμογή για το άνοιγμα αρχείων Excel.";

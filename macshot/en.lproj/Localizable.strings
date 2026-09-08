@@ -419,6 +419,24 @@
 "QR Codes" = "QR Codes";
 "Open Link" = "Open Link";
 
+/* Table Recognition Window */
+"Table Recognition" = "Table Recognition";
+"Table recognition succeeded" = "Table recognition succeeded";
+"%d rows · %d columns" = "%d rows · %d columns";
+"Open Excel File" = "Open Excel File";
+"Copy Excel File" = "Copy Excel File";
+"Copy as TSV" = "Copy as TSV";
+"Save Recognized Table" = "Save Recognized Table";
+"Recognized Table.xlsx" = "Recognized Table.xlsx";
+"Table Recognition Failed" = "Table Recognition Failed";
+"No text was detected in the selected area." = "No text was detected in the selected area.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "No table structure was detected. Select a table with at least two rows and two columns.";
+"The recognized table is too large to create an Excel file." = "The recognized table is too large to create an Excel file.";
+"Could Not Create Excel File" = "Could Not Create Excel File";
+"The Excel file could not be written. Please try again." = "The Excel file could not be written. Please try again.";
+"Could Not Open Excel File" = "Could Not Open Excel File";
+"No application is available to open Excel files." = "No application is available to open Excel files.";
+
 /* Upload Toast */
 "URL copied to the clipboard" = "URL copied to the clipboard";
 "Uploading... %d%%" = "Uploading... %d%%";

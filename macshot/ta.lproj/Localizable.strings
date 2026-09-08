@@ -682,3 +682,21 @@
 "Selection is already aligned" = "தேர்வு ஏற்கனவே சீரமைக்கப்பட்டுள்ளது";
 "Space to move. Release to annotate and edit" = "நகர்த்த ஸ்பேஸ் விசையைப் பிடிக்கவும். குறிப்புரையிட்டு திருத்த விடுவிக்கவும்";
 "Space to move. Release to finish" = "நகர்த்த ஸ்பேஸ் விசையைப் பிடிக்கவும். முடிக்க விடுவிக்கவும்";
+
+/* Table Recognition Window */
+"Table Recognition" = "அட்டவணை அடையாளம்";
+"Table recognition succeeded" = "அட்டவணை வெற்றிகரமாக அடையாளம் காணப்பட்டது";
+"%d rows · %d columns" = "%d வரிசைகள் · %d நெடுவரிசைகள்";
+"Open Excel File" = "Excel கோப்பைத் திற";
+"Copy Excel File" = "Excel கோப்பை நகலெடு";
+"Copy as TSV" = "TSV ஆக நகலெடு";
+"Save Recognized Table" = "அடையாளம் கண்ட அட்டவணையைச் சேமி";
+"Recognized Table.xlsx" = "அடையாளம் கண்ட அட்டவணை.xlsx";
+"Table Recognition Failed" = "அட்டவணை அடையாளம் தோல்வியடைந்தது";
+"No text was detected in the selected area." = "தேர்ந்தெடுத்த பகுதியில் உரை எதுவும் கண்டறியப்படவில்லை.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "அட்டவணை அமைப்பு எதுவும் கண்டறியப்படவில்லை. குறைந்தது இரண்டு வரிசைகள் மற்றும் இரண்டு நெடுவரிசைகள் உள்ள அட்டவணையைத் தேர்ந்தெடுக்கவும்.";
+"The recognized table is too large to create an Excel file." = "அடையாளம் கண்ட அட்டவணை Excel கோப்பை உருவாக்க முடியாத அளவுக்குப் பெரியது.";
+"Could Not Create Excel File" = "Excel கோப்பை உருவாக்க முடியவில்லை";
+"The Excel file could not be written. Please try again." = "Excel கோப்பை எழுத முடியவில்லை. மீண்டும் முயற்சிக்கவும்.";
+"Could Not Open Excel File" = "Excel கோப்பைத் திறக்க முடியவில்லை";
+"No application is available to open Excel files." = "Excel கோப்புகளைத் திறக்க எந்தப் பயன்பாடும் இல்லை.";

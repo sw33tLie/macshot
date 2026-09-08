@@ -680,3 +680,21 @@
 "Selection is already aligned" = "Markeringen är redan justerad";
 "Space to move. Release to annotate and edit" = "Håll ned mellanslag för att flytta. Släpp för att kommentera och redigera";
 "Space to move. Release to finish" = "Håll ned mellanslag för att flytta. Släpp för att slutföra";
+
+/* Table Recognition Window */
+"Table Recognition" = "Tabelligenkänning";
+"Table recognition succeeded" = "Tabellen har identifierats";
+"%d rows · %d columns" = "%d rader · %d kolumner";
+"Open Excel File" = "Öppna Excel-fil";
+"Copy Excel File" = "Kopiera Excel-fil";
+"Copy as TSV" = "Kopiera som TSV";
+"Save Recognized Table" = "Spara identifierad tabell";
+"Recognized Table.xlsx" = "Identifierad tabell.xlsx";
+"Table Recognition Failed" = "Tabelligenkänningen misslyckades";
+"No text was detected in the selected area." = "Ingen text hittades i det markerade området.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "Ingen tabellstruktur hittades. Markera en tabell med minst två rader och två kolumner.";
+"The recognized table is too large to create an Excel file." = "Den identifierade tabellen är för stor för att skapa en Excel-fil.";
+"Could Not Create Excel File" = "Det gick inte att skapa Excel-filen";
+"The Excel file could not be written. Please try again." = "Det gick inte att skriva Excel-filen. Försök igen.";
+"Could Not Open Excel File" = "Det gick inte att öppna Excel-filen";
+"No application is available to open Excel files." = "Det finns ingen tillgänglig app för att öppna Excel-filer.";

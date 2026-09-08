@@ -680,3 +680,21 @@
 "Selection is already aligned" = "Selecția este deja aliniată";
 "Space to move. Release to annotate and edit" = "Spațiu pentru mutare. Eliberează pentru a adăuga adnotări și a edita";
 "Space to move. Release to finish" = "Spațiu pentru mutare. Eliberează pentru a finaliza";
+
+/* Table Recognition Window */
+"Table Recognition" = "Recunoașterea tabelului";
+"Table recognition succeeded" = "Tabelul a fost recunoscut";
+"%d rows · %d columns" = "%d rânduri · %d coloane";
+"Open Excel File" = "Deschide fișierul Excel";
+"Copy Excel File" = "Copiază fișierul Excel";
+"Copy as TSV" = "Copiază ca TSV";
+"Save Recognized Table" = "Salvează tabelul recunoscut";
+"Recognized Table.xlsx" = "Tabel recunoscut.xlsx";
+"Table Recognition Failed" = "Recunoașterea tabelului a eșuat";
+"No text was detected in the selected area." = "Nu a fost detectat text în zona selectată.";
+"No table structure was detected. Select a table with at least two rows and two columns." = "Nu a fost detectată o structură de tabel. Selectează un tabel cu cel puțin două rânduri și două coloane.";
+"The recognized table is too large to create an Excel file." = "Tabelul recunoscut este prea mare pentru a crea un fișier Excel.";
+"Could Not Create Excel File" = "Fișierul Excel nu a putut fi creat";
+"The Excel file could not be written. Please try again." = "Fișierul Excel nu a putut fi scris. Încearcă din nou.";
+"Could Not Open Excel File" = "Fișierul Excel nu a putut fi deschis";
+"No application is available to open Excel files." = "Nu este disponibilă nicio aplicație pentru deschiderea fișierelor Excel.";

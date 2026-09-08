@@ -680,3 +680,21 @@
 "Selection is already aligned" = "ขอบเขตการเลือกตรงแนวอยู่แล้ว";
 "Space to move. Release to annotate and edit" = "กด Space ค้างไว้เพื่อย้าย ปล่อยเพื่อใส่คำอธิบายประกอบและแก้ไข";
 "Space to move. Release to finish" = "กด Space ค้างไว้เพื่อย้าย ปล่อยเพื่อเสร็จสิ้น";
+
+/* Table Recognition Window */
+"Table Recognition" = "การรู้จำตาราง";
+"Table recognition succeeded" = "รู้จำตารางสำเร็จ";
+"%d rows · %d columns" = "%d แถว · %d คอลัมน์";
+"Open Excel File" = "เปิดไฟล์ Excel";
+"Copy Excel File" = "คัดลอกไฟล์ Excel";
+"Copy as TSV" = "คัดลอกเป็น TSV";
+"Save Recognized Table" = "บันทึกตารางที่รู้จำ";
+"Recognized Table.xlsx" = "ตารางที่รู้จำ.xlsx";
+"Table Recognition Failed" = "การรู้จำตารางล้มเหลว";
+"No text was detected in the selected area." = "ไม่พบข้อความในพื้นที่ที่เลือก";
+"No table structure was detected. Select a table with at least two rows and two columns." = "ไม่พบโครงสร้างตาราง โปรดเลือกตารางที่มีอย่างน้อยสองแถวและสองคอลัมน์";
+"The recognized table is too large to create an Excel file." = "ตารางที่รู้จำมีขนาดใหญ่เกินกว่าจะสร้างไฟล์ Excel";
+"Could Not Create Excel File" = "ไม่สามารถสร้างไฟล์ Excel ได้";
+"The Excel file could not be written. Please try again." = "ไม่สามารถเขียนไฟล์ Excel ได้ โปรดลองอีกครั้ง";
+"Could Not Open Excel File" = "ไม่สามารถเปิดไฟล์ Excel ได้";
+"No application is available to open Excel files." = "ไม่มีแอปพลิเคชันสำหรับเปิดไฟล์ Excel";
