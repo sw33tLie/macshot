@@ -674,6 +674,37 @@
 /* URL scheme: edit (PR #272) */
 "Open a history entry in the editor (keeps annotations editable)" = "在编辑器中打开历史记录（保持标注可编辑）";
 
+/* 快速 OCR 翻译 */
+"Capture Translate" = "截图翻译";
+"Quick Translation" = "快速翻译";
+"Original" = "原文";
+"Copy Translation" = "复制译文";
+"Retry" = "重试";
+"Recognizing text..." = "正在识别文字...";
+"Translating..." = "正在翻译...";
+"No text found" = "未识别到文字";
+"Could not read the selected image" = "无法读取所选图像";
+"Text recognition failed" = "文字识别失败";
+"No response from translation service" = "翻译服务未返回结果";
+"DeepLX" = "DeepLX";
+"OpenAI Completions" = "OpenAI Completions";
+"OpenAI Responses" = "OpenAI Responses";
+"Anthropic Messages" = "Anthropic Messages";
+"Endpoint:" = "接口地址:";
+"Model:" = "模型:";
+"API Key:" = "API 密钥:";
+"Required" = "必填";
+"Optional for local endpoints" = "本地接口可不填写";
+"Apple translation runs on-device with installed language packs." = "Apple 翻译使用已安装的语言包在设备本地运行。";
+"Google Translate uses the existing unofficial translation endpoint." = "Google 翻译使用现有的非官方翻译接口。";
+"Enter the full DeepLX /translate endpoint. Use {{apiKey}} in the URL, or the key is sent as a Bearer token." = "请输入完整的 DeepLX /translate 接口地址。可在 URL 中使用 {{apiKey}}；否则密钥将作为 Bearer Token 发送。";
+"Uses the OpenAI Chat Completions messages protocol." = "使用 OpenAI Chat Completions messages 协议。";
+"Uses the OpenAI Responses input and instructions protocol." = "使用 OpenAI Responses 的 input 与 instructions 协议。";
+"Uses the Anthropic Messages protocol with an optional x-api-key." = "使用 Anthropic Messages 协议，可选配置 x-api-key。";
+"Test Translation" = "测试翻译";
+"Testing..." = "正在测试...";
+"Empty response" = "返回结果为空";
+
 /* Selection edge adjustment */
 "Auto-Adjust Selection" = "自动调整选区";
 "Auto-adjust selection" = "自动调整选区";

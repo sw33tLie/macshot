@@ -474,6 +474,8 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
         }
     }
 
+    func overlayViewDidRequestQuickTranslation() {}
+
     func overlayViewDidRequestQuickSave() {
         guard let view = overlayView,
               let raw = view.captureSelectedRegion() else { return }
@@ -691,6 +693,8 @@ private class AddCaptureOverlayHandler: NSObject, OverlayWindowControllerDelegat
         onCapture?(image)
     }
     func overlayDidRequestOCR(_ controller: OverlayWindowController, result: OCRScanResult, image: NSImage?) {}
+    func overlayDidRequestQuickTranslation(
+        _ controller: OverlayWindowController, image: NSImage, anchorRect: NSRect) {}
     func overlayDidRequestUpload(_ controller: OverlayWindowController, image: NSImage, annotationData: CaptureAnnotationData?) {}
     func overlayDidRequestStartRecording(_ controller: OverlayWindowController, rect: NSRect, screen: NSScreen) {}
     func overlayDidRequestStopRecording(_ controller: OverlayWindowController) {}

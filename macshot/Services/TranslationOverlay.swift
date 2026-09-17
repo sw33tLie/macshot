@@ -10,6 +10,8 @@ enum TranslateOverlay {
         selectionRect: NSRect,
         captureDrawRect: NSRect,
         targetLang: String,
+        requestScope: UUID,
+        isCurrent: @escaping () -> Bool,
         onError: @escaping (String) -> Void,
         completion: @escaping ([Annotation]) -> Void
     ) {
@@ -47,47 +49,55 @@ enum TranslateOverlay {
                     return (t, obs.boundingBox)
                 }
 
-                TranslationService.translateBatch(texts: blocks.map { $0.text }, targetLang: targetLang) { result in
-                    switch result {
-                    case .failure(let error):
-                        onError("Translation failed: \(error.localizedDescription)")
+                // OCR may finish after the overlay has been reset or replaced.
+                DispatchQueue.main.async {
+                    guard isCurrent() else { return }
+                    TranslationService.translateBatch(
+                        texts: blocks.map { $0.text }, targetLang: targetLang,
+                        requestScope: requestScope
+                    ) { result in
+                        guard isCurrent() else { return }
+                        switch result {
+                        case .failure(let error):
+                            onError("Translation failed: \(error.localizedDescription)")
 
-                    case .success(let translations):
-                        var annotations: [Annotation] = []
-                        let groupID = UUID()
+                        case .success(let translations):
+                            var annotations: [Annotation] = []
+                            let groupID = UUID()
 
-                        for (i, block) in blocks.enumerated() {
-                            guard i < translations.count else { continue }
-                            let translated = translations[i].trimmingCharacters(in: .whitespacesAndNewlines)
-                            guard !translated.isEmpty else { continue }
+                            for (i, block) in blocks.enumerated() {
+                                guard i < translations.count else { continue }
+                                let translated = translations[i].trimmingCharacters(in: .whitespacesAndNewlines)
+                                guard !translated.isEmpty else { continue }
 
-                            let box = block.box
-                            let padding: CGFloat = 1
-                            let viewX = selectionRect.origin.x + box.origin.x * selectionRect.width - padding
-                            let viewY = selectionRect.origin.y + box.origin.y * selectionRect.height - padding
-                            let viewW = box.width * selectionRect.width + padding * 2
-                            let viewH = box.height * selectionRect.height + padding * 2
+                                let box = block.box
+                                let padding: CGFloat = 1
+                                let viewX = selectionRect.origin.x + box.origin.x * selectionRect.width - padding
+                                let viewY = selectionRect.origin.y + box.origin.y * selectionRect.height - padding
+                                let viewW = box.width * selectionRect.width + padding * 2
+                                let viewH = box.height * selectionRect.height + padding * 2
 
-                            let bgColor = sampleAverageColor(in: cgImage, region: CGRect(
-                                x: box.origin.x * CGFloat(cgImage.width),
-                                y: box.origin.y * CGFloat(cgImage.height),
-                                width: box.width * CGFloat(cgImage.width),
-                                height: box.height * CGFloat(cgImage.height)
-                            ))
+                                let bgColor = sampleAverageColor(in: cgImage, region: CGRect(
+                                    x: box.origin.x * CGFloat(cgImage.width),
+                                    y: box.origin.y * CGFloat(cgImage.height),
+                                    width: box.width * CGFloat(cgImage.width),
+                                    height: box.height * CGFloat(cgImage.height)
+                                ))
 
-                            let ann = Annotation(
-                                tool: .translateOverlay,
-                                startPoint: NSPoint(x: viewX, y: viewY),
-                                endPoint: NSPoint(x: viewX + viewW, y: viewY + viewH),
-                                color: bgColor, strokeWidth: 0
-                            )
-                            ann.text = translated
-                            ann.fontSize = max(8, viewH * 0.65)
-                            ann.groupID = groupID
-                            annotations.append(ann)
+                                let ann = Annotation(
+                                    tool: .translateOverlay,
+                                    startPoint: NSPoint(x: viewX, y: viewY),
+                                    endPoint: NSPoint(x: viewX + viewW, y: viewY + viewH),
+                                    color: bgColor, strokeWidth: 0
+                                )
+                                ann.text = translated
+                                ann.fontSize = max(8, viewH * 0.65)
+                                ann.groupID = groupID
+                                annotations.append(ann)
+                            }
+
+                            completion(annotations)
                         }
-
-                        DispatchQueue.main.async { completion(annotations) }
                     }
                 }
             }
