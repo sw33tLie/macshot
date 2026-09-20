@@ -66,6 +66,8 @@ protocol OverlayWindowControllerDelegate: AnyObject {
     func overlayDidConfirm(_ controller: OverlayWindowController, capturedImage: NSImage?, annotationData: CaptureAnnotationData?)
     func overlayDidRequestPin(_ controller: OverlayWindowController, image: NSImage, annotationData: CaptureAnnotationData?)
     func overlayDidRequestOCR(_ controller: OverlayWindowController, result: OCRScanResult, image: NSImage?)
+    func overlayDidRequestQuickTranslation(
+        _ controller: OverlayWindowController, image: NSImage, anchorRect: NSRect)
     func overlayDidRequestUpload(_ controller: OverlayWindowController, image: NSImage, annotationData: CaptureAnnotationData?)
     func overlayDidRequestStartRecording(
         _ controller: OverlayWindowController, rect: NSRect, screen: NSScreen)
@@ -302,6 +304,15 @@ class OverlayWindowController {
     /// Set flag so overlay triggers OCR immediately after user makes a selection.
     func setAutoOCRMode() {
         overlayView?.autoOCRMode = true
+    }
+
+    /// Trigger OCR + translation in the compact result panel after selection.
+    func setAutoQuickTranslationMode() {
+        overlayView?.autoQuickTranslationMode = true
+    }
+
+    func clearAutoQuickTranslationMode() {
+        overlayView?.autoQuickTranslationMode = false
     }
 
     /// Set flag so overlay runs OCR + translate + in-place overlay immediately
@@ -633,6 +644,20 @@ extension OverlayWindowController: OverlayViewDelegate {
                 }
             }
         }
+    }
+
+    func overlayViewDidRequestQuickTranslation() {
+        guard let image = captureRegion() else { return }
+        let selection = selectionRect
+        let anchorRect = NSRect(
+            x: selection.origin.x + screen.frame.origin.x,
+            y: selection.origin.y + screen.frame.origin.y,
+            width: selection.width,
+            height: selection.height)
+        playCopySound()
+        dismiss()
+        overlayDelegate?.overlayDidRequestQuickTranslation(
+            self, image: image, anchorRect: anchorRect)
     }
 
     func overlayViewDidRequestUpload() {

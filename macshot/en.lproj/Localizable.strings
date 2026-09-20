@@ -686,6 +686,37 @@
 "Font" = "Font";
 "System" = "System";
 
+/* Quick OCR translation */
+"Capture Translate" = "Capture Translate";
+"Quick Translation" = "Quick Translation";
+"Original" = "Original";
+"Copy Translation" = "Copy Translation";
+"Retry" = "Retry";
+"Recognizing text..." = "Recognizing text...";
+"Translating..." = "Translating...";
+"No text found" = "No text found";
+"Could not read the selected image" = "Could not read the selected image";
+"Text recognition failed" = "Text recognition failed";
+"No response from translation service" = "No response from translation service";
+"DeepLX" = "DeepLX";
+"OpenAI Completions" = "OpenAI Completions";
+"OpenAI Responses" = "OpenAI Responses";
+"Anthropic Messages" = "Anthropic Messages";
+"Endpoint:" = "Endpoint:";
+"Model:" = "Model:";
+"API Key:" = "API Key:";
+"Required" = "Required";
+"Optional for local endpoints" = "Optional for local endpoints";
+"Apple translation runs on-device with installed language packs." = "Apple translation runs on-device with installed language packs.";
+"Google Translate uses the existing unofficial translation endpoint." = "Google Translate uses the existing unofficial translation endpoint.";
+"Enter the full DeepLX /translate endpoint. Use {{apiKey}} in the URL, or the key is sent as a Bearer token." = "Enter the full DeepLX /translate endpoint. Use {{apiKey}} in the URL, or the key is sent as a Bearer token.";
+"Uses the OpenAI Chat Completions messages protocol." = "Uses the OpenAI Chat Completions messages protocol.";
+"Uses the OpenAI Responses input and instructions protocol." = "Uses the OpenAI Responses input and instructions protocol.";
+"Uses the Anthropic Messages protocol with an optional x-api-key." = "Uses the Anthropic Messages protocol with an optional x-api-key.";
+"Test Translation" = "Test Translation";
+"Testing..." = "Testing...";
+"Empty response" = "Empty response";
+
 /* Auto-adjust selection (#317) */
 "Auto-Adjust Selection" = "Auto-Adjust Selection";
 "Auto-adjust selection" = "Auto-adjust selection";

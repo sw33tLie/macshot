@@ -585,8 +585,16 @@ extension OverlayView {
         }
     }
 
+    func cancelTranslation() {
+        translationRequestID &+= 1
+        TranslationService.cancelTranslations(requestScope: translationRequestScope)
+        isTranslating = false
+    }
+
     func performTranslate(targetLang: String) {
         guard state == .selected, let screenshot = screenshotImage else { return }
+        cancelTranslation()
+        let activeRequestID = translationRequestID
         annotations.removeAll { $0.tool == .translateOverlay }
         isTranslating = true
         needsDisplay = true
@@ -594,13 +602,19 @@ extension OverlayView {
         TranslateOverlay.translate(
             screenshot: screenshot, selectionRect: selectionRect, captureDrawRect: captureDrawRect,
             targetLang: targetLang,
+            requestScope: translationRequestScope,
+            isCurrent: { [weak self] in
+                guard let self else { return false }
+                return self.translationRequestID == activeRequestID && self.state == .selected
+            },
             onError: { [weak self] msg in
-                self?.isTranslating = false
-                self?.showOverlayError(msg)
-                self?.needsDisplay = true
+                guard let self, self.translationRequestID == activeRequestID else { return }
+                self.isTranslating = false
+                self.showOverlayError(msg)
+                self.needsDisplay = true
             },
             completion: { [weak self] anns in
-                guard let self = self else { return }
+                guard let self, self.translationRequestID == activeRequestID else { return }
                 self.isTranslating = false
                 self.annotations.removeAll { $0.tool == .translateOverlay }
                 self.annotations.append(contentsOf: anns)
