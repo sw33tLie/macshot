@@ -222,6 +222,25 @@ final class ImageSaveServiceTests: XCTestCase {
         XCTAssertFalse(reported.isEmpty)
     }
 
+    func testTemplateSubfoldersAreCreatedOnlyBelowAnExistingSaveFolder() throws {
+        let nested = directory.appendingPathComponent("2026/09/25/Safari-14.30.05.png")
+        try ImageSaveService.createSubfolders(for: nested, below: directory)
+        var isDirectory: ObjCBool = false
+        XCTAssertTrue(FileManager.default.fileExists(atPath: nested.deletingLastPathComponent().path,
+                                                     isDirectory: &isDirectory))
+        XCTAssertTrue(isDirectory.boolValue)
+
+        // A vanished save folder is never recreated.
+        let missingRoot = directory.appendingPathComponent("unplugged-drive")
+        try ImageSaveService.createSubfolders(for: missingRoot.appendingPathComponent("2026/x.png"), below: missingRoot)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: missingRoot.path))
+
+        // Paths outside the save folder are ignored.
+        let outside = directory.deletingLastPathComponent().appendingPathComponent("elsewhere-\(UUID().uuidString)/x.png")
+        try ImageSaveService.createSubfolders(for: outside, below: directory)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: outside.deletingLastPathComponent().path))
+    }
+
     func testTheDefaultSaveActionIsToUseTheConfiguredFolder() {
         withDefaults([SaveActionPreference.userDefaultsKey: nil]) {
             XCTAssertEqual(SaveActionPreference.current, .saveToFolder)

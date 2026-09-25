@@ -107,6 +107,7 @@ enum ImageSaveService {
         _ image: NSImage,
         using action: SaveActionPreference = .current,
         windowTitle: String? = nil,
+        appName: String? = nil,
         panelLevel: NSWindow.Level? = nil,
         sheetWindow: NSWindow? = nil,
         activateApp: Bool = true,
@@ -118,6 +119,7 @@ enum ImageSaveService {
             saveToConfiguredFolder(
                 image,
                 windowTitle: windowTitle,
+                appName: appName,
                 panelLevel: panelLevel,
                 sheetWindow: sheetWindow,
                 activateApp: activateApp,
@@ -127,6 +129,7 @@ enum ImageSaveService {
             showSavePanel(
                 for: image,
                 windowTitle: windowTitle,
+                appName: appName,
                 panelLevel: panelLevel,
                 sheetWindow: sheetWindow,
                 activateApp: activateApp,
@@ -138,6 +141,7 @@ enum ImageSaveService {
     static func saveToConfiguredFolder(
         _ image: NSImage,
         windowTitle: String? = nil,
+        appName: String? = nil,
         panelLevel: NSWindow.Level? = nil,
         sheetWindow: NSWindow? = nil,
         activateApp: Bool = true,
@@ -145,10 +149,11 @@ enum ImageSaveService {
         completion: Completion? = nil
     ) {
         guard let prepared = prepare(image, completion: completion) else { return }
-        let filename = defaultFilename(windowTitle: windowTitle, format: prepared.format)
+        // May contain "/" when the template files captures into subfolders.
+        let filename = defaultRelativePath(windowTitle: windowTitle, appName: appName, format: prepared.format)
         if let dirURL = SaveDirectoryAccess.resolveIfAccessible() {
             writePreparedImage(prepared, to: dirURL.appendingPathComponent(filename), chooseAvailableName: true,
-                               lease: SaveDirectoryLease(alreadyAccessing: dirURL),
+                               lease: SaveDirectoryLease(alreadyAccessing: dirURL), subfoldersBelow: dirURL,
                                copyPathToClipboard: copyPathToClipboard, completion: completion)
             return
         }
@@ -161,6 +166,7 @@ enum ImageSaveService {
             guard let dirURL else { completionOnMain(completion, false); return }
             writePreparedImage(prepared, to: dirURL.appendingPathComponent(filename), chooseAvailableName: true,
                                lease: SaveDirectoryLease(alreadyAccessing: securityScoped ? dirURL : nil),
+                               subfoldersBelow: dirURL,
                                copyPathToClipboard: copyPathToClipboard, completion: completion)
         }
     }
@@ -169,6 +175,7 @@ enum ImageSaveService {
         for image: NSImage,
         suggestedFilename: String? = nil,
         windowTitle: String? = nil,
+        appName: String? = nil,
         panelLevel: NSWindow.Level? = nil,
         sheetWindow: NSWindow? = nil,
         activateApp: Bool = true,
@@ -178,7 +185,8 @@ enum ImageSaveService {
         guard let prepared = prepare(image, completion: completion) else { return }
         let panel = NSSavePanel()
         panel.allowedContentTypes = [prepared.format.utType]
-        panel.nameFieldStringValue = suggestedFilename ?? defaultFilename(windowTitle: windowTitle, format: prepared.format)
+        panel.nameFieldStringValue = suggestedFilename
+            ?? (defaultRelativePath(windowTitle: windowTitle, appName: appName, format: prepared.format) as NSString).lastPathComponent
         panel.directoryURL = SaveDirectoryAccess.directoryHint()
         panel.canCreateDirectories = true
         panel.isExtensionHidden = false
@@ -201,10 +209,16 @@ enum ImageSaveService {
         presentPanel(panel, sheetWindow: sheetWindow, activateApp: activateApp, completionHandler: handler)
     }
 
-    private static func defaultFilename(windowTitle: String?, format: ImageEncoder.Format) -> String {
-        let template = UserDefaults.standard.string(forKey: FilenameFormatter.userDefaultsKey) ?? FilenameFormatter.defaultTemplate
-        let base = FilenameFormatter.format(template: template, windowTitle: windowTitle)
-        return "\(base).\(format.fileExtension)"
+    /// Template-rendered path relative to the save folder, with extension.
+    private static func defaultRelativePath(windowTitle: String?, appName: String?, format: ImageEncoder.Format) -> String {
+        let defaults = UserDefaults.standard
+        let template = defaults.string(forKey: FilenameFormatter.userDefaultsKey) ?? FilenameFormatter.defaultTemplate
+        let components = FilenameFormatter.formatRelativePath(
+            template: template,
+            noAppTemplate: defaults.string(forKey: FilenameFormatter.noAppUserDefaultsKey),
+            windowTitle: windowTitle,
+            appName: appName)
+        return components.joined(separator: "/") + ".\(format.fileExtension)"
     }
 
     private static func prepare(_ image: NSImage, completion: Completion?) -> ImageEncoder.PreparedImage? {
@@ -219,8 +233,12 @@ enum ImageSaveService {
     /// The same prepared operation handles Save and Save As. The app owns it
     /// through completion (including quit), and the destination is only replaced
     /// after the fully encoded file has been flushed successfully.
+    /// `subfoldersBelow`: an existing save folder under which missing template
+    /// subfolders ({yyyy}/{MM}/...) may be created. The folder itself is never
+    /// recreated: a vanished save folder must fail and be reported.
     static func writePreparedImage(_ prepared: ImageEncoder.PreparedImage, to url: URL,
                                    chooseAvailableName: Bool, lease: SaveDirectoryLease? = nil,
+                                   subfoldersBelow root: URL? = nil,
                                    copyPathToClipboard: Bool? = nil,
                                    completion: Completion?) {
         let shouldCopyPath = copyPathToClipboard ?? copyPathAfterSave
@@ -231,6 +249,7 @@ enum ImageSaveService {
                     try cancellation.check()
                     guard let data = prepared.encode() else { throw CocoaError(.fileWriteUnknown) }
                     if chooseAvailableName {
+                        try createSubfolders(for: url, below: root)
                         return try writeWithoutOverwriting(
                             data,
                             in: url.deletingLastPathComponent(),
@@ -255,6 +274,20 @@ enum ImageSaveService {
                 completion?(false)
             }
         })
+    }
+
+    /// Creates the folders between an existing `root` and `url`'s parent.
+    /// No-op when `root` is nil, missing, or `url` is directly inside it.
+    nonisolated static func createSubfolders(for url: URL, below root: URL?) throws {
+        guard let root else { return }
+        let parent = url.deletingLastPathComponent().standardizedFileURL
+        let base = root.standardizedFileURL
+        guard parent.path != base.path, parent.path.hasPrefix(base.path + "/") else { return }
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: base.path, isDirectory: &isDirectory), isDirectory.boolValue else {
+            return
+        }
+        try FileManager.default.createDirectory(at: parent, withIntermediateDirectories: true)
     }
 
     private static func requestSaveDirectoryAccess(
