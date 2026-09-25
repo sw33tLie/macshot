@@ -835,6 +835,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         HotkeyManager.applyMenuShortcut(for: .recordArea, to: recordAreaItem)
         menu.addItem(recordAreaItem)
 
+        let recordGIFItem = NSMenuItem(title: "\(L("Record")) \(L("GIF"))", action: #selector(recordGIF), keyEquivalent: "")
+        recordGIFItem.target = self
+        recordGIFItem.image = NSImage(systemSymbolName: "photo.stack", accessibilityDescription: nil)
+        HotkeyManager.applyMenuShortcut(for: .recordGIF, to: recordGIFItem)
+        menu.addItem(recordGIFItem)
+
         let recordScreenItem = NSMenuItem(title: L("Record Screen"), action: #selector(recordFullScreen), keyEquivalent: "")
         recordScreenItem.target = self
         recordScreenItem.image = NSImage(systemSymbolName: "menubar.dock.rectangle", accessibilityDescription: nil)
@@ -988,11 +994,29 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             },
             clearHistory: { [weak self] in
                 DispatchQueue.main.async { self?.clearHistorySilently() }
+            },
+            recordGIF: { [weak self] in
+                stamp()
+                self?.perform(#selector(AppDelegate.recordGIFFromHotkey))
             }
         )
     }
 
     private var pendingRecordMode: Bool = false
+    /// Set by the Record GIF entry points: the next recording is converted to
+    /// a GIF when it stops. Every record entry point assigns it, so a
+    /// cancelled GIF selection can't leak into a later recording.
+    private var nextRecordingIsGIF: Bool = false
+    /// Output details of the recording being set up, captured from the overlay
+    /// before it is dismissed (used for GIF conversion and archive naming).
+    private var pendingRecordingOutput = RecordingOutput()
+
+    private struct RecordingOutput {
+        var isGIF = false
+        var appName: String?
+        var startDate = Date()
+        var backingScale: CGFloat = 1
+    }
     private var pendingFullScreen: Bool = false
     private var pendingFullScreenRecord: Bool = false
     private var pendingFullScreenRecordAutoStart: Bool = false
@@ -1185,13 +1209,25 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     @objc private func recordAreaFromHotkey() {
+        // Pressing the record hotkey again stops the take.
+        if recordingEngine != nil { stopRecording(); return }
         beginRecordArea(fromMenu: false)
     }
 
-    private func beginRecordArea(fromMenu: Bool) {
+    private func beginRecordArea(fromMenu: Bool, asGIF: Bool = false) {
         guard canStartCapture else { return }
+        nextRecordingIsGIF = asGIF
         pendingRecordMode = true
         startCapture(fromMenu: fromMenu)
+    }
+
+    @objc private func recordGIF() {
+        beginRecordArea(fromMenu: true, asGIF: true)
+    }
+
+    @objc private func recordGIFFromHotkey() {
+        if recordingEngine != nil { stopRecording(); return }
+        beginRecordArea(fromMenu: false, asGIF: true)
     }
 
     @objc private func recordFullScreen() {
@@ -1204,6 +1240,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
     private func beginRecordFullScreen(fromMenu: Bool) {
         guard canStartCapture else { return }
+        nextRecordingIsGIF = false
         pendingFullScreenRecord = true
         if UserDefaults.standard.integer(forKey: "captureDelaySeconds") > 0 {
             pendingFullScreenRecordAutoStart = true
@@ -2620,6 +2657,9 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         let onStopOverride = controller.sessionRecordingOnStop
         let delayOverride = controller.sessionRecordingDelay
         let hideHUD = controller.sessionHideRecordingHUD ?? UserDefaults.standard.bool(forKey: "hideRecordingHUD")
+        pendingRecordingOutput = RecordingOutput(isGIF: nextRecordingIsGIF, appName: controller.resolvedAppName(),
+                                                 startDate: Date(), backingScale: screen.backingScaleFactor)
+        nextRecordingIsGIF = false
 
         // Detach webcam preview before dismissing overlays so we can reuse the live session
         let existingWebcam = controller.detachWebcamPreview()
@@ -2737,6 +2777,8 @@ extension AppDelegate: OverlayWindowControllerDelegate {
                                  existingWebcam: WebcamOverlay? = nil,
                                  hideHUD: Bool = false) {
         let engine = RecordingEngine()
+        let output = pendingRecordingOutput
+        pendingRecordingOutput = RecordingOutput()
         engine.onProgress = { [weak self] seconds in
             self?.updateRecordingHUD(seconds: seconds)
         }
@@ -2764,16 +2806,15 @@ extension AppDelegate: OverlayWindowControllerDelegate {
                 let deliverRecording: (URL) -> Void = { [weak self] finalURL in
                     guard let self = self else { return }
                     let onStop = onStopOverride ?? UserDefaults.standard.string(forKey: "recordingOnStop") ?? "editor"
-                    switch onStop {
-                    case "finder":
-                        // Publish a user-visible copy while keeping the
-                        // original take available in the recording library.
-                        self.revealRecordingInFinder(tmpURL: finalURL)
-                    case "clipboard":
-                        self.copyRecordingToClipboard(url: finalURL)
-                    default:
-                        VideoEditorWindowController.open(url: finalURL)
+                    // The editor exports GIFs itself; every other destination
+                    // receives the converted GIF.
+                    if output.isGIF, onStop != "editor", finalURL.pathExtension.lowercased() != "gif" {
+                        self.convertRecordingToGIF(finalURL, backingScale: output.backingScale) { [weak self] gifURL in
+                            self?.deliverFinishedRecording(gifURL, onStop: onStop, output: output)
+                        }
+                        return
                     }
+                    self.deliverFinishedRecording(finalURL, onStop: onStop, output: output)
                 }
 
                 // Offer audio merge when both mic + system audio were recorded
@@ -2955,6 +2996,74 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         }
     }
 
+    private func deliverFinishedRecording(_ finalURL: URL, onStop: String, output: RecordingOutput) {
+        switch onStop {
+        case "finder":
+            // Publish a user-visible copy while keeping the
+            // original take available in the recording library.
+            revealRecordingInFinder(tmpURL: finalURL)
+        case "clipboard":
+            copyRecordingToClipboard(url: finalURL)
+        case "save":
+            archiveRecording(tmpURL: finalURL, appName: output.appName, date: output.startDate)
+        default:
+            VideoEditorWindowController.open(url: finalURL)
+        }
+    }
+
+    /// Record GIF: encode the finished take as a looping GIF at point size.
+    /// On failure the MP4 is delivered instead, so a take is never lost.
+    private func convertRecordingToGIF(_ source: URL, backingScale: CGFloat, completion: @escaping (URL) -> Void) {
+        let gifName = source.deletingPathExtension().lastPathComponent + ".gif"
+        let gifURL = TmpScratchDirectory.makeURL(filename: gifName)
+        let savedFPS = UserDefaults.standard.integer(forKey: VideoExportSettings.gifFPSKey)
+        let fps = (5...30).contains(savedFPS) ? savedFPS : 15
+        let job = MediaExportCoordinator.shared.start(title: gifName, status: L("Exporting..."),
+            operation: { cancellation, progress in
+                try await RecordingGIFConverter.convert(source: source, to: gifURL, fps: fps,
+                                                        scale: 1 / max(1, backingScale),
+                                                        cancellation: cancellation, progress: progress)
+            }, completion: { [weak self] result in
+                switch result {
+                case .success:
+                    completion(gifURL)
+                case .failure(let error):
+                    guard !(error is CancellationError) else { return }
+                    self?.showFailureToast(L("Export failed") + ": " + error.localizedDescription)
+                    completion(source)
+                }
+            })
+        MediaExportProgressController.show(for: job)
+    }
+
+    /// `recordingOnStop = "save"`: publish the take into the recording folder
+    /// (screenshot folder as fallback) using the recording filename template,
+    /// whose `/` separators may create dated subfolders, then copy the saved
+    /// file to the clipboard, like a screenshot's "Save + copy".
+    private func archiveRecording(tmpURL: URL, appName: String?, date: Date) {
+        guard let directory = SaveDirectoryAccess.resolveRecordingDirectoryIfAccessible()
+            ?? SaveDirectoryAccess.resolveIfAccessible() else {
+            promptToSaveRecording(tmpURL: tmpURL)
+            return
+        }
+        let defaults = UserDefaults.standard
+        let components = FilenameFormatter.formatRelativePath(
+            template: defaults.string(forKey: FilenameFormatter.recordingUserDefaultsKey)
+                ?? FilenameFormatter.defaultRecordingTemplate,
+            noAppTemplate: defaults.string(forKey: FilenameFormatter.recordingNoAppUserDefaultsKey),
+            appName: appName, date: date, fallback: FilenameFormatter.defaultRecordingTemplate)
+        let ext = tmpURL.pathExtension.isEmpty ? "mp4" : tmpURL.pathExtension
+        let destination = directory.appendingPathComponent(components.joined(separator: "/"))
+            .appendingPathExtension(ext)
+        let access = SaveDirectoryLease(alreadyAccessing: directory)
+        saveRecordingCopy(source: tmpURL, destination: destination, avoidCollisions: true, access: access,
+                          revealInFinder: false, subfoldersBelow: directory,
+                          onSuccess: { [weak self] savedURL in self?.copyRecordingToClipboard(url: savedURL) }) { [weak self] error in
+            guard !(error is CancellationError) else { return }
+            self?.showFailureToast(L("Save failed") + ": " + error.localizedDescription)
+        }
+    }
+
     /// Copy a recording to a user-visible directory
     /// and reveal it in Finder. Used by the `recordingOnStop = "finder"`
     /// flow so the user doesn't end up staring at a deep sandbox path.
@@ -3002,12 +3111,16 @@ extension AppDelegate: OverlayWindowControllerDelegate {
     }
 
     private func saveRecordingCopy(source: URL, destination: URL, avoidCollisions: Bool,
-                                   access: SaveDirectoryLease? = nil, onFailure: @escaping (Error) -> Void) {
+                                   access: SaveDirectoryLease? = nil, revealInFinder: Bool = true,
+                                   subfoldersBelow root: URL? = nil,
+                                   onSuccess: ((URL) -> Void)? = nil,
+                                   onFailure: @escaping (Error) -> Void) {
         var publishedURL = destination
         let job = MediaExportCoordinator.shared.start(title: destination.lastPathComponent, status: L("Saving..."),
             operation: { cancellation, progress in
                 publishedURL = try await MediaExportIO.perform {
                     try cancellation.check()
+                    try ImageSaveService.createSubfolders(for: destination, below: root)
                     var selectedURL = destination
                     if avoidCollisions {
                         let base = destination.deletingPathExtension().lastPathComponent
@@ -3030,7 +3143,9 @@ extension AppDelegate: OverlayWindowControllerDelegate {
             }, completion: { result in
                 withExtendedLifetime(access) {}
                 switch result {
-                case .success: NSWorkspace.shared.activateFileViewerSelecting([publishedURL])
+                case .success:
+                    if revealInFinder { NSWorkspace.shared.activateFileViewerSelecting([publishedURL]) }
+                    onSuccess?(publishedURL)
                 case .failure(let error): onFailure(error)
                 }
             })
