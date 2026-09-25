@@ -92,6 +92,31 @@ class OverlayWindowController {
 
     weak var overlayDelegate: OverlayWindowControllerDelegate?
     var capturedWindowTitle: String?
+    /// Frontmost app when the capture started (for the `{app}` filename token).
+    var capturedAppName: String?
+
+    /// App a capture belongs to: the owner of a snapped window, nil for a
+    /// whole-display selection, otherwise the app that was frontmost when the
+    /// capture started. Call before `dismiss()`, which resets the selection.
+    func resolvedAppName() -> String? {
+        guard let view = overlayView else { return capturedAppName }
+        if view.selectionIsWindowSnap, let windowID = view.snappedWindowID ?? view.hoveredSnapWindowID,
+           let owner = Self.ownerName(ofWindow: windowID) {
+            return FilenameFormatter.appNameForTemplate(owner)
+        }
+        let selection = view.selectionRect
+        if selection.width >= view.bounds.width - 1, selection.height >= view.bounds.height - 1 {
+            return nil
+        }
+        return capturedAppName
+    }
+
+    private static func ownerName(ofWindow windowID: CGWindowID) -> String? {
+        guard let info = CGWindowListCopyWindowInfo([.optionIncludingWindow], windowID) as? [[String: Any]] else {
+            return nil
+        }
+        return info.first?[kCGWindowOwnerName as String] as? String
+    }
     var timingMark: ((String) -> Void)? {
         didSet {
             overlayView?.timingMark = timingMark
@@ -853,6 +878,7 @@ extension OverlayWindowController: OverlayViewDelegate {
 
     @available(macOS 14.0, *)
     func overlayViewDidRequestRemoveBackground() {
+        let appName = resolvedAppName()
         guard var image = captureRegion() else { return }
         image = applyBeautifyIfNeeded(image) ?? image
 
@@ -907,6 +933,7 @@ extension OverlayWindowController: OverlayViewDelegate {
                         ImageSaveService.saveToConfiguredFolder(
                             finalNSImage,
                             windowTitle: self.capturedWindowTitle,
+                            appName: appName,
                             copyPathToClipboard: mode.copyPathOverride)
                     }
                     self.playCopySound()
@@ -926,6 +953,7 @@ extension OverlayWindowController: OverlayViewDelegate {
     }
 
     func overlayViewDidRequestQuickSave() {
+        let appName = resolvedAppName()
         // Snapshot post-processing config before dismissing
         let hasEffects = overlayView?.effectsActive ?? false
         let effectsCfg = overlayView?.effectsConfig ?? ImageEffectsConfig()
@@ -986,12 +1014,14 @@ extension OverlayWindowController: OverlayViewDelegate {
             ImageSaveService.saveToConfiguredFolder(
                 image,
                 windowTitle: capturedWindowTitle,
+                appName: appName,
                 copyPathToClipboard: mode.copyPathOverride)
         }
         // In do-nothing mode, the image is still passed to the delegate for the thumbnail.
     }
 
     func overlayViewDidRequestFileSave() {
+        let appName = resolvedAppName()
         guard let image = captureImageForSave() else {
             dismiss()
             overlayDelegate?.overlayDidCancel(self)
@@ -1004,6 +1034,7 @@ extension OverlayWindowController: OverlayViewDelegate {
         ImageSaveService.saveToConfiguredFolder(
             image,
             windowTitle: capturedWindowTitle,
+            appName: appName,
             panelLevel: NSWindow.Level(258)
         ) { [weak self] success in
             if success {
@@ -1027,6 +1058,7 @@ extension OverlayWindowController: OverlayViewDelegate {
         ImageSaveService.showSavePanel(
             for: image,
             windowTitle: capturedWindowTitle,
+            appName: resolvedAppName(),
             panelLevel: NSWindow.Level(258)
         ) { [weak self] success in
             guard let self = self else { return }
