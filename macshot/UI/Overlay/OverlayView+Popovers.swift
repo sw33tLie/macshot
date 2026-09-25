@@ -301,7 +301,7 @@ extension OverlayView {
                 super.init()
             }
             @objc func changed(_ sender: NSPopUpButton) {
-                let values = ["editor", "finder", "clipboard"]
+                let values = ["editor", "finder", "clipboard", "save"]
                 overlayView?.sessionRecordingOnStop = values[sender.indexOfSelectedItem]
             }
         }
@@ -313,12 +313,13 @@ extension OverlayView {
 
         // When done popup
         let whenDonePopup = NSPopUpButton()
-        whenDonePopup.addItems(withTitles: [L("Open editor"), L("Show in Finder"), L("Copy to clipboard")])
+        whenDonePopup.addItems(withTitles: [L("Open editor"), L("Show in Finder"), L("Copy to clipboard"), L("Save + copy to clipboard")])
         whenDonePopup.controlSize = .small
         whenDonePopup.font = NSFont.systemFont(ofSize: 11)
         switch effectiveOnStop {
         case "finder": whenDonePopup.selectItem(at: 1)
         case "clipboard": whenDonePopup.selectItem(at: 2)
+        case "save": whenDonePopup.selectItem(at: 3)
         default: whenDonePopup.selectItem(at: 0)
         }
 

@@ -215,4 +215,48 @@ final class FilenameFormatterTests: XCTestCase {
         XCTAssertFalse(name.contains(":"), "HH:mm:ss would be mangled by the filesystem")
         XCTAssertEqual(name.filter { $0 == "-" }.count, 2)
     }
+    // MARK: - App token, date parts, subfolders
+
+    func testAppAndDatePartTokens() {
+        let millis = Date(timeIntervalSince1970: 1_773_480_413.042)
+        XCTAssertEqual(
+            FilenameFormatter.format(template: "{app}-{HH}.{mm}.{ss}.{ms}", appName: "Safari", date: millis),
+            "Safari-\(expectedDate("HH")).\(expectedDate("mm")).\(expectedDate("ss")).042")
+        XCTAssertEqual(FilenameFormatter.format(template: "{yyyy}{MM}{dd}", date: fixedDate),
+                       expectedDate("yyyyMMdd"))
+    }
+
+    func testSlashesBecomeSubfolders() {
+        let path = FilenameFormatter.formatRelativePath(
+            template: "{yyyy}/{MM}/{dd}/{app}-{HH}.{mm}.{ss}", appName: "Safari", date: fixedDate)
+        XCTAssertEqual(path, [expectedDate("yyyy"), expectedDate("MM"), expectedDate("dd"),
+                              "Safari-\(expectedDate("HH.mm.ss"))"])
+    }
+
+    func testNoAppTemplateIsUsedOnlyWhenAppIsUnknown() {
+        let template = "{yyyy}/{app}-{HH}"
+        let noApp = "{yyyy}/{HH}.{ms}"
+        XCTAssertEqual(FilenameFormatter.formatRelativePath(template: template, noAppTemplate: noApp,
+                                                            appName: "Xcode", date: fixedDate),
+                       [expectedDate("yyyy"), "Xcode-\(expectedDate("HH"))"])
+        XCTAssertEqual(FilenameFormatter.formatRelativePath(template: template, noAppTemplate: noApp,
+                                                            appName: "  ", date: fixedDate),
+                       [expectedDate("yyyy"), "\(expectedDate("HH")).000"])
+        // Without a no-app template the main one still renders.
+        XCTAssertEqual(FilenameFormatter.formatRelativePath(template: template, appName: nil, date: fixedDate).count, 2)
+    }
+
+    func testRelativePathCannotEscapeTheSaveFolder() {
+        let path = FilenameFormatter.formatRelativePath(template: "../../{app}/./x//{window}",
+                                                        windowTitle: "a/b", appName: "..", date: fixedDate)
+        XCTAssertFalse(path.contains(".."))
+        XCTAssertFalse(path.contains("."))
+        XCTAssertFalse(path.contains(""))
+        XCTAssertEqual(path.last, "a-b", "slashes inside a token value never create folders")
+    }
+
+    func testEmptyRelativePathFallsBack() {
+        XCTAssertEqual(FilenameFormatter.formatRelativePath(template: "{app}/{window}", date: fixedDate),
+                       [FilenameFormatter.format(template: FilenameFormatter.defaultTemplate, date: fixedDate)])
+    }
 }
