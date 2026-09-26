@@ -12,6 +12,7 @@ protocol OverlayViewDelegate: AnyObject {
     func overlayViewDidRequestSaveAs()
     func overlayViewDidRequestPin()
     func overlayViewDidRequestOCR()
+    func overlayViewDidRequestTableRecognition()
     func overlayViewDidRequestQuickSave()
     func overlayViewDidRequestFileSave()
     func overlayViewDidRequestUpload()
@@ -33,6 +34,10 @@ protocol OverlayViewDelegate: AnyObject {
     func overlayViewDidChangeSnapMode()
     func overlayViewRemoteSelectionDidFinish(_ rect: NSRect)
     func overlayViewDidRequestAddCapture()
+}
+
+extension OverlayViewDelegate {
+    func overlayViewDidRequestTableRecognition() {}
 }
 
 /// An entry in the undo/redo history.
@@ -8275,6 +8280,8 @@ class OverlayView: NSView {
             overlayDelegate?.overlayViewDidRequestPin()
         case .ocr:
             overlayDelegate?.overlayViewDidRequestOCR()
+        case .tableRecognition:
+            overlayDelegate?.overlayViewDidRequestTableRecognition()
         case .autoRedact:
             performAutoRedact()
         case .removeBackground:
