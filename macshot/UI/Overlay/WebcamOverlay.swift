@@ -66,6 +66,16 @@ class WebcamOverlay: NSPanel {
     private var currentSize: CGFloat = WebcamSize.defaultPoints
     private var currentShape: WebcamShape = .circle
 
+    /// Recorded area (screen coordinates) the bubble stays inside.
+    private var constraintRect: NSRect = .zero
+    private let resizeHandle = WebcamResizeHandleView()
+    private var isHovered = false
+    private var isInteracting = false
+    private var hideHandleWork: DispatchWorkItem?
+
+    /// Called with the new screen frame while the user moves or resizes the bubble.
+    var onFrameChanged: ((NSRect) -> Void)?
+
     init(screen: NSScreen) {
         super.init(
             contentRect: NSRect(x: 0, y: 0, width: 120, height: 120),
@@ -89,35 +99,44 @@ class WebcamOverlay: NSPanel {
         containerView.autoresizingMask = [.width, .height]
         containerView.panel = self
         contentView!.addSubview(containerView)
+
+        resizeHandle.panel = self
+        resizeHandle.isHidden = true
+        contentView!.addSubview(resizeHandle)
     }
 
     // MARK: - Public API
 
-    func configure(position: WebcamPosition, size: CGFloat, shape: WebcamShape, recordingRect: NSRect) {
-        let padding: CGFloat = 12
-        let maximumFittingSize = max(1, min(recordingRect.width, recordingRect.height) - padding * 2)
-        currentSize = min(
-            min(max(size, WebcamSize.minPoints), WebcamSize.maxPoints),
-            maximumFittingSize)
+    /// Places the bubble in `recordingRect`: at `freeCenter` (normalized,
+    /// from a previous drag) when given, otherwise in the `position` corner.
+    func configure(position: WebcamPosition, size: CGFloat, shape: WebcamShape, recordingRect: NSRect,
+                   freeCenter: CGPoint? = nil) {
+        constraintRect = recordingRect
         currentShape = shape
-
-        let s = currentSize
-
-        var origin: NSPoint
-        switch position {
-        case .bottomRight:
-            origin = NSPoint(x: recordingRect.maxX - s - padding, y: recordingRect.minY + padding)
-        case .bottomLeft:
-            origin = NSPoint(x: recordingRect.minX + padding, y: recordingRect.minY + padding)
-        case .topRight:
-            origin = NSPoint(x: recordingRect.maxX - s - padding, y: recordingRect.maxY - s - padding)
-        case .topLeft:
-            origin = NSPoint(x: recordingRect.minX + padding, y: recordingRect.maxY - s - padding)
+        let s = WebcamPlacement.fittedSize(size, in: recordingRect)
+        let frame: NSRect
+        if let freeCenter {
+            frame = WebcamPlacement.frame(
+                center: WebcamPlacement.center(fromNormalized: freeCenter, in: recordingRect),
+                size: s, in: recordingRect)
+        } else {
+            frame = WebcamPlacement.cornerFrame(position, size: s, in: recordingRect)
         }
+        applyBubbleFrame(frame, notify: false)
+    }
 
-        setFrame(NSRect(x: origin.x, y: origin.y, width: s, height: s), display: true)
+    /// Applies a new square frame and keeps mask, preview, handle and shadow in step.
+    private func applyBubbleFrame(_ frame: NSRect, notify: Bool = true) {
+        currentSize = frame.width
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        setFrame(frame, display: true)
         applyShapeMask()
         previewLayer?.frame = containerView.bounds
+        layoutResizeHandle()
+        CATransaction.commit()
+        invalidateShadow()
+        if notify { onFrameChanged?(frame) }
     }
 
     func startPreview(deviceUID: String?) {
@@ -196,6 +215,107 @@ class WebcamOverlay: NSPanel {
 
     func setDraggable(_ draggable: Bool) {
         ignoresMouseEvents = !draggable
+        if !draggable { setHovered(false) }
+    }
+
+    // MARK: - Move & resize
+
+    private var dragOffset: NSPoint = .zero
+    private var resizeAnchor: NSPoint = .zero
+
+    fileprivate func beginMove(at mouse: NSPoint) {
+        isInteracting = true
+        dragOffset = NSPoint(x: mouse.x - frame.minX, y: mouse.y - frame.minY)
+    }
+
+    fileprivate func move(to mouse: NSPoint) {
+        var f = frame
+        f.origin = NSPoint(x: mouse.x - dragOffset.x, y: mouse.y - dragOffset.y)
+        applyBubbleFrame(WebcamPlacement.clamped(f, to: constraintRect))
+    }
+
+    fileprivate func endMove() {
+        isInteracting = false
+        if WebcamPlacement.snapsToCorners,
+           let corner = WebcamPlacement.snapCorner(for: frame, in: constraintRect) {
+            let target = WebcamPlacement.cornerFrame(corner, size: currentSize, in: constraintRect)
+            if target != frame { applyBubbleFrame(target) }
+        }
+        persistPlacement()
+        if !isHovered { scheduleHandleHide() }
+    }
+
+    fileprivate func beginResize() {
+        isInteracting = true
+        // The corner opposite the handle stays put.
+        let d = WebcamPlacement.handleDirection(for: frame, in: constraintRect)
+        resizeAnchor = NSPoint(x: d.dx > 0 ? frame.minX : frame.maxX, y: d.dy > 0 ? frame.minY : frame.maxY)
+    }
+
+    fileprivate func resize(to mouse: NSPoint) {
+        let side = max(abs(mouse.x - resizeAnchor.x), abs(mouse.y - resizeAnchor.y))
+        applyBubbleFrame(WebcamPlacement.resized(frame, to: side, keeping: resizeAnchor, in: constraintRect))
+    }
+
+    fileprivate func endResize() {
+        isInteracting = false
+        persistPlacement()
+        if !isHovered { scheduleHandleHide() }
+    }
+
+    /// Pinch / ⌥-scroll resize around the bubble's center.
+    fileprivate func scale(by delta: CGFloat) {
+        guard delta.isFinite, delta != 0 else { return }
+        let center = NSPoint(x: frame.midX, y: frame.midY)
+        applyBubbleFrame(WebcamPlacement.frame(center: center, size: currentSize + delta, in: constraintRect))
+        persistPlacement()
+    }
+
+    /// Remembers the placement for the next recording: a corner slot when
+    /// the bubble sits in one, otherwise its normalized center.
+    private func persistPlacement() {
+        WebcamSize.save(points: currentSize)
+        if let corner = WebcamPlacement.snapCorner(for: frame, in: constraintRect, threshold: 0.5) {
+            WebcamPlacement.saveCorner(corner)
+        } else if let center = WebcamPlacement.normalizedCenter(of: frame, in: constraintRect) {
+            WebcamPlacement.saveFreeCenter(center)
+        }
+    }
+
+    // MARK: - Resize handle
+
+    fileprivate func setHovered(_ hovered: Bool) {
+        isHovered = hovered
+        if hovered {
+            hideHandleWork?.cancel()
+            hideHandleWork = nil
+            resizeHandle.isHidden = ignoresMouseEvents
+        } else if !isInteracting {
+            scheduleHandleHide()
+        }
+    }
+
+    /// Hides the handle shortly after the pointer leaves. When the webcam
+    /// is part of the recorded pixels the handle must not linger on screen.
+    private func scheduleHandleHide() {
+        hideHandleWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            guard let self, !self.isHovered, !self.isInteracting else { return }
+            self.resizeHandle.isHidden = true
+        }
+        hideHandleWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: work)
+    }
+
+    private func layoutResizeHandle() {
+        guard let content = contentView else { return }
+        let s = content.bounds.width
+        let d = WebcamPlacement.handleDirection(for: frame, in: constraintRect)
+        // On the bubble's rim, on the side facing the inside of the recorded area.
+        let reach = s / 2 * 0.62
+        let side = WebcamResizeHandleView.side
+        let center = NSPoint(x: s / 2 + reach * d.dx, y: s / 2 + reach * d.dy)
+        resizeHandle.frame = NSRect(x: center.x - side / 2, y: center.y - side / 2, width: side, height: side)
     }
 
     // MARK: - Frame tap (separate camera recording)
@@ -289,24 +409,62 @@ class WebcamOverlay: NSPanel {
 
 // MARK: - Draggable content view
 
+/// Drag to move, pinch or ⌥-scroll to resize. Works while another app is
+/// active (during recording), hence `acceptsFirstMouse`.
 private class WebcamContainerView: NSView {
-    weak var panel: NSPanel?
-    private var dragOrigin: NSPoint = .zero
+    weak var panel: WebcamOverlay?
+    private var hoverArea: NSTrackingArea?
 
-    override func mouseDown(with event: NSEvent) {
-        dragOrigin = event.locationInWindow
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        if let hoverArea { removeTrackingArea(hoverArea) }
+        let area = NSTrackingArea(rect: .zero, options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
+                                  owner: self, userInfo: nil)
+        addTrackingArea(area)
+        hoverArea = area
     }
 
-    override func mouseDragged(with event: NSEvent) {
-        guard let panel = panel else { return }
-        let current = event.locationInWindow
-        let dx = current.x - dragOrigin.x
-        let dy = current.y - dragOrigin.y
-        var origin = panel.frame.origin
-        origin.x += dx
-        origin.y += dy
-        panel.setFrameOrigin(origin)
+    override func mouseEntered(with event: NSEvent) { panel?.setHovered(true) }
+    override func mouseExited(with event: NSEvent) { panel?.setHovered(false) }
+
+    override func mouseDown(with event: NSEvent) { panel?.beginMove(at: NSEvent.mouseLocation) }
+    override func mouseDragged(with event: NSEvent) { panel?.move(to: NSEvent.mouseLocation) }
+    override func mouseUp(with event: NSEvent) { panel?.endMove() }
+
+    override func magnify(with event: NSEvent) {
+        guard let panel else { return }
+        panel.scale(by: panel.frame.width * event.magnification)
     }
+
+    override func scrollWheel(with event: NSEvent) {
+        guard event.modifierFlags.contains(.option) else { return super.scrollWheel(with: event) }
+        let delta = event.hasPreciseScrollingDeltas ? event.scrollingDeltaY : event.scrollingDeltaY * 8
+        panel?.scale(by: delta)
+    }
+}
+
+/// Small grip on the bubble's rim; dragging it resizes around the opposite corner.
+private final class WebcamResizeHandleView: NSView {
+    static let side: CGFloat = 16
+    weak var panel: WebcamOverlay?
+
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+    override var isFlipped: Bool { false }
+
+    override func draw(_ dirtyRect: NSRect) {
+        let dot = NSBezierPath(ovalIn: bounds.insetBy(dx: 2, dy: 2))
+        NSColor.white.setFill()
+        dot.fill()
+        NSColor.black.withAlphaComponent(0.35).setStroke()
+        dot.lineWidth = 1
+        dot.stroke()
+    }
+
+    override func mouseDown(with event: NSEvent) { panel?.beginResize() }
+    override func mouseDragged(with event: NSEvent) { panel?.resize(to: NSEvent.mouseLocation) }
+    override func mouseUp(with event: NSEvent) { panel?.endResize() }
 }
 
 

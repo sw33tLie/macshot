@@ -8058,7 +8058,6 @@ class OverlayView: NSView {
     }
 
     private func configureWebcamSetupPreview(_ overlay: WebcamOverlay, on screen: NSScreen) {
-        let position = WebcamPosition(rawValue: UserDefaults.standard.string(forKey: "webcamPosition") ?? "bottomRight") ?? .bottomRight
         let shape = WebcamShape(rawValue: UserDefaults.standard.string(forKey: "webcamShape") ?? "circle") ?? .circle
         let screenOrigin = screen.frame.origin
         let screenRect = NSRect(
@@ -8067,8 +8066,8 @@ class OverlayView: NSView {
             width: selectionRect.width,
             height: selectionRect.height)
         overlay.configure(
-            position: position, size: WebcamSize.savedPoints,
-            shape: shape, recordingRect: screenRect)
+            position: WebcamPlacement.savedPosition, size: WebcamSize.savedPoints,
+            shape: shape, recordingRect: screenRect, freeCenter: WebcamPlacement.savedFreeCenter)
     }
 
     private func showCameraPermissionAlert() {

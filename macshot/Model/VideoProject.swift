@@ -254,10 +254,16 @@ nonisolated struct VideoCameraStyle: Codable, Equatable, Sendable {
     var mirror = true
     var shrinkOnZoom = true
     var shadow = true
+    /// Replays where the bubble was during recording, including moves and
+    /// resizes made while recording, instead of `position` and `size`.
+    /// Only takes with a recorded placement track use it.
+    var followsRecording = false
 
     init() {}
 
-    private enum CodingKeys: String, CodingKey { case show, shape, size, position, mirror, shrinkOnZoom, shadow }
+    private enum CodingKeys: String, CodingKey {
+        case show, shape, size, position, mirror, shrinkOnZoom, shadow, followsRecording
+    }
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         show = c.decode(.show, or: true)
@@ -267,6 +273,7 @@ nonisolated struct VideoCameraStyle: Codable, Equatable, Sendable {
         mirror = c.decode(.mirror, or: true)
         shrinkOnZoom = c.decode(.shrinkOnZoom, or: true)
         shadow = c.decode(.shadow, or: true)
+        followsRecording = c.decode(.followsRecording, or: false)
     }
 }
 
