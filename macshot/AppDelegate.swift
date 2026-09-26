@@ -2842,19 +2842,19 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         if UserDefaults.standard.bool(forKey: "recordWebcam") &&
            AVCaptureDevice.authorizationStatus(for: .video) == .authorized {
             if let existing = existingWebcam {
-                // Reuse the live preview — just lock it in place
-                existing.setDraggable(false)
+                // Reuse the live preview; it stays movable and resizable
+                // inside the recorded area while recording (#425).
+                existing.setDraggable(true)
                 existing.orderFrontRegardless()
                 webcamOverlay = existing
             } else {
                 let overlay = WebcamOverlay(screen: screen)
-                let position = WebcamPosition(rawValue: UserDefaults.standard.string(forKey: "webcamPosition") ?? "bottomRight") ?? .bottomRight
                 let shape = WebcamShape(rawValue: UserDefaults.standard.string(forKey: "webcamShape") ?? "circle") ?? .circle
                 overlay.configure(
-                    position: position, size: WebcamSize.savedPoints,
-                    shape: shape, recordingRect: rect)
+                    position: WebcamPlacement.savedPosition, size: WebcamSize.savedPoints,
+                    shape: shape, recordingRect: rect, freeCenter: WebcamPlacement.savedFreeCenter)
                 overlay.startPreview(deviceUID: UserDefaults.standard.string(forKey: "selectedCameraDeviceUID"))
-                overlay.setDraggable(false)
+                overlay.setDraggable(true)
                 overlay.orderFrontRegardless()
                 webcamOverlay = overlay
             }
@@ -2886,7 +2886,15 @@ extension AppDelegate: OverlayWindowControllerDelegate {
                 let recorder = VideoCameraRecorder()
                 if webcam.startFrameTap({ sample, host in recorder.append(sample, hostTime: host) }) {
                     engine.cameraRecorder = recorder
-                    engine.onCameraFinished = { [weak webcam] in webcam?.stopFrameTap() }
+                    // Moves and resizes during the take are replayed by the editor (#425).
+                    recorder.recordPlacement(frame: webcam.frame, in: rect)
+                    webcam.onFrameChanged = { [weak recorder] frame in
+                        recorder?.recordPlacement(frame: frame, in: rect)
+                    }
+                    engine.onCameraFinished = { [weak webcam] in
+                        webcam?.onFrameChanged = nil
+                        webcam?.stopFrameTap()
+                    }
                     excludeIDs.append(CGWindowID(webcam.windowNumber))
                 }
             }

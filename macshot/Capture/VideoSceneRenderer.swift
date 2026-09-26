@@ -87,12 +87,16 @@ nonisolated final class VideoWebcamLayer: @unchecked Sendable {
     /// Upright transform for the camera track's natural image.
     let uprightTransform: CGAffineTransform
     let uprightSize: CGSize
+    /// Where the bubble sat while recording; used when the style follows it.
+    let placement: CameraPlacementTrack?
 
-    init(trackID: Int32, style: VideoCameraStyle, uprightTransform: CGAffineTransform, uprightSize: CGSize) {
+    init(trackID: Int32, style: VideoCameraStyle, uprightTransform: CGAffineTransform, uprightSize: CGSize,
+         placement: CameraPlacementTrack? = nil) {
         self.trackID = trackID
         self.style = style
         self.uprightTransform = uprightTransform
         self.uprightSize = uprightSize
+        self.placement = placement
     }
 }
 
@@ -221,7 +225,7 @@ nonisolated enum VideoSceneRenderer {
 
         // 6. Camera bubble, keystrokes, captions — fixed to the screen.
         if let webcam = scene.webcam, let webcamFrame, webcam.style.show {
-            composed = drawWebcam(webcamFrame, on: composed, layer: webcam, layout: layout, camera: camera)
+            composed = drawWebcam(webcamFrame, on: composed, layer: webcam, layout: layout, camera: camera, time: time)
         }
         if scene.keystrokeStyle.show, let (label, opacity) = KeystrokeTimeline.active(at: time, in: scene.keystrokes) {
             composed = drawKeystroke(label.text, opacity: opacity, on: composed, scene: scene)
@@ -424,28 +428,47 @@ nonisolated enum VideoSceneRenderer {
 
     // MARK: Webcam
 
-    private static func drawWebcam(_ frame: CIImage, on image: CIImage, layer: VideoWebcamLayer,
-                                   layout: VideoSceneLayout, camera: CameraState) -> CIImage {
-        let style = layer.style
+    /// Bubble rect in canvas pixels (bottom-left origin) at source `time`.
+    static func webcamRect(style: VideoCameraStyle, placement: CameraPlacementTrack?,
+                           layout: VideoSceneLayout, zoom: CGFloat, time: Double) -> CGRect {
         let W = layout.canvasSize.width, H = layout.canvasSize.height
         let short = min(W, H)
-        var size = CGFloat(style.size) * short
-        if style.shrinkOnZoom, camera.zoom > 1.001 {
-            let amount = min(1, (camera.zoom - 1) / 0.8)
-            size *= 1 - 0.35 * amount
-        }
         let aspect: CGFloat
         switch style.shape {
         case .circle, .roundedSquare: aspect = 1
         case .roundedRect: aspect = 16.0 / 9.0
         case .vertical: aspect = 3.0 / 4.0
         }
+        let shrink: CGFloat = style.shrinkOnZoom && zoom > 1.001 ? 1 - 0.35 * min(1, (zoom - 1) / 0.8) : 1
+
+        if style.followsRecording, let sample = placement?.sample(at: time) {
+            // Recorded placement is relative to the recording, so it lands
+            // where the bubble was over the same content. Screen-fixed: it
+            // does not follow the zoom.
+            let contentShort = min(layout.contentSize.width, layout.contentSize.height) * layout.contentScale
+            let size = min(CGFloat(sample.size) * contentShort * shrink, short)
+            let bw = min(size * aspect, W), bh = size
+            let c = layout.canvasPoint(forContent: CGPoint(x: sample.centerX, y: sample.centerY))
+            let x = min(max(c.x - bw / 2, 0), W - bw)
+            let yTop = min(max(c.y - bh / 2, 0), H - bh)
+            return CGRect(x: x, y: H - yTop - bh, width: bw, height: bh)
+        }
+
+        let size = CGFloat(style.size) * short * shrink
         let bw = size * aspect, bh = size
         let margin = short * 0.035
         let anchor = style.position.anchor
         let x = margin + (W - bw - 2 * margin) * anchor.x
         let yTop = margin + (H - bh - 2 * margin) * anchor.y
-        let rect = CGRect(x: x, y: H - yTop - bh, width: bw, height: bh)
+        return CGRect(x: x, y: H - yTop - bh, width: bw, height: bh)
+    }
+
+    private static func drawWebcam(_ frame: CIImage, on image: CIImage, layer: VideoWebcamLayer,
+                                   layout: VideoSceneLayout, camera: CameraState, time: Double) -> CIImage {
+        let style = layer.style
+        let short = min(layout.canvasSize.width, layout.canvasSize.height)
+        let rect = webcamRect(style: style, placement: layer.placement, layout: layout, zoom: camera.zoom, time: time)
+        guard rect.width > 1, rect.height > 1 else { return image }
 
         // Aspect-fill the camera image into the bubble.
         var cam = frame
