@@ -231,6 +231,27 @@ enum ImageEncoder {
         }
     }
 
+    /// Publish App Shot image first, then its context as a second clipboard state.
+    /// Keep the upstream sandbox-safe clipboard behavior: no private file URL.
+    static func copyContextCaptureToClipboard(_ image: NSImage, markdown: String) async -> Bool {
+        let pasteboard = NSPasteboard.general
+        let generation = AppShotClipboardPublisher.beginPublication()
+        guard let prepared = try? PreparedImage(image) else { return false }
+        let representations = await Task.detached(priority: .userInitiated) {
+            clipboardRepresentations(for: prepared, includeConfiguredFormat: false)
+        }.value
+        guard let pngData = representations.first(where: { $0.type == .png })?.data,
+              AppShotClipboardPublisher.isCurrent(generation) else { return false }
+        return await AppShotClipboardPublisher.publish(
+            to: pasteboard,
+            generation: generation,
+            backingURL: nil,
+            pngData: pngData,
+            tiffData: representations.first(where: { $0.type == .tiff })?.data,
+            markdown: markdown
+        )
+    }
+
     /// Pasteboard flavors in preference order. PNG and TIFF are always present
     /// so apps that only read those (Teams, browsers, RDP) keep working; the
     /// configured format goes first when opted in so apps that read it get the
