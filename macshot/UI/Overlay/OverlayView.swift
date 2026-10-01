@@ -674,6 +674,18 @@ class OverlayView: NSView {
     var isTranslating: Bool = false
     var translateEnabled: Bool = false
 
+    /// Set while OCR runs on the selection. Shows a spinner over the selection
+    /// and holds every input except Escape, so a click, double-click or Return
+    /// can't turn the OCR capture into an ordinary screenshot while Vision works.
+    var isRecognizingText: Bool = false {
+        didSet {
+            guard isRecognizingText != oldValue else { return }
+            if isRecognizingText { showToolbars = false }
+            updateRecognitionIndicator()
+        }
+    }
+    private var recognitionIndicator: NSView?
+
     // Crop tool state
     private var isCropDragging: Bool = false
     private var cropDragStart: NSPoint = .zero
@@ -1526,6 +1538,10 @@ class OverlayView: NSView {
     // MARK: - Hit Testing
 
     override func hitTest(_ point: NSPoint) -> NSView? {
+        // While OCR runs, no subview (toolbar, resolution box) takes a click.
+        if isRecognizingText {
+            return frame.contains(point) ? self : nil
+        }
         // Let real NSView subviews (toolbar strips, options row) handle their own events.
         // This prevents our mouseDown override from intercepting slider drags etc.
         // In editor mode the strips live in chromeParentView (a sibling container), not in
@@ -5594,6 +5610,7 @@ class OverlayView: NSView {
     // MARK: - Mouse Events
 
     override func mouseDown(with event: NSEvent) {
+        if isRecognizingText { return }
         let point = convert(event.locationInWindow, from: nil)
         justDismissedTextEditor = false  // reset per click; set below if we commit one
 
@@ -5841,6 +5858,7 @@ class OverlayView: NSView {
     }
 
     override func mouseDragged(with event: NSEvent) {
+        if isRecognizingText { return }
         let point = convert(event.locationInWindow, from: nil)
 
         // Cancel long-press timer if the user moved more than 3px (they're drawing, not selecting)
@@ -6495,6 +6513,7 @@ class OverlayView: NSView {
     }
 
     override func mouseUp(with event: NSEvent) {
+        if isRecognizingText { return }
         spaceRepositioning = false
 
         // Any drag that used boundary snap is ending — clear its guide lines.
@@ -6836,6 +6855,35 @@ class OverlayView: NSView {
         }
     }
 
+    /// Spinner centered on the selection while `isRecognizingText` is set.
+    private func updateRecognitionIndicator() {
+        guard isRecognizingText else {
+            recognitionIndicator?.removeFromSuperview()
+            recognitionIndicator = nil
+            return
+        }
+        let side: CGFloat = 56
+        let container = recognitionIndicator ?? {
+            let view = NSView(frame: NSRect(x: 0, y: 0, width: side, height: side))
+            view.wantsLayer = true
+            view.layer?.backgroundColor = NSColor(white: 0.1, alpha: 0.85).cgColor
+            view.layer?.cornerRadius = 12
+            view.appearance = NSAppearance(named: .darkAqua)
+            let spinner = NSProgressIndicator(frame: NSRect(x: 12, y: 12, width: 32, height: 32))
+            spinner.style = .spinning
+            spinner.controlSize = .regular
+            spinner.isIndeterminate = true
+            spinner.startAnimation(nil)
+            view.addSubview(spinner)
+            addSubview(view)
+            recognitionIndicator = view
+            return view
+        }()
+        let area = selectionRect.width >= side && selectionRect.height >= side ? selectionRect : bounds
+        container.setFrameOrigin(NSPoint(x: (area.midX - side / 2).rounded(),
+                                         y: (area.midY - side / 2).rounded()))
+    }
+
     private func applyPreSelectionLockAfterSelection() {
         switch activePreSelectionPreset {
         case .ratio(let aspect):
@@ -6995,6 +7043,7 @@ class OverlayView: NSView {
     }
 
     override func rightMouseDown(with event: NSEvent) {
+        if isRecognizingText { return }
         let point = convert(event.locationInWindow, from: nil)
 
         // Text Fill/Outline color picking handled by ToolOptionsRowView
@@ -7069,6 +7118,7 @@ class OverlayView: NSView {
     }
 
     override func rightMouseDragged(with event: NSEvent) {
+        if isRecognizingText { return }
         if colorWheel.isVisible {
             let point = convert(event.locationInWindow, from: nil)
             colorWheel.updateHover(at: point)
@@ -7078,6 +7128,7 @@ class OverlayView: NSView {
     }
 
     override func rightMouseUp(with event: NSEvent) {
+        if isRecognizingText { return }
         if colorWheel.isVisible && !colorWheel.isSticky {
             if colorWheel.hoveredColor != nil {
                 // User dragged to a color — pick it and dismiss
@@ -9094,6 +9145,7 @@ class OverlayView: NSView {
     }
 
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        if isRecognizingText { return true }
         // Text editing: forward standard commands to the active text view.
         if let tv = textEditView {
             if let action = EditorCommandShortcutManager.action(for: event) {
@@ -9173,6 +9225,12 @@ class OverlayView: NSView {
     }
 
     override func keyDown(with event: NSEvent) {
+        if isRecognizingText {
+            if event.keyCode == 53 {  // Escape abandons the OCR run
+                overlayDelegate?.overlayViewDidCancel()
+            }
+            return
+        }
         // Recording setup allows Move and Escape, without activating screenshot
         // tools or output shortcuts. The actual recording uses a separate HUD.
         if isRecording {
@@ -10252,6 +10310,7 @@ class OverlayView: NSView {
         autoQuickSaveMode = false
         autoScrollCaptureMode = false
         autoConfirmMode = false
+        isRecognizingText = false
         needsDisplay = true
     }
 }

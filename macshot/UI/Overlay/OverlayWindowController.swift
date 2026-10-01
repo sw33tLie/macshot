@@ -667,6 +667,7 @@ extension OverlayWindowController: OverlayViewDelegate {
         guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
             return
         }
+        overlayView?.isRecognizingText = true
 
         DispatchQueue.global(qos: .userInitiated).async {
             VisionOCR.performTextAndQRCodeRecognition(cgImage: cgImage) { [weak self] result in

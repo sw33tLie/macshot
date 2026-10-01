@@ -138,6 +138,50 @@ final class OverlayAutoSelectionTests: XCTestCase {
             XCTAssertEqual(delegate.confirms, 0)
         }
     }
+
+    // MARK: - While OCR runs
+
+    private func recognizingOverlay() -> (OverlayView, RecordingOverlayDelegate) {
+        let (view, delegate) = makeOverlay()
+        view.applySelection(NSRect(x: 30, y: 40, width: 200, height: 150))
+        view.isRecognizingText = true
+        return (view, delegate)
+    }
+
+    func testRecognitionHidesTheToolbarAndShowsASpinner() {
+        let (view, _) = recognizingOverlay()
+        XCTAssertFalse(view.showToolbars)
+        XCTAssertTrue(view.subviews.contains { $0.subviews.contains { $0 is NSProgressIndicator } })
+
+        view.isRecognizingText = false
+        XCTAssertFalse(view.subviews.contains { $0.subviews.contains { $0 is NSProgressIndicator } })
+    }
+
+    func testConfirmingIsHeldWhileRecognizing() {
+        let (view, delegate) = recognizingOverlay()
+        let inside = NSPoint(x: 100, y: 100)
+        view.mouseDown(with: mouseEvent(.leftMouseDown, at: inside))
+        view.mouseUp(with: mouseEvent(.leftMouseUp, at: inside))
+        view.mouseDown(with: mouseEvent(.leftMouseDown, at: inside, clickCount: 2))
+        view.mouseUp(with: mouseEvent(.leftMouseUp, at: inside, clickCount: 2))
+        view.keyDown(with: TestKeyEvent.keyDown(characters: "\r", keyCode: TestKeyEvent.Code.returnKey))
+        XCTAssertTrue(view.performKeyEquivalent(
+            with: TestKeyEvent.keyDown(characters: "c", keyCode: TestKeyEvent.Code.c, modifiers: .command)))
+        XCTAssertEqual(delegate.confirms, 0, "a confirm would turn the OCR capture into a screenshot")
+        XCTAssertEqual(view.selectionRect, NSRect(x: 30, y: 40, width: 200, height: 150))
+    }
+
+    func testEscapeAbandonsRecognition() {
+        let (view, delegate) = recognizingOverlay()
+        view.keyDown(with: TestKeyEvent.keyDown(characters: "\u{1b}", keyCode: TestKeyEvent.Code.escape))
+        XCTAssertEqual(delegate.cancels, 1)
+    }
+
+    func testResetClearsRecognition() {
+        let (view, _) = recognizingOverlay()
+        view.reset()
+        XCTAssertFalse(view.isRecognizingText, "a pooled overlay must not start the next session locked")
+    }
 }
 
 /// Counts the delegate calls the auto-selection tests care about.
