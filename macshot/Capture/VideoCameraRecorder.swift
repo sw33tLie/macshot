@@ -9,7 +9,8 @@ protocol RecordingCameraSource: AnyObject {
 }
 
 /// Records the webcam to its own file beside a take so the editor can
-/// restyle, move, resize or hide the camera after recording.
+/// restyle, move, resize or hide the camera after recording. Where the live
+/// bubble sat (including moves during the take) goes to a placement track.
 ///
 /// The file's timeline is aligned to the screen recording: sample times are
 /// host-clock seconds shifted so t = 0 is the screen's first frame, with
@@ -34,6 +35,12 @@ final class VideoCameraRecorder: @unchecked Sendable {
     nonisolated(unsafe) private(set) var frameCount = 0
     /// One frame the encoder was not ready for, retried with the next frame.
     nonisolated(unsafe) private var pending: (CMSampleBuffer, CMTime)?
+    /// Bubble placement over the take, written beside the camera file.
+    nonisolated(unsafe) private var placements: [CameraPlacementTrack.Sample] = []
+    /// Latest placement before the first screen frame; becomes time zero.
+    nonisolated(unsafe) private var initialPlacement: CameraPlacementTrack.Sample?
+    /// Media time at which the current pause began.
+    nonisolated(unsafe) private var pausedMediaTime: Double?
 
     /// Called once (on the recorder's queue) if the camera file fails, so
     /// the caller can put the camera back into the screen capture.
@@ -57,12 +64,19 @@ final class VideoCameraRecorder: @unchecked Sendable {
         queue.async { if self.anchor == nil { self.anchor = hostTime } }
     }
 
-    nonisolated func pause() { queue.async { self.paused = true } }
+    nonisolated func pause(hostTime: Double? = nil) {
+        let host = hostTime ?? Self.hostNow()
+        queue.async {
+            self.paused = true
+            self.pausedMediaTime = Self.mediaTime(host: host, anchor: self.anchor, pausedTotal: self.pausedTotal)
+        }
+    }
 
     nonisolated func resume(pausedDuration: Double) {
         queue.async {
             guard self.paused else { return }
             self.paused = false
+            self.pausedMediaTime = nil
             if pausedDuration.isFinite, pausedDuration > 0 { self.pausedTotal += pausedDuration }
         }
     }
@@ -72,6 +86,65 @@ final class VideoCameraRecorder: @unchecked Sendable {
         // queue reads this one.
         nonisolated(unsafe) let sample = sample
         queue.async { self.appendOnQueue(sample, hostTime: hostTime) }
+    }
+
+    // MARK: Bubble placement
+
+    /// Records where the live bubble is (`frame` inside the recorded
+    /// `bounds`, AppKit screen coordinates) so the editor can replay moves
+    /// and resizes made during the take. Moves while paused take effect at
+    /// the point where the take resumes.
+    nonisolated func recordPlacement(frame: CGRect, in bounds: CGRect, hostTime: Double? = nil) {
+        let host = hostTime ?? Self.hostNow()
+        queue.async {
+            guard !self.finished,
+                  let sample = CameraPlacementTrack.Sample.normalized(frame: frame, in: bounds, time: 0) else { return }
+            let media = self.paused
+                ? self.pausedMediaTime
+                : Self.mediaTime(host: host, anchor: self.anchor, pausedTotal: self.pausedTotal)
+            guard let media else {
+                // Before the first screen frame: the latest one starts the take.
+                if self.anchor == nil { self.initialPlacement = sample }
+                return
+            }
+            if self.placements.isEmpty {
+                var start = self.initialPlacement ?? sample
+                start.time = 0
+                self.placements.append(start)
+            }
+            var timed = sample
+            timed.time = media
+            // Mouse events arrive faster than any frame rate; within one
+            // frame keep only the newest placement (at the frame's time, so
+            // a continuous drag still yields one sample per frame).
+            if let last = self.placements.last, self.placements.count > 1, media - last.time < 1.0 / 60 {
+                timed.time = last.time
+                self.placements[self.placements.count - 1] = timed
+            } else if self.placements.count < CameraPlacementTrack.maxSamples {
+                self.placements.append(timed)
+            } else {
+                self.placements[self.placements.count - 1] = timed
+            }
+        }
+    }
+
+    nonisolated private static func hostNow() -> Double {
+        CMClockGetTime(CMClockGetHostTimeClock()).seconds
+    }
+
+    /// Writes the placement track beside the camera file. Best effort: the
+    /// editor falls back to its own placement without it.
+    nonisolated private func writePlacements() {
+        guard let url else { return }
+        var samples = placements
+        if samples.isEmpty, var initial = initialPlacement {
+            initial.time = 0
+            samples = [initial]
+        }
+        let track = CameraPlacementTrack(samples: samples)
+        guard !track.isEmpty, let data = track.encoded() else { return }
+        try? data.write(to: url.deletingLastPathComponent().appendingPathComponent(CameraPlacementTrack.filename),
+                        options: .atomic)
     }
 
     /// Media time for a host time, or nil before the first screen frame.
@@ -156,6 +229,7 @@ final class VideoCameraRecorder: @unchecked Sendable {
                     continuation.resume()
                     return
                 }
+                self.writePlacements()
                 self.input?.markAsFinished()
                 // The last frame keeps its duration rather than ending at zero length.
                 if self.lastTime.isValid { writer.endSession(atSourceTime: CMTimeAdd(self.lastTime, self.lastDuration)) }

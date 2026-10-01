@@ -98,7 +98,8 @@ final class VideoRenderPlanner {
            let upright = VideoRenderGeometry.layout(sourceSize: cameraTrack.naturalSize,
                                                      preferredTransform: cameraTrack.preferredTransform) {
             webcam = VideoWebcamLayer(trackID: id, style: project.look.camera,
-                                      uprightTransform: upright.coreImageTransform, uprightSize: upright.uprightSize)
+                                      uprightTransform: upright.coreImageTransform, uprightSize: upright.uprightSize,
+                                      placement: document.cameraPlacement)
         }
         return VideoSceneBuilder.snapshot(project: project, layout: layout, recording: document.recording, track: track,
                                           assets: assets, art: art, directory: document.projectDirectory,

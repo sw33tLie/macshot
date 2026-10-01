@@ -581,15 +581,25 @@ final class VideoInspectorView: NSView {
             p.look.camera.shape = shapes[i]
         })
         add(InspectorCard([
+            // Picking a size or position switches from the recorded placement to a fixed one.
             slider(L("Size"), 0.08...0.6, get: { [unowned self] in self.look.camera.size },
-                   format: { "\(Int(($0 * 100).rounded()))%" }) { p, v in p.look.camera.size = v },
+                   format: { "\(Int(($0 * 100).rounded()))%" }) { p, v in
+                p.look.camera.size = v
+                p.look.camera.followsRecording = false },
             toggle(L("Mirror"), get: { [unowned self] in self.look.camera.mirror }) { p, on in p.look.camera.mirror = on },
             toggle(L("Shrink during zooms"), get: { [unowned self] in self.look.camera.shrinkOnZoom }) { p, on in
                 p.look.camera.shrinkOnZoom = on },
             toggle(L("Shadow"), get: { [unowned self] in self.look.camera.shadow }) { p, on in p.look.camera.shadow = on },
         ]))
         add(InspectorSectionHeader(L("Position")))
-        add(positionGrid(get: { [unowned self] in self.look.camera.position }) { p, pos in p.look.camera.position = pos })
+        if document.cameraPlacement != nil {
+            // "Original": where the bubble was, including moves made while recording.
+            add(toggle(L("Original"), get: { [unowned self] in self.look.camera.followsRecording }) {
+                p, on in p.look.camera.followsRecording = on })
+        }
+        add(positionGrid(get: { [unowned self] in self.look.camera.position }) { p, pos in
+            p.look.camera.position = pos
+            p.look.camera.followsRecording = false })
     }
 
     // MARK: Captions

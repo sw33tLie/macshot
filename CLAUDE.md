@@ -58,6 +58,7 @@ macshot/
 │   ├── VideoSceneBuilder.swift        # Main-actor snapshot builder: background art, sprites
 │   ├── KeystrokeTimeline.swift        # Keystroke labels + caption segmentation/SRT
 │   ├── VideoCameraRecorder.swift      # Separate webcam file aligned to the screen clock
+│   ├── CameraPlacementTrack.swift     # Webcam bubble moves/resizes during a take, replayed by the editor
 │   └── VideoCaptionTranscriber.swift  # On-device speech → caption words
 │
 ├── Services/

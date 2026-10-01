@@ -89,6 +89,42 @@ final class VideoStudioMediaTests: XCTestCase {
         XCTAssertEqual(VideoCameraRecorder.mediaTime(host: 99, anchor: 100, pausedTotal: 0), nil)
     }
 
+    func testCameraRecorderWritesBubbleMovesOnTheMediaClock() async throws {
+        let bounds = CGRect(x: 0, y: 0, width: 1000, height: 500)
+        let recorder = VideoCameraRecorder()
+        recorder.open(directory: directory)
+        // Placed before the screen's first frame: the take starts there.
+        recorder.recordPlacement(frame: CGRect(x: 12, y: 12, width: 100, height: 100), in: bounds, hostTime: 50)
+        recorder.markStart(hostTime: 100)
+        let pixels = try RecordingMediaFixture.pixels(width: 64, height: 48)
+        for i in 0..<10 {
+            let host = 100 + Double(i) / 10
+            recorder.append(try videoSample(pixels, at: CMTime(value: Int64(i), timescale: 10)), hostTime: host)
+            try await Task.sleep(nanoseconds: 15_000_000)
+        }
+        recorder.recordPlacement(frame: CGRect(x: 450, y: 200, width: 100, height: 100), in: bounds, hostTime: 100.5)
+        recorder.pause(hostTime: 101)
+        // Moved while paused: takes effect where the take resumes.
+        recorder.recordPlacement(frame: CGRect(x: 800, y: 300, width: 200, height: 200), in: bounds, hostTime: 101.8)
+        recorder.resume(pausedDuration: 2)
+        for i in 0..<5 {
+            let host = 103 + Double(i) / 10
+            recorder.append(try videoSample(pixels, at: CMTime(value: Int64(30 + i), timescale: 10)), hostTime: host)
+            try await Task.sleep(nanoseconds: 15_000_000)
+        }
+        await recorder.finish()
+
+        let track = try XCTUnwrap(CameraPlacementTrack.load(url: directory.appendingPathComponent(CameraPlacementTrack.filename)))
+        XCTAssertEqual(track.samples.count, 3)
+        let times = track.samples.map(\.time)
+        XCTAssertEqual(times[0], 0)
+        XCTAssertEqual(times[1], 0.5, accuracy: 1e-6)
+        XCTAssertEqual(times[2], 1.0, accuracy: 1e-6)
+        XCTAssertEqual(track.samples[0].centerY, 0.876, accuracy: 1e-6)
+        XCTAssertEqual(track.samples[1].centerX, 0.5, accuracy: 1e-6)
+        XCTAssertEqual(track.samples[2].size, 0.4, accuracy: 1e-6)
+    }
+
     func testCameraWithoutFramesLeavesNoFile() async {
         let recorder = VideoCameraRecorder()
         recorder.open(directory: directory)
