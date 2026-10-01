@@ -6748,7 +6748,7 @@ class OverlayView: NSView {
             // Real drag — use drawn rect as-is
             state = .selected
             applyPreSelectionLockAfterSelection()
-            if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode { showToolbars = true }
+            if !hasPendingSelectionAction { showToolbars = true }
             overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
         } else if snapMode != .off, let snapRect = hoveredSnapRect, !snapRect.isEmpty {
             // Click (no drag) with snap on — select the hovered target.
@@ -6768,13 +6768,13 @@ class OverlayView: NSView {
                 }
             }
             state = .selected
-            if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode { showToolbars = true }
+            if !hasPendingSelectionAction { showToolbars = true }
             overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
         } else {
             // Click (no drag), snap off — expand to full screen
             selectionRect = bounds
             state = .selected
-            if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode { showToolbars = true }
+            if !hasPendingSelectionAction { showToolbars = true }
             overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
         }
         hoveredSnapRect = nil
@@ -6783,6 +6783,20 @@ class OverlayView: NSView {
             let point = convert(win.mouseLocationOutsideOfEventStream, from: nil)
             updateCursorForPoint(point)
         }
+        runPendingSelectionActions()
+        needsDisplay = true
+    }
+
+    /// True while the capture entry point (OCR, Quick Capture, Scroll Capture,
+    /// Add Capture) will act on the selection itself, so the toolbars stay hidden.
+    private var hasPendingSelectionAction: Bool {
+        autoOCRMode || autoQuickSaveMode || autoScrollCaptureMode || autoConfirmMode
+    }
+
+    /// Run the one-shot action the capture entry point asked for. Every way of
+    /// completing a selection (drag, click, right-click anchor, F, R) must call
+    /// this, or e.g. Capture OCR leaves a selection with no toolbar and no OCR.
+    private func runPendingSelectionActions() {
         // Auto-enter recording mode if triggered from "Record Screen"
         if autoEnterRecordingMode {
             autoEnterRecordingMode = false
@@ -6820,7 +6834,6 @@ class OverlayView: NSView {
             autoConfirmMode = false
             overlayDelegate?.overlayViewDidConfirm()
         }
-        needsDisplay = true
     }
 
     private func applyPreSelectionLockAfterSelection() {
@@ -6935,9 +6948,7 @@ class OverlayView: NSView {
         if selectionRect.width > 5 || selectionRect.height > 5 {
             state = .selected
             applyPreSelectionLockAfterSelection()
-            if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode {
-                showToolbars = true
-            }
+            if !hasPendingSelectionAction { showToolbars = true }
             overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
         } else if snapMode != .off, let snapRect = hoveredSnapRect, !snapRect.isEmpty {
             selectionRect = snapRect
@@ -6956,22 +6967,19 @@ class OverlayView: NSView {
                 }
             }
             state = .selected
-            if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode {
-                showToolbars = true
-            }
+            if !hasPendingSelectionAction { showToolbars = true }
             overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
         } else {
             selectionRect = bounds
             state = .selected
-            if !autoOCRMode && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode {
-                showToolbars = true
-            }
+            if !hasPendingSelectionAction { showToolbars = true }
             overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
         }
         hoveredSnapRect = nil
         if let win = window {
             updateCursorForPoint(convert(win.mouseLocationOutsideOfEventStream, from: nil))
         }
+        runPendingSelectionActions()
         needsDisplay = true
     }
 
@@ -9184,14 +9192,10 @@ class OverlayView: NSView {
             selectionRect = bounds
             state = .selected
             hoveredSnapRect = nil
-            if autoQuickSaveMode {
-                autoQuickSaveMode = false
-                overlayDelegate?.overlayViewDidRequestQuickSave()
-            } else {
-                showToolbars = true
-                overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
-                needsDisplay = true
-            }
+            if !hasPendingSelectionAction { showToolbars = true }
+            overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
+            runPendingSelectionActions()
+            needsDisplay = true
             return
         }
 
@@ -9962,7 +9966,8 @@ class OverlayView: NSView {
         selectionRect = rect
         selectionStart = rect.origin
         state = .selected
-        showToolbars = true
+        if !hasPendingSelectionAction { showToolbars = true }
+        runPendingSelectionActions()
         needsDisplay = true
     }
 
