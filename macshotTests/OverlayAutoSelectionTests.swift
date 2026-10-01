@@ -182,6 +182,62 @@ final class OverlayAutoSelectionTests: XCTestCase {
         view.reset()
         XCTAssertFalse(view.isRecognizingText, "a pooled overlay must not start the next session locked")
     }
+
+    // MARK: - Late OCR results
+
+    /// Overlay controllers are pooled across capture sessions, so an OCR result
+    /// that arrives after Escape (or after the next capture began) belongs to a
+    /// session that no longer exists.
+    private func pooledController() throws -> OverlayWindowController {
+        let screen = try XCTUnwrap(NSScreen.main, "no main screen in this environment")
+        let controller = OverlayWindowController(screen: screen)
+        let image = ImageProbe.quadrantImage(width: 64, height: 48)
+        controller.setScreenshot(try XCTUnwrap(image.cgImage(forProposedRect: nil, context: nil, hints: nil)))
+        return controller
+    }
+
+    private func drainMainQueue() {
+        let drained = expectation(description: "main queue drained")
+        DispatchQueue.main.async { drained.fulfill() }
+        wait(for: [drained], timeout: 2)
+    }
+
+    func testOCRResultEndsItsOwnSession() throws {
+        try XCTSkipIf(NSScreen.main == nil, "no main screen in this environment")
+        let controller = try pooledController()
+        defer { controller.tearDown() }
+        var finish: ((OCRScanResult) -> Void)?
+        controller.recognizeTextAndQRCodes = { _, completion in finish = completion }
+
+        controller.applySelection(NSRect(x: 10, y: 10, width: 40, height: 30))
+        controller.overlayViewDidRequestOCR()
+        XCTAssertNotNil(finish)
+
+        finish?(OCRScanResult(text: "hello", qrCodes: []))
+        drainMainQueue()
+        XCTAssertFalse(controller.hasSelection, "the result closes the overlay it was started from")
+    }
+
+    func testLateOCRResultLeavesTheNextSessionAlone() throws {
+        try XCTSkipIf(NSScreen.main == nil, "no main screen in this environment")
+        let controller = try pooledController()
+        defer { controller.tearDown() }
+        var finish: ((OCRScanResult) -> Void)?
+        controller.recognizeTextAndQRCodes = { _, completion in finish = completion }
+
+        controller.applySelection(NSRect(x: 10, y: 10, width: 40, height: 30))
+        controller.overlayViewDidRequestOCR()
+        controller.dismiss()  // Escape while Vision is still working
+
+        let next = NSRect(x: 5, y: 5, width: 20, height: 20)
+        let image = ImageProbe.quadrantImage(width: 64, height: 48)
+        controller.setScreenshot(try XCTUnwrap(image.cgImage(forProposedRect: nil, context: nil, hints: nil)))
+        controller.applySelection(next)
+
+        finish?(OCRScanResult(text: "late", qrCodes: []))
+        drainMainQueue()
+        XCTAssertEqual(controller.selectionRect, next, "a stale result must not dismiss the next capture")
+    }
 }
 
 /// Counts the delegate calls the auto-selection tests care about.
