@@ -348,6 +348,114 @@ final class HotkeyManagerTests: XCTestCase {
         }
     }
 
+    private func withCleanHotkeys(_ slots: [HotkeyManager.HotkeySlot], _ body: () -> Void) {
+        let keys = slots.flatMap { [$0.keyCodeKey, $0.modifiersKey, $0.disabledKey] }
+        withDefaults(Dictionary(uniqueKeysWithValues: keys.map { ($0, nil as Any?) }), body)
+    }
+
+    func testAssigningAChordTakesItAwayFromTheSlotThatHadIt() {
+        let first = HotkeyManager.HotkeySlot.captureLastArea
+        let second = HotkeyManager.HotkeySlot.pinFromClipboard
+        let mods = UInt32(cmdKey | optionKey)
+        withCleanHotkeys([first, second]) {
+            HotkeyManager.assignHotkey(for: first, keyCode: 12, modifiers: mods)
+            let displaced = HotkeyManager.assignHotkey(for: second, keyCode: 12, modifiers: mods)
+
+            XCTAssertEqual(displaced, [first], "two slots can't share a chord")
+            XCTAssertEqual(HotkeyManager.readHotkey(for: first).keyCode, 0, "the old slot is cleared")
+            XCTAssertEqual(HotkeyManager.readHotkey(for: second).keyCode, 12)
+            XCTAssertEqual(HotkeyManager.readHotkey(for: second).modifiers, mods)
+        }
+    }
+
+    func testAssigningAnotherSlotsDefaultChordClearsThatSlot() {
+        // Capture Area is unset, so it is bound through its default (Cmd+Shift+X).
+        let area = HotkeyManager.HotkeySlot.captureArea
+        let screen = HotkeyManager.HotkeySlot.captureFullScreen
+        withCleanHotkeys([area, screen]) {
+            let displaced = HotkeyManager.assignHotkey(for: screen, keyCode: area.defaultKeyCode,
+                                                       modifiers: area.defaultModifiers)
+            XCTAssertEqual(displaced, [area])
+            XCTAssertEqual(HotkeyManager.readHotkey(for: area).keyCode, 0,
+                           "the slot must not fall back to the default it just lost")
+        }
+    }
+
+    func testResettingToADefaultTakesItBackFromAnotherSlot() {
+        let screen = HotkeyManager.HotkeySlot.captureFullScreen
+        let history = HotkeyManager.HotkeySlot.historyOverlay
+        withCleanHotkeys([screen, history]) {
+            HotkeyManager.assignHotkey(for: history, keyCode: screen.defaultKeyCode, modifiers: screen.defaultModifiers)
+            let displaced = HotkeyManager.assignHotkey(for: screen, keyCode: screen.defaultKeyCode,
+                                                       modifiers: screen.defaultModifiers)
+            XCTAssertEqual(displaced, [history])
+            XCTAssertEqual(HotkeyManager.readHotkey(for: history).keyCode, 0)
+        }
+    }
+
+    func testADifferentModifierIsADifferentChord() {
+        let first = HotkeyManager.HotkeySlot.captureLastArea
+        let second = HotkeyManager.HotkeySlot.pinFromClipboard
+        withCleanHotkeys([first, second]) {
+            HotkeyManager.assignHotkey(for: first, keyCode: 12, modifiers: UInt32(cmdKey | shiftKey | optionKey))
+            let displaced = HotkeyManager.assignHotkey(for: second, keyCode: 12, modifiers: UInt32(cmdKey | optionKey))
+            XCTAssertEqual(displaced, [])
+            XCTAssertEqual(HotkeyManager.readHotkey(for: first).keyCode, 12)
+        }
+    }
+
+    func testDuplicatesLeftByAnImportKeepOnlyTheFirstSlot() {
+        let area = HotkeyManager.HotkeySlot.captureArea
+        let history = HotkeyManager.HotkeySlot.historyOverlay
+        let lastArea = HotkeyManager.HotkeySlot.captureLastArea
+        withCleanHotkeys(HotkeyManager.HotkeySlot.allCases) {
+            // An imported file that gives three slots the same chord.
+            let mods = UInt32(cmdKey | optionKey | controlKey)
+            for slot in [area, history, lastArea] {
+                HotkeyManager.saveHotkey(for: slot, keyCode: UInt32(kVK_F18), modifiers: mods)
+            }
+            HotkeyManager.resolveDuplicateHotkeys()
+            XCTAssertEqual(HotkeyManager.readHotkey(for: area).keyCode, UInt32(kVK_F18), "the first slot keeps it")
+            XCTAssertEqual(HotkeyManager.readHotkey(for: history).keyCode, 0)
+            XCTAssertEqual(HotkeyManager.readHotkey(for: lastArea).keyCode, 0)
+        }
+    }
+
+    func testDistinctHotkeysSurviveDuplicateResolution() {
+        withCleanHotkeys(HotkeyManager.HotkeySlot.allCases) {
+            let before = HotkeyManager.HotkeySlot.allCases.map { HotkeyManager.readHotkey(for: $0).keyCode }
+            HotkeyManager.resolveDuplicateHotkeys()
+            let after = HotkeyManager.HotkeySlot.allCases.map { HotkeyManager.readHotkey(for: $0).keyCode }
+            XCTAssertEqual(before, after, "the defaults don't collide, so nothing is cleared")
+        }
+    }
+
+    /// Uses real Carbon registration: a chord the app holds can't be registered
+    /// again in the same process, so a second registration attempt tells us
+    /// whether HotkeyManager currently holds it.
+    func testSuspendReleasesHotkeysAndResumeTakesThemBack() {
+        let slot = HotkeyManager.HotkeySlot.captureLastArea
+        let key = UInt32(kVK_F19), mods = UInt32(cmdKey | optionKey | controlKey)
+        func chordIsFree() -> Bool {
+            var ref: EventHotKeyRef?
+            let id = EventHotKeyID(signature: OSType(0x5445_5354), id: 99)
+            let status = RegisterEventHotKey(key, mods, id, GetApplicationEventTarget(), 0, &ref)
+            if let ref { UnregisterEventHotKey(ref) }
+            return status == noErr
+        }
+        withCleanHotkeys([slot]) {
+            HotkeyManager.saveHotkey(for: slot, keyCode: key, modifiers: mods)
+            HotkeyManager.shared.register(slot: slot, callback: {})
+            defer { HotkeyManager.shared.unregisterAll() }
+
+            XCTAssertFalse(chordIsFree(), "registered: the app holds the chord")
+            HotkeyManager.shared.suspend()
+            XCTAssertTrue(chordIsFree(), "suspended: a recorder can receive the key")
+            HotkeyManager.shared.resume()
+            XCTAssertFalse(chordIsFree(), "resumed: the hotkey works again")
+        }
+    }
+
     func testModifierSymbolsAreInTheOrderMacOSShowsThem() {
         let all = HotkeyManager.modifierString(from: UInt32(controlKey | optionKey | shiftKey | cmdKey))
         XCTAssertEqual(all, "\u{2303}\u{2325}\u{21E7}\u{2318}", "macOS renders modifiers as ⌃⌥⇧⌘")
