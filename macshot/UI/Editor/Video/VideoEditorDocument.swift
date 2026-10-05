@@ -48,6 +48,8 @@ final class VideoEditorDocument {
     let recording: CursorRecording?
     /// Recorded camera, if the take has a separate camera file.
     let cameraURL: URL?
+    /// Where the camera bubble sat while recording, if the take has it.
+    let cameraPlacement: CameraPlacementTrack?
     /// Folder for the project file and any imported background image.
     let projectDirectory: URL?
     private let projectURL: URL?
@@ -112,6 +114,9 @@ final class VideoEditorDocument {
         recording = telemetryURL.flatMap { CursorRecording.load(url: $0) }
         let camera = sessionOwned ? directory?.appendingPathComponent(VideoCameraRecorder.filename) : nil
         cameraURL = camera.flatMap { FileManager.default.fileExists(atPath: $0.path) ? $0 : nil }
+        cameraPlacement = cameraURL == nil ? nil : directory.flatMap {
+            CameraPlacementTrack.load(url: $0.appendingPathComponent(CameraPlacementTrack.filename))
+        }
 
         if let url = projectURL, let data = try? Data(contentsOf: url), let saved = VideoProject.decode(data),
            abs(saved.sourceDuration - prepared.duration) < 0.05 {
@@ -119,7 +124,7 @@ final class VideoEditorDocument {
             saved.sanitizeSegments()
             project = saved
         } else {
-            let look: VideoLook
+            var look: VideoLook
             if sessionOwned {
                 if let remembered = VideoLook.remembered() {
                     look = remembered
@@ -131,6 +136,8 @@ final class VideoEditorDocument {
             } else {
                 look = VideoLook()
             }
+            // A new take starts with the camera where it was while recording.
+            look.camera.followsRecording = cameraPlacement != nil
             project = VideoProject(sourceDuration: prepared.duration, look: look)
         }
         savedState = project.encoded()

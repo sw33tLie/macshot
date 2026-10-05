@@ -407,7 +407,9 @@ extension OverlayView {
                 init(overlayView: OverlayView?) { self.overlayView = overlayView; super.init() }
                 @objc func changed(_ sender: NSSegmentedControl) {
                     let values = ["bottomLeft", "bottomRight", "topLeft", "topRight"]
-                    UserDefaults.standard.set(values[sender.selectedSegment], forKey: "webcamPosition")
+                    if let position = WebcamPosition(rawValue: values[sender.selectedSegment]) {
+                        WebcamPlacement.saveCorner(position)
+                    }
                     overlayView?.updateWebcamSetupPreview()
                 }
             }

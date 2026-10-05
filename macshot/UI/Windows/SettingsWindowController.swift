@@ -142,6 +142,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var webcamSizeSlider: NSSlider!
     private var webcamSizeLabel: NSTextField!
     private var webcamShapePopup: NSPopUpButton!
+    private var webcamSnapCheckbox: NSButton!
     // Scroll capture controls
     private var scrollAutoScrollCheckbox: NSButton!
     private var scrollSpeedPopup: NSPopUpButton!
@@ -1845,6 +1846,11 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         webcamShapePopup.target = self
         webcamShapePopup.action = #selector(webcamShapeChanged(_:))
         stack.addArrangedSubview(labeledRow(L("Shape:"), controls: [webcamShapePopup]))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        webcamSnapCheckbox = NSButton(checkboxWithTitle: L("Snap webcam to corners when moved"),
+                                      target: self, action: #selector(webcamSnapChanged(_:)))
+        stack.addArrangedSubview(webcamSnapCheckbox)
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // ── Scroll Capture ────────────────────────────────────
@@ -2757,6 +2763,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         updateWebcamSizeLabel()
 
         webcamShapePopup.selectItem(at: (UserDefaults.standard.string(forKey: "webcamShape") ?? "circle") == "roundedRect" ? 1 : 0)
+        webcamSnapCheckbox.state = WebcamPlacement.snapsToCorners ? .on : .off
 
         // Scroll Capture
         let autoScroll = UserDefaults.standard.object(forKey: "scrollAutoScrollEnabled") as? Bool ?? false
@@ -2954,7 +2961,13 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
     @objc private func webcamPositionChanged(_ sender: NSPopUpButton) {
         let values = ["bottomRight", "bottomLeft", "topRight", "topLeft"]
-        UserDefaults.standard.set(values[sender.indexOfSelectedItem], forKey: "webcamPosition")
+        if let position = WebcamPosition(rawValue: values[sender.indexOfSelectedItem]) {
+            WebcamPlacement.saveCorner(position)
+        }
+    }
+
+    @objc private func webcamSnapChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: WebcamPlacement.snapKey)
     }
 
     @objc private func webcamSizeChanged(_ sender: NSSlider) {
