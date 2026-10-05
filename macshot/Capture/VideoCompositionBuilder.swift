@@ -38,10 +38,18 @@ enum VideoCompositionBuilder {
         let timeScale = editingTimeScale(tracks: [sourceVideo] + sourceAudio, frameDuration: frameDuration)
         video.naturalTimeScale = timeScale
         video.preferredTransform = sourceVideo.preferredTransform
-        let audio = try sourceAudio.map { _ -> AVMutableCompositionTrack in
+        let audio = try sourceAudio.map { source -> AVMutableCompositionTrack in
             guard let track = composition.addMutableTrack(withMediaType: .audio,
                 preferredTrackID: kCMPersistentTrackID_Invalid) else { throw BuildError.invalidTimeline }
-            track.naturalTimeScale = timeScale
+            // Audio keeps its own sample clock. The editing timescale is
+            // inflated toward 1 GHz for exact video endpoints, and an export
+            // copies a composition track's naturalTimeScale straight into the
+            // written mdhd. A ~1 GHz audio mdhd makes ffmpeg-family demuxers
+            // read the edit list's priming media_time against the sample rate
+            // instead of the media timescale, so the skip overshoots the track
+            // and every frame is discarded: Discord, YouTube and browsers all
+            // play the export silently while AVFoundation still sounds right.
+            track.naturalTimeScale = source.naturalTimeScale > 0 ? source.naturalTimeScale : timeScale
             return track
         }
         // Keep every edited endpoint on the same compatible clock. With a
