@@ -11,6 +11,7 @@ enum FilenameFormatter {
     /// but no app is known (e.g. a whole-display capture). Empty or missing
     /// means "use the main template anyway".
     static let noAppUserDefaultsKey = "filenameTemplateNoApp"
+    static let recordingNoAppUserDefaultsKey = "recordingFilenameTemplateNoApp"
 
     /// Renders a filename *without* extension from a user-editable template.
     ///
