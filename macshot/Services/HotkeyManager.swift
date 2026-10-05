@@ -138,6 +138,7 @@ class HotkeyManager {
     /// Register all hotkeys with their callbacks.
     func registerAll(captureArea: @escaping () -> Void, captureFullScreen: @escaping () -> Void, recordArea: @escaping () -> Void, recordScreen: @escaping () -> Void, historyOverlay: @escaping () -> Void, captureOCR: @escaping () -> Void, quickCapture: @escaping () -> Void, scrollCapture: @escaping () -> Void, openFromClipboard: @escaping () -> Void, captureLastArea: @escaping () -> Void, pinFromClipboard: @escaping () -> Void, clearHistory: @escaping () -> Void) {
         unregisterAll()
+        Self.resolveDuplicateHotkeys()
         register(slot: .captureArea, callback: captureArea)
         register(slot: .captureFullScreen, callback: captureFullScreen)
         register(slot: .recordArea, callback: recordArea)
@@ -201,6 +202,24 @@ class HotkeyManager {
     /// Legacy — kept for backward compatibility.
     func unregister() { unregisterAll() }
 
+    /// Stop every global hotkey without forgetting its callback. Carbon hotkeys
+    /// are taken before any window sees the key, so while Settings records a
+    /// shortcut they must be off, or pressing a bound chord fires its action
+    /// instead of being recorded.
+    func suspend() {
+        for (_, ref) in hotKeyRefs {
+            UnregisterEventHotKey(ref)
+        }
+        hotKeyRefs.removeAll()
+    }
+
+    /// Re-register every slot that has a callback, from the stored bindings.
+    func resume() {
+        for (slot, callback) in callbacks {
+            register(slot: slot, callback: callback)
+        }
+    }
+
     deinit { unregisterAll() }
 
     // MARK: - UserDefaults Helpers
@@ -218,6 +237,40 @@ class HotkeyManager {
             return (slot.defaultKeyCode, slot.defaultModifiers)
         }
         return (storedKey, storedMods)
+    }
+
+    /// Bind `slot` to a chord, taking it away from any other slot that has it,
+    /// including through its default. Two slots can't share a chord: the second
+    /// registration fails and that slot silently does nothing. Returns the
+    /// slots that lost the chord.
+    @discardableResult
+    static func assignHotkey(for slot: HotkeySlot, keyCode: UInt32, modifiers: UInt32) -> [HotkeySlot] {
+        let displaced = HotkeySlot.allCases.filter { other in
+            guard other != slot else { return false }
+            let bound = readHotkey(for: other)
+            return bound.keyCode == keyCode && bound.modifiers == modifiers
+        }
+        for other in displaced {
+            disableHotkey(for: other)
+        }
+        saveHotkey(for: slot, keyCode: keyCode, modifiers: modifiers)
+        return displaced
+    }
+
+    /// Clear any slot whose chord an earlier slot already has. Settings import
+    /// and older builds can leave duplicates behind; registration order follows
+    /// `allCases`, so the slot that keeps the chord is the one that already
+    /// worked, and the dead one now shows "None" instead of a shortcut that
+    /// never fires.
+    static func resolveDuplicateHotkeys() {
+        var taken = Set<[UInt32]>()
+        for slot in HotkeySlot.allCases {
+            let bound = readHotkey(for: slot)
+            guard bound.modifiers != 0 || isFunctionKey(bound.keyCode) else { continue }
+            if !taken.insert([bound.keyCode, bound.modifiers]).inserted {
+                disableHotkey(for: slot)
+            }
+        }
     }
 
     /// Save a hotkey to UserDefaults.
