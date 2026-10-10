@@ -288,7 +288,15 @@ final class MP4WriterSession: @unchecked Sendable {
                 guard let self = self, !done, self.finalResult == nil else { return }
                 self.drainAudio(isMic: isMic)
                 let empty = isMic ? self.pendingMicSamples.isEmpty : self.pendingAudioSamples.isEmpty
-                guard empty || self.firstError != nil else { return }
+                guard empty || self.firstError != nil else {
+                    if !input.isReadyForMoreMediaData {
+                        if isMic { self.pendingMicSamples.removeAll() } else { self.pendingAudioSamples.removeAll() }
+                        done = true
+                        input.markAsFinished()
+                        finishedInput()
+                    }
+                    return
+                }
                 done = true
                 input.markAsFinished()
                 finishedInput()
@@ -374,6 +382,8 @@ final class MP4WriterSession: @unchecked Sendable {
         guard input.isReadyForMoreMediaData else { droppedVideoFrames += 1; return false }
         if !sessionStarted {
             startTime = time
+            lastAudioEnd = time
+            lastMicEnd = time
             writer.startSession(atSourceTime: time)
             sessionStarted = true
             // Pre-roll that ends before the first frame would only be trimmed.
@@ -457,8 +467,7 @@ final class MP4WriterSession: @unchecked Sendable {
         }
     }
 
-    /// Drops the oldest queued audio to admit `sample`. Returns false (after
-    /// failing the take) once more than `maximumDroppedSeconds` were dropped.
+    /// Drops the oldest queued audio to admit `sample`.
     private func makeRoomForAudio(_ sample: CMSampleBuffer, isMic: Bool) -> Bool {
         if !audioStats.loggedOverflow {
             audioStats.loggedOverflow = true
@@ -472,15 +481,16 @@ final class MP4WriterSession: @unchecked Sendable {
             let seconds = max(0, CMSampleBufferGetDuration(oldest).seconds)
             audioStats.overflowSeconds += seconds
             if audioStats.overflowSeconds > Self.maximumDroppedAudioSeconds {
-                fail(WriterError.audioOverload)
-                return false
+                if !audioStats.loggedDropWarning {
+                    audioStats.loggedDropWarning = true
+                    Self.log.warning("Audio overflow exceeded \(Self.maximumDroppedAudioSeconds, privacy: .public)s (\(isMic ? "mic" : "system", privacy: .public)), discarding stale buffers to keep recording active.")
+                }
             }
         }
         return true
     }
 
-    /// Total queued audio that may be dropped over one take before the
-    /// recording is stopped.
+    /// Total queued audio that may be dropped over one take before warning.
     private static let maximumDroppedAudioSeconds = 30.0
 
     /// Audio kept before the first video frame. Generous because a first frame
@@ -494,6 +504,11 @@ final class MP4WriterSession: @unchecked Sendable {
     }
 
     private func drainAudio(isMic: Bool) {
+        if !isMic {
+            synchronizeAudioTracks()
+        } else if let micInput = micAudioInput, !micInput.isReadyForMoreMediaData {
+            synchronizeAudioTracks()
+        }
         guard sessionStarted, firstError == nil,
               let input = isMic ? micAudioInput : audioInput else { return }
         while input.isReadyForMoreMediaData {
@@ -501,6 +516,25 @@ final class MP4WriterSession: @unchecked Sendable {
             guard let sample = sample else { break }
             let lastEnd = isMic ? lastMicEnd : lastAudioEnd
             let boundary = lastEnd.isNumeric ? CMTimeMaximum(startTime, lastEnd) : startTime
+
+            // If system audio had a gap before this sample, fill the gap with silence
+            // so the system audio track remains contiguous and aligned with the timeline.
+            if !isMic, boundary.isNumeric {
+                let pts = CMSampleBufferGetPresentationTimeStamp(sample)
+                if CMTimeCompare(pts, boundary) > 0 {
+                    let gap = CMTimeSubtract(pts, boundary)
+                    if gap.seconds > 0.05,
+                       let format = activeSystemAudioFormat(),
+                       let silence = makeSilentBuffer(matching: format, duration: gap, at: boundary) {
+                        if !input.append(silence) {
+                            fail(assetWriter?.error ?? WriterError.appendFailed)
+                            return
+                        }
+                        lastAudioEnd = pts
+                    }
+                }
+            }
+
             guard let clipped = alignedAudio(sample, startingAt: boundary, isMic: isMic) else { continue }
             guard input.append(clipped) else {
                 fail(assetWriter?.error ?? WriterError.appendFailed); return
@@ -510,11 +544,144 @@ final class MP4WriterSession: @unchecked Sendable {
         }
     }
 
+    private func synchronizeAudioTracks() {
+        guard sessionStarted, firstError == nil else { return }
+
+        // Inter-track interleaving synchronization:
+        // AVAssetWriter will stall all other tracks if any audio track lags by ~0.5s - 1.0s.
+        // ScreenCaptureKit stops sending system audio buffers during silence, starving audioInput
+        // and causing micAudioInput to refuse buffers until queues overflow.
+        // We synthesize silence ONLY for system audio when it is starving and causing backpressure on micAudioInput.
+        // Microphone audio is NEVER synthesized as silence because microphone is a continuous hardware stream.
+        if let audioInput = self.audioInput, let micInput = self.micAudioInput {
+            let currentAudioEnd = lastAudioEnd.isNumeric ? lastAudioEnd : (startTime.isNumeric ? startTime : .invalid)
+            guard currentAudioEnd.isNumeric, lastMicEnd.isNumeric else { return }
+
+            let lead = CMTimeSubtract(lastMicEnd, currentAudioEnd).seconds
+            // Strictly backpressure-driven:
+            // Only inject silence when:
+            // 1. Microphone is experiencing backpressure (!micInput.isReadyForMoreMediaData) or system audio is severely lagging (lead > 1.0s)
+            // 2. System audio is actually lagging behind mic (lead > 0.05s)
+            // 3. We have no real system audio samples waiting to be written
+            // 4. audioInput is ready to accept data
+            let micStalled = !micInput.isReadyForMoreMediaData && (lead > 0.05)
+            let severeLag = lead > 1.0
+            if (micStalled || severeLag), pendingAudioSamples.isEmpty, audioInput.isReadyForMoreMediaData {
+                let target = lastMicEnd
+                var cursor = currentAudioEnd
+                while CMTimeCompare(cursor, target) < 0,
+                      pendingAudioSamples.isEmpty,
+                      audioInput.isReadyForMoreMediaData {
+                    let remaining = CMTimeSubtract(target, cursor)
+                    let chunk = CMTime(seconds: min(remaining.seconds, 1.0), preferredTimescale: 48_000)
+                    guard chunk.seconds > 0.005,
+                          let format = activeSystemAudioFormat(),
+                          let silence = makeSilentBuffer(matching: format, duration: chunk, at: cursor) else {
+                        break
+                    }
+                    guard audioInput.append(silence) else {
+                        fail(assetWriter?.error ?? WriterError.appendFailed)
+                        return
+                    }
+                    cursor = CMTimeAdd(cursor, chunk)
+                    lastAudioEnd = cursor
+                }
+            }
+        }
+    }
+
+    private func makeSilentBuffer(matching formatDescription: CMFormatDescription,
+                                  duration: CMTime,
+                                  at presentationTime: CMTime) -> CMSampleBuffer? {
+        let format = AVAudioFormat(cmAudioFormatDescription: formatDescription)
+        guard duration.isNumeric, duration > .zero, format.sampleRate > 0 else { return nil }
+
+        let frameCount = AVAudioFrameCount((duration.seconds * format.sampleRate).rounded())
+        guard frameCount > 0,
+              let pcmBuffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
+            return nil
+        }
+
+        pcmBuffer.frameLength = frameCount
+        let bufferList = UnsafeMutableAudioBufferListPointer(pcmBuffer.mutableAudioBufferList)
+        for buffer in bufferList {
+            guard let data = buffer.mData else { continue }
+            memset(data, 0, Int(buffer.mDataByteSize))
+        }
+
+        var timing = CMSampleTimingInfo(
+            duration: CMTime(value: 1, timescale: CMTimeScale(format.sampleRate)),
+            presentationTimeStamp: presentationTime,
+            decodeTimeStamp: .invalid
+        )
+
+        var sampleBuffer: CMSampleBuffer?
+        let createStatus = CMSampleBufferCreate(
+            allocator: kCFAllocatorDefault,
+            dataBuffer: nil,
+            dataReady: false,
+            makeDataReadyCallback: nil,
+            refcon: nil,
+            formatDescription: formatDescription,
+            sampleCount: CMItemCount(frameCount),
+            sampleTimingEntryCount: 1,
+            sampleTimingArray: &timing,
+            sampleSizeEntryCount: 0,
+            sampleSizeArray: nil,
+            sampleBufferOut: &sampleBuffer
+        )
+
+        guard createStatus == noErr, let buffer = sampleBuffer else { return nil }
+
+        let attachStatus = CMSampleBufferSetDataBufferFromAudioBufferList(
+            buffer,
+            blockBufferAllocator: kCFAllocatorDefault,
+            blockBufferMemoryAllocator: kCFAllocatorDefault,
+            flags: 0,
+            bufferList: pcmBuffer.mutableAudioBufferList
+        )
+
+        guard attachStatus == noErr else { return nil }
+        return buffer
+    }
+
+    private func activeSystemAudioFormat() -> CMAudioFormatDescription? {
+        if let systemAudioFormat = systemAudioFormat { return systemAudioFormat }
+        var asbd = AudioStreamBasicDescription(
+            mSampleRate: 48_000,
+            mFormatID: kAudioFormatLinearPCM,
+            mFormatFlags: kAudioFormatFlagIsFloat | kAudioFormatFlagIsPacked | kAudioFormatFlagIsNonInterleaved,
+            mBytesPerPacket: 4,
+            mFramesPerPacket: 1,
+            mBytesPerFrame: 4,
+            mChannelsPerFrame: 2,
+            mBitsPerChannel: 32,
+            mReserved: 0
+        )
+        var format: CMAudioFormatDescription?
+        let status = CMAudioFormatDescriptionCreate(
+            allocator: kCFAllocatorDefault,
+            asbd: &asbd,
+            layoutSize: 0,
+            layout: nil,
+            magicCookieSize: 0,
+            magicCookie: nil,
+            extensions: nil,
+            formatDescriptionOut: &format
+        )
+        if status == noErr, let format = format {
+            self.systemAudioFormat = format
+            return format
+        }
+        return nil
+    }
+
     /// Aligns a queued buffer to the end of the audio already written.
-    /// Capture clocks drift against the sample count, so after a second or so
-    /// every buffer overlaps its predecessor by a sample or two; trimming keeps
-    /// sync. If a buffer can't be trimmed it is moved to the boundary instead:
-    /// silently dropping it would lose all audio from that point on.
+    /// Capture clocks drift against the sample count, producing sub-sample or millisecond
+    /// timestamp jitter. For normal jitter (<= 50ms), retiming moves the buffer to the boundary
+    /// smoothly while preserving all PCM samples intact. Trimming PCM frames would slice samples
+    /// out of a continuous waveform, causing clicks, phase distortion, and stuttering.
+    /// Significant pre-roll before the start of recording is trimmed.
     private func alignedAudio(_ sample: CMSampleBuffer, startingAt boundary: CMTime, isMic: Bool) -> CMSampleBuffer? {
         let pts = CMSampleBufferGetPresentationTimeStamp(sample)
         guard CMTimeCompare(pts, boundary) < 0 else { return sample }
@@ -522,6 +689,11 @@ final class MP4WriterSession: @unchecked Sendable {
         guard CMTimeCompare(end, boundary) > 0 else {
             audioStats.droppedBeforeBoundary += 1
             return nil
+        }
+        let overlap = CMTimeSubtract(boundary, pts)
+        if overlap.seconds <= 0.05 {
+            audioStats.retimed += 1
+            return SampleBufferTiming.retimed(sample, to: boundary)
         }
         if let trimmed = RecordingSampleValidation.audio(sample, startingAt: boundary) {
             audioStats.trimmed += 1
@@ -537,7 +709,7 @@ final class MP4WriterSession: @unchecked Sendable {
 
     private struct AudioStats {
         var trimmed = 0, retimed = 0, droppedBeforeBoundary = 0, invalid = 0, ignored = 0, received = 0
-        var loggedTrimFailure = false, loggedInvalid = false, loggedOverflow = false
+        var loggedTrimFailure = false, loggedInvalid = false, loggedOverflow = false, loggedDropWarning = false
         var overflowSeconds = 0.0
     }
     private var audioStats = AudioStats()
