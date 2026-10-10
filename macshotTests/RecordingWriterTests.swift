@@ -623,4 +623,26 @@ final class RecordingWriterTests: XCTestCase {
         XCTAssertLessThan(lastGreen, 40)
         XCTAssertEqual(asset.duration.seconds, 2, accuracy: 0.001)
     }
+
+    func testMicrophoneTimestampJitterDoesNotTruncateOrDropAudio() async throws {
+        let (writer, url) = try makeWriter(audio: true)
+        let pixels = try RecordingMediaFixture.pixels()
+        try await append(writer, time: 100, buffer: pixels)
+        // 50 buffers of 960 samples (48 kHz, 20ms each).
+        // Introduce sub-sample jitter where each subsequent buffer's PTS overlaps the previous buffer by 2 samples.
+        for tick in 0..<50 {
+            let pts = CMTime(value: Int64(4_800_000 + tick * 960 - (tick > 0 ? 2 : 0)), timescale: 48_000)
+            let mic = try RecordingMediaFixture.audio(samples: 960, pts: pts, phaseSample: tick * 960)
+            queue.sync { writer.handleMicSample(mic) }
+            if tick > 0, tick % 5 == 0 {
+                try await append(writer, time: 100 + Double(tick) * 0.02, buffer: pixels)
+            }
+        }
+        writer.requestStop(atSourceTime: CMTime(value: 101, timescale: 1))
+        try await writer.finish()
+        let asset = AVAsset(url: url)
+        let tracks = asset.tracks(withMediaType: .audio)
+        let micTrack = try XCTUnwrap(tracks.first)
+        XCTAssertGreaterThanOrEqual(micTrack.timeRange.duration.seconds, 0.95)
+    }
 }
