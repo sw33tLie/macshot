@@ -476,11 +476,17 @@ class OverlayView: NSView {
         let v = UserDefaults.standard.object(forKey: "beautifyShadowRadius") as? Double
         return v != nil ? CGFloat(v!) : 20
     }()
+    /// Missing key stays on, so an existing beautify keeps its fill.
+    var beautifyBackgroundEnabled: Bool = {
+        guard UserDefaults.standard.object(forKey: "beautifyBackgroundEnabled") != nil else { return true }
+        return UserDefaults.standard.bool(forKey: "beautifyBackgroundEnabled")
+    }()
     private(set) var beautifyBgRadius: CGFloat = {
         let v = UserDefaults.standard.object(forKey: "beautifyBgRadius") as? Double
         return v != nil ? CGFloat(v!) : 8
     }()
 
+    /// Drop shadow composited on a transparent canvas. Off by default.
     var customBeautifyBackground: NSImage? {
         didSet { cachedBeautifyBgCGImage = nil }
     }
@@ -525,6 +531,7 @@ class OverlayView: NSView {
             isWindowSnap: selectionIsWindowSnap,
             customBackgroundImage: beautifyStyleIndex == -1 ? customBeautifyBackground : nil,
             backgroundBlur: beautifyBackgroundBlur,
+            backgroundEnabled: beautifyBackgroundEnabled,
             cachedBackgroundCGImage: beautifyStyleIndex == -1 ? cachedBeautifyBgCGImage : nil
         )
     }
@@ -3157,9 +3164,11 @@ class OverlayView: NSView {
             )
         }
 
-        // Clear the dark overlay for the expanded area to make the preview visible
+        // Clear the dark overlay for the expanded area to make the preview visible.
+        // With no background, the saved image is only the padding box, so the
+        // preview must not grow with the shadow radius.
         context.saveGraphicsState()
-        if !isEditorMode {
+        if !isEditorMode && config.backgroundEnabled {
             // Overlay: re-draw the screenshot in the expanded area to erase the dark overlay,
             // then draw the dark overlay back so we have a clean base for the gradient.
             context.cgContext.saveGState()
@@ -3188,13 +3197,24 @@ class OverlayView: NSView {
                 x: innerX, y: innerY, width: selectionRect.width + pad * 2,
                 height: selectionRect.height + pad * 2)
         }
-        context.cgContext.saveGState()
-        let bgPath = NSBezierPath(
-            roundedRect: bgRect, xRadius: config.bgRadius, yRadius: config.bgRadius)
-        bgPath.addClip()
-        BeautifyRenderer.drawGradientBackground(
-            in: bgRect, config: config, context: context.cgContext)
-        context.cgContext.restoreGState()
+        if config.backgroundEnabled {
+            context.cgContext.saveGState()
+            let bgPath = NSBezierPath(
+                roundedRect: bgRect, xRadius: config.bgRadius, yRadius: config.bgRadius)
+            bgPath.addClip()
+            BeautifyRenderer.drawGradientBackground(
+                in: bgRect, config: config, context: context.cgContext)
+            context.cgContext.restoreGState()
+        } else {
+            if !isEditorMode, let image = screenshotImage {
+                context.cgContext.saveGState()
+                NSBezierPath(rect: bgRect).addClip()
+                image.draw(in: bounds, from: .zero, operation: .copy, fraction: 1.0)
+                context.cgContext.restoreGState()
+            }
+            // The shadow stays inside the padding, matching the saved image.
+            NSBezierPath(rect: bgRect).addClip()
+        }
 
         // Compute the image rect inside the expanded frame
         let imageRect: NSRect
@@ -10197,6 +10217,10 @@ class OverlayView: NSView {
             UserDefaults.standard.object(forKey: "beautifyCornerRadius") as? Double ?? 10)
         beautifyShadowRadius = CGFloat(
             UserDefaults.standard.object(forKey: "beautifyShadowRadius") as? Double ?? 20)
+        beautifyBackgroundEnabled = {
+            guard UserDefaults.standard.object(forKey: "beautifyBackgroundEnabled") != nil else { return true }
+            return UserDefaults.standard.bool(forKey: "beautifyBackgroundEnabled")
+        }()
         beautifyBgRadius = CGFloat(
             UserDefaults.standard.object(forKey: "beautifyBgRadius") as? Double ?? 8)
         // The custom-style background is loaded here (not lazily in the
