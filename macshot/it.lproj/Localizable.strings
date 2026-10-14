@@ -612,6 +612,10 @@
 "Background" = "Sfondo";
 "Custom" = "Personalizzato";
 "Theme:" = "Tema:";
+"HUD:" = "HUD:";
+"Dark" = "Scuro";
+"Light" = "Chiaro";
+"Follow System" = "Segui il sistema";
 "Application" = "Applicazione";
 "Capture area and extract text" = "Cattura area ed estrai testo";
 "Capture the full screen" = "Cattura l'intero schermo";

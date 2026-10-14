@@ -632,6 +632,10 @@
 "Background" = "Fundal";
 "Custom" = "Personalizat";
 "Theme:" = "Tema:";
+"HUD:" = "HUD:";
+"Dark" = "Întunecat";
+"Light" = "Deschis";
+"Follow System" = "Urmează sistemul";
 "Application" = "Aplicație";
 "Capture area and extract text" = "Capturează zona și extrage textul";
 "Capture the full screen" = "Capturează ecranul complet";

@@ -32,6 +32,7 @@ final class ResolutionBoxView: NSView, NSTextFieldDelegate {
     private let pad: CGFloat = 6
     private let btnW: CGFloat = 30
     private var suppressNextEndEditingCommit = false
+    private var presetIsActive = false
 
     init() {
         super.init(frame: .zero)
@@ -59,6 +60,29 @@ final class ResolutionBoxView: NSView, NSTextFieldDelegate {
         addSubview(presetsButton)
 
         layoutPieces()
+        applyHUDColors()
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(hudColorsChanged),
+            name: .toolbarColorsDidChange, object: nil)
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    @objc private func hudColorsChanged() {
+        applyHUDColors()
+    }
+
+    private func applyHUDColors() {
+        layer?.backgroundColor = ToolbarLayout.bgColor.cgColor
+        appearance = ToolbarLayout.appearance
+        timesLabel.color = ToolbarLayout.iconColor.withAlphaComponent(0.55)
+        presetsButton.contentTintColor = presetIsActive ? ToolbarLayout.accentColor : ToolbarLayout.iconColor
+        for field in [widthField, heightField] {
+            field.textColor = ToolbarLayout.iconColor
+            field.layer?.backgroundColor = ToolbarLayout.iconColor.withAlphaComponent(0.12).cgColor
+        }
     }
 
     required init?(coder: NSCoder) { fatalError() }
@@ -155,8 +179,9 @@ final class ResolutionBoxView: NSView, NSTextFieldDelegate {
 
     /// Reflect the active ratio/resolution preset in the presets button.
     func setActivePresetLabel(_ label: String?) {
+        presetIsActive = label != nil
         presetsButton.toolTip = label.map { "\(L("Presets")) — \($0)" } ?? L("Aspect ratio & resolution presets")
-        presetsButton.contentTintColor = label == nil ? ToolbarLayout.iconColor : ToolbarLayout.accentColor
+        presetsButton.contentTintColor = presetIsActive ? ToolbarLayout.accentColor : ToolbarLayout.iconColor
     }
 
     @objc private func presetsClicked() {

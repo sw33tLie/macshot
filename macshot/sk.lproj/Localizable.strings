@@ -632,6 +632,10 @@
 "Background" = "Pozadie";
 "Custom" = "Vlastné";
 "Theme:" = "Téma:";
+"HUD:" = "HUD:";
+"Dark" = "Tmavý";
+"Light" = "Svetlý";
+"Follow System" = "Podľa systému";
 "Application" = "Aplikácia";
 "Capture area and extract text" = "Zachytiť oblasť a extrahovať text";
 "Capture the full screen" = "Zachytiť celú obrazovku";

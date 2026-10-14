@@ -632,6 +632,10 @@
 "Background" = "پس‌زمینه";
 "Custom" = "سفارشی";
 "Theme:" = "تم:";
+"HUD:" = "HUD:";
+"Dark" = "تیره";
+"Light" = "روشن";
+"Follow System" = "پیروی از سیستم";
 "Application" = "برنامه";
 "Capture area and extract text" = "ضبط ناحیه و استخراج متن";
 "Capture the full screen" = "ضبط تمام صفحه";

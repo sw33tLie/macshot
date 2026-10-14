@@ -634,6 +634,10 @@
 "Background" = "பின்னணி";
 "Custom" = "தனிப்பயன்";
 "Theme:" = "தீம்:";
+"HUD:" = "HUD:";
+"Dark" = "இருண்ட";
+"Light" = "வெளிர்";
+"Follow System" = "கணினியைப் பின்பற்று";
 "Application" = "பயன்பாடு";
 "Capture area and extract text" = "பகுதியைப் பிடித்து உரையைப் பிரித்தெடு";
 "Capture the full screen" = "முழுத் திரையையும் பிடி";

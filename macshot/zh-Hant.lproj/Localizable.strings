@@ -634,6 +634,10 @@
 "Background" = "背景";
 "Custom" = "自訂";
 "Theme:" = "主題：";
+"HUD:" = "介面：";
+"Dark" = "深色";
+"Light" = "淺色";
+"Follow System" = "跟隨系統";
 "Application" = "應用程式";
 "Capture area and extract text" = "擷取區域並提取文字";
 "Capture the full screen" = "擷取全螢幕";

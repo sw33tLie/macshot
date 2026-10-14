@@ -48,6 +48,28 @@ class RecordingHUDPanel: NSPanel {
         setupPauseButton()
         setupTimeLabel()
         setupDragHandle()
+        applyHUDColors()
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(hudColorsChanged),
+            name: .toolbarColorsDidChange, object: nil)
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    @objc private func hudColorsChanged() {
+        applyHUDColors()
+    }
+
+    private func applyHUDColors() {
+        containerView.layer?.backgroundColor = ToolbarLayout.bgColor.withAlphaComponent(0.94).cgColor
+        containerView.layer?.borderColor = ToolbarLayout.iconColor.withAlphaComponent(0.1).cgColor
+        stopButton.contentTintColor = ToolbarLayout.iconColor
+        pauseButton.contentTintColor = ToolbarLayout.iconColor
+        timeLabel.textColor = ToolbarLayout.iconColor
+        dragHandle.contentTintColor = ToolbarLayout.iconColor.withAlphaComponent(0.35)
+        containerView.needsDisplay = true
     }
 
     // MARK: - Setup

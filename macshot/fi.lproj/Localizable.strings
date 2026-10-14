@@ -630,6 +630,10 @@
 "Background" = "Tausta";
 "Custom" = "Mukautettu";
 "Theme:" = "Teema:";
+"HUD:" = "HUD:";
+"Dark" = "Tumma";
+"Light" = "Vaalea";
+"Follow System" = "Seuraa järjestelmää";
 "Application" = "Sovellus";
 "Capture area and extract text" = "Kaappaa alue ja poimi teksti";
 "Capture the full screen" = "Kaappaa koko ruutu";

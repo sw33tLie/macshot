@@ -621,6 +621,10 @@
 "Background" = "Achtergrond";
 "Custom" = "Aangepast";
 "Theme:" = "Thema:";
+"HUD:" = "HUD:";
+"Dark" = "Donker";
+"Light" = "Licht";
+"Follow System" = "Systeem volgen";
 "Application" = "Applicatie";
 "Capture area and extract text" = "Gebied vastleggen en tekst extraheren";
 "Capture the full screen" = "Volledig scherm vastleggen";

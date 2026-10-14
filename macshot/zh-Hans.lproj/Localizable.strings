@@ -623,6 +623,10 @@
 "Background" = "背景";
 "Custom" = "自定义";
 "Theme:" = "主题:";
+"HUD:" = "界面：";
+"Dark" = "深色";
+"Light" = "浅色";
+"Follow System" = "跟随系统";
 "Application" = "应用程序";
 "Capture area and extract text" = "捕获区域并提取文字";
 "Capture the full screen" = "捕获整个屏幕";

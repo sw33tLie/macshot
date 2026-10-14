@@ -621,6 +621,10 @@
 "Background" = "Background";
 "Custom" = "Custom";
 "Theme:" = "Theme:";
+"HUD:" = "HUD:";
+"Dark" = "Dark";
+"Light" = "Light";
+"Follow System" = "Follow System";
 
 /* Settings — shortcuts help text */
 "Application" = "Application";

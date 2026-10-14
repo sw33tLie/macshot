@@ -634,6 +634,10 @@
 "Background" = "Arka Plan";
 "Custom" = "Özel";
 "Theme:" = "Tema:";
+"HUD:" = "HUD:";
+"Dark" = "Koyu";
+"Light" = "Açık";
+"Follow System" = "Sisteme göre";
 "Application" = "Uygulama";
 "Capture area and extract text" = "Alan yakala ve metin çıkar";
 "Capture the full screen" = "Tam ekranı yakala";

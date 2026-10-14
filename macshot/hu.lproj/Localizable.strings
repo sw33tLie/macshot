@@ -632,6 +632,10 @@
 "Background" = "Háttér";
 "Custom" = "Egyéni";
 "Theme:" = "Téma:";
+"HUD:" = "HUD:";
+"Dark" = "Sötét";
+"Light" = "Világos";
+"Follow System" = "Rendszer követése";
 "Application" = "Alkalmazás";
 "Capture area and extract text" = "Terület rögzítése és szöveg kinyerése";
 "Capture the full screen" = "Teljes képernyő rögzítése";

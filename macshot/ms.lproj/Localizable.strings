@@ -634,6 +634,10 @@
 "Background" = "Latar Belakang";
 "Custom" = "Tersuai";
 "Theme:" = "Tema:";
+"HUD:" = "HUD:";
+"Dark" = "Gelap";
+"Light" = "Terang";
+"Follow System" = "Ikut sistem";
 "Application" = "Aplikasi";
 "Capture area and extract text" = "Tangkap kawasan dan ekstrak teks";
 "Capture the full screen" = "Tangkap skrin penuh";

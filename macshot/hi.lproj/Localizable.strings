@@ -632,6 +632,10 @@
 "Background" = "पृष्ठभूमि";
 "Custom" = "कस्टम";
 "Theme:" = "थीम:";
+"HUD:" = "HUD:";
+"Dark" = "गहरा";
+"Light" = "हल्का";
+"Follow System" = "सिस्टम का अनुसरण करें";
 "Application" = "एप्लिकेशन";
 "Capture area and extract text" = "क्षेत्र कैप्चर करें और पाठ निकालें";
 "Capture the full screen" = "पूरी स्क्रीन कैप्चर करें";

@@ -621,6 +621,10 @@
 "Background" = "背景";
 "Custom" = "カスタム";
 "Theme:" = "テーマ:";
+"HUD:" = "HUD:";
+"Dark" = "ダーク";
+"Light" = "ライト";
+"Follow System" = "システムに合わせる";
 "Application" = "アプリケーション";
 "Capture area and extract text" = "エリアをキャプチャしてテキストを抽出";
 "Capture the full screen" = "フルスクリーンをキャプチャ";

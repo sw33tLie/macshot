@@ -101,6 +101,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var iconColorWell: NSColorWell!
     private var bgColorWell: NSColorWell!
     private var themePresetPopup: NSPopUpButton!
+    private var hudAppearancePopup: NSPopUpButton!
     private var quickModePopup: NSPopUpButton!
     private var quickCaptureOpenEditorCheckbox: NSButton!
     private var closeEditorAfterCopyCheckbox: NSButton!
@@ -521,6 +522,18 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.addArrangedSubview(sectionHeader(L("Appearance")))
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
+        hudAppearancePopup = NSPopUpButton()
+        for mode in HUDAppearance.allCases {
+            hudAppearancePopup.addItem(withTitle: mode.settingsTitle)
+        }
+        hudAppearancePopup.target = self
+        hudAppearancePopup.action = #selector(hudAppearanceChanged(_:))
+        if let index = HUDAppearance.allCases.firstIndex(of: HUDAppearance.current) {
+            hudAppearancePopup.selectItem(at: index)
+        }
+        stack.addArrangedSubview(labeledRow(L("HUD:"), controls: [hudAppearancePopup]))
+        stack.setCustomSpacing(12, after: stack.arrangedSubviews.last!)
+
         // Theme preset dropdown
         themePresetPopup = NSPopUpButton()
         for preset in ThemePreset.all {
@@ -529,7 +542,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         themePresetPopup.addItem(withTitle: L("Custom"))
         themePresetPopup.target = self
         themePresetPopup.action = #selector(themePresetChanged(_:))
-        stack.addArrangedSubview(indented(labeledRow(L("Theme:"), controls: [themePresetPopup])))
+        stack.addArrangedSubview(labeledRow(L("Theme:"), controls: [themePresetPopup]))
         stack.setCustomSpacing(12, after: stack.arrangedSubviews.last!)
 
         // Three color wells in a single row with labels underneath
@@ -539,12 +552,12 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         accentColorWell.action = #selector(accentColorChanged(_:))
 
         iconColorWell = NSColorWell(frame: NSRect(x: 0, y: 0, width: 44, height: 32))
-        iconColorWell.color = ToolbarLayout.iconColor
+        iconColorWell.color = ToolbarLayout.storedIconColor
         iconColorWell.target = self
         iconColorWell.action = #selector(iconColorChanged(_:))
 
         bgColorWell = NSColorWell(frame: NSRect(x: 0, y: 0, width: 44, height: 32))
-        bgColorWell.color = ToolbarLayout.bgColor
+        bgColorWell.color = ToolbarLayout.storedBgColor
         bgColorWell.target = self
         bgColorWell.action = #selector(bgColorChanged(_:))
 
@@ -2491,14 +2504,28 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private static let labelColumnWidth: CGFloat = 180
 
     /// A horizontal row: right-aligned label on the left, controls on the right.
+    /// The label is pinned to the trailing edge of a fixed column so short
+    /// titles such as "界面:" line up with longer ones such as "菜单栏图标:".
     private func labeledRow(_ labelText: String, controls: [NSView]) -> NSView {
         let lbl = NSTextField(labelWithString: labelText)
         lbl.font = NSFont.systemFont(ofSize: 13)
         lbl.alignment = .right
         lbl.translatesAutoresizingMaskIntoConstraints = false
-        lbl.widthAnchor.constraint(equalToConstant: Self.labelColumnWidth).isActive = true
+        lbl.setContentHuggingPriority(.required, for: .horizontal)
+        lbl.setContentCompressionResistancePriority(.required, for: .horizontal)
 
-        let row = NSStackView(views: [lbl] + controls)
+        let labelBox = NSView()
+        labelBox.translatesAutoresizingMaskIntoConstraints = false
+        labelBox.addSubview(lbl)
+        NSLayoutConstraint.activate([
+            labelBox.widthAnchor.constraint(equalToConstant: Self.labelColumnWidth),
+            lbl.trailingAnchor.constraint(equalTo: labelBox.trailingAnchor),
+            lbl.leadingAnchor.constraint(greaterThanOrEqualTo: labelBox.leadingAnchor),
+            lbl.topAnchor.constraint(equalTo: labelBox.topAnchor),
+            lbl.bottomAnchor.constraint(equalTo: labelBox.bottomAnchor),
+        ])
+
+        let row = NSStackView(views: [labelBox] + controls)
         row.orientation = .horizontal
         row.spacing = 8
         row.alignment = .centerY
@@ -2689,8 +2716,11 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         betaUpdateCheckbox.state = UserDefaults.standard.bool(forKey: "betaUpdatesEnabled") ? .on : .off
 
         accentColorWell.color = ToolbarLayout.accentColor
-        iconColorWell.color = ToolbarLayout.iconColor
-        bgColorWell.color = ToolbarLayout.bgColor
+        iconColorWell.color = ToolbarLayout.storedIconColor
+        bgColorWell.color = ToolbarLayout.storedBgColor
+        if let index = HUDAppearance.allCases.firstIndex(of: HUDAppearance.current) {
+            hudAppearancePopup.selectItem(at: index)
+        }
 
         let historySize = UserDefaults.standard.object(forKey: "historySize") as? Int ?? 10
         historySizeField.integerValue = historySize
@@ -3080,6 +3110,14 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         return col
     }
 
+    @objc private func hudAppearanceChanged(_ sender: NSPopUpButton) {
+        let modes = HUDAppearance.allCases
+        let index = sender.indexOfSelectedItem
+        guard index >= 0, index < modes.count else { return }
+        UserDefaults.standard.set(modes[index].rawValue, forKey: HUDAppearance.defaultsKey)
+        notifyToolbarColorChange()
+    }
+
     @objc private func themePresetChanged(_ sender: NSPopUpButton) {
         let idx = sender.indexOfSelectedItem
         // indexOfSelectedItem is -1 with no selection, which passes "< count".
@@ -3100,7 +3138,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
     private func updateThemePresetSelection() {
         guard let popup = themePresetPopup else { return }
-        let current = (ToolbarLayout.accentColor, ToolbarLayout.iconColor, ToolbarLayout.bgColor)
+        let current = (ToolbarLayout.accentColor, ToolbarLayout.storedIconColor, ToolbarLayout.storedBgColor)
         for (i, preset) in ThemePreset.all.enumerated() {
             if colorsClose(current.0, preset.accent) &&
                colorsClose(current.1, preset.icon) &&

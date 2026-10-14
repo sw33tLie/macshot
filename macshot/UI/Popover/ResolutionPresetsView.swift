@@ -24,6 +24,24 @@ final class ResolutionPresetsView: NSView {
     var autoAdjustShortcut: String?
     var onAutoAdjust: (() -> Void)?
 
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(hudColorsChanged),
+            name: .toolbarColorsDidChange, object: nil)
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    @objc private func hudColorsChanged() {
+        guard !subviews.isEmpty else { return }
+        build()
+    }
+
     private let rowH: CGFloat = 26
     // Wide enough to fit the longest row labels without crowding the edge,
     // e.g. "Custom · 1.54 : 1" in the aspect-ratio column.

@@ -634,6 +634,10 @@
 "Background" = "Φόντο";
 "Custom" = "Προσαρμοσμένο";
 "Theme:" = "Θέμα:";
+"HUD:" = "HUD:";
+"Dark" = "Σκούρο";
+"Light" = "Ανοιχτό";
+"Follow System" = "Ακολούθηση συστήματος";
 "Application" = "Εφαρμογή";
 "Capture area and extract text" = "Λήψη περιοχής και εξαγωγή κειμένου";
 "Capture the full screen" = "Λήψη πλήρους οθόνης";

@@ -634,6 +634,10 @@
 "Background" = "الخلفية";
 "Custom" = "مخصص";
 "Theme:" = "السمة:";
+"HUD:" = "HUD:";
+"Dark" = "داكن";
+"Light" = "فاتح";
+"Follow System" = "اتباع النظام";
 "Application" = "التطبيق";
 "Capture area and extract text" = "التقاط منطقة واستخراج النص";
 "Capture the full screen" = "التقاط الشاشة بالكامل";

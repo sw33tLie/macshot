@@ -632,6 +632,10 @@
 "Background" = "Bakgrunn";
 "Custom" = "Egendefinert";
 "Theme:" = "Tema:";
+"HUD:" = "HUD:";
+"Dark" = "Mørk";
+"Light" = "Lys";
+"Follow System" = "Følg systemet";
 "Application" = "Program";
 "Capture area and extract text" = "Ta opp område og trekk ut tekst";
 "Capture the full screen" = "Ta bilde av hele skjermen";

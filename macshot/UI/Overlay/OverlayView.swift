@@ -1145,6 +1145,7 @@ class OverlayView: NSView {
         if let tool = toolOptionsRowView?.currentTool {
             toolOptionsRowView?.rebuild(for: tool)
         }
+        editorTooltipView?.needsDisplay = true
         needsDisplay = true
     }
 
@@ -2299,7 +2300,8 @@ class OverlayView: NSView {
     private static let helperFont = NSFont.systemFont(ofSize: 13, weight: .medium)
     private static let helperSmallFont = NSFont.systemFont(ofSize: 12, weight: .regular)
     private static let helperSmallBoldFont = NSFont.systemFont(ofSize: 12, weight: .semibold)
-    private static let helperDimColor = NSColor.white.withAlphaComponent(0.7)
+    private var helperPrimaryColor: NSColor { ToolbarLayout.iconColor }
+    private var helperDimColor: NSColor { ToolbarLayout.iconColor.withAlphaComponent(0.7) }
 
     private func drawIdleHelperText() {
         let line1: String
@@ -2320,15 +2322,15 @@ class OverlayView: NSView {
 
         let snapColor = snapMode == .off ? NSColor.systemOrange : NSColor.systemGreen
 
-        let attrs1: [NSAttributedString.Key: Any] = [.font: Self.helperFont, .foregroundColor: NSColor.white]
+        let attrs1: [NSAttributedString.Key: Any] = [.font: Self.helperFont, .foregroundColor: helperPrimaryColor]
         let attrs2prefix: [NSAttributedString.Key: Any] = [
-            .font: Self.helperSmallFont, .foregroundColor: Self.helperDimColor,
+            .font: Self.helperSmallFont, .foregroundColor: helperDimColor,
         ]
         let attrs2state: [NSAttributedString.Key: Any] = [
             .font: Self.helperSmallBoldFont, .foregroundColor: snapColor,
         ]
         let attrs2suffix: [NSAttributedString.Key: Any] = [
-            .font: Self.helperSmallFont, .foregroundColor: Self.helperDimColor,
+            .font: Self.helperSmallFont, .foregroundColor: helperDimColor,
         ]
 
         let size1 = (line1 as NSString).size(withAttributes: attrs1)
@@ -2353,7 +2355,7 @@ class OverlayView: NSView {
         let bgY = bounds.midY - bgHeight / 2
         let bgRect = NSRect(x: bgX, y: bgY, width: bgWidth, height: bgHeight)
 
-        NSColor.black.withAlphaComponent(0.65).setFill()
+        ToolbarLayout.bgColor.setFill()
         NSBezierPath(roundedRect: bgRect, xRadius: 8, yRadius: 8).fill()
 
         if showPresetButton {
@@ -2385,18 +2387,16 @@ class OverlayView: NSView {
             withAttributes: attrs2suffix)
     }
 
-    private static let helperTextAttrs: [NSAttributedString.Key: Any] = [
-        .font: NSFont.systemFont(ofSize: 12, weight: .medium),
-        .foregroundColor: NSColor.white,
-    ]
-
     private func drawSelectingHelperText() {
         guard selectionRect.width >= 1, selectionRect.height >= 1 else { return }
 
         let text = autoQuickSaveMode
             ? L("Hold Space to move. Release to finish")
             : L("Hold Space to move. Release to annotate and edit")
-        let attrs = Self.helperTextAttrs
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 12, weight: .medium),
+            .foregroundColor: helperPrimaryColor,
+        ]
         let size = (text as NSString).size(withAttributes: attrs)
         let padding: CGFloat = 10
         let bgWidth = size.width + padding * 2
@@ -2414,7 +2414,7 @@ class OverlayView: NSView {
         labelX = max(bounds.minX + 4, min(labelX, bounds.maxX - bgWidth - 4))
 
         let bgRect = NSRect(x: labelX, y: labelY, width: bgWidth, height: bgHeight)
-        NSColor.black.withAlphaComponent(0.65).setFill()
+        ToolbarLayout.bgColor.setFill()
         NSBezierPath(roundedRect: bgRect, xRadius: 6, yRadius: 6).fill()
 
         (text as NSString).draw(
@@ -10342,6 +10342,18 @@ private final class PreSelectionPresetButton: NSButton {
             symbol?.isTemplate = true
             image = symbol
         }
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(hudColorsChanged),
+            name: .toolbarColorsDidChange, object: nil)
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    @objc private func hudColorsChanged() {
+        contentTintColor = activePreset ? ToolbarLayout.accentColor : ToolbarLayout.iconColor.withAlphaComponent(0.88)
+        needsDisplay = true
     }
 
     required init?(coder: NSCoder) { fatalError() }

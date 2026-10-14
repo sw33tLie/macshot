@@ -632,6 +632,10 @@
 "Background" = "Тло";
 "Custom" = "Власний";
 "Theme:" = "Тема:";
+"HUD:" = "HUD:";
+"Dark" = "Темна";
+"Light" = "Світла";
+"Follow System" = "Як у системі";
 "Application" = "Програма";
 "Capture area and extract text" = "Захопити область і розпізнати текст";
 "Capture the full screen" = "Захопити весь екран";

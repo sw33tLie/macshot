@@ -49,6 +49,25 @@ class ScrollCaptureHUDView: NSView {
         stopButton.target = self
         stopButton.action = #selector(stopClicked)
         addSubview(stopButton)
+
+        applyHUDColors()
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(hudColorsChanged),
+            name: .toolbarColorsDidChange, object: nil)
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    @objc private func hudColorsChanged() {
+        applyHUDColors()
+    }
+
+    private func applyHUDColors() {
+        layer?.backgroundColor = ToolbarLayout.bgColor.cgColor
+        infoLabel.textColor = ToolbarLayout.iconColor
+        appearance = ToolbarLayout.appearance
     }
 
     required init?(coder: NSCoder) { fatalError() }

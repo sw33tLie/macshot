@@ -623,6 +623,10 @@
 "Background" = "배경";
 "Custom" = "사용자 지정";
 "Theme:" = "테마:";
+"HUD:" = "HUD:";
+"Dark" = "다크";
+"Light" = "라이트";
+"Follow System" = "시스템 설정 따르기";
 "Application" = "애플리케이션";
 "Capture area and extract text" = "영역 캡처 및 텍스트 추출";
 "Capture the full screen" = "전체 화면 캡처";

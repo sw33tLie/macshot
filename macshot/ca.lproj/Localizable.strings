@@ -626,6 +626,10 @@
 "Background" = "Fons";
 "Custom" = "Personalitzat";
 "Theme:" = "Tema:";
+"HUD:" = "HUD:";
+"Dark" = "Fosc";
+"Light" = "Clar";
+"Follow System" = "Segueix el sistema";
 "Application" = "Aplicació";
 "Capture area and extract text" = "Capturar àrea i extreure text";
 "Capture the full screen" = "Capturar la pantalla completa";

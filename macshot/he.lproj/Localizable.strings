@@ -632,6 +632,10 @@
 "Background" = "רקע";
 "Custom" = "מותאם אישית";
 "Theme:" = "ערכת נושא:";
+"HUD:" = "HUD:";
+"Dark" = "כהה";
+"Light" = "בהיר";
+"Follow System" = "לפי המערכת";
 "Application" = "אפליקציה";
 "Capture area and extract text" = "לכוד אזור וחלץ טקסט";
 "Capture the full screen" = "לכוד את המסך המלא";

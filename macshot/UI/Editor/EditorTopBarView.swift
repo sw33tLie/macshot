@@ -8,6 +8,7 @@ class EditorTopBarView: NSView {
     private var sizeLabel: NSTextField!
     private var zoomButton: NSButton!
     private var doneButton: NSButton?
+    private var toolButtons: [NSButton] = []
     var onDone: (() -> Void)?
 
     override init(frame: NSRect) {
@@ -24,6 +25,7 @@ class EditorTopBarView: NSView {
         let flipHBtn = makeButton("arrow.left.and.right.righttriangle.left.righttriangle.right", tooltip: L("Flip Horizontal"), action: #selector(flipHClicked))
         let flipVBtn = makeButton("arrow.up.and.down.righttriangle.up.righttriangle.down", tooltip: L("Flip Vertical"), action: #selector(flipVClicked))
         let addCaptureBtn = makeButton("rectangle.badge.plus", tooltip: L("Add Capture"), action: #selector(addCaptureClicked))
+        toolButtons = [cropBtn, flipHBtn, flipVBtn, addCaptureBtn]
 
         // Zoom dropdown button
         zoomButton = NSButton()
@@ -82,6 +84,30 @@ class EditorTopBarView: NSView {
             border.bottomAnchor.constraint(equalTo: bottomAnchor),
             border.heightAnchor.constraint(equalToConstant: 0.5),
         ])
+
+        applyHUDColors()
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(hudColorsChanged),
+            name: .toolbarColorsDidChange, object: nil)
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    @objc private func hudColorsChanged() {
+        applyHUDColors()
+    }
+
+    private func applyHUDColors() {
+        layer?.backgroundColor = ToolbarLayout.bgColor.cgColor
+        appearance = ToolbarLayout.appearance
+        sizeLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.45)
+        zoomButton.contentTintColor = ToolbarLayout.iconColor.withAlphaComponent(0.45)
+        for button in toolButtons {
+            button.contentTintColor = ToolbarLayout.iconColor.withAlphaComponent(0.85)
+        }
+        doneButton?.contentTintColor = ToolbarLayout.accentColor
     }
 
     required init?(coder: NSCoder) { fatalError() }

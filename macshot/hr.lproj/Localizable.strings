@@ -632,6 +632,10 @@
 "Background" = "Pozadina";
 "Custom" = "Prilagođeno";
 "Theme:" = "Tema:";
+"HUD:" = "HUD:";
+"Dark" = "Tamno";
+"Light" = "Svijetlo";
+"Follow System" = "Slijedi sustav";
 "Application" = "Aplikacija";
 "Capture area and extract text" = "Snimi područje i izdvoji tekst";
 "Capture the full screen" = "Snimi cijeli zaslon";
