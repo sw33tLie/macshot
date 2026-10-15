@@ -133,6 +133,16 @@ class OverlayWindowController {
     private var overlayWindow: OverlayWindow?
     private var shareDelegate: SharePickerDelegate?
     private var shareDismissTime: Date = .distantPast
+    /// Bumped by dismiss() and tearDown(). A pooled controller serves many
+    /// capture sessions, so async work (OCR) only acts if the session that
+    /// started it is still live.
+    private var sessionGeneration = 0
+    /// Text + QR recognition for the OCR action. Calls back on any queue.
+    var recognizeTextAndQRCodes: (CGImage, @escaping (OCRScanResult) -> Void) -> Void = { cgImage, completion in
+        DispatchQueue.global(qos: .userInitiated).async {
+            VisionOCR.performTextAndQRCodeRecognition(cgImage: cgImage, completionHandler: completion)
+        }
+    }
     var windowNumber: CGWindowID {
         overlayWindow.map { CGWindowID($0.windowNumber) } ?? CGWindowID.max
     }
@@ -430,6 +440,7 @@ class OverlayWindowController {
     /// what makes the next capture instant, since WindowServer's per-window
     /// composition cache survives `orderOut`).
     func dismiss() {
+        sessionGeneration &+= 1
         saveSelectionIfNeeded()
         overlayView?.reset()
         overlayView?.screenshotImage = nil
@@ -452,6 +463,7 @@ class OverlayWindowController {
     /// (display added/removed), or app shutdown. After this the controller is
     /// dead and a new one must be constructed.
     func tearDown() {
+        sessionGeneration &+= 1
         overlayView?.reset()
         overlayView?.overlayDelegate = nil
         overlayWindow?.contentView = nil
@@ -667,16 +679,17 @@ extension OverlayWindowController: OverlayViewDelegate {
         guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
             return
         }
+        overlayView?.isRecognizingText = true
+        let generation = sessionGeneration
 
-        DispatchQueue.global(qos: .userInitiated).async {
-            VisionOCR.performTextAndQRCodeRecognition(cgImage: cgImage) { [weak self] result in
-                guard let self = self else { return }
-                let capturedImage = image  // capture before dismiss
-                DispatchQueue.main.async {
-                    self.playCopySound()
-                    self.dismiss()
-                    self.overlayDelegate?.overlayDidRequestOCR(self, result: result, image: capturedImage)
-                }
+        recognizeTextAndQRCodes(cgImage) { [weak self] result in
+            DispatchQueue.main.async {
+                // Cancelled with Escape, or this pooled overlay already serves a
+                // newer capture: the result must not dismiss it or open a window.
+                guard let self = self, self.sessionGeneration == generation else { return }
+                self.playCopySound()
+                self.dismiss()
+                self.overlayDelegate?.overlayDidRequestOCR(self, result: result, image: image)
             }
         }
     }
