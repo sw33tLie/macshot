@@ -857,3 +857,7 @@
 "Sway" = "Люлеене";
 
 "Snap webcam to corners when moved" = "Прилепване на уебкамерата към ъглите при преместване";
+
+"Pin position:" = "Позиция на закачането:";
+"Center of screen" = "Центъра на екрана";
+"Original capture position" = "Първоначалната позиция на заснемане";

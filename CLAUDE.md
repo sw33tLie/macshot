@@ -253,7 +253,7 @@ The video editor is built around `VideoEditorDocument` (one `VideoProject`: time
 ### Persistence (UserDefaults)
 - Drawing: `currentStrokeWidth`, `numberStrokeWidth`, `markerStrokeWidth`
 - Hotkey: `hotkeyKeyCode`, `hotkeyModifiers`
-- Output: `saveDirectory`, `quickCaptureMode`, `copyPathAfterSave`, `playCopySound`
+- Output: `saveDirectory`, `quickCaptureMode`, `copyPathAfterSave`, `playCopySound`, `pinPlacement` (0 = screen center, 1 = original capture position; only overlay pins have a capture position)
 - Selection: `lastSelectionRect`, `lastSelectionScreenFrame`, `rememberLastSelection`
 - Thumbnails: `showFloatingThumbnail`, `thumbnailStacking`, `thumbnailAutoDismissSeconds`
 - Image: `imageFormat` (png/jpeg/heic/webp/avif), `imageQuality` (0.0–1.0), `downscaleRetina` (bool), `clipboardIncludesImageFormat` (bool, opt-in: adds the configured format ahead of PNG/TIFF on the clipboard)

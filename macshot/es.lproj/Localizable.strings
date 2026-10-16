@@ -859,3 +859,7 @@
 "Sway" = "Balanceo";
 
 "Snap webcam to corners when moved" = "Ajustar la cámara web a las esquinas al moverla";
+
+"Pin position:" = "Posición al fijar:";
+"Center of screen" = "Centro de la pantalla";
+"Original capture position" = "Posición original de la captura";

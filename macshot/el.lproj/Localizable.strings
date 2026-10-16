@@ -859,3 +859,7 @@
 "Sway" = "Ταλάντευση";
 
 "Snap webcam to corners when moved" = "Προσκόλληση της κάμερας στις γωνίες κατά τη μετακίνηση";
+
+"Pin position:" = "Θέση καρφιτσώματος:";
+"Center of screen" = "Κέντρο οθόνης";
+"Original capture position" = "Αρχική θέση λήψης";

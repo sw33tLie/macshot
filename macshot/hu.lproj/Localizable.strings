@@ -857,3 +857,7 @@
 "Sway" = "Billegés";
 
 "Snap webcam to corners when moved" = "Webkamera sarkokhoz igazítása mozgatáskor";
+
+"Pin position:" = "Rögzített kép helye:";
+"Center of screen" = "Képernyő közepe";
+"Original capture position" = "Eredeti rögzítési hely";

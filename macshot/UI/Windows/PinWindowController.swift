@@ -1,6 +1,43 @@
 import Cocoa
 import UniformTypeIdentifiers
 
+/// Where a pin opens when it comes straight from a capture selection. Pins
+/// from history, the clipboard, thumbnails and the editor have no on-screen
+/// origin and always open centered.
+enum PinPlacement: Int, CaseIterable {
+    case screenCenter = 0
+    case captureLocation = 1
+
+    static let userDefaultsKey = "pinPlacement"
+
+    static var current: PinPlacement {
+        get {
+            PinPlacement(rawValue: UserDefaults.standard.integer(forKey: userDefaultsKey)) ?? .screenCenter
+        }
+        set {
+            UserDefaults.standard.set(newValue.rawValue, forKey: userDefaultsKey)
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .screenCenter:
+            return L("Center of screen")
+        case .captureLocation:
+            return L("Original capture position")
+        }
+    }
+}
+
+/// Where a pin's pixels came from on screen.
+struct PinSource: Equatable {
+    /// The captured region, in global AppKit screen coordinates.
+    var rect: NSRect
+    /// Where that region sits inside the pinned image when it is larger than
+    /// the region (beautify). Nil centers the image on the region.
+    var contentOrigin: NSPoint? = nil
+}
+
 @MainActor
 protocol PinWindowControllerDelegate: AnyObject {
     func pinWindowDidClose(_ controller: PinWindowController)
@@ -17,30 +54,29 @@ class PinWindowController {
     private let initialWindowSize: NSSize
     private static let minScale: CGFloat = 0.1
     private static let maxScale: CGFloat = 5.0
+    /// A new pin never covers more than this much of its screen.
+    private nonisolated static let maxScreenFraction: CGFloat = 0.8
 
-    init(image: NSImage) {
+    /// `source` is only honored when the user chose `PinPlacement.captureLocation`.
+    init(image: NSImage, source: PinSource? = nil) {
         self.image = image
 
         let size = image.size
         // An initializer can't bail, and a pin is worth showing even if macOS
         // reports no display right now (it will land on one when a display
         // returns), so fall back to a plausible frame.
-        let screenFrame = NSScreen.preferredVisibleFrame
-
-        // Center on screen, cap at 80% of screen size
-        let maxW = screenFrame.width * 0.8
-        let maxH = screenFrame.height * 0.8
-        let scale = min(1.0, min(maxW / size.width, maxH / size.height))
-        let windowSize = NSSize(width: size.width * scale, height: size.height * scale)
+        let frame = Self.initialFrame(
+            imageSize: size,
+            source: source,
+            placement: PinPlacement.current,
+            screenFrames: NSScreen.screens.map(\.frame),
+            preferredVisibleFrame: NSScreen.preferredVisibleFrame
+        )
+        let windowSize = frame.size
         self.initialWindowSize = windowSize
 
-        let origin = NSPoint(
-            x: screenFrame.midX - windowSize.width / 2,
-            y: screenFrame.midY - windowSize.height / 2
-        )
-
         let panel = PinPanel(
-            contentRect: NSRect(origin: origin, size: windowSize),
+            contentRect: frame,
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
@@ -76,6 +112,80 @@ class PinWindowController {
         panel.contentView = view
         self.window = panel
         self.pinView = view
+    }
+
+    /// The pin's first window frame: centered on the preferred screen, or with
+    /// `.captureLocation`, the captured content back over its region on the
+    /// screen it came from.
+    nonisolated static func initialFrame(
+        imageSize size: NSSize,
+        source: PinSource?,
+        placement: PinPlacement,
+        screenFrames: [NSRect],
+        preferredVisibleFrame: NSRect
+    ) -> NSRect {
+        if placement == .captureLocation, let source, size.width > 0, size.height > 0,
+           let frame = captureLocationFrame(imageSize: size, source: source, screenFrames: screenFrames) {
+            return frame
+        }
+
+        // Center on screen, cap at 80% of screen size
+        let screenFrame = preferredVisibleFrame
+        let maxW = screenFrame.width * maxScreenFraction
+        let maxH = screenFrame.height * maxScreenFraction
+        let scale = min(1.0, min(maxW / size.width, maxH / size.height))
+        let windowSize = NSSize(width: size.width * scale, height: size.height * scale)
+        let origin = NSPoint(
+            x: screenFrame.midX - windowSize.width / 2,
+            y: screenFrame.midY - windowSize.height / 2
+        )
+        return NSRect(origin: origin, size: windowSize)
+    }
+
+    private nonisolated static func captureLocationFrame(imageSize size: NSSize, source: PinSource, screenFrames: [NSRect]) -> NSRect? {
+        let rect = source.rect
+        func area(_ screen: NSRect) -> CGFloat {
+            let overlap = rect.intersection(screen)
+            return overlap.width * overlap.height
+        }
+        // Like cross-screen stitching, a sliver under a point (pixel snapping
+        // rounding past an edge) doesn't make a selection span that display.
+        let overlapping = screenFrames.filter {
+            let overlap = rect.intersection($0)
+            return overlap.width >= 1 && overlap.height >= 1
+        }
+        // No overlap means the display it was captured from is gone.
+        guard let screen = overlapping.max(by: { area($0) < area($1) }) else { return nil }
+
+        // Align the content's center, not the image's, with the region's.
+        let contentCenter = source.contentOrigin.map {
+            NSPoint(x: $0.x + rect.width / 2, y: $0.y + rect.height / 2)
+        } ?? NSPoint(x: size.width / 2, y: size.height / 2)
+
+        func placed(scale: CGFloat) -> NSRect {
+            NSRect(
+                x: rect.midX - contentCenter.x * scale,
+                y: rect.midY - contentCenter.y * scale,
+                width: size.width * scale,
+                height: size.height * scale
+            )
+        }
+
+        // A selection spanning displays already lies exactly where it was
+        // captured; fitting it onto one screen would move it.
+        if overlapping.count > 1 {
+            return placed(scale: 1)
+        }
+
+        // Same 80% cap as a centered pin; a larger capture shrinks around its
+        // center. The clamp also absorbs pixel snapping past the screen edge.
+        let maxW = screen.width * maxScreenFraction
+        let maxH = screen.height * maxScreenFraction
+        let scale = min(1.0, min(maxW / size.width, maxH / size.height))
+        var frame = placed(scale: scale)
+        frame.origin.x = min(max(frame.minX, screen.minX), screen.maxX - frame.width)
+        frame.origin.y = min(max(frame.minY, screen.minY), screen.maxY - frame.height)
+        return frame
     }
 
     private func zoom(by factor: CGFloat, around viewPoint: NSPoint) {

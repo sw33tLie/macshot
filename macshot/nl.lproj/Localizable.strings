@@ -859,3 +859,7 @@
 "Sway" = "Zwaai";
 
 "Snap webcam to corners when moved" = "Webcam bij verplaatsen aan hoeken vastklikken";
+
+"Pin position:" = "Positie van vastgepinde afbeelding:";
+"Center of screen" = "Midden van het scherm";
+"Original capture position" = "Oorspronkelijke opnamepositie";

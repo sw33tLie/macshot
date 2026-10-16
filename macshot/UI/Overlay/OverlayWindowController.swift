@@ -64,7 +64,7 @@ private final class ScreenshotOverlayRootView: NSView {
 protocol OverlayWindowControllerDelegate: AnyObject {
     func overlayDidCancel(_ controller: OverlayWindowController)
     func overlayDidConfirm(_ controller: OverlayWindowController, capturedImage: NSImage?, annotationData: CaptureAnnotationData?)
-    func overlayDidRequestPin(_ controller: OverlayWindowController, image: NSImage, annotationData: CaptureAnnotationData?)
+    func overlayDidRequestPin(_ controller: OverlayWindowController, image: NSImage, annotationData: CaptureAnnotationData?, source: PinSource?)
     func overlayDidRequestOCR(_ controller: OverlayWindowController, result: OCRScanResult, image: NSImage?)
     func overlayDidRequestUpload(_ controller: OverlayWindowController, image: NSImage, annotationData: CaptureAnnotationData?)
     func overlayDidRequestStartRecording(
@@ -541,6 +541,18 @@ class OverlayWindowController {
         return result
     }
 
+    /// Where a pin of the current selection came from. Read before dismiss()
+    /// resets the selection. A cross-screen capture is stitched from the
+    /// unsnapped rect, at most half a point from this one.
+    private func pinSource(capturedSize: NSSize) -> PinSource? {
+        guard let view = overlayView else { return nil }
+        let rect = view.pixelSnappedSelectionRect.offsetBy(dx: screen.frame.minX, dy: screen.frame.minY)
+        let contentOrigin = view.beautifyEnabled
+            ? BeautifyRenderer.contentRect(forImageSize: capturedSize, config: view.beautifyConfig).origin
+            : nil
+        return PinSource(rect: rect, contentOrigin: contentOrigin)
+    }
+
     private func applyBeautifyIfNeeded(_ image: NSImage?) -> NSImage? {
         guard let image = image, let view = overlayView else { return image }
         var result = image
@@ -656,10 +668,11 @@ extension OverlayWindowController: OverlayViewDelegate {
     func overlayViewDidRequestPin() {
         guard var image = captureRegion() else { return }
         let annotationData = currentAnnotationDataForHistory()
+        let source = pinSource(capturedSize: image.size)
         image = applyBeautifyIfNeeded(image) ?? image
         playCopySound()
         dismiss()
-        overlayDelegate?.overlayDidRequestPin(self, image: image, annotationData: annotationData)
+        overlayDelegate?.overlayDidRequestPin(self, image: image, annotationData: annotationData, source: source)
     }
 
     func overlayViewDidRequestOCR() {

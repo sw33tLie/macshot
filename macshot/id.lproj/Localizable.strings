@@ -857,3 +857,7 @@
 "Sway" = "Ayunan";
 
 "Snap webcam to corners when moved" = "Tempelkan webcam ke sudut saat dipindahkan";
+
+"Pin position:" = "Posisi sematan:";
+"Center of screen" = "Tengah layar";
+"Original capture position" = "Posisi tangkapan asli";

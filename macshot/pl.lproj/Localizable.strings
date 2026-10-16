@@ -857,3 +857,7 @@
 "Sway" = "Kołysanie";
 
 "Snap webcam to corners when moved" = "Przyciągaj kamerę do narożników podczas przesuwania";
+
+"Pin position:" = "Położenie przypiętego obrazu:";
+"Center of screen" = "Środek ekranu";
+"Original capture position" = "Pierwotne miejsce zrzutu";

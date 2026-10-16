@@ -857,3 +857,7 @@
 "Sway" = "Njihanje";
 
 "Snap webcam to corners when moved" = "Prilijepi web-kameru uz kutove pri pomicanju";
+
+"Pin position:" = "Položaj prikvačene slike:";
+"Center of screen" = "Sredina zaslona";
+"Original capture position" = "Izvorni položaj snimke";

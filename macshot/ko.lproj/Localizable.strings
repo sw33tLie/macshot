@@ -859,3 +859,7 @@
 "Sway" = "흔들림";
 
 "Snap webcam to corners when moved" = "이동할 때 웹캠을 모서리에 맞추기";
+
+"Pin position:" = "고정 위치:";
+"Center of screen" = "화면 중앙";
+"Original capture position" = "원래 캡처 위치";

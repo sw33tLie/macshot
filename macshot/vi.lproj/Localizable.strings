@@ -857,3 +857,7 @@
 "Sway" = "Lắc lư";
 
 "Snap webcam to corners when moved" = "Bám webcam vào các góc khi di chuyển";
+
+"Pin position:" = "Vị trí ghim:";
+"Center of screen" = "Giữa màn hình";
+"Original capture position" = "Vị trí chụp ban đầu";

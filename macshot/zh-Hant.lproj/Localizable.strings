@@ -859,3 +859,7 @@
 "Sway" = "擺動";
 
 "Snap webcam to corners when moved" = "移動時將攝影機吸附至角落";
+
+"Pin position:" = "釘選位置：";
+"Center of screen" = "螢幕中央";
+"Original capture position" = "原始擷取位置";

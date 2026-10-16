@@ -859,3 +859,7 @@
 "Sway" = "দোলন";
 
 "Snap webcam to corners when moved" = "সরানোর সময় ওয়েবক্যামকে কোণায় আটকে দিন";
+
+"Pin position:" = "পিনের অবস্থান:";
+"Center of screen" = "স্ক্রিনের মাঝখানে";
+"Original capture position" = "মূল ক্যাপচারের অবস্থান";

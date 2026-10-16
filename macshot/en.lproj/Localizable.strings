@@ -858,3 +858,7 @@
 "Sway" = "Sway";
 
 "Snap webcam to corners when moved" = "Snap webcam to corners when moved";
+
+"Pin position:" = "Pin position:";
+"Center of screen" = "Center of screen";
+"Original capture position" = "Original capture position";

@@ -857,3 +857,7 @@
 "Sway" = "Покачивание";
 
 "Snap webcam to corners when moved" = "Привязывать веб-камеру к углам при перемещении";
+
+"Pin position:" = "Положение закреплённого снимка:";
+"Center of screen" = "Центр экрана";
+"Original capture position" = "Исходное место захвата";

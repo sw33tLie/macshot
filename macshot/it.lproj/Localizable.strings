@@ -840,3 +840,7 @@
 "Sway" = "Oscillazione";
 
 "Snap webcam to corners when moved" = "Aggancia la webcam agli angoli durante lo spostamento";
+
+"Pin position:" = "Posizione dell’immagine fissata:";
+"Center of screen" = "Centro dello schermo";
+"Original capture position" = "Posizione di cattura originale";
