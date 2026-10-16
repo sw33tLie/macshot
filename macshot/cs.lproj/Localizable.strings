@@ -857,3 +857,7 @@
 "Sway" = "Kývání";
 
 "Snap webcam to corners when moved" = "Přichytávat webkameru k rohům při přesouvání";
+
+"Pin position:" = "Umístění připnutí:";
+"Center of screen" = "Střed obrazovky";
+"Original capture position" = "Původní místo snímku";

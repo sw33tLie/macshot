@@ -859,3 +859,7 @@
 "Sway" = "झुकाव";
 
 "Snap webcam to corners when moved" = "वेबकैम को खिसकाते समय कोनों से चिपकाएँ";
+
+"Pin position:" = "पिन की स्थिति:";
+"Center of screen" = "स्क्रीन के बीच में";
+"Original capture position" = "मूल कैप्चर स्थिति";

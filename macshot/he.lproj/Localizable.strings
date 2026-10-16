@@ -859,3 +859,7 @@
 "Sway" = "נטייה";
 
 "Snap webcam to corners when moved" = "הצמדת מצלמת הרשת לפינות בעת הזזה";
+
+"Pin position:" = "מיקום ההצמדה:";
+"Center of screen" = "מרכז המסך";
+"Original capture position" = "מיקום הלכידה המקורי";

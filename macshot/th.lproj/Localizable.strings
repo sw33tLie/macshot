@@ -857,3 +857,7 @@
 "Sway" = "การเอียง";
 
 "Snap webcam to corners when moved" = "จัดเว็บแคมให้ชิดมุมเมื่อย้าย";
+
+"Pin position:" = "ตำแหน่งการปักหมุด:";
+"Center of screen" = "กึ่งกลางหน้าจอ";
+"Original capture position" = "ตำแหน่งที่จับภาพเดิม";

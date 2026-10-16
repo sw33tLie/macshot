@@ -857,3 +857,7 @@
 "Sway" = "Svaj";
 
 "Snap webcam to corners when moved" = "Fäst webbkameran i hörnen när den flyttas";
+
+"Pin position:" = "Placering av fäst bild:";
+"Center of screen" = "Mitt på skärmen";
+"Original capture position" = "Ursprunglig fångstposition";

@@ -857,3 +857,7 @@
 "Sway" = "Heilunta";
 
 "Snap webcam to corners when moved" = "Kohdista verkkokamera kulmiin siirrettäessä";
+
+"Pin position:" = "Kiinnityksen sijainti:";
+"Center of screen" = "Näytön keskellä";
+"Original capture position" = "Alkuperäinen kaappauskohta";

@@ -859,3 +859,7 @@
 "Sway" = "Pag-ugoy";
 
 "Snap webcam to corners when moved" = "Idikit ang webcam sa mga sulok kapag inililipat";
+
+"Pin position:" = "Posisyon ng pin:";
+"Center of screen" = "Gitna ng screen";
+"Original capture position" = "Orihinal na posisyon ng capture";

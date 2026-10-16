@@ -857,3 +857,7 @@
 "Sway" = "Погойдування";
 
 "Snap webcam to corners when moved" = "Прив’язувати вебкамеру до кутів під час переміщення";
+
+"Pin position:" = "Розташування закріпленого знімка:";
+"Center of screen" = "Центр екрана";
+"Original capture position" = "Початкове місце захоплення";

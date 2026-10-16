@@ -859,3 +859,7 @@
 "Sway" = "Salınım";
 
 "Snap webcam to corners when moved" = "Taşırken web kamerasını köşelere yasla";
+
+"Pin position:" = "Sabitleme konumu:";
+"Center of screen" = "Ekranın ortası";
+"Original capture position" = "Orijinal yakalama konumu";

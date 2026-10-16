@@ -857,3 +857,7 @@
 "Sway" = "揺れ";
 
 "Snap webcam to corners when moved" = "移動時にウェブカメラを四隅にスナップ";
+
+"Pin position:" = "ピン留めの位置:";
+"Center of screen" = "画面中央";
+"Original capture position" = "元のキャプチャ位置";

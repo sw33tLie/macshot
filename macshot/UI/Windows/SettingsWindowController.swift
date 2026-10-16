@@ -58,6 +58,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var saveActionPopup: NSPopUpButton!
     private var copyPathAfterSaveCheckbox: NSButton!
     private var ocrActionPopup: NSPopUpButton!
+    private var pinPlacementPopup: NSPopUpButton!
     private var copySoundCheckbox: NSButton!
     // rememberSelectionCheckbox removed — selection is always saved for "Capture Last Area"
     private var rememberToolCheckbox: NSButton!
@@ -766,6 +767,18 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
         closeEditorAfterCopyCheckbox = NSButton(checkboxWithTitle: L("Close editor after copying"), target: self, action: #selector(closeEditorAfterCopyChanged(_:)))
         stack.addArrangedSubview(indented(closeEditorAfterCopyCheckbox))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        // Where pins from the capture overlay open
+        pinPlacementPopup = NSPopUpButton()
+        for placement in PinPlacement.allCases {
+            pinPlacementPopup.addItem(withTitle: placement.title)
+            pinPlacementPopup.lastItem?.representedObject = placement.rawValue
+        }
+        pinPlacementPopup.target = self
+        pinPlacementPopup.action = #selector(pinPlacementChanged(_:))
+
+        stack.addArrangedSubview(labeledRow(L("Pin position:"), controls: [pinPlacementPopup]))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         // OCR & QR action dropdown
@@ -2631,6 +2644,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
             UserDefaults.standard.set(legacyAutoCopy ? 0 : 1, forKey: "ocrAction")
         }
         ocrActionPopup.selectItem(at: UserDefaults.standard.integer(forKey: "ocrAction"))
+        pinPlacementPopup.selectItem(at: pinPlacementPopup.indexOfItem(withRepresentedObject: PinPlacement.current.rawValue))
         captureMenuOrder = CaptureMenuItemID.orderedItems()
         rebuildCaptureMenuOrderRows()
 
@@ -2831,6 +2845,11 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         guard let raw = sender.selectedItem?.representedObject as? Int,
               let action = SaveActionPreference(rawValue: raw) else { return }
         SaveActionPreference.current = action
+    }
+    @objc private func pinPlacementChanged(_ sender: NSPopUpButton) {
+        guard let raw = sender.selectedItem?.representedObject as? Int,
+              let placement = PinPlacement(rawValue: raw) else { return }
+        PinPlacement.current = placement
     }
     @objc private func copyPathAfterSaveChanged(_ sender: NSButton) {
         ImageSaveService.copyPathAfterSave = sender.state == .on

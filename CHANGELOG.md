@@ -6,6 +6,7 @@
 
 - Move and resize the webcam during recording, with optional corner snapping. Studio replays recorded placement changes. Thanks @ivanilsonsousa. (#429)
 - Record GIF menu item and configurable hotkey, plus Save + copy to clipboard when a recording stops. Thanks @mdtoupin. (#423)
+- Pinned screenshots can open at their original capture position instead of the screen center. Set it in Settings > General > Pin position. (#331)
 
 ### Fixed
 

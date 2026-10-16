@@ -859,3 +859,7 @@
 "Sway" = "تمايل";
 
 "Snap webcam to corners when moved" = "محاذاة كاميرا الويب إلى الزوايا عند تحريكها";
+
+"Pin position:" = "موضع التثبيت:";
+"Center of screen" = "وسط الشاشة";
+"Original capture position" = "موضع الالتقاط الأصلي";

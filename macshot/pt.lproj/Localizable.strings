@@ -859,3 +859,7 @@
 "Sway" = "Balanço";
 
 "Snap webcam to corners when moved" = "Alinhar a webcam com os cantos ao mover";
+
+"Pin position:" = "Posição ao fixar:";
+"Center of screen" = "Centro do ecrã";
+"Original capture position" = "Posição original da captura";

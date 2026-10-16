@@ -859,3 +859,7 @@
 "Sway" = "அசைவு";
 
 "Snap webcam to corners when moved" = "நகர்த்தும்போது வெப்கேமைக் மூலைகளில் பொருத்து";
+
+"Pin position:" = "பொருத்தும் இடம்:";
+"Center of screen" = "திரையின் நடுவில்";
+"Original capture position" = "அசல் பிடிப்பு இடம்";

@@ -9819,32 +9819,44 @@ class OverlayView: NSView {
         return renderSelectedRegion(includeAnnotations: false)
     }
 
-    private func renderSelectedRegion(includeAnnotations: Bool) -> NSImage? {
-        guard selectionRect.width > 0, selectionRect.height > 0 else { return nil }
-
-        // Determine the source image's actual pixel scale so we render at
-        // native resolution instead of relying on lockFocus() which always
-        // picks the highest backing scale of any connected display.  This
-        // prevents interpolation-upscaling when a 1x external monitor is
-        // captured while a Retina display is also connected.
-        let scale: CGFloat
+    /// Determine the source image's actual pixel scale so we render at
+    /// native resolution instead of relying on lockFocus() which always
+    /// picks the highest backing scale of any connected display.  This
+    /// prevents interpolation-upscaling when a 1x external monitor is
+    /// captured while a Retina display is also connected.
+    private var captureRenderScale: CGFloat {
         if let screenshot = captureSourceImage ?? screenshotImage,
             let cg = screenshot.cgImage(forProposedRect: nil, context: nil, hints: nil)
         {
-            scale = CGFloat(cg.width) / screenshot.size.width
-        } else {
-            scale = window?.backingScaleFactor ?? 2.0
+            return CGFloat(cg.width) / screenshot.size.width
         }
+        return window?.backingScaleFactor ?? 2.0
+    }
 
-        // Snap selection rect to pixel boundaries to prevent sub-pixel
-        // interpolation blur (especially visible on 1x non-Retina displays
-        // where fractional mouse coordinates aren't absorbed by 2x scaling).
-        let snappedRect = NSRect(
-            x: round(selectionRect.origin.x * scale) / scale,
-            y: round(selectionRect.origin.y * scale) / scale,
-            width: round(selectionRect.width * scale) / scale,
-            height: round(selectionRect.height * scale) / scale
+    /// The selection snapped to pixel boundaries — exactly the region
+    /// `captureSelectedRegion()` renders. Overlay coordinates only: in the
+    /// editor the selection is the document, not a place on screen.
+    var pixelSnappedSelectionRect: NSRect {
+        pixelSnapped(selectionRect, scale: captureRenderScale)
+    }
+
+    // Snap selection rect to pixel boundaries to prevent sub-pixel
+    // interpolation blur (especially visible on 1x non-Retina displays
+    // where fractional mouse coordinates aren't absorbed by 2x scaling).
+    private func pixelSnapped(_ rect: NSRect, scale: CGFloat) -> NSRect {
+        NSRect(
+            x: round(rect.origin.x * scale) / scale,
+            y: round(rect.origin.y * scale) / scale,
+            width: round(rect.width * scale) / scale,
+            height: round(rect.height * scale) / scale
         )
+    }
+
+    private func renderSelectedRegion(includeAnnotations: Bool) -> NSImage? {
+        guard selectionRect.width > 0, selectionRect.height > 0 else { return nil }
+
+        let scale = captureRenderScale
+        let snappedRect = pixelSnapped(selectionRect, scale: scale)
 
         let pixelW = Int(snappedRect.width * scale)
         let pixelH = Int(snappedRect.height * scale)

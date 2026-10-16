@@ -859,3 +859,7 @@
 "Sway" = "Schwingen";
 
 "Snap webcam to corners when moved" = "Webcam beim Verschieben an Ecken einrasten lassen";
+
+"Pin position:" = "Position beim Anheften:";
+"Center of screen" = "Bildschirmmitte";
+"Original capture position" = "Ursprüngliche Aufnahmeposition";

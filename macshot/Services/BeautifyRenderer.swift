@@ -490,6 +490,13 @@ class BeautifyRenderer {
         }
     }
 
+    /// Where `render(image:config:)` draws the source image inside its output.
+    /// Every style insets it by the padding; the window style's title bar sits
+    /// above it, so the content is not centered in that output.
+    static func contentRect(forImageSize size: NSSize, config: BeautifyConfig) -> NSRect {
+        NSRect(x: config.padding, y: config.padding, width: size.width, height: size.height)
+    }
+
     static func shadowAlpha(for radius: CGFloat) -> CGFloat {
         guard radius > 0 else { return 0 }
         let t = min(max(radius / 100, 0), 1)
@@ -817,8 +824,8 @@ class BeautifyRenderer {
             }
 
             // Screenshot image
-            let contentRect = NSRect(x: windowX, y: windowY, width: windowWidth, height: windowHeight - titleBarHeight)
-            image.draw(in: contentRect, from: .zero, operation: .sourceOver, fraction: 1.0)
+            let imageRect = contentRect(forImageSize: imgSize, config: config)
+            image.draw(in: imageRect, from: .zero, operation: .sourceOver, fraction: 1.0)
 
             context.restoreGState()
 
@@ -860,7 +867,7 @@ class BeautifyRenderer {
             drawGradientBackground(in: bgRect, config: config, context: context, prerenderedMesh: prerenderedMesh)
             context.restoreGState()
 
-            let imageRect = NSRect(x: padding, y: padding, width: imgSize.width, height: imgSize.height)
+            let imageRect = contentRect(forImageSize: imgSize, config: config)
 
             // Draw the window image with shadow on top of the gradient.
             // The image has transparent corners, so the gradient shows through naturally.
@@ -918,7 +925,7 @@ class BeautifyRenderer {
             drawGradientBackground(in: bgRect, config: config, context: context, prerenderedMesh: prerenderedMesh)
             context.restoreGState()
 
-            let imageRect = NSRect(x: padding, y: padding, width: imgSize.width, height: imgSize.height)
+            let imageRect = contentRect(forImageSize: imgSize, config: config)
             let clipPath = NSBezierPath(roundedRect: imageRect, xRadius: cornerRadius, yRadius: cornerRadius)
             drawRoundedImageWithShadow(image, clipPath: clipPath, in: imageRect,
                                        shadowRadius: shadowRadius, context: context)
