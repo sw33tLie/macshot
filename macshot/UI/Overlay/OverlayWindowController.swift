@@ -14,6 +14,16 @@ struct CaptureAnnotationData {
         self.annotations = annotations
         self.editState = editState
     }
+
+    /// Editable data for an otherwise flattened image that only needs its
+    /// timestamp redrawn after future edits.
+    static func timestampOnly(rawImage: NSImage, capturedAt: Date?) -> CaptureAnnotationData? {
+        guard let capturedAt else { return nil }
+        return CaptureAnnotationData(
+            rawImage: rawImage,
+            annotations: [],
+            editState: CaptureEditState(capturedAt: capturedAt))
+    }
 }
 
 private final class ScreenshotOverlayRootView: NSView {
@@ -133,6 +143,10 @@ class OverlayWindowController {
     private var overlayWindow: OverlayWindow?
     private var shareDelegate: SharePickerDelegate?
     private var shareDismissTime: Date = .distantPast
+    /// Captured when the screenshot arrives, not when annotation finishes.
+    private var capturedAt = Date()
+    /// Add Capture hands unstamped pixels to its parent editor.
+    private var addsToEditor = false
     var windowNumber: CGWindowID {
         overlayWindow.map { CGWindowID($0.windowNumber) } ?? CGWindowID.max
     }
@@ -218,6 +232,8 @@ class OverlayWindowController {
     /// Install the screenshot into the overlay's backing layer. Once set, the
     /// window becomes opaque (dark dim) and the overlay can render annotations.
     private func installScreenshot(_ image: CGImage) {
+        capturedAt = Date()
+        addsToEditor = false
         let nsImage = NSImage(cgImage: image, size: screen.frame.size)
         overlayView?.captureSourceImage = nsImage
         overlayView?.screenshotImage = nsImage
@@ -368,6 +384,7 @@ class OverlayWindowController {
     /// Set flag so overlay auto-confirms immediately after selection (no toolbars, no save).
     func setAutoConfirmMode() {
         overlayView?.autoConfirmMode = true
+        addsToEditor = true
     }
 
     /// Enter recording mode — shows recording toolbar buttons in the normal toolbar.
@@ -484,13 +501,24 @@ class OverlayWindowController {
             ?? overlayView?.captureSelectedRegion()
     }
 
-    /// Snapshot editable history data, using a pre-captured raw image.
-    /// Returns nil if there are no movable annotations or post-processing edits.
-    private func snapshotAnnotationData(rawImage: NSImage) -> CaptureAnnotationData? {
+    /// Snapshot the unstamped pixels and editable state behind a finished image.
+    /// `region` is before effects, Beautify, and timestamp burn-in.
+    private func currentAnnotationDataForHistory(region: NSImage? = nil) -> CaptureAnnotationData? {
         guard let view = overlayView else { return nil }
         let annotations = view.annotations.filter { $0.isMovable }
-        let editState = view.captureEditState()
-        guard !annotations.isEmpty || editState.hasPostProcessing else { return nil }
+        let hasEdits = !annotations.isEmpty || view.effectsActive || view.beautifyEnabled
+        guard hasEdits || burnInDate != nil else { return nil }
+        let editState = editStateForCapture()
+
+        let rawImage: NSImage?
+        if editState.beautifyIsWindowSnap, let snapped = view.snappedWindowImage {
+            rawImage = snapped
+        } else if !hasEdits {
+            rawImage = region ?? captureRegion()
+        } else {
+            rawImage = view.captureSelectedRegionRaw()
+        }
+        guard let rawImage else { return nil }
 
         let sel = view.selectionRect
         let shifted = annotations.map { ann -> Annotation in
@@ -501,20 +529,8 @@ class OverlayWindowController {
         return CaptureAnnotationData(
             rawImage: rawImage,
             annotations: shifted,
-            editState: editState.hasPostProcessing ? editState : nil
+            editState: editState.shouldPersist ? editState : nil
         )
-    }
-
-    private func currentAnnotationDataForHistory() -> CaptureAnnotationData? {
-        guard let view = overlayView else { return nil }
-        let editState = view.captureEditState()
-        let snapWindowImg = view.snappedWindowImage
-        let hasAnnotations = view.annotations.contains(where: { $0.isMovable })
-        guard hasAnnotations || editState.hasPostProcessing else { return nil }
-        let rawImage: NSImage? = (editState.beautifyIsWindowSnap && snapWindowImg != nil)
-            ? snapWindowImg : view.captureSelectedRegionRaw()
-        guard let rawImage else { return nil }
-        return snapshotAnnotationData(rawImage: rawImage)
     }
 
     /// Composite annotations onto the snapped window image (preserving transparency).
@@ -527,15 +543,7 @@ class OverlayWindowController {
             guard let ctx = NSGraphicsContext.current else { return true }
             // Translate so annotation coords (relative to selectionRect) map to image coords
             ctx.cgContext.translateBy(x: -sel.origin.x, y: -sel.origin.y)
-            // Match the live order: censor, then the spotlight dim (union of
-            // highlight rects, clipped to the selection), then shapes on top.
-            for annotation in annotations where annotation.tool == .pixelate {
-                annotation.draw(in: ctx)
-            }
-            Annotation.drawHighlightDim(for: annotations, in: sel)
-            for annotation in annotations where annotation.tool != .pixelate {
-                annotation.draw(in: ctx)
-            }
+            Annotation.drawComposited(annotations, in: ctx, highlightDimBounds: sel)
             return true
         }
         return result
@@ -557,6 +565,20 @@ class OverlayWindowController {
 
     private func copyImageToClipboard(_ image: NSImage) {
         ImageEncoder.copyToClipboard(image)
+    }
+
+    private var burnInDate: Date? {
+        TimestampOverlay.isEnabled ? capturedAt : nil
+    }
+
+    private func withTimestamp(_ image: NSImage) -> NSImage {
+        TimestampOverlay.stamp(image, capturedAt: burnInDate)
+    }
+
+    private func editStateForCapture() -> CaptureEditState {
+        var state = overlayView?.captureEditState() ?? CaptureEditState()
+        state.capturedAt = burnInDate
+        return state
     }
 
 }
@@ -593,6 +615,7 @@ extension OverlayWindowController: OverlayViewDelegate {
         let hasBeautify = overlayView?.beautifyEnabled ?? false
         let beautifyCfg = overlayView?.beautifyConfig ?? BeautifyConfig()
         let snapWindowImg = overlayView?.snappedWindowImage
+        let addsToEditor = self.addsToEditor
 
         // Capture the composited image (screenshot + annotations baked in).
         // This is a single render — no double capture.
@@ -605,23 +628,7 @@ extension OverlayWindowController: OverlayViewDelegate {
         // Snapshot annotations + selection rect before dismiss (view will be torn down)
         let snapshotAnnotations = overlayView?.annotations ?? []
         let snapshotSelRect = overlayView?.selectionRect ?? .zero
-
-        // Snapshot annotation data using the raw screenshot (without annotations).
-        // For window snaps, use the independently captured window image (transparent corners)
-        // so the editor shows clean corners when re-editing.
-        let hasAnnotations = overlayView?.annotations.contains(where: { $0.isMovable }) ?? false
-        let annotationData: CaptureAnnotationData?
-        if hasAnnotations || hasEffects || hasBeautify {
-            let rawImage: NSImage? = (beautifyCfg.isWindowSnap && snapWindowImg != nil)
-                ? snapWindowImg : overlayView?.captureSelectedRegionRaw()
-            if let raw = rawImage {
-                annotationData = snapshotAnnotationData(rawImage: raw)
-            } else {
-                annotationData = nil
-            }
-        } else {
-            annotationData = nil
-        }
+        let annotationData = currentAnnotationDataForHistory(region: compositedImage)
 
         // Dismiss immediately — user is free to continue working
         playCopySound()
@@ -646,17 +653,22 @@ extension OverlayWindowController: OverlayViewDelegate {
             }
             finalImage = BeautifyRenderer.render(image: beautifyInput, config: beautifyCfg)
         }
+        let stamped = withTimestamp(finalImage)
 
         // Copy button / Cmd+C always copies to clipboard
-        ImageEncoder.copyToClipboard(finalImage)
+        ImageEncoder.copyToClipboard(stamped)
 
-        overlayDelegate?.overlayDidConfirm(self, capturedImage: finalImage, annotationData: annotationData)
+        overlayDelegate?.overlayDidConfirm(
+            self,
+            capturedImage: addsToEditor ? finalImage : stamped,
+            annotationData: annotationData)
     }
 
     func overlayViewDidRequestPin() {
         guard var image = captureRegion() else { return }
-        let annotationData = currentAnnotationDataForHistory()
+        let annotationData = currentAnnotationDataForHistory(region: image)
         image = applyBeautifyIfNeeded(image) ?? image
+        if !addsToEditor { image = withTimestamp(image) }
         playCopySound()
         dismiss()
         overlayDelegate?.overlayDidRequestPin(self, image: image, annotationData: annotationData)
@@ -684,8 +696,9 @@ extension OverlayWindowController: OverlayViewDelegate {
     func overlayViewDidRequestUpload() {
         #if !OFFLINE
         guard var image = captureRegion() else { return }
-        let annotationData = currentAnnotationDataForHistory()
+        let annotationData = currentAnnotationDataForHistory(region: image)
         image = applyBeautifyIfNeeded(image) ?? image
+        image = withTimestamp(image)
         playCopySound()
         dismiss()
         overlayDelegate?.overlayDidRequestUpload(self, image: image, annotationData: annotationData)
@@ -700,9 +713,11 @@ extension OverlayWindowController: OverlayViewDelegate {
         }
 
         guard var image = captureRegion() else { return }
+        let annotationData = currentAnnotationDataForHistory(region: image)
+        let addsToEditor = self.addsToEditor
         image = applyBeautifyIfNeeded(image) ?? image
-        let annotationData = currentAnnotationDataForHistory()
-        guard let imageData = ImageEncoder.encode(image) else { return }
+        let stamped = withTimestamp(image)
+        guard let imageData = ImageEncoder.encode(stamped) else { return }
         let tempURL = TmpScratchDirectory.makeURL(
             filename: FilenameFormatter.defaultImageFilename(windowTitle: capturedWindowTitle))
         try? imageData.write(to: tempURL)
@@ -729,9 +744,11 @@ extension OverlayWindowController: OverlayViewDelegate {
                 self.overlayWindow?.level = savedLevel
                 self.shareDelegate = nil
                 self.playCopySound()
-                let img = image
                 self.dismiss()
-                self.overlayDelegate?.overlayDidConfirm(self, capturedImage: img, annotationData: annotationData)
+                self.overlayDelegate?.overlayDidConfirm(
+                    self,
+                    capturedImage: addsToEditor ? image : stamped,
+                    annotationData: annotationData)
             },
             onDismiss: { [weak self] in
                 self?.overlayWindow?.level = savedLevel
@@ -881,20 +898,21 @@ extension OverlayWindowController: OverlayViewDelegate {
         let tool = view.currentTool
         let color = view.currentColor
         let stroke = view.currentStrokeWidth
-        let editState = view.captureEditState()
+        let editState = editStateForCapture()
 
         dismiss()
         overlayDelegate?.overlayDidCancel(self)
         DetachedEditorWindowController.open(
             image: image, tool: tool, color: color, strokeWidth: stroke,
             annotations: shiftedAnnotations, fromCapture: true,
-            editState: editState.hasPostProcessing ? editState : nil)
+            editState: editState.shouldPersist ? editState : nil)
     }
 
     @available(macOS 14.0, *)
     func overlayViewDidRequestRemoveBackground() {
         let appName = resolvedAppName()
         guard var image = captureRegion() else { return }
+        let addsToEditor = self.addsToEditor
         image = applyBeautifyIfNeeded(image) ?? image
 
         guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
@@ -940,20 +958,27 @@ extension OverlayWindowController: OverlayViewDelegate {
                 let finalNSImage = NSImage(cgImage: finalCGImage, size: image.size)
 
                 DispatchQueue.main.async {
+                    let stamped = self.withTimestamp(finalNSImage)
+                    let annotationData = CaptureAnnotationData.timestampOnly(
+                        rawImage: finalNSImage,
+                        capturedAt: self.burnInDate)
                     let mode = QuickCaptureMode.current
                     if mode.shouldCopyImage {
-                        self.copyImageToClipboard(finalNSImage)
+                        self.copyImageToClipboard(stamped)
                     }
                     if mode.shouldSave {
                         ImageSaveService.saveToConfiguredFolder(
-                            finalNSImage,
+                            stamped,
                             windowTitle: self.capturedWindowTitle,
                             appName: appName,
                             copyPathToClipboard: mode.copyPathOverride)
                     }
                     self.playCopySound()
                     self.dismiss()
-                    self.overlayDelegate?.overlayDidConfirm(self, capturedImage: finalNSImage, annotationData: nil)
+                    self.overlayDelegate?.overlayDidConfirm(
+                        self,
+                        capturedImage: addsToEditor ? finalNSImage : stamped,
+                        annotationData: annotationData)
                 }
             } catch {
                 #if DEBUG
@@ -975,6 +1000,7 @@ extension OverlayWindowController: OverlayViewDelegate {
         let hasBeautify = overlayView?.beautifyEnabled ?? false
         let beautifyCfg = overlayView?.beautifyConfig ?? BeautifyConfig()
         let snapWindowImg = overlayView?.snappedWindowImage
+        let addsToEditor = self.addsToEditor
 
         guard let compositedImage = captureRegion() else {
             dismiss()
@@ -986,20 +1012,7 @@ extension OverlayWindowController: OverlayViewDelegate {
         let snapshotAnns = overlayView?.annotations ?? []
         let snapshotSel = overlayView?.selectionRect ?? .zero
 
-        // Snapshot annotation data — use snapped window image for clean corners
-        let hasAnnotations = overlayView?.annotations.contains(where: { $0.isMovable }) ?? false
-        let annotationData: CaptureAnnotationData?
-        if hasAnnotations || hasEffects || hasBeautify {
-            let rawImage: NSImage? = (beautifyCfg.isWindowSnap && snapWindowImg != nil)
-                ? snapWindowImg : overlayView?.captureSelectedRegionRaw()
-            if let raw = rawImage {
-                annotationData = snapshotAnnotationData(rawImage: raw)
-            } else {
-                annotationData = nil
-            }
-        } else {
-            annotationData = nil
-        }
+        let annotationData = currentAnnotationDataForHistory(region: compositedImage)
 
         dismiss()
 
@@ -1015,19 +1028,23 @@ extension OverlayWindowController: OverlayViewDelegate {
             }
             image = BeautifyRenderer.render(image: beautifyInput, config: beautifyCfg)
         }
+        let stamped = withTimestamp(image)
 
         let mode = QuickCaptureMode.current
 
         if mode.shouldCopyImage {
-            ImageEncoder.copyToClipboard(image)
+            ImageEncoder.copyToClipboard(stamped)
         }
         playCopySound()
 
-        overlayDelegate?.overlayDidConfirm(self, capturedImage: image, annotationData: annotationData)
+        overlayDelegate?.overlayDidConfirm(
+            self,
+            capturedImage: addsToEditor ? image : stamped,
+            annotationData: annotationData)
 
         if mode.shouldSave {
             ImageSaveService.saveToConfiguredFolder(
-                image,
+                stamped,
                 windowTitle: capturedWindowTitle,
                 appName: appName,
                 copyPathToClipboard: mode.copyPathOverride)
@@ -1043,11 +1060,16 @@ extension OverlayWindowController: OverlayViewDelegate {
             return
         }
         let annotationData = currentAnnotationDataForHistory()
+        let addsToEditor = self.addsToEditor
+        let stamped = withTimestamp(image)
 
         dismiss()
-        overlayDelegate?.overlayDidConfirm(self, capturedImage: image, annotationData: annotationData)
+        overlayDelegate?.overlayDidConfirm(
+            self,
+            capturedImage: addsToEditor ? image : stamped,
+            annotationData: annotationData)
         ImageSaveService.saveToConfiguredFolder(
-            image,
+            stamped,
             windowTitle: capturedWindowTitle,
             appName: appName,
             panelLevel: NSWindow.Level(258)
@@ -1071,7 +1093,7 @@ extension OverlayWindowController: OverlayViewDelegate {
         guard let image = captureImageForSave() else { return }
 
         ImageSaveService.showSavePanel(
-            for: image,
+            for: withTimestamp(image),
             windowTitle: capturedWindowTitle,
             appName: resolvedAppName(),
             panelLevel: NSWindow.Level(258)

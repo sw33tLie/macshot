@@ -225,6 +225,8 @@
 "Show snap alignment guides" = "Illesztési segédvonalak megjelenítése";
 "Snap selection edges to image boundaries" = "Kijelölés széleinek illesztése a kép határaihoz";
 "Capture mouse cursor in screenshot" = "Egérmutató rögzítése a képernyőképen";
+"Timestamp burn-in" = "Beégetett időbélyeg";
+"Burns the capture time into the screenshot everywhere it is copied or saved." = "A képernyőkép minden másolásakor vagy mentésekor beleégeti a rögzítés időpontját.";
 "Double-click selection to copy" = "Dupla kattintás a kijelölésre a másoláshoz";
 "Hide capture instructions" = "Rögzítési útmutató elrejtése";
 "Disable shadow outside selection" = "Árnyék letiltása a kijelölésen kívül";

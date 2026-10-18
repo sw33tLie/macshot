@@ -214,6 +214,8 @@
 "Enhance browser and Electron element snapping" = "브라우저 및 Electron 요소 스냅 향상";
 "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "요소 모드에서 대상 앱의 접근성 트리를 구축합니다. 브라우저 또는 Electron 앱이 느려지거나 입력 문제가 있는 경우 비활성화하세요.";
 "Capture mouse cursor in screenshot" = "스크린샷에 마우스 커서 포함";
+"Timestamp burn-in" = "타임스탬프 삽입";
+"Burns the capture time into the screenshot everywhere it is copied or saved." = "스크린샷을 복사하거나 저장할 때마다 캡처 시간을 이미지에 삽입합니다.";
 "Double-click selection to copy" = "선택 영역 더블 클릭으로 복사";
 "Hide capture instructions" = "캡처 안내 숨기기";
 "Use window title in saved filename" = "저장 파일명에 윈도우 제목 사용";

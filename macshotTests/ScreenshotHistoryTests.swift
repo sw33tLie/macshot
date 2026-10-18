@@ -103,6 +103,53 @@ final class ScreenshotHistoryTests: XCTestCase {
         XCTAssertEqual(restored, state)
     }
 
+    func testTimestampOnlyCaptureReopensFromUnstampedPixels() async throws {
+        let capturedAt = Date(timeIntervalSinceReferenceDate: 780_877_060)
+        let raw = ImageProbe.solidImage(width: 400, height: 220)
+        let stamped = TimestampOverlay.stamp(raw, capturedAt: capturedAt)
+        let state = CaptureEditState(capturedAt: capturedAt)
+        XCTAssertFalse(state.hasPostProcessing)
+        XCTAssertTrue(state.shouldPersist)
+
+        let history = makeHistory()
+        withDefaults(["historySize": 10, "historyUnlimited": false]) {
+            history.add(
+                image: stamped,
+                rawImage: raw,
+                annotations: [],
+                editState: state)
+        }
+        await history.waitUntilIdle()
+
+        let reloaded = makeHistory()
+        let entry = try XCTUnwrap(reloaded.entries.first)
+        XCTAssertTrue(entry.hasAnnotations,
+                      "timestamp state makes an otherwise plain capture editable")
+        let editable = try XCTUnwrap(reloaded.loadEditableCapture(for: entry))
+        XCTAssertTrue(editable.annotations.isEmpty)
+        XCTAssertEqual(editable.editState?.capturedAt, capturedAt)
+        let restoredPixel = try XCTUnwrap(ImageProbe.pixelColor(editable.rawImage, x: 388, y: 208))
+        let rawPixel = try XCTUnwrap(ImageProbe.pixelColor(raw, x: 388, y: 208))
+        XCTAssertEqual(restoredPixel.redComponent, rawPixel.redComponent, accuracy: 0.01)
+        XCTAssertEqual(restoredPixel.greenComponent, rawPixel.greenComponent, accuracy: 0.01)
+        XCTAssertEqual(restoredPixel.blueComponent, rawPixel.blueComponent, accuracy: 0.01,
+                       "history must retain the unstamped source")
+
+        reloaded.updateEntry(
+            id: entry.id,
+            compositedImage: stamped,
+            rawImage: editable.rawImage,
+            annotations: [],
+            editState: state)
+        await reloaded.waitUntilIdle()
+        let savedAgain = makeHistory()
+        let savedEntry = try XCTUnwrap(savedAgain.entries.first)
+        XCTAssertEqual(
+            savedAgain.loadEditableCapture(for: savedEntry)?.editState?.capturedAt,
+            capturedAt,
+            "saving after all annotations are removed must keep the capture time")
+    }
+
     func testAnnotationsWrittenByAnOlderBuildStillLoad() throws {
         // Same shape the app writes, but with only the fields the first version
         // had — what an entry saved before later fields existed looks like.

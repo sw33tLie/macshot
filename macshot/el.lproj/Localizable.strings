@@ -225,6 +225,8 @@
 "Show snap alignment guides" = "Εμφάνιση οδηγών ευθυγράμμισης κουμπώματος";
 "Snap selection edges to image boundaries" = "Κούμπωμα των άκρων επιλογής στα όρια της εικόνας";
 "Capture mouse cursor in screenshot" = "Λήψη δρομέα ποντικιού στο στιγμιότυπο";
+"Timestamp burn-in" = "Ενσωματωμένη χρονική σήμανση";
+"Burns the capture time into the screenshot everywhere it is copied or saved." = "Ενσωματώνει την ώρα λήψης στο στιγμιότυπο οθόνης κάθε φορά που αντιγράφεται ή αποθηκεύεται.";
 "Double-click selection to copy" = "Διπλό κλικ στην επιλογή για αντιγραφή";
 "Hide capture instructions" = "Απόκρυψη οδηγιών λήψης";
 "Disable shadow outside selection" = "Απενεργοποίηση σκιάς εκτός επιλογής";

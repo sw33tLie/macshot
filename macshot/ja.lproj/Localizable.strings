@@ -214,6 +214,8 @@
 "Enhance browser and Electron element snapping" = "ブラウザと Electron の要素スナップを強化";
 "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "要素モードで対象アプリのアクセシビリティツリーを構築します。ブラウザまたは Electron アプリが動作中に遅くなる場合や入力に問題がある場合は無効にしてください。";
 "Capture mouse cursor in screenshot" = "スクリーンショットにマウスカーソルを含める";
+"Timestamp burn-in" = "タイムスタンプの焼き込み";
+"Burns the capture time into the screenshot everywhere it is copied or saved." = "スクリーンショットをコピーまたは保存する際に、撮影日時を常に焼き込みます。";
 "Double-click selection to copy" = "選択範囲をダブルクリックでコピー";
 "Hide capture instructions" = "撮影時の操作説明を非表示";
 "Use window title in saved filename" = "保存ファイル名にウインドウタイトルを使用";

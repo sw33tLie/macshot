@@ -213,6 +213,8 @@
 "Show snap alignment guides" = "عرض خطوط المحاذاة";
 "Snap selection edges to image boundaries" = "محاذاة حواف التحديد إلى حدود الصورة";
 "Capture mouse cursor in screenshot" = "التقاط مؤشر الفأرة في لقطة الشاشة";
+"Timestamp burn-in" = "تضمين الطابع الزمني";
+"Burns the capture time into the screenshot everywhere it is copied or saved." = "يضمّن وقت الالتقاط في لقطة الشاشة أينما تم نسخها أو حفظها.";
 "Double-click selection to copy" = "النقر المزدوج على التحديد للنسخ";
 "Hide capture instructions" = "إخفاء تعليمات الالتقاط";
 "Disable shadow outside selection" = "تعطيل الظل خارج التحديد";

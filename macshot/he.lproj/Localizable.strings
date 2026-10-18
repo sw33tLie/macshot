@@ -213,6 +213,8 @@
 "Show snap alignment guides" = "הצג קווי הצמדה";
 "Snap selection edges to image boundaries" = "הצמד את קצות הבחירה לגבולות התמונה";
 "Capture mouse cursor in screenshot" = "לכוד סמן עכבר בצילום מסך";
+"Timestamp burn-in" = "הטבעת חותמת זמן";
+"Burns the capture time into the screenshot everywhere it is copied or saved." = "מטביע את זמן הצילום בצילום המסך בכל פעם שהוא מועתק או נשמר.";
 "Double-click selection to copy" = "לחיצה כפולה על הבחירה להעתקה";
 "Hide capture instructions" = "הסתר הוראות צילום";
 "Disable shadow outside selection" = "השבת הצללה מחוץ לבחירה";

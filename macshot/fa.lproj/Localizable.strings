@@ -213,6 +213,8 @@
 "Show snap alignment guides" = "نمایش خطوط راهنمای تراز";
 "Snap selection edges to image boundaries" = "چسباندن لبه‌های انتخاب به مرزهای تصویر";
 "Capture mouse cursor in screenshot" = "ضبط نشانگر موس در تصویر صفحه";
+"Timestamp burn-in" = "درج دائمی مهر زمانی";
+"Burns the capture time into the screenshot everywhere it is copied or saved." = "زمان ثبت را روی نماگرفت درج می‌کند تا در هر نسخهٔ کپی یا ذخیره‌شده نمایش داده شود.";
 "Double-click selection to copy" = "دوبار کلیک روی انتخاب برای کپی";
 "Hide capture instructions" = "پنهان کردن راهنمای تصویربرداری";
 "Disable shadow outside selection" = "غیرفعال کردن سایه خارج از انتخاب";

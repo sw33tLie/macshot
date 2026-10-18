@@ -228,6 +228,8 @@
 "Enhance browser and Electron element snapping" = "F\U00F6rb\U00E4ttra elementf\U00E5ngst f\U00F6r webbl\U00E4sare och Electron";
 "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Bygger m\U00E5lappens tr\U00E4d f\U00F6r hj\U00E4lpmedel i Element-l\U00E4ge. Inaktivera detta om en webbl\U00E4sare eller Electron-app blir långsam eller har inmatningsproblem.";
 "Capture mouse cursor in screenshot" = "F\U00E5nga muspekaren i sk\U00E4rmbild";
+"Timestamp burn-in" = "Inbr\U00E4nd tidsst\U00E4mpel";
+"Burns the capture time into the screenshot everywhere it is copied or saved." = "Br\U00E4nner in tiden d\U00E5 bilden togs i sk\U00E4rmbilden varje g\U00E5ng den kopieras eller sparas.";
 "Double-click selection to copy" = "Dubbelklicka p\U00E5 markeringen f\U00F6r att kopiera";
 "Hide capture instructions" = "D\U00F6lj instruktioner vid sk\U00E4rmbild";
 "Use window title in saved filename" = "Anv\U00E4nd f\U00F6nstertitel i filnamn";

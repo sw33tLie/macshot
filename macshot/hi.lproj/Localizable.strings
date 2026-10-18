@@ -213,6 +213,8 @@
 "Show snap alignment guides" = "स्नैप संरेखण गाइड दिखाएँ";
 "Snap selection edges to image boundaries" = "चयन के किनारों को छवि की सीमाओं पर स्नैप करें";
 "Capture mouse cursor in screenshot" = "स्क्रीनशॉट में माउस कर्सर कैप्चर करें";
+"Timestamp burn-in" = "समय-मुद्रा अंकन";
+"Burns the capture time into the screenshot everywhere it is copied or saved." = "स्क्रीनशॉट को जहाँ भी कॉपी या सहेजा जाए, उसमें कैप्चर का समय स्थायी रूप से अंकित करता है।";
 "Double-click selection to copy" = "कॉपी करने के लिए चयन पर डबल-क्लिक करें";
 "Hide capture instructions" = "कैप्चर निर्देश छिपाएँ";
 "Disable shadow outside selection" = "चयन के बाहर छाया अक्षम करें";

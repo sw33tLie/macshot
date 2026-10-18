@@ -213,6 +213,8 @@
 "Show snap alignment guides" = "Mostrar guies d'alineació";
 "Snap selection edges to image boundaries" = "Ajustar les vores de la selecció als límits de la imatge";
 "Capture mouse cursor in screenshot" = "Capturar el cursor del ratolí a la captura";
+"Timestamp burn-in" = "Marca de temps incrustada";
+"Burns the capture time into the screenshot everywhere it is copied or saved." = "Incrusta la data i l'hora de la captura a la captura de pantalla sempre que es copia o es desa.";
 "Double-click selection to copy" = "Doble clic a la selecció per copiar";
 "Hide capture instructions" = "Amagar les instruccions de captura";
 "Disable shadow outside selection" = "Desactivar l'ombra fora de la selecció";

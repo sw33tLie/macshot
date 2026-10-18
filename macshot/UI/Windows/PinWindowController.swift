@@ -14,12 +14,19 @@ class PinWindowController {
     private var window: NSPanel?
     private var pinView: PinView?
     private let image: NSImage
+    private let annotationData: CaptureAnnotationData?
     private let initialWindowSize: NSSize
     private static let minScale: CGFloat = 0.1
     private static let maxScale: CGFloat = 5.0
 
-    init(image: NSImage) {
+    init(image: NSImage, annotationData: CaptureAnnotationData? = nil) {
         self.image = image
+        self.annotationData = annotationData.map {
+            CaptureAnnotationData(
+                rawImage: $0.rawImage,
+                annotations: $0.annotations.map { $0.clone() },
+                editState: $0.editState)
+        }
 
         let size = image.size
         // An initializer can't bail, and a pin is worth showing even if macOS
@@ -135,7 +142,14 @@ class PinWindowController {
     }
 
     private func openInEditor() {
-        DetachedEditorWindowController.open(image: image)
+        if let annotationData {
+            DetachedEditorWindowController.open(
+                image: annotationData.rawImage,
+                annotations: annotationData.annotations,
+                editState: annotationData.editState)
+        } else {
+            DetachedEditorWindowController.open(image: image)
+        }
         close()
     }
 }

@@ -228,7 +228,7 @@ class FloatingThumbnailController: NSObject, NSDraggingSource, QLPreviewPanelDat
     var onDelete:   (() -> Void)?
     var onCloseAll: (() -> Void)?
     var onSaveAll:  (() -> Void)?
-    var onTransform: ((NSImage) -> Void)?
+    var onTransform: ((NSImage, CaptureAnnotationData?) -> Void)?
     var onOCR: (() -> Void)?
 
     init(image: NSImage) {
@@ -438,9 +438,13 @@ class FloatingThumbnailController: NSObject, NSDraggingSource, QLPreviewPanelDat
 
     @objc private func contextTransform(_ sender: NSMenuItem) {
         guard let transform = ImageContextTransform(rawValue: sender.tag),
-              let transformed = image.macshotTransformed(transform) else { return }
-        updateImage(transformed)
-        onTransform?(transformed)
+              let result = CaptureTransform.apply(
+                transform,
+                to: image,
+                annotationData: annotationData)
+        else { return }
+        updateImage(result.image, annotationData: result.annotationData)
+        onTransform?(result.image, result.annotationData)
     }
 
     @objc private func contextQuickLook() {

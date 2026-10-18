@@ -234,6 +234,8 @@
 "Enhance browser and Electron element snapping" = "Улучшить привязку элементов в браузере и Electron";
 "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Строит дерево доступности целевого приложения в режиме элементов. Отключите, если браузер или Electron-приложение начинает медленно работать или возникают проблемы с вводом.";
 "Capture mouse cursor in screenshot" = "Захватывать курсор мыши на снимке экрана";
+"Timestamp burn-in" = "Встроенная отметка времени";
+"Burns the capture time into the screenshot everywhere it is copied or saved." = "Наносит время создания на снимок экрана при каждом копировании или сохранении.";
 "Double-click selection to copy" = "Копировать двойным щелчком по выделению";
 "Hide capture instructions" = "Скрывать подсказки при захвате";
 "Use window title in saved filename" = "Использовать заголовок окна в имени файла";

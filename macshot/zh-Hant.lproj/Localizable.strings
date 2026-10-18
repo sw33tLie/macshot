@@ -231,6 +231,8 @@
 "Enhance browser and Electron element snapping" = "增強瀏覽器與 Electron 元素吸附";
 "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "在元素模式下建立目標應用程式的輔助使用樹狀結構。如果瀏覽器或 Electron 應用程式變慢或出現輸入問題，請關閉此選項。";
 "Capture mouse cursor in screenshot" = "在螢幕截圖中擷取滑鼠游標";
+"Timestamp burn-in" = "嵌入時間戳記";
+"Burns the capture time into the screenshot everywhere it is copied or saved." = "無論複製或儲存到何處，都會將擷取時間嵌入螢幕截圖中。";
 "Double-click selection to copy" = "雙擊選取範圍以複製";
 "Hide capture instructions" = "隱藏截圖操作提示";
 "Disable shadow outside selection" = "停用選取範圍外的陰影";

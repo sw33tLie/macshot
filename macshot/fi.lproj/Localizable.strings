@@ -228,6 +228,8 @@
 "Enhance browser and Electron element snapping" = "Paranna selaimen ja Electronin elementtien tartuntaa";
 "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Rakentaa kohdeohjelman saavutettavuuspuun Element-tilassa. Poista tämä käytöstä, jos selain tai Electron-sovellus hidastuu tai sillä on input-ongelmia.";
 "Capture mouse cursor in screenshot" = "Kaappaa hiiren osoitin kuvakaappaukseen";
+"Timestamp burn-in" = "Upotettu aikaleima";
+"Burns the capture time into the screenshot everywhere it is copied or saved." = "Upottaa kuvausajan n\U00E4ytt\U00F6kuvaan aina, kun se kopioidaan tai tallennetaan.";
 "Double-click selection to copy" = "Kopioi kaksoisnapsauttamalla valintaa";
 "Hide capture instructions" = "Piilota kuvakaappausohjeet";
 "Use window title in saved filename" = "Käytä ikkunan otsikkoa tiedostonimessä";

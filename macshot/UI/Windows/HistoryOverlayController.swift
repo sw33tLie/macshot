@@ -214,10 +214,21 @@ final class HistoryOverlayController: NSObject, QLPreviewPanelDataSource, QLPrev
     func pinToScreen(index: Int) {
         let entries = ScreenshotHistory.shared.entries
         guard index >= 0, index < entries.count else { return }
-        guard let image = ScreenshotHistory.shared.loadImage(for: entries[index]) else { return }
+        let entry = entries[index]
+        guard let image = ScreenshotHistory.shared.loadImage(for: entry) else { return }
+        var userInfo: [AnyHashable: Any]?
+        if let editable = ScreenshotHistory.shared.loadEditableCapture(for: entry) {
+            userInfo = ["annotationData": CaptureAnnotationData(
+                rawImage: editable.rawImage,
+                annotations: editable.annotations,
+                editState: editable.editState)]
+        }
         dismiss()
         // Post notification so AppDelegate handles pin creation (it owns pinControllers)
-        NotificationCenter.default.post(name: .init("macshot.pinFromHistory"), object: image)
+        NotificationCenter.default.post(
+            name: .init("macshot.pinFromHistory"),
+            object: image,
+            userInfo: userInfo)
     }
 
     func quickLook(index: Int) {
@@ -267,9 +278,24 @@ final class HistoryOverlayController: NSObject, QLPreviewPanelDataSource, QLPrev
         let entries = ScreenshotHistory.shared.entries
         guard index >= 0, index < entries.count else { return }
         let entry = entries[index]
-        guard let image = ScreenshotHistory.shared.loadImage(for: entry),
-              let transformed = image.macshotTransformed(transform) else { return }
-        ScreenshotHistory.shared.updateEntry(id: entry.id, compositedImage: transformed, rawImage: nil, annotations: nil)
+        guard let image = ScreenshotHistory.shared.loadImage(for: entry) else { return }
+        let annotationData = ScreenshotHistory.shared.loadEditableCapture(for: entry).map {
+            CaptureAnnotationData(
+                rawImage: $0.rawImage,
+                annotations: $0.annotations,
+                editState: $0.editState)
+        }
+        guard let result = CaptureTransform.apply(
+            transform,
+            to: image,
+            annotationData: annotationData)
+        else { return }
+        ScreenshotHistory.shared.updateEntry(
+            id: entry.id,
+            compositedImage: result.image,
+            rawImage: result.annotationData?.rawImage,
+            annotations: result.annotationData?.annotations,
+            editState: result.annotationData?.editState)
         contentView?.loadEntries()
     }
 
