@@ -17,6 +17,9 @@ struct CaptureEditState: Codable, Equatable {
     var beautifyBackgroundBlur: Double = 0
     var beautifyIsWindowSnap: Bool = false
     var customBeautifyBackgroundPNG: Data?
+    /// The original capture time when timestamp burn-in was enabled. The raw
+    /// image stays unstamped so an editor can redraw the label after all edits.
+    var capturedAt: Date?
 
     var effectsPreset: ImageEffectPreset {
         ImageEffectPreset(rawValue: effectsPresetRaw) ?? .none
@@ -34,6 +37,7 @@ struct CaptureEditState: Codable, Equatable {
 
     var hasEffects: Bool { !effectsConfig.isIdentity }
     var hasPostProcessing: Bool { hasEffects || beautifyEnabled }
+    var shouldPersist: Bool { hasPostProcessing || capturedAt != nil }
 
     var beautifyMode: BeautifyMode {
         BeautifyMode(rawValue: beautifyModeRaw) ?? .window
@@ -86,6 +90,7 @@ extension CaptureEditState {
         beautifyBackgroundBlur = c.decode(.beautifyBackgroundBlur, or: 0)
         beautifyIsWindowSnap = c.decode(.beautifyIsWindowSnap, or: false)
         customBeautifyBackgroundPNG = c.decodeOptional(.customBeautifyBackgroundPNG)
+        capturedAt = c.decodeOptional(.capturedAt)
         normalizeValues()
     }
 
@@ -101,6 +106,10 @@ extension CaptureEditState {
         beautifyCornerRadius = SavedCaptureValidation.bounded(beautifyCornerRadius, 0...1024, fallback: 10)
         beautifyShadowRadius = SavedCaptureValidation.bounded(beautifyShadowRadius, 0...100, fallback: 20)
         beautifyBackgroundBlur = SavedCaptureValidation.bounded(beautifyBackgroundBlur, 0...50, fallback: 0)
+        if let date = capturedAt,
+           !date.timeIntervalSinceReferenceDate.isFinite || date < .distantPast || date > .distantFuture {
+            capturedAt = nil
+        }
     }
 }
 

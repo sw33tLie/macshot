@@ -1961,7 +1961,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                 annotations: data?.annotations,
                 editState: data?.editState
             )
-            self.showPin(image: image)
+            self.showPin(image: image, annotationData: data)
         }
         controller.onEdit = { [weak controller] in
             guard let controller else { return }
@@ -2004,9 +2004,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             self.showUploadProgress(image: image)
         }
         #endif
-        controller.onTransform = { transformed in
+        controller.onTransform = { transformed, annotationData in
             if let id = historyEntryID {
-                ScreenshotHistory.shared.updateEntry(id: id, compositedImage: transformed, rawImage: nil, annotations: nil)
+                ScreenshotHistory.shared.updateEntry(
+                    id: id,
+                    compositedImage: transformed,
+                    rawImage: annotationData?.rawImage,
+                    annotations: annotationData?.annotations,
+                    editState: annotationData?.editState)
             }
         }
         controller.onOCR = { [weak self, weak controller] in
@@ -2190,7 +2195,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
     @objc private func pinFromHistory(_ notification: Notification) {
         guard let image = notification.object as? NSImage else { return }
-        showPin(image: image)
+        showPin(
+            image: image,
+            annotationData: notification.userInfo?["annotationData"] as? CaptureAnnotationData)
     }
 
     /// Reports a failure the user needs to know about. Losing a capture without
@@ -2206,8 +2213,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         toast.showError(message: message, asUploadFailure: false)
     }
 
-    func showPin(image: NSImage) {
-        let pin = PinWindowController(image: image)
+    func showPin(image: NSImage, annotationData: CaptureAnnotationData? = nil) {
+        let pin = PinWindowController(image: image, annotationData: annotationData)
         pin.delegate = self
         pin.show()
         pinControllers.append(pin)
@@ -2665,7 +2672,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         )
         let appToRefocus = previousApp
         dismissOverlays(refocusPreviousApp: false)
-        let pin = PinWindowController(image: image)
+        let pin = PinWindowController(image: image, annotationData: annotationData)
         pin.delegate = self
         pin.show()
         pinControllers.append(pin)
@@ -3530,9 +3537,18 @@ extension AppDelegate: OverlayWindowControllerDelegate {
 
         dismissOverlays()
 
-        guard let image = finalImage else { return }
+        guard let captured = finalImage else { return }
+        let capturedAt: Date? = TimestampOverlay.isEnabled ? Date() : nil
+        let image = TimestampOverlay.stamp(captured, capturedAt: capturedAt)
+        let annotationData = CaptureAnnotationData.timestampOnly(
+            rawImage: captured,
+            capturedAt: capturedAt)
 
-        let entryID = ScreenshotHistory.shared.add(image: image)
+        let entryID = ScreenshotHistory.shared.add(
+            image: image,
+            rawImage: annotationData?.rawImage,
+            annotations: annotationData?.annotations,
+            editState: annotationData?.editState)
         let mode = QuickCaptureMode.current
         if mode.shouldCopyImage {
             ImageEncoder.copyToClipboard(image)
@@ -3541,10 +3557,20 @@ extension AppDelegate: OverlayWindowControllerDelegate {
             saveImageToConfiguredFolder(image, copyPathToClipboard: mode.copyPathOverride)
         }
         playCopySound()
-        showFloatingThumbnail(image: image)
+        showFloatingThumbnail(image: image, annotationData: annotationData, historyEntryID: entryID)
 
         if UserDefaults.standard.bool(forKey: "quickCaptureOpenEditor") {
-            DetachedEditorWindowController.open(image: image, historyEntryID: entryID, disableBeautify: true)
+            if let data = annotationData {
+                DetachedEditorWindowController.open(
+                    image: data.rawImage,
+                    historyEntryID: entryID,
+                    editState: data.editState)
+            } else {
+                DetachedEditorWindowController.open(
+                    image: image,
+                    historyEntryID: entryID,
+                    disableBeautify: true)
+            }
         }
     }
 
@@ -3612,7 +3638,16 @@ extension AppDelegate: NSMenuDelegate {
         guard let image = ScreenshotHistory.shared.loadImage(for: entry) else { return }
 
         ImageEncoder.copyToClipboard(image)
-        showFloatingThumbnail(image: image, historyEntryID: entry.id)
+        let annotationData = ScreenshotHistory.shared.loadEditableCapture(for: entry).map {
+            CaptureAnnotationData(
+                rawImage: $0.rawImage,
+                annotations: $0.annotations,
+                editState: $0.editState)
+        }
+        showFloatingThumbnail(
+            image: image,
+            annotationData: annotationData,
+            historyEntryID: entry.id)
 
         let soundEnabled = UserDefaults.standard.object(forKey: "playCopySound") as? Bool ?? true
         if soundEnabled {

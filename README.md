@@ -106,6 +106,7 @@ brew install --cask macshot
 - **S3-compatible** — upload to Cloudflare R2, AWS S3, MinIO, DigitalOcean Spaces, Backblaze B2, etc.
 - **Retina downscale** — optional 1x export for smaller files
 - **sRGB color profile** — optional embedding for cross-display consistency
+- **Timestamp burn-in** — optionally add the capture date and time to every screenshot output
 
 ### Editor Window
 - Standalone resizable window with full annotation tools, beautify preview

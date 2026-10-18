@@ -2128,6 +2128,22 @@ class Annotation {
         drawHighlightDim(highlightRects: rects, in: bounds, opacity: opacity)
     }
 
+    /// Draws annotations in capture order: censors, the shared spotlight dim,
+    /// then regular shapes.
+    static func drawComposited(
+        _ list: [Annotation],
+        in context: NSGraphicsContext,
+        highlightDimBounds: NSRect
+    ) {
+        for annotation in list where annotation.tool == .pixelate {
+            annotation.draw(in: context)
+        }
+        drawHighlightDim(for: list, in: highlightDimBounds)
+        for annotation in list where annotation.tool != .pixelate {
+            annotation.draw(in: context)
+        }
+    }
+
     /// Erase mode: sample the border pixels around the rect from the source image,
     /// then fill each pixel by interpolating from the nearest edge colors.
     /// Per-row left/right colors and per-column top/bottom colors are blended

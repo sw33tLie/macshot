@@ -228,6 +228,8 @@
 "Enhance browser and Electron element snapping" = "Forbedre elementfangst for nettleser og Electron";
 "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Bygger tilgangstr\U00E6t i m\U00E5lappen i Element-modus. Deaktiver dette hvis en nettleser eller Electron-app blir treg eller har innproblemer.";
 "Capture mouse cursor in screenshot" = "Ta med musepeker i skjermbilde";
+"Timestamp burn-in" = "Innbrent tidsstempel";
+"Burns the capture time into the screenshot everywhere it is copied or saved." = "Brenner opptakstidspunktet inn i skjermbildet hver gang det kopieres eller lagres.";
 "Double-click selection to copy" = "Dobbeltklikk p\U00E5 utvalget for \U00E5 kopiere";
 "Hide capture instructions" = "Skjul instruksjoner ved skjermbilde";
 "Use window title in saved filename" = "Bruk vindustittel i lagret filnavn";

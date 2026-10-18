@@ -107,6 +107,7 @@ final class LegacyDecodingTests: XCTestCase {
         XCTAssertEqual(state.beautifyBackgroundBlur, 0, "a field added later takes its default")
         XCTAssertFalse(state.beautifyIsWindowSnap)
         XCTAssertNil(state.customBeautifyBackgroundPNG)
+        XCTAssertNil(state.capturedAt)
         XCTAssertEqual(state.effectsBrightness, 0.2, accuracy: 0.0001)
     }
 
@@ -122,6 +123,7 @@ final class LegacyDecodingTests: XCTestCase {
         state.beautifyPadding = 100
         state.beautifyBackgroundBlur = 12
         state.effectsSaturation = 1.4
+        state.capturedAt = Date(timeIntervalSinceReferenceDate: 780_877_060)
         state.customBeautifyBackgroundPNG = ImageProbe.quadrantImage(width: 8, height: 8)
             .tiffRepresentation.flatMap { NSBitmapImageRep(data: $0)?.representation(using: .png, properties: [:]) }
 

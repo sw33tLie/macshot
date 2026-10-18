@@ -232,6 +232,8 @@
 "Enhance browser and Electron element snapping" = "Tingkatkan penjepretan elemen browser dan Electron";
 "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Membangun pohon aksesibilitas aplikasi target dalam Mode Elemen. Nonaktifkan ini jika browser atau aplikasi Electron menjadi lambat atau memiliki masalah input.";
 "Capture mouse cursor in screenshot" = "Tangkap kursor mouse di tangkapan layar";
+"Timestamp burn-in" = "Stempel waktu tertanam";
+"Burns the capture time into the screenshot everywhere it is copied or saved." = "Menyematkan waktu pengambilan pada tangkapan layar setiap kali disalin atau disimpan.";
 "Double-click selection to copy" = "Klik dua kali pilihan untuk menyalin";
 "Hide capture instructions" = "Sembunyikan petunjuk pengambilan tangkapan layar";
 "Disable shadow outside selection" = "Nonaktifkan bayangan di luar seleksi";

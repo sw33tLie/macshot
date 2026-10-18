@@ -97,7 +97,7 @@ struct HistoryImageSnapshot: Sendable {
     @MainActor init(image: NSImage, rawImage: NSImage?, annotations: [Annotation]?, editState: CaptureEditState?) throws {
         composited = try Image(image)
         let needsAnnotations = !(annotations?.isEmpty ?? true)
-        let needsEditState = editState?.hasPostProcessing == true
+        let needsEditState = editState?.shouldPersist == true
         if needsAnnotations || needsEditState {
             guard let rawImage else { throw CocoaError(.fileWriteUnknown) }
             raw = try Image(rawImage)

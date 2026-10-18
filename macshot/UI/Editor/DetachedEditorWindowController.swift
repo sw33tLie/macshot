@@ -45,6 +45,8 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
     /// When true, force beautify off on open (image already has beautify baked in).
     private var disableBeautifyOnOpen: Bool = false
     private var initialEditState: CaptureEditState?
+    /// Redrawn after all editor composition; nil for already-flattened images.
+    private var capturedAt: Date?
 
     /// Open an editor window with the given image (typically from captureSelectedRegion).
     /// When `disableBeautify` is true, beautify starts off regardless of UserDefaults
@@ -192,6 +194,7 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         if !annotations.isEmpty { view.setAnnotations(annotations) }
         if let editState = initialEditState {
             view.applyCaptureEditState(editState)
+            capturedAt = editState.capturedAt
         }
 
         // Settle any deferred state before snapshotting the clean baseline, so a
@@ -413,13 +416,14 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
     private func currentAnnotationData() -> CaptureAnnotationData? {
         guard let view = overlayView else { return nil }
         let annotations = view.annotations.filter { $0.isMovable }.map { $0.clone() }
-        let editState = view.captureEditState()
-        guard !annotations.isEmpty || editState.hasPostProcessing,
+        var editState = view.captureEditState()
+        editState.capturedAt = capturedAt
+        guard !annotations.isEmpty || editState.shouldPersist,
               let rawImage = view.captureSelectedRegionRaw() else { return nil }
         return CaptureAnnotationData(
             rawImage: rawImage,
             annotations: annotations,
-            editState: editState.hasPostProcessing ? editState : nil
+            editState: editState.shouldPersist ? editState : nil
         )
     }
 
@@ -432,7 +436,7 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         if let view = overlayView, view.beautifyEnabled {
             result = BeautifyRenderer.render(image: result, config: view.beautifyConfig)
         }
-        return result
+        return TimestampOverlay.stamp(result, capturedAt: capturedAt)
     }
 }
 
@@ -479,7 +483,9 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
     func overlayViewDidRequestPin() {
         guard let save = captureHistorySave() else { return }
         playCopySound()
-        (NSApp.delegate as? AppDelegate)?.showPin(image: save.image)
+        (NSApp.delegate as? AppDelegate)?.showPin(
+            image: save.image,
+            annotationData: save.annotationData)
         autoSaveToHistoryIfNeeded(save)
     }
 
@@ -584,10 +590,15 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
                 guard let out = filter.outputImage,
                       let cg = CIContext().createCGImage(out, from: out.extent) else { return }
                 DispatchQueue.main.async {
-                    let finalImage = NSImage(cgImage: cg, size: image.size)
+                    let removed = NSImage(cgImage: cg, size: image.size)
+                    let finalImage = TimestampOverlay.stamp(removed, capturedAt: self.capturedAt)
                     ImageEncoder.copyToClipboard(finalImage)
                     self.playCopySound()
-                    (NSApp.delegate as? AppDelegate)?.showFloatingThumbnail(image: finalImage)
+                    (NSApp.delegate as? AppDelegate)?.showFloatingThumbnail(
+                        image: finalImage,
+                        annotationData: .timestampOnly(
+                            rawImage: removed,
+                            capturedAt: self.capturedAt))
                 }
             } catch {}
         }
@@ -619,9 +630,9 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
             }
 
             let handler = AddCaptureOverlayHandler()
-            handler.onCapture = { [weak self] image in
+            handler.onCapture = { [weak self] image, capturedAt in
                 guard let self = self else { return }
-                self.addCapturedImage(image)
+                self.addCapturedImage(image, capturedAt: capturedAt)
                 self.addCaptureHandler = nil
             }
             handler.onCancel = { [weak self] in
@@ -642,10 +653,11 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
         }
     }
 
-    private func addCapturedImage(_ image: NSImage) {
+    private func addCapturedImage(_ image: NSImage, capturedAt addedCapturedAt: Date?) {
         guard let view = overlayView else { return }
 
         view.addCaptureImage(image)
+        self.capturedAt = self.capturedAt ?? addedCapturedAt
 
         // Update top bar size label
         if let cg = view.screenshotImage?.cgImage(forProposedRect: nil, context: nil, hints: nil),
@@ -679,7 +691,8 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
 private class AddCaptureOverlayHandler: NSObject, OverlayWindowControllerDelegate {
 
     var overlayControllers: [OverlayWindowController] = []
-    var onCapture: ((NSImage) -> Void)?
+    /// The unstamped capture and its burn-in date, when enabled.
+    var onCapture: ((NSImage, Date?) -> Void)?
     var onCancel: (() -> Void)?
 
     private func dismissOverlays() {
@@ -698,7 +711,7 @@ private class AddCaptureOverlayHandler: NSObject, OverlayWindowControllerDelegat
         let image = capturedImage ?? overlayCrossScreenImage(controller)
         dismissOverlays()
         if let image = image {
-            onCapture?(image)
+            onCapture?(image, annotationData?.editState?.capturedAt)
         } else {
             onCancel?()
         }
@@ -706,7 +719,7 @@ private class AddCaptureOverlayHandler: NSObject, OverlayWindowControllerDelegat
 
     func overlayDidRequestPin(_ controller: OverlayWindowController, image: NSImage, annotationData: CaptureAnnotationData?) {
         dismissOverlays()
-        onCapture?(image)
+        onCapture?(image, annotationData?.editState?.capturedAt)
     }
     func overlayDidRequestOCR(_ controller: OverlayWindowController, result: OCRScanResult, image: NSImage?) {}
     func overlayDidRequestUpload(_ controller: OverlayWindowController, image: NSImage, annotationData: CaptureAnnotationData?) {}

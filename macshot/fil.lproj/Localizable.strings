@@ -232,6 +232,8 @@
 "Enhance browser and Electron element snapping" = "Pahusayin ang element snapping ng browser at Electron";
 "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Gumagawa ng accessibility tree ng target app sa Element mode. I-disable ito kung mabagal ang browser o Electron app o may mga problema sa input.";
 "Capture mouse cursor in screenshot" = "Isama ang cursor ng mouse sa screenshot";
+"Timestamp burn-in" = "Naka-embed na timestamp";
+"Burns the capture time into the screenshot everywhere it is copied or saved." = "Permanenteng inilalagay ang oras ng pagkuha sa screenshot saanman ito kopyahin o i-save.";
 "Double-click selection to copy" = "I-double-click ang pinili upang kopyahin";
 "Hide capture instructions" = "Itago ang mga tagubilin sa pagkuha ng screenshot";
 "Disable shadow outside selection" = "I-disable ang anino sa labas ng pinili";

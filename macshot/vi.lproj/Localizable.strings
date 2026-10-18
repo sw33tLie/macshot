@@ -231,6 +231,8 @@
 "Enhance browser and Electron element snapping" = "Nâng cao bắt dính phần tử trình duyệt và Electron";
 "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Xây dựng cây khả năng truy cập của ứng dụng đích trong Chế độ phần tử. Tắt tính năng này nếu trình duyệt hoặc ứng dụng Electron trở nên chậm hoặc gặp sự cố nhập liệu.";
 "Capture mouse cursor in screenshot" = "Chụp con trỏ chuột trong ảnh";
+"Timestamp burn-in" = "Đóng dấu thời gian";
+"Burns the capture time into the screenshot everywhere it is copied or saved." = "Đóng dấu thời gian chụp lên ảnh chụp màn hình mỗi khi ảnh được sao chép hoặc lưu.";
 "Double-click selection to copy" = "Nhấp đúp vào vùng chọn để sao chép";
 "Hide capture instructions" = "Ẩn hướng dẫn chụp màn hình";
 "Disable shadow outside selection" = "Tắt bóng tối bên ngoài vùng chọn";

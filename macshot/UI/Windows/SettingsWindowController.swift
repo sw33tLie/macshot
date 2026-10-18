@@ -88,6 +88,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var boundarySnapCheckbox: NSButton!
     private var browserElementSnapCheckbox: NSButton!
     private var captureCursorCheckbox: NSButton!
+    private var timestampBurnInCheckbox: NSButton!
     private var doubleClickToCopyCheckbox: NSButton!
     private var hideCaptureInstructionsCheckbox: NSButton!
     private var disableSelectionShadowCheckbox: NSButton!
@@ -792,6 +793,10 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
             target: self,
             action: #selector(browserElementSnapChanged(_:)))
         captureCursorCheckbox = NSButton(checkboxWithTitle: L("Capture mouse cursor in screenshot"), target: self, action: #selector(captureCursorChanged(_:)))
+        timestampBurnInCheckbox = NSButton(
+            checkboxWithTitle: L("Timestamp burn-in"),
+            target: self,
+            action: #selector(timestampBurnInChanged(_:)))
         doubleClickToCopyCheckbox = NSButton(checkboxWithTitle: L("Double-click selection to copy"), target: self, action: #selector(doubleClickToCopyChanged(_:)))
         hideCaptureInstructionsCheckbox = NSButton(checkboxWithTitle: L("Hide capture instructions"), target: self, action: #selector(hideCaptureInstructionsChanged(_:)))
         disableSelectionShadowCheckbox = NSButton(checkboxWithTitle: L("Disable shadow outside selection"), target: self, action: #selector(disableSelectionShadowChanged(_:)))
@@ -892,6 +897,15 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
         stack.addArrangedSubview(indented(disableSelectionShadowCheckbox))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+
+        stack.addArrangedSubview(indented(timestampBurnInCheckbox))
+        let timestampNote = NSTextField(wrappingLabelWithString: L(
+            "Burns the capture time into the screenshot everywhere it is copied or saved."))
+        timestampNote.font = NSFont.systemFont(ofSize: 10)
+        timestampNote.textColor = .secondaryLabelColor
+        timestampNote.preferredMaxLayoutWidth = 380
+        stack.addArrangedSubview(indented(timestampNote))
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // ── Output ───────────────────────────────────────────
@@ -2681,6 +2695,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         showToolShortcutsInTooltipsCheckbox.state = UserDefaults.standard.bool(forKey: "showToolShortcutsInTooltips") ? .on : .off
 
         captureCursorCheckbox.state = UserDefaults.standard.bool(forKey: "captureCursor") ? .on : .off
+        timestampBurnInCheckbox.state = TimestampOverlay.isEnabled ? .on : .off
         doubleClickToCopyCheckbox.state = (UserDefaults.standard.object(forKey: "doubleClickToCopy") as? Bool ?? true) ? .on : .off
         hideCaptureInstructionsCheckbox.state = UserDefaults.standard.bool(forKey: "hideCaptureInstructions") ? .on : .off
         disableSelectionShadowCheckbox.state = UserDefaults.standard.bool(forKey: "disableSelectionOutsideShadow") ? .on : .off
@@ -3161,6 +3176,9 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     }
     @objc private func captureCursorChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "captureCursor")
+    }
+    @objc private func timestampBurnInChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: TimestampOverlay.userDefaultsKey)
     }
     @objc private func doubleClickToCopyChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "doubleClickToCopy")
