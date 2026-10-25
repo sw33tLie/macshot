@@ -5597,6 +5597,13 @@ class OverlayView: NSView {
         let point = convert(event.locationInWindow, from: nil)
         justDismissedTextEditor = false  // reset per click; set below if we commit one
 
+        // Editor mode: remember the undo depth on the first click of a potential
+        // double-click, so the double-click zoom toggle can tell "clicked empty
+        // canvas" from "two fast deliberate strokes" (the latter pushed an entry).
+        if isInsideScrollView {
+            editorDoubleClickUndoBaseline = event.clickCount == 1 ? undoStack.count : nil
+        }
+
         // Anchored selection commit: a left-click while the right-click-
         // anchored tracker is live finalizes the selection and returns to
         // the standard flow. Do this BEFORE any other mouseDown handling so
@@ -5737,6 +5744,15 @@ class OverlayView: NSView {
         justDismissedTextEditor = textEditor.isEditing && !isTextFormattingClick
         if !isTextFormattingClick {
             commitTextFieldIfNeeded()
+        }
+
+        // Editor mode: double-click on the canvas toggles zoom (2× in, anchored
+        // at the cursor, / back out) before the double-click-to-copy path can
+        // consume it. The capture overlay keeps its double-click-to-copy.
+        if isInsideScrollView, event.clickCount >= 2,
+           handleEditorDoubleClickZoom(event: event, at: point)
+        {
+            return
         }
 
         // Double-click to copy: when the setting is on, two fast clicks inside the
@@ -7176,6 +7192,71 @@ class OverlayView: NSView {
         if isInsideScrollView {
             editorZoom(by: 1.0 + event.magnification, cursorInWindow: event.locationInWindow)
         }
+    }
+
+    override func smartMagnify(with event: NSEvent) {
+        // Two-finger double tap on the trackpad — same toggle as double-click.
+        if isInsideScrollView {
+            _ = handleEditorDoubleClickZoom(event: event, at: convert(event.locationInWindow, from: nil))
+        } else {
+            super.smartMagnify(with: event)
+        }
+    }
+
+    // MARK: - Editor double-click zoom
+
+    /// Undo-stack depth at the first click of a potential editor double-click.
+    /// Lets the zoom toggle decline when the first click actually drew something
+    /// (two fast deliberate strokes must not be hijacked as a zoom).
+    private var editorDoubleClickUndoBaseline: Int?
+    /// Magnification the canvas had before the double-click zoomed in.
+    private var editorMagnificationBeforeDoubleClickZoom: CGFloat?
+    /// The level the double-click zoom toggled in to — the second double-click
+    /// returns to `editorMagnificationBeforeDoubleClickZoom` when the canvas is
+    /// currently at this level.
+    private var editorDoubleClickZoomedInLevel: CGFloat?
+
+    /// Editor mode: double-click toggles between 2× (anchored at the cursor)
+    /// and the previous magnification. Returns true when the event was consumed.
+    /// Declines when the double-click means "edit this text", would interact
+    /// with the selected annotation, or the first click drew something.
+    private func handleEditorDoubleClickZoom(event: NSEvent, at point: NSPoint) -> Bool {
+        guard let sv = enclosingScrollView else { return false }
+        // An open text editor owns its clicks (commit / dismiss, not zoom).
+        guard !textEditor.isEditing else { return false }
+        // A double-click on an existing text annotation means "edit that text".
+        let canvasPoint = viewToCanvas(point)
+        if annotations.reversed().contains(where: { $0.tool == .text && $0.hitTest(point: canvasPoint) }) {
+            return false
+        }
+        // A double-click on the selected annotation goes through its normal
+        // interaction path (handles, re-edit, …).
+        if let selected = selectedAnnotation, selected.hitTest(point: canvasPoint) {
+            return false
+        }
+        // The first click pushed an undo entry — these are two deliberate
+        // strokes, not a double-click on empty canvas.
+        if let baseline = editorDoubleClickUndoBaseline, undoStack.count > baseline {
+            editorDoubleClickUndoBaseline = nil
+            return false
+        }
+        editorDoubleClickUndoBaseline = nil
+
+        let current = sv.magnification
+        let target: CGFloat
+        if let zoomedInLevel = editorDoubleClickZoomedInLevel, abs(current - zoomedInLevel) < 0.05 {
+            // Second double-click: return to the pre-zoom magnification.
+            editorDoubleClickZoomedInLevel = nil
+            target = editorMagnificationBeforeDoubleClickZoom ?? 1.0
+            editorMagnificationBeforeDoubleClickZoom = nil
+        } else {
+            editorMagnificationBeforeDoubleClickZoom = current
+            editorDoubleClickZoomedInLevel = min(2.0, sv.maxMagnification)
+            target = editorDoubleClickZoomedInLevel!
+        }
+        guard abs(target - current) > 0.001 else { return true }
+        editorZoom(by: target / max(current, 0.0001), cursorInWindow: event.locationInWindow, animated: true)
+        return true
     }
 
     // MARK: - Middle Mouse (toggle move mode)
@@ -9363,6 +9444,14 @@ class OverlayView: NSView {
             if event.modifierFlags.contains(.command) {
                 // Editing and history commands are handled in performKeyEquivalent.
                 // Only Cmd+S and zoom shortcuts remain here.
+                // Cmd+Shift+S always opens the Save panel (pick folder + filename),
+                // regardless of the configured default save action.
+                if KeyboardShortcutMatcher.matches(event, character: "s", modifiers: [.command, .shift]) {
+                    if state == .selected || isInsideScrollView {
+                        overlayDelegate?.overlayViewDidRequestSaveAs()
+                    }
+                    return
+                }
                 if KeyboardShortcutMatcher.matches(event, character: "s", modifiers: .command) {
                     if state == .selected {
                         overlayDelegate?.overlayViewDidRequestSave()

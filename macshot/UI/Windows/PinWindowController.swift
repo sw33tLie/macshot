@@ -54,8 +54,12 @@ class PinWindowController {
         panel.isReleasedWhenClosed = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.contentAspectRatio = size
-        // Allow scroll/magnify events to reach the view even when panel is not key
-        panel.becomesKeyOnlyIfNeeded = true
+        // Gesture events (trackpad pinch) are only delivered to the key window.
+        // The panel becomes key explicitly (show() and hover/click handlers); a
+        // nonactivating panel takes key status without stealing focus from the
+        // user's frontmost app.
+        panel.becomesKeyOnlyIfNeeded = false
+        panel.acceptsMouseMovedEvents = true
 
         let view = PinView(image: image)
         view.frame = NSRect(origin: .zero, size: windowSize)
@@ -123,7 +127,13 @@ class PinWindowController {
     }
 
     func show() {
+        // Take key status immediately, not just on hover: the pointer can
+        // already be inside the pin's frame when it appears right after a
+        // capture, in which case the mouseEntered handler fires too early
+        // (or races the window ordering) and the first pinch is lost. A
+        // nonactivating panel becomes key without activating macshot.
         window?.orderFrontRegardless()
+        window?.makeKey()
     }
 
     func close() {
@@ -243,7 +253,10 @@ private class PinView: NSView {
         if let existing = trackingArea {
             removeTrackingArea(existing)
         }
-        let area = NSTrackingArea(rect: bounds, options: [.mouseEnteredAndExited, .activeAlways], owner: self, userInfo: nil)
+        let area = NSTrackingArea(
+            rect: bounds,
+            options: [.mouseEnteredAndExited, .mouseMoved, .activeAlways],
+            owner: self, userInfo: nil)
         addTrackingArea(area)
         trackingArea = area
     }
@@ -253,6 +266,22 @@ private class PinView: NSView {
         editButton?.isHidden = false
         closeButton?.isHidden = false
         zoomLabel?.isHidden = false
+        // Gesture events (trackpad pinch) are only delivered to the key window,
+        // while scroll events reach any window under the pointer. A borderless
+        // panel never becomes key on its own, so `magnify(with:)` would never
+        // fire and pinch-to-zoom would appear missing. Making the panel key on
+        // hover fixes it without activating macshot (the panel is
+        // `.nonactivatingPanel`, so the frontmost app keeps focus).
+        window?.makeKeyAndOrderFront(nil)
+    }
+
+    override func mouseMoved(with event: NSEvent) {
+        // Belt-and-braces for the first pin after launch: if the key status
+        // taken at creation time didn't stick (app never active yet), any
+        // pointer movement over the pin re-asserts it before the user pinches.
+        if let window, !window.isKeyWindow {
+            window.makeKey()
+        }
     }
 
     override func mouseExited(with event: NSEvent) {
@@ -325,9 +354,17 @@ private class PinView: NSView {
 
     // Scroll to zoom (mouse wheel and trackpad two-finger scroll)
     override func scrollWheel(with event: NSEvent) {
-        let delta = event.scrollingDeltaY
-        guard abs(delta) > 0.01 else { return }
-        // Trackpad sends fine-grained deltas; mouse wheel sends larger discrete steps
+        // Momentum events keep arriving after the fingers lift — letting them
+        // zoom makes the target level impossible to stop on. Only live input
+        // zooms (mouse wheels never set a momentum phase).
+        guard event.momentumPhase == .none else { return }
+        // Trackpads send fine-grained precise deltas. Classic mouse wheels send
+        // discrete notch deltas in deltaY, and some mouse drivers leave
+        // scrollingDeltaY at zero for them — fall back so every mouse works.
+        let delta = event.hasPreciseScrollingDeltas
+            ? event.scrollingDeltaY
+            : (event.deltaY != 0 ? event.deltaY : event.scrollingDeltaY)
+        guard abs(delta) > 0.0001 else { return }
         let sensitivity: CGFloat = event.hasPreciseScrollingDeltas ? 0.005 : 0.03
         let factor: CGFloat = 1.0 + delta * sensitivity
         let loc = convert(event.locationInWindow, from: nil)
@@ -343,6 +380,12 @@ private class PinView: NSView {
 
     // Keyboard: Escape to close
     override var acceptsFirstResponder: Bool { true }
+
+    // A click on the pin makes the panel key (same reason as the hover→key
+    // handling in mouseEntered: pinch gestures need a key window).
+    override var needsPanelToBecomeKey: Bool { true }
+
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 
     override func keyDown(with event: NSEvent) {
         if event.keyCode == 53 { // Escape

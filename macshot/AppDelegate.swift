@@ -258,17 +258,53 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         return NSSound(contentsOfFile: path, byReference: true) ?? NSSound(named: "Tink")
     }()
 
+    /// Tell the existing instance to show its icon and open Settings, then quit.
+    private func quitAsDuplicateInstance() {
+        DistributedNotificationCenter.default().postNotificationName(
+            .init("com.sw33tlie.macshot.showAndOpenPrefs"),
+            object: nil, userInfo: nil, deliverImmediately: true
+        )
+        NSApp.terminate(nil)
+    }
+
+    /// File descriptor holding the single-instance flock; lives for the whole
+    /// process lifetime. The kernel releases the lock automatically when the
+    /// process dies, so stale locks can never block a later launch.
+    nonisolated(unsafe) private static var instanceLockFD: Int32 = -1
+
+    /// Acquires an exclusive flock for this bundle identifier. Returns false
+    /// when another process already holds it. Fails open if the lock file can't
+    /// be created — the count-based check still applies in that case.
+    private static func acquireInstanceLock(bundleIdentifier: String) -> Bool {
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Library/Application Support")
+        let dir = support.appendingPathComponent("macshot", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let path = dir.appendingPathComponent("instance-\(bundleIdentifier).lock").path
+        let fd = open(path, O_CREAT | O_RDWR, 0o644)
+        guard fd >= 0 else { return true }
+        guard flock(fd, LOCK_EX | LOCK_NB) == 0 else {
+            close(fd)
+            return false
+        }
+        instanceLockFD = fd
+        return true
+    }
+
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        // Prevent multiple instances — if already running, activate the existing one and quit
+        // Prevent multiple instances — if already running, activate the existing one and quit.
         let bundleID = Bundle.main.bundleIdentifier ?? "com.sw33tlie.macshot.macshot"
         let running = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
         if running.count > 1 {
-            // Tell the existing instance to show its icon and open Settings
-            DistributedNotificationCenter.default().postNotificationName(
-                .init("com.sw33tlie.macshot.showAndOpenPrefs"),
-                object: nil, userInfo: nil, deliverImmediately: true
-            )
-            NSApp.terminate(nil)
+            quitAsDuplicateInstance()
+            return
+        }
+        // The count-based check above races when several copies (Applications,
+        // DMG, Xcode build) launch together — each can see only itself before
+        // the others register, leaving multiple menu-bar icons. Back it with a
+        // kernel-arbitrated flock that exactly one process can hold.
+        if !AppDelegate.acquireInstanceLock(bundleIdentifier: bundleID) {
+            quitAsDuplicateInstance()
             return
         }
 

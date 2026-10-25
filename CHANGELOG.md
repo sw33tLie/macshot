@@ -4,11 +4,17 @@
 
 ### Added
 
+- Cmd+Shift+S opens the Save panel from the capture overlay or editor window, to pick the save folder and filename on a per-save basis regardless of the default save action.
+- Double-click the screenshot in the editor window to zoom in (2×, anchored at the cursor); double-click again to zoom back to the previous level. Two-finger double-tap on the trackpad toggles the same way. Text annotations still edit on double-click.
 - Move and resize the webcam during recording, with optional corner snapping. Studio replays recorded placement changes. Thanks @ivanilsonsousa. (#429)
 - Record GIF menu item and configurable hotkey, plus Save + copy to clipboard when a recording stops. Thanks @mdtoupin. (#423)
 
 ### Fixed
 
+- Trackpad pinch-to-zoom on a pinned screenshot. Pinch (magnify) gestures are only delivered to the key window, and the borderless pin panel never became key on its own — the panel now becomes key on hover/click, so two-finger pinch zooms the pin (two-finger scroll still works and never needed this).
+- Launching several copies of the app together (Applications + DMG + dev build) could end up with multiple menu-bar icons: the count-based duplicate check races before other processes register. A kernel-level flock now guarantees exactly one instance per app variant.
+- Mouse-wheel zoom on a pinned screenshot now works with mice whose drivers don't populate precise scroll deltas, and scroll momentum no longer keeps zooming after the fingers lift.
+- Pinning the first capture after launch could leave the pin unable to pinch-zoom until another pin was created: the panel only took key status on hover, which raced the window ordering when the pointer was already inside the pin's frame. The pin now becomes key at creation and re-asserts it on pointer movement.
 - Exported audio plays in FFmpeg-based players and services by keeping its sample-rate clock. Thanks @Redth. (#449)
 - Small silence buffers advance a silent system track when it holds up microphone encoding. Queued audio still drains at stop, and persistent overload remains an explicit failure. Based on the investigation in #456.
 - Webcam resizing preserves the initial grab offset and opposite corner. Cancelled GIF requests do not affect later captures, and Save + copy also copies after choosing a destination in the Save dialog.
