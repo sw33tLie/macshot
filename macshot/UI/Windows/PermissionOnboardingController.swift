@@ -290,10 +290,14 @@ class PermissionOnboardingController: NSWindowController {
     // MARK: - Actions
 
     @objc private func openSettings() {
+        // macOS lists an app under Screen Recording only once it has asked.
+        // The preflight polling never asks, and captures don't run until the
+        // permission exists, so the list had no macshot to switch on (#299).
+        // Ask once before opening Settings: the first call adds macshot to
+        // the list (switched off) and shows the system prompt; later calls
+        // return immediately without a dialog.
+        _ = CGRequestScreenCaptureAccess()
         // Deep-link directly to Privacy & Security → Screen Recording.
-        // macOS will add macshot to the list automatically when it first
-        // attempts a capture — no CGRequestScreenCaptureAccess() call needed
-        // (that API shows the redundant native dialog we want to avoid).
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
             NSWorkspace.shared.open(url)
         }
