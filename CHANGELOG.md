@@ -6,8 +6,18 @@
 
 - Move and resize the webcam during recording, with optional corner snapping. Studio replays recorded placement changes. Thanks @ivanilsonsousa. (#429)
 - Record GIF menu item and configurable hotkey, plus Save + copy to clipboard when a recording stops. Thanks @mdtoupin. (#423)
+- macshot appears in Finder's "Open With" menu for MP4, MOV and M4V videos, which open in the video editor. (#461)
+
+### Changed
+
+- Pressing the Record Area or Record GIF hotkey again stops the recording.
+- Record GIF opens the take in the video editor with GIF already selected as the export format, when the recording destination is "Open editor".
+- The webcam bubble takes clicks while recording so it can be moved and resized. Clicks and scrolling over the bubble no longer reach the app underneath.
 
 ### Fixed
+
+- **Chinese, Japanese and other non-Latin text** on lines that also contain English came out garbled in OCR, e.g. "174531 Privacy & Security". Text recognition now uses your system languages ahead of English. (#462)
+- **Capture OCR did nothing with some ways of selecting**: right-click selection, F (full screen) and R (last area) ignored OCR mode. Every way of selecting now runs it, a spinner shows while text is recognized, and Escape cancels. Thanks @a1exsun. (#440, #302)
 
 - Exported audio plays in FFmpeg-based players and services by keeping its sample-rate clock. Thanks @Redth. (#449)
 - Small silence buffers advance a silent system track when it holds up microphone encoding. Queued audio still drains at stop, and persistent overload remains an explicit failure. Based on the investigation in #456.
