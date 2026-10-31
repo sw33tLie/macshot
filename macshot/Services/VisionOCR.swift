@@ -53,6 +53,7 @@ enum VisionOCR {
     nonisolated static func startTextRecognition(
         cgImage: CGImage,
         recognitionLevel: VNRequestTextRecognitionLevel,
+        preferredLanguages: [String] = userLanguages(),
         completion: @escaping (Result<[OCRTextObservation], Error>) -> Void
     ) -> () -> Void {
         if #available(macOS 15.0, *) {
@@ -62,6 +63,12 @@ enum VisionOCR {
                     request.recognitionLevel = recognitionLevel == .accurate ? .accurate : .fast
                     request.usesLanguageCorrection = true
                     request.automaticallyDetectsLanguage = true
+                    let languages = recognitionLanguages(
+                        preferred: preferredLanguages,
+                        supported: request.supportedRecognitionLanguages.map(\.maximalIdentifier))
+                    if !languages.isEmpty {
+                        request.recognitionLanguages = languages.map { Locale.Language(identifier: $0) }
+                    }
                     let observations = try await request.perform(on: cgImage)
                     let lines = observations.compactMap { observation -> OCRTextObservation? in
                         guard let candidate = observation.topCandidates(1).first else { return nil }
@@ -82,6 +89,10 @@ enum VisionOCR {
         request.usesLanguageCorrection = true
         if #available(macOS 13.0, *) {
             request.automaticallyDetectsLanguage = true
+            let languages = recognitionLanguages(
+                preferred: preferredLanguages,
+                supported: (try? request.supportedRecognitionLanguages()) ?? [])
+            if !languages.isEmpty { request.recognitionLanguages = languages }
         }
         DispatchQueue.global(qos: .userInitiated).async {
             do {
@@ -98,6 +109,48 @@ enum VisionOCR {
             }
         }
         return { request.cancel() }
+    }
+
+    /// The user's languages: system order first, then macshot's own UI language.
+    nonisolated static func userLanguages() -> [String] {
+        var languages = Locale.preferredLanguages
+        if let app = UserDefaults.standard.string(forKey: "appLanguage"), app != "system", !app.isEmpty {
+            languages.append(app)
+        }
+        return languages
+    }
+
+    /// Languages to hand Vision, in priority order. Automatic detection alone
+    /// keeps English as the only recognition language, which garbles CJK on
+    /// lines that also contain Latin text (#462), and the order matters: the
+    /// user's own script has to come before English. Returns the user's
+    /// supported languages followed by English, or empty (Vision's default)
+    /// when that would just be English.
+    nonisolated static func recognitionLanguages(preferred: [String], supported: [String]) -> [String] {
+        guard #available(macOS 13.0, *) else { return [] }
+        struct Key: Equatable { let language: String; let script: String?; let region: String? }
+        func key(_ identifier: String) -> Key? {
+            let language = Locale.Language(identifier: identifier.replacingOccurrences(of: "_", with: "-"))
+            let maximal = Locale.Language(identifier: language.maximalIdentifier)
+            guard let code = maximal.languageCode?.identifier else { return nil }
+            return Key(language: code, script: maximal.script?.identifier, region: maximal.region?.identifier)
+        }
+        let candidates = supported.compactMap { id in key(id).map { (id, $0) } }
+        var result: [String] = []
+        for identifier in preferred {
+            guard let wanted = key(identifier) else { continue }
+            // Same language and script (zh-Hans vs zh-Hant), exact region first.
+            let sameScript = candidates.filter { $0.1.language == wanted.language && $0.1.script == wanted.script }
+            guard let match = sameScript.first(where: { $0.1.region == wanted.region }) ?? sameScript.first,
+                  !result.contains(match.0) else { continue }
+            result.append(match.0)
+        }
+        if let english = candidates.first(where: { $0.1.language == "en" && $0.1.region == "US" })
+            ?? candidates.first(where: { $0.1.language == "en" }),
+           !result.contains(where: { key($0)?.language == "en" }) {
+            result.append(english.0)
+        }
+        return result.allSatisfy({ key($0)?.language == "en" }) ? [] : result
     }
 
     nonisolated static func detectQRCodes(cgImage: CGImage) -> [QRCodePayload] {

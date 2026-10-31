@@ -95,6 +95,40 @@ final class VisionOCRTests: XCTestCase {
         assertRetry(for: .failure(NSError(domain: "E5RT", code: 13)))
     }
 
+    func testRecognitionLanguagesPutTheUsersScriptBeforeEnglish() {
+        let supported = ["en-US", "fr-FR", "zh-Hans", "zh-Hant", "yue-Hant", "ja-JP", "pt-BR", "nb-NO", "vi-VT"]
+        let languages = { VisionOCR.recognitionLanguages(preferred: $0, supported: supported) }
+        XCTAssertEqual(languages(["zh-Hans-CN", "en-GB"]), ["zh-Hans", "en-US"])
+        XCTAssertEqual(languages(["zh-TW"]), ["zh-Hant", "en-US"])
+        XCTAssertEqual(languages(["zh_HK", "ja"]), ["zh-Hant", "ja-JP", "en-US"])
+        XCTAssertEqual(languages(["en-US", "ja-JP"]), ["en-US", "ja-JP"])
+        XCTAssertEqual(languages(["pt-PT", "nb", "vi-VN"]), ["pt-BR", "nb-NO", "vi-VT", "en-US"])
+        // English only, or nothing Vision supports: keep Vision's default.
+        XCTAssertEqual(languages(["en-GB"]), [])
+        XCTAssertEqual(languages(["ko-KR", "xx"]), [])
+        XCTAssertEqual(languages([]), [])
+    }
+
+    // #462: a line mixing Chinese and English came back as "42 Privacy & Security"
+    // or "#*#I Screen Recording EA" while only English was listed.
+    func testMixedChineseAndEnglishLineKeepsTheChinese() throws {
+        guard #available(macOS 13.0, *) else { throw XCTSkip("Language list needs macOS 13") }
+        let done = expectation(description: "Chinese OCR")
+        _ = VisionOCR.startTextRecognition(cgImage: image("隐私与安全性 Privacy & Security"),
+                                           recognitionLevel: .accurate,
+                                           preferredLanguages: ["zh-Hans-CN", "en-US"]) { result in
+            switch result {
+            case .failure(let error): XCTFail("Chinese OCR failed: \(error)")
+            case .success(let lines):
+                let text = lines.map(\.text).joined(separator: "\n")
+                XCTAssertTrue(text.contains("隐私与安全性"), text)
+                XCTAssertTrue(text.contains("Privacy"), text)
+            }
+            done.fulfill()
+        }
+        wait(for: [done], timeout: 60)
+    }
+
     private func assertRetry(for firstResult: Result<[OCRTextObservation], Error>) {
         let done = expectation(description: "fast recovery")
         var levels: [VNRequestTextRecognitionLevel] = []
