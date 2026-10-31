@@ -625,10 +625,39 @@ jobs:
         run: |
           git clone https://x-access-token:${GH_TOKEN}@github.com/sw33tLie/homebrew-macshot.git /tmp/tap
 
-          sed -i '' \
-            -e "s/version \".*\"/version \"$VERSION\"/" \
-            -e "s/sha256 \".*\"/sha256 \"$SHA256\"/" \
-            /tmp/tap/Casks/macshot.rb
+          # Generated like the offline cask. No postflight block: Homebrew
+          # deprecated `postflight` (#458), and Sparkle updates the app itself.
+          cat > /tmp/tap/Casks/macshot.rb <<EOF
+          cask "macshot" do
+            version "$VERSION"
+            sha256 "$SHA256"
+
+            url "https://github.com/sw33tLie/macshot/releases/download/v#{version}/MacShot.dmg"
+            name "macshot"
+            desc "Native screenshot tool inspired by Flameshot"
+            homepage "https://github.com/sw33tLie/macshot"
+
+            livecheck do
+              url "https://raw.githubusercontent.com/sw33tLie/macshot/main/appcast.xml"
+              strategy :sparkle do |items|
+                items.find { |item| item.channel.nil? }&.short_version
+              end
+            end
+
+            auto_updates true
+            depends_on macos: :monterey
+
+            app "macshot.app"
+
+            uninstall quit: "com.sw33tlie.macshot.macshot"
+
+            zap trash: [
+              "~/Library/Application Scripts/com.sw33tlie.macshot.macshot",
+              "~/Library/Containers/com.sw33tlie.macshot.macshot",
+              "~/Library/Preferences/com.sw33tlie.macshot.macshot.plist",
+            ]
+          end
+          EOF
 
           OFFLINE_CASK="/tmp/tap/Casks/macshot-offline.rb"
           cat > "$OFFLINE_CASK" <<EOF
@@ -638,7 +667,7 @@ jobs:
 
             url "https://github.com/sw33tLie/macshot/releases/download/v#{version}/MacShot-Offline.dmg"
             name "macshot Offline"
-            desc "Native macOS screenshot tool without upload integrations"
+            desc "Native screenshot tool without upload integrations"
             homepage "https://github.com/sw33tLie/macshot"
 
             livecheck do
