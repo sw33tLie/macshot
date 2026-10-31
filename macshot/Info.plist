@@ -42,6 +42,20 @@
 				<string>com.microsoft.bmp</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Video</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.mpeg-4</string>
+				<string>com.apple.quicktime-movie</string>
+				<string>com.apple.m4v-video</string>
+			</array>
+		</dict>
 	</array>
 	<key>Privacy - Screen Capture Usage Description</key>
 	<string>macshot needs screen recording permission to capture screenshots.</string>
