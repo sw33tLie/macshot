@@ -91,5 +91,13 @@ final class VideoCompositionAudioClockTests: XCTestCase {
         let saved = AVURLAsset(url: output)
         let track = try XCTUnwrap(saved.tracks(withMediaType: .audio).first)
         XCTAssertEqual(track.naturalTimeScale, sourceAudio.naturalTimeScale)
+
+        // #450: Telegram's full-screen player rejected files whose video track
+        // carried the ~1 GHz editing clock (999840000). The recording and the
+        // export both have to declare an ordinary video timescale.
+        let recordedVideo = try XCTUnwrap(source.tracks(withMediaType: .video).first)
+        XCTAssertLessThanOrEqual(recordedVideo.naturalTimeScale, 90_000)
+        let exportedVideo = try XCTUnwrap(saved.tracks(withMediaType: .video).first)
+        XCTAssertLessThanOrEqual(exportedVideo.naturalTimeScale, 90_000, "got \(exportedVideo.naturalTimeScale)")
     }
 }
