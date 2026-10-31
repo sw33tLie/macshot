@@ -36,8 +36,12 @@ final class VideoEditorWindowController: NSWindowController, NSWindowDelegate {
     /// Opens a video in the editor.
     /// - Parameter deleteOnClose: Temporary input is removed after the editor
     ///   and its readers release it. Durable recordings are always retained.
-    static func open(url: URL, deleteOnClose: Bool = true) {
+    /// - Parameter exportFormat: Preselects the export format for this window
+    ///   only (Record GIF opens its take ready to export a GIF). The user's
+    ///   remembered format changes only if they pick one in the export panel.
+    static func open(url: URL, deleteOnClose: Bool = true, exportFormat: VideoExportSettings.Format? = nil) {
         let controller = VideoEditorWindowController(window: nil)
+        if let exportFormat { controller.exportSettings.format = exportFormat }
         activeControllers.append(controller)
         if activeControllers.count == 1 { NSApp.setActivationPolicy(.regular) }
         controller.prepare(url: url, deleteOnClose: deleteOnClose)

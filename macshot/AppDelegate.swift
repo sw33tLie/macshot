@@ -3083,7 +3083,8 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         case "save":
             archiveRecording(tmpURL: finalURL, appName: output.appName, date: output.startDate)
         default:
-            VideoEditorWindowController.open(url: finalURL)
+            // Record GIF keeps the take editable and opens it ready to export a GIF.
+            VideoEditorWindowController.open(url: finalURL, exportFormat: output.isGIF ? .gif : nil)
         }
     }
 
