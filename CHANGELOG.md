@@ -17,6 +17,9 @@
 ### Fixed
 
 - **Chinese, Japanese and other non-Latin text** on lines that also contain English came out garbled in OCR, e.g. "174531 Privacy & Security". Text recognition now uses your system languages ahead of English. (#462)
+- **Each screenshot showed up twice in clipboard managers** (Maccy, Raycast, Paste): one Copy changed the clipboard twice. It now changes it once. (#483)
+- **Global hotkeys that silently did nothing**: two actions could share a shortcut, and the second never fired. Setting a shortcut now takes it away from the action that had it, and existing duplicates are cleared. Thanks @zkmn73. (#445, #446)
+- **Recording filenames now match the Settings preview**: `{app}` names every take, and "Show in Finder" files recordings into the template's folders like Save + copy does.
 - **Capture OCR did nothing with some ways of selecting**: right-click selection, F (full screen) and R (last area) ignored OCR mode. Every way of selecting now runs it, a spinner shows while text is recognized, and Escape cancels. Thanks @a1exsun. (#440, #302)
 
 - Exported audio plays in FFmpeg-based players and services by keeping its sample-rate clock. Thanks @Redth. (#449)

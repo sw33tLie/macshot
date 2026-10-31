@@ -259,4 +259,17 @@ final class FilenameFormatterTests: XCTestCase {
         XCTAssertEqual(FilenameFormatter.formatRelativePath(template: "{app}/{window}", date: fixedDate),
                        [FilenameFormatter.format(template: FilenameFormatter.defaultTemplate, date: fixedDate)])
     }
+
+    /// The recording template preview in Settings shows `{app}` and folders;
+    /// the take itself must carry the same file name (folders are created only
+    /// where it is saved).
+    func testRecordingTakeUsesTheTemplatesFileNameWithTheApp() {
+        withDefaults([FilenameFormatter.recordingNoAppUserDefaultsKey: nil]) {
+            XCTAssertEqual(RecordingEngine.takeFilename(template: "{yyyy}/{MM}/{app} {HH}", appName: "Safari", date: fixedDate),
+                           "Safari \(expectedDate("HH"))")
+            XCTAssertEqual(RecordingEngine.takeFilename(template: FilenameFormatter.defaultRecordingTemplate,
+                                                        appName: nil, date: fixedDate),
+                           FilenameFormatter.format(template: FilenameFormatter.defaultRecordingTemplate, date: fixedDate))
+        }
+    }
 }

@@ -93,8 +93,9 @@ final class RecordingEngine: NSObject {
 
     /// Start recording the given rect (in NSScreen/AppKit coordinates, bottom-left origin).
     /// Optional overrides take precedence over UserDefaults for this session.
+    /// `appName` fills the filename template's `{app}` token.
     func startRecording(rect: NSRect, screen: NSScreen, fpsOverride: Int? = nil, excludeWindowNumbers: [CGWindowID] = [],
-                        editablePointer: Bool = false, cameraWindowID: CGWindowID? = nil) {
+                        editablePointer: Bool = false, cameraWindowID: CGWindowID? = nil, appName: String? = nil) {
         guard state == .idle else { return }
         var configuration: RecordingConfiguration
         do {
@@ -108,7 +109,7 @@ final class RecordingEngine: NSObject {
                 backingScale: screen.backingScaleFactor, frameRate: fpsOverride ?? ((1...120).contains(savedFPS) ? savedFPS : 30),
                 microphone: defaults.bool(forKey: "recordMicAudio"), systemAudio: defaults.bool(forKey: "recordSystemAudio"),
                 microphoneDeviceID: defaults.string(forKey: "selectedMicDeviceUID"), excludedWindows: excludeWindowNumbers,
-                filename: FilenameFormatter.format(template: template, fallback: FilenameFormatter.defaultRecordingTemplate))
+                filename: Self.takeFilename(template: template, appName: appName))
             configuration.pointerRegion = CursorTelemetryRecorder.globalRegion(forAppKitRect: rect)
             configuration.hidesCursor = editablePointer
             configuration.overlaysInTelemetry = editablePointer
@@ -122,6 +123,18 @@ final class RecordingEngine: NSObject {
     }
 
     /// Shared entry point for the UI and internal recording test driver.
+    /// The take's own name: the template's last path component, so a
+    /// `{yyyy}/{MM}/…` template names the file like the saved copy does
+    /// (folders are created only where the take is published).
+    static func takeFilename(template: String, appName: String?, date: Date = Date()) -> String {
+        let components = FilenameFormatter.formatRelativePath(
+            template: template,
+            noAppTemplate: UserDefaults.standard.string(forKey: FilenameFormatter.recordingNoAppUserDefaultsKey),
+            appName: appName, date: date, fallback: FilenameFormatter.defaultRecordingTemplate)
+        return components.last ?? FilenameFormatter.format(template: FilenameFormatter.defaultRecordingTemplate,
+                                                           fallback: FilenameFormatter.defaultRecordingTemplate)
+    }
+
     func startRecording(configuration: RecordingConfiguration) {
         guard let sessionID = lifecycle.begin() else { return }
         captureError = nil

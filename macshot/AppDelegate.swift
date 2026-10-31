@@ -3019,7 +3019,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
 
         // Start recording
         engine.startRecording(rect: rect, screen: screen, fpsOverride: fpsOverride, excludeWindowNumbers: excludeIDs,
-                              editablePointer: editable, cameraWindowID: cameraWindowID)
+                              editablePointer: editable, cameraWindowID: cameraWindowID, appName: output.appName)
     }
 
     func overlayDidRequestStopRecording(_ controller: OverlayWindowController) {
@@ -3077,7 +3077,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         case "finder":
             // Publish a user-visible copy while keeping the
             // original take available in the recording library.
-            revealRecordingInFinder(tmpURL: finalURL)
+            revealRecordingInFinder(tmpURL: finalURL, appName: output.appName, date: output.startDate)
         case "clipboard":
             copyRecordingToClipboard(url: finalURL)
         case "save":
@@ -3124,15 +3124,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
             promptToSaveRecording(tmpURL: tmpURL, revealInFinder: false, onSuccess: copySaved)
             return
         }
-        let defaults = UserDefaults.standard
-        let components = FilenameFormatter.formatRelativePath(
-            template: defaults.string(forKey: FilenameFormatter.recordingUserDefaultsKey)
-                ?? FilenameFormatter.defaultRecordingTemplate,
-            noAppTemplate: defaults.string(forKey: FilenameFormatter.recordingNoAppUserDefaultsKey),
-            appName: appName, date: date, fallback: FilenameFormatter.defaultRecordingTemplate)
-        let ext = tmpURL.pathExtension.isEmpty ? "mp4" : tmpURL.pathExtension
-        let destination = directory.appendingPathComponent(components.joined(separator: "/"))
-            .appendingPathExtension(ext)
+        let destination = recordingDestination(for: tmpURL, in: directory, appName: appName, date: date)
         let access = SaveDirectoryLease(alreadyAccessing: directory)
         saveRecordingCopy(source: tmpURL, destination: destination, avoidCollisions: true, access: access,
                           revealInFinder: false, subfoldersBelow: directory,
@@ -3140,6 +3132,20 @@ extension AppDelegate: OverlayWindowControllerDelegate {
             guard !(error is CancellationError) else { return }
             self?.showFailureToast(L("Save failed") + ": " + error.localizedDescription)
         }
+    }
+
+    /// Where a take is published inside the save folder: the recording
+    /// filename template, whose `/` separators create subfolders, exactly as
+    /// Settings previews it.
+    private func recordingDestination(for tmpURL: URL, in directory: URL, appName: String?, date: Date) -> URL {
+        let defaults = UserDefaults.standard
+        let components = FilenameFormatter.formatRelativePath(
+            template: defaults.string(forKey: FilenameFormatter.recordingUserDefaultsKey)
+                ?? FilenameFormatter.defaultRecordingTemplate,
+            noAppTemplate: defaults.string(forKey: FilenameFormatter.recordingNoAppUserDefaultsKey),
+            appName: appName, date: date, fallback: FilenameFormatter.defaultRecordingTemplate)
+        let ext = tmpURL.pathExtension.isEmpty ? "mp4" : tmpURL.pathExtension
+        return directory.appendingPathComponent(components.joined(separator: "/")).appendingPathExtension(ext)
     }
 
     /// Copy a recording to a user-visible directory
@@ -3153,15 +3159,16 @@ extension AppDelegate: OverlayWindowControllerDelegate {
     ///
     /// On a collision at the destination, we append " (N)" to the filename
     /// so nothing gets silently overwritten.
-    private func revealRecordingInFinder(tmpURL: URL) {
+    private func revealRecordingInFinder(tmpURL: URL, appName: String?, date: Date) {
         guard let directory = SaveDirectoryAccess.resolveRecordingDirectoryIfAccessible()
             ?? SaveDirectoryAccess.resolveIfAccessible() else {
             promptToSaveRecording(tmpURL: tmpURL)
             return
         }
         let access = SaveDirectoryLease(alreadyAccessing: directory)
-        saveRecordingCopy(source: tmpURL, destination: directory.appendingPathComponent(tmpURL.lastPathComponent),
-            avoidCollisions: true, access: access) { [weak self] error in
+        saveRecordingCopy(source: tmpURL,
+            destination: recordingDestination(for: tmpURL, in: directory, appName: appName, date: date),
+            avoidCollisions: true, access: access, subfoldersBelow: directory) { [weak self] error in
             guard !(error is CancellationError) else { return }
             if self?.terminationCoordinator.isWaiting != true {
                 self?.promptToSaveRecording(tmpURL: tmpURL)
