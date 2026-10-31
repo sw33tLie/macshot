@@ -227,6 +227,7 @@ enum TestKeyEvent {
     enum Code {
         static let a: UInt16 = 0
         static let s: UInt16 = 1
+        static let f: UInt16 = 3
         static let z: UInt16 = 6
         static let y: UInt16 = 16
         static let c: UInt16 = 8
