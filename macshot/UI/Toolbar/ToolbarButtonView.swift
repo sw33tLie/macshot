@@ -128,6 +128,8 @@ class ToolbarButtonView: NSView {
                 let img: NSImage?
                 if name == "_custom.checkerboard" {
                     img = Self.checkerboardIcon(color: color)
+                } else if name == "_custom.text" {
+                    img = Self.textIcon(color: color)
                 } else {
                     let cfg = NSImage.SymbolConfiguration(pointSize: 14, weight: .medium)
                     if let symbol = NSImage(systemSymbolName: name, accessibilityDescription: nil)?
@@ -305,7 +307,23 @@ class ToolbarButtonView: NSView {
         addCursorRect(bounds, cursor: .arrow)
     }
 
-    // MARK: - Custom checkerboard icon
+    // MARK: - Custom icons
+
+    /// Bold "T" like WeChat's text tool. SF Symbol "textformat" is locale-sensitive
+    /// and renders as a CJK glyph on Chinese/Japanese systems.
+    private static func textIcon(color: NSColor) -> NSImage {
+        let size: CGFloat = 16
+        return NSImage(size: NSSize(width: size, height: size), flipped: false) { rect in
+            let attrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 17, weight: .bold),
+                .foregroundColor: color,
+            ]
+            let text = NSAttributedString(string: "T", attributes: attrs)
+            let textSize = text.size()
+            text.draw(at: NSPoint(x: rect.midX - textSize.width / 2, y: rect.midY - textSize.height / 2))
+            return true
+        }
+    }
 
     /// Generate a checkerboard icon matching the style of SF Symbols, tinted with the given color.
     /// The result is a rounded square with a 4x4 checkerboard pattern.

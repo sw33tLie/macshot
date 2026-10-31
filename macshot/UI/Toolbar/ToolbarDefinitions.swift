@@ -349,7 +349,7 @@ class ToolbarLayout {
                 if #available(macOS 14.0, *) { return "highlighter" }
                 return "paintbrush.pointed.fill"
             }(), L("Marker")),
-            (.text, "textformat", L("Text")),
+            (.text, "_custom.text", L("Text")),
             (.number, "1.circle.fill", L("Number")),
             (.pixelate, "_custom.checkerboard", L("Censor (Pixelate / Blur / Solid)")),
             (.highlight, "sun.max", L("Highlight (Spotlight)")),
