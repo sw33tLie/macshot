@@ -18,13 +18,12 @@
 
 - **Chinese, Japanese and other non-Latin text** on lines that also contain English came out garbled in OCR, e.g. "174531 Privacy & Security". Text recognition now uses your system languages ahead of English. (#462)
 - **macshot was missing from the Screen Recording list on first launch**: macOS lists an app only after it asks for access, and the permission window never asked. "Open System Settings" now asks first, so macshot is in the list ready to switch on. (#299)
-- **Drawing with a trackpad double-tap drag copied the capture**: with "tap to click", a drag starts with a double tap, which double-click-to-copy treated as a copy. Every annotation drawn that way copied the image and added a floating thumbnail, and the annotation itself was lost. Double-click-to-copy now copies only when the second click doesn't move. (#467)
-- **Captures confirmed by themselves right after selecting**: some apps send ⌘C after any mouse drag to copy selected text, and macshot treated it as Copy. A ⌘C within a quarter second of releasing the selection is now ignored. (#477)
+- **Drawing with a trackpad double-tap drag copied the capture**: with "tap to click", a drag starts with a double tap, which double-click-to-copy treated as a copy. Every annotation drawn that way copied the image and added a floating thumbnail, and the annotation itself was lost. A double-click inside the selection now copies only when the second click doesn't move. (#467)
+- **Captures confirmed by themselves right after selecting or drawing**: some apps send ⌘C after any mouse drag to copy selected text, and macshot treated it as Copy. A ⌘C within a quarter second of releasing the mouse is now ignored. (#477)
 - **Each screenshot showed up twice in clipboard managers** (Maccy, Raycast, Paste): one Copy changed the clipboard twice. It now changes it once. (#483)
 - **Global hotkeys that silently did nothing**: two actions could share a shortcut, and the second never fired. Setting a shortcut now takes it away from the action that had it, and existing duplicates are cleared. Thanks @zkmn73. (#445, #446)
 - **Recording filenames now match the Settings preview**: `{app}` names every take, and "Show in Finder" files recordings into the template's folders like Save + copy does.
 - **Capture OCR did nothing with some ways of selecting**: right-click selection, F (full screen) and R (last area) ignored OCR mode. Every way of selecting now runs it, a spinner shows while text is recognized, and Escape cancels. Thanks @a1exsun. (#440, #302)
-
 - Exported audio plays in FFmpeg-based players and services by keeping its sample-rate clock. Thanks @Redth. (#449)
 - Small silence buffers advance a silent system track when it holds up microphone encoding. Queued audio still drains at stop, and persistent overload remains an explicit failure. Based on the investigation in #456.
 - Webcam resizing preserves the initial grab offset and opposite corner. Cancelled GIF requests do not affect later captures, and Save + copy also copies after choosing a destination in the Save dialog.

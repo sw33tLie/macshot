@@ -203,8 +203,8 @@ class OverlayView: NSView {
     /// with trackpad tap-to-click, dragging starts with a double tap, so a
     /// drag that begins with clickCount 2 is still a drag (#467).
     private var pendingDoubleClickCopy: (event: NSEvent, point: NSPoint)?
-    /// Timestamp of the mouse-up that finished the last drawn selection.
-    private var selectionFinishedAt: TimeInterval = -.infinity
+    /// Timestamp of the last mouse-up (selection, annotation or move drag).
+    private var lastMouseUpAt: TimeInterval = -.infinity
     /// Some apps post ⌘C right after any mouse drag to "copy the selection".
     /// A person can't release the mouse and press ⌘C this fast (#477).
     static let injectedCopyWindow: TimeInterval = 0.25
@@ -5620,6 +5620,9 @@ class OverlayView: NSView {
 
     override func mouseDown(with event: NSEvent) {
         if isRecognizingText { return }
+        // A second click whose mouse-up never arrived (window ordered out
+        // mid-press) must not turn the next press into a copy.
+        pendingDoubleClickCopy = nil
         let point = convert(event.locationInWindow, from: nil)
         justDismissedTextEditor = false  // reset per click; set below if we commit one
 
@@ -6527,6 +6530,7 @@ class OverlayView: NSView {
 
     override func mouseUp(with event: NSEvent) {
         if isRecognizingText { return }
+        lastMouseUpAt = event.timestamp
         if pendingDoubleClickCopy != nil {
             pendingDoubleClickCopy = nil
             completeDoubleClickCopy()
@@ -6618,7 +6622,6 @@ class OverlayView: NSView {
         lastDragPoint = nil
         switch state {
         case .selecting:
-            selectionFinishedAt = event.timestamp
             finishSelection()
 
         case .selected:
@@ -9237,8 +9240,8 @@ class OverlayView: NSView {
             if KeyboardShortcutMatcher.matches(event, character: "c", modifiers: .command) {
                 if !selectedAnnotations.isEmpty {
                     copySelectedAnnotations()
-                } else if event.timestamp - selectionFinishedAt < Self.injectedCopyWindow {
-                    // Another app's synthetic ⌘C right after the drag: swallow it.
+                } else if event.timestamp - lastMouseUpAt < Self.injectedCopyWindow {
+                    // Another app's synthetic ⌘C right after a drag: swallow it.
                 } else {
                     overlayDelegate?.overlayViewDidConfirm()
                 }
@@ -10352,7 +10355,7 @@ class OverlayView: NSView {
         autoConfirmMode = false
         isRecognizingText = false
         pendingDoubleClickCopy = nil
-        selectionFinishedAt = -.infinity
+        lastMouseUpAt = -.infinity
         needsDisplay = true
     }
 }

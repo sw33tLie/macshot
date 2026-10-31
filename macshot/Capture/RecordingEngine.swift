@@ -122,7 +122,6 @@ final class RecordingEngine: NSObject {
         startRecording(configuration: configuration)
     }
 
-    /// Shared entry point for the UI and internal recording test driver.
     /// The take's own name: the template's last path component, so a
     /// `{yyyy}/{MM}/…` template names the file like the saved copy does
     /// (folders are created only where the take is published).
@@ -135,6 +134,7 @@ final class RecordingEngine: NSObject {
                                                            fallback: FilenameFormatter.defaultRecordingTemplate)
     }
 
+    /// Shared entry point for the UI and internal recording test driver.
     func startRecording(configuration: RecordingConfiguration) {
         guard let sessionID = lifecycle.begin() else { return }
         captureError = nil

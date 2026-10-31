@@ -110,6 +110,9 @@ class HotkeyManager {
 
     private var hotKeyRefs: [HotkeySlot: EventHotKeyRef] = [:]
     private var callbacks: [HotkeySlot: () -> Void] = [:]
+    /// While Settings records a shortcut, re-registration (menu reorder,
+    /// settings import) only stores callbacks; `resume()` arms them.
+    private(set) var isSuspended = false
     private var eventHandlerRef: EventHandlerRef?
 
     private init() {}
@@ -124,6 +127,7 @@ class HotkeyManager {
             hotKeyRefs[slot] = nil
         }
 
+        guard !isSuspended else { return }
         let (keyCode, modifiers) = Self.readHotkey(for: slot)
         guard modifiers != 0 || Self.isFunctionKey(keyCode) else { return }  // no modifiers = disabled (unless function key)
 
@@ -213,6 +217,7 @@ class HotkeyManager {
     /// shortcut they must be off, or pressing a bound chord fires its action
     /// instead of being recorded.
     func suspend() {
+        isSuspended = true
         for (_, ref) in hotKeyRefs {
             UnregisterEventHotKey(ref)
         }
@@ -221,6 +226,7 @@ class HotkeyManager {
 
     /// Re-register every slot that has a callback, from the stored bindings.
     func resume() {
+        isSuspended = false
         for (slot, callback) in callbacks {
             register(slot: slot, callback: callback)
         }

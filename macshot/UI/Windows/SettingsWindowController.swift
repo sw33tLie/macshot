@@ -3439,8 +3439,10 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     /// only sees key presses while Settings is key. Switching to another app
     /// mid-recording must not leave the hotkeys off until Settings returns.
     func windowDidResignKey(_ notification: Notification) {
-        stopShortcutRecording()
-        stopCommandShortcutRecording()
+        // The key monitor is shared with the tool-shortcut recorder, so only
+        // stop the recorders that suspended the hotkeys.
+        if recordingSlot != nil { stopShortcutRecording() }
+        if recordingCommandAction != nil { stopCommandShortcutRecording() }
     }
 }
 

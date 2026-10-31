@@ -15,8 +15,13 @@ extension VideoEditorWindowController {
     }
 
     func exportSettingsChanged(_ settings: VideoExportSettings) {
+        let previousFormat = exportSettings.format
         exportSettings = settings
-        settings.save()
+        // Record GIF preselects GIF for its window only: changing quality or
+        // scale there must not make GIF everyone's default export format.
+        var remembered = settings
+        if settings.format == previousFormat { remembered.format = VideoExportSettings.load().format }
+        remembered.save()
         savedURL = nil
     }
 

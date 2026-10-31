@@ -99,7 +99,42 @@ final class OverlayConfirmGestureTests: XCTestCase {
         }
     }
 
+    /// A second click whose mouse-up never arrived must not make the next,
+    /// unrelated press copy the capture.
+    func testALostSecondClickMouseUpDoesNotTurnTheNextDragIntoACopy() {
+        withDefaults(settings) {
+            let (view, delegate) = makeSelectedOverlay()
+            view.currentTool = .arrow
+            let point = NSPoint(x: 100, y: 100)
+            view.mouseDown(with: mouse(.leftMouseDown, at: point))
+            view.mouseUp(with: mouse(.leftMouseUp, at: point))
+            view.mouseDown(with: mouse(.leftMouseDown, at: point, clickCount: 2))   // mouse-up lost
+
+            let start = NSPoint(x: 250, y: 60), end = NSPoint(x: 330, y: 200)
+            view.mouseDown(with: mouse(.leftMouseDown, at: start))
+            view.mouseDragged(with: mouse(.leftMouseDragged, at: end))
+            view.mouseUp(with: mouse(.leftMouseUp, at: end))
+
+            XCTAssertEqual(delegate.confirms, 0)
+            XCTAssertEqual(view.annotations.count, 1)
+        }
+    }
+
     // MARK: - Injected ⌘C (#477)
+
+    func testCommandCRightAfterAnAnnotationDragDoesNotConfirm() {
+        withDefaults(settings) {
+            let (view, delegate) = makeSelectedOverlay()
+            view.currentTool = .arrow
+            view.mouseDown(with: mouse(.leftMouseDown, at: NSPoint(x: 100, y: 100), timestamp: 10))
+            view.mouseDragged(with: mouse(.leftMouseDragged, at: NSPoint(x: 200, y: 200), timestamp: 10.1))
+            view.mouseUp(with: mouse(.leftMouseUp, at: NSPoint(x: 200, y: 200), timestamp: 10.2))
+            XCTAssertTrue(view.performKeyEquivalent(with: commandC(at: 10.3)))
+            XCTAssertEqual(delegate.confirms, 0)
+            XCTAssertTrue(view.performKeyEquivalent(with: commandC(at: 11)))
+            XCTAssertEqual(delegate.confirms, 1)
+        }
+    }
 
     func testCommandCRightAfterTheSelectionMouseUpDoesNotConfirm() {
         withDefaults(settings) {
