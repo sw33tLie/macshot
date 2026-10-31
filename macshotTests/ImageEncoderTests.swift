@@ -189,7 +189,10 @@ final class ImageEncoderTests: XCTestCase {
         let pasteboard = NSPasteboard(name: NSPasteboard.Name("macshot.tests.\(UUID().uuidString)"))
         defer { pasteboard.releaseGlobally() }
         pasteboard.setString("stale", forType: .string)
+        let changeCount = pasteboard.changeCount
         ImageEncoder.writeImagePasteboard(pasteboard, representations: representations)
+        XCTAssertEqual(pasteboard.changeCount, changeCount + 1, "one copy is one clipboard change (#483)")
+        XCTAssertNil(pasteboard.string(forType: .string), "the previous contents are cleared")
         // AppKit adds legacy aliases (e.g. "Apple PNG pasteboard type"); the UTIs keep our order.
         let utis = (pasteboard.types ?? []).filter { $0.rawValue.hasPrefix("public.") }
         XCTAssertEqual(utis, [NSPasteboard.PasteboardType("public.jpeg"), .png, .tiff])

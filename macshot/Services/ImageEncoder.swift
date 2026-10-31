@@ -270,7 +270,9 @@ enum ImageEncoder {
         _ pasteboard: NSPasteboard,
         representations: [(type: NSPasteboard.PasteboardType, data: Data)]
     ) {
-        pasteboard.clearContents()
+        // declareTypes clears the pasteboard itself. A clearContents() before it
+        // counts as a second change, and clipboard managers that watch
+        // changeCount recorded every copy twice (#483).
         pasteboard.declareTypes(representations.map(\.type), owner: nil)
         for representation in representations {
             pasteboard.setData(representation.data, forType: representation.type)
