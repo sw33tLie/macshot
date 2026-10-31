@@ -46,8 +46,10 @@ macshot/
 ├── Capture/
 │   ├── ScreenCaptureManager.swift      # Multi-screen capture via ScreenCaptureKit (async/await)
 │   ├── RecordingEngine.swift           # Screen recording to durable MP4 originals
-│   ├── ScrollCaptureController.swift   # Scroll capture with SAD-based stitching
-│   ├── ScrollFrameAnalyzer.swift       # Pure pixel comparison: frozen header + scrollbar detection
+│   ├── ScrollCaptureController.swift   # Scroll capture session: frame grabs, manual/auto scroll, HUD callbacks
+│   ├── ScrollFrameMatcher.swift        # Pure: exact scroll shift, ignoring navbars, sidebars, fixed backgrounds, pinned boxes
+│   ├── ScrollStitcher.swift            # Pure: appends new rows; sticky content appears once (tested pixel-exact)
+│   ├── ScrollFrameAnalyzer.swift       # Pure pixel access + frozen header / scrollbar helpers
 │   ├── GIFExporter.swift              # Edited timeline → timestamped GIF frames
 │   ├── GIFEncoder.swift               # Bounded-memory streaming GIF writer
 │   ├── CursorTelemetry.swift          # Pointer/click/key data file format + media-clock view (CursorRecording)
@@ -267,7 +269,7 @@ The video editor is built around `VideoEditorDocument` (one `VideoProject`: time
 ### Threading Model
 - **Capture:** Displays are captured one at a time, the one under the pointer first (on macOS 26 `replayd` serializes concurrent screenshot requests and charges far more per queued request). Each display's overlay is shown as soon as its capture lands; keyboard focus stays on the display with a selection, else the one under the pointer, and a partial failure falls back only for the displays not yet shown.
 - **Recording:** SCStream output on background thread, main actor for state updates
-- **Scroll capture:** Background throttle/settlement timers, serialized captureAndStitch
+- **Scroll capture:** Frames grabbed every 50 ms while scrolling (a mouse wheel animates without events) plus a settled capture after; matching/stitching on main, serialized by `isCapturing`
 - **OCR:** VNImageRequestHandler on background thread, results to main
 - **Upload:** URLSession background task
 - **GIF:** Frame encoding on background thread
@@ -297,7 +299,7 @@ Copy to clipboard, Save to file (PNG/JPEG/HEIC/WebP), Pin (floating always-on-to
 - **Editor Window:** Standalone resizable window for post-capture editing, full annotation tools, zoom 0.1x–8x via NSScrollView
 - **Video Editor:** Standalone video editor window for trimming, exporting, and uploading recorded videos
 - **Screen Recording:** MP4/GIF, annotation mode during recording, configurable FPS (up to 120fps), mouse click highlighting, system audio capture
-- **Scroll Capture:** Automatic scroll detection + stitching via SAD matching
+- **Scroll Capture:** Automatic scroll detection + stitching. `ScrollFrameMatcher` matches only the columns that scroll, cancels fixed backgrounds and leaves out navbars (translucent too) and pinned boxes; `ScrollStitcher` shows headers, sidebars and bottom banners once
 - **Auto-Redact:** Right-click filled rect → regex patterns (emails, phones, SSN, credit cards, IPs, AWS keys, bearer tokens)
 - **Barcode/QR Detection:** Live Vision detection with decoded payload, open/copy actions
 - **Floating Thumbnail:** Stackable, draggable, auto-dismiss, quick actions
