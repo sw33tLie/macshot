@@ -199,6 +199,15 @@ class OverlayView: NSView {
     private var doubleClickUndoBaseline: Int?
     /// Short-lived marker for the Text tool case where the first click opens an empty editor.
     private var textToolDoubleClickCopyDeadline: TimeInterval = 0
+    /// Second click of a possible double-click-to-copy, decided on mouse-up:
+    /// with trackpad tap-to-click, dragging starts with a double tap, so a
+    /// drag that begins with clickCount 2 is still a drag (#467).
+    private var pendingDoubleClickCopy: (event: NSEvent, point: NSPoint)?
+    /// Timestamp of the mouse-up that finished the last drawn selection.
+    private var selectionFinishedAt: TimeInterval = -.infinity
+    /// Some apps post ⌘C right after any mouse drag to "copy the selection".
+    /// A person can't release the mouse and press ⌘C this fast (#477).
+    static let injectedCopyWindow: TimeInterval = 0.25
 
     // Annotations
     var annotations: [Annotation] = [] {
@@ -5860,6 +5869,10 @@ class OverlayView: NSView {
     override func mouseDragged(with event: NSEvent) {
         if isRecognizingText { return }
         let point = convert(event.locationInWindow, from: nil)
+        if let pending = pendingDoubleClickCopy {
+            guard hypot(point.x - pending.point.x, point.y - pending.point.y) > 3 else { return }
+            convertPendingDoubleClickToDrag(pending)
+        }
 
         // Cancel long-press timer if the user moved more than 3px (they're drawing, not selecting)
         if longPressTimer != nil {
@@ -6514,6 +6527,11 @@ class OverlayView: NSView {
 
     override func mouseUp(with event: NSEvent) {
         if isRecognizingText { return }
+        if pendingDoubleClickCopy != nil {
+            pendingDoubleClickCopy = nil
+            completeDoubleClickCopy()
+            return
+        }
         spaceRepositioning = false
 
         // Any drag that used boundary snap is ending — clear its guide lines.
@@ -6600,6 +6618,7 @@ class OverlayView: NSView {
         lastDragPoint = nil
         switch state {
         case .selecting:
+            selectionFinishedAt = event.timestamp
             finishSelection()
 
         case .selected:
@@ -6706,19 +6725,10 @@ class OverlayView: NSView {
                 overlayDelegate?.overlayViewDidConfirm()
                 return true
             }
-            // Cancel any in-progress annotation from this second click.
+            // Cancel any in-progress annotation from this second click, and
+            // copy on mouse-up unless the pointer moves first (a drag).
             currentAnnotation = nil
-            // Rewind the undo stack to the baseline captured on the first click,
-            // popping the annotation(s) the first click finished.
-            if let baseline = doubleClickUndoBaseline {
-                while undoStack.count > baseline { undo() }
-            }
-            doubleClickUndoBaseline = nil
-            textToolDoubleClickCopyDeadline = 0
-            // Clear caches so the confirm renders without the popped annotations.
-            cachedCompositedImage = nil
-            cachedAnnotationLayer = nil
-            overlayDelegate?.overlayViewDidConfirm()
+            pendingDoubleClickCopy = (event, point)
             return true
         }
 
@@ -6740,6 +6750,35 @@ class OverlayView: NSView {
             textToolDoubleClickCopyDeadline = 0
         }
         return false
+    }
+
+    /// The second click ended without moving: rewind what the first click
+    /// drew and copy.
+    private func completeDoubleClickCopy() {
+        // Rewind the undo stack to the baseline captured on the first click,
+        // popping the annotation(s) the first click finished.
+        if let baseline = doubleClickUndoBaseline {
+            while undoStack.count > baseline { undo() }
+        }
+        doubleClickUndoBaseline = nil
+        textToolDoubleClickCopyDeadline = 0
+        // Clear caches so the confirm renders without the popped annotations.
+        cachedCompositedImage = nil
+        cachedAnnotationLayer = nil
+        overlayDelegate?.overlayViewDidConfirm()
+    }
+
+    /// The second click moved: replay it as an ordinary single click so the
+    /// current tool starts drawing at the press point.
+    private func convertPendingDoubleClickToDrag(_ pending: (event: NSEvent, point: NSPoint)) {
+        pendingDoubleClickCopy = nil
+        textToolDoubleClickCopyDeadline = 0
+        let down = pending.event
+        guard let single = NSEvent.mouseEvent(
+            with: .leftMouseDown, location: down.locationInWindow, modifierFlags: down.modifierFlags,
+            timestamp: down.timestamp, windowNumber: down.windowNumber, context: nil,
+            eventNumber: down.eventNumber, clickCount: 1, pressure: down.pressure) else { return }
+        mouseDown(with: single)
     }
 
     private var isDoubleClickToCopyEnabled: Bool {
@@ -9198,6 +9237,8 @@ class OverlayView: NSView {
             if KeyboardShortcutMatcher.matches(event, character: "c", modifiers: .command) {
                 if !selectedAnnotations.isEmpty {
                     copySelectedAnnotations()
+                } else if event.timestamp - selectionFinishedAt < Self.injectedCopyWindow {
+                    // Another app's synthetic ⌘C right after the drag: swallow it.
                 } else {
                     overlayDelegate?.overlayViewDidConfirm()
                 }
@@ -10310,6 +10351,8 @@ class OverlayView: NSView {
         autoScrollCaptureMode = false
         autoConfirmMode = false
         isRecognizingText = false
+        pendingDoubleClickCopy = nil
+        selectionFinishedAt = -.infinity
         needsDisplay = true
     }
 }
