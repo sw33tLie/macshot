@@ -813,6 +813,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // Capture Delay submenu
         let delayItem = NSMenuItem(title: L("Capture Delay"), action: nil, keyEquivalent: "")
         delayItem.image = NSImage(systemSymbolName: "timer", accessibilityDescription: nil)
+        delayItem.keepImageVisible()
         let delaySubmenu = NSMenu()
         delaySubmenu.autoenablesItems = false
         let currentDelay = UserDefaults.standard.integer(forKey: "captureDelaySeconds")
@@ -832,18 +833,21 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         let recordAreaItem = NSMenuItem(title: L("Record Area"), action: #selector(recordArea), keyEquivalent: "")
         recordAreaItem.target = self
         recordAreaItem.image = NSImage(systemSymbolName: "record.circle", accessibilityDescription: nil)
+        recordAreaItem.keepImageVisible()
         HotkeyManager.applyMenuShortcut(for: .recordArea, to: recordAreaItem)
         menu.addItem(recordAreaItem)
 
         let recordGIFItem = NSMenuItem(title: "\(L("Record")) \(L("GIF"))", action: #selector(recordGIF), keyEquivalent: "")
         recordGIFItem.target = self
         recordGIFItem.image = NSImage(systemSymbolName: "photo.stack", accessibilityDescription: nil)
+        recordGIFItem.keepImageVisible()
         HotkeyManager.applyMenuShortcut(for: .recordGIF, to: recordGIFItem)
         menu.addItem(recordGIFItem)
 
         let recordScreenItem = NSMenuItem(title: L("Record Screen"), action: #selector(recordFullScreen), keyEquivalent: "")
         recordScreenItem.target = self
         recordScreenItem.image = NSImage(systemSymbolName: "menubar.dock.rectangle", accessibilityDescription: nil)
+        recordScreenItem.keepImageVisible()
         HotkeyManager.applyMenuShortcut(for: .recordScreen, to: recordScreenItem)
         menu.addItem(recordScreenItem)
 
@@ -936,6 +940,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         let item = NSMenuItem(title: itemID.title, action: action, keyEquivalent: "")
         item.target = self
         item.image = NSImage(systemSymbolName: itemID.symbolName, accessibilityDescription: nil)
+        item.keepImageVisible()
         HotkeyManager.applyMenuShortcut(for: itemID.hotkeySlot, to: item)
         return item
     }
