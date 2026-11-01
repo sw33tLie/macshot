@@ -179,7 +179,7 @@ enum ScrollFrameMatcher {
             // Not moving explains the frames about as well: don't invent a scroll.
             return Match(shift: 0, band: band, staticBottomRows: 0, fixedSides: [])
         }
-        let bottom = chosen.shift > 0 ? pinnedBottomRows(previous, current, band: band) : 0
+        let bottom = chosen.shift > 0 ? pinnedBottomRows(previous, current, band: band, shift: chosen.shift) : 0
         let atShift = blockCosts(prev: prev, cur: cur, shift: chosen.shift, groups: groups)
         let edges = edgeBands(atShift, groups: groups.count, level: level)
         // Sidebars are judged on the rows that follow the scroll: a sticky
@@ -712,7 +712,7 @@ enum ScrollFrameMatcher {
     /// qualifies when a stretch of it with real content stayed exactly put.
     /// Over-estimating is harmless (new rows are just taken from higher up),
     /// missing one repeats the box down the whole image, so this errs wide.
-    static func pinnedBottomRows(_ previous: Samples, _ current: Samples, band: ClosedRange<Int>) -> Int {
+    static func pinnedBottomRows(_ previous: Samples, _ current: Samples, band: ClosedRange<Int>, shift: Int = 0) -> Int {
         // Consent panels can be most of the window tall (Stack Overflow's
         // covers about 60%). Over-estimating only moves where new rows are taken
         // from; at 50 ms between grabs the top third still covers any scroll.
@@ -737,16 +737,26 @@ enum ScrollFrameMatcher {
             return sum / Float((topRows + 1) / 2) > unchangedThreshold
         }
         var highest = -1                       // rows from the bottom to the highest pinned row
+        var hits = 0                           // rows that qualified
         var pinnedColumns: ClosedRange<Int>?   // where that row's pinned stretch is
         for offset in 0..<cap {
             let row = current.height - 1 - offset
-            var start = band.lowerBound, low: Float = 255, high: Float = 0
+            var start = band.lowerBound, low: Float = 255, high: Float = 0, evidence = 0
             for column in band {
                 let value = current.value(row, column)
                 if movesAbove[column], unchanged(row, column) {
                     low = min(low, value); high = max(high, value)
-                    if column - start + 1 >= minimumRun, high - low > 24 {
+                    // Evidence of pinning: the same here, but not what scrolling
+                    // would have brought. Flat colour (a big purple graphic after
+                    // a small scroll) is the same both ways and proves nothing.
+                    // Rows within one shift of the bottom show content that came
+                    // from below the previous frame; matching in place there is
+                    // evidence by itself.
+                    if shift > 0, row + shift >= current.height
+                        || abs(value - previous.value(row + shift, column)) > 4 { evidence += 1 }
+                    if column - start + 1 >= minimumRun, high - low > 24, shift == 0 || evidence >= max(2, minimumRun / 4) {
                         highest = offset
+                        hits += 1
                         // Extend the stretch to its full unchanged width.
                         var end = column
                         while end < band.upperBound, unchanged(row, end + 1) { end += 1 }
@@ -754,18 +764,23 @@ enum ScrollFrameMatcher {
                         break
                     }
                 } else {
-                    start = column + 1; low = 255; high = 0
+                    start = column + 1; low = 255; high = 0; evidence = 0
                 }
             }
             // A banner's own padding rows have no detail; allow a gap, but
-            // stop once well past the top of anything pinned.
-            if highest >= 0, offset - highest > gap { break }
+            // stop once well past the top of anything pinned. Pinned content
+            // starts at or near the bottom edge: nothing there, nothing pinned
+            // (one stray match far up a scrolling feed is not a banner).
+            if offset - max(highest, 0) > gap { break }
         }
-        guard highest >= 0, let columns = pinnedColumns else { return 0 }
+        guard highest >= 0, hits >= 3, let columns = pinnedColumns else { return 0 }
         // Above its highest line of content a banner usually has plain padding:
         // still pinned, just without detail. Follow the same columns up while
         // they stay unchanged.
-        while highest + 1 < cap,
+        // Bounded: plain unchanged columns (a dark gutter) would otherwise
+        // climb all the way to the cap.
+        let paddingLimit = min(cap, highest + 1 + max(48, current.height / 8))
+        while highest + 1 < paddingLimit,
               columns.allSatisfy({ unchanged(current.height - 2 - highest, $0) }) { highest += 1 }
         return min(cap, highest + 1 + 4)
     }

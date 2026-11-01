@@ -202,6 +202,26 @@ final class ScrollFrameMatcherTests: XCTestCase {
         XCTAssertEqual(result?.staticBottomRows, 0)
     }
 
+    /// Reddit: a big flat graphic with large lettering, scrolled by a few
+    /// pixels, matches itself in place over most of its area. That is not a
+    /// pinned banner, or its rows would be held back from every strip.
+    func testAFlatGraphicAfterASmallScrollIsNotPinned() {
+        let result = match(300, 312) { context, scroll in
+            self.drawPage(context, scroll: scroll)
+            let top = 500 - scroll
+            context.setFillColor(CGColor(red: 0.45, green: 0.3, blue: 0.85, alpha: 1))
+            context.fill(CGRect(x: 20, y: top, width: 360, height: 300))
+            context.setFillColor(CGColor(red: 0.75, green: 0.65, blue: 1, alpha: 1))
+            for (i, x) in [40, 120, 200, 280].enumerated() {
+                context.fill(CGRect(x: x, y: top + 30 + i * 50, width: 60, height: 70))   // big letters
+            }
+        }
+        XCTAssertEqual(result?.shift, 12)
+        // Rows within one shift of the bottom can't be told apart from pinned
+        // content and a few may be held back; the graphic itself must not be.
+        XCTAssertLessThanOrEqual(result?.staticBottomRows ?? .max, 32)
+    }
+
     func testAPageWithoutPinnedContentHoldsNothingBack() {
         XCTAssertEqual(match(300, 370) { self.drawPage($0, scroll: $1) }?.staticBottomRows, 0)
     }
