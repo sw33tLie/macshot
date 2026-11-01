@@ -23,7 +23,7 @@
 </p>
 
 <p align="center">
-  <img src="assets/preview-editor.png" alt="macshot video editor — timeline with cut, speed, freeze, zoom and censor effects" width="700"/>
+  <img src="assets/preview-editor.png" alt="macshot Studio video editor — background, pointer, zoom, keystrokes, camera and captions, with a timeline for zooms, cuts and titles" width="700"/>
 </p>
 
 ---
