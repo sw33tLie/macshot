@@ -1,22 +1,46 @@
 # Changelog
 
-## [Unreleased]
+## [4.4.0] - 2026-11-01
 
-### Added
+### Before you update
 
-- **Every emoji in the stamp tool**: the picker has a search field over every emoji your Mac can draw, matched by name ("tears" finds 🥹, "flag italy" finds 🇮🇹), and an All tab. The curated tabs are unchanged. (#473)
-- Option to open the Editor right after the selection is released (Settings › Capture, off by default). Thanks @ClmntCh7. (#474, #475)
+- **macshot has a new developer signature**, so macOS may ask you to allow Screen Recording again (and Accessibility or Input Monitoring if you use them). If macshot looks enabled in System Settings but capture fails, remove it with the minus button (−) and add it back from Applications with the plus button (+). Your settings, history and recordings are kept.
 
-### Changed
+### New
 
-- The text tool's icon is a plain "T" in every language; the system symbol it used turned into "格式" or "あぁ" on Chinese and Japanese systems. Thanks @hhktony. (#485)
-- On macOS 27, which hides menu icons by default, the capture and record items in the menu bar menu keep their icons. (#313)
-- Exported MP4 videos are "fast start": an uploaded or linked export starts playing before it has fully downloaded. (#452)
+- **Studio, a redesigned video editor**: a sidebar for background, pointer, zoom, keystrokes, camera and captions, a multi-lane timeline with thumbnails, waveform and snapping, undo/redo, and autosaved projects.
+- **Editable pointer and Auto Zoom**: restyle, resize, smooth or hide the cursor and its click effects after recording, and get zooms generated from your clicks and typing that follow the pointer.
+- **Backgrounds and framing** for recordings: gradients, macOS wallpapers, colors or your own image, with padding, rounded corners, shadow and aspect ratio presets.
+- **Webcam as its own track**: move and resize it while recording, and change its shape, size and position afterwards. (#429)
+- **Captions and keystroke labels**, transcribed on your Mac and exportable as SRT.
+- **Record GIF** from the menu or its own hotkey; press a record hotkey again to stop. (#423)
+- **Every emoji in the stamp tool**, with search by name. (#473)
+- **Filename tokens and date folders**: `{app}`, `{yyyy}`, `{MM}`, `{dd}` and more, and a `/` files screenshots into subfolders. (#422)
+- **Press R** on the capture screen to bring back the last area. (#359)
+- Smaller additions: open the Editor right after selecting (#474), copy screenshots in your image format as well as PNG (#373), date folders for S3 uploads (#417), and "Open With" macshot for videos in Finder (#461).
+
+### Improved
+
+- **Much faster capture on multiple displays**: 4.2 s down to 0.2 s on four displays. (#349)
+- **Scroll capture rebuilt**: translucent navbars, sticky sidebars, cookie banners and pinned boxes appear once instead of repeating, videos stay whole, mouse wheels no longer lose content, and ⌘C or Return finishes the capture. (#484, #437)
+- **macOS 27**: OCR no longer hangs, and the capture and record menu items keep their icons. (#439, #313)
+- Exported MP4s start playing before they have fully downloaded, and recordings play in Telegram and FFmpeg-based players. (#452, #450, #449)
+- The text tool's icon is a plain "T" in every language. (#485)
 
 ### Fixed
 
-- **⌘C during a scroll capture copied only the first frame** and left the scroll-capture HUD on screen. ⌘C now finishes the capture and copies the whole stitched image; Return finishes it like the Stop button. (#437)
-- **macshot froze for several seconds when confirming a capture** while the audio device was slow to start: the capture sound played on the main thread. It now plays in the background. (#418)
+- Recordings with system audio stopping with "Audio encoding could not keep up". (#444, #453, #455)
+- OCR garbling Chinese, Japanese and other non-Latin text on lines that also contain English. (#462)
+- A trackpad double-tap drag copying the capture instead of drawing. (#467)
+- Captures confirming themselves when another app sent ⌘C after a drag. (#477)
+- Screenshots appearing twice in clipboard managers. (#483)
+- Global hotkeys that silently did nothing when two actions shared a shortcut. (#445)
+- Capture OCR doing nothing after right-click, F or R selection. (#440)
+- macshot missing from the Screen Recording list on first launch. (#299)
+- macshot freezing for seconds when confirming a capture with a slow audio device. (#418)
+- Microphone recordings failing after a restart because a stale default microphone had been saved.
+
+Thanks to @ivanilsonsousa, @mdtoupin, @defia, @mjjjjaazing, @DasCanard, @zkmn73, @a1exsun, @Redth, @ClmntCh7 and @hhktony for their contributions.
 
 ## [4.4.0-beta.7] - 2026-11-01
 

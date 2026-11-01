@@ -1,7 +1,7 @@
 # macshot
 
 > [!IMPORTANT]
-> **Upgrading to a 4.4.0 beta from 4.3.x or beta.1/beta.2?** macshot's developer signature changed in beta.3, so macOS may require you to grant permissions again. If Screen Recording looks enabled but capture fails, remove macshot with the minus button (−) in System Settings, then add it back from Applications with the plus button (+). Re-enable Accessibility or Input Monitoring if prompted. Your settings, history and recordings are preserved. If you already restored permissions in beta.3 or later, you should not need to repeat this.
+> **Updating to 4.4.0 from 4.3.x or earlier?** macshot's developer signature changed in 4.4.0, so macOS may require you to grant permissions again. If Screen Recording looks enabled but capture fails, remove macshot with the minus button (−) in System Settings, then add it back from Applications with the plus button (+). Re-enable Accessibility or Input Monitoring if prompted. Your settings, history and recordings are preserved. If you already restored permissions on a 4.4.0 beta (beta.3 or later), you don't need to do this again.
 
 <p align="center">
   <img src="assets/logo.svg" alt="macshot logo" width="200"/>
