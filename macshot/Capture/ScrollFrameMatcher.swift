@@ -531,9 +531,19 @@ enum ScrollFrameMatcher {
                     // always on the outer side, and on the side toward the
                     // scrolling content only if that column is still too (a
                     // card's border), never into one that moves (line numbers).
+                    // Toward the content, reach up to three still samples: a
+                    // card's thin border and rounded corners can fall between
+                    // samples and would otherwise repeat down the image
+                    // (x.com's right column). Clamped to the band edge.
                     func still(_ c: Int) -> Bool { c >= 0 && c < count && change[c] <= unchangedThreshold }
-                    let lowSample = innerIsHigh || still(first - 1) ? first - 1 : first
-                    let highSample = !innerIsHigh || still(column) ? column + 1 : column
+                    var lowSample = first, highSample = column
+                    if innerIsHigh {
+                        lowSample = first - 1
+                        while highSample < column + 3, still(highSample) { highSample += 1 }
+                    } else {
+                        highSample = column + 1
+                        while lowSample > first - 3, still(lowSample - 1) { lowSample -= 1 }
+                    }
                     let low = max(clampLow, Int(Double(lowSample) * step))
                     let high = min(clampHigh, Int((Double(highSample) * step).rounded(.up)))
                     if high > low { ranges.append(low..<high) }
