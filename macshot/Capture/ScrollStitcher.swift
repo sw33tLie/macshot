@@ -46,6 +46,8 @@ final class ScrollStitcher {
     /// A larger pinned bottom seen in the previous pair; adopted when the next
     /// pair agrees (a consent panel can settle after the first frames).
     private var pendingBottomRows = 0
+    /// Height of the first frame in the image; repairs never reach into it.
+    private var firstFrameRows = 0
     /// Regions that change on their own (videos, animations), in image
     /// coordinates (top-left origin). Grown as more of a video is seen, and
     /// pasted whole from the latest frame that shows them completely.
@@ -68,6 +70,7 @@ final class ScrollStitcher {
 
     init(firstFrame: CGImage, handlesPinnedContent: Bool = true) {
         image = firstFrame
+        firstFrameRows = firstFrame.height
         reference = firstFrame
         referenceSamples = ScrollFrameMatcher.samples(of: firstFrame)
         self.handlesPinnedContent = handlesPinnedContent
@@ -107,13 +110,17 @@ final class ScrollStitcher {
             rowsToRevisit += -match.shift
             return .pending
         }
-        if !geometryDecided { decideGeometry(match) } else { growPinnedBottom(match) }
+        var grown = 0
+        if !geometryDecided { decideGeometry(match) } else { grown = pinnedGrowth(match) }
         let revisited = min(rowsToRevisit, match.shift)
         rowsToRevisit -= revisited
         let newRows = min(match.shift - revisited, frame.height - bottomRows)
         guard newRows > 0,
               let strip = frame.cropping(to: CGRect(x: 0, y: frame.height - bottomRows - newRows,
-                                                    width: frame.width, height: newRows)) else { return .pending }
+                                                    width: frame.width, height: newRows)) else {
+            if grown > 0 { rowsToRevisit += grown - bottomRows; bottomRows = grown }
+            return .pending
+        }
         let sides = handlesPinnedContent ? sideFill(for: match, width: frame.width).compactMap { columns in
             Self.backgroundColor(of: frame, columns: columns, rows: 0..<(frame.height - bottomRows)).map { (columns, $0) }
         } : []
@@ -144,7 +151,59 @@ final class ScrollStitcher {
         append(strip, sides: sides, pastes: pastes, from: frame, frameBottom: frameBottom,
                followingRows: max(frameBottom / 8, match.followingRows.lowerBound)..<min(frameBottom, match.followingRows.upperBound))
         appendedStrips += 1
+        if grown > 0 {
+            if revisited == 0 {
+                repairAfterGrowth(to: grown, frame: frame, match: match, sides: sides)
+            } else {
+                rowsToRevisit += grown - bottomRows
+                bottomRows = grown
+            }
+        }
         return .appended
+    }
+
+    /// The pinned bottom turned out taller than assumed: a box that slid or
+    /// faded in after the capture started (Figma's cookie box) left slices of
+    /// itself in the strips taken while it grew. The image bottom shows frame
+    /// row (height - bottomRows) of `frame`, so the rows that now sit under
+    /// the box are cut off, and the recent rows above it are copied again
+    /// from this frame, where that content is visible and the box isn't.
+    private func repairAfterGrowth(to grown: Int, frame: CGImage, match: ScrollFrameMatcher.Match,
+                                   sides: [(columns: Range<Int>, color: CGColor)]) {
+        let cut = grown - bottomRows
+        // Never into the first frame: it holds the header and sidebars as seen.
+        let stripRows = image.height - firstFrameRows
+        guard cut > 0, stripRows > cut,
+              let kept = image.cropping(to: CGRect(x: 0, y: 0, width: image.width, height: image.height - cut)) else {
+            rowsToRevisit += max(0, cut)
+            bottomRows = grown
+            return
+        }
+        image = kept
+        bottomRows = grown
+        let top = max(frame.height / 8, match.followingRows.lowerBound)
+        let rows = min(frame.height - grown - top, stripRows - cut)
+        guard rows > 0,
+              let fresh = frame.cropping(to: CGRect(x: 0, y: frame.height - grown - rows, width: frame.width, height: rows))
+        else { return }
+        replaceBottom(with: fresh, sides: sides)
+    }
+
+    /// Draws `rows` over the bottom of the image, plain-filling `sides`.
+    private func replaceBottom(with rows: CGImage, sides: [(columns: Range<Int>, color: CGColor)]) {
+        let existing = image
+        guard existing.width == rows.width, existing.height >= rows.height else { return }
+        let colorSpace = existing.colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB)!
+        let bitmapInfo = CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue
+        guard let context = CGContext(data: nil, width: existing.width, height: existing.height, bitsPerComponent: 8,
+                                      bytesPerRow: existing.width * 4, space: colorSpace, bitmapInfo: bitmapInfo) else { return }
+        context.draw(existing, in: CGRect(x: 0, y: 0, width: existing.width, height: existing.height))
+        context.draw(rows, in: CGRect(x: 0, y: 0, width: rows.width, height: rows.height))
+        for side in sides {
+            context.setFillColor(side.color)
+            context.fill(CGRect(x: side.columns.lowerBound, y: 0, width: side.columns.count, height: rows.height))
+        }
+        if let merged = context.makeImage() { image = merged }
     }
 
     /// The finished image: adds the held-back bottom banner, once.
@@ -198,18 +257,15 @@ final class ScrollStitcher {
         dynamicRegions = others + [merged]
     }
 
-    /// Grows the held-back bottom when two consecutive pairs see more pinned
-    /// rows than assumed. Never shrinks: a banner that disappears just costs
-    /// a little of each strip. The rows between the old and new cutoff are
-    /// already in the image, so they are revisited rather than added again.
-    private func growPinnedBottom(_ match: ScrollFrameMatcher.Match) {
-        guard handlesPinnedContent else { return }
+    /// The held-back bottom to grow to, when two consecutive pairs see more
+    /// pinned rows than assumed; 0 otherwise. Never shrinks: a banner that
+    /// disappears just costs a little of each strip.
+    private func pinnedGrowth(_ match: ScrollFrameMatcher.Match) -> Int {
+        guard handlesPinnedContent else { return 0 }
         let seen = match.staticBottomRows
         defer { pendingBottomRows = seen > bottomRows ? seen : 0 }
-        guard seen > bottomRows, pendingBottomRows > bottomRows else { return }
-        let grown = min(seen, pendingBottomRows)
-        rowsToRevisit += grown - bottomRows
-        bottomRows = grown
+        guard seen > bottomRows, pendingBottomRows > bottomRows else { return 0 }
+        return min(seen, pendingBottomRows)
     }
 
     private func decideGeometry(_ match: ScrollFrameMatcher.Match) {
@@ -221,6 +277,7 @@ final class ScrollStitcher {
         if bottomRows > 0,
            let trimmed = first.cropping(to: CGRect(x: 0, y: 0, width: first.width, height: first.height - bottomRows)) {
             image = trimmed
+            firstFrameRows = trimmed.height
         }
     }
 

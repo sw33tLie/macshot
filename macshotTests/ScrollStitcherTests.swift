@@ -183,6 +183,37 @@ final class ScrollStitcherTests: XCTestCase {
         assertSameRows(stitched, expectedPage, rows: (videoTop + 140)..<total)
     }
 
+    /// Figma: the cookie box slides up into view after the capture started.
+    /// Strips taken while it moved must not keep slices of it; it appears
+    /// once, at the end.
+    func testABoxThatSlidesInAfterTheStartAppearsOnlyAtTheEnd() {
+        func box(_ context: CGContext, rise: Int) {
+            let top = height - rise
+            context.setFillColor(CGColor(gray: 0.12, alpha: 1))
+            context.fill(CGRect(x: 160, y: top, width: 190, height: 90))
+            context.setFillColor(CGColor(gray: 0.95, alpha: 1))
+            context.fill(CGRect(x: 172, y: top + 14, width: 150, height: 9))
+            context.fill(CGRect(x: 172, y: top + 34, width: 120, height: 9))
+            context.fill(CGRect(x: 172, y: top + 60, width: 60, height: 16))
+        }
+        // The box rises 0 → 100 px over the first frames, then stays.
+        let path = [0, 30, 62, 95, 128, 160, 195, 230, 262, 300, 333, 370]
+        let rises = [0, 25, 50, 75, 100, 100, 100, 100, 100, 100, 100, 100]
+        let stitcher = ScrollStitcher(firstFrame: image(height: height) { self.drawPage($0, scroll: 0, height: self.height) })
+        for (position, rise) in zip(path, rises).dropFirst() {
+            stitcher.add(image(height: height) { context in
+                self.drawPage(context, scroll: position, height: self.height)
+                box(context, rise: rise)
+            })
+        }
+        let stitched = stitcher.finish()
+        let total = height + path.last!
+        XCTAssertEqual(stitched.height, total)
+        let expected = image(height: total) { self.drawPage($0, scroll: 0, height: total) }
+        // Everything above the final box is the page, with no slices of the box.
+        assertSameRows(stitched, expected, rows: 0..<(total - 100), columns: 150..<360)
+    }
+
     func testWithPinnedHandlingOffFramesAreStitchedAsCaptured() {
         let stitched = stitch([0, 120], handlesPinnedContent: false) { context, scroll in
             self.drawPage(context, scroll: scroll, height: self.height)
