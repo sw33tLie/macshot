@@ -81,6 +81,7 @@ enum AudioTrackMixer {
         reader.add(audioOutput)
 
         let writer = try AVAssetWriter(outputURL: save.stagingURL, fileType: .mp4)
+        writer.shouldOptimizeForNetworkUse = true   // fast start (#452)
         if let cadence = VideoFrameCadence.declaredDuration(in: asset.metadata) {
             writer.metadata = VideoFrameCadence.metadata(for: cadence)
         }

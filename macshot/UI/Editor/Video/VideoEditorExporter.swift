@@ -101,6 +101,7 @@ final class VideoEditorExporter {
             session.metadata = VideoFrameCadence.metadata(for: document.frameDuration)
             session.outputURL = outputURL
             session.outputFileType = .mp4
+            session.shouldOptimizeForNetworkUse = true   // fast start (#452)
             session.videoComposition = prepared.composition
             if !includeAudio { session.audioMix = nil }
             return VideoExportJob(session: session, sourceLease: lease)

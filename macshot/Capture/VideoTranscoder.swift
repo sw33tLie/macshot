@@ -47,6 +47,9 @@ enum VideoTranscoder {
         let reader = try AVAssetReader(asset: request.asset)
         reader.timeRange = request.timeRange
         let writer = try AVAssetWriter(outputURL: request.outputURL, fileType: .mp4)
+        // Fast start: the index goes before the media, so an uploaded or
+        // linked export starts playing before it has fully downloaded (#452).
+        writer.shouldOptimizeForNetworkUse = true
         let cadence = request.composition?.frameDuration ?? request.sourceFrameDuration
             ?? VideoFrameCadence.declaredDuration(in: request.asset.metadata)
             ?? VideoFrameCadence.Inspection(track: request.videoTrack).duration()

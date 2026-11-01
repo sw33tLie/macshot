@@ -262,3 +262,33 @@ enum TestKeyEvent {
         return event
     }
 }
+
+/// Top-level box types of an MP4 file, in order ("ftyp", "moov", "mdat", …).
+enum MP4Boxes {
+    static func topLevel(_ url: URL) throws -> [String] {
+        let handle = try FileHandle(forReadingFrom: url)
+        defer { try? handle.close() }
+        let size = try handle.seekToEnd()
+        var types: [String] = []
+        var offset: UInt64 = 0
+        while offset + 8 <= size {
+            try handle.seek(toOffset: offset)
+            let header = handle.readData(ofLength: 16)
+            guard header.count >= 8 else { break }
+            var length = header.prefix(4).reduce(UInt64(0)) { $0 << 8 | UInt64($1) }
+            types.append(String(decoding: header[4..<8], as: UTF8.self))
+            if length == 1, header.count >= 16 { length = header[8..<16].reduce(UInt64(0)) { $0 << 8 | UInt64($1) } }
+            if length == 0 { break }   // runs to the end of the file
+            guard length >= 8 else { break }
+            offset += length
+        }
+        return types
+    }
+
+    /// Whether the index comes before the media ("fast start").
+    static func isFastStart(_ url: URL) throws -> Bool {
+        let types = try topLevel(url)
+        guard let moov = types.firstIndex(of: "moov"), let mdat = types.firstIndex(of: "mdat") else { return false }
+        return moov < mdat
+    }
+}

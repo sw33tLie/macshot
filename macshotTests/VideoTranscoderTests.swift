@@ -26,6 +26,8 @@ final class VideoTranscoderTests: XCTestCase {
         let source = try await RecordingMediaFixture.mixedMovie(in: directory)
         let request = try request(source: source)
         try await VideoTranscoder.export(request)
+        let boxes = try MP4Boxes.topLevel(request.outputURL)
+        XCTAssertTrue(try MP4Boxes.isFastStart(request.outputURL), "exports put the index first (#452): \(boxes)")
         let asset = AVAsset(url: request.outputURL)
         XCTAssertEqual(asset.duration.seconds, 1, accuracy: 1.0 / 30)
         XCTAssertEqual(asset.tracks(withMediaType: .audio).count, 2)

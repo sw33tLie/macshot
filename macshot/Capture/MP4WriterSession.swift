@@ -99,6 +99,10 @@ final class MP4WriterSession: @unchecked Sendable {
         // retain completed fragments, and finalization need not build one
         // ever-growing sample table for a multi-hour recording.
         writer.movieFragmentInterval = CMTime(value: 10, timescale: 1)
+        // Not `shouldOptimizeForNetworkUse`: with it AVFoundation writes the
+        // take somewhere else and moves it here only when finishing, so a
+        // crash mid-recording would leave nothing at all. Fast start is applied
+        // to exports instead (#452).
         let settings = VideoEncodingSettings.outputSettings(
             width: width, height: height, fps: fps, codec: .h264, quality: .high)
         let input = AVAssetWriterInput(mediaType: .video, outputSettings: settings)

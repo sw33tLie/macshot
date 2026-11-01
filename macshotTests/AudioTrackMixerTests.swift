@@ -92,6 +92,7 @@ final class AudioTrackMixerTests: XCTestCase {
         for volumes: [Float] in [[1, 0], [0, 1], [1, 1], [0, 0]] {
             let destination = directory.appendingPathComponent(UUID().uuidString + ".mp4")
             try await AudioTrackMixer.export(source: source, destination: destination, volumes: volumes)
+            XCTAssertTrue(try MP4Boxes.isFastStart(destination), "mixed copies put the index first (#452)")
             let samples = try audio(destination)
             if volumes == [0, 1] {
                 let right = try audio(destination, channel: 1)
