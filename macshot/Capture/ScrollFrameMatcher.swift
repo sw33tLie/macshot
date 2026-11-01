@@ -164,7 +164,8 @@ enum ScrollFrameMatcher {
         }
         let bottom = chosen.shift > 0 ? pinnedBottomRows(previous, current, band: band) : 0
         var result = Match(shift: chosen.shift, band: band, staticBottomRows: bottom,
-                           fixedSides: fixedSides(previous, current, band: band, change: change, shift: chosen.shift))
+                           fixedSides: fixedSides(previous, current, band: band, change: change, shift: chosen.shift,
+                                                  rows: 0..<(height - bottom)))
         if chosen.shift > 0 {
             let atShift = blockCosts(prev: prev, cur: cur, shift: chosen.shift, groups: groups)
             let edges = edgeBands(atShift, groups: groups.count, level: level)
@@ -455,27 +456,43 @@ enum ScrollFrameMatcher {
     /// moves at a different rate meanwhile is covered too. Columns of a single
     /// colour (a plain margin, a vertical border line) are left alone.
     static func fixedSides(_ previous: Samples, _ current: Samples, band: ClosedRange<Int>,
-                           change: [Float], shift: Int = 0) -> [Range<Int>] {
+                           change fullChange: [Float], shift: Int = 0, rows: Range<Int>? = nil) -> [Range<Int>] {
         let count = current.columnCount
-        let first = max(0, -shift), last = min(current.height, current.height - shift)
-        func isFixed(_ column: Int) -> Bool {
-            guard change[column] <= unchangedThreshold else {
-                // Moving, but outside the scrolling band: keep it only if it
-                // follows the same scroll (a second column of the page).
-                guard shift != 0, last - first >= 8 else { return false }
-                var atShift: Float = 0
-                for row in stride(from: first, to: last, by: 2) {
-                    atShift += abs(current.value(row, column) - previous.value(row + shift, column))
+        // Judged above any pinned bottom box: a tall cookie panel over part of
+        // the content columns must not make those columns look static.
+        let rows = rows ?? 0..<current.height
+        let change: [Float]
+        if rows == 0..<current.height {
+            change = fullChange
+        } else {
+            change = (0..<count).map { column in
+                var sum: Float = 0, n = 0
+                for row in Swift.stride(from: rows.lowerBound, to: rows.upperBound, by: 2) {
+                    sum += abs(current.value(row, column) - previous.value(row, column)); n += 1
                 }
-                atShift /= Float((last - first + 1) / 2)
-                return atShift > max(2, change[column] * 0.3)
+                return n > 0 ? sum / Float(n) : fullChange[column]
             }
+        }
+        let first = max(0, -shift), last = min(rows.upperBound, current.height - shift)
+        func isFixed(_ column: Int) -> Bool {
+            // Content, not a plain margin or a single-colour border line.
             var low: Float = 255, high: Float = 0
-            for row in stride(from: 0, to: current.height, by: 2) {
+            for row in Swift.stride(from: rows.lowerBound, to: rows.upperBound, by: 2) {
                 let value = current.value(row, column)
                 low = min(low, value); high = max(high, value)
             }
-            return high - low >= 8
+            guard high - low >= 8 else { return false }
+            if shift == 0 || last - first < 8 { return change[column] <= unchangedThreshold }
+            // Does following the scroll explain this column? A sidebar (static,
+            // or moving at its own rate) doesn't; a nearly blank column of the
+            // page (a code box's padding) does, even if it barely changes.
+            var atShift: Float = 0
+            for row in Swift.stride(from: first, to: last, by: 2) {
+                atShift += abs(current.value(row, column) - previous.value(row + shift, column))
+            }
+            atShift /= Float((last - first + 1) / 2)
+            return atShift > max(1, change[column] * 0.3) && atShift > change[column] + 0.5
+                || (change[column] > unchangedThreshold && atShift > max(2, change[column] * 0.3))
         }
         let step = Double(current.width) / Double(count)
         let bandLeft = Int(Double(band.lowerBound) * step), bandRight = Int((Double(band.upperBound + 1) * step).rounded(.up))
@@ -664,7 +681,10 @@ enum ScrollFrameMatcher {
     /// Over-estimating is harmless (new rows are just taken from higher up),
     /// missing one repeats the box down the whole image, so this errs wide.
     static func pinnedBottomRows(_ previous: Samples, _ current: Samples, band: ClosedRange<Int>) -> Int {
-        let cap = current.height * 35 / 100
+        // Consent panels can be most of the window tall (Stack Overflow's
+        // covers about 60%). Over-estimating only moves where new rows are taken
+        // from; at 50 ms between grabs the top third still covers any scroll.
+        let cap = current.height * 65 / 100
         let minimumRun = max(4, band.count * 8 / 100)
         func unchanged(_ row: Int, _ column: Int) -> Bool {
             abs(current.value(row, column) - previous.value(row, column)) < unchangedThreshold

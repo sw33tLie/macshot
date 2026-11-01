@@ -188,7 +188,7 @@ final class ScrollFrameMatcherTests: XCTestCase {
         }
         XCTAssertEqual(result?.shift, 70)
         XCTAssertGreaterThanOrEqual(result?.staticBottomRows ?? 0, 70, "the whole box, including its top padding")
-        XCTAssertLessThanOrEqual(result?.staticBottomRows ?? .max, height * 35 / 100)
+        XCTAssertLessThanOrEqual(result?.staticBottomRows ?? .max, height * 65 / 100)
     }
 
     func testAPageWithoutPinnedContentHoldsNothingBack() {

@@ -106,7 +106,7 @@ final class ScrollStitcher {
               let strip = frame.cropping(to: CGRect(x: 0, y: frame.height - bottomRows - newRows,
                                                     width: frame.width, height: newRows)) else { return .pending }
         let sides = handlesPinnedContent ? match.fixedSides.compactMap { columns in
-            Self.backgroundColor(of: frame, columns: columns).map { (columns, $0) }
+            Self.backgroundColor(of: frame, columns: columns, rows: 0..<(frame.height - bottomRows)).map { (columns, $0) }
         } : []
         // After this append, the frame's row (height - bottomRows) is the bottom
         // of the image, which places every visible row of the frame. Pasting
@@ -170,11 +170,12 @@ final class ScrollStitcher {
     /// The most common colour in `columns` of `image`: a sidebar's background.
     /// Colours are bucketed to find the mode, then averaged within it so a
     /// plain white or black background is reproduced exactly.
-    static func backgroundColor(of image: CGImage, columns: Range<Int>) -> CGColor? {
+    static func backgroundColor(of image: CGImage, columns: Range<Int>, rows: Range<Int>? = nil) -> CGColor? {
         guard let frame = ScrollFrameAnalyzer.frame(for: image), !columns.isEmpty else { return nil }
+        let rows = rows.flatMap { $0.isEmpty ? nil : $0 } ?? 0..<image.height
         var buckets: [Int: (count: Int, red: Int, green: Int, blue: Int)] = [:]
-        let columnStep = max(1, columns.count / 24), rowStep = max(1, image.height / 64)
-        for y in stride(from: 0, to: image.height, by: rowStep) {
+        let columnStep = max(1, columns.count / 24), rowStep = max(1, rows.count / 64)
+        for y in stride(from: rows.lowerBound, to: rows.upperBound, by: rowStep) {
             for x in stride(from: columns.lowerBound, to: min(columns.upperBound, image.width), by: columnStep) {
                 guard let offset = frame.offset(x: x, y: y) else { continue }
                 let red = Int(frame.bytes[offset + frame.redOffset])
