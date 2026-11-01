@@ -197,7 +197,7 @@ final class ScrollStitcher {
             // over a dark page can match by chance, so it isn't always in the
             // detected edge band, and a paste there drops it mid-image.
             let topGuard = max(match.followingRows.lowerBound, frameBottom / 8)
-            let following = CGFloat(topGuard)...CGFloat(min(match.followingRows.upperBound, frameBottom))
+            let following = Self.clampedRows(topGuard, min(match.followingRows.upperBound, frameBottom))
             pastes = dynamicRegions.compactMap { region in
                 let inFrame = region.offsetBy(dx: 0, dy: CGFloat(-frameTop))
                 guard following.contains(inFrame.minY), following.contains(inFrame.maxY),
@@ -240,8 +240,8 @@ final class ScrollStitcher {
                     recordHole(pointer.intersection(CGRect(x: 0, y: 0, width: frame.width, height: firstFrameRows)), imageTop: 0)
                 }
             }
-            let usable = CGFloat(max(frameBottom / 8, match.followingRows.lowerBound))
-                ... CGFloat(min(frameBottom - newRows, match.followingRows.upperBound))
+            let usable = Self.clampedRows(max(frameBottom / 8, match.followingRows.lowerBound),
+                                          min(frameBottom - newRows, match.followingRows.upperBound))
             pointerHoles.removeAll { hole in
                 let inFrame = hole.offsetBy(dx: 0, dy: CGFloat(-frameTop))
                 guard usable.contains(inFrame.minY), usable.contains(inFrame.maxY),
@@ -255,10 +255,11 @@ final class ScrollStitcher {
             }
         }
         append(strip, sides: sides, pastes: pastes, patches: patches, pointer: pointer, from: frame, frameBottom: frameBottom,
-               followingRows: max(frameBottom / 8, match.followingRows.lowerBound)..<min(frameBottom, match.followingRows.upperBound))
+               followingRows: Self.clampedRange(max(frameBottom / 8, match.followingRows.lowerBound),
+                                                min(frameBottom, match.followingRows.upperBound)))
         appendedStrips += 1
         for paste in pastes where CGFloat(frameTop) + paste.minY < CGFloat(firstFrameRows) {
-            pastedFirstFrameColumns.append(max(0, Int(paste.minX))..<min(frame.width, Int(paste.maxX.rounded(.up))))
+            pastedFirstFrameColumns.append(Self.clampedRange(max(0, Int(paste.minX)), min(frame.width, Int(paste.maxX.rounded(.up)))))
         }
         restoreFirstFrameSidebars()
         if grown > 0 {
@@ -334,6 +335,14 @@ final class ScrollStitcher {
         }
         if let merged = context.makeImage() { image = merged }
     }
+
+    /// `low..<high`, or an empty range at `low` when `high` is below it: under
+    /// a tall held-back panel the frame's bottom can end above where the
+    /// rows following the scroll begin (nature.com's consent banner).
+    static func clampedRange(_ low: Int, _ high: Int) -> Range<Int> { low..<max(low, high) }
+
+    /// `low...high` as frame rows, collapsed to `low` when `high` is below it.
+    static func clampedRows(_ low: Int, _ high: Int) -> ClosedRange<CGFloat> { CGFloat(low)...CGFloat(max(low, high)) }
 
     /// Draws `rows` over the bottom of the image, plain-filling `sides`.
     private func replaceBottom(with rows: CGImage, sides: [(columns: Range<Int>, color: CGColor)]) {

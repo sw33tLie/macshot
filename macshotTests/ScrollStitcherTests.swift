@@ -319,6 +319,46 @@ final class ScrollStitcherTests: XCTestCase {
         assertSameRows(stitched, expected, rows: 0..<total, columns: feed)
     }
 
+    /// nature.com: a consent banner over most of the frame is held back, so
+    /// little of each frame is left between the navbar and the banner. The
+    /// rows that follow the scroll can then begin below where the usable
+    /// part of the frame ends; that must give an empty range, not a crash.
+    func testATallPanelUnderANavbarLeavingFewRowsDoesNotCrash() {
+        let navbar = 40, panel = 196
+        func chrome(_ context: CGContext) {
+            context.setFillColor(CGColor(red: 0.08, green: 0.08, blue: 0.16, alpha: 0.6))
+            context.fill(CGRect(x: 0, y: 0, width: self.width, height: navbar))
+            context.setFillColor(CGColor(gray: 0.15, alpha: 1))
+            context.fill(CGRect(x: 0, y: self.height - panel, width: self.width, height: panel))
+            context.setFillColor(CGColor(gray: 0.95, alpha: 1))
+            context.fill(CGRect(x: 22, y: self.height - panel + 20, width: 160, height: 10))
+            context.fill(CGRect(x: 22, y: self.height - panel + 60, width: 90, height: 14))
+        }
+        let path = [0, 20, 44, 66, 90, 112, 136, 160, 182, 206, 230]
+        let pointer = CGRect(x: 200, y: navbar + 20, width: 20, height: 26)
+        let stitcher = ScrollStitcher(firstFrame: image(height: height) { context in
+            self.drawPage(context, scroll: 0, height: self.height)
+            chrome(context)
+        })
+        for position in path.dropFirst() {
+            stitcher.add(image(height: height) { context in
+                self.drawPage(context, scroll: position, height: self.height)
+                chrome(context)
+            }, pointer: pointer)
+        }
+        XCTAssertGreaterThanOrEqual(stitcher.finish().height, height)
+    }
+
+    /// Under a tall held-back panel the rows that follow the scroll can
+    /// begin below the end of the usable frame (nature.com: a crash while
+    /// patching the pointer). Derived ranges collapse instead of trapping.
+    func testDerivedRowRangesCollapseInsteadOfTrapping() {
+        XCTAssertEqual(ScrollStitcher.clampedRange(640, 460), 640..<640)
+        XCTAssertEqual(ScrollStitcher.clampedRange(10, 40), 10..<40)
+        XCTAssertEqual(ScrollStitcher.clampedRows(640, 460), 640...640)
+        XCTAssertEqual(ScrollStitcher.clampedRows(10, 40), 10...40)
+    }
+
     func testTheMousePointerIsNotPastedDownTheImage() {
         let pointer = CGRect(x: 170, y: 140, width: 20, height: 26)
         func arrow(_ context: CGContext) {
