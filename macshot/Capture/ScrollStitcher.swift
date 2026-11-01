@@ -58,6 +58,12 @@ final class ScrollStitcher {
     /// stretch of a file tree with no text in the rows that pair looked at);
     /// the history decides.
     private var sideScores: [Float] = []
+    /// The first frame as captured, and the pixel columns where pastes landed
+    /// in its rows. A region pasted there before its columns were known to be
+    /// a sidebar (Wikipedia's contents collapsing a section while the header
+    /// scrolls away) is put back as first seen once they are.
+    private let firstFrame: CGImage
+    private var pastedFirstFrameColumns: [Range<Int>] = []
     private var finished = false
 
     /// Rows scrolled back up that must come down again before anything new.
@@ -70,6 +76,7 @@ final class ScrollStitcher {
 
     init(firstFrame: CGImage, handlesPinnedContent: Bool = true) {
         image = firstFrame
+        self.firstFrame = firstFrame
         firstFrameRows = firstFrame.height
         reference = firstFrame
         referenceSamples = ScrollFrameMatcher.samples(of: firstFrame)
@@ -127,12 +134,22 @@ final class ScrollStitcher {
             return .pending
         }
         let stripRows = (frame.height - bottomRows - newRows)..<(frame.height - bottomRows)
-        let sides = handlesPinnedContent ? sideFill(for: match, width: frame.width, frameHeight: frame.height)
+        let fill = handlesPinnedContent ? sideFill(for: match, width: frame.width, frameHeight: frame.height)
+            : (judged: [], carried: [])
+        let sides = handlesPinnedContent ? (fill.judged
             // Under a tall pinned panel sides are misjudged more easily; there,
             // fill only what stayed put. Elsewhere a side moving at its own
             // rate (x.com's right column catching up) must still be filled.
             .flatMap { bottomRows * 2 > frame.height
                 ? Self.staticColumns($0, rows: stripRows, frame: frame, previous: previousFrame) : [$0] }
+            // A long-standing sidebar this pair missed is filled only if the
+            // strip stayed put across it; content scrolling into those
+            // columns (a footer once the sidebar ends, GitHub's file tree
+            // growing) moved, and a partial fill would cut through its text.
+            + fill.carried.filter { columns in
+                let still = Self.staticColumns(columns, rows: stripRows, frame: frame, previous: previousFrame)
+                return still.reduce(0) { $0 + $1.count } * 10 >= columns.count * 9
+            })
             .compactMap { columns in
                 Self.backgroundColor(of: frame, columns: columns, rows: 0..<(frame.height - bottomRows)).map { (columns, $0) }
             } : []
@@ -143,7 +160,16 @@ final class ScrollStitcher {
         let frameTop = image.height + newRows - frameBottom
         var pastes: [CGRect] = []
         if revisited == 0 {
+            // A change inside a sidebar that has stayed put (Wikipedia's
+            // contents moving its highlight) is not a video in the page: a
+            // region there would be pasted into the content further down.
+            func mostlySticky(_ rect: CGRect) -> Bool {
+                let low = max(0, Int(rect.minX)), high = min(sideScores.count, Int(rect.maxX.rounded(.up)))
+                guard high > low else { return false }
+                return sideScores[low..<high].filter { $0 > 0.2 }.count * 2 >= high - low
+            }
             for rect in match.dynamicRects where rect.maxY <= CGFloat(frameBottom)
+                && !mostlySticky(rect)
                 && !(pointer.map { rect.intersects($0) && rect.width * rect.height < 4 * $0.width * $0.height } ?? false) {
                 trackRegion(rect.offsetBy(dx: 0, dy: CGFloat(frameTop)))
             }
@@ -159,7 +185,9 @@ final class ScrollStitcher {
                       // into the image again at every paste.
                       !(pointer.map { inFrame.intersects($0) } ?? false),
                       // Never into columns this strip treats as a fixed sidebar.
-                      !match.fixedSides.contains(where: { CGFloat($0.lowerBound) < inFrame.maxX && CGFloat($0.upperBound) > inFrame.minX })
+                      !match.fixedSides.contains(where: { CGFloat($0.lowerBound) < inFrame.maxX && CGFloat($0.upperBound) > inFrame.minX }),
+                      !sides.contains(where: { CGFloat($0.0.lowerBound) < inFrame.maxX && CGFloat($0.0.upperBound) > inFrame.minX }),
+                      !mostlySticky(inFrame)
                 else { return nil }
                 return inFrame
             }
@@ -167,6 +195,10 @@ final class ScrollStitcher {
         append(strip, sides: sides, pastes: pastes, from: frame, frameBottom: frameBottom,
                followingRows: max(frameBottom / 8, match.followingRows.lowerBound)..<min(frameBottom, match.followingRows.upperBound))
         appendedStrips += 1
+        for paste in pastes where CGFloat(frameTop) + paste.minY < CGFloat(firstFrameRows) {
+            pastedFirstFrameColumns.append(max(0, Int(paste.minX))..<min(frame.width, Int(paste.maxX.rounded(.up))))
+        }
+        restoreFirstFrameSidebars()
         if grown > 0 {
             if revisited == 0 {
                 repairAfterGrowth(to: grown, frame: frame, match: match, sides: sides)
@@ -205,6 +237,42 @@ final class ScrollStitcher {
         replaceBottom(with: fresh, sides: sides)
     }
 
+    /// Puts the first frame back where a paste reached into it, in columns
+    /// that have since proved to be a sidebar.
+    private func restoreFirstFrameSidebars() {
+        guard !pastedFirstFrameColumns.isEmpty, sideScores.count == image.width,
+              firstFrame.width == image.width else { return }
+        var runs: [Range<Int>] = [], remaining: [Range<Int>] = []
+        for pasted in pastedFirstFrameColumns {
+            var start: Int?, kept = false
+            for x in pasted.lowerBound...pasted.upperBound {
+                if x < pasted.upperBound, sideScores[x] > 0.7 {
+                    if start == nil { start = x }
+                } else if let first = start {
+                    runs.append(first..<x)
+                    start = nil
+                }
+                if x < pasted.upperBound, sideScores[x] <= 0.7 { kept = true }
+            }
+            // Columns not yet decided stay pending; whole sidebar runs are done.
+            if kept { remaining.append(pasted) }
+        }
+        pastedFirstFrameColumns = remaining
+        let rows = min(firstFrameRows, firstFrame.height, image.height)
+        guard !runs.isEmpty, rows > 0 else { return }
+        let existing = image
+        let colorSpace = existing.colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB)!
+        let bitmapInfo = CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue
+        guard let context = CGContext(data: nil, width: existing.width, height: existing.height, bitsPerComponent: 8,
+                                      bytesPerRow: existing.width * 4, space: colorSpace, bitmapInfo: bitmapInfo) else { return }
+        context.draw(existing, in: CGRect(x: 0, y: 0, width: existing.width, height: existing.height))
+        for run in runs {
+            guard let piece = firstFrame.cropping(to: CGRect(x: run.lowerBound, y: 0, width: run.count, height: rows)) else { continue }
+            context.draw(piece, in: CGRect(x: run.lowerBound, y: existing.height - rows, width: run.count, height: rows))
+        }
+        if let merged = context.makeImage() { image = merged }
+    }
+
     /// Draws `rows` over the bottom of the image, plain-filling `sides`.
     private func replaceBottom(with rows: CGImage, sides: [(columns: Range<Int>, color: CGColor)]) {
         let existing = image
@@ -238,7 +306,12 @@ final class ScrollStitcher {
     /// that looked still for one pair). Every pair votes on every column, so
     /// an early misjudgement (a consent panel before it was recognised as
     /// pinned) fades instead of filling that strip for the rest of the capture.
-    private func sideFill(for match: ScrollFrameMatcher.Match, width: Int, frameHeight: Int) -> [Range<Int>] {
+    /// A column judged fixed for several pairs in a row and missed by this one
+    /// is returned as `carried`: Wikipedia's sticky contents moves its
+    /// highlight to the section scrolling in, and that one pair sees the
+    /// sidebar as part of the scrolling content, stitching a slice of it in.
+    private func sideFill(for match: ScrollFrameMatcher.Match, width: Int,
+                          frameHeight: Int) -> (judged: [Range<Int>], carried: [Range<Int>]) {
         if sideScores.count != width { sideScores = Array(repeating: 0, count: width) }
         var fixedNow = [Bool](repeating: false, count: width)
         for range in match.fixedSides {
@@ -249,23 +322,27 @@ final class ScrollStitcher {
         // Overflow: the left edge of a code block). Then a column must be
         // judged fixed twice in a row before it is filled.
         let strict = bottomRows * 2 > frameHeight
-        var fill = [Bool](repeating: false, count: width)
+        var fill = [Bool](repeating: false, count: width), carry = [Bool](repeating: false, count: width)
         for x in 0..<width {
             let previous = sideScores[x]
             sideScores[x] = 0.5 * previous + (fixedNow[x] ? 0.5 : -0.5)
             fill[x] = fixedNow[x] && (strict ? previous > 0.2 : previous > -0.6)
+            carry[x] = !fixedNow[x] && !strict && previous > 0.7
         }
-        var ranges: [Range<Int>] = []
-        var start: Int?
-        for x in 0...width {
-            if x < width, fill[x] {
-                if start == nil { start = x }
-            } else if let first = start {
-                ranges.append(first..<x)
-                start = nil
+        func runs(_ flags: [Bool]) -> [Range<Int>] {
+            var ranges: [Range<Int>] = []
+            var start: Int?
+            for x in 0...width {
+                if x < width, flags[x] {
+                    if start == nil { start = x }
+                } else if let first = start {
+                    ranges.append(first..<x)
+                    start = nil
+                }
             }
+            return ranges
         }
-        return ranges
+        return (runs(fill), runs(carry))
     }
 
     /// Adds a dynamic region, merging it with any it overlaps or nearly touches.

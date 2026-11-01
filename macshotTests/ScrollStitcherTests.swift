@@ -124,6 +124,39 @@ final class ScrollStitcherTests: XCTestCase {
         XCTAssertEqual(Set(stride(from: 0, to: below.count, by: 3).map { below[$0] }).count, 1)
     }
 
+    /// Wikipedia: a short sticky table of contents moves its highlight to the
+    /// section scrolling in. Neither that pair nor a highlight region may put
+    /// slices of it into the content, and the first frame shows it as seen.
+    func testStickyContentsWithAMovingHighlightAppearsOnce() {
+        // It follows the page until the header above it has scrolled away.
+        let feed = 100..<340, toc = 0..<90, tocRows = 130, header = 50
+        let path = [0, 30, 64, 101, 140, 182, 226, 262, 300, 341, 380, 420]
+        func contents(_ context: CGContext, scroll: Int) {
+            let top = max(0, header - scroll)
+            context.saveGState()
+            context.clip(to: CGRect(x: toc.lowerBound, y: top, width: toc.count, height: tocRows))
+            let item = min(4, scroll / 90)
+            context.setFillColor(CGColor(red: 0.75, green: 0.85, blue: 1, alpha: 1))
+            context.fill(CGRect(x: toc.lowerBound, y: top + item * 22 + 2, width: toc.count, height: 18))
+            self.drawPage(context, scroll: -top, height: tocRows + header, columns: toc)
+            context.restoreGState()
+        }
+        let stitched = stitch(path) { context, scroll in
+            self.drawPage(context, scroll: scroll, height: self.height, columns: feed)
+            contents(context, scroll: scroll)
+        }
+        let total = height + path.last!
+        XCTAssertEqual(stitched.height, total)
+        let expected = image(height: total) { self.drawPage($0, scroll: 0, height: total, columns: feed) }
+        assertSameRows(stitched, expected, rows: 0..<total, columns: feed)
+        // The contents appears once, as in the first frame.
+        let first = image(height: height) { contents($0, scroll: 0) }
+        assertSameRows(stitched, first, rows: 0..<(header + tocRows), columns: toc)
+        // Below it the column is plain: no slices of the contents.
+        let below = pixels(stitched, rows: height..<total, columns: toc)
+        XCTAssertEqual(Set(stride(from: 0, to: below.count, by: 3).map { below[$0] }).count, 1)
+    }
+
     /// Vercel: a cookie box floating at the bottom appears once, at the end.
     func testFloatingBottomBoxAppearsOnceAtTheEnd() {
         func box(_ context: CGContext) {
