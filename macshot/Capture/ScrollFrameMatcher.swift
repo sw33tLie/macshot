@@ -78,6 +78,10 @@ enum ScrollFrameMatcher {
         var followingRows: Range<Int> = 0..<0
         /// Pixel columns of `band`: the content seen scrolling in this pair.
         var bandPixels: Range<Int> = 0..<0
+        /// The part of `fixedSides` that moved, but not with the scroll (a
+        /// sidebar catching up or coming to a stop): strong evidence, unlike
+        /// a column that merely looked still in this pair.
+        var divergentSides: [Range<Int>] = []
     }
 
     /// Below this mean per-sample difference a column or row counts as unchanged.
@@ -251,12 +255,18 @@ enum ScrollFrameMatcher {
             if let inner = divergent.left {
                 let last = extend(from: groups[inner].upperBound - 1, by: 1, limit: reach)
                 let right = Int((Double(pixelColumn(last)) + sampleWidth / 2).rounded(.up))
-                if right > bandLeft { result.fixedSides.append(bandLeft..<min(right, current.width)) }
+                if right > bandLeft {
+                    result.fixedSides.append(bandLeft..<min(right, current.width))
+                    result.divergentSides.append(bandLeft..<min(right, current.width))
+                }
             }
             if let inner = divergent.right {
                 let first = extend(from: groups[inner].lowerBound, by: -1, limit: reach)
                 let left = max(0, Int(Double(pixelColumn(first)) - sampleWidth / 2))
-                if bandRight > left { result.fixedSides.append(left..<bandRight) }
+                if bandRight > left {
+                    result.fixedSides.append(left..<bandRight)
+                    result.divergentSides.append(left..<bandRight)
+                }
             }
             let excludedGroups = Set((divergent.left.map { Array(0...$0) } ?? [])
                                      + (divergent.right.map { Array($0..<groups.count) } ?? []))

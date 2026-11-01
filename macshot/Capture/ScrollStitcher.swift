@@ -151,15 +151,22 @@ final class ScrollStitcher {
             : (judged: [], carried: [])
         let sides = handlesPinnedContent ? (fill.judged
             // Under a tall pinned panel sides are misjudged more easily; there,
-            // fill only what stayed put. Elsewhere a side moving at its own
-            // rate (x.com's right column catching up) must still be filled.
-            .flatMap { bottomRows * 2 > frame.height
-                ? Self.staticColumns($0, rows: stripRows, frame: frame, previous: previousFrame) : [$0] }
+            // fill only what stayed put. A side moving at its own rate (x.com's
+            // right column catching up) must still be filled, as it is
+            // elsewhere.
+            .flatMap { columns in
+                bottomRows * 2 > frame.height && !match.divergentSides.contains(where: { $0.overlaps(columns) })
+                    ? Self.staticColumns(columns, rows: stripRows, frame: frame, previous: previousFrame) : [columns]
+            }
             // A long-standing sidebar this pair missed is filled only if the
             // strip stayed put across it; content scrolling into those
             // columns (a footer once the sidebar ends, GitHub's file tree
             // growing) moved, and a partial fill would cut through its text.
             + fill.carried.filter { columns in
+                // Under a tall panel, only a whole sidebar (Stack Overflow's
+                // right column sticking at its end), never a sliver such as
+                // a code box's edge, whose border column is still too.
+                guard bottomRows * 2 <= frame.height || columns.count * 8 >= frame.width else { return false }
                 let still = Self.staticColumns(columns, rows: stripRows, frame: frame, previous: previousFrame)
                 return still.reduce(0) { $0 + $1.count } * 10 >= columns.count * 9
             })
@@ -361,16 +368,24 @@ final class ScrollStitcher {
     /// that looked still for one pair). Every pair votes on every column, so
     /// an early misjudgement (a consent panel before it was recognised as
     /// pinned) fades instead of filling that strip for the rest of the capture.
-    /// A column judged fixed for several pairs in a row and missed by this one
-    /// is returned as `carried`: Wikipedia's sticky contents moves its
-    /// highlight to the section scrolling in, and that one pair sees the
-    /// sidebar as part of the scrolling content, stitching a slice of it in.
+    /// Columns the vote is unsure of are returned as `carried`, for the caller
+    /// to fill only if the strip stayed put across them: one judged fixed for
+    /// several pairs in a row and missed by this one (Wikipedia's sticky
+    /// contents moves its highlight to the section scrolling in, and that
+    /// pair sees it as scrolling content), or one that just turned fixed.
     private func sideFill(for match: ScrollFrameMatcher.Match, width: Int,
                           frameHeight: Int) -> (judged: [Range<Int>], carried: [Range<Int>]) {
         if sideScores.count != width { sideScores = Array(repeating: 0, count: width) }
         var fixedNow = [Bool](repeating: false, count: width)
         for range in match.fixedSides {
             for x in max(0, range.lowerBound)..<min(width, range.upperBound) { fixedNow[x] = true }
+        }
+        // A side that moved but not with the scroll is filled whatever its
+        // history: stitched, its rows repeat (Stack Overflow's right column
+        // and x.com's coming to a stop at their ends).
+        var diverging = [Bool](repeating: false, count: width)
+        for range in match.divergentSides {
+            for x in max(0, range.lowerBound)..<min(width, range.upperBound) { diverging[x] = true }
         }
         // Under a tall pinned panel, sidebars are judged on only the top part
         // of the frame, too little to tell a sidebar from content (Stack
@@ -381,8 +396,12 @@ final class ScrollStitcher {
         for x in 0..<width {
             let previous = sideScores[x]
             sideScores[x] = 0.5 * previous + (fixedNow[x] ? 0.5 : -0.5)
-            fill[x] = fixedNow[x] && (strict ? previous > 0.2 : previous > -0.6)
-            carry[x] = !fixedNow[x] && !strict && previous > 0.7
+            fill[x] = fixedNow[x] && (diverging[x] || (strict ? previous > 0.2 : previous > -0.6))
+            // Long a sidebar but missed by this pair, or judged fixed now
+            // against a history of scrolling (x.com's right column the moment
+            // it sticks, its footer at the bottom of the frame): filled only
+            // where the strip proves it stayed put.
+            carry[x] = fixedNow[x] ? !fill[x] : (!strict && previous > 0.7)
         }
         func runs(_ flags: [Bool]) -> [Range<Int>] {
             var ranges: [Range<Int>] = []
@@ -415,17 +434,27 @@ final class ScrollStitcher {
     /// disappears just costs a little of each strip.
     private func pinnedGrowth(_ match: ScrollFrameMatcher.Match) -> Int {
         guard handlesPinnedContent else { return 0 }
-        let seen = match.staticBottomRows
+        let seen = Self.heldRows(match.staticBottomRows, height: reference.height)
         defer { pendingBottomRows = seen > bottomRows ? seen : 0 }
         guard seen > bottomRows, pendingBottomRows > bottomRows else { return 0 }
         return min(seen, pendingBottomRows)
+    }
+
+    /// Rows to hold back for a pinned bottom of `staticRows`: a little more,
+    /// for the soft shadow above a floating panel. It changes with the
+    /// content behind it, so it isn't detected as pinned, and left in, it
+    /// cuts across the first frame and lies faintly over every strip (Stack
+    /// Overflow's and Booking.com's cookie panels).
+    static func heldRows(_ staticRows: Int, height: Int) -> Int {
+        guard staticRows > 0 else { return 0 }
+        return min(height * 3 / 4, staticRows + max(4, height / 60))
     }
 
     private func decideGeometry(_ match: ScrollFrameMatcher.Match) {
         geometryDecided = true
         guard handlesPinnedContent else { return }
         let first = image
-        bottomRows = match.staticBottomRows
+        bottomRows = Self.heldRows(match.staticBottomRows, height: first.height)
         // The first frame's own banner is replaced by the final frame's at the end.
         if bottomRows > 0,
            let trimmed = first.cropping(to: CGRect(x: 0, y: 0, width: first.width, height: first.height - bottomRows)) {
