@@ -104,6 +104,7 @@ final class ScrollStitcher {
         guard abs(match.shift) >= max(6, frame.height / 24) else { return .pending }
 
         lastShift = match.shift
+        let previousFrame = reference
         reference = frame
         self.referenceSamples = samples
         if match.shift < 0 {
@@ -121,9 +122,16 @@ final class ScrollStitcher {
             if grown > 0 { rowsToRevisit += grown - bottomRows; bottomRows = grown }
             return .pending
         }
-        let sides = handlesPinnedContent ? sideFill(for: match, width: frame.width).compactMap { columns in
-            Self.backgroundColor(of: frame, columns: columns, rows: 0..<(frame.height - bottomRows)).map { (columns, $0) }
-        } : []
+        let stripRows = (frame.height - bottomRows - newRows)..<(frame.height - bottomRows)
+        let sides = handlesPinnedContent ? sideFill(for: match, width: frame.width, frameHeight: frame.height)
+            // Under a tall pinned panel sides are misjudged more easily; there,
+            // fill only what stayed put. Elsewhere a side moving at its own
+            // rate (x.com's right column catching up) must still be filled.
+            .flatMap { bottomRows * 2 > frame.height
+                ? Self.staticColumns($0, rows: stripRows, frame: frame, previous: previousFrame) : [$0] }
+            .compactMap { columns in
+                Self.backgroundColor(of: frame, columns: columns, rows: 0..<(frame.height - bottomRows)).map { (columns, $0) }
+            } : []
         // After this append, the frame's row (height - bottomRows) is the bottom
         // of the image, which places every visible row of the frame. Pasting
         // needs that exact mapping, so skip it while revisiting.
@@ -222,17 +230,22 @@ final class ScrollStitcher {
     /// that looked still for one pair). Every pair votes on every column, so
     /// an early misjudgement (a consent panel before it was recognised as
     /// pinned) fades instead of filling that strip for the rest of the capture.
-    private func sideFill(for match: ScrollFrameMatcher.Match, width: Int) -> [Range<Int>] {
+    private func sideFill(for match: ScrollFrameMatcher.Match, width: Int, frameHeight: Int) -> [Range<Int>] {
         if sideScores.count != width { sideScores = Array(repeating: 0, count: width) }
         var fixedNow = [Bool](repeating: false, count: width)
         for range in match.fixedSides {
             for x in max(0, range.lowerBound)..<min(width, range.upperBound) { fixedNow[x] = true }
         }
+        // Under a tall pinned panel, sidebars are judged on only the top part
+        // of the frame, too little to tell a sidebar from content (Stack
+        // Overflow: the left edge of a code block). Then a column must be
+        // judged fixed twice in a row before it is filled.
+        let strict = bottomRows * 2 > frameHeight
         var fill = [Bool](repeating: false, count: width)
         for x in 0..<width {
             let previous = sideScores[x]
             sideScores[x] = 0.5 * previous + (fixedNow[x] ? 0.5 : -0.5)
-            fill[x] = fixedNow[x] && previous > -0.6
+            fill[x] = fixedNow[x] && (strict ? previous > 0.2 : previous > -0.6)
         }
         var ranges: [Range<Int>] = []
         var start: Int?
@@ -279,6 +292,44 @@ final class ScrollStitcher {
             image = trimmed
             firstFrameRows = trimmed.height
         }
+    }
+
+    /// The parts of `columns` that stayed put over `rows` between `previous`
+    /// and `frame`. Newly revealed rows can't be compared with where the scroll
+    /// came from (they weren't on screen), but in place a real sidebar is
+    /// unchanged, while content that scrolled in (the start of a code line
+    /// next to a misjudged side) differs. Only those columns are filled.
+    static func staticColumns(_ columns: Range<Int>, rows: Range<Int>, frame: CGImage, previous: CGImage) -> [Range<Int>] {
+        guard frame.width == previous.width, frame.height == previous.height, !rows.isEmpty, !columns.isEmpty,
+              let a = ScrollFrameAnalyzer.frame(for: frame), let b = ScrollFrameAnalyzer.frame(for: previous)
+        else { return [columns] }
+        func luma(_ f: ScrollFrameAnalyzer.Frame, _ x: Int, _ y: Int) -> Int? {
+            guard let o = f.offset(x: x, y: y) else { return nil }
+            return (Int(f.bytes[o + f.redOffset]) * 299 + Int(f.bytes[o + f.greenOffset]) * 587
+                    + Int(f.bytes[o + f.blueOffset]) * 114) / 1000
+        }
+        let step = 2, rowStep = max(1, rows.count / 48)
+        var still: [Bool] = []
+        for x in Swift.stride(from: columns.lowerBound, to: columns.upperBound, by: step) {
+            var changed = 0, samples = 0
+            for y in Swift.stride(from: rows.lowerBound, to: rows.upperBound, by: rowStep) {
+                guard let p = luma(a, x, y), let q = luma(b, x, y) else { continue }
+                samples += 1
+                if abs(p - q) > 8 { changed += 1 }
+            }
+            still.append(samples == 0 || changed * 20 <= samples)   // at most 5% of samples differ
+        }
+        var ranges: [Range<Int>] = []
+        var start: Int?
+        for (index, isStill) in (still + [false]).enumerated() {
+            let x = columns.lowerBound + index * step
+            if isStill, start == nil { start = x }
+            if !isStill, let first = start {
+                ranges.append(first..<min(columns.upperBound, x))
+                start = nil
+            }
+        }
+        return ranges.filter { $0.count >= 2 }
     }
 
     /// The most common colour in `columns` of `image`: a sidebar's background.
