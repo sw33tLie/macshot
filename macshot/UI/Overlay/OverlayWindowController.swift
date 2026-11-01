@@ -490,8 +490,7 @@ class OverlayWindowController {
     private func playCopySound() {
         let soundEnabled = UserDefaults.standard.object(forKey: "playCopySound") as? Bool ?? true
         guard soundEnabled else { return }
-        AppDelegate.captureSound?.stop()
-        AppDelegate.captureSound?.play()
+        CaptureSound.shared.play()
     }
 
     private func captureRegion() -> NSImage? {

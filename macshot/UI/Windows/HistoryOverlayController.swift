@@ -167,8 +167,7 @@ final class HistoryOverlayController: NSObject, QLPreviewPanelDataSource, QLPrev
         ScreenshotHistory.shared.copyEntry(at: index)
         let soundEnabled = UserDefaults.standard.object(forKey: "playCopySound") as? Bool ?? true
         if soundEnabled {
-            AppDelegate.captureSound?.stop()
-            AppDelegate.captureSound?.play()
+            CaptureSound.shared.play()
         }
         dismiss()
     }

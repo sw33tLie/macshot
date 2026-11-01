@@ -254,12 +254,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     /// keeps Macs awake indefinitely.
     private var appNapAssertion: NSObjectProtocol?
 
-    /// Shared capture sound — loaded once, reused everywhere.
-    static let captureSound: NSSound? = {
-        let path = "/System/Library/Components/CoreAudio.component/Contents/SharedSupport/SystemSounds/system/Screen Capture.aif"
-        return NSSound(contentsOfFile: path, byReference: true) ?? NSSound(named: "Tink")
-    }()
-
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         // Prevent multiple instances — if already running, activate the existing one and quit
         let bundleID = Bundle.main.bundleIdentifier ?? "com.sw33tlie.macshot.macshot"
@@ -333,13 +327,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             setMenuBarIconVisible(false)
         }
         registerHotkey()
-        // Pre-warm CoreAudio so the first capture sound doesn't stall ~1s.
-        if let sound = Self.captureSound {
-            sound.volume = 0
-            sound.play()
-            sound.stop()
-            sound.volume = 1
-        }
+        // Load the capture sound ahead of the first capture, off the main thread.
+        CaptureSound.shared.warmUp()
 
         // Listen for duplicate-launch notification to restore icon
         DistributedNotificationCenter.default().addObserver(
@@ -2121,8 +2110,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     private func playCopySound() {
         let soundEnabled = UserDefaults.standard.object(forKey: "playCopySound") as? Bool ?? true
         guard soundEnabled else { return }
-        Self.captureSound?.stop()
-        Self.captureSound?.play()
+        CaptureSound.shared.play()
     }
 
     func runOCR(on image: NSImage) {
@@ -3635,8 +3623,7 @@ extension AppDelegate: NSMenuDelegate {
 
         let soundEnabled = UserDefaults.standard.object(forKey: "playCopySound") as? Bool ?? true
         if soundEnabled {
-            Self.captureSound?.stop()
-            Self.captureSound?.play()
+            CaptureSound.shared.play()
         }
     }
 
