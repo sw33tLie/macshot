@@ -228,6 +228,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     private var selectionBorderOverlay: SelectionBorderOverlay?
     private var menuBarIconWasHidden: Bool = false  // restore after recording if user had it hidden
     private var scrollCaptureController: ScrollCaptureController?
+    /// Set when the session is stopped with ⌘C: copy the result whatever the mode.
+    private var scrollCaptureCopyRequested = false
     /// The overlay controller whose selection is being scroll-captured.
     private var scrollCaptureOverlayController: OverlayWindowController?
     private var scrollCapturePreviewPanel: ScrollCapturePreviewPanel?
@@ -3306,6 +3308,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
 
         scrollCaptureOverlayController = controller
 
+        scrollCaptureCopyRequested = false
         let scc = ScrollCaptureController(captureRect: rect, screen: screen)
         scc.excludedWindowIDs = overlayControllers.map { $0.windowNumber }
         scrollCaptureController = scc
@@ -3348,6 +3351,12 @@ extension AppDelegate: OverlayWindowControllerDelegate {
     func overlayDidRequestStopScrollCapture(_ controller: OverlayWindowController) {
         scrollCaptureController?.stopSession()
         // onSessionDone fires asynchronously via handleScrollCaptureCompleted
+    }
+
+    func overlayDidRequestCopyScrollCapture(_ controller: OverlayWindowController) {
+        guard scrollCaptureController != nil else { return }
+        scrollCaptureCopyRequested = true
+        scrollCaptureController?.stopSession()
     }
 
     func overlayDidRequestCancelScrollCapture(_ controller: OverlayWindowController) {
@@ -3535,18 +3544,20 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         scrollCaptureOverlayController?.setScrollCaptureState(isActive: false)
         scrollCaptureOverlayController = nil
         scrollCaptureController = nil
+        let copyRequested = scrollCaptureCopyRequested
+        scrollCaptureCopyRequested = false
 
         dismissOverlays()
 
         guard let image = finalImage else { return }
 
         let entryID = ScreenshotHistory.shared.add(image: image)
-        let mode = QuickCaptureMode.current
-        if mode.shouldCopyImage {
+        let delivery = QuickCaptureMode.current.scrollCaptureDelivery(copyRequested: copyRequested)
+        if delivery.copyImage {
             ImageEncoder.copyToClipboard(image)
         }
-        if mode.shouldSave {
-            saveImageToConfiguredFolder(image, copyPathToClipboard: mode.copyPathOverride)
+        if delivery.save {
+            saveImageToConfiguredFolder(image, copyPathToClipboard: delivery.copyPath)
         }
         playCopySound()
         showFloatingThumbnail(image: image)

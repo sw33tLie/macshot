@@ -38,6 +38,9 @@ protocol OverlayViewDelegate: AnyObject {
 
 extension OverlayViewDelegate {
     func overlayViewDidRequestRestoreLastSelection() {}
+    /// ⌘C during scroll capture: stop and put the stitched image on the
+    /// clipboard whatever the capture mode. Plain Stop by default.
+    func overlayViewDidRequestCopyScrollCapture() { overlayViewDidRequestStopScrollCapture() }
 }
 
 /// An entry in the undo/redo history.
@@ -866,20 +869,27 @@ class OverlayView: NSView {
             }
         }
 
-        // Escape key monitor — global catches when another app has focus; local when macshot has focus.
-        let handleScrollKey: (NSEvent) -> Void = { [weak self] event in
-            guard let self = self, self.isScrollCapturing else { return }
-            if event.keyCode == 53 {  // Escape
-                self.overlayDelegate?.overlayViewDidRequestCancelScrollCapture()
+        // Key monitors. Global: another app has focus (the page being
+        // scrolled), so only Escape, which never means anything else there.
+        // Local: macshot has focus; Return and ⌘C finish the capture and are
+        // consumed, so ⌘C can't fall through to the overlay's own Copy, which
+        // would copy only the first selected frame and leave the HUD up (#437).
+        let handleScrollKey: (NSEvent, Bool) -> Bool = { [weak self] event, local in
+            guard let self = self, self.isScrollCapturing,
+                  let action = Self.scrollCaptureKeyAction(for: event),
+                  local || action == .cancel else { return false }
+            switch action {
+            case .cancel: self.overlayDelegate?.overlayViewDidRequestCancelScrollCapture()
+            case .stop: self.overlayDelegate?.overlayViewDidRequestStopScrollCapture()
+            case .stopAndCopy: self.overlayDelegate?.overlayViewDidRequestCopyScrollCapture()
             }
+            return true
         }
         scrollCaptureKeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { event in
-            handleScrollKey(event)
+            _ = handleScrollKey(event, false)
         }
         scrollCaptureLocalKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            handleScrollKey(event)
-            if event.keyCode == 53 { return nil }  // consume
-            return event
+            handleScrollKey(event, true) ? nil : event
         }
 
         // Show real NSPanel-based HUD (receives clicks independently of overlay window)
@@ -902,6 +912,20 @@ class OverlayView: NSView {
         scrollCaptureHUDPanel = panel
 
         needsDisplay = true
+    }
+
+    enum ScrollCaptureKeyAction: Equatable { case cancel, stop, stopAndCopy }
+
+    /// What a key does while a scroll capture runs: Escape cancels, Return or
+    /// Enter stops like the Stop button, ⌘C stops and copies the stitched
+    /// image. Everything else passes through.
+    static func scrollCaptureKeyAction(for event: NSEvent) -> ScrollCaptureKeyAction? {
+        switch event.keyCode {
+        case 53: return .cancel
+        case 36, 76: return KeyboardShortcutMatcher.modifiers(in: event).isEmpty ? .stop : nil
+        default:
+            return KeyboardShortcutMatcher.matches(event, character: "c", modifiers: .command) ? .stopAndCopy : nil
+        }
     }
 
     func stopScrollCaptureMode() {
@@ -9193,6 +9217,12 @@ class OverlayView: NSView {
 
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
         if isRecognizingText { return true }
+        // The scroll-capture key monitor normally consumes these first; never
+        // let ⌘C reach the overlay's own Copy mid-capture (#437).
+        if isScrollCapturing, Self.scrollCaptureKeyAction(for: event) == .stopAndCopy {
+            overlayDelegate?.overlayViewDidRequestCopyScrollCapture()
+            return true
+        }
         // Text editing: forward standard commands to the active text view.
         if let tv = textEditView {
             if let action = EditorCommandShortcutManager.action(for: event) {

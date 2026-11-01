@@ -69,6 +69,15 @@ enum QuickCaptureMode: Int, CaseIterable {
     var copyPathOverride: Bool? {
         self == .saveAndCopyPath ? true : nil
     }
+
+    /// How a finished scroll capture is delivered. ⌘C asks for the image on
+    /// the clipboard whatever the mode; a save still happens if the mode saves,
+    /// but without putting the path over the copied image.
+    func scrollCaptureDelivery(copyRequested: Bool) -> (copyImage: Bool, save: Bool, copyPath: Bool?) {
+        copyRequested
+            ? (true, shouldSave, shouldSave ? false : nil)
+            : (shouldCopyImage, shouldSave, copyPathOverride)
+    }
 }
 
 enum ImageSaveService {

@@ -88,6 +88,9 @@ protocol OverlayWindowControllerDelegate: AnyObject {
 
 extension OverlayWindowControllerDelegate {
     func overlayDidRequestRestoreLastSelection(_ controller: OverlayWindowController) {}
+    func overlayDidRequestCopyScrollCapture(_ controller: OverlayWindowController) {
+        overlayDidRequestStopScrollCapture(controller)
+    }
 }
 
 /// Manages one fullscreen overlay per screen.
@@ -800,6 +803,10 @@ extension OverlayWindowController: OverlayViewDelegate {
 
     func overlayViewDidRequestStopScrollCapture() {
         overlayDelegate?.overlayDidRequestStopScrollCapture(self)
+    }
+
+    func overlayViewDidRequestCopyScrollCapture() {
+        overlayDelegate?.overlayDidRequestCopyScrollCapture(self)
     }
 
     func overlayViewDidRequestCancelScrollCapture() {
