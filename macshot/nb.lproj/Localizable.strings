@@ -523,6 +523,7 @@
 "Settings..." = "Innstillinger...";
 "macshot Settings" = "macshot-innstillinger";
 "Also open in Editor" = "\U00C5pne ogs\U00E5 i redigering";
+"Open in Editor right after selection" = "\U00C5pne i redigering rett etter markering";
 "Close editor after copying" = "Lukk redigeringsvinduet etter kopiering";
 "Hide controls" = "Skjul kontroller";
 "Hide recording controls" = "Skjul opptakskontroller";

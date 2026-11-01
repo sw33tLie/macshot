@@ -516,6 +516,7 @@
 "Settings..." = "Configuració...";
 "macshot Settings" = "Configuració de macshot";
 "Also open in Editor" = "Obrir també a l'editor";
+"Open in Editor right after selection" = "Obrir a l'editor just després de seleccionar";
 "Close editor after copying" = "Tanca l'editor després de copiar";
 "Hide controls" = "Amagar controls";
 "Hide recording controls" = "Amagar controls de gravació";

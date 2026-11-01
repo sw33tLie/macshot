@@ -524,6 +524,7 @@
 "Settings..." = "Postavke...";
 "macshot Settings" = "macshot Postavke";
 "Also open in Editor" = "Otvori i u uređivaču";
+"Open in Editor right after selection" = "Otvori u uređivaču odmah nakon odabira";
 "Close editor after copying" = "Zatvori uređivač nakon kopiranja";
 "Hide controls" = "Sakrij kontrole";
 "Hide recording controls" = "Sakrij kontrole snimanja";

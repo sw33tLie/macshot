@@ -524,6 +524,7 @@
 "Settings..." = "Ρυθμίσεις...";
 "macshot Settings" = "Ρυθμίσεις macshot";
 "Also open in Editor" = "Άνοιγμα και σε επεξεργαστή";
+"Open in Editor right after selection" = "Άνοιγμα σε επεξεργαστή αμέσως μετά την επιλογή";
 "Close editor after copying" = "Κλείσιμο του επεξεργαστή μετά την αντιγραφή";
 "Hide controls" = "Απόκρυψη χειριστηρίων";
 "Hide recording controls" = "Απόκρυψη χειριστηρίων εγγραφής";

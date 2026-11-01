@@ -523,6 +523,7 @@
 "Settings..." = "सेटिंग्स...";
 "macshot Settings" = "macshot सेटिंग्स";
 "Also open in Editor" = "संपादक में भी खोलें";
+"Open in Editor right after selection" = "चयन के तुरंत बाद संपादक में खोलें";
 "Close editor after copying" = "कॉपी करने के बाद संपादक बंद करें";
 "Hide controls" = "नियंत्रण छिपाएँ";
 "Hide recording controls" = "रिकॉर्डिंग नियंत्रण छिपाएँ";

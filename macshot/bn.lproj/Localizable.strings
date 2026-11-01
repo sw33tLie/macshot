@@ -524,6 +524,7 @@
 "Settings..." = "সেটিংস...";
 "macshot Settings" = "macshot সেটিংস";
 "Also open in Editor" = "এডিটরেও খুলুন";
+"Open in Editor right after selection" = "নির্বাচনের পরপরই এডিটরে খুলুন";
 "Close editor after copying" = "কপি করার পরে এডিটর বন্ধ করুন";
 "Hide controls" = "নিয়ন্ত্রণ লুকান";
 "Hide recording controls" = "রেকর্ডিং নিয়ন্ত্রণ লুকান";

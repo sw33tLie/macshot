@@ -516,6 +516,7 @@
 "Settings..." = "Ayarlar...";
 "macshot Settings" = "macshot Ayarları";
 "Also open in Editor" = "Düzenleyicide de aç";
+"Open in Editor right after selection" = "Seçimden hemen sonra düzenleyicide aç";
 "Close editor after copying" = "Kopyaladıktan sonra düzenleyiciyi kapat";
 "Hide controls" = "Kontrolleri gizle";
 "Hide recording controls" = "Kayıt kontrollerini gizle";

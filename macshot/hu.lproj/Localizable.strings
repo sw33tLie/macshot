@@ -525,6 +525,7 @@
 "Settings..." = "Beállítások...";
 "macshot Settings" = "macshot beállítások";
 "Also open in Editor" = "Megnyitás a szerkesztőben is";
+"Open in Editor right after selection" = "Megnyitás a szerkesztőben közvetlenül a kijelölés után";
 "Close editor after copying" = "Szerkesztő bezárása másolás után";
 "Hide controls" = "Vezérlők elrejtése";
 "Hide recording controls" = "Felvételi vezérlők elrejtése";

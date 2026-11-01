@@ -524,6 +524,7 @@
 "Settings..." = "Pengaturan...";
 "macshot Settings" = "Pengaturan macshot";
 "Also open in Editor" = "Buka juga di Editor";
+"Open in Editor right after selection" = "Buka di Editor langsung setelah memilih";
 "Close editor after copying" = "Tutup editor setelah menyalin";
 "Hide controls" = "Sembunyikan kontrol";
 "Hide recording controls" = "Sembunyikan kontrol rekaman";

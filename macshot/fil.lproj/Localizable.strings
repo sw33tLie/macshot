@@ -522,6 +522,7 @@
 "Settings..." = "Mga Setting...";
 "macshot Settings" = "Mga Setting ng macshot";
 "Also open in Editor" = "Buksan din sa Editor";
+"Open in Editor right after selection" = "Buksan sa Editor agad pagkatapos pumili";
 "Close editor after copying" = "Isara ang editor pagkatapos kumopya";
 "Hide controls" = "Itago ang mga kontrol";
 "Hide recording controls" = "Itago ang mga kontrol sa pag-record";

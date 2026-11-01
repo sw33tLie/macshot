@@ -516,6 +516,7 @@
 "Settings" = "Setări";
 "macshot Settings" = "Setări macshot";
 "Also open in Editor" = "Deschide și în editor";
+"Open in Editor right after selection" = "Deschide în editor imediat după selecție";
 "Close editor after copying" = "Închide editorul după copiere";
 "Hide controls" = "Ascunde controalele";
 "Hide recording controls" = "Ascunde controalele de înregistrare";

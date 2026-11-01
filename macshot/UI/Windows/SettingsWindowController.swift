@@ -103,6 +103,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var themePresetPopup: NSPopUpButton!
     private var quickModePopup: NSPopUpButton!
     private var quickCaptureOpenEditorCheckbox: NSButton!
+    private var openEditorAfterSelectionCheckbox: NSButton!
     private var closeEditorAfterCopyCheckbox: NSButton!
     private var imageFormatPopup: NSPopUpButton!
     private var clipboardFormatCheckbox: NSButton!
@@ -782,6 +783,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.setCustomSpacing(12, after: stack.arrangedSubviews.last!)
 
         // Checkboxes
+        openEditorAfterSelectionCheckbox = NSButton(checkboxWithTitle: L("Open in Editor right after selection"), target: self, action: #selector(openEditorAfterSelectionChanged(_:)))
         copySoundCheckbox = NSButton(checkboxWithTitle: L("Play sound on capture"), target: self, action: #selector(copySoundChanged(_:)))
         rememberToolCheckbox = NSButton(checkboxWithTitle: L("Remember last selected tool"), target: self, action: #selector(rememberToolChanged(_:)))
         thumbnailCheckbox = NSButton(checkboxWithTitle: L("Show floating thumbnail after capture"), target: self, action: #selector(thumbnailChanged(_:)))
@@ -809,7 +811,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         filenameTemplatePreview.textColor = .secondaryLabelColor
         filenameTemplatePreview.lineBreakMode = .byTruncatingMiddle
 
-        for cb in [copySoundCheckbox!, rememberToolCheckbox!, thumbnailCheckbox!] {
+        for cb in [openEditorAfterSelectionCheckbox!, copySoundCheckbox!, rememberToolCheckbox!, thumbnailCheckbox!] {
             stack.addArrangedSubview(indented(cb))
             stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
         }
@@ -2731,6 +2733,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         quickModePopup.select(
             quickModePopup.itemArray.first { $0.representedObject as? Int == quickMode.rawValue })
         quickCaptureOpenEditorCheckbox.state = UserDefaults.standard.bool(forKey: "quickCaptureOpenEditor") ? .on : .off
+        openEditorAfterSelectionCheckbox.state = UserDefaults.standard.bool(forKey: "openEditorAfterSelection") ? .on : .off
         closeEditorAfterCopyCheckbox.state = UserDefaults.standard.bool(forKey: "closeEditorAfterCopy") ? .on : .off
 
         selectImageFormat(ImageEncoder.format)
@@ -2891,6 +2894,9 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     }
     @objc private func quickCaptureOpenEditorChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "quickCaptureOpenEditor")
+    }
+    @objc private func openEditorAfterSelectionChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: "openEditorAfterSelection")
     }
     @objc private func closeEditorAfterCopyChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "closeEditorAfterCopy")

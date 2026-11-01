@@ -515,6 +515,7 @@
 "Settings..." = "تنظیمات...";
 "macshot Settings" = "تنظیمات macshot";
 "Also open in Editor" = "باز کردن در ویرایشگر نیز";
+"Open in Editor right after selection" = "باز کردن در ویرایشگر بلافاصله پس از انتخاب";
 "Close editor after copying" = "بستن ویرایشگر پس از کپی";
 "Hide controls" = "پنهان کردن کنترل‌ها";
 "Hide recording controls" = "پنهان کردن کنترل‌های ضبط ویدیو";

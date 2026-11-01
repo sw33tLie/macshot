@@ -512,6 +512,7 @@
 "Settings..." = "设置...";
 "macshot Settings" = "macshot 设置";
 "Also open in Editor" = "同时在编辑器中打开";
+"Open in Editor right after selection" = "选择后立即在编辑器中打开";
 "Close editor after copying" = "复制后关闭编辑器";
 "Hide controls" = "隐藏控制";
 "Hide recording controls" = "隐藏录制控制";

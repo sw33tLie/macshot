@@ -523,6 +523,7 @@
 "Settings..." = "Nastavení...";
 "macshot Settings" = "Nastavení macshot";
 "Also open in Editor" = "Otevřít také v editoru";
+"Open in Editor right after selection" = "Otevřít v editoru hned po výběru";
 "Close editor after copying" = "Zavřít editor po zkopírování";
 "Hide controls" = "Skrýt ovládací prvky";
 "Hide recording controls" = "Skrýt ovládací prvky nahrávání";

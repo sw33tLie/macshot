@@ -523,6 +523,7 @@
 "Settings..." = "Настройки...";
 "macshot Settings" = "Настройки на macshot";
 "Also open in Editor" = "Отвори и в редактора";
+"Open in Editor right after selection" = "Отвори в редактора веднага след избора";
 "Close editor after copying" = "Затвори редактора след копиране";
 "Hide controls" = "Скрий контролите";
 "Hide recording controls" = "Скрий контролите за запис";

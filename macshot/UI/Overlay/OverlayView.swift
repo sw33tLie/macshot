@@ -6805,11 +6805,14 @@ class OverlayView: NSView {
     }
 
     private func finishSelection() {
+        let opensEditor = UserDefaults.standard.bool(forKey: "openEditorAfterSelection")
+            && !autoEnterRecordingMode && !autoOCRMode && !autoTranslateOverlayMode
+            && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode
         if selectionRect.width > 5 || selectionRect.height > 5 {
             // Real drag — use drawn rect as-is
             state = .selected
             applyPreSelectionLockAfterSelection()
-            if !hasPendingSelectionAction { showToolbars = true }
+            if !hasPendingSelectionAction && !opensEditor { showToolbars = true }
             overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
         } else if snapMode != .off, let snapRect = hoveredSnapRect, !snapRect.isEmpty {
             // Click (no drag) with snap on — select the hovered target.
@@ -6829,13 +6832,13 @@ class OverlayView: NSView {
                 }
             }
             state = .selected
-            if !hasPendingSelectionAction { showToolbars = true }
+            if !hasPendingSelectionAction && !opensEditor { showToolbars = true }
             overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
         } else {
             // Click (no drag), snap off — expand to full screen
             selectionRect = bounds
             state = .selected
-            if !hasPendingSelectionAction { showToolbars = true }
+            if !hasPendingSelectionAction && !opensEditor { showToolbars = true }
             overlayDelegate?.overlayViewDidFinishSelection(selectionRect)
         }
         hoveredSnapRect = nil
@@ -6845,6 +6848,9 @@ class OverlayView: NSView {
             updateCursorForPoint(point)
         }
         runPendingSelectionActions()
+        if opensEditor {
+            overlayDelegate?.overlayViewDidRequestDetach()
+        }
         needsDisplay = true
     }
 

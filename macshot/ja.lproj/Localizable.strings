@@ -513,6 +513,7 @@
 "Settings..." = "設定...";
 "macshot Settings" = "macshot 設定";
 "Also open in Editor" = "エディタでも開く";
+"Open in Editor right after selection" = "選択直後にエディタで開く";
 "Close editor after copying" = "コピー後にエディタを閉じる";
 "Hide controls" = "コントロールを隠す";
 "Hide recording controls" = "録画コントロールを隠す";
