@@ -64,11 +64,19 @@ final class ScrollStitcher {
     /// scrolls away) is put back as first seen once they are.
     private let firstFrame: CGImage
     private var pastedFirstFrameColumns: [Range<Int>] = []
+    /// Where the mouse pointer was appended with a strip (image coordinates).
+    /// The page scrolls out from under the pointer, so a later frame shows
+    /// that content uncovered and it is copied over the pointer from there.
+    private var pointerHoles: [CGRect] = []
+    private var firstFramePointerChecked = false
     private var finished = false
 
     /// Rows scrolled back up that must come down again before anything new.
     private var rowsToRevisit = 0
     private var lastShift = 0
+    /// Frames compared with the current reference so far: the expected shift
+    /// grows with them while small moves accumulate or frames fail to match.
+    private var framesSinceReference = 0
     private var consecutiveFailures = 0
     /// A reference that can't be matched for this many frames was outrun;
     /// start again from the current frame (leaving a gap).
@@ -97,7 +105,9 @@ final class ScrollStitcher {
             self.referenceSamples = ScrollFrameMatcher.samples(of: frame)
             return .noMatch
         }
-        guard let match = ScrollFrameMatcher.match(previous: referenceSamples, current: samples, hint: lastShift, pinnedBottom: bottomRows) else {
+        framesSinceReference += 1
+        let hint = lastShift > 0 ? lastShift * min(framesSinceReference, Self.reanchorAfterFailures) : lastShift
+        guard let match = ScrollFrameMatcher.match(previous: referenceSamples, current: samples, hint: hint, pinnedBottom: bottomRows) else {
             // Keep the reference: a transient mismatch (an animation, a blank
             // stretch) usually resolves on a later frame.
             consecutiveFailures += 1
@@ -105,6 +115,7 @@ final class ScrollStitcher {
                 consecutiveFailures = 0
                 reference = frame
                 self.referenceSamples = samples
+                framesSinceReference = 0
             }
             return .noMatch
         }
@@ -114,10 +125,12 @@ final class ScrollStitcher {
         // and one exact large shift beats many small ones.
         guard abs(match.shift) >= max(6, frame.height / 24) else { return .pending }
 
-        lastShift = match.shift
+        lastShift = match.shift / max(1, framesSinceReference)
+        if match.shift > 0, lastShift == 0 { lastShift = 1 }
         let previousFrame = reference
         reference = frame
         self.referenceSamples = samples
+        framesSinceReference = 0
         if match.shift < 0 {
             rowsToRevisit += -match.shift
             return .pending
@@ -158,7 +171,7 @@ final class ScrollStitcher {
         // needs that exact mapping, so skip it while revisiting.
         let frameBottom = frame.height - bottomRows
         let frameTop = image.height + newRows - frameBottom
-        var pastes: [CGRect] = []
+        var pastes: [CGRect] = [], patches: [CGRect] = []
         if revisited == 0 {
             // A change inside a sidebar that has stayed put (Wikipedia's
             // contents moving its highlight) is not a video in the page: a
@@ -192,7 +205,49 @@ final class ScrollStitcher {
                 return inFrame
             }
         }
-        append(strip, sides: sides, pastes: pastes, from: frame, frameBottom: frameBottom,
+        if revisited == 0 {
+            // Only over content that scrolls: a patch copies the frame at the
+            // content's new position, which for a sidebar is something else.
+            func recordHole(_ hit: CGRect, imageTop: Int) {
+                guard !hit.isNull, hit.height >= 1 else { return }
+                let band = match.bandPixels
+                let low = max(Int(hit.minX), band.lowerBound), high = min(Int(hit.maxX.rounded(.up)), band.upperBound)
+                guard low < high else { return }
+                var segments = [low..<high]
+                for side in sides.map(\.0) + match.fixedSides {
+                    segments = segments.flatMap { segment -> [Range<Int>] in
+                        guard segment.overlaps(side) else { return [segment] }
+                        return [segment.lowerBound..<max(segment.lowerBound, side.lowerBound),
+                                min(segment.upperBound, side.upperBound)..<segment.upperBound].filter { !$0.isEmpty }
+                    }
+                }
+                for segment in segments {
+                    pointerHoles.append(CGRect(x: CGFloat(segment.lowerBound), y: hit.minY + CGFloat(imageTop),
+                                               width: CGFloat(segment.count), height: hit.height))
+                }
+            }
+            // The first frame shows the pointer too.
+            if !firstFramePointerChecked {
+                firstFramePointerChecked = true
+                if let pointer {
+                    recordHole(pointer.intersection(CGRect(x: 0, y: 0, width: frame.width, height: firstFrameRows)), imageTop: 0)
+                }
+            }
+            let usable = CGFloat(max(frameBottom / 8, match.followingRows.lowerBound))
+                ... CGFloat(min(frameBottom - newRows, match.followingRows.upperBound))
+            pointerHoles.removeAll { hole in
+                let inFrame = hole.offsetBy(dx: 0, dy: CGFloat(-frameTop))
+                guard usable.contains(inFrame.minY), usable.contains(inFrame.maxY),
+                      !(pointer.map { inFrame.intersects($0) } ?? false) else { return false }
+                patches.append(inFrame)
+                return true
+            }
+            if let pointer {
+                recordHole(pointer.intersection(CGRect(x: 0, y: frameBottom - newRows, width: frame.width, height: newRows)),
+                           imageTop: frameTop)
+            }
+        }
+        append(strip, sides: sides, pastes: pastes, patches: patches, pointer: pointer, from: frame, frameBottom: frameBottom,
                followingRows: max(frameBottom / 8, match.followingRows.lowerBound)..<min(frameBottom, match.followingRows.upperBound))
         appendedStrips += 1
         for paste in pastes where CGFloat(frameTop) + paste.minY < CGFloat(firstFrameRows) {
@@ -295,7 +350,7 @@ final class ScrollStitcher {
         if !finished, geometryDecided, bottomRows > 0,
            let strip = reference.cropping(to: CGRect(x: 0, y: reference.height - bottomRows,
                                                      width: reference.width, height: bottomRows)) {
-            append(strip, sides: [], pastes: [], from: reference, frameBottom: 0, followingRows: 0..<0)
+            append(strip, sides: [], pastes: [], patches: [], pointer: nil, from: reference, frameBottom: 0, followingRows: 0..<0)
         }
         finished = true
         return image
@@ -448,7 +503,8 @@ final class ScrollStitcher {
     /// content that already lines up); anything that can't be closed off that
     /// way (content moving at another rate) isn't pasted.
     private func append(_ strip: CGImage, sides: [(columns: Range<Int>, color: CGColor)],
-                        pastes: [CGRect], from frame: CGImage, frameBottom: Int, followingRows: Range<Int>) {
+                        pastes: [CGRect], patches: [CGRect], pointer: CGRect?,
+                        from frame: CGImage, frameBottom: Int, followingRows: Range<Int>) {
         let existing = image
         guard existing.width == strip.width else { return }
         let width = existing.width
@@ -539,8 +595,20 @@ final class ScrollStitcher {
                         || hasDetail(rows: bottom..<(bottom + 2 * band), columns: left..<right) else { return nil }
                 return CGRect(x: left, y: top, width: right - left, height: bottom - top)
             }
-            let accepted = pastes.compactMap { consistentRegion($0, following: followingRows) }
+            // Grown to the whole video, a region can reach the pointer; it is
+            // pasted from a later frame instead, once the page has moved on.
+            let grown = pastes.compactMap { consistentRegion($0, following: followingRows) }
+            let accepted = grown.filter { rect in !(pointer.map { rect.intersects($0) } ?? false) }
             for rect in accepted {
+                guard let piece = frame.cropping(to: rect) else { continue }
+                let top = frameTop + Int(rect.minY)
+                context.draw(piece, in: CGRect(x: rect.minX, y: CGFloat(totalHeight - top) - rect.height,
+                                               width: rect.width, height: rect.height))
+            }
+        }
+        // Exact copies of content the pointer covered when it was appended.
+        if frameTop >= 0 {
+            for rect in patches {
                 guard let piece = frame.cropping(to: rect) else { continue }
                 let top = frameTop + Int(rect.minY)
                 context.draw(piece, in: CGRect(x: rect.minX, y: CGFloat(totalHeight - top) - rect.height,

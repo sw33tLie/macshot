@@ -250,6 +250,75 @@ final class ScrollStitcherTests: XCTestCase {
     /// The mouse pointer sits still over the page while it scrolls, so it
     /// looks like a small changing region. Pasting it would stamp a pointer
     /// into the image again and again (seen on Twitch and x.com).
+    /// Booking.com: a cookie panel is held back, so each strip is taken from
+    /// just above it, where the pointer rests (turning into a hand over
+    /// links, so it isn't held back with the panel). The pointer is appended
+    /// with the strips and is in the first frame; each spot is covered with
+    /// the same content from a later frame that shows it uncovered. Only the
+    /// last strips, which no later frame shows clear of it, may keep it.
+    func testThePointerInTheAppendedRowsIsReplacedFromALaterFrame() {
+        let panel = 70
+        let pointer = CGRect(x: 230, y: height - panel - 30, width: 20, height: 26)
+        func box(_ context: CGContext) {
+            context.setFillColor(CGColor(gray: 0.15, alpha: 1))
+            context.fill(CGRect(x: 0, y: height - panel, width: width, height: panel))
+            context.setFillColor(CGColor(gray: 0.95, alpha: 1))
+            context.fill(CGRect(x: 22, y: height - panel + 14, width: 110, height: 9))
+            context.fill(CGRect(x: 22, y: height - panel + 34, width: 40, height: 14))
+        }
+        func arrow(_ context: CGContext, hand: Bool = false) {
+            context.setFillColor(CGColor(gray: 0, alpha: 1))
+            context.fill(hand ? pointer.insetBy(dx: 3, dy: 0) : pointer)
+            context.setFillColor(CGColor(gray: 1, alpha: 1))
+            context.fill(pointer.insetBy(dx: hand ? 6 : 4, dy: hand ? 8 : 5))
+        }
+        let path = [0, 40, 84, 126, 170, 212, 256, 300, 342, 386]
+        let stitcher = ScrollStitcher(firstFrame: image(height: height) { context in
+            self.drawPage(context, scroll: 0, height: self.height)
+            box(context)
+            arrow(context)
+        })
+        for (index, position) in path.enumerated().dropFirst() {
+            stitcher.add(image(height: height) { context in
+                self.drawPage(context, scroll: position, height: self.height)
+                box(context)
+                arrow(context, hand: index % 2 == 1)
+            }, pointer: pointer.insetBy(dx: -6, dy: -6))
+        }
+        let stitched = stitcher.finish()
+        let total = height + path.last!
+        XCTAssertEqual(stitched.height, total)
+        let expected = image(height: total) { self.drawPage($0, scroll: 0, height: total) }
+        // Down to the last two strips, the page is exact.
+        let lastStrips = path.last! - path[path.count - 3]
+        assertSameRows(stitched, expected, rows: 0..<(total - panel - lastStrips))
+    }
+
+    /// A pointer resting over a fixed sidebar, outside the scrolling band,
+    /// is no spot to patch from the content (and must not trip over the
+    /// empty column range).
+    func testAPointerOverAFixedSidebarIsLeftAlone() {
+        let feed = 90..<270
+        let pointer = CGRect(x: 30, y: height - 40, width: 20, height: 26)
+        let stitcher = ScrollStitcher(firstFrame: image(height: height) { context in
+            self.drawPage(context, scroll: 0, height: self.height, columns: feed)
+            self.drawPage(context, scroll: 0, height: self.height, columns: 0..<80)
+        })
+        for position in positions.dropFirst() {
+            stitcher.add(image(height: height) { context in
+                self.drawPage(context, scroll: position, height: self.height, columns: feed)
+                self.drawPage(context, scroll: 0, height: self.height, columns: 0..<80)
+                context.setFillColor(CGColor(gray: 0, alpha: 1))
+                context.fill(pointer)
+            }, pointer: pointer.insetBy(dx: -6, dy: -6))
+        }
+        let stitched = stitcher.finish()
+        let total = height + positions.last!
+        XCTAssertEqual(stitched.height, total)
+        let expected = image(height: total) { self.drawPage($0, scroll: 0, height: total, columns: feed) }
+        assertSameRows(stitched, expected, rows: 0..<total, columns: feed)
+    }
+
     func testTheMousePointerIsNotPastedDownTheImage() {
         let pointer = CGRect(x: 170, y: 140, width: 20, height: 26)
         func arrow(_ context: CGContext) {

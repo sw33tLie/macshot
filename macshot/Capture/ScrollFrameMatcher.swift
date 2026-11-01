@@ -86,8 +86,9 @@ enum ScrollFrameMatcher {
     /// Compares `current` with `previous`. Returns nil when the frames can't be
     /// aligned with confidence: blank content, too little overlap, or no shift
     /// that explains the change.
-    /// - Parameter hint: the shift seen last time, used only to break near-ties
-    ///   on repetitive content.
+    /// - Parameter hint: the shift expected from the recent motion (0 if
+    ///   unknown): breaks near-ties on repetitive content and makes a jump far
+    ///   from it need clearer evidence.
     /// - Parameter pinnedBottom: rows at the bottom the caller already treats as
     ///   pinned; sidebars are judged above them even when this pair sees less.
     static func match(previous: Samples, current: Samples, hint: Int = 0, pinnedBottom: Int = 0) -> Match? {
@@ -153,12 +154,20 @@ enum ScrollFrameMatcher {
         // (Reddit: +1420 px between two 50 ms grabs). If a shift in line with
         // the recent motion explains the frames nearly as well, keep to it. A
         // genuine fling still wins: small shifts then explain it badly.
+        // Jumping back by much of a frame while scrolling down is no more
+        // plausible (x.com: -899 px between two grabs, whose new rows were
+        // then skipped as already seen). Either keeps to the steady motion if
+        // that explains the frames nearly as well; otherwise a jump back is
+        // refused, and a jump ahead must match clearly.
         if hint > 0 {
             let plausible = 2 * hint + height / 6
-            if chosen.shift > plausible,
-               let steady = scored.filter({ (0...plausible).contains($0.shift) }).min(by: { $0.cost < $1.cost }),
-               steady.cost <= chosen.cost * 1.6 + 0.05 * level {
-                chosen = steady
+            if chosen.shift > plausible || chosen.shift < -height / 6 {
+                if let steady = scored.filter({ (0...plausible).contains($0.shift) }).min(by: { $0.cost < $1.cost }),
+                   steady.cost <= chosen.cost * 1.6 + 0.05 * level {
+                    chosen = steady
+                } else if chosen.shift < 0 || chosen.cost > 0.25 * level {
+                    return nil
+                }
             }
         }
         // Thresholds scale with how much there is to align on: sparse text and
