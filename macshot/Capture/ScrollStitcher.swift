@@ -8,8 +8,11 @@ import Foundation
 /// above anything pinned at the bottom. What doesn't scroll appears once:
 /// a header in the first frame at the top, fixed sidebars in the first frame
 /// only (filled with their background below it), and a pinned bottom banner
-/// at the very end. Scrolling back up is tracked, so those rows aren't added
-/// twice when the page comes down again.
+/// at the very end. A region that changes on its own (a playing video, an
+/// animation) is pasted whole from one frame once fully visible, instead of
+/// being assembled from strips taken at different moments. Scrolling back up
+/// is tracked, so those rows aren't added twice when the page comes down
+/// again.
 ///
 /// Free of capture and timing so it can be driven by synthetic frames in tests.
 final class ScrollStitcher {
@@ -39,8 +42,11 @@ final class ScrollStitcher {
 
     // Fixed by the first downward match, so every strip lines up.
     private var geometryDecided = false
-    private var fixedSides: [(columns: Range<Int>, color: CGColor)] = []
     private var bottomRows = 0
+    /// Regions that change on their own (videos, animations), in image
+    /// coordinates (top-left origin). Grown as more of a video is seen, and
+    /// pasted whole from the latest frame that shows them completely.
+    private var dynamicRegions: [CGRect] = []
     private var finished = false
 
     /// Rows scrolled back up that must come down again before anything new.
@@ -99,7 +105,31 @@ final class ScrollStitcher {
         guard newRows > 0,
               let strip = frame.cropping(to: CGRect(x: 0, y: frame.height - bottomRows - newRows,
                                                     width: frame.width, height: newRows)) else { return .pending }
-        append(strip, coveringSides: true)
+        let sides = handlesPinnedContent ? match.fixedSides.compactMap { columns in
+            Self.backgroundColor(of: frame, columns: columns).map { (columns, $0) }
+        } : []
+        // After this append, the frame's row (height - bottomRows) is the bottom
+        // of the image, which places every visible row of the frame. Pasting
+        // needs that exact mapping, so skip it while revisiting.
+        let frameBottom = frame.height - bottomRows
+        let frameTop = image.height + newRows - frameBottom
+        var pastes: [CGRect] = []
+        if revisited == 0 {
+            for rect in match.dynamicRects where rect.maxY <= CGFloat(frameBottom) {
+                trackRegion(rect.offsetBy(dx: 0, dy: CGFloat(frameTop)))
+            }
+            let following = CGFloat(max(match.followingRows.lowerBound, 0))...CGFloat(min(match.followingRows.upperBound, frameBottom))
+            pastes = dynamicRegions.compactMap { region in
+                let inFrame = region.offsetBy(dx: 0, dy: CGFloat(-frameTop))
+                guard following.contains(inFrame.minY), following.contains(inFrame.maxY),
+                      // Never into columns this strip treats as a fixed sidebar.
+                      !match.fixedSides.contains(where: { CGFloat($0.lowerBound) < inFrame.maxX && CGFloat($0.upperBound) > inFrame.minX })
+                else { return nil }
+                return inFrame
+            }
+        }
+        append(strip, sides: sides, pastes: pastes, from: frame, frameBottom: frameBottom,
+               followingRows: max(0, match.followingRows.lowerBound)..<min(frameBottom, match.followingRows.upperBound))
         appendedStrips += 1
         return .appended
     }
@@ -109,10 +139,20 @@ final class ScrollStitcher {
         if !finished, geometryDecided, bottomRows > 0,
            let strip = reference.cropping(to: CGRect(x: 0, y: reference.height - bottomRows,
                                                      width: reference.width, height: bottomRows)) {
-            append(strip, coveringSides: false)
+            append(strip, sides: [], pastes: [], from: reference, frameBottom: 0, followingRows: 0..<0)
         }
         finished = true
         return image
+    }
+
+    /// Adds a dynamic region, merging it with any it overlaps or nearly touches.
+    private func trackRegion(_ rect: CGRect) {
+        var merged = rect
+        var others: [CGRect] = []
+        for region in dynamicRegions {
+            if region.insetBy(dx: -16, dy: -16).intersects(merged) { merged = merged.union(region) } else { others.append(region) }
+        }
+        dynamicRegions = others + [merged]
     }
 
     private func decideGeometry(_ match: ScrollFrameMatcher.Match) {
@@ -120,9 +160,6 @@ final class ScrollStitcher {
         guard handlesPinnedContent else { return }
         let first = image
         bottomRows = match.staticBottomRows
-        fixedSides = match.fixedSides.compactMap { columns in
-            Self.backgroundColor(of: first, columns: columns).map { (columns, $0) }
-        }
         // The first frame's own banner is replaced by the final frame's at the end.
         if bottomRows > 0,
            let trimmed = first.cropping(to: CGRect(x: 0, y: 0, width: first.width, height: first.height - bottomRows)) {
@@ -153,7 +190,14 @@ final class ScrollStitcher {
         return CGColor(srgbRed: channel(mode.red), green: channel(mode.green), blue: channel(mode.blue), alpha: 1)
     }
 
-    private func append(_ strip: CGImage, coveringSides: Bool) {
+    /// Appends `strip`, plain-filling fixed `sides` in it, then pastes the
+    /// `pastes` rectangles of `frame` over the image where the frame row
+    /// `frameBottom` lands at the new bottom. A paste is first grown until the
+    /// rows and columns around it match the image (a real video sits in
+    /// content that already lines up); anything that can't be closed off that
+    /// way (content moving at another rate) isn't pasted.
+    private func append(_ strip: CGImage, sides: [(columns: Range<Int>, color: CGColor)],
+                        pastes: [CGRect], from frame: CGImage, frameBottom: Int, followingRows: Range<Int>) {
         let existing = image
         guard existing.width == strip.width else { return }
         let width = existing.width
@@ -165,10 +209,89 @@ final class ScrollStitcher {
         // CGContext has a bottom-left origin: the existing image goes on top.
         context.draw(existing, in: CGRect(x: 0, y: strip.height, width: width, height: existing.height))
         context.draw(strip, in: CGRect(x: 0, y: 0, width: width, height: strip.height))
-        if coveringSides {
-            for side in fixedSides {
-                context.setFillColor(side.color)
-                context.fill(CGRect(x: side.columns.lowerBound, y: 0, width: side.columns.count, height: strip.height))
+        for side in sides {
+            context.setFillColor(side.color)
+            context.fill(CGRect(x: side.columns.lowerBound, y: 0, width: side.columns.count, height: strip.height))
+        }
+        // Frame row r sits at image row (totalHeight - frameBottom + r).
+        let frameTop = totalHeight - frameBottom
+        if !pastes.isEmpty, frameTop >= 0, let pixels = ScrollFrameAnalyzer.frame(for: frame),
+           let canvas = context.data?.assumingMemoryBound(to: UInt8.self) {
+            let stride = context.bytesPerRow
+            // The canvas is BGRA in memory, rows from the top.
+            func luma(canvasRow: Int, x: Int) -> Int {
+                let o = canvasRow * stride + x * 4
+                return (Int(canvas[o + 2]) * 299 + Int(canvas[o + 1]) * 587 + Int(canvas[o]) * 114) / 1000
+            }
+            func luma(frameRow: Int, x: Int) -> Int? {
+                guard let o = pixels.offset(x: x, y: frameRow) else { return nil }
+                return (Int(pixels.bytes[o + pixels.redOffset]) * 299 + Int(pixels.bytes[o + pixels.greenOffset]) * 587
+                        + Int(pixels.bytes[o + pixels.blueOffset]) * 114) / 1000
+            }
+            /// Mean difference between the frame and the image over a band of
+            /// frame rows/columns, or nil if it falls outside both.
+            func mismatch(rows: Range<Int>, columns: Range<Int>) -> Bool? {
+                let rowStep = max(1, rows.count / 8), columnStep = max(1, columns.count / 64)
+                var difference = 0, samples = 0
+                for row in Swift.stride(from: rows.lowerBound, to: rows.upperBound, by: rowStep) {
+                    guard row >= 0, row < frameBottom, frameTop + row < totalHeight else { continue }
+                    for x in Swift.stride(from: columns.lowerBound, to: columns.upperBound, by: columnStep)
+                        where x >= 0 && x < width {
+                        guard let value = luma(frameRow: row, x: x) else { continue }
+                        difference += abs(value - luma(canvasRow: frameTop + row, x: x))
+                        samples += 1
+                    }
+                }
+                guard samples >= 8 else { return nil }
+                return difference > samples * 3
+            }
+            /// Whether a band of frame rows holds text or edges, not plain colour.
+            func hasDetail(rows: Range<Int>, columns: Range<Int>) -> Bool {
+                let columnStep = max(1, columns.count / 96)
+                for row in rows where row >= 0 && row < frameBottom {
+                    var low = 255, high = 0
+                    for x in Swift.stride(from: columns.lowerBound, to: columns.upperBound, by: columnStep) {
+                        guard let value = luma(frameRow: row, x: x) else { continue }
+                        low = min(low, value); high = max(high, value)
+                    }
+                    if high - low > 40 { return true }
+                }
+                return false
+            }
+            /// Grows `rect` until the rows and columns just outside it match the
+            /// image: a region seen only partly changing (a slow talking-head
+            /// video) is widened to the whole video. Nil if that takes more than
+            /// `limit` in any direction, or leaves the frame's following rows.
+            func consistentRegion(_ rect: CGRect, following: Range<Int>) -> CGRect? {
+                var top = Int(rect.minY), bottom = Int(rect.maxY), left = Int(rect.minX), right = Int(rect.maxX)
+                let limit = 480, step = 8, band = 6
+                let start = (top, bottom, left, right)
+                for _ in 0..<(limit / step) {
+                    var grew = false
+                    if mismatch(rows: (top - band)..<top, columns: left..<right) ?? false { top -= step; grew = true }
+                    if mismatch(rows: bottom..<(bottom + band), columns: left..<right) ?? false { bottom += step; grew = true }
+                    if mismatch(rows: top..<bottom, columns: (left - band)..<left) ?? false { left -= step; grew = true }
+                    if mismatch(rows: top..<bottom, columns: right..<(right + band)) ?? false { right += step; grew = true }
+                    if !grew { break }
+                    guard top >= following.lowerBound, bottom <= following.upperBound, left >= 0, right <= width,
+                          start.0 - top <= limit, bottom - start.1 <= limit,
+                          start.2 - left <= limit, right - start.3 <= limit else { return nil }
+                }
+                // Still mismatched at the limit: not a self-contained region.
+                if mismatch(rows: (top - band)..<top, columns: left..<right) ?? true { return nil }
+                if mismatch(rows: bottom..<(bottom + band), columns: left..<right) ?? true { return nil }
+                // Anchored to content: matching plain background above and below
+                // proves nothing about where the region belongs.
+                guard hasDetail(rows: (top - 2 * band)..<top, columns: left..<right)
+                        || hasDetail(rows: bottom..<(bottom + 2 * band), columns: left..<right) else { return nil }
+                return CGRect(x: left, y: top, width: right - left, height: bottom - top)
+            }
+            let accepted = pastes.compactMap { consistentRegion($0, following: followingRows) }
+            for rect in accepted {
+                guard let piece = frame.cropping(to: rect) else { continue }
+                let top = frameTop + Int(rect.minY)
+                context.draw(piece, in: CGRect(x: rect.minX, y: CGFloat(totalHeight - top) - rect.height,
+                                               width: rect.width, height: rect.height))
             }
         }
         if let merged = context.makeImage() { image = merged }

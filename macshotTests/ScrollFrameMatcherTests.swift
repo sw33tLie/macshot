@@ -102,11 +102,26 @@ final class ScrollFrameMatcherTests: XCTestCase {
         }
         XCTAssertEqual(result?.shift, 90)
         let sides = result?.fixedSides ?? []
-        XCTAssertEqual(sides.count, 2)
-        XCTAssertEqual(sides.first?.lowerBound, 0)
-        XCTAssertLessThanOrEqual(sides.first?.upperBound ?? .max, 112)
-        XCTAssertGreaterThanOrEqual(sides.last?.lowerBound ?? 0, 285)
-        XCTAssertEqual(sides.last?.upperBound, 400)
+        XCTAssertEqual(sides.count, 2, "\(sides)")
+        // Each covers its sidebar's content; plain margin columns are left alone.
+        XCTAssertLessThanOrEqual(sides.first?.lowerBound ?? .max, 14)
+        XCTAssertTrue((70...112).contains(sides.first?.upperBound ?? 0), "\(sides)")
+        XCTAssertTrue((300...330).contains(sides.last?.lowerBound ?? 0), "\(sides)")
+        XCTAssertGreaterThanOrEqual(sides.last?.upperBound ?? 0, 386)
+    }
+
+    /// x.com's right column scrolls slower than the feed until it sticks.
+    /// While it lags, its columns are reported for filling rather than being
+    /// stitched (which garbles them), and the feed's shift wins.
+    func testASlowerSidebarIsReportedAndDoesNotGarble() {
+        let result = match(300, 360) { context, scroll in
+            self.drawPage(context, scroll: scroll, columns: 0..<280)
+            self.drawPage(context, scroll: 1000 + scroll / 3, columns: 290..<400)
+        }
+        XCTAssertEqual(result?.shift, 60)
+        let sides = result?.fixedSides ?? []
+        XCTAssertTrue(sides.contains { $0.lowerBound <= 305 && $0.upperBound >= 380 }, "\(sides)")
+        XCTAssertFalse(sides.contains { $0.lowerBound < 250 }, "the feed stays: \(sides)")
     }
 
     /// A background gradient that stays put while sparse text scrolls over it
@@ -126,6 +141,36 @@ final class ScrollFrameMatcherTests: XCTestCase {
     func testRepetitiveRowsStillAlignExactly() {
         let result = match(240, 285, hint: 40) { self.drawPage($0, scroll: $1, repetitive: true) }
         XCTAssertEqual(result?.shift, 45)
+    }
+
+    /// A video playing in the middle of the page changes between frames on
+    /// its own. It must not pull the shift, and it is reported as one region
+    /// so the stitcher can paste it from a single frame.
+    func testPlayingVideoDoesNotPullTheShiftAndIsReported() {
+        let result = match(300, 352) { context, scroll in
+            self.drawPage(context, scroll: scroll)
+            self.drawVideo(context, top: 400 - scroll, moment: scroll)
+        }
+        XCTAssertEqual(result?.shift, 52)
+        let rects = result?.dynamicRects ?? []
+        XCTAssertEqual(rects.count, 1, "\(rects)")
+        XCTAssertTrue(rects.first?.contains(CGRect(x: 110, y: 56, width: 180, height: 140)) ?? false, "\(rects)")
+    }
+
+    func testAStillPageReportsNoDynamicRegion() {
+        XCTAssertEqual(match(300, 352) { self.drawPage($0, scroll: $1) }?.dynamicRects, [])
+    }
+
+    /// Random 8×8 blocks that differ for every `moment`: a playing video.
+    private func drawVideo(_ context: CGContext, top: Int, moment: Int) {
+        var seed = UInt64(moment) &* 2862933555777941757 &+ 3037000493
+        for y in stride(from: 0, to: 160, by: 8) {
+            for x in stride(from: 60, to: 340, by: 8) {
+                seed = seed &* 6364136223846793005 &+ 1442695040888963407
+                context.setFillColor(CGColor(gray: CGFloat(seed >> 56) / 255, alpha: 1))
+                context.fill(CGRect(x: x, y: top + y, width: 8, height: 8))
+            }
+        }
     }
 
     // MARK: - Pinned bottom content

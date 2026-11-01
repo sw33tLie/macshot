@@ -147,6 +147,42 @@ final class ScrollStitcherTests: XCTestCase {
         assertSameRows(stitched, expected, rows: 0..<total)
     }
 
+    /// A playing video must appear as one moment, not as strips from
+    /// different moments stacked into a staircase.
+    func testPlayingVideoIsPastedFromOneFrame() {
+        let videoTop = 330, videoColumns = 60..<300
+        func video(_ context: CGContext, top: Int, moment: Int) {
+            var seed = UInt64(moment) &* 2862933555777941757 &+ 3037000493
+            for y in stride(from: 0, to: 120, by: 8) {
+                for x in stride(from: videoColumns.lowerBound, to: videoColumns.upperBound, by: 8) {
+                    seed = seed &* 6364136223846793005 &+ 1442695040888963407
+                    context.setFillColor(CGColor(gray: CGFloat(seed >> 56) / 255, alpha: 1))
+                    context.fill(CGRect(x: x, y: top + y, width: 8, height: 8))
+                }
+            }
+        }
+        let path = [0, 40, 85, 130, 170, 215, 260, 300]
+        let stitched = stitch(path) { context, scroll in
+            self.drawPage(context, scroll: scroll, height: self.height)
+            video(context, top: videoTop - scroll, moment: scroll)
+        }
+        let rows = (videoTop + 8)..<(videoTop + 112), columns = (videoColumns.lowerBound + 8)..<(videoColumns.upperBound - 8)
+        let got = pixels(stitched, rows: rows, columns: columns)
+        let total = height + path.last!
+        let moments = path.filter { p in
+            let expected = image(height: total) { context in
+                self.drawPage(context, scroll: 0, height: total)
+                video(context, top: videoTop, moment: p)
+            }
+            return pixels(expected, rows: rows, columns: columns) == got
+        }
+        XCTAssertEqual(moments.count, 1, "the video region must match exactly one frame")
+        // Everything outside the video is still the page, pixel for pixel.
+        let expectedPage = image(height: total) { self.drawPage($0, scroll: 0, height: total) }
+        assertSameRows(stitched, expectedPage, rows: 0..<(videoTop - 20))
+        assertSameRows(stitched, expectedPage, rows: (videoTop + 140)..<total)
+    }
+
     func testWithPinnedHandlingOffFramesAreStitchedAsCaptured() {
         let stitched = stitch([0, 120], handlesPinnedContent: false) { context, scroll in
             self.drawPage(context, scroll: scroll, height: self.height)
