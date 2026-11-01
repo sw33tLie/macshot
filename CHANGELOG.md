@@ -1,5 +1,23 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- **Every emoji in the stamp tool**: the picker has a search field over every emoji your Mac can draw, matched by name ("tears" finds 🥹, "flag italy" finds 🇮🇹), and an All tab. The curated tabs are unchanged. (#473)
+- Option to open the Editor right after the selection is released (Settings › Capture, off by default). Thanks @ClmntCh7. (#474, #475)
+
+### Changed
+
+- The text tool's icon is a plain "T" in every language; the system symbol it used turned into "格式" or "あぁ" on Chinese and Japanese systems. Thanks @hhktony. (#485)
+- On macOS 27, which hides menu icons by default, the capture and record items in the menu bar menu keep their icons. (#313)
+- Exported MP4 videos are "fast start": an uploaded or linked export starts playing before it has fully downloaded. (#452)
+
+### Fixed
+
+- **⌘C during a scroll capture copied only the first frame** and left the scroll-capture HUD on screen. ⌘C now finishes the capture and copies the whole stitched image; Return finishes it like the Stop button. (#437)
+- **macshot froze for several seconds when confirming a capture** while the audio device was slow to start: the capture sound played on the main thread. It now plays in the background. (#418)
+
 ## [4.4.0-beta.7] - 2026-11-01
 
 ### Added
