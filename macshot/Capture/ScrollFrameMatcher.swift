@@ -531,18 +531,31 @@ enum ScrollFrameMatcher {
                     // always on the outer side, and on the side toward the
                     // scrolling content only if that column is still too (a
                     // card's border), never into one that moves (line numbers).
-                    // Toward the content, reach up to three still samples: a
-                    // card's thin border and rounded corners can fall between
-                    // samples and would otherwise repeat down the image
-                    // (x.com's right column). Clamped to the band edge.
+                    // Toward the content, reach up to five more still samples
+                    // when the rows this pair reveals didn't change there: a
+                    // card's thin border can fall between samples and would
+                    // otherwise repeat down the image (x.com's right column).
+                    // "Still" is a mean over the frame, so a line of new text
+                    // beside the column barely moves it; checking the
+                    // revealed rows keeps the fill off that text (Stack
+                    // Overflow's "25 Answers" beside the sticky vote buttons).
                     func still(_ c: Int) -> Bool { c >= 0 && c < count && change[c] <= unchangedThreshold }
+                    func unchangedInRevealedRows(_ c: Int) -> Bool {
+                        let top = max(rows.lowerBound, rows.upperBound - max(shift, 0) - 8)
+                        for row in top..<rows.upperBound
+                        where abs(current.value(row, c) - previous.value(row, c)) > 24 { return false }
+                        return true
+                    }
+                    func extends(_ c: Int, beyondFirst: Bool) -> Bool {
+                        still(c) && (!beyondFirst || unchangedInRevealedRows(c))
+                    }
                     var lowSample = first, highSample = column
                     if innerIsHigh {
                         lowSample = first - 1
-                        while highSample < column + 3, still(highSample) { highSample += 1 }
+                        while highSample < column + 6, extends(highSample, beyondFirst: highSample > column) { highSample += 1 }
                     } else {
                         highSample = column + 1
-                        while lowSample > first - 3, still(lowSample - 1) { lowSample -= 1 }
+                        while lowSample > first - 6, extends(lowSample - 1, beyondFirst: lowSample < first) { lowSample -= 1 }
                     }
                     let low = max(clampLow, Int(Double(lowSample) * step))
                     let high = min(clampHigh, Int((Double(highSample) * step).rounded(.up)))
