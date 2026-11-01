@@ -43,10 +43,19 @@ final class ScrollStitcher {
     // Fixed by the first downward match, so every strip lines up.
     private var geometryDecided = false
     private var bottomRows = 0
+    /// A larger pinned bottom seen in the previous pair; adopted when the next
+    /// pair agrees (a consent panel can settle after the first frames).
+    private var pendingBottomRows = 0
     /// Regions that change on their own (videos, animations), in image
     /// coordinates (top-left origin). Grown as more of a video is seen, and
     /// pasted whole from the latest frame that shows them completely.
     private var dynamicRegions: [CGRect] = []
+    /// Per pixel column, a running vote between "a fixed sidebar" (positive)
+    /// and "content that scrolls" (negative). One frame pair can misjudge a
+    /// column (a gutter of line numbers that happened to look still, or a
+    /// stretch of a file tree with no text in the rows that pair looked at);
+    /// the history decides.
+    private var sideScores: [Float] = []
     private var finished = false
 
     /// Rows scrolled back up that must come down again before anything new.
@@ -74,7 +83,7 @@ final class ScrollStitcher {
             self.referenceSamples = ScrollFrameMatcher.samples(of: frame)
             return .noMatch
         }
-        guard let match = ScrollFrameMatcher.match(previous: referenceSamples, current: samples, hint: lastShift) else {
+        guard let match = ScrollFrameMatcher.match(previous: referenceSamples, current: samples, hint: lastShift, pinnedBottom: bottomRows) else {
             // Keep the reference: a transient mismatch (an animation, a blank
             // stretch) usually resolves on a later frame.
             consecutiveFailures += 1
@@ -98,14 +107,14 @@ final class ScrollStitcher {
             rowsToRevisit += -match.shift
             return .pending
         }
-        if !geometryDecided { decideGeometry(match) }
+        if !geometryDecided { decideGeometry(match) } else { growPinnedBottom(match) }
         let revisited = min(rowsToRevisit, match.shift)
         rowsToRevisit -= revisited
         let newRows = min(match.shift - revisited, frame.height - bottomRows)
         guard newRows > 0,
               let strip = frame.cropping(to: CGRect(x: 0, y: frame.height - bottomRows - newRows,
                                                     width: frame.width, height: newRows)) else { return .pending }
-        let sides = handlesPinnedContent ? match.fixedSides.compactMap { columns in
+        let sides = handlesPinnedContent ? sideFill(for: match, width: frame.width).compactMap { columns in
             Self.backgroundColor(of: frame, columns: columns, rows: 0..<(frame.height - bottomRows)).map { (columns, $0) }
         } : []
         // After this append, the frame's row (height - bottomRows) is the bottom
@@ -118,7 +127,11 @@ final class ScrollStitcher {
             for rect in match.dynamicRects where rect.maxY <= CGFloat(frameBottom) {
                 trackRegion(rect.offsetBy(dx: 0, dy: CGFloat(frameTop)))
             }
-            let following = CGFloat(max(match.followingRows.lowerBound, 0))...CGFloat(min(match.followingRows.upperBound, frameBottom))
+            // Never in the top eighth of the frame either: a translucent navbar
+            // over a dark page can match by chance, so it isn't always in the
+            // detected edge band, and a paste there drops it mid-image.
+            let topGuard = max(match.followingRows.lowerBound, frameBottom / 8)
+            let following = CGFloat(topGuard)...CGFloat(min(match.followingRows.upperBound, frameBottom))
             pastes = dynamicRegions.compactMap { region in
                 let inFrame = region.offsetBy(dx: 0, dy: CGFloat(-frameTop))
                 guard following.contains(inFrame.minY), following.contains(inFrame.maxY),
@@ -129,7 +142,7 @@ final class ScrollStitcher {
             }
         }
         append(strip, sides: sides, pastes: pastes, from: frame, frameBottom: frameBottom,
-               followingRows: max(0, match.followingRows.lowerBound)..<min(frameBottom, match.followingRows.upperBound))
+               followingRows: max(frameBottom / 8, match.followingRows.lowerBound)..<min(frameBottom, match.followingRows.upperBound))
         appendedStrips += 1
         return .appended
     }
@@ -145,6 +158,36 @@ final class ScrollStitcher {
         return image
     }
 
+    /// Columns to plain-fill in this strip: those this pair judges fixed,
+    /// unless their recent history says they scroll (a gutter of line numbers
+    /// that looked still for one pair). Every pair votes on every column, so
+    /// an early misjudgement (a consent panel before it was recognised as
+    /// pinned) fades instead of filling that strip for the rest of the capture.
+    private func sideFill(for match: ScrollFrameMatcher.Match, width: Int) -> [Range<Int>] {
+        if sideScores.count != width { sideScores = Array(repeating: 0, count: width) }
+        var fixedNow = [Bool](repeating: false, count: width)
+        for range in match.fixedSides {
+            for x in max(0, range.lowerBound)..<min(width, range.upperBound) { fixedNow[x] = true }
+        }
+        var fill = [Bool](repeating: false, count: width)
+        for x in 0..<width {
+            let previous = sideScores[x]
+            sideScores[x] = 0.5 * previous + (fixedNow[x] ? 0.5 : -0.5)
+            fill[x] = fixedNow[x] && previous > -0.6
+        }
+        var ranges: [Range<Int>] = []
+        var start: Int?
+        for x in 0...width {
+            if x < width, fill[x] {
+                if start == nil { start = x }
+            } else if let first = start {
+                ranges.append(first..<x)
+                start = nil
+            }
+        }
+        return ranges
+    }
+
     /// Adds a dynamic region, merging it with any it overlaps or nearly touches.
     private func trackRegion(_ rect: CGRect) {
         var merged = rect
@@ -153,6 +196,20 @@ final class ScrollStitcher {
             if region.insetBy(dx: -16, dy: -16).intersects(merged) { merged = merged.union(region) } else { others.append(region) }
         }
         dynamicRegions = others + [merged]
+    }
+
+    /// Grows the held-back bottom when two consecutive pairs see more pinned
+    /// rows than assumed. Never shrinks: a banner that disappears just costs
+    /// a little of each strip. The rows between the old and new cutoff are
+    /// already in the image, so they are revisited rather than added again.
+    private func growPinnedBottom(_ match: ScrollFrameMatcher.Match) {
+        guard handlesPinnedContent else { return }
+        let seen = match.staticBottomRows
+        defer { pendingBottomRows = seen > bottomRows ? seen : 0 }
+        guard seen > bottomRows, pendingBottomRows > bottomRows else { return }
+        let grown = min(seen, pendingBottomRows)
+        rowsToRevisit += grown - bottomRows
+        bottomRows = grown
     }
 
     private func decideGeometry(_ match: ScrollFrameMatcher.Match) {
@@ -265,7 +322,9 @@ final class ScrollStitcher {
             /// `limit` in any direction, or leaves the frame's following rows.
             func consistentRegion(_ rect: CGRect, following: Range<Int>) -> CGRect? {
                 var top = Int(rect.minY), bottom = Int(rect.maxY), left = Int(rect.minX), right = Int(rect.maxX)
-                let limit = 480, step = 8, band = 6
+                // Up to half the frame each way: a portrait video can be most
+                // of the frame tall, while only part of it changed.
+                let limit = max(480, frameBottom / 2), step = 8, band = 6
                 let start = (top, bottom, left, right)
                 for _ in 0..<(limit / step) {
                     var grew = false

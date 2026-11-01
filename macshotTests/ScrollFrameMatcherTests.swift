@@ -191,6 +191,17 @@ final class ScrollFrameMatcherTests: XCTestCase {
         XCTAssertLessThanOrEqual(result?.staticBottomRows ?? .max, height * 65 / 100)
     }
 
+    /// x.com: a sticky sidebar is static in every row, but it isn't pinned
+    /// bottom content. Claiming it as a banner starved the whole stitch.
+    func testAStickySidebarIsNotMistakenForAPinnedBanner() {
+        let result = match(300, 370) { context, scroll in
+            self.drawPage(context, scroll: scroll, columns: 0..<300)
+            self.drawPage(context, scroll: 0, columns: 310..<400)
+        }
+        XCTAssertEqual(result?.shift, 70)
+        XCTAssertEqual(result?.staticBottomRows, 0)
+    }
+
     func testAPageWithoutPinnedContentHoldsNothingBack() {
         XCTAssertEqual(match(300, 370) { self.drawPage($0, scroll: $1) }?.staticBottomRows, 0)
     }

@@ -76,6 +76,8 @@ enum ScrollFrameMatcher {
         /// Frame rows that follow the scroll: below a navbar band at the top
         /// and above anything pinned at the bottom of the overlap.
         var followingRows: Range<Int> = 0..<0
+        /// Pixel columns of `band`: the content seen scrolling in this pair.
+        var bandPixels: Range<Int> = 0..<0
     }
 
     /// Below this mean per-sample difference a column or row counts as unchanged.
@@ -86,7 +88,9 @@ enum ScrollFrameMatcher {
     /// that explains the change.
     /// - Parameter hint: the shift seen last time, used only to break near-ties
     ///   on repetitive content.
-    static func match(previous: Samples, current: Samples, hint: Int = 0) -> Match? {
+    /// - Parameter pinnedBottom: rows at the bottom the caller already treats as
+    ///   pinned; sidebars are judged above them even when this pair sees less.
+    static func match(previous: Samples, current: Samples, hint: Int = 0, pinnedBottom: Int = 0) -> Match? {
         guard previous.width == current.width, previous.height == current.height,
               previous.columns == current.columns, current.height >= 16 else { return nil }
         let change = columnChange(previous, current)
@@ -144,6 +148,19 @@ enum ScrollFrameMatcher {
             chosen = robust
             scored = masked
         }
+        // A jump far beyond the recent motion across a thin overlap is how a
+        // full-width playing video or look-alike content fools the search
+        // (Reddit: +1420 px between two 50 ms grabs). If a shift in line with
+        // the recent motion explains the frames nearly as well, keep to it. A
+        // genuine fling still wins: small shifts then explain it badly.
+        if hint > 0 {
+            let plausible = 2 * hint + height / 6
+            if chosen.shift > plausible,
+               let steady = scored.filter({ (0...plausible).contains($0.shift) }).min(by: { $0.cost < $1.cost }),
+               steady.cost <= chosen.cost * 1.6 + 0.05 * level {
+                chosen = steady
+            }
+        }
         // Thresholds scale with how much there is to align on: sparse text and
         // dense photos produce very different absolute differences.
         guard chosen.cost <= 0.45 * level else { return nil }
@@ -163,12 +180,19 @@ enum ScrollFrameMatcher {
             return Match(shift: 0, band: band, staticBottomRows: 0, fixedSides: [])
         }
         let bottom = chosen.shift > 0 ? pinnedBottomRows(previous, current, band: band) : 0
+        let atShift = blockCosts(prev: prev, cur: cur, shift: chosen.shift, groups: groups)
+        let edges = edgeBands(atShift, groups: groups.count, level: level)
+        // Sidebars are judged on the rows that follow the scroll: a sticky
+        // header at the top (GitHub's file header) stays put in every column
+        // and would make a plain gutter beside the code look like a sidebar.
+        let sideBottom = height - min(height * 65 / 100, max(bottom, pinnedBottom))
+        let sideTop = chosen.shift > 0 ? min(edges.top * blockRows, sideBottom / 2) : 0
         var result = Match(shift: chosen.shift, band: band, staticBottomRows: bottom,
                            fixedSides: fixedSides(previous, current, band: band, change: change, shift: chosen.shift,
-                                                  rows: 0..<(height - bottom)))
+                                                  rows: sideTop..<sideBottom))
+        let step = Double(current.width) / Double(current.columnCount)
+        result.bandPixels = Int(Double(band.lowerBound) * step)..<min(current.width, Int((Double(band.upperBound + 1) * step).rounded(.up)))
         if chosen.shift > 0 {
-            let atShift = blockCosts(prev: prev, cur: cur, shift: chosen.shift, groups: groups)
-            let edges = edgeBands(atShift, groups: groups.count, level: level)
             let overlapRows = height - chosen.shift
             let lastBlock = (overlapRows - 1) / blockRows
             result.followingRows = min(overlapRows, edges.top * blockRows)
@@ -473,7 +497,7 @@ enum ScrollFrameMatcher {
                 return n > 0 ? sum / Float(n) : fullChange[column]
             }
         }
-        let first = max(0, -shift), last = min(rows.upperBound, current.height - shift)
+        let first = max(rows.lowerBound, -shift), last = min(rows.upperBound, current.height - shift)
         func isFixed(_ column: Int) -> Bool {
             // Content, not a plain margin or a single-colour border line.
             var low: Float = 255, high: Float = 0
@@ -497,22 +521,30 @@ enum ScrollFrameMatcher {
         let step = Double(current.width) / Double(count)
         let bandLeft = Int(Double(band.lowerBound) * step), bandRight = Int((Double(band.upperBound + 1) * step).rounded(.up))
         var ranges: [Range<Int>] = []
-        func collect(_ columns: Range<Int>, clampLow: Int, clampHigh: Int) {
+        func collect(_ columns: Range<Int>, clampLow: Int, clampHigh: Int, innerIsHigh: Bool) {
             var start: Int?
             for column in columns.lowerBound...columns.upperBound {
                 if column < columns.upperBound, isFixed(column) {
                     if start == nil { start = column }
                 } else if let first = start {
-                    // One sample of margin each side: content can begin between samples.
-                    let low = max(clampLow, Int(Double(first - 1) * step))
-                    let high = min(clampHigh, Int((Double(column + 1) * step).rounded(.up)))
+                    // One sample of margin (content can begin between samples):
+                    // always on the outer side, and on the side toward the
+                    // scrolling content only if that column is still too (a
+                    // card's border), never into one that moves (line numbers).
+                    func still(_ c: Int) -> Bool { c >= 0 && c < count && change[c] <= unchangedThreshold }
+                    let lowSample = innerIsHigh || still(first - 1) ? first - 1 : first
+                    let highSample = !innerIsHigh || still(column) ? column + 1 : column
+                    let low = max(clampLow, Int(Double(lowSample) * step))
+                    let high = min(clampHigh, Int((Double(highSample) * step).rounded(.up)))
                     if high > low { ranges.append(low..<high) }
                     start = nil
                 }
             }
         }
-        if band.lowerBound > 0 { collect(0..<band.lowerBound, clampLow: 0, clampHigh: bandLeft) }
-        if band.upperBound < count - 1 { collect((band.upperBound + 1)..<count, clampLow: bandRight, clampHigh: current.width) }
+        if band.lowerBound > 0 { collect(0..<band.lowerBound, clampLow: 0, clampHigh: bandLeft, innerIsHigh: true) }
+        if band.upperBound < count - 1 {
+            collect((band.upperBound + 1)..<count, clampLow: bandRight, clampHigh: current.width, innerIsHigh: false)
+        }
         return ranges
     }
 
@@ -685,9 +717,24 @@ enum ScrollFrameMatcher {
         // covers about 60%). Over-estimating only moves where new rows are taken
         // from; at 50 ms between grabs the top third still covers any scroll.
         let cap = current.height * 65 / 100
-        let minimumRun = max(4, band.count * 8 / 100)
+        let minimumRun = max(4, band.count * 5 / 100)
+        // Panels have plain stretches (padding, short bullet lines) between
+        // lines of text; bridge up to a twelfth of the frame.
+        let gap = max(48, current.height / 12)
         func unchanged(_ row: Int, _ column: Int) -> Bool {
             abs(current.value(row, column) - previous.value(row, column)) < unchangedThreshold
+        }
+        // A pinned box sits over content that scrolls: only columns that move
+        // in the top third of the frame count. A sticky sidebar is still
+        // everywhere and must not look like a banner (x.com: it claimed most of
+        // the frame and starved the stitch).
+        let topRows = max(1, current.height / 3)
+        let movesAbove: [Bool] = (0..<current.columnCount).map { column in
+            var sum: Float = 0
+            for row in Swift.stride(from: 0, to: topRows, by: 2) {
+                sum += abs(current.value(row, column) - previous.value(row, column))
+            }
+            return sum / Float((topRows + 1) / 2) > unchangedThreshold
         }
         var highest = -1                       // rows from the bottom to the highest pinned row
         var pinnedColumns: ClosedRange<Int>?   // where that row's pinned stretch is
@@ -696,7 +743,7 @@ enum ScrollFrameMatcher {
             var start = band.lowerBound, low: Float = 255, high: Float = 0
             for column in band {
                 let value = current.value(row, column)
-                if unchanged(row, column) {
+                if movesAbove[column], unchanged(row, column) {
                     low = min(low, value); high = max(high, value)
                     if column - start + 1 >= minimumRun, high - low > 24 {
                         highest = offset
@@ -712,7 +759,7 @@ enum ScrollFrameMatcher {
             }
             // A banner's own padding rows have no detail; allow a gap, but
             // stop once well past the top of anything pinned.
-            if highest >= 0, offset - highest > 48 { break }
+            if highest >= 0, offset - highest > gap { break }
         }
         guard highest >= 0, let columns = pinnedColumns else { return 0 }
         // Above its highest line of content a banner usually has plain padding:
