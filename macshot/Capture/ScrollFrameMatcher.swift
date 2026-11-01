@@ -163,6 +163,15 @@ enum ScrollFrameMatcher {
         }
         // Thresholds scale with how much there is to align on: sparse text and
         // dense photos produce very different absolute differences.
+        if chosen.cost > 0.45 * level,
+           let narrowed = withoutDivergentSides(prev: prev, cur: cur, chosen: chosen, groups: groups,
+                                                unexplained: unexplained, mismatch: mismatch, level: level) {
+            // A side of the band moving at its own rate (GitHub's file tree
+            // still sliding up to stick while the code scrolls) mismatches at
+            // every shift. Judged without it, the content matches; the side
+            // is then filled like any sidebar that diverges.
+            chosen = narrowed
+        }
         guard chosen.cost <= 0.45 * level else { return nil }
         // Repetitive content (identical list rows) can score several shifts
         // almost equally; prefer the one that continues the current motion.
@@ -207,12 +216,37 @@ enum ScrollFrameMatcher {
                                             edges: edges, threshold: mismatch)
             let bandLeft = Int(Double(band.lowerBound) * sampleWidth)
             let bandRight = Int((Double(band.upperBound + 1) * sampleWidth).rounded(.up))
+            // Groups are coarse: the side usually ends inside the next group
+            // (GitHub's file tree beside the line numbers). Follow it column
+            // by column while columns still don't follow the scroll, so the
+            // fill doesn't stop mid-word.
+            let bodyRows = min(overlapRows, edges.top * blockRows)
+                ..< max(min(overlapRows, edges.top * blockRows), min(overlapRows, (lastBlock + 1 - edges.bottom) * blockRows))
+            func diverges(_ column: Int) -> Bool {
+                guard !bodyRows.isEmpty else { return false }
+                var sum: Float = 0
+                for row in bodyRows {
+                    sum += abs(cur.values[row * cur.width + column] - prev.values[(row + chosen.shift) * cur.width + column])
+                }
+                return sum / Float(bodyRows.count) > mismatch
+            }
+            func extend(from start: Int, by step: Int, limit: Int) -> Int {
+                var edge = start, column = start + step, matching = 0
+                while column >= 0, column < cur.width, abs(column - start) <= limit {
+                    if diverges(column) { edge = column; matching = 0 } else { matching += 1; if matching >= 3 { break } }
+                    column += step
+                }
+                return edge
+            }
+            let reach = cur.width / 4
             if let inner = divergent.left {
-                let right = Int((Double(pixelColumn(groups[inner].upperBound - 1)) + sampleWidth / 2).rounded(.up))
+                let last = extend(from: groups[inner].upperBound - 1, by: 1, limit: reach)
+                let right = Int((Double(pixelColumn(last)) + sampleWidth / 2).rounded(.up))
                 if right > bandLeft { result.fixedSides.append(bandLeft..<min(right, current.width)) }
             }
             if let inner = divergent.right {
-                let left = max(0, Int(Double(pixelColumn(groups[inner].lowerBound)) - sampleWidth / 2))
+                let first = extend(from: groups[inner].lowerBound, by: -1, limit: reach)
+                let left = max(0, Int(Double(pixelColumn(first)) - sampleWidth / 2))
                 if bandRight > left { result.fixedSides.append(left..<bandRight) }
             }
             let excludedGroups = Set((divergent.left.map { Array(0...$0) } ?? [])
@@ -338,6 +372,29 @@ enum ScrollFrameMatcher {
     /// different rate, such as a sidebar catching up before it sticks. Nil on
     /// a side with none, and nothing when half the groups or more would
     /// qualify (then it's the rows, not the columns, that disagree).
+    /// The best shift near `chosen`, costed without the column groups at the
+    /// sides of the band that don't follow it; nil when no side diverges.
+    static func withoutDivergentSides(prev: Features, cur: Features, chosen: (shift: Int, cost: Float),
+                                      groups: [Range<Int>], unexplained: [Bool], mismatch: Float,
+                                      level: Float) -> (shift: Int, cost: Float)? {
+        guard chosen.shift > 0 else { return nil }
+        let atShift = blockCosts(prev: prev, cur: cur, shift: chosen.shift, groups: groups)
+        let edges = edgeBands(atShift, groups: groups.count, level: level)
+        let divergent = divergentGroups(atShift, groups: groups.count, shift: chosen.shift, height: cur.height,
+                                        edges: edges, threshold: mismatch)
+        let sides = Set((divergent.left.map { Array(0...$0) } ?? [])
+                        + (divergent.right.map { Array($0..<groups.count) } ?? []))
+        guard !sides.isEmpty else { return nil }
+        let excluding = unexplained.indices.map { unexplained[$0] || sides.contains($0 % groups.count) }
+        var best: (shift: Int, cost: Float)?
+        for shift in (chosen.shift - 2)...(chosen.shift + 2) {
+            guard let cost = maskedCost(prev: prev, cur: cur, shift: shift, groups: groups,
+                                        excluding: excluding, level: level) else { continue }
+            if best == nil || cost < best!.cost { best = (shift, cost) }
+        }
+        return best
+    }
+
     static func divergentGroups(_ costs: [Float?], groups: Int, shift: Int, height: Int,
                                 edges: (top: Int, bottom: Int), threshold: Float) -> (left: Int?, right: Int?) {
         let lastRow = (height - shift - 1) / blockRows

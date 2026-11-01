@@ -124,6 +124,20 @@ final class ScrollFrameMatcherTests: XCTestCase {
         XCTAssertFalse(sides.contains { $0.lowerBound < 250 }, "the feed stays: \(sides)")
     }
 
+    /// GitHub: a wide file tree slides up at its own rate (until it sticks)
+    /// while the code scrolls. The code's shift wins, and the side reported
+    /// for filling covers the whole tree, so no file name is cut in half.
+    func testAWideSidePanelMovingAtItsOwnRateDoesNotFailTheMatch() {
+        let result = match(100, 244) { context, scroll in
+            self.drawPage(context, scroll: scroll, columns: 170..<400)
+            self.drawPage(context, scroll: 500 + scroll / 6, columns: 0..<160)
+        }
+        XCTAssertEqual(result?.shift, 144)
+        let sides = result?.fixedSides ?? []
+        XCTAssertTrue(sides.contains { $0.lowerBound <= 20 } && sides.contains { $0.upperBound >= 140 }, "\(sides)")
+        XCTAssertFalse(sides.contains { $0.upperBound > 185 }, "the code stays: \(sides)")
+    }
+
     /// A background gradient that stays put while sparse text scrolls over it
     /// shifts whole rows' brightness; it must not decide the match.
     func testFixedGradientBackgroundCancelsOut() {
