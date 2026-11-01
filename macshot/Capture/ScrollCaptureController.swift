@@ -491,9 +491,20 @@ final class ScrollCaptureController {
     // MARK: - Stitching
 
     /// Feeds a frame to the stitcher and reports new strips.
+    /// The mouse pointer's area in a captured frame (pixels, top-left origin),
+    /// generous enough for the large accessibility pointer sizes.
+    private func pointerRect(in frame: CGImage) -> CGRect? {
+        let mouse = NSEvent.mouseLocation
+        guard captureRect.insetBy(dx: -40, dy: -40).contains(mouse) else { return nil }
+        let scale = CGFloat(frame.width) / max(1, captureRect.width)
+        let x = (mouse.x - captureRect.minX) * scale, y = (captureRect.maxY - mouse.y) * scale
+        // The hotspot is the arrow's tip: the pointer extends down and right.
+        return CGRect(x: x - 8 * scale, y: y - 8 * scale, width: 48 * scale, height: 56 * scale)
+    }
+
     private func process(_ frame: CGImage) -> ScrollStitcher.Outcome {
         guard let stitcher else { return .noMatch }
-        let outcome = stitcher.add(frame)
+        let outcome = stitcher.add(frame, pointer: pointerRect(in: frame))
         if outcome == .appended {
             hasScrolledOnce = true
             stripCount += 1

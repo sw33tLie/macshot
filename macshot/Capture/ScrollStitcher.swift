@@ -78,7 +78,11 @@ final class ScrollStitcher {
 
     /// Aligns `frame` with the reference and appends the rows it reveals.
     @discardableResult
-    func add(_ frame: CGImage) -> Outcome {
+    /// - Parameter pointer: where the mouse pointer is in `frame` (pixels,
+    ///   top-left origin), if the frames include it. It stays put while the
+    ///   page scrolls under it, so it looks like a small changing region; it
+    ///   must not be pasted into the image as one.
+    func add(_ frame: CGImage, pointer: CGRect? = nil) -> Outcome {
         guard !finished else { return .pending }
         guard let referenceSamples, frame.width == reference.width, frame.height == reference.height,
               let samples = ScrollFrameMatcher.samples(of: frame) else {
@@ -139,7 +143,8 @@ final class ScrollStitcher {
         let frameTop = image.height + newRows - frameBottom
         var pastes: [CGRect] = []
         if revisited == 0 {
-            for rect in match.dynamicRects where rect.maxY <= CGFloat(frameBottom) {
+            for rect in match.dynamicRects where rect.maxY <= CGFloat(frameBottom)
+                && !(pointer.map { rect.intersects($0) && rect.width * rect.height < 4 * $0.width * $0.height } ?? false) {
                 trackRegion(rect.offsetBy(dx: 0, dy: CGFloat(frameTop)))
             }
             // Never in the top eighth of the frame either: a translucent navbar
@@ -150,6 +155,9 @@ final class ScrollStitcher {
             pastes = dynamicRegions.compactMap { region in
                 let inFrame = region.offsetBy(dx: 0, dy: CGFloat(-frameTop))
                 guard following.contains(inFrame.minY), following.contains(inFrame.maxY),
+                      // Never a region holding the pointer: it would be stamped
+                      // into the image again at every paste.
+                      !(pointer.map { inFrame.intersects($0) } ?? false),
                       // Never into columns this strip treats as a fixed sidebar.
                       !match.fixedSides.contains(where: { CGFloat($0.lowerBound) < inFrame.maxX && CGFloat($0.upperBound) > inFrame.minX })
                 else { return nil }

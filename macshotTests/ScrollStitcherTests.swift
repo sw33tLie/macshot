@@ -214,6 +214,32 @@ final class ScrollStitcherTests: XCTestCase {
         assertSameRows(stitched, expected, rows: 0..<(total - 100), columns: 150..<360)
     }
 
+    /// The mouse pointer sits still over the page while it scrolls, so it
+    /// looks like a small changing region. Pasting it would stamp a pointer
+    /// into the image again and again (seen on Twitch and x.com).
+    func testTheMousePointerIsNotPastedDownTheImage() {
+        let pointer = CGRect(x: 170, y: 140, width: 20, height: 26)
+        func arrow(_ context: CGContext) {
+            context.setFillColor(CGColor(gray: 0, alpha: 1))
+            context.fill(pointer)
+            context.setFillColor(CGColor(gray: 1, alpha: 1))
+            context.fill(pointer.insetBy(dx: 4, dy: 5))
+        }
+        let path = [0, 30, 62, 95, 128, 160, 195, 230, 262, 300]
+        let stitcher = ScrollStitcher(firstFrame: image(height: height) { self.drawPage($0, scroll: 0, height: self.height) })
+        for position in path.dropFirst() {
+            stitcher.add(image(height: height) { context in
+                self.drawPage(context, scroll: position, height: self.height)
+                arrow(context)
+            }, pointer: pointer.insetBy(dx: -6, dy: -6))
+        }
+        let stitched = stitcher.finish()
+        let total = height + path.last!
+        XCTAssertEqual(stitched.height, total)
+        let expected = image(height: total) { self.drawPage($0, scroll: 0, height: total) }
+        assertSameRows(stitched, expected, rows: 0..<total)
+    }
+
     func testWithPinnedHandlingOffFramesAreStitchedAsCaptured() {
         let stitched = stitch([0, 120], handlesPinnedContent: false) { context, scroll in
             self.drawPage(context, scroll: scroll, height: self.height)
