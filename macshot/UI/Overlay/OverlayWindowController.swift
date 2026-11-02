@@ -66,6 +66,10 @@ protocol OverlayWindowControllerDelegate: AnyObject {
     func overlayDidConfirm(_ controller: OverlayWindowController, capturedImage: NSImage?, annotationData: CaptureAnnotationData?)
     func overlayDidRequestPin(_ controller: OverlayWindowController, image: NSImage, annotationData: CaptureAnnotationData?)
     func overlayDidRequestOCR(_ controller: OverlayWindowController, result: OCRScanResult, image: NSImage?)
+    func overlayDidRequestTableRecognition(
+        _ controller: OverlayWindowController,
+        result: Result<RecognizedTable, Error>
+    )
     func overlayDidRequestUpload(_ controller: OverlayWindowController, image: NSImage, annotationData: CaptureAnnotationData?)
     func overlayDidRequestStartRecording(
         _ controller: OverlayWindowController, rect: NSRect, screen: NSScreen)
@@ -91,6 +95,13 @@ extension OverlayWindowControllerDelegate {
     func overlayDidRequestCopyScrollCapture(_ controller: OverlayWindowController) {
         overlayDidRequestStopScrollCapture(controller)
     }
+}
+
+extension OverlayWindowControllerDelegate {
+    func overlayDidRequestTableRecognition(
+        _ controller: OverlayWindowController,
+        result: Result<RecognizedTable, Error>
+    ) {}
 }
 
 /// Manages one fullscreen overlay per screen.
@@ -692,6 +703,23 @@ extension OverlayWindowController: OverlayViewDelegate {
                 self.playCopySound()
                 self.dismiss()
                 self.overlayDelegate?.overlayDidRequestOCR(self, result: result, image: image)
+            }
+        }
+    }
+
+    func overlayViewDidRequestTableRecognition() {
+        guard let image = captureRegion(),
+              let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+            return
+        }
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            VisionTableRecognizer.recognize(cgImage: cgImage) { [weak self] result in
+                guard let self else { return }
+                DispatchQueue.main.async {
+                    self.dismiss()
+                    self.overlayDelegate?.overlayDidRequestTableRecognition(self, result: result)
+                }
             }
         }
     }
