@@ -23,6 +23,7 @@ class PermissionOnboardingController: NSWindowController {
     private let isReturningUser: Bool
 
     private static let grantedBeforeKey = "screenRecordingGrantedBefore"
+    private static var didRequestScreenRecordingAccess = false
 
     /// Sparkle records the first launch; the flag covers later grants.
     static func isReturningUser(_ defaults: UserDefaults = .standard) -> Bool {
@@ -290,13 +291,13 @@ class PermissionOnboardingController: NSWindowController {
     // MARK: - Actions
 
     @objc private func openSettings() {
-        // macOS lists an app under Screen Recording only once it has asked.
-        // The preflight polling never asks, and captures don't run until the
-        // permission exists, so the list had no macshot to switch on (#299).
-        // Ask once before opening Settings: the first call adds macshot to
-        // the list (switched off) and shows the system prompt; later calls
-        // return immediately without a dialog.
-        _ = CGRequestScreenCaptureAccess()
+        // First launch: register macshot in Settings (#299). Returning users
+        // need the pane to replace a possibly stale grant; requesting access
+        // again does not replace the old signing requirement.
+        if !isReturningUser && !Self.didRequestScreenRecordingAccess {
+            Self.didRequestScreenRecordingAccess = true
+            _ = CGRequestScreenCaptureAccess()
+        }
         // Deep-link directly to Privacy & Security → Screen Recording.
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
             NSWorkspace.shared.open(url)
