@@ -456,6 +456,13 @@ class OverlayView: NSView {
             }
         }
     }
+    /// Settings → Tools → "Hide the bottom toolbar": no tool strip or options
+    /// row, so nothing covers the capture; tools are picked with their
+    /// keyboard shortcuts instead. The right action strip is unaffected. (#490)
+    static let hideBottomToolbarKey = "hideBottomToolbar"
+    private var bottomToolbarHiddenBySetting: Bool {
+        UserDefaults.standard.bool(forKey: Self.hideBottomToolbarKey)
+    }
     private var bottomStripView: ToolbarStripView?
     private var rightStripView: ToolbarStripView?
     private var toolOptionsRowView: ToolOptionsRowView?
@@ -5270,7 +5277,7 @@ class OverlayView: NSView {
         rightStrip.passesThrough = isEditorMode
 
         let visible = showToolbars && state == .selected && !isScrollCapturing
-        let bottomHasButtons = bottomStrip.buttonViews.count > 0
+        let bottomHasButtons = bottomStrip.buttonViews.count > 0 && !bottomToolbarHiddenBySetting
         bottomStrip.isHidden = !visible || !bottomHasButtons
         let rightHasButtons = rightStrip.buttonViews.count > 0
         rightStrip.isHidden = !visible || !rightHasButtons
@@ -5312,7 +5319,8 @@ class OverlayView: NSView {
 
         let rightSize = rightStrip.frame.size
 
-        let bottomSize = bottomStrip.frame.size
+        // A hidden bottom bar must not push the right bar out of its way.
+        let bottomSize = bottomHasButtons ? bottomStrip.frame.size : .zero
 
         if isEditorMode {
             let cb = chromeParentView?.bounds ?? bounds

@@ -1646,6 +1646,23 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.translatesAutoresizingMaskIntoConstraints = false
         stack.edgeInsets = NSEdgeInsets(top: 0, left: 20, bottom: 16, right: 20)
 
+        // ── Hide the whole bottom toolbar (#490) ─────────────
+        let hideBottomToolbarCheckbox = NSButton(
+            checkboxWithTitle: L("Hide the bottom toolbar"),
+            target: self,
+            action: #selector(hideBottomToolbarChanged(_:)))
+        hideBottomToolbarCheckbox.state =
+            UserDefaults.standard.bool(forKey: OverlayView.hideBottomToolbarKey) ? .on : .off
+        stack.addArrangedSubview(hideBottomToolbarCheckbox)
+        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+
+        let hideBottomToolbarNote = NSTextField(
+            labelWithString: L("Pick tools with their keyboard shortcuts instead."))
+        hideBottomToolbarNote.font = NSFont.systemFont(ofSize: 11)
+        hideBottomToolbarNote.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(hideBottomToolbarNote)
+        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
+
         // ── Annotation Tools ─────────────────────────────────
         stack.addArrangedSubview(sectionHeader(L("Annotation Tools")))
         stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
@@ -3184,6 +3201,10 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     @objc private func doubleClickToCopyChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "doubleClickToCopy")
     }
+    @objc private func hideBottomToolbarChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: OverlayView.hideBottomToolbarKey)
+    }
+
     @objc private func hideCaptureInstructionsChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "hideCaptureInstructions")
     }
