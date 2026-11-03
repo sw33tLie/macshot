@@ -130,7 +130,7 @@ macshot/
 │   │
 │   ├── Popover/
 │   │   ├── PopoverHelper.swift         # Static helper for showing/dismissing NSPopovers
-│   │   ├── ColorPickerView.swift       # Custom color picker: swatches, HSB gradient, opacity, custom slots
+│   │   ├── ColorPickerView.swift       # Custom color picker: swatches, HSB gradient, opacity, custom slots, hex entry
 │   │   ├── ListPickerView.swift        # Reusable list picker with checkmark selection
 │   │   ├── EmojiPickerView.swift       # Emoji grid with category tabs
 │   │   └── GradientPickerView.swift    # Beautify gradient style swatch grid
