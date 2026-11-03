@@ -2,7 +2,7 @@ import Cocoa
 
 /// Custom color picker view for use inside an NSPopover.
 /// Features: preset swatches, custom saveable slots, opacity slider, HSB gradient, brightness slider, hex display.
-class ColorPickerView: NSView {
+class ColorPickerView: NSView, NSTextFieldDelegate {
 
     // MARK: - Public interface
 
@@ -29,6 +29,7 @@ class ColorPickerView: NSView {
         self.selectedColor = color
         self.opacity = opacity
         syncHSBFromColor(color)
+        syncHexField()
         needsDisplay = true
     }
 
@@ -48,6 +49,9 @@ class ColorPickerView: NSView {
     private let gradientSize: CGFloat = 140
     private let brightnessBarHeight: CGFloat = 16
     private let hexRowHeight: CGFloat = 22
+    private let hexPreviewSize: CGFloat = 12
+    private let hexBubbleInset: CGFloat = 6
+    private let hexBubbleGap: CGFloat = 6
 
     // MARK: - HSB state
 
@@ -62,8 +66,9 @@ class ColorPickerView: NSView {
     private var opacitySliderRect: NSRect = .zero
     private var gradientRect: NSRect = .zero
     private var brightnessSliderRect: NSRect = .zero
-    private var hexDisplayRect: NSRect = .zero
     private var customSlotRects: [NSRect] = []
+
+    private let hexField = HexField()
 
     // MARK: - Drag state
 
@@ -88,9 +93,52 @@ class ColorPickerView: NSView {
         super.init(frame: NSRect(origin: .zero, size: NSSize(width: 180, height: 400)))
         let size = preferredSize
         frame.size = size
+
+        hexField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .medium)
+        hexField.isBordered = false
+        hexField.drawsBackground = false
+        hexField.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.9)
+        hexField.focusRingType = .none
+        hexField.placeholderString = "#RRGGBB"
+        hexField.delegate = self
+        hexField.target = self
+        hexField.action = #selector(hexFieldCommitted)
+        hexField.setAccessibilityLabel(L("Color"))
+        addSubview(hexField)
+        syncHexField()
+        layoutHexField()
     }
 
     required init?(coder: NSCoder) { fatalError() }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        // Prevent auto focusing on editing the hex code input
+        window?.makeFirstResponder(self)
+    }
+
+    override var acceptsFirstResponder: Bool { true }
+
+    private var hexRowRect: NSRect {
+        NSRect(x: padding, y: padding, width: bounds.width - padding * 2, height: hexRowHeight)
+    }
+
+    private var hexBubbleRect: NSRect {
+        let row = hexRowRect
+        let left = row.minX + hexBubbleInset + hexPreviewSize + hexBubbleGap
+        return NSRect(x: left, y: row.minY, width: row.maxX - left, height: row.height)
+    }
+
+    private func layoutHexField() {
+        let bubble = hexBubbleRect
+        hexField.frame = NSRect(x: bubble.minX + hexBubbleInset, y: bubble.midY - 8,
+                                width: bubble.width - hexBubbleInset * 2, height: 16)
+    }
+
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        layoutHexField()
+    }
 
     // MARK: - Drawing
 
@@ -189,9 +237,7 @@ class ColorPickerView: NSView {
 
         // --- 6. Hex display ---
         cursorY -= padding
-        let hRect = NSRect(x: padding, y: cursorY - hexRowHeight, width: pickerWidth - padding * 2, height: hexRowHeight)
-        hexDisplayRect = hRect
-        drawHexDisplay(in: hRect)
+        drawHexRow(in: hexRowRect)
     }
 
     // MARK: - Sub-draw helpers
@@ -288,38 +334,36 @@ class ColorPickerView: NSView {
         NSBezierPath(roundedRect: thumbRect, xRadius: 3, yRadius: 3).stroke()
     }
 
-    private func drawHexDisplay(in rect: NSRect) {
+    private func drawHexRow(in rect: NSRect) {
+        let bubble = hexBubbleRect
         NSColor(white: 0.2, alpha: 0.8).setFill()
-        NSBezierPath(roundedRect: rect, xRadius: 4, yRadius: 4).fill()
+        NSBezierPath(roundedRect: bubble, xRadius: 4, yRadius: 4).fill()
 
         // Preview circle
-        let circleSize: CGFloat = 12
-        let circleRect = NSRect(x: rect.minX + 6, y: rect.midY - circleSize / 2, width: circleSize, height: circleSize)
+        let circleRect = NSRect(x: rect.minX + hexBubbleInset, y: rect.midY - hexPreviewSize / 2,
+                                width: hexPreviewSize, height: hexPreviewSize)
         selectedColor.withAlphaComponent(opacity).setFill()
         NSBezierPath(ovalIn: circleRect).fill()
         ToolbarLayout.iconColor.withAlphaComponent(0.3).setStroke()
         NSBezierPath(ovalIn: circleRect).stroke()
-
-        // Hex text
-        let hashAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.monospacedSystemFont(ofSize: 11, weight: .regular),
-            .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(0.5),
-        ]
-        let hexAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.monospacedSystemFont(ofSize: 11, weight: .medium),
-            .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(0.9),
-        ]
-        let hashSize = ("#" as NSString).size(withAttributes: hashAttrs)
-        let hashX = circleRect.maxX + 6
-        ("#" as NSString).draw(at: NSPoint(x: hashX, y: rect.midY - hashSize.height / 2), withAttributes: hashAttrs)
-        let hex = colorToHex(selectedColor)
-        (hex as NSString).draw(at: NSPoint(x: hashX + hashSize.width, y: rect.midY - hashSize.height / 2), withAttributes: hexAttrs)
     }
 
     // MARK: - Mouse events
 
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
+
+        if hexRowRect.contains(point) {
+            if hexField.currentEditor() == nil {
+                window?.makeFirstResponder(hexField)
+                hexField.selectText(nil)
+            }
+            return
+        }
+        // A click elsewhere commits a half-typed code before changing the color.
+        if hexField.currentEditor() != nil {
+            window?.makeFirstResponder(nil)
+        }
 
         // Preset swatches
         for (i, color) in Self.presetColors.enumerated() {
@@ -331,6 +375,7 @@ class ColorPickerView: NSView {
                 selectedColor = color
                 syncHSBFromColor(color)
                 onColorChanged?(color)
+                syncHexField()
                 needsDisplay = true
                 return
             }
@@ -344,6 +389,7 @@ class ColorPickerView: NSView {
                     selectedColor = saved
                     syncHSBFromColor(saved)
                     onColorChanged?(saved)
+                    syncHexField()
                 }
                 onCustomSlotSelected?(i)
                 needsDisplay = true
@@ -400,6 +446,7 @@ class ColorPickerView: NSView {
         let color = NSColor(calibratedHue: hue, saturation: saturation, brightness: brightness, alpha: 1)
         selectedColor = color
         onColorChanged?(color)
+        syncHexField()
         needsDisplay = true
     }
 
@@ -409,6 +456,7 @@ class ColorPickerView: NSView {
         let color = NSColor(calibratedHue: hue, saturation: saturation, brightness: brightness, alpha: 1)
         selectedColor = color
         onColorChanged?(color)
+        syncHexField()
         needsDisplay = true
     }
 
@@ -440,11 +488,63 @@ class ColorPickerView: NSView {
                       Int(round(rgb.blueComponent * 255)))
     }
 
-    /// Save the current color into the selected custom slot.
+    // MARK: - Hex field
+
+    private func syncHexField(force: Bool = false) {
+        let editor = hexField.currentEditor()
+        guard force || editor == nil else { return }
+        let text = "#" + colorToHex(selectedColor)
+        hexField.stringValue = text
+        editor?.string = text
+    }
+
+    @objc private func hexFieldCommitted() {
+        commitHexField()
+    }
+
+    func commitHexField() {
+        let text = hexField.currentEditor()?.string ?? hexField.stringValue
+        guard let color = ColorCode.color(from: text) else {
+            syncHexField(force: true)
+            return
+        }
+        selectedColor = color
+        syncHSBFromColor(color)
+        onColorChanged?(color)
+        syncHexField(force: true)
+        needsDisplay = true
+    }
+
+    func controlTextDidEndEditing(_ obj: Notification) {
+        commitHexField()
+    }
+
     func saveToSelectedSlot(_ color: NSColor) {
         guard selectedColorSlot >= 0, selectedColorSlot < customColors.count else { return }
         customColors[selectedColorSlot] = color.withAlphaComponent(1)
         onCustomColorsChanged?(customColors)
         needsDisplay = true
+    }
+}
+
+private final class HexField: NSTextField {
+    override func mouseDown(with event: NSEvent) {
+        super.mouseDown(with: event)
+        (currentEditor() as? NSTextView)?.selectAll(nil)
+    }
+}
+
+/// Accepts `#RRGGBB` and bare `RRGGBB`; anything else returns `nil`.
+enum ColorCode {
+
+    static func color(from text: String) -> NSColor? {
+        var value = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if value.hasPrefix("#") { value.removeFirst() }
+        guard value.count == 6, value.allSatisfy(\.isHexDigit),
+              let number = UInt32(value, radix: 16) else { return nil }
+        return NSColor(srgbRed: CGFloat((number >> 16) & 0xFF) / 255,
+                       green: CGFloat((number >> 8) & 0xFF) / 255,
+                       blue: CGFloat(number & 0xFF) / 255,
+                       alpha: 1)
     }
 }
