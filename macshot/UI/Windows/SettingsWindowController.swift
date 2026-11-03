@@ -65,6 +65,8 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var thumbnailAutoDismissStepper: NSStepper!
     private var thumbnailAutoDismissField: NSTextField!
     private var thumbnailStackingPopup: NSPopUpButton!
+    private var thumbnailClickActionPopup: NSPopUpButton!
+    private var thumbnailEditBehaviorPopup: NSPopUpButton!
     private var thumbnailCornerPopup: NSPopUpButton!
     private var thumbnailLetterboxCheckbox: NSButton!
     private var historyUnlimitedCheckbox: NSButton!
@@ -844,6 +846,39 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         thumbnailStackingPopup.action = #selector(thumbnailStackingChanged(_:))
 
         stack.addArrangedSubview(indented(labeledRow(L("  Multiple previews:"), controls: [thumbnailStackingPopup!])))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        // Click on the preview image itself
+        thumbnailClickActionPopup = NSPopUpButton()
+        let clickTitles: [(ThumbnailClickAction, String)] = [
+            (.dismiss, L("Dismiss")),
+            (.openEditor, L("Open in Editor")),
+            (.copy, L("Copy & dismiss")),
+            (.nothing, L("Do nothing")),
+        ]
+        for (action, title) in clickTitles {
+            thumbnailClickActionPopup.addItem(withTitle: title)
+            thumbnailClickActionPopup.lastItem?.representedObject = action.rawValue
+        }
+        thumbnailClickActionPopup.target = self
+        thumbnailClickActionPopup.action = #selector(thumbnailClickActionChanged(_:))
+        stack.addArrangedSubview(indented(labeledRow(L("  Click on preview:"), controls: [thumbnailClickActionPopup!])))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        // What happens to the preview while it is open in the editor
+        thumbnailEditBehaviorPopup = NSPopUpButton()
+        let editTitles: [(ThumbnailEditBehavior, String)] = [
+            (.dismiss, L("Close preview")),
+            (.keep, L("Keep in stack")),
+            (.returnAfterClose, L("Return to stack when editor closes")),
+        ]
+        for (behavior, title) in editTitles {
+            thumbnailEditBehaviorPopup.addItem(withTitle: title)
+            thumbnailEditBehaviorPopup.lastItem?.representedObject = behavior.rawValue
+        }
+        thumbnailEditBehaviorPopup.target = self
+        thumbnailEditBehaviorPopup.action = #selector(thumbnailEditBehaviorChanged(_:))
+        stack.addArrangedSubview(indented(labeledRow(L("  When opened in Editor:"), controls: [thumbnailEditBehaviorPopup!])))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         thumbnailCornerPopup = NSPopUpButton()
@@ -2668,6 +2703,15 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         let stacking = UserDefaults.standard.object(forKey: "thumbnailStacking") as? Bool ?? true
         thumbnailStackingPopup.selectItem(at: stacking ? 0 : 1)
 
+        let clickAction = ThumbnailClickAction.current.rawValue
+        if let item = thumbnailClickActionPopup.itemArray.first(where: { $0.representedObject as? String == clickAction }) {
+            thumbnailClickActionPopup.select(item)
+        }
+        let editBehavior = ThumbnailEditBehavior.current.rawValue
+        if let item = thumbnailEditBehaviorPopup.itemArray.first(where: { $0.representedObject as? String == editBehavior }) {
+            thumbnailEditBehaviorPopup.select(item)
+        }
+
         let thumbnailCorner = UserDefaults.standard.string(forKey: "thumbnailCorner") ?? "bottomRight"
         switch thumbnailCorner {
         case "bottomLeft": thumbnailCornerPopup.selectItem(at: 1)
@@ -2882,6 +2926,16 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
     @objc private func thumbnailStackingChanged(_ sender: NSPopUpButton) {
         UserDefaults.standard.set(sender.indexOfSelectedItem == 0, forKey: "thumbnailStacking")
+    }
+    @objc private func thumbnailClickActionChanged(_ sender: NSPopUpButton) {
+        guard let raw = sender.selectedItem?.representedObject as? String,
+              ThumbnailClickAction(rawValue: raw) != nil else { return }
+        UserDefaults.standard.set(raw, forKey: ThumbnailClickAction.userDefaultsKey)
+    }
+    @objc private func thumbnailEditBehaviorChanged(_ sender: NSPopUpButton) {
+        guard let raw = sender.selectedItem?.representedObject as? String,
+              ThumbnailEditBehavior(rawValue: raw) != nil else { return }
+        UserDefaults.standard.set(raw, forKey: ThumbnailEditBehavior.userDefaultsKey)
     }
     @objc private func thumbnailCornerChanged(_ sender: NSPopUpButton) {
         let values = ["bottomRight", "bottomLeft", "topRight", "topLeft"]

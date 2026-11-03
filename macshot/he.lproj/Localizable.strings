@@ -861,3 +861,12 @@
 
 "Snap webcam to corners when moved" = "הצמדת מצלמת הרשת לפינות בעת הזזה";
 "Search emoji" = "חיפוש אמוג׳י";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "סגור";
+"Copy & dismiss" = "העתק וסגור";
+"Close preview" = "סגור תצוגה מקדימה";
+"Keep in stack" = "השאר בערימה";
+"Return to stack when editor closes" = "החזר לערימה כשהעורך נסגר";
+"  Click on preview:" = "  לחיצה על התצוגה המקדימה:";
+"  When opened in Editor:" = "  בעת פתיחה בעורך:";

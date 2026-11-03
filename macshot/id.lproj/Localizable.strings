@@ -859,3 +859,12 @@
 
 "Snap webcam to corners when moved" = "Tempelkan webcam ke sudut saat dipindahkan";
 "Search emoji" = "Cari emoji";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Tutup";
+"Copy & dismiss" = "Salin & tutup";
+"Close preview" = "Tutup pratinjau";
+"Keep in stack" = "Simpan di tumpukan";
+"Return to stack when editor closes" = "Kembali ke tumpukan saat editor ditutup";
+"  Click on preview:" = "  Klik pada pratinjau:";
+"  When opened in Editor:" = "  Saat dibuka di Editor:";
