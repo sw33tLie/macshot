@@ -198,6 +198,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     private var overlayControllers: [OverlayWindowController] = []
     private var settingsController: SettingsWindowController?
     private var onboardingController: PermissionOnboardingController?
+    // Snapshot before Sparkle starts and can mark this as a previous launch.
+    private let hasUsedMacshotBefore = PermissionOnboardingController.isReturningUser()
     private var pinControllers: [PinWindowController] = []
     private var thumbnailControllers: [FloatingThumbnailController] = []
     private var ocrController: OCRResultController?
@@ -242,10 +244,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     /// capture can be torn down by `rebuildOverlayPool()` later in startup.
     private var isReadyForOpenRequests = false
     private var pendingOpenURLs: [URL] = []
-    /// Capture/record URL actions additionally wait for Screen Recording
-    /// permission. Non-capture actions (settings, history, file opens, etc.)
-    /// remain usable while the onboarding window is shown.
-    private var isReadyForScreenCaptureURLs = false
+    /// Capture and record actions wait for Screen Recording permission.
+    /// URL actions are queued during onboarding; non-capture actions remain usable.
+    private var isReadyForScreenCapture = false
     private var pendingScreenCaptureURLs: [URL] = []
     /// App Nap suppression assertion. Held for the app's lifetime so global
     /// hotkeys respond instantly instead of paying a wake-up penalty when
@@ -362,7 +363,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             guard let self = self else { return }
             if granted {
                 PermissionOnboardingController.rememberGranted()
-                self.markScreenCaptureURLsReady()
+                self.markScreenCaptureReady()
             } else {
                 self.showOnboarding()
             }
@@ -387,11 +388,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             existing.show()
             return
         }
-        let oc = PermissionOnboardingController()
+        let oc = PermissionOnboardingController(returningUser: hasUsedMacshotBefore || isReadyForScreenCapture)
         oc.onPermissionGranted = { [weak self] in
             guard let self = self else { return }
             self.onboardingController = nil
-            self.markScreenCaptureURLsReady()
+            self.markScreenCaptureReady()
         }
         oc.onClose = { [weak self, weak oc] in
             guard let self = self, self.onboardingController === oc else { return }
@@ -414,15 +415,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         rebuildOverlayPool()
     }
 
-    private func markScreenCaptureURLsReady() {
-        guard !isReadyForScreenCaptureURLs else { return }
+    private func markScreenCaptureReady() {
+        guard !isReadyForScreenCapture else { return }
         // Do not rebuild underneath a capture started through another entry
         // point. A later capture can create any missing pooled controller on
         // demand.
         if !isCapturing && recordingEngine == nil {
             prewarmCapturePath()
         }
-        isReadyForScreenCaptureURLs = true
+        isReadyForScreenCapture = true
         let urls = pendingScreenCaptureURLs
         pendingScreenCaptureURLs.removeAll()
         handleOpenURLs(urls)
@@ -461,12 +462,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     @objc private func systemDidWake() {
-        guard !isCapturing, recordingEngine == nil else { return }
+        guard isReadyForScreenCapture, !isCapturing, recordingEngine == nil else { return }
         prewarmCapturePath()
     }
 
     @objc private func screenParametersDidChange() {
-        guard !isCapturing, recordingEngine == nil else { return }
+        guard isReadyForScreenCapture, !isCapturing, recordingEngine == nil else { return }
         prewarmCapturePath()
     }
 
@@ -1108,6 +1109,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func beginCaptureArea(fromMenu: Bool) {
+        guard prepareToStartCapture() else { return }
         startCapture(fromMenu: fromMenu)
     }
 
@@ -1120,7 +1122,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func beginCaptureFullScreen(fromMenu: Bool) {
-        guard canStartCapture else { return }
+        guard prepareToStartCapture() else { return }
         pendingFullScreen = true
         startCapture(fromMenu: fromMenu)
     }
@@ -1148,7 +1150,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func beginCaptureOCR(fromMenu: Bool) {
-        guard canStartCapture else { return }
+        guard prepareToStartCapture() else { return }
         pendingOCRMode = true
         startCapture(fromMenu: fromMenu)
     }
@@ -1157,7 +1159,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     /// original text on the screenshot (macshot://ocr-translate). `target` nil
     /// uses the saved default language.
     private func beginCaptureTranslate(target: String?, fromMenu: Bool) {
-        guard canStartCapture else { return }
+        guard prepareToStartCapture() else { return }
         pendingTranslateOverlayMode = true
         pendingTranslateOverlayLang = target
         startCapture(fromMenu: fromMenu)
@@ -1172,7 +1174,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func beginQuickCapture(fromMenu: Bool) {
-        guard canStartCapture else { return }
+        guard prepareToStartCapture() else { return }
         pendingQuickCaptureMode = true
         startCapture(fromMenu: fromMenu)
     }
@@ -1186,7 +1188,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func beginScrollCapture(fromMenu: Bool) {
-        guard canStartCapture else { return }
+        guard prepareToStartCapture() else { return }
         pendingScrollCaptureMode = true
         startCapture(fromMenu: fromMenu)
     }
@@ -1202,7 +1204,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func beginCaptureLastArea(fromMenu: Bool) {
-        guard canStartCapture else { return }
+        guard prepareToStartCapture() else { return }
         pendingRestoreLastArea = true
         startCapture(fromMenu: fromMenu)
     }
@@ -1219,7 +1221,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func beginRecordArea(fromMenu: Bool, asGIF: Bool = false) {
-        guard canStartCapture else { return }
+        guard prepareToStartCapture() else { return }
         pendingRecordMode = true
         startCapture(fromMenu: fromMenu, recordingAsGIF: asGIF)
     }
@@ -1242,7 +1244,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func beginRecordFullScreen(fromMenu: Bool) {
-        guard canStartCapture else { return }
+        guard prepareToStartCapture() else { return }
         pendingFullScreenRecord = true
         if UserDefaults.standard.integer(forKey: "captureDelaySeconds") > 0 {
             pendingFullScreenRecordAutoStart = true
@@ -1260,24 +1262,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         }
     }
 
-    /// Whether a new capture can start right now. The `begin*` entry points set
-    /// their pending mode flag (pendingOCRMode, pendingRecordMode, …) BEFORE
-    /// calling `startCapture`. If `startCapture` were to bail at its guards after
-    /// the flag was set, the flag would strand and get applied to the *next*
-    /// capture — e.g. a stranded `pendingOCRMode` makes a later screenshot spawn
-    /// an unexpected OCR window (issue #276). So each `begin*` checks this FIRST
-    /// and only sets its flag when a capture will actually run. We must not clear
-    /// the flags inside `startCapture`'s `!isCapturing` guard, because during a
-    /// delay-capture countdown `isCapturing` is already true and the pending mode
-    /// belongs to that accepted (not-yet-consumed) capture.
-    private var canStartCapture: Bool {
-        !isCapturing && recordingEngine == nil
+    /// Check before setting any pending mode flags, so a blocked action cannot
+    /// affect the next capture (#276). While access is missing, send menu and
+    /// hotkey actions to onboarding before they can trigger a system prompt.
+    private func prepareToStartCapture() -> Bool {
+        guard !isCapturing, recordingEngine == nil else { return false }
+        guard isReadyForScreenCapture || PermissionOnboardingController.hasScreenRecordingPermission() else {
+            showOnboarding()
+            return false
+        }
+        return true
     }
 
     private func startCapture(fromMenu: Bool = false, recordingAsGIF: Bool = false) {
-        guard !isCapturing else { return }
-        // Don't allow captures while recording
-        guard recordingEngine == nil else { return }
         nextRecordingIsGIF = recordingAsGIF
         let trace = makeCaptureTimingTrace()
         captureTimingTrace = trace
@@ -2433,11 +2430,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                 let urlSchemeEnabled = UserDefaults.standard.object(forKey: "urlSchemeEnabled") as? Bool ?? true
                 guard urlSchemeEnabled else { continue }
                 if Self.screenCaptureURLActions.contains(url.host ?? "") {
-                    if !isReadyForScreenCaptureURLs,
+                    if !isReadyForScreenCapture,
                        PermissionOnboardingController.hasScreenRecordingPermission() {
-                        markScreenCaptureURLsReady()
+                        markScreenCaptureReady()
                     }
-                    if !isReadyForScreenCaptureURLs {
+                    if !isReadyForScreenCapture {
                         pendingScreenCaptureURLs.append(url)
                         showOnboarding()
                         continue
@@ -3578,7 +3575,9 @@ extension AppDelegate: NSMenuDelegate {
         // menuNeedsUpdate). Dismiss any active modal before the menu shows, and
         // pre-warm ScreenCaptureKit content while the user browses.
         guard menu === statusBarMenu else { return }
-        ScreenCaptureManager.prewarm()
+        if isReadyForScreenCapture {
+            ScreenCaptureManager.prewarm()
+        }
         if let modalWin = NSApp.modalWindow {
             NSApp.stopModal()
             modalWin.close()
