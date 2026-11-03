@@ -861,3 +861,12 @@
 
 "Snap webcam to corners when moved" = "محاذاة كاميرا الويب إلى الزوايا عند تحريكها";
 "Search emoji" = "ابحث عن رمز تعبيري";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "إغلاق";
+"Copy & dismiss" = "نسخ وإغلاق";
+"Close preview" = "إغلاق المعاينة";
+"Keep in stack" = "إبقاء في المكدس";
+"Return to stack when editor closes" = "إعادة إلى المكدس عند إغلاق المحرر";
+"  Click on preview:" = "  النقر على المعاينة:";
+"  When opened in Editor:" = "  عند الفتح في المحرر:";

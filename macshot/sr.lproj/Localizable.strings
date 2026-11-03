@@ -861,3 +861,12 @@
 
 "Snap webcam to corners when moved" = "Приањање веб-камере уз углове при померању";
 "Search emoji" = "Претражи емоџије";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Затвори";
+"Copy & dismiss" = "Копирај и затвори";
+"Close preview" = "Затвори преглед";
+"Keep in stack" = "Задржи у гомили";
+"Return to stack when editor closes" = "Врати у гомилу након затварања уређивача";
+"  Click on preview:" = "  Клик на преглед:";
+"  When opened in Editor:" = "  При отварању у уређивачу:";

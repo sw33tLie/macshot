@@ -859,3 +859,12 @@
 
 "Snap webcam to corners when moved" = "Bám webcam vào các góc khi di chuyển";
 "Search emoji" = "Tìm biểu tượng cảm xúc";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Đóng";
+"Copy & dismiss" = "Sao chép và đóng";
+"Close preview" = "Đóng bản xem trước";
+"Keep in stack" = "Giữ trong ngăn xếp";
+"Return to stack when editor closes" = "Trở lại ngăn xếp khi đóng trình chỉnh sửa";
+"  Click on preview:" = "  Nhấp vào bản xem trước:";
+"  When opened in Editor:" = "  Khi mở trong trình chỉnh sửa:";

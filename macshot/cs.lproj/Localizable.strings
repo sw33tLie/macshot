@@ -859,3 +859,12 @@
 
 "Snap webcam to corners when moved" = "Přichytávat webkameru k rohům při přesouvání";
 "Search emoji" = "Hledat emoji";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Zavřít";
+"Copy & dismiss" = "Kopírovat a zavřít";
+"Close preview" = "Zavřít náhled";
+"Keep in stack" = "Ponechat v zásobníku";
+"Return to stack when editor closes" = "Vrátit do zásobníku po zavření editoru";
+"  Click on preview:" = "  Kliknutí na náhled:";
+"  When opened in Editor:" = "  Při otevření v editoru:";

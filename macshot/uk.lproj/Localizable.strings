@@ -859,3 +859,12 @@
 
 "Snap webcam to corners when moved" = "Прив’язувати вебкамеру до кутів під час переміщення";
 "Search emoji" = "Пошук емодзі";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Закрити";
+"Copy & dismiss" = "Скопіювати й закрити";
+"Close preview" = "Закрити превʼю";
+"Keep in stack" = "Залишити в стосі";
+"Return to stack when editor closes" = "Повернути в стос після закриття редактора";
+"  Click on preview:" = "  Клік по превʼю:";
+"  When opened in Editor:" = "  Під час редагування:";

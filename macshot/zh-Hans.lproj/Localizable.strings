@@ -861,3 +861,12 @@
 
 "Snap webcam to corners when moved" = "移动时将摄像头吸附到角落";
 "Search emoji" = "搜索表情符号";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "关闭";
+"Copy & dismiss" = "复制并关闭";
+"Close preview" = "关闭预览";
+"Keep in stack" = "保留在堆叠中";
+"Return to stack when editor closes" = "关闭编辑器后返回堆叠";
+"  Click on preview:" = "  点击预览:";
+"  When opened in Editor:" = "  在编辑器中打开时:";
