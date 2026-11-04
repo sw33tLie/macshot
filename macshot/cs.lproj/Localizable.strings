@@ -859,3 +859,8 @@
 
 "Snap webcam to corners when moved" = "Přichytávat webkameru k rohům při přesouvání";
 "Search emoji" = "Hledat emoji";
+
+"Default Colors" = "Výchozí barvy";
+"The preset swatches in the color picker." = "Přednastavené vzorky v nástroji pro výběr barvy.";
+"Add Color" = "Přidat barvu";
+"No default colors." = "Žádné výchozí barvy.";

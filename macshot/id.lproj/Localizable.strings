@@ -859,3 +859,8 @@
 
 "Snap webcam to corners when moved" = "Tempelkan webcam ke sudut saat dipindahkan";
 "Search emoji" = "Cari emoji";
+
+"Default Colors" = "Warna Default";
+"The preset swatches in the color picker." = "Warna preset di pemilih warna.";
+"Add Color" = "Tambah Warna";
+"No default colors." = "Tidak ada warna default.";

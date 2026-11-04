@@ -861,3 +861,8 @@
 
 "Snap webcam to corners when moved" = "Webcam beim Verschieben an Ecken einrasten lassen";
 "Search emoji" = "Emoji suchen";
+
+"Default Colors" = "Standardfarben";
+"The preset swatches in the color picker." = "Die voreingestellten Farbfelder in der Farbauswahl.";
+"Add Color" = "Farbe hinzufügen";
+"No default colors." = "Keine Standardfarben.";

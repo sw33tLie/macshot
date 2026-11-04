@@ -861,3 +861,8 @@
 
 "Snap webcam to corners when moved" = "সরানোর সময় ওয়েবক্যামকে কোণায় আটকে দিন";
 "Search emoji" = "ইমোজি খুঁজুন";
+
+"Default Colors" = "ডিফল্ট রঙ";
+"The preset swatches in the color picker." = "রঙ নির্বাচকে প্রিসেট রংসমূহ।";
+"Add Color" = "রঙ যোগ করুন";
+"No default colors." = "কোনো ডিফল্ট রঙ নেই।";

@@ -859,3 +859,8 @@
 
 "Snap webcam to corners when moved" = "Fäst webbkameran i hörnen när den flyttas";
 "Search emoji" = "Sök emoji";
+
+"Default Colors" = "Standardfärger";
+"The preset swatches in the color picker." = "De förinställda färgproverna i färgväljaren.";
+"Add Color" = "Lägg till färg";
+"No default colors." = "Inga standardfärger.";
