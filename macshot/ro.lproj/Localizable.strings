@@ -859,3 +859,8 @@
 
 "Snap webcam to corners when moved" = "Aliniază webcamul la colțuri când este mutat";
 "Search emoji" = "Caută emoji";
+
+"Default Colors" = "Culori implicite";
+"The preset swatches in the color picker." = "Culorile prestabilite din selectorul de culori.";
+"Add Color" = "Adaugă o culoare";
+"No default colors." = "Nicio culoare implicită.";

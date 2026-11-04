@@ -861,3 +861,8 @@
 
 "Snap webcam to corners when moved" = "Ajusta la càmera web a les cantonades en moure-la";
 "Search emoji" = "Cerca emojis";
+
+"Default Colors" = "Colors per defecte";
+"The preset swatches in the color picker." = "Els colors predefinits del selector de color.";
+"Add Color" = "Afegeix un color";
+"No default colors." = "Cap color per defecte.";

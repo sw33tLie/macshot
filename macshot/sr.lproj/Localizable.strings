@@ -861,3 +861,8 @@
 
 "Snap webcam to corners when moved" = "Приањање веб-камере уз углове при померању";
 "Search emoji" = "Претражи емоџије";
+
+"Default Colors" = "Подразумеване боје";
+"The preset swatches in the color picker." = "Унапред подешене боје у бирачу боја.";
+"Add Color" = "Додај боју";
+"No default colors." = "Нема подразумеваних боја.";

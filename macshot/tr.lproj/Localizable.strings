@@ -861,3 +861,8 @@
 
 "Snap webcam to corners when moved" = "Taşırken web kamerasını köşelere yasla";
 "Search emoji" = "Emoji ara";
+
+"Default Colors" = "Varsayılan renkler";
+"The preset swatches in the color picker." = "Renk seçicideki hazır renkler.";
+"Add Color" = "Renk ekle";
+"No default colors." = "Varsayılan renk yok.";

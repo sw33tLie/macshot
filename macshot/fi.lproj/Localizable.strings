@@ -859,3 +859,8 @@
 
 "Snap webcam to corners when moved" = "Kohdista verkkokamera kulmiin siirrettäessä";
 "Search emoji" = "Hae emojia";
+
+"Default Colors" = "Oletusvärit";
+"The preset swatches in the color picker." = "Värien esiasetukset värinvalitsimessa.";
+"Add Color" = "Lisää väri";
+"No default colors." = "Ei oletusvärejä.";

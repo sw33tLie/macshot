@@ -859,3 +859,8 @@
 
 "Snap webcam to corners when moved" = "移動時にウェブカメラを四隅にスナップ";
 "Search emoji" = "絵文字を検索";
+
+"Default Colors" = "デフォルトの色";
+"The preset swatches in the color picker." = "カラーピッカーのプリセット色。";
+"Add Color" = "色を追加";
+"No default colors." = "デフォルトの色はありません。";

@@ -861,3 +861,8 @@
 
 "Snap webcam to corners when moved" = "הצמדת מצלמת הרשת לפינות בעת הזזה";
 "Search emoji" = "חיפוש אמוג׳י";
+
+"Default Colors" = "צבעי ברירת מחדל";
+"The preset swatches in the color picker." = "הדוגמיות המוגדרות מראש בבורר הצבעים.";
+"Add Color" = "הוספת צבע";
+"No default colors." = "אין צבעי ברירת מחדל.";

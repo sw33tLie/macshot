@@ -861,3 +861,8 @@
 
 "Snap webcam to corners when moved" = "이동할 때 웹캠을 모서리에 맞추기";
 "Search emoji" = "이모티콘 검색";
+
+"Default Colors" = "기본 색상";
+"The preset swatches in the color picker." = "색상 선택기의 사전 설정 색상입니다.";
+"Add Color" = "색상 추가";
+"No default colors." = "기본 색상이 없습니다.";
