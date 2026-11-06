@@ -284,6 +284,14 @@ class ScreenCaptureManager {
                 continue
             }
             timing?("SCK rect capture end screen=\(index) pixels=\(image.width)x\(image.height)")
+            // On some setups (macOS 27, closed-lid MacBook, two 5K displays at
+            // 2x) the main display comes back as a full-size buffer with only
+            // the 1x content painted top-left. The content-filter path
+            // captures it correctly.
+            if isUnderPaintedCapture(image) {
+                timing?("SCK rect capture under-painted screen=\(index) pixels=\(image.width)x\(image.height) — fallback")
+                return nil
+            }
             let capture = ScreenCapture(screen: screen, image: image)
             captures.append(capture)
             onCapture?(capture)
@@ -296,6 +304,35 @@ class ScreenCaptureManager {
 
         timing?("SCK rect immediate: end")
         return captures
+    }
+
+    /// True when a display capture has transparent pixels in its top-right,
+    /// bottom-left and bottom-right corners. A display is opaque everywhere,
+    /// so this means the buffer is larger than what was painted into it.
+    /// Reads three pixels, not the whole buffer.
+    static func isUnderPaintedCapture(_ image: CGImage) -> Bool {
+        let width = image.width
+        let height = image.height
+        guard width > 0, height > 0 else { return true }
+        let corners = [(width - 1, 0), (0, height - 1), (width - 1, height - 1)]
+        return corners.allSatisfy { alpha(of: image, x: $0.0, y: $0.1) == 0 }
+    }
+
+    /// Alpha of one pixel, `y` counted from the top. Nil if it can't be read.
+    private static func alpha(of image: CGImage, x: Int, y: Int) -> UInt8? {
+        guard let pixel = image.cropping(to: CGRect(x: x, y: y, width: 1, height: 1)) else { return nil }
+        var rgba = [UInt8](repeating: 0, count: 4)
+        let drawn = rgba.withUnsafeMutableBytes { buffer -> Bool in
+            guard let context = CGContext(
+                data: buffer.baseAddress, width: 1, height: 1,
+                bitsPerComponent: 8, bytesPerRow: 4,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+            else { return false }
+            context.draw(pixel, in: CGRect(x: 0, y: 0, width: 1, height: 1))
+            return true
+        }
+        return drawn ? rgba[3] : nil
     }
 
     @available(macOS 26.0, *)
