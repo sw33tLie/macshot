@@ -1644,7 +1644,9 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.alignment = .leading
         stack.spacing = 0
         stack.translatesAutoresizingMaskIntoConstraints = false
-        stack.edgeInsets = NSEdgeInsets(top: 0, left: 20, bottom: 16, right: 20)
+        // A checkbox leads this tab rather than a small section header, so it
+        // needs some room under the toolbar's separator line.
+        stack.edgeInsets = NSEdgeInsets(top: 12, left: 20, bottom: 16, right: 20)
 
         // ── Hide the whole bottom toolbar (#490) ─────────────
         let hideBottomToolbarCheckbox = NSButton(
