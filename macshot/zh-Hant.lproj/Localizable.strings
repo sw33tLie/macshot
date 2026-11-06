@@ -861,3 +861,5 @@
 
 "Snap webcam to corners when moved" = "移動時將攝影機吸附至角落";
 "Search emoji" = "搜尋表情符號";
+"Hide the bottom toolbar" = "隱藏底部工具列";
+"Pick tools with their keyboard shortcuts instead." = "改用鍵盤快捷鍵選擇工具。";

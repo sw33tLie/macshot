@@ -859,3 +859,5 @@
 
 "Snap webcam to corners when moved" = "จัดเว็บแคมให้ชิดมุมเมื่อย้าย";
 "Search emoji" = "ค้นหาอีโมจิ";
+"Hide the bottom toolbar" = "ซ่อนแถบเครื่องมือด้านล่าง";
+"Pick tools with their keyboard shortcuts instead." = "เลือกเครื่องมือด้วยปุ่มลัดแป้นพิมพ์แทน";
