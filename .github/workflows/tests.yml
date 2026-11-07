@@ -69,6 +69,26 @@ jobs:
             | { grep -E "Executed .* tests|error:|\*\*" || true; }
           exit ${PIPESTATUS[0]}
 
+      - name: Build and check feedback CLI
+        run: |
+          bash scripts/build-feedback-cli.sh "$PWD/build/macshot-cli" universal
+          build/macshot-cli --help
+          python3 scripts/test-feedback-cli.py "$PWD/build/macshot-cli"
+
+      - name: Set up Node for feedback connector
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: connector/package-lock.json
+
+      - name: Test feedback MCP connector
+        working-directory: connector
+        run: |
+          npm ci --ignore-scripts
+          npm run build
+          npm test
+
       - name: Summarize failures
         if: always()
         run: |

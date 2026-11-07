@@ -101,6 +101,24 @@ final class LocalizationTests: XCTestCase {
         XCTAssertTrue(report.isEmpty, "untranslated keys — these fall back to the raw key:\n" + report.joined(separator: "\n"))
     }
 
+    func testFeedbackTranslationsDoNotUseEnglishFallback() throws {
+        let source = try String(contentsOf: Self.sourceRoot.appendingPathComponent("en.lproj/Localizable.strings"))
+        let section = try XCTUnwrap(source.components(separatedBy: "// AI modification feedback").last)
+        let pattern = try NSRegularExpression(pattern: #"^"((?:[^"\\]|\\.)*)"\s*="#, options: .anchorsMatchLines)
+        let keys = pattern.matches(in: section, range: NSRange(section.startIndex..., in: section)).compactMap {
+            Range($0.range(at: 1), in: section).map { Self.unescape(String(section[$0])) }
+        }
+        XCTAssertGreaterThan(keys.count, 50)
+        let base = try XCTUnwrap(Self.tables[Self.baseLocale])
+        var untranslated: [String] = []
+        for (locale, table) in Self.tables where locale != Self.baseLocale {
+            for key in keys where table[key] == base[key] {
+                untranslated.append("\(locale): \(key)")
+            }
+        }
+        XCTAssertTrue(untranslated.isEmpty, "Feedback text still uses English fallback:\n" + untranslated.sorted().joined(separator: "\n"))
+    }
+
     func testNoTranslationIsEmpty() {
         var empty: [String] = []
         for (locale, table) in Self.tables {
@@ -216,7 +234,7 @@ final class LocalizationTests: XCTestCase {
     /// re-damaged; the fix is to repair the strings, not to raise the number.
     private static let diacriticSuspectBudget: [String: Int] = [
         "ca": 2, "cs": 17, "es": 0, "fr": 6, "hr": 1, "pl": 1,
-        "pt": 1, "pt-BR": 1, "ro": 45, "sk": 3, "sv": 1, "tr": 6, "vi": 43,
+        "pt": 1, "pt-BR": 1, "ro": 45, "sk": 3, "sv": 1, "tr": 1, "vi": 39,
     ]
 
     private static func deaccented(_ word: String) -> String {
@@ -233,10 +251,13 @@ final class LocalizationTests: XCTestCase {
         for value in table.values {
             for word in value.split(whereSeparator: { !$0.isLetter }).map(String.init) {
                 guard word.count > 3 else { continue }
-                if word.unicodeScalars.contains(where: { !$0.isASCII }) {
-                    accented.insert(deaccented(word).lowercased())
+                // Turkish capital İ is the ordinary uppercase form of i,
+                // not an accent that is missing in lowercase UI text.
+                let normalized = locale == "tr" ? word.lowercased(with: Locale(identifier: "tr")) : word
+                if normalized.unicodeScalars.contains(where: { !$0.isASCII }) {
+                    accented.insert(deaccented(normalized).lowercased())
                 } else {
-                    plain[word.lowercased(), default: 0] += 1
+                    plain[normalized.lowercased(), default: 0] += 1
                 }
             }
         }
@@ -248,7 +269,9 @@ final class LocalizationTests: XCTestCase {
         // https://www.fundeu.es/recomendacion/video-video/).
         let validPlainWords: Set<String>
         switch locale {
-        case "vi": validPlainWords = ["trong"]
+        // "chung" (general) vs "chúng" (they), and "dung" in
+        // "nội dung" (content) vs "dùng" (use), are also valid words.
+        case "vi": validPlainWords = ["trong", "chung", "dung"]
         // "esta" (this) and "está" (is) are different words.
         case "es": validPlainWords = ["video", "esta"]
         case "pt", "pt-BR": validPlainWords = ["esta"]
@@ -258,11 +281,19 @@ final class LocalizationTests: XCTestCase {
         case "fr": validPlainWords = ["enregistre"]
         // "andra" (other) vs "ändra" (change); "fast" (fixed) vs "fäst" (attach).
         case "sv": validPlainWords = ["andra", "fast"]
-        // "imleci" (the pointer, accusative) vs "imleç" (pointer).
-        case "tr": validPlainWords = ["imleci"]
+        // "imleci" (the pointer, accusative) vs "imleç" (pointer),
+        // and "dondur" (freeze) vs "döndür" (rotate).
+        case "tr": validPlainWords = ["imleci", "dondur"]
         default: validPlainWords = []
         }
         return plain.filter { accented.contains($0.key) && !validPlainWords.contains($0.key) }
+    }
+
+    func testDiacriticCheckHandlesValidTurkishCaseAndVietnameseWords() {
+        let turkish = ["a": "İptal", "b": "iptal", "c": "İzin", "d": "izin", "e": "görüntü", "f": "goruntu", "g": "Dondur", "h": "Döndür"]
+        XCTAssertEqual(Self.diacriticSuspects(in: turkish, locale: "tr"), ["goruntu": 1])
+        let vietnamese = ["a": "chung chúng", "b": "nội dung dùng", "c": "thành thanh"]
+        XCTAssertEqual(Self.diacriticSuspects(in: vietnamese, locale: "vi"), ["thanh": 1])
     }
 
     func testNoLocaleHasMoreDiacriticDamageThanItsBudget() {

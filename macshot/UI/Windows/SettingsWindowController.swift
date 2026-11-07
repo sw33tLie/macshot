@@ -55,6 +55,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var showToolShortcutsInTooltipsCheckbox: NSButton!
     private var recordingToolAction: ToolShortcutManager.Action?
     private var savePathField: NSTextField!
+    private var feedbackPathField: NSTextField!
     private var saveActionPopup: NSPopUpButton!
     private var copyPathAfterSaveCheckbox: NSButton!
     private var ocrActionPopup: NSPopUpButton!
@@ -1049,6 +1050,21 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         orderNote.font = NSFont.systemFont(ofSize: 10)
         orderNote.textColor = .tertiaryLabelColor
         stack.addArrangedSubview(indented(orderNote))
+        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
+
+        // ── AI Collaboration ─────────────────────────────────
+        stack.addArrangedSubview(sectionHeader(L("AI Collaboration")))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        feedbackPathField = NSTextField()
+        feedbackPathField.isEditable = false
+        feedbackPathField.isSelectable = true
+        feedbackPathField.lineBreakMode = .byTruncatingMiddle
+        feedbackPathField.widthAnchor.constraint(equalToConstant: 240).isActive = true
+        let feedbackBrowseButton = NSButton(title: L("Browse…"), target: self,
+                                            action: #selector(browseFeedbackPath(_:)))
+        feedbackBrowseButton.bezelStyle = .rounded
+        stack.addArrangedSubview(labeledRow(L("Handoff folder:"), controls: [feedbackPathField, feedbackBrowseButton]))
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // ── Translation ──────────────────────────────────────
@@ -2637,6 +2653,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         refreshShortcutDisplaysForKeyboardLayout()
 
         savePathField.stringValue = SaveDirectoryAccess.displayPath
+        refreshFeedbackPath()
         selectSaveAction(SaveActionPreference.current)
         copyPathAfterSaveCheckbox.state = ImageSaveService.copyPathAfterSave ? .on : .off
 
@@ -2826,6 +2843,17 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     }
 
     // MARK: - Actions
+
+    private func refreshFeedbackPath() {
+        let path = FeedbackSessionManager.shared.directoryDisplayPath
+        feedbackPathField.stringValue = path ?? L("Not configured")
+        feedbackPathField.toolTip = path
+    }
+
+    @objc private func browseFeedbackPath(_ sender: NSButton) {
+        FeedbackSessionManager.shared.chooseDirectory()
+        refreshFeedbackPath()
+    }
 
     @objc private func browseSavePath(_ sender: NSButton) {
         let panel = NSOpenPanel()

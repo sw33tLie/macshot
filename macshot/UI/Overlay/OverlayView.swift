@@ -22,6 +22,7 @@ protocol OverlayViewDelegate: AnyObject {
     func overlayViewDidRequestStartRecording(rect: NSRect)
     func overlayViewDidRequestStopRecording()
     func overlayViewDidRequestDetach()
+    func overlayViewDidRequestFeedback()
     func overlayViewDidRequestScrollCapture(rect: NSRect)
     func overlayViewDidRequestStopScrollCapture()
     func overlayViewDidRequestCancelScrollCapture()
@@ -37,6 +38,7 @@ protocol OverlayViewDelegate: AnyObject {
 }
 
 extension OverlayViewDelegate {
+    func overlayViewDidRequestFeedback() {}
     func overlayViewDidRequestRestoreLastSelection() {}
     /// ⌘C during scroll capture: stop and put the stitched image on the
     /// clipboard whatever the capture mode. Plain Stop by default.
@@ -783,6 +785,7 @@ class OverlayView: NSView {
     var autoTranslateOverlayLang: String?  // target language for autoTranslateOverlayMode (nil = saved default)
     var autoQuickSaveMode: Bool = false  // set by "Quick Capture" menu — quick-saves immediately after selection
     var autoScrollCaptureMode: Bool = false  // set by "Scroll Capture" menu — triggers scroll capture immediately after selection
+    var autoFeedbackMode = false
     var autoConfirmMode: Bool = false  // set by "Add Capture" — auto-confirms selection (no toolbars, no save)
 
     // Recording session overrides (popover settings — nil means use UserDefaults default)
@@ -6831,7 +6834,7 @@ class OverlayView: NSView {
     private func finishSelection() {
         let opensEditor = UserDefaults.standard.bool(forKey: "openEditorAfterSelection")
             && !autoEnterRecordingMode && !autoOCRMode && !autoTranslateOverlayMode
-            && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode
+            && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode && !autoFeedbackMode
         if selectionRect.width > 5 || selectionRect.height > 5 {
             // Real drag — use drawn rect as-is
             state = .selected
@@ -6881,13 +6884,18 @@ class OverlayView: NSView {
     /// True while the capture entry point (OCR, Quick Capture, Scroll Capture,
     /// Add Capture) will act on the selection itself, so the toolbars stay hidden.
     private var hasPendingSelectionAction: Bool {
-        autoOCRMode || autoQuickSaveMode || autoScrollCaptureMode || autoConfirmMode
+        autoOCRMode || autoQuickSaveMode || autoScrollCaptureMode || autoConfirmMode || autoFeedbackMode
     }
 
     /// Run the one-shot action the capture entry point asked for. Every way of
     /// completing a selection (drag, click, right-click anchor, F, R) must call
     /// this, or e.g. Capture OCR leaves a selection with no toolbar and no OCR.
     private func runPendingSelectionActions() {
+        if autoFeedbackMode {
+            autoFeedbackMode = false
+            overlayDelegate?.overlayViewDidRequestFeedback()
+            return
+        }
         // Auto-enter recording mode if triggered from "Record Screen"
         if autoEnterRecordingMode {
             autoEnterRecordingMode = false
@@ -10388,6 +10396,7 @@ class OverlayView: NSView {
         autoTranslateOverlayLang = nil
         autoQuickSaveMode = false
         autoScrollCaptureMode = false
+        autoFeedbackMode = false
         autoConfirmMode = false
         isRecognizingText = false
         pendingDoubleClickCopy = nil

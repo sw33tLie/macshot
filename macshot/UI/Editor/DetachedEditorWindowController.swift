@@ -171,6 +171,20 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         // no Done until you draw). Wire the action now; visibility is driven by
         // refreshDoneButtonVisibility() via the view's onContentChanged hook.
         topBar.onDone = { [weak self] in self?.commitToHistory() }
+        topBar.onFeedback = { [weak self] in
+            guard let self, let view = self.overlayView else { return }
+            view.commitTextFieldIfNeeded()
+            let alert = NSAlert()
+            alert.messageText = L("Create feedback from the current image?")
+            alert.informativeText = L("Finish cropping, flipping and stitching first. Redactions are baked into the feedback image. The original editor remains open.")
+            alert.addButton(withTitle: L("Fix Source and Start"))
+            alert.addButton(withTitle: L("Cancel"))
+            guard alert.runModal() == .alertFirstButtonReturn,
+                  let save = self.captureHistorySave(),
+                  let image = save.image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return }
+            let feedback = FeedbackEditorWindowController.open(image: image)
+            feedback.onReturnToImageEditor = { [weak self] in self?.window?.makeKeyAndOrderFront(nil) }
+        }
         view.onContentChanged = { [weak self] in
             self?.contentRevision &+= 1
             self?.refreshDoneButtonVisibility()

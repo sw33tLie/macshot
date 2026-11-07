@@ -1,0 +1,16 @@
+{
+  "name": "macshot-mcp-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node mcp-server.mjs",
+    "build": "node --check mcp-server.mjs && node --check feedback-jobs.mjs",
+    "test": "node --test *.test.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "zod": "^4.6.7"
+  }
+}

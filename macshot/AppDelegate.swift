@@ -342,6 +342,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             name: NSWorkspace.activeSpaceDidChangeNotification, object: nil
         )
         NSWorkspace.shared.notificationCenter.addObserver(
+            self, selector: #selector(applicationDidActivate(_:)),
+            name: NSWorkspace.didActivateApplicationNotification, object: nil
+        )
+        NSWorkspace.shared.notificationCenter.addObserver(
             self, selector: #selector(systemDidWake),
             name: NSWorkspace.didWakeNotification, object: nil
         )
@@ -355,6 +359,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             self, selector: #selector(pinFromHistory(_:)),
             name: .init("macshot.pinFromHistory"), object: nil
         )
+
+        FeedbackSessionManager.shared.refreshDirectoryPathSnapshot()
 
         // Check screen recording permission. If not yet granted, show the
         // custom onboarding window instead of letting macOS throw its own dialogs.
@@ -611,7 +617,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        terminationCoordinator.request(hasActiveWork: recordingEngine != nil || MediaExportCoordinator.shared.hasActiveJobs || ScreenshotHistory.shared.hasPendingWrites,
+        var feedbackReady = true
+        return terminationCoordinator.request(hasActiveWork: recordingEngine != nil || MediaExportCoordinator.shared.hasActiveJobs || ScreenshotHistory.shared.hasPendingWrites || FeedbackEditorWindowController.hasPendingDrafts,
             drain: { [weak self] in
                 if let self, let engine = self.recordingEngine {
                     self.terminatingAfterRecording = true
@@ -622,10 +629,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                 }
                 await MediaExportCoordinator.shared.waitUntilIdle()
                 await ScreenshotHistory.shared.waitUntilIdle()
-            }, terminate: { sender.terminate(nil) })
+                feedbackReady = await FeedbackEditorWindowController.saveBeforeTermination()
+            }, terminate: { if feedbackReady { sender.terminate(nil) } })
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
+        FeedbackSessionManager.shared.applicationWillTerminate()
         os_log(.fault, log: timingLog, "macshot terminating — thermalState=%d", ProcessInfo.processInfo.thermalState.rawValue)
         // Normal quit drains the recording writer and coordinated exports.
         // A force quit leaves the durable take in place.
@@ -828,6 +837,23 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         delayItem.submenu = delaySubmenu
         menu.addItem(delayItem)
 
+        let feedbackItem = NSMenuItem(title: L("Capture for Feedback"), action: #selector(captureFeedback), keyEquivalent: "")
+        feedbackItem.target = self
+        feedbackItem.image = NSImage(systemSymbolName: "text.bubble", accessibilityDescription: nil)
+        feedbackItem.keepImageVisible()
+        HotkeyManager.applyMenuShortcut(for: .captureFeedback, to: feedbackItem)
+        menu.addItem(feedbackItem)
+        let feedbackFileItem = NSMenuItem(title: L("Create Feedback from Image…"), action: #selector(openFeedbackImage), keyEquivalent: "")
+        feedbackFileItem.target = self
+        feedbackFileItem.image = NSImage(systemSymbolName: "photo", accessibilityDescription: nil)
+        feedbackFileItem.keepImageVisible()
+        menu.addItem(feedbackFileItem)
+        let feedbackDraftItem = NSMenuItem(title: L("Restore Feedback Draft…"), action: #selector(restoreFeedbackDraft), keyEquivalent: "")
+        feedbackDraftItem.target = self
+        feedbackDraftItem.image = NSImage(systemSymbolName: "clock.arrow.circlepath", accessibilityDescription: nil)
+        feedbackDraftItem.keepImageVisible()
+        menu.addItem(feedbackDraftItem)
+
         menu.addItem(NSMenuItem.separator())
 
         let recordAreaItem = NSMenuItem(title: L("Record Area"), action: #selector(recordArea), keyEquivalent: "")
@@ -1005,9 +1031,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                 self?.perform(#selector(AppDelegate.recordGIFFromHotkey))
             }
         )
+        HotkeyManager.shared.register(slot: .captureFeedback) { [weak self] in
+            self?.perform(#selector(AppDelegate.captureFeedback))
+        }
     }
 
     private var pendingRecordMode: Bool = false
+    private var pendingFeedbackMode = false
+    private var feedbackCaptureSession: UUID?
     /// Assigned for every accepted capture, including ordinary screenshots
     /// whose overlay can subsequently start a recording.
     private var nextRecordingIsGIF: Bool = false
@@ -1109,6 +1140,71 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
     private func beginCaptureArea(fromMenu: Bool) {
         startCapture(fromMenu: fromMenu)
+    }
+
+    @objc private func captureFeedback() {
+        guard canStartCapture else { return }
+        pendingFeedbackMode = true
+        startCapture()
+    }
+
+    private func beginFeedbackSessionCapture(session: UUID) {
+        guard canStartCapture else {
+            FeedbackSessionManager.shared.endCapture(session: session, state: .failed, message: FeedbackLocalization.message(FeedbackError.busy))
+            return
+        }
+        guard PermissionOnboardingController.hasScreenRecordingPermission() else {
+            FeedbackSessionManager.shared.endCapture(session: session, state: .failed,
+                message: L("Screen Recording permission is required. Grant access to macshot in System Settings, then retry capture."))
+            showOnboarding()
+            return
+        }
+        guard !NSScreen.screens.isEmpty else {
+            FeedbackSessionManager.shared.endCapture(session: session, state: .failed, message: L("No display is available for capture."))
+            return
+        }
+        feedbackCaptureSession = session
+        pendingFeedbackMode = true
+        startCapture()
+    }
+
+    private func endFeedbackSessionCapture(state: FeedbackReceipt.State, message: String) {
+        guard let session = feedbackCaptureSession else { return }
+        feedbackCaptureSession = nil
+        FeedbackSessionManager.shared.endCapture(session: session, state: state, message: message)
+    }
+
+    private func cancelFeedbackSessionCapture(session: UUID) {
+        guard feedbackCaptureSession == session else { return }
+        feedbackCaptureSession = nil
+        cancelPreCaptureCountdown()
+        dismissOverlays()
+    }
+
+    @objc private func openFeedbackImage() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.image]
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        let accessed = url.startAccessingSecurityScopedResource()
+        defer { if accessed { url.stopAccessingSecurityScopedResource() } }
+        do { FeedbackEditorWindowController.open(image: try FeedbackExport.loadImage(url)) }
+        catch { NSAlert(error: FeedbackLocalization.localizedError(error)).runModal() }
+    }
+
+    @objc private func restoreFeedbackDraft() {
+        do {
+            let drafts = try FeedbackDraftStore.list()
+            guard !drafts.isEmpty else {
+                let alert = NSAlert(); alert.messageText = L("No feedback drafts to restore"); alert.runModal(); return
+            }
+            let panel = NSOpenPanel()
+            panel.canChooseDirectories = true; panel.canChooseFiles = false
+            panel.directoryURL = FeedbackDraftStore.root
+            panel.message = L("Select a draft folder to restore. Restoring does not submit feedback to AI.")
+            guard panel.runModal() == .OK, let folder = panel.url else { return }
+            let (document, image) = try FeedbackDraftStore.load(folder)
+            FeedbackEditorWindowController.open(image: image, document: document)
+        } catch { NSAlert(error: FeedbackLocalization.localizedError(error)).runModal() }
     }
 
     @objc private func captureFullScreen() {
@@ -1307,7 +1403,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
         // Clean up stale overlays without consuming previousApp — we just set it.
         measureCaptureTiming("dismiss stale overlays") {
-            dismissOverlays(refocusPreviousApp: false)
+            dismissOverlays(refocusPreviousApp: false, cancelFeedbackCapture: false)
         }
         isCapturing = true
 
@@ -1395,6 +1491,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func cancelPreCaptureCountdown() {
+        let wasFeedbackCapture = feedbackCaptureSession != nil
         delayTimer?.invalidate()
         delayTimer = nil
         delayCountdownWindow?.orderOut(nil)
@@ -1402,6 +1499,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         removeDelayEscMonitors()
         isCapturing = false
         pendingRecordMode = false
+        pendingFeedbackMode = false
         pendingFullScreen = false
         pendingFullScreenRecord = false
         pendingFullScreenRecordAutoStart = false
@@ -1411,6 +1509,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         pendingQuickCaptureMode = false
         pendingScrollCaptureMode = false
         pendingRestoreLastArea = false
+        if wasFeedbackCapture {
+            endFeedbackSessionCapture(state: .cancelled, message: L("Screenshot capture was cancelled."))
+            dismissOverlays()
+        }
     }
 
     private func performCapture(fromMenu: Bool) {
@@ -1452,12 +1554,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             if pendingTranslateOverlayMode { controller.setAutoTranslateOverlayMode(targetLang: pendingTranslateOverlayLang) }
             if pendingQuickCaptureMode { controller.setAutoQuickSaveMode() }
             if pendingScrollCaptureMode { controller.setAutoScrollCaptureMode() }
+            if pendingFeedbackMode { controller.setAutoFeedbackMode() }
             controllers.append(controller)
         }
         overlayControllers.append(contentsOf: controllers)
 
         pendingRecordMode = false
         let didApplyFullScreenRecord = pendingFullScreenRecord
+        pendingFeedbackMode = false
         let didApplyFullScreenRecordAutoStart = pendingFullScreenRecordAutoStart
         let didApplyFullScreen = pendingFullScreen
         pendingFullScreenRecordAutoStart = false
@@ -1574,6 +1678,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         markInteractive: Bool = true
     ) {
         if captures.isEmpty {
+            endFeedbackSessionCapture(state: .failed, message: L("Screenshot capture failed. Check Screen Recording permission and retry."))
             captureTimingTrace?.mark("no captures returned — bailing out")
             // This accepted capture is ending without a selection, so nothing
             // consumes the remaining pending flags. Clear them here so they don't
@@ -1713,11 +1818,48 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     @objc private func spaceDidChange() {
+        if let session = feedbackCaptureSession {
+            // An existing countdown will capture the new Space when it finishes.
+            guard delayTimer == nil else { return }
+            scheduleFeedbackCaptureRefresh(session: session)
+            return
+        }
         guard !overlayControllers.isEmpty else { return }
         dismissOverlays()
     }
 
-    private func dismissOverlays(refocusPreviousApp: Bool = true) {
+    @objc private func applicationDidActivate(_ notification: Notification) {
+        guard let session = feedbackCaptureSession,
+              let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
+              app.processIdentifier != ProcessInfo.processInfo.processIdentifier else { return }
+        previousApp = app
+        capturedWindowTitle = nil
+        guard delayTimer == nil else { return }
+        scheduleFeedbackCaptureRefresh(session: session, focusedApp: app)
+    }
+
+    private func scheduleFeedbackCaptureRefresh(session: UUID, focusedApp: NSRunningApplication? = nil) {
+        dismissOverlays(refocusPreviousApp: false, cancelFeedbackCapture: false)
+        captureSessionID &+= 1
+        let generation = captureSessionID
+        // Reserve capture while the app or Space transition settles. Each later
+        // notification invalidates both this refresh and older screenshot callbacks.
+        isCapturing = true
+        if let focusedApp {
+            resolveFocusedWindowTitleAsync(for: focusedApp.processIdentifier, sessionID: generation)
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+            guard let self, self.feedbackCaptureSession == session,
+                  self.captureSessionID == generation, self.isCapturing else { return }
+            self.pendingFeedbackMode = true
+            self.performCapture(fromMenu: false)
+        }
+    }
+
+    private func dismissOverlays(refocusPreviousApp: Bool = true, cancelFeedbackCapture: Bool = true) {
+        if cancelFeedbackCapture {
+            endFeedbackSessionCapture(state: .cancelled, message: L("Screenshot capture was cancelled."))
+        }
         captureTimingTrace?.mark("dismissOverlays entered refocus=\(refocusPreviousApp)")
         autoreleasepool {
             for controller in overlayControllers {
@@ -2461,13 +2603,21 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     /// Handle macshot:// URL scheme actions from external tools (Raycast, Alfred, etc.).
     /// Usage: `open macshot://capture`, `open macshot://ocr`, etc.
     private static let screenCaptureURLActions: Set<String> = [
-        "capture", "capture-fullscreen", "capture-last", "quick-capture",
+        "capture", "capture-fullscreen", "capture-last", "quick-capture", "capture-feedback",
         "ocr", "ocr-translate", "record", "record-fullscreen", "scroll-capture",
     ]
 
     private func handleURLSchemeAction(_ url: URL) {
         guard let action = url.host else { return }
         switch action {
+        case "feedback":
+            if let value = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "session" })?.value,
+               let session = UUID(uuidString: value) {
+                FeedbackSessionManager.shared.open(session: session,
+                    beginCapture: { [weak self] in self?.beginFeedbackSessionCapture(session: $0) },
+                    cancelCapture: { [weak self] in self?.cancelFeedbackSessionCapture(session: $0) })
+            }
+        case "capture-feedback": captureFeedback()
         case "capture":             captureScreen()
         case "capture-fullscreen":  captureFullScreen()
         case "quick-capture":       quickCapture()
@@ -2541,6 +2691,9 @@ extension AppDelegate: OverlayWindowControllerDelegate {
     }
 
     func overlayDidCancel(_ controller: OverlayWindowController) {
+        if overlayControllers.contains(where: { $0 === controller }) {
+            endFeedbackSessionCapture(state: .cancelled, message: L("Screenshot capture was cancelled."))
+        }
         // If the user cancels while in recording setup (before capture started),
         // just dismiss. If recording is actively capturing, stop it.
         if controller === recordingOverlayController, let engine = recordingEngine {
@@ -2550,6 +2703,19 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         dismissOverlays()
 
         // Focus is returned to the previous app by dismissOverlays() above.
+    }
+
+    func overlayDidRequestFeedback(_ controller: OverlayWindowController, image: CGImage?) {
+        guard overlayControllers.contains(where: { $0 === controller }) else { return }
+        if let session = feedbackCaptureSession {
+            feedbackCaptureSession = nil
+            dismissOverlays(refocusPreviousApp: false)
+            FeedbackSessionManager.shared.completeCapture(session: session, image: image)
+            if !FeedbackSessionManager.shared.hasActiveSession { returnFocusIfNeeded() }
+        } else if let image {
+            dismissOverlays(refocusPreviousApp: false)
+            FeedbackEditorWindowController.open(image: image)
+        }
     }
 
     func overlayDidConfirm(_ controller: OverlayWindowController, capturedImage: NSImage?, annotationData: CaptureAnnotationData?) {

@@ -9,6 +9,7 @@ class EditorTopBarView: NSView {
     private var zoomButton: NSButton!
     private var doneButton: NSButton?
     var onDone: (() -> Void)?
+    var onFeedback: (() -> Void)?
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -24,6 +25,7 @@ class EditorTopBarView: NSView {
         let flipHBtn = makeButton("arrow.left.and.right.righttriangle.left.righttriangle.right", tooltip: L("Flip Horizontal"), action: #selector(flipHClicked))
         let flipVBtn = makeButton("arrow.up.and.down.righttriangle.up.righttriangle.down", tooltip: L("Flip Vertical"), action: #selector(flipVClicked))
         let addCaptureBtn = makeButton("rectangle.badge.plus", tooltip: L("Add Capture"), action: #selector(addCaptureClicked))
+        let feedbackBtn = makeButton("text.bubble", tooltip: L("Modification Feedback"), action: #selector(feedbackClicked))
 
         // Zoom dropdown button
         zoomButton = NSButton()
@@ -43,7 +45,7 @@ class EditorTopBarView: NSView {
         addSubview(border)
 
         // Layout with constraints
-        for v: NSView in [sizeLabel, cropBtn, flipHBtn, flipVBtn, addCaptureBtn, zoomButton] {
+        for v: NSView in [sizeLabel, cropBtn, flipHBtn, flipVBtn, addCaptureBtn, feedbackBtn, zoomButton] {
             v.translatesAutoresizingMaskIntoConstraints = false
             addSubview(v)
         }
@@ -73,6 +75,11 @@ class EditorTopBarView: NSView {
             addCaptureBtn.centerYAnchor.constraint(equalTo: centerYAnchor),
             addCaptureBtn.widthAnchor.constraint(equalToConstant: 24),
             addCaptureBtn.heightAnchor.constraint(equalToConstant: 22),
+
+            feedbackBtn.leadingAnchor.constraint(equalTo: addCaptureBtn.trailingAnchor, constant: 12),
+            feedbackBtn.centerYAnchor.constraint(equalTo: centerYAnchor),
+            feedbackBtn.widthAnchor.constraint(equalToConstant: 24),
+            feedbackBtn.heightAnchor.constraint(equalToConstant: 22),
 
             zoomButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
             zoomButton.centerYAnchor.constraint(equalTo: centerYAnchor),
@@ -220,6 +227,7 @@ class EditorTopBarView: NSView {
     }
 
     @objc private func doneClicked() { onDone?() }
+    @objc private func feedbackClicked() { onFeedback?() }
 
     @objc private func cropClicked() {
         guard let ov = overlayView else { return }

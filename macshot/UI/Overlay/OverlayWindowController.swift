@@ -63,6 +63,7 @@ private final class ScreenshotOverlayRootView: NSView {
 @MainActor
 protocol OverlayWindowControllerDelegate: AnyObject {
     func overlayDidCancel(_ controller: OverlayWindowController)
+    func overlayDidRequestFeedback(_ controller: OverlayWindowController, image: CGImage?)
     func overlayDidConfirm(_ controller: OverlayWindowController, capturedImage: NSImage?, annotationData: CaptureAnnotationData?)
     func overlayDidRequestPin(_ controller: OverlayWindowController, image: NSImage, annotationData: CaptureAnnotationData?)
     func overlayDidRequestOCR(_ controller: OverlayWindowController, result: OCRScanResult, image: NSImage?)
@@ -87,6 +88,11 @@ protocol OverlayWindowControllerDelegate: AnyObject {
 }
 
 extension OverlayWindowControllerDelegate {
+    func overlayDidRequestFeedback(_ controller: OverlayWindowController, image: CGImage?) {
+        guard let image else { return }
+        overlayDidCancel(controller)
+        FeedbackEditorWindowController.open(image: image)
+    }
     func overlayDidRequestRestoreLastSelection(_ controller: OverlayWindowController) {}
     func overlayDidRequestCopyScrollCapture(_ controller: OverlayWindowController) {
         overlayDidRequestStopScrollCapture(controller)
@@ -376,6 +382,10 @@ class OverlayWindowController {
     /// Set flag so overlay triggers scroll capture immediately after user makes a selection.
     func setAutoScrollCaptureMode() {
         overlayView?.autoScrollCaptureMode = true
+    }
+
+    func setAutoFeedbackMode() {
+        overlayView?.autoFeedbackMode = true
     }
 
     /// Set flag so overlay auto-confirms immediately after selection (no toolbars, no save).
@@ -908,6 +918,12 @@ extension OverlayWindowController: OverlayViewDelegate {
             image: image, tool: tool, color: color, strokeWidth: stroke,
             annotations: shiftedAnnotations, fromCapture: true,
             editState: editState.hasPostProcessing ? editState : nil)
+    }
+
+    func overlayViewDidRequestFeedback() {
+        let rendered = applyBeautifyIfNeeded(captureRegion())
+        let image = rendered?.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        overlayDelegate?.overlayDidRequestFeedback(self, image: image)
     }
 
     @available(macOS 14.0, *)
