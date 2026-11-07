@@ -749,7 +749,7 @@ extension OverlayWindowController: OverlayViewDelegate {
 
         let picker = NSSharingServicePicker(items: [tempURL])
         let delegate = SharePickerDelegate(
-            onPick: { [weak self] in
+            onShare: { [weak self] in
                 guard let self = self else { return }
                 self.overlayWindow?.level = savedLevel
                 self.shareDelegate = nil
@@ -1160,22 +1160,31 @@ class OverlayWindow: NSPanel {
     override var canBecomeMain: Bool { true }
 }
 
-/// Retained delegate for NSSharingServicePicker — dismisses overlay only when user picks a service.
-private class SharePickerDelegate: NSObject, NSSharingServicePickerDelegate {
-    let onPick: () -> Void
+/// Keep the overlay alive until the selected service finishes using its share item.
+private class SharePickerDelegate: NSObject, NSSharingServicePickerDelegate, NSSharingServiceDelegate {
+    let onShare: () -> Void
     let onDismiss: () -> Void
-    init(onPick: @escaping () -> Void, onDismiss: @escaping () -> Void) {
-        self.onPick = onPick
+    init(onShare: @escaping () -> Void, onDismiss: @escaping () -> Void) {
+        self.onShare = onShare
         self.onDismiss = onDismiss
     }
 
     func sharingServicePicker(
         _ sharingServicePicker: NSSharingServicePicker, didChoose service: NSSharingService?
     ) {
-        if service != nil {
-            onPick()
-        } else {
-            onDismiss()
-        }
+        if service == nil { onDismiss() }
+    }
+
+    func sharingServicePicker(_ sharingServicePicker: NSSharingServicePicker,
+                              delegateFor sharingService: NSSharingService) -> (any NSSharingServiceDelegate)? {
+        self
+    }
+
+    func sharingService(_ sharingService: NSSharingService, didShareItems items: [Any]) {
+        onShare()
+    }
+
+    func sharingService(_ sharingService: NSSharingService, didFailToShareItems items: [Any], error: any Error) {
+        onDismiss()
     }
 }
