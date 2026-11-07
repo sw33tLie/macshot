@@ -1145,6 +1145,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     @objc private func captureFeedback() {
         guard canStartCapture else { return }
         pendingFeedbackMode = true
+        // Establish the editor's regular-app Space before showing the capture overlay.
+        NSApp.setActivationPolicy(.regular)
         startCapture()
     }
 
