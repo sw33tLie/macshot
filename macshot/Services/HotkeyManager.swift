@@ -23,6 +23,7 @@ class HotkeyManager {
         case pinFromClipboard = 11
         case clearHistory = 12
         case recordGIF = 13
+        case captureFeedback = 14
 
         var keyCodeKey: String {
             switch self {
@@ -39,6 +40,7 @@ class HotkeyManager {
             case .pinFromClipboard: return "hotkeyPinClipboardKeyCode"
             case .clearHistory: return "hotkeyClearHistoryKeyCode"
             case .recordGIF: return "hotkeyRecordGIFKeyCode"
+            case .captureFeedback: return "hotkeyFeedbackKeyCode"
             }
         }
 
@@ -57,6 +59,7 @@ class HotkeyManager {
             case .pinFromClipboard: return "hotkeyPinClipboardModifiers"
             case .clearHistory: return "hotkeyClearHistoryModifiers"
             case .recordGIF: return "hotkeyRecordGIFModifiers"
+            case .captureFeedback: return "hotkeyFeedbackModifiers"
             }
         }
 
@@ -79,6 +82,7 @@ class HotkeyManager {
             case .pinFromClipboard: return L("Pin from Clipboard")
             case .clearHistory: return L("Clear History")
             case .recordGIF: return "\(L("Record")) \(L("GIF"))"
+            case .captureFeedback: return L("Capture for Feedback")
             }
         }
 
@@ -97,6 +101,7 @@ class HotkeyManager {
             case .pinFromClipboard: return 0    // no default hotkey
             case .clearHistory: return 0        // no default hotkey
             case .recordGIF: return 0           // no default hotkey
+            case .captureFeedback: return UInt32(kVK_ANSI_A)
             }
         }
 
