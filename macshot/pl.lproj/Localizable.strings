@@ -213,6 +213,7 @@
 "Play sound on capture" = "Odtwórz dźwięk przy przechwyceniu";
 "Play sound on copy" = "Odtwórz dźwięk przy kopiowaniu";
 "Remember last selected tool" = "Zapamiętaj ostatnio wybrane narzędzie";
+"Start captures in move mode" = "Rozpoczynaj przechwytywanie w trybie przesuwania";
 "Show floating thumbnail after capture" = "Pokaż pływającą miniaturę po zrzucie";
 "Launch at login" = "Uruchamiaj przy logowaniu";
 "Show snap alignment guides" = "Pokaż linie wyrównywania";

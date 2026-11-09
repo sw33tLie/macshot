@@ -207,6 +207,7 @@
 "Play sound on capture" = "截图时播放提示音";
 "Play sound on copy" = "拷贝时播放声音";
 "Remember last selected tool" = "记住上次选择的工具";
+"Start captures in move mode" = "截图时默认移动选区";
 "Show floating thumbnail after capture" = "捕获后显示浮动缩略图";
 "Launch at login" = "登录时启动";
 "Show snap alignment guides" = "显示对齐辅助线";

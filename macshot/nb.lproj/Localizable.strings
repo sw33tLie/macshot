@@ -221,6 +221,7 @@
 "Play sound on capture" = "Spill lyd ved opptak";
 "Play sound on copy" = "Spill lyd ved kopiering";
 "Remember last selected tool" = "Husk siste valgte verkt\U00F8y";
+"Start captures in move mode" = "Start skjermbilder i flyttemodus";
 "Show floating thumbnail after capture" = "Vis flytende miniatyrbilde etter opptak";
 "Launch at login" = "Start ved innlogging";
 "Show snap alignment guides" = "Vis hjelpelinje for justering";

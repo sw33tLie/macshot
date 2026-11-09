@@ -227,6 +227,7 @@
 "Play sound on capture" = "Prehrať zvuk pri snímaní";
 "Play sound on copy" = "Prehrať zvuk pri kopírovaní";
 "Remember last selected tool" = "Pamätať si posledný vybraný nástroj";
+"Start captures in move mode" = "Začínať snímanie v režime presúvania";
 "Show floating thumbnail after capture" = "Zobraziť plávajúci náhľad po zachytení";
 "Launch at login" = "Spustiť pri prihlásení";
 "Show snap alignment guides" = "Zobraziť vodiace čiary zarovnania";

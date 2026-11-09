@@ -212,6 +212,7 @@
 "Play sound on capture" = "படமெடுக்கும்போது ஒலி எழுப்பு";
 "Play sound on copy" = "நகலெடுக்கும்போது ஒலி எழுப்பு";
 "Remember last selected tool" = "கடைசி தேர்ந்தெடுத்த கருவியை நினைவில் கொள்";
+"Start captures in move mode" = "திரைப்பிடிப்புகளை நகர்த்தும் பயன்முறையில் தொடங்கு";
 "Show floating thumbnail after capture" = "பிடிப்புக்குப் பிறகு மிதக்கும் சிறுபடத்தைக் காட்டு";
 "Launch at login" = "உள்நுழையும்போது தொடங்கு";
 "Show snap alignment guides" = "ஒட்டு சீரமைப்பு வழிகாட்டிகளைக் காட்டு";

@@ -227,6 +227,7 @@
 "Play sound on capture" = "Пусти звук при снимању";
 "Play sound on copy" = "Звучни сигнал при копирању";
 "Remember last selected tool" = "Запамти последњи изабрани алат";
+"Start captures in move mode" = "Започни снимање у режиму померања";
 "Show floating thumbnail after capture" = "Прикажи плутајући приказ после снимања";
 "Launch at login" = "Покрени при пријављивању";
 "Show snap alignment guides" = "Прикажи водиље за поравнање";

@@ -227,6 +227,7 @@
 "Play sound on capture" = "Reproduciraj zvuk pri snimanju";
 "Play sound on copy" = "Reproduciraj zvuk pri kopiranju";
 "Remember last selected tool" = "Zapamti zadnji odabrani alat";
+"Start captures in move mode" = "Započni snimanje u načinu pomicanja";
 "Show floating thumbnail after capture" = "Prikaži plutajuću minijaturu nakon snimanja";
 "Launch at login" = "Pokreni pri prijavi";
 "Show snap alignment guides" = "Prikaži vodilice za poravnanje";

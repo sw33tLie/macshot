@@ -225,6 +225,7 @@
 "Play sound on capture" = "Putar suara saat menangkap";
 "Play sound on copy" = "Putar suara saat menyalin";
 "Remember last selected tool" = "Ingat alat terakhir yang dipilih";
+"Start captures in move mode" = "Mulai tangkapan dalam mode pindah";
 "Show floating thumbnail after capture" = "Tampilkan thumbnail mengambang setelah tangkapan";
 "Launch at login" = "Jalankan saat masuk";
 "Show snap alignment guides" = "Tampilkan panduan perataan jepret";

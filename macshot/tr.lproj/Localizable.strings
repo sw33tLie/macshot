@@ -208,6 +208,7 @@
 "Play sound on capture" = "Yakalama sırasında ses çal";
 "Play sound on copy" = "Kopyalamada ses çal";
 "Remember last selected tool" = "Son seçilen aracı hatırla";
+"Start captures in move mode" = "Yakalamaları taşıma modunda başlat";
 "Show floating thumbnail after capture" = "Yakalamadan sonra kayan küçük resim göster";
 "Launch at login" = "Oturum açılışında başlat";
 "Show snap alignment guides" = "Hizalama kılavuzlarını göster";

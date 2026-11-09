@@ -208,6 +208,7 @@
 "Play sound on capture" = "پخش صدا هنگام ضبط تصویر";
 "Play sound on copy" = "پخش صدا هنگام کپی";
 "Remember last selected tool" = "به خاطر سپردن آخرین ابزار انتخابی";
+"Start captures in move mode" = "شروع تصویربرداری در حالت جابه‌جایی";
 "Show floating thumbnail after capture" = "نمایش تصویر بندانگشتی شناور پس از ضبط";
 "Launch at login" = "اجرا هنگام ورود";
 "Show snap alignment guides" = "نمایش خطوط راهنمای تراز";

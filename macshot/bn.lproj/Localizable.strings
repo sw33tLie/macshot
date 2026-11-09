@@ -211,6 +211,7 @@
 "Play sound on capture" = "ক্যাপচারে শব্দ বাজান";
 "Play sound on copy" = "কপিতে শব্দ বাজান";
 "Remember last selected tool" = "শেষ নির্বাচিত টুল মনে রাখুন";
+"Start captures in move mode" = "স্ক্রিনশট নেওয়ার শুরুতে সরানোর মোড ব্যবহার করুন";
 "Show floating thumbnail after capture" = "ক্যাপচারের পর ভাসমান থাম্বনেইল দেখান";
 "Launch at login" = "লগইনে চালু করুন";
 "Show snap alignment guides" = "স্ন্যাপ সারিবদ্ধকরণ গাইড দেখান";

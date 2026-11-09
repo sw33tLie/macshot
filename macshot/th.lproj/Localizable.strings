@@ -224,6 +224,7 @@
 "Play sound on capture" = "เล่นเสียงเมื่อจับภาพ";
 "Play sound on copy" = "เล่นเสียงเมื่อคัดลอก";
 "Remember last selected tool" = "จำเครื่องมือที่เลือกล่าสุด";
+"Start captures in move mode" = "เริ่มจับภาพในโหมดเคลื่อนย้าย";
 "Show floating thumbnail after capture" = "แสดงภาพขนาดย่อลอยหลังจับภาพ";
 "Launch at login" = "เปิดเมื่อเข้าสู่ระบบ";
 "Show snap alignment guides" = "แสดงเส้นจัดแนว";

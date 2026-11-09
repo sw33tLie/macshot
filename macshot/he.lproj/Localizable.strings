@@ -208,6 +208,7 @@
 "Play sound on capture" = "השמע צליל בעת לכידה";
 "Play sound on copy" = "נגן צליל בהעתקה";
 "Remember last selected tool" = "זכור כלי שנבחר אחרון";
+"Start captures in move mode" = "התחלת צילומי מסך במצב הזזה";
 "Show floating thumbnail after capture" = "הצג תמונה ממוזערת צפה לאחר לכידה";
 "Launch at login" = "הפעל בהתחברות";
 "Show snap alignment guides" = "הצג קווי הצמדה";

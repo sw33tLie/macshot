@@ -61,6 +61,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var copySoundCheckbox: NSButton!
     // rememberSelectionCheckbox removed — selection is always saved for "Capture Last Area"
     private var rememberToolCheckbox: NSButton!
+    private var startCapturesInMoveModeCheckbox: NSButton!
     private var thumbnailCheckbox: NSButton!
     private var thumbnailAutoDismissStepper: NSStepper!
     private var thumbnailAutoDismissField: NSTextField!
@@ -786,6 +787,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         openEditorAfterSelectionCheckbox = NSButton(checkboxWithTitle: L("Open in Editor right after selection"), target: self, action: #selector(openEditorAfterSelectionChanged(_:)))
         copySoundCheckbox = NSButton(checkboxWithTitle: L("Play sound on capture"), target: self, action: #selector(copySoundChanged(_:)))
         rememberToolCheckbox = NSButton(checkboxWithTitle: L("Remember last selected tool"), target: self, action: #selector(rememberToolChanged(_:)))
+        startCapturesInMoveModeCheckbox = NSButton(checkboxWithTitle: L("Start captures in move mode"), target: self, action: #selector(startCapturesInMoveModeChanged(_:)))
         thumbnailCheckbox = NSButton(checkboxWithTitle: L("Show floating thumbnail after capture"), target: self, action: #selector(thumbnailChanged(_:)))
         snapGuidesCheckbox = NSButton(checkboxWithTitle: L("Show snap alignment guides"), target: self, action: #selector(snapGuidesChanged(_:)))
         boundarySnapCheckbox = NSButton(checkboxWithTitle: L("Snap selection edges to image boundaries"), target: self, action: #selector(boundarySnapChanged(_:)))
@@ -811,7 +813,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         filenameTemplatePreview.textColor = .secondaryLabelColor
         filenameTemplatePreview.lineBreakMode = .byTruncatingMiddle
 
-        for cb in [openEditorAfterSelectionCheckbox!, copySoundCheckbox!, rememberToolCheckbox!, thumbnailCheckbox!] {
+        for cb in [openEditorAfterSelectionCheckbox!, copySoundCheckbox!, startCapturesInMoveModeCheckbox!, rememberToolCheckbox!, thumbnailCheckbox!] {
             stack.addArrangedSubview(indented(cb))
             stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
         }
@@ -2656,6 +2658,8 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
         let rememberTool = UserDefaults.standard.object(forKey: "rememberLastTool") as? Bool ?? true
         rememberToolCheckbox.state = rememberTool ? .on : .off
+        startCapturesInMoveModeCheckbox.state =
+            (UserDefaults.standard.object(forKey: "startCapturesInMoveMode") as? Bool ?? true) ? .on : .off
 
         let thumbnail = UserDefaults.standard.object(forKey: "showFloatingThumbnail") as? Bool ?? true
         thumbnailCheckbox.state = thumbnail ? .on : .off
@@ -2853,6 +2857,9 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     }
     @objc private func copySoundChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "playCopySound")
+    }
+    @objc private func startCapturesInMoveModeChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: "startCapturesInMoveMode")
     }
     @objc private func rememberToolChanged(_ sender: NSButton) {
         let enabled = sender.state == .on

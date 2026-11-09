@@ -227,6 +227,7 @@
 "Play sound on capture" = "Възпроизвеждане на звук при заснемане";
 "Play sound on copy" = "Звук при копиране";
 "Remember last selected tool" = "Запомняне на последния избран инструмент";
+"Start captures in move mode" = "Започване на заснемането в режим на преместване";
 "Show floating thumbnail after capture" = "Показване на плаващ миниатюр след заснемане";
 "Launch at login" = "Стартиране при вход";
 "Show snap alignment guides" = "Показване на водачи за подравняване";
