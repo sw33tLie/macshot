@@ -43,7 +43,6 @@
 
 /* History Panel */
 "Copy" = "நகலெடு";
-"Save As..." = "இவ்வாறு சேமி...";
 "Open in Editor" = "திருத்தியில் திற";
 "Open With" = "இதனுடன் திற";
 "Open Link" = "இணைப்பைத் திற";
@@ -58,7 +57,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "அனைத்தையும் மூடு";
-"Save All to Folder…" = "அனைத்தையும் கோப்புறையில் சேமி…";
 "Save" = "சேமி";
 
 /* Editor Top Bar */
@@ -178,6 +176,13 @@
 "ON" = "இயக்கு";
 "OFF" = "நிறுத்து";
 "  (Tab to toggle)" = "  (மாற்ற Tab)";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "ஒரு உறுப்பொருளைக் கிளிக் செய்  ·  தனிப்பயன் பகுதிக்கு இழு  ·  முழுத்திரைக்கு F";
+"Snap mode: " = "ஒட்டு முறை: ";
+"WINDOW" = "சாளரம்";
+"ELEMENT" = "உறுப்பொருள்";
+"  (Tab to switch)" = "  (மாற்ற Tab)";
+"Enhance browser and Electron element snapping" = "உலாவி மற்றும் எலக்ட்ரான் உறுப்பொருள் ஒட்டுதலை மேம்படுத்து";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "உறுப்பொருள் பயன்முறையில் இலக்கு செயலியின் அணுகல்தன்மை மரத்தை உருவாக்குகிறது. உலாவி அல்லது எலக்ட்ரான் செயலி மெதுவாகும் அல்லது உள்ளீட்டுச் சிக்கல்கள் இருந்தால் இதை முடக்கவும்.";
 "Right-click to copy" = "நகலெடுக்க வலது கிளிக் செய்";
 "Copied %@" = "%@ நகலெடுக்கப்பட்டது";
 "Set color %@" = "நிறம் %@ அமைக்கப்பட்டது";
@@ -242,6 +247,8 @@
 "Move down" = "கீழே நகர்த்து";
 "Output" = "வெளியீடு";
 "Image format:" = "பட வடிவம்:";
+"Also copy to the clipboard in this format" = "இந்த வடிவத்திலும் கிளிப்போர்டுக்கு நகலெடு";
+"PNG is always included so every app can paste" = "எந்த ஆப்பிலும் ஒட்ட முடியும் வகையில் PNG எப்போதும் சேர்க்கப்படும்";
 "Quality:" = "தரம்:";
 "%d%%" = "%d%%";
 "Save at standard resolution (1x)" = "நிலையான தெளிவுத்திறனில் சேமி (1x)";
@@ -337,6 +344,7 @@
 "Signed in" = "உள்நுழைந்துள்ளீர்கள்";
 "Not signed in" = "உள்நுழையவில்லை";
 "Account:" = "கணக்கு:";
+"Folder:" = "கோப்புறை:";
 "Test Connection" = "இணைப்பைச் சோதி";
 "Fill in endpoint, bucket, and credentials first" = "முதலில் முனைப்புள்ளி, பக்கெட் மற்றும் சான்றுகளை நிரப்புங்கள்";
 "Testing..." = "சோதிக்கிறது...";
@@ -349,11 +357,13 @@
 "Secret Key:" = "ரகசிய விசை:";
 "Public URL:" = "பொது URL:";
 "Path Prefix:" = "பாதை முன்னொட்டு:";
+"Make uploads publicly readable" = "பதிவேற்றங்களை பொதுவில் படிக்கக்கூடியதாக்கு";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "public-read ACL அனுப்புகிறது, இதனால் பதிவேற்றிய கோப்புகள் இணைப்பு உள்ள எவரும் பார்க்கக்கூடியதாக இருக்கும். இயல்பாக பொருட்களை தனிப்பட்டதாக சேமிக்கும் AWS S3, DigitalOcean Spaces, MinIO மற்றும் Backblaze B2 க்கு தேவை. ACLs இல்லாத மற்றும் தலைப்பை நிராகரிக்கும் Cloudflare R2 க்கு அணைத்து வைக்கவும்.";
 "API key:" = "API விசை:";
 "Upload History" = "பதிவேற்ற வரலாறு";
 "No uploads yet." = "இதுவரை பதிவேற்றங்கள் இல்லை.";
 "Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "பொது அணுகலுக்கான அடிப்படை URL. காலியாக இருந்தால், S3 முனைப்புள்ளி URL பயன்படுத்தப்படும் (பொதுவாக அணுகக்கூடியதாக இல்லாமல் போகலாம்).";
-"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "பகிரப்பட்ட விசை சேர்க்கப்பட்டுள்ளது — வீத வரம்புகளை அடைந்தால் imgbb.com/api இல் உங்கள் சொந்த இலவச விசையைப் பெறுங்கள். படங்கள் மட்டும் (காணொளி ஆதரவு இல்லை).";
+"A shared key is included. Get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "பகிரப்பட்ட விசை சேர்க்கப்பட்டுள்ளது, வீத வரம்புகளை அடைந்தால் imgbb.com/api இல் உங்கள் சொந்த இலவச விசையைப் பெறுங்கள். படங்கள் மட்டும் (காணொளி ஆதரவு இல்லை).";
 "Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 மற்றும் பிற S3-இணக்கமான சேவைகளுடன் செயல்படும். படங்கள் மற்றும் காணொளிகளை ஆதரிக்கிறது.";
 "Configure S3 in Preferences" = "விருப்பங்களில் S3 ஐ உள்ளமை";
 "Sign in to Google Drive in Preferences" = "விருப்பங்களில் Google Drive இல் உள்நுழை";
@@ -364,7 +374,7 @@
 "Version %@ (%@)" = "பதிப்பு %@ (%@)";
 "Made by" = "உருவாக்கியவர்";
 "Licensed under the GPLv3" = "GPLv3 உரிமத்தின் கீழ் வழங்கப்பட்டது";
-"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "macOS க்கான இலவச, திறந்த மூல திரைப்பிடிப்பு & திரைப்பதிவு கருவி.\nமுழுமையாக நேட்டிவ் — Swift மற்றும் AppKit மூலம் உருவாக்கப்பட்டது.";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native, built with Swift and AppKit." = "macOS க்கான இலவச, திறந்த மூல திரைப்பிடிப்பு & திரைப்பதிவு கருவி.\nமுழுமையாக நேட்டிவ், Swift மற்றும் AppKit மூலம் உருவாக்கப்பட்டது.";
 
 /* Alerts */
 "No Image on Clipboard" = "ஒட்டுப்பலகையில் படம் இல்லை";
@@ -386,6 +396,9 @@
 
 /* Permission Onboarding */
 "Welcome to macshot" = "macshot க்கு வரவேற்கிறோம்";
+"Welcome back to macshot" = "macshot-க்கு மீண்டும் வரவேற்கிறோம்";
+"Turn Screen Recording back on" = "திரைப் பதிவை மீண்டும் இயக்கவும்";
+"After some updates, macOS asks you to allow macshot again. Your settings and captures are safe. If macshot is already in the list, select it, click the minus button (−) to remove it, then click the plus button (+) and add macshot again." = "சில புதுப்பிப்புகளுக்குப் பிறகு, macshot-ஐ மீண்டும் அனுமதிக்குமாறு macOS கேட்கும். உங்கள் அமைப்புகளும் பிடிப்புகளும் பாதுகாப்பாக உள்ளன. பட்டியலில் macshot ஏற்கனவே இருந்தால், அதைத் தேர்ந்தெடுத்து கழித்தல் பொத்தானை (−) அழுத்தி நீக்கவும், பிறகு கூட்டல் பொத்தானை (+) அழுத்தி macshot-ஐ மீண்டும் சேர்க்கவும்.";
 "macshot needs one permission" = "macshot க்கு ஒரு அனுமதி தேவை";
 "Screen Recording not yet granted" = "திரைப் பதிவு இன்னும் வழங்கப்படவில்லை";
 "Screen Recording granted!" = "திரைப் பதிவு வழங்கப்பட்டது!";
@@ -418,6 +431,7 @@
 /* Recording Toast */
 "Recording saved" = "பதிவு சேமிக்கப்பட்டது";
 "%@ • Recording saved" = "%@ • பதிவு சேமிக்கப்பட்டது";
+"Recording failed: %@" = "பதிவு தோல்வி: %@";
 "Copy Path" = "பாதையை நகலெடு";
 "Path copied!" = "பாதை நகலெடுக்கப்பட்டது!";
 
@@ -436,6 +450,9 @@
 "Save As..." = "இவ்வாறு சேமி...";
 "Choose a folder" = "கோப்புறையைத் தேர்வுசெய்";
 "Save All to Folder…" = "அனைத்தையும் கோப்புறையில் சேமி…";
+"Could not encode the screenshot." = "திரைப்பிடிப்பைக் குறியாக்கம் செய்ய முடியவில்லை.";
+"Could not save the screenshot: %@" = "திரைப்பிடிப்பைச் சேமிக்க முடியவில்லை: %@";
+"Could not save the screenshot to history." = "திரைப்பிடிப்பை வரலாற்றில் சேமிக்க முடியவில்லை.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "தானியங்கு உருள்தல்";
@@ -467,8 +484,8 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "உள்ளீட்டு கண்காணிப்பு தேவை";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "பதிவின் போது விசை அழுத்தங்களைக் காட்ட macshot க்கு உள்ளீட்டு கண்காணிப்பு அனுமதி தேவை. System Settings இல் அணுகலை வழங்கி, மீண்டும் முயற்சிக்கவும்.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "பதிவின் போது விசை அழுத்தங்களைக் காட்ட macshot க்கு அணுகல்தன்மை அனுமதி தேவை. System Settings இல் அணுகலை வழங்கி, மீண்டும் முயற்சிக்கவும்.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "பதிவின்போது மவுஸ் கிளிக்குகளை முன்னிலைப்படுத்த அல்லது விசை அழுத்தங்களைக் காட்ட macshot க்கு உள்ளீட்டு கண்காணிப்பு அனுமதி தேவை. கணினி அமைப்புகளில் அணுகலை வழங்கி, மீண்டும் முயற்சிக்கவும்.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "தனித்தனி இடைமுக உறுப்புகளுடன் ஸ்நாப் செய்ய macshot-க்கு அணுகல்தன்மை அனுமதி தேவை. கணினி அமைப்புகளில் அணுகலை வழங்கி, மீண்டும் முயற்சிக்கவும்.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "விசை அழுத்தங்களைக் காட்டு";
@@ -507,6 +524,8 @@
 "Settings..." = "அமைப்புகள்...";
 "macshot Settings" = "macshot அமைப்புகள்";
 "Also open in Editor" = "எடிட்டரிலும் திற";
+"Open in Editor right after selection" = "தேர்வு செய்தவுடன் எடிட்டரில் திற";
+"Close editor after copying" = "நகலெடுத்த பிறகு எடிட்டரை மூடு";
 "Hide controls" = "கட்டுப்பாடுகளை மறை";
 "Hide recording controls" = "பதிவு கட்டுப்பாடுகளை மறை";
 "Stop recording from the menu bar icon instead." = "அதற்குப் பதிலாக மெனு பட்டை ஐகானிலிருந்து பதிவை நிறுத்தவும்.";
@@ -553,12 +572,13 @@
 
 "Same as screenshots" = "ஸ்கிரீன்ஷாட்களைப் போலவே";
 "  Preview size:" = "  முன்னோட்ட அளவு:";
+"Fit image in preview (letterbox)" = "முன்னோட்டத்தில் படத்தைப் பொருத்து (லெட்டர்பாக்ஸ்)";
 "(0 = off)" = "(0 = அணைப்பு)";
 "Clear All" = "அனைத்தையும் அழி";
 "Clear History?" = "வரலாற்றை அழிக்கவா?";
 "This will permanently delete all screenshots from history." = "இது வரலாற்றில் உள்ள அனைத்து ஸ்கிரீன்ஷாட்களையும் நிரந்தரமாக நீக்கும்.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "\"அமை\" என்பதை கிளிக் செய்து, குறுக்குவழியை அமைக்க குறைந்தது ஒரு மாற்றி (⌘, ⌥, ⌃, ⇧) கொண்ட விசை சேர்க்கையை அழுத்தவும்.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "கோப்புகள் உங்கள் Google Drive-ல் உள்ள \"macshot\" கோப்புறையில் பதிவேற்றப்படும். அனைத்தும் தனிப்பட்டதாக இருக்கும் — எதுவும் பொதுவில் பகிரப்படாது.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused. A new one is created instead. Everything stays private and nothing is shared publicly." = "கோப்புகள் உங்கள் Google Drive-ல் உள்ள இந்தக் கோப்புறையில் பதிவேற்றப்படும். \"macshot\"-ஐப் பயன்படுத்த காலியாக விடவும். macshot தானே உருவாக்கிய கோப்புறைகளை மட்டுமே பயன்படுத்த முடியும், எனவே Drive-ல் நீங்கள் அதே பெயரில் உருவாக்கிய கோப்புறை மீண்டும் பயன்படுத்தப்படாது, அதற்குப் பதிலாக புதிய கோப்புறை உருவாக்கப்படும். அனைத்தும் தனிப்பட்டதாக இருக்கும், எதுவும் பொதுவில் பகிரப்படாது.";
 
 "Pressure" = "அழுத்தம்";
 
@@ -628,7 +648,7 @@
 "Open this settings window" = "இந்த அமைப்புகள் சாளரத்தைத் திற";
 "Quick capture (uses your Enter action)" = "விரைவு பிடிப்பு (உங்கள் Enter செயலைப் பயன்படுத்துகிறது)";
 "Re-capture the last selected area" = "கடைசியாக தேர்ந்தெடுத்த பகுதியை மீண்டும் பிடி";
-"Screenshots only — captured window title (blank otherwise)" = "திரைப்பிடிப்புகள் மட்டும் — பிடிக்கப்பட்ட சாளரத் தலைப்பு (இல்லையெனில் காலி)";
+"Captured window title (screenshots only, blank otherwise)" = "திரைப்பிடிப்புகள் மட்டும், பிடிக்கப்பட்ட சாளரத் தலைப்பு (இல்லையெனில் காலி)";
 "Show available filename tokens" = "கிடைக்கும் கோப்புப்பெயர் டோக்கன்களைக் காட்டு";
 "Enable macshot:// URL scheme" = "macshot:// URL திட்டத்தை இயக்கு";
 "Show supported URL scheme commands" = "ஆதரிக்கப்படும் URL திட்ட கட்டளைகளைக் காட்டு";
@@ -682,3 +702,162 @@
 "Selection is already aligned" = "தேர்வு ஏற்கனவே சீரமைக்கப்பட்டுள்ளது";
 "Space to move. Release to annotate and edit" = "நகர்த்த ஸ்பேஸ் விசையைப் பிடிக்கவும். குறிப்புரையிட்டு திருத்த விடுவிக்கவும்";
 "Space to move. Release to finish" = "நகர்த்த ஸ்பேஸ் விசையைப் பிடிக்கவும். முடிக்க விடுவிக்கவும்";
+
+"Saving..." = "சேமிக்கப்படுகிறது…";
+
+"Show Recordings in Finder" = "Finder-இல் பதிவுகளைக் காட்டு";
+
+"Cancelled" = "ரத்துசெய்யப்பட்டது";
+
+"Cancelling..." = "ரத்துசெய்யப்படுகிறது...";
+"Preparing video..." = "வீடியோ தயாராகிறது...";
+"History is busy saving. Please try again shortly." = "வரலாறு சேமிக்கப்படுகிறது. சிறிது நேரத்திற்குப் பிறகு மீண்டும் முயற்சிக்கவும்.";
+
+// Video editor accessibility
+"Play" = "இயக்கு";
+"Mute" = "ஒலியை முடக்கு";
+"Unmute" = "ஒலியை இயக்கு";
+
+/* Video editor (Studio) */
+"%.1f× · follows pointer" = "%.1f× · சுட்டியைப் பின்தொடர்கிறது";
+"Add" = "சேர்";
+"Add Cut Here" = "இங்கே வெட்டைச் சேர்";
+"Add Text Here" = "இங்கே உரையைச் சேர்";
+"Add Zoom Here" = "இங்கே பெரிதாக்கத்தைச் சேர்";
+"Added %d captions" = "%d தலைப்புரைகள் சேர்க்கப்பட்டன";
+"Added %d zooms" = "%d பெரிதாக்கங்கள் சேர்க்கப்பட்டன";
+"Apply Default Zoom to All" = "இயல்புநிலை பெரிதாக்கத்தை அனைத்திற்கும் பயன்படுத்து";
+"Auto" = "தானியங்கு";
+"Auto Zoom" = "தானியங்கு பெரிதாக்கம்";
+"Auto Zoom needs pointer data, which macshot records with every new recording. You can still add zooms by double-clicking the zoom lane." = "தானியங்கு பெரிதாக்கத்திற்கு சுட்டி தரவு தேவை, அதை macshot ஒவ்வொரு புதிய பதிவிலும் பதிவுசெய்கிறது. பெரிதாக்கப் பாதையில் இருமுறை கிளிக் செய்து இப்போதும் பெரிதாக்கங்களைச் சேர்க்கலாம்.";
+"Background blur" = "பின்னணி மங்கல்";
+"Background color" = "பின்னணி நிறம்";
+"Background, padding, rounded corners and shadow" = "பின்னணி, இடைவெளி, வட்டமான மூலைகள் மற்றும் நிழல்";
+"Bold Italic" = "தடித்த சாய்வான";
+"Box" = "பெட்டி";
+"Camera" = "கேமரா";
+"Caption" = "தலைப்புரை";
+"Captions" = "தலைப்புரைகள்";
+"Captions are transcribed on this Mac. Nothing is uploaded." = "தலைப்புரைகள் இந்த Mac-இலேயே எழுத்தாக்கப்படுகின்றன. எதுவும் பதிவேற்றப்படாது.";
+"Choose Image…" = "படத்தைத் தேர்வுசெய்…";
+"Click color" = "கிளிக் நிறம்";
+"Clicks" = "கிளிக்குகள்";
+"Clip" = "கிளிப்";
+"Colors" = "நிறங்கள்";
+"Connect nearby zooms" = "அருகிலுள்ள பெரிதாக்கங்களை இணை";
+"Copy the edited video to the clipboard" = "திருத்திய வீடியோவை கிளிப்போர்டுக்கு நகலெடு";
+"Corner radius" = "மூலை ஆரம்";
+"Creates zooms that follow the pointer wherever you click or type. Adjust or delete them on the timeline." = "நீங்கள் கிளிக் செய்யும் அல்லது தட்டச்சு செய்யும் இடமெல்லாம் சுட்டியைப் பின்தொடரும் பெரிதாக்கங்களை உருவாக்குகிறது. காலவரிசையில் அவற்றைச் சரிசெய்யலாம் அல்லது நீக்கலாம்.";
+"Custom color" = "தனிப்பயன் நிறம்";
+"Cut" = "வெட்டு";
+"Cuts, speed and freeze frames" = "வெட்டுகள், வேகம் மற்றும் உறைந்த பிரேம்கள்";
+"Default zoom" = "இயல்புநிலை பெரிதாக்கம்";
+"Dot" = "புள்ளி";
+"Double-click the text on the preview to edit it." = "திருத்த முன்னோட்டத்தில் உள்ள உரையை இருமுறை கிளிக் செய்யவும்.";
+"Double-click to add a zoom" = "பெரிதாக்கத்தைச் சேர்க்க இருமுறை கிளிக் செய்யவும்";
+"Double-click to add a zoom, or use Auto Zoom" = "பெரிதாக்கத்தைச் சேர்க்க இருமுறை கிளிக் செய்யவும், அல்லது தானியங்கு பெரிதாக்கத்தைப் பயன்படுத்தவும்";
+"Drag the frame on the preview to choose where the zoom looks." = "பெரிதாக்கம் எங்கே பார்க்க வேண்டும் என்பதைத் தேர்வுசெய்ய முன்னோட்டத்தில் சட்டகத்தை இழுக்கவும்.";
+"Duration" = "கால அளவு";
+"Edge highlight" = "விளிம்பு ஒளிர்வு";
+"Edit Text" = "உரையைத் திருத்து";
+"Editable pointer, clicks and keystrokes" = "திருத்தக்கூடிய சுட்டி, கிளிக்குகள் மற்றும் விசை அழுத்தங்கள்";
+"Edits" = "திருத்தங்கள்";
+"Export" = "ஏற்றுமதி";
+"Export Subtitles (.srt)…" = "வசனங்களை ஏற்றுமதி செய் (.srt)…";
+"Fade in" = "மெல்லத் தோன்றல்";
+"Fade out" = "மெல்ல மறைதல்";
+"Fit" = "பொருத்து";
+"Fixed" = "நிலையானது";
+"Fixed point" = "நிலையான புள்ளி";
+"Focus" = "குவியம்";
+"Follow" = "பின்தொடர்";
+"Follow Pointer" = "சுட்டியைப் பின்தொடர்";
+"Follow pointer" = "சுட்டியைப் பின்தொடர்";
+"Follow tightness" = "பின்தொடர்தல் நெருக்கம்";
+"Format" = "வடிவமைப்பு";
+"Frame" = "சட்டகம்";
+"Frame rate" = "பிரேம் வீதம்";
+"Frame the recording" = "பதிவைச் சட்டகமிடு";
+"Freeze Frame" = "உறைந்த பிரேம்";
+"Generate Captions" = "தலைப்புரைகளை உருவாக்கு";
+"Gentle" = "மென்மையான";
+"Gradient" = "சாய்வுநிறம்";
+"Hide ordinary typing, show key combinations" = "சாதாரண தட்டச்சை மறை, விசைச் சேர்க்கைகளைக் காட்டு";
+"Hide when idle" = "செயலற்றபோது மறை";
+"Hide while typing" = "தட்டச்சு செய்யும்போது மறை";
+"Hold Focus" = "குவியத்தை நிலைநிறுத்து";
+"Idle delay" = "செயலற்ற தாமதம்";
+"Image" = "படம்";
+"Keystrokes" = "விசை அழுத்தங்கள்";
+"Keystrokes in this recording are part of the video pixels." = "இந்தப் பதிவிலுள்ள விசை அழுத்தங்கள் வீடியோ பிக்சல்களின் ஒரு பகுதி.";
+"Light appearance" = "வெளிர் தோற்றம்";
+"Makes looping GIFs seamless" = "சுழலும் GIF-களைத் தடையற்றதாக்குகிறது";
+"Mirror" = "கண்ணாடிப் பிம்பம்";
+"Motion" = "இயக்கம்";
+"Motion blur" = "இயக்க மங்கல்";
+"Next edit" = "அடுத்த திருத்தம்";
+"No clicks or typing found to zoom into" = "பெரிதாக்க கிளிக்குகளோ தட்டச்சோ இல்லை";
+"No speech was recognized" = "பேச்சு எதுவும் அடையாளம் காணப்படவில்லை";
+"No system wallpapers were found. Choose an image instead." = "கணினி வால்பேப்பர்கள் எதுவும் இல்லை. அதற்குப் பதிலாக ஒரு படத்தைத் தேர்வுசெய்யவும்.";
+"Off" = "முடக்கம்";
+"On-device speech recognition isn't available for your language on this Mac." = "இந்த Mac-இல் உங்கள் மொழிக்குச் சாதனத்திலேயே பேச்சு அறிதல் கிடைக்கவில்லை.";
+"Original" = "அசல்";
+"Outline color" = "வெளிக்கோட்டு நிறம்";
+"Outline width" = "வெளிக்கோட்டு அகலம்";
+"Overlays" = "மேலடுக்குகள்";
+"Pan between zooms instead of zooming out" = "சிறிதாக்குவதற்குப் பதிலாகப் பெரிதாக்கங்களுக்கு இடையே நகர்";
+"Pill" = "மாத்திரை";
+"Pointer" = "சுட்டி";
+"Position" = "நிலை";
+"Press animation" = "அழுத்த அனிமேஷன்";
+"Previous edit" = "முந்தைய திருத்தம்";
+"Quality" = "தரம்";
+"Regenerate Captions" = "தலைப்புரைகளை மீண்டும் உருவாக்கு";
+"Regular" = "வழக்கமான";
+"Remove Automatic Zooms" = "தானியங்கு பெரிதாக்கங்களை அகற்று";
+"Remove Captions" = "தலைப்புரைகளை அகற்று";
+"Removes %.1f seconds from the video. Drag its edges on the timeline to adjust." = "வீடியோவிலிருந்து %.1f வினாடிகளை அகற்றுகிறது. சரிசெய்ய காலவரிசையில் அதன் விளிம்புகளை இழுக்கவும்.";
+"Return to start at the end" = "இறுதியில் தொடக்கத்திற்குத் திரும்பு";
+"Ring" = "வளையம்";
+"Ripple" = "அலை";
+"Save As…" = "இவ்வாறு சேமி…";
+"Shape" = "வடிவம்";
+"Shortcuts only" = "குறுக்குவழிகள் மட்டும்";
+"Show camera" = "கேமராவைக் காட்டு";
+"Show captions" = "தலைப்புரைகளைக் காட்டு";
+"Show keystrokes" = "விசை அழுத்தங்களைக் காட்டு";
+"Show pointer" = "சுட்டியைக் காட்டு";
+"Shrink during zooms" = "பெரிதாக்கத்தின்போது சுருக்கு";
+"Smoothing" = "மென்மையாக்கல்";
+"Snappy" = "விரைவான";
+"Speech recognition is turned off for macshot in System Settings › Privacy & Security." = "macshot-க்கான பேச்சு அறிதல் கணினி அமைப்புகள் › தனியுரிமை & பாதுகாப்பு என்பதில் முடக்கப்பட்டுள்ளது.";
+"Speed" = "வேகம்";
+"Spotlight" = "ஸ்பாட்லைட்";
+"Square" = "சதுரம்";
+"Style" = "பாணி";
+"Tall" = "உயரமான";
+"Text and blur" = "உரை மற்றும் மங்கல்";
+"The recording's audio could not be read." = "பதிவின் ஒலியைப் படிக்க முடியவில்லை.";
+"This recording already shows the pointer in its pixels, so it can't be restyled. Zooms can still follow it." = "இந்தப் பதிவு ஏற்கனவே அதன் பிக்சல்களில் சுட்டியைக் காட்டுகிறது, எனவே அதன் பாணியை மாற்ற முடியாது. பெரிதாக்கங்கள் இன்னும் அதைப் பின்தொடரலாம்.";
+"This recording has no audio to transcribe." = "இந்தப் பதிவில் எழுத்தாக்க ஒலி எதுவும் இல்லை.";
+"This video has no recorded pointer data. Recordings made with macshot that open in the editor let you restyle, smooth and resize the pointer after recording." = "இந்த வீடியோவில் பதிவுசெய்யப்பட்ட சுட்டி தரவு இல்லை. macshot மூலம் எடுக்கப்பட்டு எடிட்டரில் திறக்கும் பதிவுகளில், பதிவுக்குப் பிறகு சுட்டியின் பாணி, மென்மை மற்றும் அளவை மாற்றலாம்.";
+"Title" = "தலைப்பு";
+"Transcribing…" = "எழுத்தாக்குகிறது…";
+"Transition" = "மாறுதல்";
+"Turn on Show Keystrokes before recording. macshot then records them separately so you can style them here." = "பதிவுசெய்வதற்கு முன் \"விசை அழுத்தங்களைக் காட்டு\" என்பதை இயக்கவும். பின்னர் macshot அவற்றைத் தனியாகப் பதிவுசெய்யும், எனவே அவற்றை இங்கே வடிவமைக்கலாம்.";
+"Turn on the camera before recording. macshot records it separately so you can move, resize, restyle or hide it here, and shrink it during zooms." = "பதிவுசெய்வதற்கு முன் கேமராவை இயக்கவும். macshot அதைத் தனியாகப் பதிவுசெய்வதால், அதை இங்கே நகர்த்தலாம், அளவு மாற்றலாம், பாணி மாற்றலாம் அல்லது மறைக்கலாம், மேலும் பெரிதாக்கத்தின்போது சுருக்கலாம்.";
+"Use Solid to hide sensitive information: blur and pixelation can sometimes be reversed." = "முக்கியமான தகவலை மறைக்க திடமான என்பதைப் பயன்படுத்தவும்: மங்கலாக்கலையும் பிக்சலேஷனையும் சில நேரங்களில் மீட்டெடுக்க முடியும்.";
+"Visibility" = "தெரிவுநிலை";
+"Wallpaper" = "வால்பேப்பர்";
+"When recordings open in the editor, the pointer is recorded separately so you can smooth, resize, restyle or hide it, and add zooms that follow it." = "பதிவுகள் எடிட்டரில் திறக்கும்போது, சுட்டி தனியாகப் பதிவுசெய்யப்படும், எனவே அதை மென்மையாக்கலாம், அளவு மாற்றலாம், பாணி மாற்றலாம் அல்லது மறைக்கலாம், மேலும் அதைப் பின்தொடரும் பெரிதாக்கங்களைச் சேர்க்கலாம்.";
+"Wide" = "அகலமான";
+"Zoom in" = "பெரிதாக்கல்";
+"Zoom in timeline" = "காலவரிசையைப் பெரிதாக்கு";
+"Zoom level" = "பெரிதாக்க நிலை";
+"Zoom out" = "சிறிதாக்கல்";
+"Zoom out timeline" = "காலவரிசையைச் சிறிதாக்கு";
+"macOS" = "macOS";
+"Sway" = "அசைவு";
+
+"Snap webcam to corners when moved" = "நகர்த்தும்போது வெப்கேமைக் மூலைகளில் பொருத்து";
+"Search emoji" = "எமோஜியைத் தேடு";

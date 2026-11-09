@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "Kopier";
-"Save As..." = "Lagre som\U2026";
 "Open in Editor" = "\U00C5pne i redigering";
 "Pin to Screen" = "Fest til skjerm";
 "Quick Look" = "Hurtigvisning";
@@ -54,7 +53,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "Lukk alle";
-"Save All to Folder\U2026" = "Lagre alle i mappe\U2026";
 "Save" = "Lagre";
 
 /* Editor Top Bar */
@@ -176,6 +174,7 @@
 
 /* Overlay / Canvas */
 "Click a window  \U00B7  Drag for custom area  \U00B7  F for full screen" = "Klikk et vindu  \U00B7  Dra for egendefinert omr\U00E5de  \U00B7  F for fullskjerm";
+"Click an element  \U00B7  Drag for custom area  \U00B7  F for full screen" = "Klikk et element  \U00B7  Dra for egendefinert omr\U00E5de  \U00B7  F for fullskjerm";
 "Drag to select  \U00B7  Click for full screen" = "Dra for \U00E5 velge  \U00B7  Klikk for fullskjerm";
 "Release to annotate and edit" = "Slipp for \U00E5 kommentere og redigere";
 "Release to finish" = "Slipp for \U00E5 fullf\U00F8re";
@@ -183,9 +182,13 @@
 "Hold Space to move. Release to finish" = "Hold mellomrom for \U00E5 flytte. Slipp for \U00E5 fullf\U00F8re";
 "Space" = "Mellomrom";
 "Window snap: " = "Vindussnapping: ";
+"Snap mode: " = "Snappemodus: ";
 "ON" = "P\U00C5";
 "OFF" = "AV";
+"WINDOW" = "VINDU";
+"ELEMENT" = "ELEMENT";
 "  (Tab to toggle)" = "  (Tab for \U00E5 veksle)";
+"  (Tab to switch)" = "  (Tab for \U00E5 bytte)";
 "Right-click to copy" = "H\U00F8yreklikk for \U00E5 kopiere";
 "Copied %@" = "Kopierte %@";
 "Set color %@" = "Sett farge %@";
@@ -222,6 +225,8 @@
 "Launch at login" = "Start ved innlogging";
 "Show snap alignment guides" = "Vis hjelpelinje for justering";
 "Snap selection edges to image boundaries" = "Fest markeringskanter til bildegrenser";
+"Enhance browser and Electron element snapping" = "Forbedre elementfangst for nettleser og Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Bygger tilgangstr\U00E6t i m\U00E5lappen i Element-modus. Deaktiver dette hvis en nettleser eller Electron-app blir treg eller har innproblemer.";
 "Capture mouse cursor in screenshot" = "Ta med musepeker i skjermbilde";
 "Double-click selection to copy" = "Dobbeltklikk p\U00E5 utvalget for \U00E5 kopiere";
 "Hide capture instructions" = "Skjul instruksjoner ved skjermbilde";
@@ -238,6 +243,8 @@
 "Replace (show only latest)" = "Erstatt (vis kun siste)";
 "Output" = "Utdata";
 "Image format:" = "Bildeformat:";
+"Also copy to the clipboard in this format" = "Kopier også til utklippstavlen i dette formatet";
+"PNG is always included so every app can paste" = "PNG er alltid med, så alle apper kan lime inn";
 "Quality:" = "Kvalitet:";
 "%d%%" = "%d%%";
 "Save at standard resolution (1x)" = "Lagre med standard oppl\U00F8sning (1x)";
@@ -337,6 +344,7 @@
 "Signed in" = "Innlogget";
 "Not signed in" = "Ikke innlogget";
 "Account:" = "Konto:";
+"Folder:" = "Mappe:";
 "Test Connection" = "Test tilkobling";
 "Fill in endpoint, bucket, and credentials first" = "Fyll inn endepunkt, beholder og legitimasjon f\U00F8rst";
 "Testing..." = "Tester\U2026";
@@ -349,11 +357,13 @@
 "Secret Key:" = "Hemmelig n\U00F8kkel:";
 "Public URL:" = "Offentlig URL:";
 "Path Prefix:" = "Sti-prefiks:";
+"Make uploads publicly readable" = "Gj\U00F8r opplastinger offentlig lesbare";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Sender public-read ACL slik at opplastede filer kan ses av alle med lenken. N\U00F8dvendig for AWS S3, DigitalOcean Spaces, MinIO og Backblaze B2, som lagrer objekter privat som standard. La st\U00E5 av for Cloudflare R2, som ikke har ACL og avviser headeren.";
 "API key:" = "API-n\U00F8kkel:";
 "Upload History" = "Opplastingshistorikk";
 "No uploads yet." = "Ingen opplastinger enn\U00E5.";
 "Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "Basis-URL for offentlig tilgang. Hvis tom, brukes S3-endepunktets URL (som kanskje ikke er offentlig tilgjengelig).";
-"A shared key is included \U2014 get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "En delt n\U00F8kkel er inkludert \U2014 f\U00E5 din egen gratis n\U00F8kkel p\U00E5 imgbb.com/api hvis du n\U00E5r hastighetsgrenser. Kun bilder (ingen st\U00F8tte for video).";
+"A shared key is included. Get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "En delt nøkkel er inkludert, få din egen gratis nøkkel på imgbb.com/api hvis du når hastighetsgrenser. Kun bilder (ingen støtte for video).";
 "Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "Fungerer med AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 og andre S3-kompatible tjenester. St\U00F8tter bilder og videoer.";
 "Configure S3 in Preferences" = "Konfigurer S3 i innstillingene";
 "Sign in to Google Drive in Preferences" = "Logg inn p\U00E5 Google Drive i innstillingene";
@@ -364,7 +374,7 @@
 "Version %@ (%@)" = "Versjon %@ (%@)";
 "Made by" = "Laget av";
 "Licensed under the GPLv3" = "Lisensiert under GPLv3";
-"A free, open-source screenshot & screen recording tool for macOS.\nFully native \U2014 built with Swift and AppKit." = "Et gratis skjermbilde- og skjermopptaksverkt\U00F8y med \U00E5pen kildekode for macOS.\nHelt innebygd \U2014 bygget med Swift og AppKit.";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native, built with Swift and AppKit." = "Et gratis skjermbilde- og skjermopptaksverktøy med åpen kildekode for macOS.\nHelt innebygd, bygget med Swift og AppKit.";
 
 /* Alerts */
 "No Image on Clipboard" = "Ingen bilde p\U00E5 utklippstavlen";
@@ -386,6 +396,9 @@
 
 /* Permission Onboarding */
 "Welcome to macshot" = "Velkommen til macshot";
+"Welcome back to macshot" = "Velkommen tilbake til macshot";
+"Turn Screen Recording back on" = "Slå på skjermopptak igjen";
+"After some updates, macOS asks you to allow macshot again. Your settings and captures are safe. If macshot is already in the list, select it, click the minus button (−) to remove it, then click the plus button (+) and add macshot again." = "Etter enkelte oppdateringer ber macOS deg om å tillate macshot på nytt. Innstillingene og opptakene dine er trygge. Hvis macshot allerede står i listen, markerer du det, klikker på minusknappen (−) for å fjerne det, og klikker deretter på plussknappen (+) og legger til macshot igjen.";
 "macshot needs one permission" = "macshot trenger \U00E9n tillatelse";
 "Screen Recording not yet granted" = "Skjermopptak er ikke gitt enn\U00E5";
 "Screen Recording granted!" = "Skjermopptak er gitt!";
@@ -415,6 +428,7 @@
 /* Recording Toast */
 "Recording saved" = "Opptak lagret";
 "%@ \U2022 Recording saved" = "%@ \U2022 Opptak lagret";
+"Recording failed: %@" = "Opptaket mislyktes: %@";
 "Copy Path" = "Kopier sti";
 "Path copied!" = "Sti kopiert!";
 
@@ -433,6 +447,9 @@
 "Save As..." = "Lagre som\U2026";
 "Choose a folder" = "Velg en mappe";
 "Save All to Folder\U2026" = "Lagre alle i mappe\U2026";
+"Could not encode the screenshot." = "Kunne ikke kode skjermbildet.";
+"Could not save the screenshot: %@" = "Kunne ikke lagre skjermbildet: %@";
+"Could not save the screenshot to history." = "Kunne ikke lagre skjermbildet i historikken.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Autorulling";
@@ -464,8 +481,8 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Inngangsoverv\U00E5king p\U00E5krevd";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot trenger tillatelse for inngangsoverv\U00E5king for \U00E5 vise tastetrykk under opptak. Gi tilgang i System Settings, og pr\U00F8v igjen.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot trenger tilgjengelighetstillatelse for \U00E5 vise tastetrykk under opptak. Gi tilgang i System Settings, og pr\U00F8v igjen.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot trenger tillatelse til inndataovervåking for å fremheve museklikk eller vise tastetrykk under opptak. Gi tilgang i Systeminnstillinger, og prøv igjen.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot trenger tilgjengelighetstillatelse for å feste seg til enkelte grensesnittelementer. Gi tilgang i Systeminnstillinger og prøv igjen.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Vis tastetrykk";
@@ -506,6 +523,8 @@
 "Settings..." = "Innstillinger...";
 "macshot Settings" = "macshot-innstillinger";
 "Also open in Editor" = "\U00C5pne ogs\U00E5 i redigering";
+"Open in Editor right after selection" = "\U00C5pne i redigering rett etter markering";
+"Close editor after copying" = "Lukk redigeringsvinduet etter kopiering";
 "Hide controls" = "Skjul kontroller";
 "Hide recording controls" = "Skjul opptakskontroller";
 "Stop recording from the menu bar icon instead." = "Stopp opptaket fra menylinjeikonen i stedet.";
@@ -551,12 +570,13 @@
 
 "Same as screenshots" = "Samme som skjermbilder";
 "  Preview size:" = "  Forhåndsvisningsstørrelse:";
+"Fit image in preview (letterbox)" = "Tilpass bildet i forhåndsvisningen (letterbox)";
 "(0 = off)" = "(0 = av)";
 "Clear All" = "Tøm alt";
 "Clear History?" = "Tøm historikk?";
 "This will permanently delete all screenshots from history." = "Dette vil slette alle skjermbilder fra historikken permanent.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Klikk \"Angi\" og trykk en tastekombinasjon med minst én modifikatortast (⌘, ⌥, ⌃, ⇧) for å angi en snarvei.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Filer lastes opp til en \"macshot\"-mappe i Google Disk. Alt forblir privat — ingenting deles offentlig.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused. A new one is created instead. Everything stays private and nothing is shared publicly." = "Filer lastes opp til denne mappen i Google Disk. La feltet stå tomt for å bruke \"macshot\". macshot kan bare bruke mapper det har opprettet selv, så en mappe med samme navn som du har laget i Disk, blir ikke gjenbrukt, det opprettes en ny i stedet. Alt forblir privat, ingenting deles offentlig.";
 
 "Pressure" = "Trykk";
 
@@ -626,7 +646,7 @@
 "Open this settings window" = "Åpne dette innstillingsvinduet";
 "Quick capture (uses your Enter action)" = "Hurtigopptak (bruker Enter-handlingen din)";
 "Re-capture the last selected area" = "Ta nytt opptak av sist valgte område";
-"Screenshots only — captured window title (blank otherwise)" = "Kun skjermbilder — tittelen på vinduet som er tatt bilde av (tom ellers)";
+"Captured window title (screenshots only, blank otherwise)" = "Kun skjermbilder, tittelen på vinduet som er tatt bilde av (tom ellers)";
 "Show available filename tokens" = "Vis tilgjengelige filnavntegn";
 "Show supported URL scheme commands" = "Vis støttede URL-skjemakommandoer";
 "Start area capture" = "Start områdeopptak";
@@ -680,3 +700,162 @@
 "Selection is already aligned" = "Markeringen er allerede justert etter kantene";
 "Space to move. Release to annotate and edit" = "Mellomrom for å flytte. Slipp for å kommentere og redigere";
 "Space to move. Release to finish" = "Mellomrom for å flytte. Slipp for å fullføre";
+
+"Saving..." = "Lagrer…";
+
+"Show Recordings in Finder" = "Vis opptak i Finder";
+
+"Cancelled" = "Avbrutt";
+
+"Cancelling..." = "Avbryter...";
+"Preparing video..." = "Forbereder video...";
+"History is busy saving. Please try again shortly." = "Historikken lagres. Prøv igjen om et øyeblikk.";
+
+// Video editor accessibility
+"Play" = "Spill av";
+"Mute" = "Demp";
+"Unmute" = "Slå på lyd";
+
+/* Video editor (Studio) */
+"%.1f× · follows pointer" = "%.1f× · følger pekeren";
+"Add" = "Legg til";
+"Add Cut Here" = "Legg til kutt her";
+"Add Text Here" = "Legg til tekst her";
+"Add Zoom Here" = "Legg til zoom her";
+"Added %d captions" = "La til %d undertekster";
+"Added %d zooms" = "La til %d zoomer";
+"Apply Default Zoom to All" = "Bruk standardzoom på alle";
+"Auto" = "Auto";
+"Auto Zoom" = "Autozoom";
+"Auto Zoom needs pointer data, which macshot records with every new recording. You can still add zooms by double-clicking the zoom lane." = "Autozoom trenger pekerdata, som macshot tar opp ved hvert nytt opptak. Du kan fortsatt legge til zoomer ved å dobbeltklikke på zoomsporet.";
+"Background blur" = "Bakgrunnsuskarphet";
+"Background color" = "Bakgrunnsfarge";
+"Background, padding, rounded corners and shadow" = "Bakgrunn, utfylling, avrundede hjørner og skygge";
+"Bold Italic" = "Fet kursiv";
+"Box" = "Boks";
+"Camera" = "Kamera";
+"Caption" = "Undertekst";
+"Captions" = "Undertekster";
+"Captions are transcribed on this Mac. Nothing is uploaded." = "Undertekster transkriberes på denne Macen. Ingenting lastes opp.";
+"Choose Image…" = "Velg bilde…";
+"Click color" = "Klikkfarge";
+"Clicks" = "Klikk";
+"Clip" = "Klipp";
+"Colors" = "Farger";
+"Connect nearby zooms" = "Koble sammen nærliggende zoomer";
+"Copy the edited video to the clipboard" = "Kopier den redigerte videoen til utklippstavlen";
+"Corner radius" = "Hjørneradius";
+"Creates zooms that follow the pointer wherever you click or type. Adjust or delete them on the timeline." = "Lager zoomer som følger pekeren der du klikker eller skriver. Juster eller slett dem på tidslinjen.";
+"Custom color" = "Egendefinert farge";
+"Cut" = "Kutt";
+"Cuts, speed and freeze frames" = "Kutt, hastighet og stillbilder";
+"Default zoom" = "Standardzoom";
+"Dot" = "Prikk";
+"Double-click the text on the preview to edit it." = "Dobbeltklikk på teksten i forhåndsvisningen for å redigere den.";
+"Double-click to add a zoom" = "Dobbeltklikk for å legge til zoom";
+"Double-click to add a zoom, or use Auto Zoom" = "Dobbeltklikk for å legge til zoom, eller bruk Autozoom";
+"Drag the frame on the preview to choose where the zoom looks." = "Dra rammen i forhåndsvisningen for å velge hvor zoomen skal se.";
+"Duration" = "Varighet";
+"Edge highlight" = "Kantlys";
+"Edit Text" = "Rediger tekst";
+"Editable pointer, clicks and keystrokes" = "Redigerbar peker, klikk og tastetrykk";
+"Edits" = "Redigeringer";
+"Export" = "Eksporter";
+"Export Subtitles (.srt)…" = "Eksporter undertekster (.srt)…";
+"Fade in" = "Ton inn";
+"Fade out" = "Ton ut";
+"Fit" = "Tilpass";
+"Fixed" = "Fast";
+"Fixed point" = "Fast punkt";
+"Focus" = "Fokus";
+"Follow" = "Følg";
+"Follow Pointer" = "Følg pekeren";
+"Follow pointer" = "Følg pekeren";
+"Follow tightness" = "Følgepresisjon";
+"Format" = "Format";
+"Frame" = "Ramme";
+"Frame rate" = "Bildefrekvens";
+"Frame the recording" = "Ramme inn opptaket";
+"Freeze Frame" = "Stillbilde";
+"Generate Captions" = "Generer undertekster";
+"Gentle" = "Rolig";
+"Gradient" = "Gradient";
+"Hide ordinary typing, show key combinations" = "Skjul vanlig skriving, vis tastekombinasjoner";
+"Hide when idle" = "Skjul ved inaktivitet";
+"Hide while typing" = "Skjul under skriving";
+"Hold Focus" = "Hold fokus";
+"Idle delay" = "Inaktivitetsforsinkelse";
+"Image" = "Bilde";
+"Keystrokes" = "Tastetrykk";
+"Keystrokes in this recording are part of the video pixels." = "Tastetrykkene i dette opptaket er en del av videoens piksler.";
+"Light appearance" = "Lyst utseende";
+"Makes looping GIFs seamless" = "Gjør GIF-er i løkke sømløse";
+"Mirror" = "Speilvend";
+"Motion" = "Bevegelse";
+"Motion blur" = "Bevegelsesuskarphet";
+"Next edit" = "Neste redigering";
+"No clicks or typing found to zoom into" = "Fant ingen klikk eller skriving å zoome inn på";
+"No speech was recognized" = "Ingen tale ble gjenkjent";
+"No system wallpapers were found. Choose an image instead." = "Fant ingen systemskrivebordsbilder. Velg et bilde i stedet.";
+"Off" = "Av";
+"On-device speech recognition isn't available for your language on this Mac." = "Talegjenkjenning på enheten er ikke tilgjengelig for språket ditt på denne Macen.";
+"Original" = "Original";
+"Outline color" = "Omrissfarge";
+"Outline width" = "Omrissbredde";
+"Overlays" = "Overlegg";
+"Pan between zooms instead of zooming out" = "Panorer mellom zoomer i stedet for å zoome ut";
+"Pill" = "Pille";
+"Pointer" = "Peker";
+"Position" = "Plassering";
+"Press animation" = "Trykkanimasjon";
+"Previous edit" = "Forrige redigering";
+"Quality" = "Kvalitet";
+"Regenerate Captions" = "Generer undertekster på nytt";
+"Regular" = "Normal";
+"Remove Automatic Zooms" = "Fjern automatiske zoomer";
+"Remove Captions" = "Fjern undertekster";
+"Removes %.1f seconds from the video. Drag its edges on the timeline to adjust." = "Fjerner %.1f sekunder fra videoen. Dra i kantene på tidslinjen for å justere.";
+"Return to start at the end" = "Gå tilbake til start på slutten";
+"Ring" = "Ring";
+"Ripple" = "Krusning";
+"Save As…" = "Lagre som…";
+"Shape" = "Form";
+"Shortcuts only" = "Bare snarveier";
+"Show camera" = "Vis kamera";
+"Show captions" = "Vis undertekster";
+"Show keystrokes" = "Vis tastetrykk";
+"Show pointer" = "Vis peker";
+"Shrink during zooms" = "Krymp under zoom";
+"Smoothing" = "Utjevning";
+"Snappy" = "Kjapp";
+"Speech recognition is turned off for macshot in System Settings › Privacy & Security." = "Talegjenkjenning er slått av for macshot i Systeminnstillinger › Personvern og sikkerhet.";
+"Speed" = "Hastighet";
+"Spotlight" = "Spotlight";
+"Square" = "Kvadrat";
+"Style" = "Stil";
+"Tall" = "Høy";
+"Text and blur" = "Tekst og uskarphet";
+"The recording's audio could not be read." = "Lyden i opptaket kunne ikke leses.";
+"This recording already shows the pointer in its pixels, so it can't be restyled. Zooms can still follow it." = "Dette opptaket viser allerede pekeren i pikslene, så stilen kan ikke endres. Zoomer kan fortsatt følge den.";
+"This recording has no audio to transcribe." = "Dette opptaket har ingen lyd å transkribere.";
+"This video has no recorded pointer data. Recordings made with macshot that open in the editor let you restyle, smooth and resize the pointer after recording." = "Denne videoen har ingen registrerte pekerdata. Opptak gjort med macshot som åpnes i redigering, lar deg endre stil, jevne ut og endre størrelse på pekeren etter opptak.";
+"Title" = "Tittel";
+"Transcribing…" = "Transkriberer…";
+"Transition" = "Overgang";
+"Turn on Show Keystrokes before recording. macshot then records them separately so you can style them here." = "Slå på Vis tastetrykk før opptak. macshot tar dem da opp separat, slik at du kan endre stilen her.";
+"Turn on the camera before recording. macshot records it separately so you can move, resize, restyle or hide it here, and shrink it during zooms." = "Slå på kameraet før opptak. macshot tar det opp separat, slik at du kan flytte, endre størrelse, endre stil eller skjule det her, og krympe det under zoom.";
+"Use Solid to hide sensitive information: blur and pixelation can sometimes be reversed." = "Bruk Heldekkende for å skjule sensitiv informasjon: uskarphet og pikselering kan noen ganger reverseres.";
+"Visibility" = "Synlighet";
+"Wallpaper" = "Skrivebordsbilde";
+"When recordings open in the editor, the pointer is recorded separately so you can smooth, resize, restyle or hide it, and add zooms that follow it." = "Når opptak åpnes i redigering, tas pekeren opp separat, slik at du kan jevne ut, endre størrelse, endre stil eller skjule den, og legge til zoomer som følger den.";
+"Wide" = "Bred";
+"Zoom in" = "Zoom inn";
+"Zoom in timeline" = "Zoom inn på tidslinjen";
+"Zoom level" = "Zoomnivå";
+"Zoom out" = "Zoom ut";
+"Zoom out timeline" = "Zoom ut på tidslinjen";
+"macOS" = "macOS";
+"Sway" = "Svai";
+
+"Snap webcam to corners when moved" = "Fest webkameraet til hjørnene når det flyttes";
+"Search emoji" = "Søk etter emoji";

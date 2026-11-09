@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "Sao chép";
-"Save As..." = "Lưu thành...";
 "Open in Editor" = "Mở trong trình chỉnh sửa";
 "Pin to Screen" = "Ghim lên màn hình";
 "Quick Look" = "Xem nhanh";
@@ -54,7 +53,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "Đóng tất cả";
-"Save All to Folder…" = "Lưu tất cả vào thư mục…";
 "Save" = "Lưu";
 
 /* Editor Top Bar */
@@ -171,6 +169,7 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Nhấp vào cửa sổ  ·  Kéo để chọn vùng  ·  F để toàn màn hình";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Nhấp vào phần tử  ·  Kéo để chọn vùng  ·  F để toàn màn hình";
 "Drag to select  ·  Click for full screen" = "Kéo để chọn  ·  Nhấp để toàn màn hình";
 "Release to annotate and edit" = "Thả chuột để chú thích và chỉnh sửa";
 "Release to finish" = "Thả chuột để hoàn tất";
@@ -178,9 +177,13 @@
 "Hold Space to move. Release to finish" = "Giữ Space để di chuyển. Thả chuột để hoàn tất";
 "Space" = "Space";
 "Window snap: " = "Bắt cửa sổ: ";
+"Snap mode: " = "Chế độ bắt: ";
 "ON" = "BẬT";
 "OFF" = "TẮT";
+"WINDOW" = "CỬA SỔ";
+"ELEMENT" = "PHẦN TỬ";
 "  (Tab to toggle)" = "  (Tab để chuyển)";
+"  (Tab to switch)" = "  (Tab để chuyển đổi)";
 "Right-click to copy" = "Nhấp chuột phải để sao chép";
 "Copied %@" = "Đã sao chép %@";
 "Set color %@" = "Đặt màu %@";
@@ -225,6 +228,8 @@
 "Launch at login" = "Khởi chạy khi đăng nhập";
 "Show snap alignment guides" = "Hiển thị đường căn chỉnh bắt dính";
 "Snap selection edges to image boundaries" = "Bắt dính cạnh vùng chọn vào ranh giới ảnh";
+"Enhance browser and Electron element snapping" = "Nâng cao bắt dính phần tử trình duyệt và Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Xây dựng cây khả năng truy cập của ứng dụng đích trong Chế độ phần tử. Tắt tính năng này nếu trình duyệt hoặc ứng dụng Electron trở nên chậm hoặc gặp sự cố nhập liệu.";
 "Capture mouse cursor in screenshot" = "Chụp con trỏ chuột trong ảnh";
 "Double-click selection to copy" = "Nhấp đúp vào vùng chọn để sao chép";
 "Hide capture instructions" = "Ẩn hướng dẫn chụp màn hình";
@@ -251,6 +256,8 @@
 "Replace (show only latest)" = "Thay thế (chỉ hiển thị mới nhất)";
 "Output" = "Đầu ra";
 "Image format:" = "Định dạng ảnh:";
+"Also copy to the clipboard in this format" = "Sao chép vào bảng nhớ tạm ở định dạng này nữa";
+"PNG is always included so every app can paste" = "Luôn kèm PNG để mọi ứng dụng đều dán được";
 "Quality:" = "Chất lượng:";
 "%d%%" = "%d%%";
 "Save at standard resolution (1x)" = "Lưu ở độ phân giải tiêu chuẩn (1x)";
@@ -338,6 +345,7 @@
 "Signed in" = "Đã đăng nhập";
 "Not signed in" = "Chưa đăng nhập";
 "Account:" = "Tài khoản:";
+"Folder:" = "Thư mục:";
 "Test Connection" = "Kiểm tra kết nối";
 "Fill in endpoint, bucket, and credentials first" = "Điền endpoint, bucket và thông tin xác thực trước";
 "Testing..." = "Đang kiểm tra...";
@@ -350,11 +358,13 @@
 "Secret Key:" = "Khóa bí mật:";
 "Public URL:" = "URL công khai:";
 "Path Prefix:" = "Tiền tố đường dẫn:";
+"Make uploads publicly readable" = "Cho phép đọc công khai các tệp tải lên";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Gửi ACL public-read để các tệp đã tải lên có thể xem được bởi bất kỳ ai có liên kết. Cần thiết cho AWS S3, DigitalOcean Spaces, MinIO và Backblaze B2 vì các dịch vụ này lưu trữ đối tượng ở chế độ riêng tư theo mặc định. Tắt cho Cloudflare R2 vì không hỗ trợ ACL và sẽ từ chối header.";
 "API key:" = "Khóa API:";
 "Upload History" = "Lịch sử tải lên";
 "No uploads yet." = "Chưa có tải lên nào.";
 "Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "URL cơ sở để truy cập công khai. Nếu để trống, URL endpoint S3 sẽ được sử dụng (có thể không truy cập được công khai).";
-"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "Đã bao gồm khóa dùng chung — lấy khóa miễn phí riêng tại imgbb.com/api nếu bạn bị giới hạn tốc độ. Chỉ hỗ trợ ảnh (không hỗ trợ video).";
+"A shared key is included. Get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "Đã bao gồm khóa dùng chung, lấy khóa miễn phí riêng tại imgbb.com/api nếu bạn bị giới hạn tốc độ. Chỉ hỗ trợ ảnh (không hỗ trợ video).";
 "Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "Hoạt động với AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 và các dịch vụ tương thích S3 khác. Hỗ trợ ảnh và video.";
 "Configure S3 in Preferences" = "Cấu hình S3 trong Tùy chọn";
 "Sign in to Google Drive in Preferences" = "Đăng nhập Google Drive trong Tùy chọn";
@@ -365,7 +375,7 @@
 "Version %@ (%@)" = "Phiên bản %@ (%@)";
 "Made by" = "Được tạo bởi";
 "Licensed under the GPLv3" = "Được cấp phép theo GPLv3";
-"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "Công cụ chụp ảnh và quay màn hình mã nguồn mở, miễn phí cho macOS.\nHoàn toàn gốc — được xây dựng bằng Swift và AppKit.";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native, built with Swift and AppKit." = "Công cụ chụp ảnh và quay màn hình mã nguồn mở, miễn phí cho macOS.\nHoàn toàn gốc, được xây dựng bằng Swift và AppKit.";
 
 /* Alerts */
 "No Image on Clipboard" = "Không có ảnh trong bộ nhớ tạm";
@@ -387,6 +397,9 @@
 
 /* Permission Onboarding */
 "Welcome to macshot" = "Chào mừng đến với macshot";
+"Welcome back to macshot" = "Chào mừng bạn quay lại macshot";
+"Turn Screen Recording back on" = "Bật lại Ghi màn hình";
+"After some updates, macOS asks you to allow macshot again. Your settings and captures are safe. If macshot is already in the list, select it, click the minus button (−) to remove it, then click the plus button (+) and add macshot again." = "Sau một số bản cập nhật, macOS sẽ yêu cầu bạn cho phép macshot lần nữa. Cài đặt và ảnh chụp của bạn vẫn an toàn. Nếu macshot đã có trong danh sách, hãy chọn nó, bấm nút trừ (−) để gỡ bỏ, rồi bấm nút cộng (+) và thêm lại macshot.";
 "macshot needs one permission" = "macshot cần một quyền";
 "Screen Recording not yet granted" = "Chưa cấp quyền Quay màn hình";
 "Screen Recording granted!" = "Đã cấp quyền Quay màn hình!";
@@ -417,6 +430,7 @@
 /* Recording Toast */
 "Recording saved" = "Đã lưu bản quay";
 "%@ • Recording saved" = "%@ • Đã lưu bản quay";
+"Recording failed: %@" = "Quay màn hình thất bại: %@";
 "Copy Path" = "Sao chép đường dẫn";
 "Path copied!" = "Đã sao chép đường dẫn!";
 
@@ -427,6 +441,9 @@
 "Export failed" = "Xuất thất bại";
 "Saved to %@" = "Đã lưu vào %@";
 "Save failed" = "Lưu thất bại";
+"Could not encode the screenshot." = "Không thể mã hóa ảnh chụp màn hình.";
+"Could not save the screenshot: %@" = "Không thể lưu ảnh chụp màn hình: %@";
+"Could not save the screenshot to history." = "Không thể lưu ảnh chụp màn hình vào lịch sử.";
 
 /* Barcode Detector */
 /* "Open" and "Copy" are shared with other sections */
@@ -466,8 +483,8 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Yêu cầu quyền Giám sát đầu vào";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot cần quyền Giám sát đầu vào để hiển thị phím bấm trong khi quay. Vui lòng cấp quyền trong System Settings, rồi thử lại.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot cần quyền Trợ năng để hiển thị phím bấm trong khi quay. Vui lòng cấp quyền trong System Settings, rồi thử lại.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot cần quyền Giám sát đầu vào để làm nổi bật thao tác nhấp chuột hoặc hiển thị phím bấm trong khi ghi. Hãy cấp quyền truy cập trong Cài đặt hệ thống rồi thử lại.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot cần quyền Trợ năng để bám vào từng thành phần giao diện. Vui lòng cấp quyền trong Cài đặt Hệ thống, rồi thử lại.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Hiển thị phím bấm";
@@ -506,6 +523,8 @@
 "Settings..." = "Cài đặt...";
 "macshot Settings" = "Cài đặt macshot";
 "Also open in Editor" = "Đồng thời mở trong trình chỉnh sửa";
+"Open in Editor right after selection" = "Mở trong trình chỉnh sửa ngay sau khi chọn";
+"Close editor after copying" = "Đóng trình chỉnh sửa sau khi sao chép";
 "Hide controls" = "Ẩn điều khiển";
 "Hide recording controls" = "Ẩn điều khiển quay";
 "Stop recording from the menu bar icon instead." = "Dừng quay từ biểu tượng thanh menu thay thế.";
@@ -551,12 +570,13 @@
 
 "Same as screenshots" = "Giống như ảnh chụp màn hình";
 "  Preview size:" = "  Kích thước xem trước:";
+"Fit image in preview (letterbox)" = "Hiển thị trọn ảnh trong xem trước (có viền đen)";
 "(0 = off)" = "(0 = tắt)";
 "Clear All" = "Xóa tất cả";
 "Clear History?" = "Xóa lịch sử?";
 "This will permanently delete all screenshots from history." = "Thao tác này sẽ xóa vĩnh viễn tất cả ảnh chụp màn hình khỏi lịch sử.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Nhấp vào \"Đặt\" và nhấn tổ hợp phím có ít nhất một phím bổ trợ (⌘, ⌥, ⌃, ⇧) để đặt phím tắt.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Các tệp được tải lên thư mục \"macshot\" trong Google Drive của bạn. Mọi thứ đều được giữ bí mật — không có gì được chia sẻ công khai.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused. A new one is created instead. Everything stays private and nothing is shared publicly." = "Các tệp được tải lên thư mục này trong Google Drive của bạn. Để trống để dùng \"macshot\". macshot chỉ có thể dùng các thư mục do chính nó tạo ra, vì vậy thư mục cùng tên mà bạn tự tạo trong Drive sẽ không được dùng lại, thay vào đó một thư mục mới sẽ được tạo. Mọi thứ đều được giữ bí mật, không có gì được chia sẻ công khai.";
 
 "Pressure" = "Lực nhấn";
 
@@ -626,7 +646,7 @@
 "Open this settings window" = "Mở cửa sổ cài đặt này";
 "Quick capture (uses your Enter action)" = "Chụp nhanh (dùng hành động Enter của bạn)";
 "Re-capture the last selected area" = "Chụp lại vùng đã chọn gần nhất";
-"Screenshots only — captured window title (blank otherwise)" = "Chỉ ảnh chụp — tiêu đề cửa sổ đã chụp (trống nếu khác)";
+"Captured window title (screenshots only, blank otherwise)" = "Chỉ ảnh chụp, tiêu đề cửa sổ đã chụp (trống nếu khác)";
 "Show available filename tokens" = "Hiển thị các token tên tệp có sẵn";
 "Show supported URL scheme commands" = "Hiển thị các lệnh URL scheme được hỗ trợ";
 "Start area capture" = "Bắt đầu chụp vùng chọn";
@@ -680,3 +700,162 @@
 "Selection is already aligned" = "Vùng chọn đã được căn chỉnh";
 "Space to move. Release to annotate and edit" = "Giữ phím cách để di chuyển. Thả ra để chú thích và chỉnh sửa";
 "Space to move. Release to finish" = "Giữ phím cách để di chuyển. Thả ra để hoàn tất";
+
+"Saving..." = "Đang lưu…";
+
+"Show Recordings in Finder" = "Hiển thị bản ghi trong Finder";
+
+"Cancelled" = "Đã hủy";
+
+"Cancelling..." = "Đang hủy...";
+"Preparing video..." = "Đang chuẩn bị video...";
+"History is busy saving. Please try again shortly." = "Đang lưu lịch sử. Vui lòng thử lại sau giây lát.";
+
+// Video editor accessibility
+"Play" = "Phát";
+"Mute" = "Tắt tiếng";
+"Unmute" = "Bật tiếng";
+
+/* Video editor (Studio) */
+"%.1f× · follows pointer" = "%.1f× · theo con trỏ";
+"Add" = "Thêm";
+"Add Cut Here" = "Thêm đoạn cắt tại đây";
+"Add Text Here" = "Thêm văn bản tại đây";
+"Add Zoom Here" = "Thêm thu phóng tại đây";
+"Added %d captions" = "Đã thêm %d phụ đề";
+"Added %d zooms" = "Đã thêm %d thu phóng";
+"Apply Default Zoom to All" = "Áp dụng thu phóng mặc định cho tất cả";
+"Auto" = "Tự động";
+"Auto Zoom" = "Tự động thu phóng";
+"Auto Zoom needs pointer data, which macshot records with every new recording. You can still add zooms by double-clicking the zoom lane." = "Tự động thu phóng cần dữ liệu con trỏ, được macshot ghi lại trong mỗi bản quay mới. Bạn vẫn có thể thêm thu phóng bằng cách nhấp đúp vào làn thu phóng.";
+"Background blur" = "Làm mờ nền";
+"Background color" = "Màu nền";
+"Background, padding, rounded corners and shadow" = "Nền, đệm, bo góc và bóng";
+"Bold Italic" = "Đậm nghiêng";
+"Box" = "Hộp";
+"Camera" = "Camera";
+"Caption" = "Phụ đề";
+"Captions" = "Phụ đề";
+"Captions are transcribed on this Mac. Nothing is uploaded." = "Phụ đề được chép lời ngay trên máy Mac này. Không có gì được tải lên.";
+"Choose Image…" = "Chọn ảnh…";
+"Click color" = "Màu nhấp";
+"Clicks" = "Lần nhấp";
+"Clip" = "Clip";
+"Colors" = "Màu sắc";
+"Connect nearby zooms" = "Nối các thu phóng gần nhau";
+"Copy the edited video to the clipboard" = "Sao chép video đã chỉnh sửa vào bộ nhớ tạm";
+"Corner radius" = "Bán kính góc";
+"Creates zooms that follow the pointer wherever you click or type. Adjust or delete them on the timeline." = "Tạo các thu phóng theo con trỏ ở bất cứ đâu bạn nhấp hoặc gõ. Điều chỉnh hoặc xóa chúng trên dòng thời gian.";
+"Custom color" = "Màu tùy chỉnh";
+"Cut" = "Cắt";
+"Cuts, speed and freeze frames" = "Cắt, tốc độ và khung hình dừng";
+"Default zoom" = "Thu phóng mặc định";
+"Dot" = "Chấm";
+"Double-click the text on the preview to edit it." = "Nhấp đúp vào văn bản trên bản xem trước để chỉnh sửa.";
+"Double-click to add a zoom" = "Nhấp đúp để thêm thu phóng";
+"Double-click to add a zoom, or use Auto Zoom" = "Nhấp đúp để thêm thu phóng, hoặc dùng Tự động thu phóng";
+"Drag the frame on the preview to choose where the zoom looks." = "Kéo khung trên bản xem trước để chọn vị trí thu phóng.";
+"Duration" = "Thời lượng";
+"Edge highlight" = "Viền sáng";
+"Edit Text" = "Sửa văn bản";
+"Editable pointer, clicks and keystrokes" = "Con trỏ, lần nhấp và phím bấm có thể chỉnh sửa";
+"Edits" = "Chỉnh sửa";
+"Export" = "Xuất";
+"Export Subtitles (.srt)…" = "Xuất phụ đề (.srt)…";
+"Fade in" = "Hiện dần";
+"Fade out" = "Mờ dần";
+"Fit" = "Vừa khít";
+"Fixed" = "Cố định";
+"Fixed point" = "Điểm cố định";
+"Focus" = "Tiêu điểm";
+"Follow" = "Theo";
+"Follow Pointer" = "Theo con trỏ";
+"Follow pointer" = "Theo con trỏ";
+"Follow tightness" = "Độ bám theo";
+"Format" = "Định dạng";
+"Frame" = "Khung";
+"Frame rate" = "Tốc độ khung hình";
+"Frame the recording" = "Đóng khung bản quay";
+"Freeze Frame" = "Khung hình dừng";
+"Generate Captions" = "Tạo phụ đề";
+"Gentle" = "Nhẹ nhàng";
+"Gradient" = "Chuyển sắc";
+"Hide ordinary typing, show key combinations" = "Ẩn thao tác gõ thông thường, hiện tổ hợp phím";
+"Hide when idle" = "Ẩn khi không hoạt động";
+"Hide while typing" = "Ẩn khi đang gõ";
+"Hold Focus" = "Giữ tiêu điểm";
+"Idle delay" = "Độ trễ không hoạt động";
+"Image" = "Hình ảnh";
+"Keystrokes" = "Phím bấm";
+"Keystrokes in this recording are part of the video pixels." = "Phím bấm trong bản quay này là một phần điểm ảnh của video.";
+"Light appearance" = "Giao diện sáng";
+"Makes looping GIFs seamless" = "Giúp GIF lặp liền mạch";
+"Mirror" = "Lật gương";
+"Motion" = "Chuyển động";
+"Motion blur" = "Mờ chuyển động";
+"Next edit" = "Điểm chỉnh sửa tiếp theo";
+"No clicks or typing found to zoom into" = "Không tìm thấy lần nhấp hoặc thao tác gõ nào để thu phóng";
+"No speech was recognized" = "Không nhận dạng được giọng nói";
+"No system wallpapers were found. Choose an image instead." = "Không tìm thấy hình nền hệ thống. Hãy chọn một ảnh thay thế.";
+"Off" = "Tắt";
+"On-device speech recognition isn't available for your language on this Mac." = "Tính năng nhận dạng giọng nói trên thiết bị không khả dụng cho ngôn ngữ của bạn trên máy Mac này.";
+"Original" = "Gốc";
+"Outline color" = "Màu viền";
+"Outline width" = "Độ dày viền";
+"Overlays" = "Lớp phủ";
+"Pan between zooms instead of zooming out" = "Lia giữa các thu phóng thay vì thu nhỏ";
+"Pill" = "Viên thuốc";
+"Pointer" = "Con trỏ";
+"Position" = "Vị trí";
+"Press animation" = "Hiệu ứng nhấn";
+"Previous edit" = "Điểm chỉnh sửa trước";
+"Quality" = "Chất lượng";
+"Regenerate Captions" = "Tạo lại phụ đề";
+"Regular" = "Thường";
+"Remove Automatic Zooms" = "Xóa thu phóng tự động";
+"Remove Captions" = "Xóa phụ đề";
+"Removes %.1f seconds from the video. Drag its edges on the timeline to adjust." = "Xóa %.1f giây khỏi video. Kéo các cạnh trên dòng thời gian để điều chỉnh.";
+"Return to start at the end" = "Quay về điểm đầu khi kết thúc";
+"Ring" = "Vòng";
+"Ripple" = "Gợn sóng";
+"Save As…" = "Lưu thành…";
+"Shape" = "Hình dạng";
+"Shortcuts only" = "Chỉ phím tắt";
+"Show camera" = "Hiện camera";
+"Show captions" = "Hiện phụ đề";
+"Show keystrokes" = "Hiện phím bấm";
+"Show pointer" = "Hiện con trỏ";
+"Shrink during zooms" = "Thu nhỏ khi thu phóng";
+"Smoothing" = "Làm mượt";
+"Snappy" = "Nhanh nhạy";
+"Speech recognition is turned off for macshot in System Settings › Privacy & Security." = "Nhận dạng giọng nói đang bị tắt cho macshot trong Cài đặt hệ thống › Quyền riêng tư & Bảo mật.";
+"Speed" = "Tốc độ";
+"Spotlight" = "Đèn chiếu";
+"Square" = "Vuông";
+"Style" = "Kiểu";
+"Tall" = "Dọc";
+"Text and blur" = "Văn bản và làm mờ";
+"The recording's audio could not be read." = "Không thể đọc âm thanh của bản quay.";
+"This recording already shows the pointer in its pixels, so it can't be restyled. Zooms can still follow it." = "Bản quay này đã hiển thị con trỏ trong điểm ảnh nên không thể đổi kiểu. Thu phóng vẫn có thể theo con trỏ.";
+"This recording has no audio to transcribe." = "Bản quay này không có âm thanh để chép lời.";
+"This video has no recorded pointer data. Recordings made with macshot that open in the editor let you restyle, smooth and resize the pointer after recording." = "Video này không có dữ liệu con trỏ được ghi lại. Các bản quay bằng macshot được mở trong trình chỉnh sửa cho phép bạn đổi kiểu, làm mượt và đổi kích thước con trỏ sau khi quay.";
+"Title" = "Tiêu đề";
+"Transcribing…" = "Đang chép lời…";
+"Transition" = "Chuyển tiếp";
+"Turn on Show Keystrokes before recording. macshot then records them separately so you can style them here." = "Hãy bật Hiển thị phím bấm trước khi quay. Khi đó macshot sẽ ghi lại phím bấm riêng để bạn có thể tùy chỉnh kiểu tại đây.";
+"Turn on the camera before recording. macshot records it separately so you can move, resize, restyle or hide it here, and shrink it during zooms." = "Hãy bật camera trước khi quay. macshot ghi camera riêng để bạn có thể di chuyển, đổi kích thước, đổi kiểu hoặc ẩn nó tại đây, và thu nhỏ nó khi thu phóng.";
+"Use Solid to hide sensitive information: blur and pixelation can sometimes be reversed." = "Hãy dùng Đặc để che thông tin nhạy cảm: làm mờ và khảm đôi khi có thể bị đảo ngược.";
+"Visibility" = "Hiển thị";
+"Wallpaper" = "Hình nền";
+"When recordings open in the editor, the pointer is recorded separately so you can smooth, resize, restyle or hide it, and add zooms that follow it." = "Khi bản quay được mở trong trình chỉnh sửa, con trỏ được ghi riêng để bạn có thể làm mượt, đổi kích thước, đổi kiểu hoặc ẩn nó, và thêm thu phóng theo con trỏ.";
+"Wide" = "Rộng";
+"Zoom in" = "Phóng to";
+"Zoom in timeline" = "Phóng to dòng thời gian";
+"Zoom level" = "Mức thu phóng";
+"Zoom out" = "Thu nhỏ";
+"Zoom out timeline" = "Thu nhỏ dòng thời gian";
+"macOS" = "macOS";
+"Sway" = "Lắc lư";
+
+"Snap webcam to corners when moved" = "Bám webcam vào các góc khi di chuyển";
+"Search emoji" = "Tìm biểu tượng cảm xúc";

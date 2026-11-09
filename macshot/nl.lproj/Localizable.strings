@@ -39,7 +39,6 @@
 
 /* History Panel */
 "Copy" = "Kopieer";
-"Save As..." = "Bewaar als...";
 "Open in Editor" = "Open in editor";
 "Pin to Screen" = "Vastpinnen op scherm";
 "Quick Look" = "Snelle weergave";
@@ -47,12 +46,11 @@
 "All" = "Alles";
 "Screenshots" = "Schermafbeeldingen";
 "GIFs" = "GIFs";
-"Click to copy · Drag to app" = "Klik om te kopieren · Sleep naar app";
+"Click to copy · Drag to app" = "Klik om te kopiëren · Sleep naar app";
 "No captures yet" = "Nog geen opnames";
 
 /* Floating Thumbnail */
 "Close All" = "Sluit alles";
-"Save All to Folder…" = "Bewaar alles in map…";
 "Save" = "Bewaar";
 
 /* Editor Top Bar */
@@ -171,16 +169,21 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Klik op een venster  ·  Sleep voor aangepast gebied  ·  F voor volledig scherm";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Klik op een element  ·  Sleep voor aangepast gebied  ·  F voor volledig scherm";
 "Drag to select  ·  Click for full screen" = "Sleep om te selecteren  ·  Klik voor volledig scherm";
 "Release to annotate and edit" = "Laat los om te annoteren en bewerken";
 "Release to finish" = "Laat los om te voltooien";
 "Hold Space to move. Release to annotate and edit" = "Houd Spatie ingedrukt om te verplaatsen. Laat los om te annoteren en bewerken";
 "Hold Space to move. Release to finish" = "Houd Spatie ingedrukt om te verplaatsen. Laat los om te voltooien";
 "Window snap: " = "Venster-snap: ";
+"Snap mode: " = "Snap-modus: ";
 "ON" = "AAN";
 "OFF" = "UIT";
+"WINDOW" = "VENSTER";
+"ELEMENT" = "ELEMENT";
 "  (Tab to toggle)" = "  (Tab om te wisselen)";
-"Right-click to copy" = "Rechtsklik om te kopieren";
+"  (Tab to switch)" = "  (Tab om te schakelen)";
+"Right-click to copy" = "Rechtsklik om te kopiëren";
 "Copied %@" = "%@ gekopieerd";
 "Set color %@" = "Kleur %@ ingesteld";
 "Draw something first to use the move tool." = "Teken eerst iets om het verplaatsgereedschap te gebruiken.";
@@ -207,12 +210,14 @@
 "Restart the app to fully apply the new language." = "Herstart de app om de nieuwe taal volledig toe te passen.";
 "Capture" = "Opname";
 "Play sound on capture" = "Geluid afspelen bij opname";
-"Play sound on copy" = "Geluid afspelen bij kopieren";
+"Play sound on copy" = "Geluid afspelen bij kopiëren";
 "Remember last selected tool" = "Laatst geselecteerd gereedschap onthouden";
 "Show floating thumbnail after capture" = "Zwevende miniatuur tonen na opname";
 "Launch at login" = "Open bij inloggen";
 "Show snap alignment guides" = "Uitlijnhulplijnen tonen";
 "Snap selection edges to image boundaries" = "Selectieranden uitlijnen op afbeeldingsgrenzen";
+"Enhance browser and Electron element snapping" = "Verbeter browser- en Electron-element-snap";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Bouwt de toegankelijkheidsboom van de doel-app op in Element-modus. Schakel dit uit als een browser of Electron-app traag wordt of invoerproblemen heeft.";
 "Capture mouse cursor in screenshot" = "Muiscursor vastleggen in schermafbeelding";
 "Double-click selection to copy" = "Dubbelklik op selectie om te kopiëren";
 "Hide capture instructions" = "Opname-instructies verbergen";
@@ -236,6 +241,8 @@
 "Move down" = "Omlaag verplaatsen";
 "Output" = "Uitvoer";
 "Image format:" = "Afbeeldingsformaat:";
+"Also copy to the clipboard in this format" = "Ook in dit formaat naar het klembord kopiëren";
+"PNG is always included so every app can paste" = "PNG wordt altijd meegestuurd, zodat elke app kan plakken";
 "Quality:" = "Kwaliteit:";
 "%d%%" = "%d%%";
 "Save at standard resolution (1x)" = "Opslaan op standaardresolutie (1x)";
@@ -264,9 +271,9 @@
 "Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "Voer een willekeurige SF Symbol-naam in (bijv. camera.fill) of kies een voorinstelling. Blader door namen in Apple's SF Symbols-app. Ongeldige namen vallen terug op het standaardpictogram.";
 "OCR Capture:" = "OCR-opname:";
 "OCR & QR Capture:" = "OCR & QR-opname:";
-"Show window + copy to clipboard" = "Venster tonen + kopieren naar klembord";
+"Show window + copy to clipboard" = "Venster tonen + kopiëren naar klembord";
 "Show window only" = "Alleen venster tonen";
-"Copy to clipboard only" = "Alleen kopieren naar klembord";
+"Copy to clipboard only" = "Alleen kopiëren naar klembord";
 "Enter / Quick Capture:" = "Enter / Snelle opname:";
 "Save to file" = "Bewaar als bestand";
 "Save + copy to clipboard" = "Bewaar + kopieer naar klembord";
@@ -328,6 +335,7 @@
 "Signed in" = "Ingelogd";
 "Not signed in" = "Niet ingelogd";
 "Account:" = "Account:";
+"Folder:" = "Map:";
 "Test Connection" = "Verbinding testen";
 "Fill in endpoint, bucket, and credentials first" = "Vul eerst endpoint, bucket en inloggegevens in";
 "Testing..." = "Testen...";
@@ -340,11 +348,13 @@
 "Secret Key:" = "Geheime sleutel:";
 "Public URL:" = "Publieke URL:";
 "Path Prefix:" = "Padprefix:";
+"Make uploads publicly readable" = "Uploads publiek leesbaar maken";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Verstuurt de public-read ACL zodat geüploade bestanden zichtbaar zijn voor iedereen met de link. Vereist voor AWS S3, DigitalOcean Spaces, MinIO en Backblaze B2, die objecten standaard privé opslaan. Laat uitgeschakeld voor Cloudflare R2, dat geen ACL's ondersteunt en de header weigert.";
 "API key:" = "API-sleutel:";
 "Upload History" = "Uploadgeschiedenis";
 "No uploads yet." = "Nog geen uploads.";
 "Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "Basis-URL voor publieke toegang. Indien leeg wordt de S3-endpoint-URL gebruikt (mogelijk niet publiek toegankelijk).";
-"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "Een gedeelde sleutel is inbegrepen — haal je eigen gratis sleutel op imgbb.com/api als je limieten bereikt. Alleen afbeeldingen (geen video-ondersteuning).";
+"A shared key is included. Get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "Een gedeelde sleutel is inbegrepen, haal je eigen gratis sleutel op imgbb.com/api als je limieten bereikt. Alleen afbeeldingen (geen video-ondersteuning).";
 "Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "Werkt met AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 en andere S3-compatibele diensten. Ondersteunt afbeeldingen en video's.";
 "Configure S3 in Preferences" = "Configureer S3 in Instellingen";
 "Sign in to Google Drive in Preferences" = "Log in bij Google Drive in Instellingen";
@@ -355,7 +365,7 @@
 "Version %@ (%@)" = "Versie %@ (%@)";
 "Made by" = "Gemaakt door";
 "Licensed under the GPLv3" = "Gelicenseerd onder de GPLv3";
-"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "Een gratis, open-source schermafbeelding- en schermopnametool voor macOS.\nVolledig natief — gebouwd met Swift en AppKit.";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native, built with Swift and AppKit." = "Een gratis, open-source schermafbeelding- en schermopnametool voor macOS.\nVolledig natief, gebouwd met Swift en AppKit.";
 
 /* Alerts */
 "No Image on Clipboard" = "Geen afbeelding op klembord";
@@ -373,10 +383,13 @@
 "Upload to Google Drive?" = "Uploaden naar Google Drive?";
 "Upload to S3?" = "Uploaden naar S3?";
 "Upload to imgbb.com?" = "Uploaden naar imgbb.com?";
-"Your screenshot will be uploaded." = "Je schermafbeelding wordt geupload.";
+"Your screenshot will be uploaded." = "Je schermafbeelding wordt geüpload.";
 
 /* Permission Onboarding */
 "Welcome to macshot" = "Welkom bij macshot";
+"Welcome back to macshot" = "Welkom terug bij macshot";
+"Turn Screen Recording back on" = "Zet schermopname weer aan";
+"After some updates, macOS asks you to allow macshot again. Your settings and captures are safe. If macshot is already in the list, select it, click the minus button (−) to remove it, then click the plus button (+) and add macshot again." = "Na sommige updates vraagt macOS je om macshot opnieuw toe te staan. Je instellingen en opnamen zijn veilig. Staat macshot al in de lijst, selecteer het dan, klik op de minknop (−) om het te verwijderen en klik daarna op de plusknop (+) om macshot opnieuw toe te voegen.";
 "macshot needs one permission" = "macshot heeft een toestemming nodig";
 "Screen Recording not yet granted" = "Schermopname nog niet toegestaan";
 "Screen Recording granted!" = "Schermopname toegestaan!";
@@ -399,13 +412,14 @@
 "URL copied to the clipboard" = "URL gekopieerd naar het klembord";
 "Uploading... %d%%" = "Uploaden... %d%%";
 "Upload failed: %@" = "Upload mislukt: %@";
-"Uploaded! Link copied." = "Geupload! Link gekopieerd.";
+"Uploaded! Link copied." = "Geüpload! Link gekopieerd.";
 "Uploading to %@... %d%%" = "Uploaden naar %@... %d%%";
 "Open" = "Open";
 
 /* Recording Toast */
 "Recording saved" = "Opname opgeslagen";
 "%@ • Recording saved" = "%@ • Opname opgeslagen";
+"Recording failed: %@" = "Opname mislukt: %@";
 "Copy Path" = "Kopieer pad";
 "Path copied!" = "Pad gekopieerd!";
 
@@ -425,6 +439,9 @@
 "Save Recording" = "Bewaar opname";
 "Choose a folder" = "Kies een map";
 "Save All to Folder…" = "Bewaar alles in map…";
+"Could not encode the screenshot." = "Kon de schermafbeelding niet coderen.";
+"Could not save the screenshot: %@" = "Kon de schermafbeelding niet opslaan: %@";
+"Could not save the screenshot to history." = "Kon de schermafbeelding niet opslaan in de geschiedenis.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Automatisch scrollen";
@@ -456,8 +473,8 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Invoerbewaking vereist";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot heeft de toestemming Invoerbewaking nodig om toetsaanslagen te tonen tijdens de opname. Verleen toegang in System Settings en probeer het opnieuw.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot heeft de toegankelijkheidstoestemming nodig om toetsaanslagen te tonen tijdens de opname. Verleen toegang in System Settings en probeer het opnieuw.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot heeft toestemming voor Invoerbewaking nodig om muisklikken te markeren of toetsaanslagen te tonen tijdens de opname. Verleen toegang in Systeeminstellingen en probeer het opnieuw.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot heeft toegankelijkheidstoestemming nodig om uit te lijnen op afzonderlijke interface-elementen. Verleen toegang in Systeeminstellingen en probeer het opnieuw.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Toetsaanslagen tonen";
@@ -496,6 +513,8 @@
 "Settings" = "Instellingen";
 "macshot Settings" = "macshot-instellingen";
 "Also open in Editor" = "Ook openen in editor";
+"Open in Editor right after selection" = "Direct na selectie openen in editor";
+"Close editor after copying" = "Editor sluiten na kopiëren";
 "Hide controls" = "Bedieningselementen verbergen";
 "Hide recording controls" = "Opnamebediening verbergen";
 "Stop recording from the menu bar icon instead." = "Stop de opname via het menubalkpictogram.";
@@ -540,12 +559,13 @@
 
 "Same as screenshots" = "Hetzelfde als schermafbeeldingen";
 "  Preview size:" = "  Voorbeeldgrootte:";
+"Fit image in preview (letterbox)" = "Afbeelding passend maken in voorbeeld (letterbox)";
 "(0 = off)" = "(0 = uit)";
 "Clear All" = "Alles wissen";
 "Clear History?" = "Geschiedenis wissen?";
 "This will permanently delete all screenshots from history." = "Hiermee worden alle schermafbeeldingen definitief uit de geschiedenis verwijderd.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Klik op \"Instellen\" en druk op een toetscombinatie met ten minste één modifier (⌘, ⌥, ⌃, ⇧) om een sneltoets in te stellen.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Bestanden worden geüpload naar een \"macshot\"-map in uw Google Drive. Alles blijft privé — er wordt niets openbaar gedeeld.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused. A new one is created instead. Everything stays private and nothing is shared publicly." = "Bestanden worden geüpload naar deze map in uw Google Drive. Laat leeg om \"macshot\" te gebruiken. macshot kan alleen mappen gebruiken die het zelf heeft aangemaakt, dus een map met dezelfde naam die u zelf in Drive hebt gemaakt wordt niet hergebruikt, er wordt in plaats daarvan een nieuwe aangemaakt. Alles blijft privé, er wordt niets openbaar gedeeld.";
 
 "Pressure" = "Druk";
 
@@ -615,7 +635,7 @@
 "Open this settings window" = "Open dit instellingenvenster";
 "Quick capture (uses your Enter action)" = "Snelle opname (gebruikt je Enter-actie)";
 "Re-capture the last selected area" = "Laatst geselecteerde gebied opnieuw vastleggen";
-"Screenshots only — captured window title (blank otherwise)" = "Alleen schermafbeeldingen — titel van het vastgelegde venster (anders leeg)";
+"Captured window title (screenshots only, blank otherwise)" = "Alleen schermafbeeldingen, titel van het vastgelegde venster (anders leeg)";
 "Show available filename tokens" = "Beschikbare bestandsnaam-tokens tonen";
 "Show supported URL scheme commands" = "Ondersteunde URL-schemacommando's tonen";
 "Enable macshot:// URL scheme" = "macshot:// URL-schema inschakelen";
@@ -682,3 +702,162 @@
 "Selection is already aligned" = "Selectie is al uitgelijnd";
 "Space to move. Release to annotate and edit" = "Spatie om te verplaatsen. Laat los om te annoteren en bewerken";
 "Space to move. Release to finish" = "Spatie om te verplaatsen. Laat los om te voltooien";
+
+"Saving..." = "Opslaan…";
+
+"Show Recordings in Finder" = "Toon opnamen in Finder";
+
+"Cancelled" = "Geannuleerd";
+
+"Cancelling..." = "Annuleren...";
+"Preparing video..." = "Video voorbereiden...";
+"History is busy saving. Please try again shortly." = "De geschiedenis wordt opgeslagen. Probeer het zo opnieuw.";
+
+// Video editor accessibility
+"Play" = "Afspelen";
+"Mute" = "Dempen";
+"Unmute" = "Dempen opheffen";
+
+/* Video editor (Studio) */
+"%.1f× · follows pointer" = "%.1f× · volgt aanwijzer";
+"Add" = "Voeg toe";
+"Add Cut Here" = "Knip hier toevoegen";
+"Add Text Here" = "Tekst hier toevoegen";
+"Add Zoom Here" = "Zoom hier toevoegen";
+"Added %d captions" = "%d ondertitels toegevoegd";
+"Added %d zooms" = "%d zooms toegevoegd";
+"Apply Default Zoom to All" = "Standaardzoom op alles toepassen";
+"Auto" = "Auto";
+"Auto Zoom" = "Automatisch zoomen";
+"Auto Zoom needs pointer data, which macshot records with every new recording. You can still add zooms by double-clicking the zoom lane." = "Automatisch zoomen heeft aanwijzergegevens nodig, die macshot bij elke nieuwe opname vastlegt. Je kunt nog steeds zooms toevoegen door dubbel te klikken op het zoomspoor.";
+"Background blur" = "Achtergrondvervaging";
+"Background color" = "Achtergrondkleur";
+"Background, padding, rounded corners and shadow" = "Achtergrond, opvulling, afgeronde hoeken en schaduw";
+"Bold Italic" = "Vet cursief";
+"Box" = "Kader";
+"Camera" = "Camera";
+"Caption" = "Ondertitel";
+"Captions" = "Ondertitels";
+"Captions are transcribed on this Mac. Nothing is uploaded." = "Ondertitels worden op deze Mac getranscribeerd. Er wordt niets geüpload.";
+"Choose Image…" = "Kies afbeelding…";
+"Click color" = "Klikkleur";
+"Clicks" = "Klikken";
+"Clip" = "Clip";
+"Colors" = "Kleuren";
+"Connect nearby zooms" = "Nabije zooms verbinden";
+"Copy the edited video to the clipboard" = "Kopieer de bewerkte video naar het klembord";
+"Corner radius" = "Hoekradius";
+"Creates zooms that follow the pointer wherever you click or type. Adjust or delete them on the timeline." = "Maakt zooms die de aanwijzer volgen waar je ook klikt of typt. Pas ze aan of verwijder ze op de tijdlijn.";
+"Custom color" = "Aangepaste kleur";
+"Cut" = "Knip";
+"Cuts, speed and freeze frames" = "Knippen, snelheid en stilstaande beelden";
+"Default zoom" = "Standaardzoom";
+"Dot" = "Stip";
+"Double-click the text on the preview to edit it." = "Dubbelklik op de tekst in het voorbeeld om deze te bewerken.";
+"Double-click to add a zoom" = "Dubbelklik om een zoom toe te voegen";
+"Double-click to add a zoom, or use Auto Zoom" = "Dubbelklik om een zoom toe te voegen, of gebruik Automatisch zoomen";
+"Drag the frame on the preview to choose where the zoom looks." = "Sleep het kader in het voorbeeld om te kiezen waar de zoom op richt.";
+"Duration" = "Duur";
+"Edge highlight" = "Randglans";
+"Edit Text" = "Tekst bewerken";
+"Editable pointer, clicks and keystrokes" = "Bewerkbare aanwijzer, klikken en toetsaanslagen";
+"Edits" = "Bewerkingen";
+"Export" = "Exporteer";
+"Export Subtitles (.srt)…" = "Ondertitels exporteren (.srt)…";
+"Fade in" = "Invloeien";
+"Fade out" = "Uitvloeien";
+"Fit" = "Passend";
+"Fixed" = "Vast";
+"Fixed point" = "Vast punt";
+"Focus" = "Focus";
+"Follow" = "Volgen";
+"Follow Pointer" = "Aanwijzer volgen";
+"Follow pointer" = "Aanwijzer volgen";
+"Follow tightness" = "Volgnauwkeurigheid";
+"Format" = "Formaat";
+"Frame" = "Kader";
+"Frame rate" = "Framesnelheid";
+"Frame the recording" = "Opname omkaderen";
+"Freeze Frame" = "Stilstaand beeld";
+"Generate Captions" = "Ondertitels genereren";
+"Gentle" = "Zacht";
+"Gradient" = "Verloop";
+"Hide ordinary typing, show key combinations" = "Gewoon typen verbergen, toetscombinaties tonen";
+"Hide when idle" = "Verbergen bij inactiviteit";
+"Hide while typing" = "Verbergen tijdens typen";
+"Hold Focus" = "Focus vasthouden";
+"Idle delay" = "Inactiviteitsvertraging";
+"Image" = "Afbeelding";
+"Keystrokes" = "Toetsaanslagen";
+"Keystrokes in this recording are part of the video pixels." = "Toetsaanslagen in deze opname maken deel uit van de videopixels.";
+"Light appearance" = "Lichte weergave";
+"Makes looping GIFs seamless" = "Maakt herhalende GIF's naadloos";
+"Mirror" = "Spiegelen";
+"Motion" = "Beweging";
+"Motion blur" = "Bewegingsonscherpte";
+"Next edit" = "Volgende bewerking";
+"No clicks or typing found to zoom into" = "Geen klikken of typen gevonden om op in te zoomen";
+"No speech was recognized" = "Er is geen spraak herkend";
+"No system wallpapers were found. Choose an image instead." = "Geen systeemachtergronden gevonden. Kies in plaats daarvan een afbeelding.";
+"Off" = "Uit";
+"On-device speech recognition isn't available for your language on this Mac." = "Spraakherkenning op het apparaat is op deze Mac niet beschikbaar voor je taal.";
+"Original" = "Origineel";
+"Outline color" = "Omtrekkleur";
+"Outline width" = "Omtrekdikte";
+"Overlays" = "Overlays";
+"Pan between zooms instead of zooming out" = "Tussen zooms pannen in plaats van uitzoomen";
+"Pill" = "Pil";
+"Pointer" = "Aanwijzer";
+"Position" = "Positie";
+"Press animation" = "Klikanimatie";
+"Previous edit" = "Vorige bewerking";
+"Quality" = "Kwaliteit";
+"Regenerate Captions" = "Ondertitels opnieuw genereren";
+"Regular" = "Normaal";
+"Remove Automatic Zooms" = "Automatische zooms verwijderen";
+"Remove Captions" = "Ondertitels verwijderen";
+"Removes %.1f seconds from the video. Drag its edges on the timeline to adjust." = "Verwijdert %.1f seconden uit de video. Sleep de randen op de tijdlijn om aan te passen.";
+"Return to start at the end" = "Aan het einde terug naar begin";
+"Ring" = "Ring";
+"Ripple" = "Rimpeling";
+"Save As…" = "Bewaar als…";
+"Shape" = "Vorm";
+"Shortcuts only" = "Alleen sneltoetsen";
+"Show camera" = "Camera tonen";
+"Show captions" = "Ondertitels tonen";
+"Show keystrokes" = "Toetsaanslagen tonen";
+"Show pointer" = "Aanwijzer tonen";
+"Shrink during zooms" = "Verkleinen tijdens zooms";
+"Smoothing" = "Afvlakking";
+"Snappy" = "Vlot";
+"Speech recognition is turned off for macshot in System Settings › Privacy & Security." = "Spraakherkenning is uitgeschakeld voor macshot in Systeeminstellingen › Privacy en beveiliging.";
+"Speed" = "Snelheid";
+"Spotlight" = "Spotlight";
+"Square" = "Vierkant";
+"Style" = "Stijl";
+"Tall" = "Staand";
+"Text and blur" = "Tekst en vervaging";
+"The recording's audio could not be read." = "De audio van de opname kon niet worden gelezen.";
+"This recording already shows the pointer in its pixels, so it can't be restyled. Zooms can still follow it." = "Deze opname bevat de aanwijzer al in de pixels, dus de stijl kan niet worden aangepast. Zooms kunnen hem nog steeds volgen.";
+"This recording has no audio to transcribe." = "Deze opname heeft geen audio om te transcriberen.";
+"This video has no recorded pointer data. Recordings made with macshot that open in the editor let you restyle, smooth and resize the pointer after recording." = "Deze video heeft geen opgenomen aanwijzergegevens. Bij macshot-opnamen die in de editor openen, kun je de aanwijzer na het opnemen een andere stijl geven, afvlakken en van grootte veranderen.";
+"Title" = "Titel";
+"Transcribing…" = "Transcriberen…";
+"Transition" = "Overgang";
+"Turn on Show Keystrokes before recording. macshot then records them separately so you can style them here." = "Zet Toetsaanslagen tonen aan voordat je opneemt. macshot legt ze dan apart vast zodat je ze hier kunt opmaken.";
+"Turn on the camera before recording. macshot records it separately so you can move, resize, restyle or hide it here, and shrink it during zooms." = "Zet de camera aan voordat je opneemt. macshot neemt deze apart op zodat je hem hier kunt verplaatsen, van grootte veranderen, een andere stijl geven of verbergen, en verkleinen tijdens zooms.";
+"Use Solid to hide sensitive information: blur and pixelation can sometimes be reversed." = "Gebruik Effen om gevoelige informatie te verbergen: vervaging en pixelering kunnen soms ongedaan worden gemaakt.";
+"Visibility" = "Zichtbaarheid";
+"Wallpaper" = "Bureaubladachtergrond";
+"When recordings open in the editor, the pointer is recorded separately so you can smooth, resize, restyle or hide it, and add zooms that follow it." = "Wanneer opnamen in de editor openen, wordt de aanwijzer apart vastgelegd zodat je hem kunt afvlakken, van grootte veranderen, een andere stijl geven of verbergen, en zooms kunt toevoegen die hem volgen.";
+"Wide" = "Breed";
+"Zoom in" = "Inzoomen";
+"Zoom in timeline" = "Tijdlijn inzoomen";
+"Zoom level" = "Zoomniveau";
+"Zoom out" = "Uitzoomen";
+"Zoom out timeline" = "Tijdlijn uitzoomen";
+"macOS" = "macOS";
+"Sway" = "Zwaai";
+
+"Snap webcam to corners when moved" = "Webcam bij verplaatsen aan hoeken vastklikken";
+"Search emoji" = "Emoji zoeken";

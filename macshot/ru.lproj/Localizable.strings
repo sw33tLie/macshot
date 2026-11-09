@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "Копировать";
-"Save As..." = "Сохранить как...";
 "Open in Editor" = "Открыть в редакторе";
 "Pin to Screen" = "Закрепить на экране";
 "Quick Look" = "Быстрый просмотр";
@@ -54,7 +53,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "Закрыть все";
-"Save All to Folder…" = "Сохранить все в папку…";
 "Save" = "Сохранить";
 
 /* Editor Top Bar */
@@ -177,7 +175,7 @@
 "Padding" = "Отступ";
 "Shadow" = "Тень";
 "Right-click to add points" = "Нажмите правую кнопку, чтобы добавить точки";
-"Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "Удерживайте 1 — авто-вертикаль  ·  Удерживайте 2 — авто-горизонталь";
+"Hold 1 auto-vertical  ·  Hold 2 auto-horizontal" = "Удерживайте 1: авто-вертикаль  ·  Удерживайте 2: авто-горизонталь";
 "Limit to selection" = "Ограничить выделением";
 "Effect" = "Эффект";
 "Font" = "Шрифт";
@@ -185,15 +183,20 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Нажмите на окно  ·  Выделите область  ·  F для полного экрана";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Нажмите на элемент  ·  Выделите область  ·  F для полного экрана";
 "Drag to select  ·  Click for full screen" = "Выделите область  ·  Нажмите для полного экрана";
 "Release to annotate and edit" = "Отпустите для аннотации и редактирования";
 "Release to finish" = "Отпустите для завершения";
 "Hold Space to move. Release to annotate and edit" = "Удерживайте Пробел для перемещения. Отпустите для аннотации и редактирования";
 "Hold Space to move. Release to finish" = "Удерживайте Пробел для перемещения. Отпустите для завершения";
 "Window snap: " = "Привязка к окнам: ";
+"Snap mode: " = "Режим привязки: ";
 "ON" = "ВКЛ";
 "OFF" = "ВЫКЛ";
+"WINDOW" = "ОКНО";
+"ELEMENT" = "ЭЛЕМЕНТ";
 "  (Tab to toggle)" = "  (Tab для переключения)";
+"  (Tab to switch)" = "  (Tab для переключения)";
 "Space" = "Пробел";
 "Right-click to copy" = "Нажмите правой кнопкой, чтобы скопировать";
 "Copied %@" = "Скопировано: %@";
@@ -228,6 +231,8 @@
 "Launch at login" = "Запускать при входе в систему";
 "Show snap alignment guides" = "Показывать направляющие привязки";
 "Snap selection edges to image boundaries" = "Привязывать края выделения к границам изображения";
+"Enhance browser and Electron element snapping" = "Улучшить привязку элементов в браузере и Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Строит дерево доступности целевого приложения в режиме элементов. Отключите, если браузер или Electron-приложение начинает медленно работать или возникают проблемы с вводом.";
 "Capture mouse cursor in screenshot" = "Захватывать курсор мыши на снимке экрана";
 "Double-click selection to copy" = "Копировать двойным щелчком по выделению";
 "Hide capture instructions" = "Скрывать подсказки при захвате";
@@ -244,6 +249,8 @@
 "Replace (show only latest)" = "Заменять (только последнее)";
 "Output" = "Вывод";
 "Image format:" = "Формат изображения:";
+"Also copy to the clipboard in this format" = "Также копировать в буфер обмена в этом формате";
+"PNG is always included so every app can paste" = "PNG всегда добавляется, чтобы вставка работала в любом приложении";
 "Quality:" = "Качество:";
 "%d%%" = "%d%%";
 "Save at standard resolution (1x)" = "Сохранять в стандартном разрешении (1x)";
@@ -339,6 +346,7 @@
 "Signed in" = "Вход выполнен";
 "Not signed in" = "Вход не выполнен";
 "Account:" = "Аккаунт:";
+"Folder:" = "Папка:";
 "Test Connection" = "Проверить подключение";
 "Fill in endpoint, bucket, and credentials first" = "Сначала заполните адрес, бакет и учётные данные";
 "Testing..." = "Проверка...";
@@ -351,11 +359,13 @@
 "Secret Key:" = "Секретный ключ:";
 "Public URL:" = "Публичный URL:";
 "Path Prefix:" = "Префикс пути:";
+"Make uploads publicly readable" = "Сделать загрузки общедоступными для чтения";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Отправляет ACL public-read, чтобы загруженные файлы были доступны всем по ссылке. Необходимо для AWS S3, DigitalOcean Spaces, MinIO и Backblaze B2, которые по умолчанию хранят объекты приватно. Отключите для Cloudflare R2, который не поддерживает ACL и отклоняет этот заголовок.";
 "API key:" = "API-ключ:";
 "Upload History" = "История загрузок";
 "No uploads yet." = "Загрузок пока нет.";
 "Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "Базовый URL для публичного доступа. Если пуст, используется URL S3 (может быть недоступен публично).";
-"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "Используется общий ключ — получите свой бесплатный ключ на imgbb.com/api при превышении лимитов. Только изображения (видео не поддерживается).";
+"A shared key is included. Get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "Используется общий ключ, получите свой бесплатный ключ на imgbb.com/api при превышении лимитов. Только изображения (видео не поддерживается).";
 "Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "Работает с AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 и другими S3-совместимыми сервисами. Поддерживает изображения и видео.";
 "Configure S3 in Preferences" = "Настройте S3 в Настройках";
 "Sign in to Google Drive in Preferences" = "Войдите в Google Drive в Настройках";
@@ -366,7 +376,7 @@
 "Version %@ (%@)" = "Версия %@ (%@)";
 "Made by" = "Разработал";
 "Licensed under the GPLv3" = "Лицензия GPLv3";
-"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "Бесплатный инструмент для снимков экрана и записи видео с открытым исходным кодом для macOS.\nПолностью нативный — создан на Swift и AppKit.";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native, built with Swift and AppKit." = "Бесплатный инструмент для снимков экрана и записи видео с открытым исходным кодом для macOS.\nПолностью нативный, создан на Swift и AppKit.";
 
 /* Alerts */
 "No Image on Clipboard" = "Нет изображения в буфере обмена";
@@ -388,6 +398,9 @@
 
 /* Permission Onboarding */
 "Welcome to macshot" = "Добро пожаловать в macshot";
+"Welcome back to macshot" = "С возвращением в macshot";
+"Turn Screen Recording back on" = "Снова включите запись экрана";
+"After some updates, macOS asks you to allow macshot again. Your settings and captures are safe. If macshot is already in the list, select it, click the minus button (−) to remove it, then click the plus button (+) and add macshot again." = "После некоторых обновлений macOS просит снова разрешить доступ macshot. Ваши настройки и снимки на месте. Если macshot уже есть в списке, выберите его, нажмите кнопку «минус» (−), чтобы удалить, затем нажмите кнопку «плюс» (+) и добавьте macshot снова.";
 "macshot needs one permission" = "macshot требуется одно разрешение";
 "Screen Recording not yet granted" = "Разрешение на запись экрана не предоставлено";
 "Screen Recording granted!" = "Разрешение на запись экрана получено!";
@@ -417,6 +430,7 @@
 /* Recording Toast */
 "Recording saved" = "Запись сохранена";
 "%@ • Recording saved" = "%@ • Запись сохранена";
+"Recording failed: %@" = "Ошибка записи: %@";
 "Copy Path" = "Копировать путь";
 "Path copied!" = "Путь скопирован!";
 
@@ -435,6 +449,9 @@
 "Save As..." = "Сохранить как...";
 "Choose a folder" = "Выберите папку";
 "Save All to Folder…" = "Сохранить все в папку…";
+"Could not encode the screenshot." = "Не удалось закодировать снимок экрана.";
+"Could not save the screenshot: %@" = "Не удалось сохранить снимок экрана: %@";
+"Could not save the screenshot to history." = "Не удалось сохранить снимок экрана в историю.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Авто-прокрутка";
@@ -466,8 +483,8 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Требуется мониторинг ввода";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot требуется разрешение на мониторинг ввода для отображения нажатий клавиш во время записи. Предоставьте доступ в System Settings и попробуйте снова.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot требуется разрешение Универсального доступа для отображения нажатий клавиш во время записи. Предоставьте доступ в System Settings и попробуйте снова.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot требуется разрешение на мониторинг ввода для выделения щелчков мыши или отображения нажатий клавиш во время записи. Предоставьте доступ в Системных настройках и попробуйте снова.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot требуется разрешение Универсального доступа для привязки к отдельным элементам интерфейса. Предоставьте доступ в Системных настройках и повторите попытку.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Показывать нажатия клавиш";
@@ -506,6 +523,8 @@
 "Settings" = "Настройки";
 "macshot Settings" = "Настройки macshot";
 "Also open in Editor" = "Также открыть в редакторе";
+"Open in Editor right after selection" = "Открыть в редакторе сразу после выделения";
+"Close editor after copying" = "Закрывать редактор после копирования";
 "Hide controls" = "Скрыть элементы управления";
 "Hide recording controls" = "Скрыть элементы управления записью";
 "Stop recording from the menu bar icon instead." = "Остановите запись через значок в строке меню.";
@@ -551,12 +570,13 @@
 
 "Same as screenshots" = "Как у скриншотов";
 "  Preview size:" = "  Размер превью:";
+"Fit image in preview (letterbox)" = "Вписать изображение в превью (с полосами)";
 "(0 = off)" = "(0 = выкл)";
 "Clear All" = "Очистить всё";
 "Clear History?" = "Очистить историю?";
 "This will permanently delete all screenshots from history." = "Это безвозвратно удалит все скриншоты из истории.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Нажмите \"Задать\" и введите комбинацию клавиш с хотя бы одним модификатором (⌘, ⌥, ⌃, ⇧), чтобы установить сочетание.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Файлы загружаются в папку \"macshot\" на вашем Google Drive. Всё остаётся приватным — ничего не публикуется в открытый доступ.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused. A new one is created instead. Everything stays private and nothing is shared publicly." = "Файлы загружаются в эту папку на вашем Google Drive. Оставьте поле пустым, чтобы использовать \"macshot\". macshot может использовать только созданные им самим папки, поэтому папка с таким же именем, созданная вами в Drive, не будет использована, вместо неё будет создана новая. Всё остаётся приватным, ничего не публикуется в открытый доступ.";
 
 "Pressure" = "Нажим";
 
@@ -626,7 +646,7 @@
 "Open this settings window" = "Открыть это окно настроек";
 "Quick capture (uses your Enter action)" = "Быстрый захват (использует действие Enter)";
 "Re-capture the last selected area" = "Повторный захват последней выбранной области";
-"Screenshots only — captured window title (blank otherwise)" = "Только для скриншотов — заголовок захваченного окна (иначе пусто)";
+"Captured window title (screenshots only, blank otherwise)" = "Только для скриншотов, заголовок захваченного окна (иначе пусто)";
 "Show available filename tokens" = "Показать доступные токены имени файла";
 "Show supported URL scheme commands" = "Показать поддерживаемые команды URL-схемы";
 "Start area capture" = "Начать захват области";
@@ -678,5 +698,164 @@
 "No nearby edges found" = "Ближайшие границы не найдены";
 "Selection adjusted" = "Область скорректирована";
 "Selection is already aligned" = "Область уже выровнена";
-"Space to move. Release to annotate and edit" = "Пробел — перемещение. Отпустите, чтобы добавить аннотации и перейти к редактированию";
-"Space to move. Release to finish" = "Пробел — перемещение. Отпустите, чтобы завершить";
+"Space to move. Release to annotate and edit" = "Пробел: перемещение. Отпустите, чтобы добавить аннотации и перейти к редактированию";
+"Space to move. Release to finish" = "Пробел: перемещение. Отпустите, чтобы завершить";
+
+"Saving..." = "Сохранение…";
+
+"Show Recordings in Finder" = "Показать записи в Finder";
+
+"Cancelled" = "Отменено";
+
+"Cancelling..." = "Отмена...";
+"Preparing video..." = "Подготовка видео...";
+"History is busy saving. Please try again shortly." = "История сохраняется. Повторите попытку через несколько секунд.";
+
+// Video editor accessibility
+"Play" = "Воспроизвести";
+"Mute" = "Выключить звук";
+"Unmute" = "Включить звук";
+
+/* Video editor (Studio) */
+"%.1f× · follows pointer" = "%.1f× · следует за указателем";
+"Add" = "Добавить";
+"Add Cut Here" = "Добавить вырез здесь";
+"Add Text Here" = "Добавить текст здесь";
+"Add Zoom Here" = "Добавить масштаб здесь";
+"Added %d captions" = "Добавлено субтитров: %d";
+"Added %d zooms" = "Добавлено увеличений: %d";
+"Apply Default Zoom to All" = "Применить масштаб по умолчанию ко всем";
+"Auto" = "Авто";
+"Auto Zoom" = "Автомасштаб";
+"Auto Zoom needs pointer data, which macshot records with every new recording. You can still add zooms by double-clicking the zoom lane." = "Автомасштабу нужны данные об указателе, которые macshot записывает при каждой новой записи. Вы по-прежнему можете добавлять увеличения двойным щелчком по дорожке масштаба.";
+"Background blur" = "Размытие фона";
+"Background color" = "Цвет фона";
+"Background, padding, rounded corners and shadow" = "Фон, отступы, скруглённые углы и тень";
+"Bold Italic" = "Жирный курсив";
+"Box" = "Блок";
+"Camera" = "Камера";
+"Caption" = "Субтитр";
+"Captions" = "Субтитры";
+"Captions are transcribed on this Mac. Nothing is uploaded." = "Субтитры распознаются на этом Mac. Ничего не загружается.";
+"Choose Image…" = "Выбрать изображение…";
+"Click color" = "Цвет щелчка";
+"Clicks" = "Щелчки";
+"Clip" = "Клип";
+"Colors" = "Цвета";
+"Connect nearby zooms" = "Связывать соседние увеличения";
+"Copy the edited video to the clipboard" = "Скопировать отредактированное видео в буфер обмена";
+"Corner radius" = "Радиус скругления";
+"Creates zooms that follow the pointer wherever you click or type. Adjust or delete them on the timeline." = "Создаёт увеличения, следующие за указателем там, где вы щёлкаете или печатаете. Настройте или удалите их на шкале времени.";
+"Custom color" = "Свой цвет";
+"Cut" = "Вырез";
+"Cuts, speed and freeze frames" = "Вырезы, скорость и стоп-кадры";
+"Default zoom" = "Масштаб по умолчанию";
+"Dot" = "Точка";
+"Double-click the text on the preview to edit it." = "Дважды щёлкните текст в предпросмотре, чтобы изменить его.";
+"Double-click to add a zoom" = "Дважды щёлкните, чтобы добавить увеличение";
+"Double-click to add a zoom, or use Auto Zoom" = "Дважды щёлкните, чтобы добавить увеличение,, или используйте автомасштаб";
+"Drag the frame on the preview to choose where the zoom looks." = "Перетащите рамку в предпросмотре, чтобы выбрать, куда направлено увеличение.";
+"Duration" = "Длительность";
+"Edge highlight" = "Подсветка краёв";
+"Edit Text" = "Изменить текст";
+"Editable pointer, clicks and keystrokes" = "Редактируемые указатель, щелчки и нажатия клавиш";
+"Edits" = "Правки";
+"Export" = "Экспорт";
+"Export Subtitles (.srt)…" = "Экспорт субтитров (.srt)…";
+"Fade in" = "Появление";
+"Fade out" = "Исчезание";
+"Fit" = "Вместить";
+"Fixed" = "Фикс.";
+"Fixed point" = "Фиксированная точка";
+"Focus" = "Фокус";
+"Follow" = "Следование";
+"Follow Pointer" = "Следовать за указателем";
+"Follow pointer" = "За указателем";
+"Follow tightness" = "Плотность следования";
+"Format" = "Формат";
+"Frame" = "Рамка";
+"Frame rate" = "Частота кадров";
+"Frame the recording" = "Оформить запись";
+"Freeze Frame" = "Стоп-кадр";
+"Generate Captions" = "Создать субтитры";
+"Gentle" = "Мягкий";
+"Gradient" = "Градиент";
+"Hide ordinary typing, show key combinations" = "Скрывать обычный ввод, показывать сочетания клавиш";
+"Hide when idle" = "Скрывать при бездействии";
+"Hide while typing" = "Скрывать при вводе";
+"Hold Focus" = "Удерживать фокус";
+"Idle delay" = "Задержка бездействия";
+"Image" = "Изображение";
+"Keystrokes" = "Нажатия клавиш";
+"Keystrokes in this recording are part of the video pixels." = "Нажатия клавиш в этой записи являются частью изображения видео.";
+"Light appearance" = "Светлое оформление";
+"Makes looping GIFs seamless" = "Делает зацикленные GIF бесшовными";
+"Mirror" = "Зеркально";
+"Motion" = "Движение";
+"Motion blur" = "Размытие движения";
+"Next edit" = "Следующая правка";
+"No clicks or typing found to zoom into" = "Не найдено щелчков или ввода для увеличения";
+"No speech was recognized" = "Речь не распознана";
+"No system wallpapers were found. Choose an image instead." = "Системные обои не найдены. Выберите изображение.";
+"Off" = "Выкл.";
+"On-device speech recognition isn't available for your language on this Mac." = "Распознавание речи на устройстве недоступно для вашего языка на этом Mac.";
+"Original" = "Оригинал";
+"Outline color" = "Цвет контура";
+"Outline width" = "Толщина контура";
+"Overlays" = "Наложения";
+"Pan between zooms instead of zooming out" = "Переходить между увеличениями без отдаления";
+"Pill" = "Капсула";
+"Pointer" = "Указатель";
+"Position" = "Положение";
+"Press animation" = "Анимация нажатия";
+"Previous edit" = "Предыдущая правка";
+"Quality" = "Качество";
+"Regenerate Captions" = "Пересоздать субтитры";
+"Regular" = "Обычный";
+"Remove Automatic Zooms" = "Удалить автоматические увеличения";
+"Remove Captions" = "Удалить субтитры";
+"Removes %.1f seconds from the video. Drag its edges on the timeline to adjust." = "Удаляет %.1f с из видео. Перетащите края на шкале времени, чтобы изменить.";
+"Return to start at the end" = "Вернуться к началу в конце";
+"Ring" = "Кольцо";
+"Ripple" = "Волна";
+"Save As…" = "Сохранить как…";
+"Shape" = "Форма";
+"Shortcuts only" = "Только сочетания";
+"Show camera" = "Показывать камеру";
+"Show captions" = "Показывать субтитры";
+"Show keystrokes" = "Показывать нажатия клавиш";
+"Show pointer" = "Показывать указатель";
+"Shrink during zooms" = "Уменьшать при увеличении";
+"Smoothing" = "Сглаживание";
+"Snappy" = "Быстрый";
+"Speech recognition is turned off for macshot in System Settings › Privacy & Security." = "Распознавание речи для macshot отключено в Системных настройках › Конфиденциальность и безопасность.";
+"Speed" = "Скорость";
+"Spotlight" = "Прожектор";
+"Square" = "Квадрат";
+"Style" = "Стиль";
+"Tall" = "Высокая";
+"Text and blur" = "Текст и размытие";
+"The recording's audio could not be read." = "Не удалось прочитать звук записи.";
+"This recording already shows the pointer in its pixels, so it can't be restyled. Zooms can still follow it." = "В этой записи указатель уже является частью изображения, поэтому его нельзя изменить. Увеличения по-прежнему могут следовать за ним.";
+"This recording has no audio to transcribe." = "В этой записи нет звука для распознавания.";
+"This video has no recorded pointer data. Recordings made with macshot that open in the editor let you restyle, smooth and resize the pointer after recording." = "В этом видео нет записанных данных указателя. Записи macshot, открываемые в редакторе, позволяют менять стиль, сглаживать и изменять размер указателя после записи.";
+"Title" = "Заголовок";
+"Transcribing…" = "Распознавание…";
+"Transition" = "Переход";
+"Turn on Show Keystrokes before recording. macshot then records them separately so you can style them here." = "Включите «Показывать нажатия клавиш» перед записью. Тогда macshot запишет их отдельно, и здесь их можно будет оформить.";
+"Turn on the camera before recording. macshot records it separately so you can move, resize, restyle or hide it here, and shrink it during zooms." = "Включите камеру перед записью. macshot запишет её отдельно, и здесь её можно будет перемещать, менять размер и стиль, скрывать, и уменьшать во время увеличений.";
+"Use Solid to hide sensitive information: blur and pixelation can sometimes be reversed." = "Используйте «Заливка», чтобы скрыть конфиденциальные данные: размытие и пикселизацию иногда можно обратить.";
+"Visibility" = "Видимость";
+"Wallpaper" = "Обои";
+"When recordings open in the editor, the pointer is recorded separately so you can smooth, resize, restyle or hide it, and add zooms that follow it." = "Если записи открываются в редакторе, указатель записывается отдельно, поэтому его можно сглаживать, менять размер и стиль, скрывать, а также добавлять следующие за ним увеличения.";
+"Wide" = "Широкая";
+"Zoom in" = "Приближение";
+"Zoom in timeline" = "Увеличить шкалу времени";
+"Zoom level" = "Уровень масштаба";
+"Zoom out" = "Отдаление";
+"Zoom out timeline" = "Уменьшить шкалу времени";
+"macOS" = "macOS";
+"Sway" = "Покачивание";
+
+"Snap webcam to corners when moved" = "Привязывать веб-камеру к углам при перемещении";
+"Search emoji" = "Поиск эмодзи";

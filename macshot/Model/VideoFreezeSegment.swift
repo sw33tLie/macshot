@@ -3,17 +3,10 @@ import Foundation
 /// A point-in-time "freeze" — pauses the video on a single source frame for
 /// `holdDuration` seconds of composition time before resuming playback.
 ///
-/// Unlike zoom / censor (pixel transforms) or cuts (frames removed) or
-/// speed (time scaling over a range), a freeze is essentially "time stops
-/// at this moment for N seconds." Semantically it's a speed piece with
-/// `factor ≈ 0` applied at a zero-width source range, but the time-map
-/// math works out more naturally by treating it as its own piece type:
-///
-///   - Source range covered: a tiny slice at `atTime` (one frame's worth)
-///     so `AVMutableCompositionTrack.insertTimeRange` actually inserts
-///     something we can scale.
-///   - Composition duration: `holdDuration` (independent of source).
-///   - Audio: silent (we skip audio inserts on freeze pieces).
+/// A freeze consumes no original footage. It adds exactly `holdDuration` to
+/// the edited timeline, holds source time constant, and inserts silence in
+/// every audio track. The composition builder locates the actual source frame
+/// independently of the edit's source-to-output time mapping.
 ///
 /// Times are stored in source-asset seconds (pre-trim, pre-cut). The UI
 /// prevents two freezes from sharing exactly the same `atTime`, and the
@@ -41,6 +34,16 @@ final class VideoFreezeSegment: Codable {
         self.id = id
         self.atTime = atTime
         self.holdDuration = VideoFreezeSegment.clampDuration(holdDuration)
+    }
+
+    private enum CodingKeys: String, CodingKey { case id, atTime, holdDuration }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = c.decode(.id, or: UUID())
+        atTime = c.decode(.atTime, or: 0)
+        let hold = c.decode(.holdDuration, or: Self.defaultDuration)
+        holdDuration = VideoFreezeSegment.clampDuration(hold.isFinite ? hold : Self.defaultDuration)
     }
 
     static func clampDuration(_ d: Double) -> Double {

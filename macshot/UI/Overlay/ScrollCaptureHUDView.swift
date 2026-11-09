@@ -145,34 +145,60 @@ class ScrollCaptureHUDPanel: NSPanel {
     // nonactivating panel + acceptsFirstMouse.
     override var canBecomeKey: Bool { false }
 
+    /// Where the HUD goes for a given selection.
+    ///
+    /// Below the selection when there's room, above it otherwise — and always
+    /// on screen and clear of the camera housing. A full-height selection (the
+    /// common case for scroll capture) leaves no room either side, and the
+    /// fallback used to put the HUD at the very top of the display, where the
+    /// notch swallowed the Auto Scroll and Stop buttons.
+    ///
+    /// `topInset` is the display's `safeAreaInsets.top`: 0 on a display with no
+    /// notch, the height of the camera housing otherwise.
+    static func hudFrame(size: NSSize,
+                         selectionScreenRect selection: NSRect,
+                         screenFrame: NSRect,
+                         visibleFrame: NSRect,
+                         topInset: CGFloat) -> NSRect {
+        let margin: CGFloat = 4
+        let gap: CGFloat = 6
+
+        var y = selection.minY - size.height - gap
+        if y < visibleFrame.minY + margin {
+            y = selection.maxY + gap
+        }
+
+        // The highest the HUD may reach: below the notch band when there is
+        // one, otherwise just under the menu bar.
+        let topLimit = topInset > 0
+            ? screenFrame.maxY - topInset - margin
+            : visibleFrame.maxY - margin
+        y = min(y, topLimit - size.height)
+        y = max(y, visibleFrame.minY + margin)
+
+        var x = selection.midX - size.width / 2
+        x = max(visibleFrame.minX + margin, min(x, visibleFrame.maxX - size.width - margin))
+
+        return NSRect(x: x, y: y, width: size.width, height: size.height)
+    }
+
     func position(relativeTo selectionRect: NSRect, in overlayWindow: NSWindow) {
         hudView.layoutSubviews()
         let hudSize = hudView.frame.size
-
-        let totalH = hudSize.height
-        let totalW = hudSize.width
-
-        // Convert selection rect to screen coords
         let selScreen = overlayWindow.convertToScreen(selectionRect)
+        let screen = overlayWindow.screen ?? NSScreen.main
 
-        // Position below selection
-        var barX = selScreen.midX - totalW / 2
-        var barY = selScreen.minY - totalH - 6
+        let frame = Self.hudFrame(
+            size: hudSize,
+            selectionScreenRect: selScreen,
+            screenFrame: screen?.frame ?? selScreen,
+            visibleFrame: screen?.visibleFrame ?? selScreen,
+            topInset: screen?.safeAreaInsets.top ?? 0)
 
-        // If below screen, put above selection
-        if let screen = overlayWindow.screen {
-            if barY < screen.visibleFrame.minY + 4 {
-                barY = selScreen.maxY + 6
-            }
-            barX = max(
-                screen.visibleFrame.minX + 4, min(barX, screen.visibleFrame.maxX - totalW - 4))
-        }
-
-        setFrame(NSRect(x: barX, y: barY, width: totalW, height: totalH), display: true)
+        setFrame(frame, display: true)
 
         // Layout inside content view
-        hudView.frame.origin = NSPoint(x: (totalW - hudSize.width) / 2, y: 0)
-
-        contentView?.frame = NSRect(origin: .zero, size: NSSize(width: totalW, height: totalH))
+        hudView.frame.origin = .zero
+        contentView?.frame = NSRect(origin: .zero, size: frame.size)
     }
 }

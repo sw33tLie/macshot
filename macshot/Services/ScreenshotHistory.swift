@@ -10,12 +10,15 @@ struct HistoryEntry {
     var pixelHeight: Int
     var hasAnnotations: Bool = false  // true if editable raw data is saved alongside
     var thumbnail: NSImage?  // lazily cached, tiny
+    var revision: String? = nil
 
     /// The time used for "order by last edit": the most recent of edit/creation.
     var effectiveSortDate: Date { lastEditedAt ?? timestamp }
 
     var timeAgoString: String {
-        let seconds = Int(-timestamp.timeIntervalSinceNow)
+        guard timestamp.timeIntervalSinceReferenceDate.isFinite,
+              timestamp >= .distantPast, timestamp <= .distantFuture else { return "-" }
+        let seconds = SafeNumerics.int((-timestamp.timeIntervalSinceNow).rounded(.towardZero))
         if seconds < 5 { return L("just now") }
         if seconds < 60 { return String(format: L("%ds ago"), seconds) }
         let minutes = seconds / 60
@@ -28,480 +31,275 @@ struct HistoryEntry {
     }
 }
 
-class ScreenshotHistory {
-
+@MainActor
+final class ScreenshotHistory {
     static let shared = ScreenshotHistory()
-
+    typealias IndexEntry = HistoryRecord
     private(set) var entries: [HistoryEntry] = []
-
     private let historyDir: URL
-    private let indexFile: URL
+    private let storage: HistoryStorage
+    private var committedRecords: [HistoryRecord]
+    private var pendingRecords: [String: HistoryRecord] = [:]
+    private var hiddenIDs: [String: UUID] = [:]
+    private var activeWrites = 0
+    private let maximumPendingBytes: Int
+    private let maximumPendingSaves: Int
+    private(set) var pendingSnapshotBytes = 0
+    private var pendingSaves = 0
+    private var idleWaiters: [CheckedContinuation<Void, Never>] = []
+    var hasPendingWrites: Bool { activeWrites > 0 }
+    func containsEntry(id: String) -> Bool {
+        hiddenIDs[id] == nil && (pendingRecords[id] != nil || committedRecords.contains { $0.id == id })
+    }
 
     var maxEntries: Int {
         if UserDefaults.standard.bool(forKey: "historyUnlimited") { return Int.max }
-        if let stored = UserDefaults.standard.object(forKey: "historySize") as? Int {
-            return stored
-        }
-        return 10  // default
+        return max(0, UserDefaults.standard.object(forKey: "historySize") as? Int ?? 10)
     }
-
-    private init() {
-        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        historyDir = appSupport.appendingPathComponent("com.sw33tlie.macshot/history")
-        indexFile = historyDir.appendingPathComponent("index.json")
-
-        // Create directory with 0700 permissions (owner only)
-        if !FileManager.default.fileExists(atPath: historyDir.path) {
-            try? FileManager.default.createDirectory(at: historyDir, withIntermediateDirectories: true, attributes: [
-                .posixPermissions: 0o700
-            ])
-        }
-
-        loadIndex()
-        pruneOrphanedFiles()
-    }
-
-    /// Delete files in the history directory that aren't referenced by
-    /// any entry in `index.json`. Catches orphans from past bugs where a
-    /// `_preview.png` / `_raw.png` / `_annotations.json` was written but
-    /// never cleaned up. Runs once at startup off the main thread via
-    /// the shared `DirectorySweeper` helper.
-    private func pruneOrphanedFiles() {
-        let dir = historyDir
-        let indexName = indexFile.lastPathComponent
-        let validIDs = Set(entries.map { $0.id })
-        DispatchQueue.global(qos: .utility).async {
-            DirectorySweeper.sweep(
-                directory: dir,
-                // No age filter — orphan detection is by UUID-prefix
-                // lookup against `index.json`, not mtime.
-                olderThan: nil,
-                shouldDelete: { name in
-                    if name == indexName { return false }
-                    guard name.count >= 36 else { return false }
-                    let uuid = String(name.prefix(36))
-                    guard UUID(uuidString: uuid) != nil else { return false }
-                    return !validIDs.contains(uuid)
-                }
-            )
-        }
-    }
-
-    // MARK: - Public API
-
-    /// Add a screenshot to history.
-    /// - Parameters:
-    ///   - image: The composited image (annotations baked in) used for display, clipboard, and sharing.
-    ///   - rawImage: The raw screenshot without annotations (optional — for editable history).
-    ///   - annotations: Live annotation objects (optional — serialized to JSON for editable history).
-    ///   - editState: Live post-processing settings (optional — serialized for non-destructive editing).
-    func add(image: NSImage, rawImage: NSImage? = nil, annotations: [Annotation]? = nil, editState: CaptureEditState? = nil) {
-        let max = maxEntries
-        guard max > 0 else { return }
-
-        let id = UUID().uuidString
-        let ext = "png"
-
-        // Capture metadata on main thread (cheap)
-        let size = image.size
-        let scale: CGFloat = ImageEncoder.downscaleRetina ? 1.0 : (NSScreen.main?.backingScaleFactor ?? 2.0)
-
-        let hasAnns = annotations != nil && !(annotations!.isEmpty)
-        let hasEditState = editState?.hasPostProcessing == true
-        let hasEditableData = rawImage != nil && (hasAnns || hasEditState)
-
-        // Create entry with a placeholder thumbnail (tiny, fast)
-        let entry = HistoryEntry(
-            id: id,
-            fileExtension: ext,
-            timestamp: Date(),
-            pixelWidth: Int(size.width * scale),
-            pixelHeight: Int(size.height * scale),
-            hasAnnotations: hasEditableData,
-            thumbnail: NSImage(size: NSSize(width: 1, height: 1))
-        )
-        entries.insert(entry, at: 0)
-
-        // Prune oldest entries beyond max
-        while entries.count > max {
-            let removed = entries.removeLast()
-            deleteFiles(for: removed.id, ext: removed.fileExtension)
-        }
-
-        // Serialize annotations on main thread (fast — just JSON encoding)
-        let annotationData: Data? = hasAnns ? AnnotationSerializer.encode(annotations!) : nil
-        let editStateData: Data? = {
-            guard hasEditState, let editState else { return nil }
-            return try? JSONEncoder().encode(editState)
-        }()
-
-        // Move all expensive work off main thread: thumbnail, preview, PNG encoding, index save
-        let fileURL = historyDir.appendingPathComponent("\(id).\(ext)")
-        let thumbURL = historyDir.appendingPathComponent("\(id)_thumb.png")
-        let previewURL = historyDir.appendingPathComponent("\(id)_preview.png")
-        let rawURL = historyDir.appendingPathComponent("\(id)_raw.png")
-        let annURL = historyDir.appendingPathComponent("\(id)_annotations.json")
-        let editURL = historyDir.appendingPathComponent("\(id)_edit.json")
-        let histDir = historyDir
-        DispatchQueue.global(qos: .utility).async { [weak self] in
-            guard let self = self else { return }
-            let thumb = self.makeThumbnail(image: image, maxWidth: 36)
-            let preview = self.makePreview(image: image)
-
-            // Briefly hold the thumbnail in memory so the menu bar can render
-            // it before the disk write lands. Cleared once the disk file is
-            // safely on-disk — subsequent reads go through loadThumbnail's
-            // disk path so we don't pin every entry's bitmap forever.
-            DispatchQueue.main.async {
-                if let idx = self.entries.firstIndex(where: { $0.id == id }) {
-                    self.entries[idx].thumbnail = thumb
-                }
-                self.saveIndex()
-            }
-
-            // Write composited image
-            if let tiff = image.tiffRepresentation,
-               let bitmap = NSBitmapImageRep(data: tiff),
-               let imageData = bitmap.representation(using: .png, properties: [:]) {
-                try? imageData.write(to: fileURL, options: .atomic)
-            }
-            if let thumbTiff = thumb.tiffRepresentation,
-               let thumbBitmap = NSBitmapImageRep(data: thumbTiff),
-               let thumbPng = thumbBitmap.representation(using: .png, properties: [:]) {
-                try? thumbPng.write(to: thumbURL, options: .atomic)
-            }
-            if let prevTiff = preview.tiffRepresentation,
-               let prevBitmap = NSBitmapImageRep(data: prevTiff),
-               let prevPng = prevBitmap.representation(using: .png, properties: [:]) {
-                try? prevPng.write(to: previewURL, options: .atomic)
-            }
-
-            // Write raw image + annotations if available
-            if let raw = rawImage,
-               let rawTiff = raw.tiffRepresentation,
-               let rawBitmap = NSBitmapImageRep(data: rawTiff),
-               let rawData = rawBitmap.representation(using: .png, properties: [:]) {
-                try? rawData.write(to: rawURL, options: .atomic)
-            }
-            if let annData = annotationData {
-                try? annData.write(to: annURL, options: .atomic)
-            }
-            if let editData = editStateData {
-                try? editData.write(to: editURL, options: .atomic)
-            }
-
-            // Disk artifacts are now on disk — drop the in-memory thumbnail.
-            // loadThumbnail() will read from disk on next access.
-            DispatchQueue.main.async {
-                if let idx = self.entries.firstIndex(where: { $0.id == id }) {
-                    self.entries[idx].thumbnail = nil
-                }
-            }
-        }
-    }
-
-    /// Update an existing history entry in-place (for "Done" in editor).
-    /// Rewrites the composited image, raw image, annotations, thumbnail, and preview.
-    /// Whether the history panel orders entries by last-edit time (default on).
-    /// When off, entries stay in creation order (newest created first).
     static var orderByLastEdit: Bool {
         UserDefaults.standard.object(forKey: "historyOrderByLastEdit") as? Bool ?? true
     }
 
-    /// Re-sort `entries` to honor the current ordering preference. When ordering
-    /// by last edit, sort by the most recent of edit/creation, descending. When
-    /// off, restore creation order (newest first). Stable for equal dates.
-    func applyHistoryOrderPreference(persist: Bool = false) {
-        if Self.orderByLastEdit {
-            entries.sort { $0.effectiveSortDate > $1.effectiveSortDate }
-        } else {
-            entries.sort { $0.timestamp > $1.timestamp }
+    init(directory: URL? = nil, cleanupQueue: DispatchQueue = .global(qos: .utility),
+         writeQueue: DispatchQueue = DispatchQueue(label: "macshot.history.writer", qos: .utility),
+         maximumPendingBytes: Int = 512 * 1024 * 1024, maximumPendingSaves: Int = 32,
+         beforeIndexPublication: @escaping @Sendable () throws -> Void = {}) {
+        self.maximumPendingBytes = max(1, maximumPendingBytes)
+        self.maximumPendingSaves = max(1, maximumPendingSaves)
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Library/Application Support")
+        historyDir = directory ?? support.appendingPathComponent("com.sw33tlie.macshot/history")
+        try? FileManager.default.createDirectory(at: historyDir, withIntermediateDirectories: true,
+                                                 attributes: [.posixPermissions: 0o700])
+        let data = try? Data(contentsOf: historyDir.appendingPathComponent("index.json"))
+        let complete = data.flatMap { try? JSONDecoder().decode([HistoryRecord].self, from: $0) }
+        let loaded = complete ?? data.flatMap { LenientArrayDecoder.decode(HistoryRecord.self, from: $0) } ?? []
+        var seen = Set<UUID>()
+        let root = historyDir
+        committedRecords = loaded.filter {
+            guard let id = UUID(uuidString: $0.id), FileManager.default.fileExists(atPath: $0.url(in: root).path) else { return false }
+            return seen.insert(id).inserted
         }
-        if persist { saveIndex() }
+        storage = HistoryStorage(directory: root, records: committedRecords, queue: writeQueue,
+                                 beforeIndexPublication: beforeIndexPublication)
+        publishEntries()
+        let indexedIDs = complete.map { Set($0.map(\.id)) }
+        let cutoff = Date()
+        cleanupQueue.async { HistoryFileCleanup.sweep(directory: root, indexedIDs: indexedIDs, asOf: cutoff) }
+        if committedRecords.count > maxEntries { pruneToMax() }
     }
 
-    func updateEntry(id: String, compositedImage: NSImage, rawImage: NSImage?, annotations: [Annotation]?, editState: CaptureEditState? = nil) {
-        guard let idx = entries.firstIndex(where: { $0.id == id }) else { return }
-
-        let hasAnns = annotations != nil && !(annotations!.isEmpty)
-        let hasEditState = editState?.hasPostProcessing == true
-        let hasEditableData = rawImage != nil && (hasAnns || hasEditState)
-        entries[idx].hasAnnotations = hasEditableData
-        // Stamp the edit time (used for last-edit ordering). The actual reorder
-        // happens at the end, after all entries[idx] field updates, so the index
-        // stays valid here.
-        entries[idx].lastEditedAt = Date()
-        let scale: CGFloat = ImageEncoder.downscaleRetina ? 1.0 : (NSScreen.main?.backingScaleFactor ?? 2.0)
-        entries[idx].pixelWidth = Int(compositedImage.size.width * scale)
-        entries[idx].pixelHeight = Int(compositedImage.size.height * scale)
-
-        let annotationData: Data? = hasAnns ? AnnotationSerializer.encode(annotations!) : nil
-        let editStateData: Data? = {
-            guard hasEditState, let editState else { return nil }
-            return try? JSONEncoder().encode(editState)
-        }()
-
-        let ext = entries[idx].fileExtension
-        let fileURL = historyDir.appendingPathComponent("\(id).\(ext)")
-        let thumbURL = historyDir.appendingPathComponent("\(id)_thumb.png")
-        let previewURL = historyDir.appendingPathComponent("\(id)_preview.png")
-        let rawURL = historyDir.appendingPathComponent("\(id)_raw.png")
-        let annURL = historyDir.appendingPathComponent("\(id)_annotations.json")
-        let editURL = historyDir.appendingPathComponent("\(id)_edit.json")
-
-        // Update thumbnail in memory immediately
-        let thumb = makeThumbnail(image: compositedImage, maxWidth: 36)
-        entries[idx].thumbnail = thumb
-        // When ordering by last edit, float the just-edited entry to the top.
-        if Self.orderByLastEdit, idx != 0 {
-            let edited = entries.remove(at: idx)
-            entries.insert(edited, at: 0)
+    /// Return the reserved identifier directly. It must never be inferred from
+    /// entries.first: saving is asynchronous, and history may be disabled.
+    @discardableResult
+    func add(image: NSImage, rawImage: NSImage? = nil, annotations: [Annotation]? = nil,
+             editState: CaptureEditState? = nil, completion: ((Bool) -> Void)? = nil) -> String? {
+        let limit = maxEntries
+        guard limit > 0 else { completion?(false); return nil }
+        do {
+            try checkSaveCapacity()
+            let snapshot = try HistoryImageSnapshot(image: image, rawImage: rawImage,
+                                                    annotations: annotations, editState: editState)
+            let record = HistoryRecord(id: UUID().uuidString, fileExtension: "png", timestamp: Date(),
+                pixelWidth: snapshot.composited.pixels.width, pixelHeight: snapshot.composited.pixels.height,
+                hasAnnotations: snapshot.isEditable ? true : nil, lastEditedAt: nil, revision: UUID().uuidString)
+            try save(record, snapshot: snapshot, maximum: limit, completion: completion)
+            return record.id
+        } catch {
+            report(error)
+            completion?(false)
+            return nil
         }
-        saveIndex()
+    }
 
-        DispatchQueue.global(qos: .utility).async { [weak self] in
-            guard let self = self else { return }
-            // Composited image
-            if let tiff = compositedImage.tiffRepresentation,
-               let bitmap = NSBitmapImageRep(data: tiff),
-               let data = bitmap.representation(using: .png, properties: [:]) {
-                try? data.write(to: fileURL, options: .atomic)
-            }
-            // Thumbnail + preview
-            if let thumbTiff = thumb.tiffRepresentation,
-               let thumbBitmap = NSBitmapImageRep(data: thumbTiff),
-               let thumbPng = thumbBitmap.representation(using: .png, properties: [:]) {
-                try? thumbPng.write(to: thumbURL, options: .atomic)
-            }
-            let preview = self.makePreview(image: compositedImage)
-            if let prevTiff = preview.tiffRepresentation,
-               let prevBitmap = NSBitmapImageRep(data: prevTiff),
-               let prevPng = prevBitmap.representation(using: .png, properties: [:]) {
-                try? prevPng.write(to: previewURL, options: .atomic)
-            }
-            // Raw image + annotations
-            if let raw = rawImage,
-               let rawTiff = raw.tiffRepresentation,
-               let rawBitmap = NSBitmapImageRep(data: rawTiff),
-               let rawData = rawBitmap.representation(using: .png, properties: [:]) {
-                try? rawData.write(to: rawURL, options: .atomic)
-            } else {
-                try? FileManager.default.removeItem(at: rawURL)
-            }
-            if let annData = annotationData {
-                try? annData.write(to: annURL, options: .atomic)
-            } else {
-                try? FileManager.default.removeItem(at: annURL)
-            }
-            if let editData = editStateData {
-                try? editData.write(to: editURL, options: .atomic)
-            } else {
-                try? FileManager.default.removeItem(at: editURL)
-            }
+    func updateEntry(id: String, compositedImage: NSImage, rawImage: NSImage?, annotations: [Annotation]?,
+                     editState: CaptureEditState? = nil, completion: ((Bool) -> Void)? = nil) {
+        guard maxEntries > 0, hiddenIDs[id] == nil,
+              let previous = pendingRecords[id] ?? committedRecords.first(where: { $0.id == id }) else {
+            completion?(false); return
+        }
+        do {
+            try checkSaveCapacity()
+            let snapshot = try HistoryImageSnapshot(image: compositedImage, rawImage: rawImage,
+                                                    annotations: annotations, editState: editState)
+            let record = HistoryRecord(id: id, fileExtension: "png", timestamp: previous.timestamp,
+                pixelWidth: snapshot.composited.pixels.width, pixelHeight: snapshot.composited.pixels.height,
+                hasAnnotations: snapshot.isEditable ? true : nil, lastEditedAt: Date(), revision: UUID().uuidString)
+            try save(record, snapshot: snapshot, maximum: maxEntries, completion: completion)
+        } catch { report(error); completion?(false) }
+    }
 
-            // Disk artifacts updated — drop the in-memory thumbnail so the
-            // next read pulls the fresh on-disk version through loadThumbnail.
-            DispatchQueue.main.async {
-                if let idx = self.entries.firstIndex(where: { $0.id == id }) {
-                    self.entries[idx].thumbnail = nil
+    private func save(_ record: HistoryRecord, snapshot: HistoryImageSnapshot, maximum: Int,
+                      completion: ((Bool) -> Void)?) throws {
+        let bytes = snapshot.retainedBytes
+        // One oversized scroll capture may save by itself. Never retain an
+        // unbounded burst of additional snapshots while that save is pending.
+        guard pendingSaves == 0 || bytes <= maximumPendingBytes - pendingSnapshotBytes else {
+            throw saveQueueBusyError()
+        }
+        pendingSnapshotBytes += bytes
+        pendingSaves += 1
+        pendingRecords[record.id] = record
+        enqueue(.save(record, snapshot, maximum: maximum, orderByEdit: Self.orderByLastEdit)) { [weak self] success in
+            guard let self else { completion?(success); return }
+            self.pendingSnapshotBytes -= bytes
+            self.pendingSaves -= 1
+            if self.pendingRecords[record.id]?.revision == record.revision { self.pendingRecords.removeValue(forKey: record.id) }
+            completion?(success)
+        }
+    }
+
+    private func saveQueueBusyError() -> NSError {
+        NSError(domain: "macshot.history", code: 1,
+                userInfo: [NSLocalizedDescriptionKey: L("History is busy saving. Please try again shortly.")])
+    }
+
+    private func checkSaveCapacity() throws {
+        guard pendingSaves < maximumPendingSaves,
+              pendingSaves == 0 || pendingSnapshotBytes < maximumPendingBytes else { throw saveQueueBusyError() }
+    }
+
+    private func enqueue(_ operation: HistoryStorage.Operation, completion: ((Bool) -> Void)? = nil) {
+        activeWrites += 1
+        // Retain the owner until publication, UI notification and cleanup finish.
+        storage.enqueue(operation) { result in
+            switch result {
+            case .success(let commit):
+                self.committedRecords = commit.records
+                self.publishEntries()
+                completion?(true)
+                self.storage.cleanup(commit.obsoleteFiles) { error in
+                    if let error { self.report(error) }
+                    self.finishedWrite()
                 }
+            case .failure(let error):
+                self.report(error)
+                completion?(false)
+                self.finishedWrite()
             }
         }
     }
 
+    private func finishedWrite() {
+        activeWrites -= 1
+        guard activeWrites == 0 else { return }
+        let waiters = idleWaiters
+        idleWaiters.removeAll()
+        for waiter in waiters { waiter.resume() }
+    }
+
+    func waitUntilIdle() async {
+        guard hasPendingWrites else { return }
+        await withCheckedContinuation { idleWaiters.append($0) }
+    }
+
+    private func report(_ error: Error) {
+        ImageSaveService.reportFailure(L("Could not save the screenshot to history.") + " " + error.localizedDescription)
+    }
+
+    private func publishEntries() {
+        entries = HistoryStorage.ordered(committedRecords, byEdit: Self.orderByLastEdit)
+            .filter { hiddenIDs[$0.id] == nil }.map {
+                HistoryEntry(id: $0.id, fileExtension: $0.fileExtension, timestamp: $0.timestamp,
+                    lastEditedAt: $0.lastEditedAt, pixelWidth: $0.pixelWidth, pixelHeight: $0.pixelHeight,
+                    hasAnnotations: $0.hasAnnotations ?? false, thumbnail: nil, revision: $0.revision)
+            }
+        NotificationCenter.default.post(name: Self.didChange, object: self)
+    }
+    static let didChange = Notification.Name("macshot.screenshotHistoryDidChange")
+
+    func applyHistoryOrderPreference(persist: Bool = false) {
+        publishEntries()
+        if persist { pruneToMax() }
+    }
     func pruneToMax() {
-        let max = maxEntries
-        if max <= 0 {
-            clear()
-        } else {
-            while entries.count > max {
-                let removed = entries.removeLast()
-                deleteFiles(for: removed.id, ext: removed.fileExtension)
-            }
-            saveIndex()
+        if maxEntries == 0 { clear(); return }
+        enqueue(.prune(maximum: maxEntries, orderByEdit: Self.orderByLastEdit))
+    }
+    func removeEntry(id: String) { remove(ids: [id]) }
+    func clear() { remove(ids: Set(committedRecords.map(\.id)).union(pendingRecords.keys)) }
+
+    private func remove(ids: Set<String>) {
+        guard !ids.isEmpty else { return }
+        let token = UUID()
+        for id in ids { hiddenIDs[id] = token; pendingRecords.removeValue(forKey: id) }
+        publishEntries()
+        enqueue(.remove(ids)) { [weak self] _ in
+            guard let self else { return }
+            for id in ids where self.hiddenIDs[id] == token { self.hiddenIDs.removeValue(forKey: id) }
+            self.publishEntries()
         }
     }
 
-    func removeEntry(id: String) {
-        guard let index = entries.firstIndex(where: { $0.id == id }) else { return }
-        let entry = entries.remove(at: index)
-        deleteFiles(for: entry.id, ext: entry.fileExtension)
-        saveIndex()
+    private func record(for entry: HistoryEntry) -> HistoryRecord {
+        committedRecords.first(where: { $0.id == entry.id }) ?? HistoryRecord(id: entry.id,
+            fileExtension: entry.fileExtension, timestamp: entry.timestamp, pixelWidth: entry.pixelWidth,
+            pixelHeight: entry.pixelHeight, hasAnnotations: entry.hasAnnotations,
+            lastEditedAt: entry.lastEditedAt, revision: entry.revision)
     }
-
-    func clear() {
-        for entry in entries {
-            deleteFiles(for: entry.id, ext: entry.fileExtension)
-        }
-        entries.removeAll()
-        saveIndex()
-    }
-
+    func fileURL(for entry: HistoryEntry) -> URL { record(for: entry).url(in: historyDir) }
+    func sidecarURL(for entry: HistoryEntry, suffix: String) -> URL { record(for: entry).url(in: historyDir, suffix: suffix) }
     func copyEntry(at index: Int) {
-        guard index >= 0, index < entries.count else { return }
-        let entry = entries[index]
-        let fileURL = historyDir.appendingPathComponent("\(entry.id).\(entry.fileExtension)")
-        guard let imageData = try? Data(contentsOf: fileURL),
-              let image = NSImage(data: imageData) else { return }
-        ImageEncoder.copyToClipboard(image, sourceFileURL: fileURL)
+        guard entries.indices.contains(index), let image = loadImage(for: entries[index]) else { return }
+        ImageEncoder.copyToClipboard(image)
     }
-
-    func loadImage(for entry: HistoryEntry) -> NSImage? {
-        let fileURL = historyDir.appendingPathComponent("\(entry.id).\(entry.fileExtension)")
-        guard let data = try? Data(contentsOf: fileURL) else { return nil }
-        return NSImage(data: data)
-    }
-
-    func fileURL(for entry: HistoryEntry) -> URL {
-        historyDir.appendingPathComponent("\(entry.id).\(entry.fileExtension)")
-    }
-
-    /// Load the raw (un-annotated) screenshot for editable history entries.
+    func loadImage(for entry: HistoryEntry) -> NSImage? { image(at: fileURL(for: entry)) }
     func loadRawImage(for entry: HistoryEntry) -> NSImage? {
-        guard entry.hasAnnotations else { return nil }
-        let rawURL = historyDir.appendingPathComponent("\(entry.id)_raw.png")
-        guard let data = try? Data(contentsOf: rawURL) else { return nil }
-        return NSImage(data: data)
+        guard record(for: entry).hasAnnotations == true else { return nil }
+        return image(at: sidecarURL(for: entry, suffix: "_raw.png"))
     }
-
-    /// Load saved annotations for editable history entries.
     func loadAnnotations(for entry: HistoryEntry) -> [Annotation]? {
-        guard entry.hasAnnotations else { return nil }
-        let annURL = historyDir.appendingPathComponent("\(entry.id)_annotations.json")
-        guard let data = try? Data(contentsOf: annURL) else { return [] }
+        guard record(for: entry).hasAnnotations == true else { return nil }
+        guard let data = try? Data(contentsOf: sidecarURL(for: entry, suffix: "_annotations.json")) else { return [] }
         return AnnotationSerializer.decode(data)
     }
-
-    /// Load saved post-processing settings for editable history entries.
     func loadEditState(for entry: HistoryEntry) -> CaptureEditState? {
-        guard entry.hasAnnotations else { return nil }
-        let editURL = historyDir.appendingPathComponent("\(entry.id)_edit.json")
-        guard let data = try? Data(contentsOf: editURL) else { return nil }
+        guard record(for: entry).hasAnnotations == true,
+              let data = try? Data(contentsOf: sidecarURL(for: entry, suffix: "_edit.json")) else { return nil }
         return try? JSONDecoder().decode(CaptureEditState.self, from: data)
     }
+    struct EditableCapture {
+        let rawImage: NSImage
+        let annotations: [Annotation]
+        let editState: CaptureEditState?
+    }
 
+    /// Reopen the editable parts together. Missing optional legacy sidecars are
+    /// supported, but a present unreadable sidecar must fall back to the saved
+    /// composited image instead of silently removing its effects/annotations.
+    func loadEditableCapture(for entry: HistoryEntry) -> EditableCapture? {
+        guard let rawImage = loadRawImage(for: entry) else { return nil }
+        let annotationsURL = sidecarURL(for: entry, suffix: "_annotations.json")
+        let editURL = sidecarURL(for: entry, suffix: "_edit.json")
+        let hasAnnotations = FileManager.default.fileExists(atPath: annotationsURL.path)
+        let hasEditState = FileManager.default.fileExists(atPath: editURL.path)
+        guard hasAnnotations || hasEditState else { return nil }
+        let annotations: [Annotation]
+        if hasAnnotations {
+            guard let data = try? Data(contentsOf: annotationsURL),
+                  let restored = AnnotationSerializer.decode(data, requireAll: true) else { return nil }
+            annotations = restored
+        } else { annotations = [] }
+        let editState: CaptureEditState?
+        if hasEditState {
+            guard let restored = loadEditState(for: entry) else { return nil }
+            if restored.customBeautifyBackgroundPNG != nil && restored.customBeautifyBackground == nil { return nil }
+            editState = restored
+        } else { editState = nil }
+        return EditableCapture(rawImage: rawImage, annotations: annotations, editState: editState)
+    }
     func loadThumbnail(for entry: HistoryEntry) -> NSImage? {
-        if let thumb = entry.thumbnail { return thumb }
-        let thumbURL = historyDir.appendingPathComponent("\(entry.id)_thumb.png")
-        return NSImage(contentsOf: thumbURL)
+        image(at: sidecarURL(for: entry, suffix: "_thumb.png"))
     }
-
-    /// Load a mid-size preview suitable for history panel cards (~240pt wide).
-    /// Falls back to disk thumbnail scaled up, or full image if needed.
     func loadPreview(for entry: HistoryEntry) -> NSImage? {
-        // Try preview file first
-        let previewURL = historyDir.appendingPathComponent("\(entry.id)_preview.png")
-        if let preview = NSImage(contentsOf: previewURL) { return preview }
-
-        // Fall back to full image, scaled down
-        guard let full = loadImage(for: entry) else { return nil }
-        let preview = makePreview(image: full)
-
-        // Cache preview to disk for next time (fire and forget)
-        DispatchQueue.global(qos: .utility).async {
-            if let tiff = preview.tiffRepresentation,
-               let bitmap = NSBitmapImageRep(data: tiff),
-               let data = bitmap.representation(using: .png, properties: [:]) {
-                try? data.write(to: previewURL, options: .atomic)
-            }
-        }
-
-        return preview
+        guard let pixels = HistoryImageSnapshot.preview(at: previewURLs(for: entry)) else { return nil }
+        return NSImage(cgImage: pixels, size: .zero)
     }
-
-    private func makePreview(image: NSImage, maxDimension: CGFloat = 240) -> NSImage {
-        let size = image.size
-        guard size.width > 0, size.height > 0 else { return image }
-        let scale = min(maxDimension / size.width, maxDimension / size.height, 1.0)
-        let previewSize = NSSize(width: round(size.width * scale), height: round(size.height * scale))
-        let preview = NSImage(size: previewSize, flipped: false) { _ in
-            image.draw(in: NSRect(origin: .zero, size: previewSize), from: .zero, operation: .copy, fraction: 1.0)
-            return true
-        }
-        return preview
+    func previewURLs(for entry: HistoryEntry) -> [URL] {
+        [sidecarURL(for: entry, suffix: "_preview.png"), fileURL(for: entry)]
     }
-
-    // MARK: - Persistence
-
-    private struct IndexEntry: Codable {
-        let id: String
-        let fileExtension: String
-        let timestamp: Date
-        let pixelWidth: Int
-        let pixelHeight: Int
-        var hasAnnotations: Bool?  // optional for backward compat with old index files
-        var lastEditedAt: Date?    // optional for backward compat (nil = never edited)
-    }
-
-    private func saveIndex() {
-        let indexEntries = entries.map {
-            IndexEntry(id: $0.id, fileExtension: $0.fileExtension, timestamp: $0.timestamp,
-                       pixelWidth: $0.pixelWidth, pixelHeight: $0.pixelHeight,
-                       hasAnnotations: $0.hasAnnotations ? true : nil,
-                       lastEditedAt: $0.lastEditedAt)
-        }
-        if let data = try? JSONEncoder().encode(indexEntries) {
-            try? data.write(to: indexFile, options: .atomic)
-        }
-    }
-
-    private func loadIndex() {
-        guard let data = try? Data(contentsOf: indexFile),
-              let indexEntries = try? JSONDecoder().decode([IndexEntry].self, from: data) else { return }
-
-        entries = indexEntries.compactMap { ie in
-            // Only include entries whose image file still exists
-            let ext = ie.fileExtension
-            let fileURL = historyDir.appendingPathComponent("\(ie.id).\(ext)")
-            guard FileManager.default.fileExists(atPath: fileURL.path) else { return nil }
-            return HistoryEntry(id: ie.id, fileExtension: ext, timestamp: ie.timestamp, lastEditedAt: ie.lastEditedAt, pixelWidth: ie.pixelWidth, pixelHeight: ie.pixelHeight, hasAnnotations: ie.hasAnnotations ?? false, thumbnail: nil)
-        }
-
-        // Apply the persisted ordering preference on load so the panel reflects
-        // it immediately (when off, this is a no-op — array stays creation-order).
-        applyHistoryOrderPreference()
-
-        // Prune if maxEntries was lowered since last run
-        let max = maxEntries
-        if max <= 0 {
-            clear()
-        } else {
-            while entries.count > max {
-                let removed = entries.removeLast()
-                deleteFiles(for: removed.id, ext: removed.fileExtension)
-            }
-            if entries.count < indexEntries.count {
-                saveIndex()
-            }
-        }
-    }
-
-    // MARK: - File helpers
-
-    private func deleteFiles(for id: String, ext: String = "png") {
-        let fileURL = historyDir.appendingPathComponent("\(id).\(ext)")
-        let thumbURL = historyDir.appendingPathComponent("\(id)_thumb.png")
-        let previewURL = historyDir.appendingPathComponent("\(id)_preview.png")
-        let rawURL = historyDir.appendingPathComponent("\(id)_raw.png")
-        let annURL = historyDir.appendingPathComponent("\(id)_annotations.json")
-        let editURL = historyDir.appendingPathComponent("\(id)_edit.json")
-        try? FileManager.default.removeItem(at: fileURL)
-        try? FileManager.default.removeItem(at: thumbURL)
-        try? FileManager.default.removeItem(at: previewURL)
-        try? FileManager.default.removeItem(at: rawURL)
-        try? FileManager.default.removeItem(at: annURL)
-        try? FileManager.default.removeItem(at: editURL)
-    }
-
-    private func makeThumbnail(image: NSImage, maxWidth: CGFloat) -> NSImage {
-        let size = image.size
-        guard size.width > 0, size.height > 0 else { return image }
-        let scale = min(maxWidth / size.width, maxWidth / size.height)
-        let thumbSize = NSSize(width: size.width * scale, height: size.height * scale)
-        let thumb = NSImage(size: thumbSize, flipped: false) { _ in
-            image.draw(in: NSRect(origin: .zero, size: thumbSize), from: .zero, operation: .copy, fraction: 1.0)
-            return true
-        }
-        return thumb
+    private func image(at url: URL) -> NSImage? {
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        return NSImage(data: data)
     }
 }

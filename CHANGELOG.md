@@ -1,5 +1,230 @@
 # Changelog
 
+## [4.4.0] - 2026-11-01
+
+### Before you update
+
+- **macshot has a new developer signature**, so macOS may ask you to allow Screen Recording again (and Accessibility or Input Monitoring if you use them). If macshot looks enabled in System Settings but capture fails, remove it with the minus button (−) and add it back from Applications with the plus button (+). Your settings, history and recordings are kept.
+
+### New
+
+- **Studio, a redesigned video editor**: a sidebar for background, pointer, zoom, keystrokes, camera and captions, a multi-lane timeline with thumbnails, waveform and snapping, undo/redo, and autosaved projects.
+- **Editable pointer and Auto Zoom**: restyle, resize, smooth or hide the cursor and its click effects after recording, and get zooms generated from your clicks and typing that follow the pointer.
+- **Backgrounds and framing** for recordings: gradients, macOS wallpapers, colors or your own image, with padding, rounded corners, shadow and aspect ratio presets.
+- **Webcam as its own track**: move and resize it while recording, and change its shape, size and position afterwards. (#429)
+- **Captions and keystroke labels**, transcribed on your Mac and exportable as SRT.
+- **Record GIF** from the menu or its own hotkey; press a record hotkey again to stop. (#423)
+- **Every emoji in the stamp tool**, with search by name. (#473)
+- **Filename tokens and date folders**: `{app}`, `{yyyy}`, `{MM}`, `{dd}` and more, and a `/` files screenshots into subfolders. (#422)
+- **Press R** on the capture screen to bring back the last area. (#359)
+- Smaller additions: open the Editor right after selecting (#474), copy screenshots in your image format as well as PNG (#373), date folders for S3 uploads (#417), and "Open With" macshot for videos in Finder (#461).
+
+### Improved
+
+- **Much faster capture on multiple displays**: 4.2 s down to 0.2 s on four displays. (#349)
+- **Scroll capture rebuilt**: translucent navbars, sticky sidebars, cookie banners and pinned boxes appear once instead of repeating, videos stay whole, mouse wheels no longer lose content, and ⌘C or Return finishes the capture. (#484, #437)
+- **macOS 27**: OCR no longer hangs, and the capture and record menu items keep their icons. (#439, #313)
+- Exported MP4s start playing before they have fully downloaded, and recordings play in Telegram and FFmpeg-based players. (#452, #450, #449)
+- The text tool's icon is a plain "T" in every language. (#485)
+
+### Fixed
+
+- Recordings with system audio stopping with "Audio encoding could not keep up". (#444, #453, #455)
+- OCR garbling Chinese, Japanese and other non-Latin text on lines that also contain English. (#462)
+- A trackpad double-tap drag copying the capture instead of drawing. (#467)
+- Captures confirming themselves when another app sent ⌘C after a drag. (#477)
+- Screenshots appearing twice in clipboard managers. (#483)
+- Global hotkeys that silently did nothing when two actions shared a shortcut. (#445)
+- Capture OCR doing nothing after right-click, F or R selection. (#440)
+- macshot missing from the Screen Recording list on first launch. (#299)
+- macshot freezing for seconds when confirming a capture with a slow audio device. (#418)
+- Microphone recordings failing after a restart because a stale default microphone had been saved.
+
+Thanks to @ivanilsonsousa, @mdtoupin, @defia, @mjjjjaazing, @DasCanard, @zkmn73, @a1exsun, @Redth, @ClmntCh7 and @hhktony for their contributions.
+
+## [4.4.0-beta.7] - 2026-11-01
+
+### Added
+
+- Move and resize the webcam during recording, with optional corner snapping. Studio replays recorded placement changes. Thanks @ivanilsonsousa. (#429)
+- Record GIF menu item and configurable hotkey, plus Save + copy to clipboard when a recording stops. Thanks @mdtoupin. (#423)
+- macshot appears in Finder's "Open With" menu for MP4, MOV and M4V videos, which open in the video editor. (#461)
+
+### Changed
+
+- Pressing the Record Area or Record GIF hotkey again stops the recording.
+- Record GIF opens the take in the video editor with GIF already selected as the export format, when the recording destination is "Open editor".
+- The webcam bubble takes clicks while recording so it can be moved and resized. Clicks and scrolling over the bubble no longer reach the app underneath.
+
+### Fixed
+
+- **Chinese, Japanese and other non-Latin text** on lines that also contain English came out garbled in OCR, e.g. "174531 Privacy & Security". Text recognition now uses your system languages ahead of English. (#462)
+- **macshot was missing from the Screen Recording list on first launch**: macOS lists an app only after it asks for access, and the permission window never asked. "Open System Settings" now asks first, so macshot is in the list ready to switch on. (#299)
+- **Scroll capture on modern pages**: stitching no longer breaks on translucent navbars (their blur changes as content passes under them), pages where only a center column scrolls between fixed sidebars (x.com), fixed gradient backgrounds, cookie banners and floating boxes pinned to the bottom, or lists of near-identical rows. Navbars, sidebars and banners now appear once instead of being repeated down the image, and a mismatched frame no longer drops the rest of the page.
+- **Scroll capture with videos and sticky panels**: playing videos and animations are kept whole instead of being sliced into strips (x.com, YouTube, Reddit). Sidebars that scroll and then stick (x.com's right column, Stack Overflow's), sticky tables of contents (Wikipedia) and side panels that move at their own pace (GitHub's file tree) appear once, cookie panels that slide in late are held back, and the mouse pointer is no longer stamped down the image.
+- **Scroll capture with a mouse wheel**: a wheel moves the page in large animated steps between scroll events, which outran the capture and lost content. Frames are now taken continuously while the page moves. (#484)
+- **Drawing with a trackpad double-tap drag copied the capture**: with "tap to click", a drag starts with a double tap, which double-click-to-copy treated as a copy. Every annotation drawn that way copied the image and added a floating thumbnail, and the annotation itself was lost. A double-click inside the selection now copies only when the second click doesn't move. (#467)
+- **Captures confirmed by themselves right after selecting or drawing**: some apps send ⌘C after any mouse drag to copy selected text, and macshot treated it as Copy. A ⌘C within a quarter second of releasing the mouse is now ignored. (#477)
+- **Each screenshot showed up twice in clipboard managers** (Maccy, Raycast, Paste): one Copy changed the clipboard twice. It now changes it once. (#483)
+- **Global hotkeys that silently did nothing**: two actions could share a shortcut, and the second never fired. Setting a shortcut now takes it away from the action that had it, and existing duplicates are cleared. Thanks @zkmn73. (#445, #446)
+- **Recording filenames now match the Settings preview**: `{app}` names every take, and "Show in Finder" files recordings into the template's folders like Save + copy does.
+- **Capture OCR did nothing with some ways of selecting**: right-click selection, F (full screen) and R (last area) ignored OCR mode. Every way of selecting now runs it, a spinner shows while text is recognized, and Escape cancels. Thanks @a1exsun. (#440, #302)
+- Exported audio plays in FFmpeg-based players and services by keeping its sample-rate clock. Thanks @Redth. (#449)
+- Small silence buffers advance a silent system track when it holds up microphone encoding. Queued audio still drains at stop, and persistent overload remains an explicit failure. Based on the investigation in #456.
+- Webcam resizing preserves the initial grab offset and opposite corner. Cancelled GIF requests do not affect later captures, and Save + copy also copies after choosing a destination in the Save dialog.
+
+## [4.4.0-beta.6] - 2026-10-05
+
+### Fixed
+
+- **Recording stopped with "Audio encoding could not keep up"**: when the encoder briefly stopped accepting audio, the whole take was aborted. macshot now drops the oldest queued audio and keeps recording, and stops only if the stall lasts more than 30 seconds of audio. When it happens, the writer state is logged (Console, category `RecordingWriter`) to help track down the cause. (#444)
+
+## [4.4.0-beta.5] - 2026-10-01
+
+### Upgrade notice
+
+- **Upgrading from 4.3.x or 4.4.0-beta.1/beta.2?** macshot has a new developer signature, introduced in beta.3. macOS may ask you to grant permissions again. If Screen Recording already looks enabled but capture fails, remove macshot with the minus button (−) in System Settings, then add it back from Applications with the plus button (+). Re-enable Accessibility or Input Monitoring if prompted. Your settings, history and recordings are preserved. Users who already restored permissions in beta.3 or beta.4 should not need to repeat this.
+
+### Fixed
+
+- **OCR on macOS 27**: text recognition could hang or return no text. Recognition now has a timeout and a fast fallback, shared by OCR, screenshot translation, auto-redaction and the smart marker. (#439)
+- **Microphone recording failed even while its level meter reacted**: older builds could save a temporary default microphone ID that stopped working after restarting macshot. These stale selections now resolve to the current default microphone. Explicitly selected microphones are preserved, including when disconnected.
+- **Microphone level meter** now listens to the selected recording microphone instead of always using the system default.
+
+## [4.4.0-beta.4] - 2026-09-27
+
+### Added
+
+- **Press R to restore the last area**: on the capture screen, before selecting, R brings back your previous selection. Thanks @defia. (#359)
+- **More filename tokens and date folders**: `{app}`, `{yyyy}`, `{MM}`, `{dd}`, `{HH}`, `{mm}`, `{ss}` and `{ms}`, and a `/` in the template files screenshots into subfolders, e.g. `{yyyy}/{MM}/{dd}/{app}-{HH}.{mm}.{ss}`. Thanks @mdtoupin. (#422)
+
+### Improved
+
+- **Much faster capture on multiple displays**: displays are captured one after another, the one under the pointer first, and each appears as soon as it is ready (reported 4.2 s down to 0.2 s on four displays). Thanks @mjjjjaazing. (#349)
+
+### Changed
+
+- **macshot has a new developer signature.** After this update, macOS may ask you once to allow Screen Recording for macshot again (and Accessibility or Input Monitoring if you use element snapping, keystrokes or click highlights). Your settings, history and recordings stay as they are. If macshot already looks switched on in System Settings but capturing does not work, select macshot there, remove it with the minus button (−), then add it back with the plus button (+). Technical users can instead run `tccutil reset ScreenCapture com.sw33tlie.macshot.macshot` (offline version: `com.sw33tlie.macshot.offline`) and relaunch macshot.
+- The permission window now tells returning users how to remove and re-add macshot, since switching it off and on does not restore access after a signature change.
+
+## [4.4.0-beta.3] - 2026-09-24
+
+### Changed
+
+- **macshot has a new developer signature.** After this update, macOS may ask you once to allow Screen Recording for macshot again (and Accessibility or Input Monitoring if you use element snapping, keystrokes or click highlights). Your settings, history and recordings stay as they are. If macshot already looks switched on in System Settings but capturing does not work, switch it off and on again.
+- The permission window now explains this to returning users instead of greeting them as new.
+
+## [4.4.0-beta.2] - 2026-09-24
+
+### Added
+
+- **S3 date folders**: use `{year}`, `{month}` and `{day}` in the S3 path prefix to sort uploads by date. Thanks @DasCanard. (#417)
+- **Clipboard in your image format**: an opt-in Output setting also copies screenshots in the selected format (for example AVIF or HEIC). PNG is always included, so apps that only read PNG, like Teams, keep working. (#373)
+
+### Fixed
+
+- **System audio recordings** stopped right away with "Audio encoding could not keep up". System audio now records for the whole take: the recorder measures queued audio by duration and copies each audio buffer as it arrives, since macOS stops delivering audio to apps that hold on to its capture buffers. The microphone uses the same path.
+- **Copy and Save of trimmed videos** failed with "The operation could not be completed" when the trim started after the recorded audio ended. Silent audio tracks are now left out of the export.
+- **Zoom preview while playing**: selecting a zoom, blur or text item no longer turns zooms off during playback. Playback always shows the final result; the full frame with editing handles appears only while paused, and clicking the preview while playing pauses it.
+- **Video editor sidebar**: hover and selection highlights on neighbouring buttons no longer touch.
+- **WebP transparency**: semi-transparent pixels (for example the edges of a removed background) no longer come out darker in WebP files.
+
+## [4.4.0-beta.1] - 2026-09-23
+
+### Added
+
+- **Redesigned video editor (Studio)**: a larger window with a sidebar for Background, Pointer, Zoom, Keystrokes, Camera and Captions, a new multi-lane timeline with thumbnails, waveform, snapping and pinch zoom, plus undo/redo and autosaved projects.
+- **Editable pointer**: recordings that open in the editor save pointer, click and keystroke data beside the video, so the cursor can be restyled (macOS, dot or ring), resized, smoothed, hidden when idle or typing, given motion blur and sway, and click effects can be changed after recording. Recordings sent elsewhere keep the cursor in the video as before.
+- **Auto Zoom**: zooms generated from your clicks and typing, zooms that follow the pointer, smooth pans between nearby zooms and zoom motion blur.
+- **Backgrounds and framing**: gradients, macOS wallpapers, solid colors or your own image, with blur, padding, rounded corners, shadow, aspect ratio presets and crop.
+- **Webcam as a separate track**: change the camera's shape, size and position after recording; it shrinks during zooms.
+- **Keystroke labels and captions**: keystrokes are restyled after recording; captions are transcribed on your Mac and can be exported as SRT.
+
+### Improved and fixed
+
+- Preview and every export (MP4 High, Medium, Low and GIF) share one renderer, so what you see is what you export, including the webcam.
+- The last timeline ruler label no longer clips at the edge of the window.
+- Em dashes removed from interface text in every language, and a Finnish translation fix.
+
+## [4.3.0] - 2026-09-23
+
+### Added
+
+- **Element snapping** — press Tab to select buttons, fields, and panels, including in browsers and Electron apps. Requires Accessibility access. (#360)
+- **Video editing** — style text overlays, add effects at the playhead, and preview zooms as they will export. GIFs have a 5–30 fps picker. (#296, #301, #307)
+- **Screenshot paths** — Enter can save and copy the final full path; an optional Output setting does the same after any screenshot save. (#399)
+- **Capture and editor shortcuts** — auto-adjust selections to visual edges; Cmd+D duplicates annotations. Optional settings fit wide captures in the thumbnail and close the editor after copying. (#317, #366, #394)
+- **Uploads** — choose a Google Drive folder or enable public-read links on S3 services that support them. (#372, #352)
+
+### Improved and fixed
+
+- **Screenshot saves and history** — atomic writes prevent overwrites; failures are shown; older captures reopen with annotations and effects intact. See [downgrade and recovery notes](https://github.com/sw33tLie/macshot/blob/main/docs/history-recovery.md) before returning to an older version. (#344)
+- **Recording and export** — fixes early stops, idle resumes, fractional cuts, Bluetooth mic audio, and GIF timing. Exports show progress, support cancellation, and preserve originals after failure. (#323, #326, #340)
+- **Clipboard compatibility** — screenshots paste as images in Teams and remote desktop clients; video Copy provides playable MP4 data. (#309, #329, #337, #393)
+- **Scroll capture** — Escape cancels; controls avoid the notch; padded image rows stitch correctly. (#153, #333)
+- **Capture and editor fixes** — window shadows, effects on snapped windows, text undo, display disconnects, and sampling colors from annotations. (#88, #387)
+
+## [4.3.0-beta.1] - 2026-09-20
+
+### Fixed
+
+- **Cuts and speed edits** — use a compatible editing clock so fractional-second recording tails do not trigger “invalid time range” or leave playback on the uncut timeline.
+- **Video effects preview and saving** — preserve exact recording end times so fractional-second clips do not lose effect previews or fail to save with “Operation Stopped”.
+- **Mouse click highlighting permissions** — enabling click highlights now requests Input Monitoring access, just like Show Keystrokes. Entering recording setup keeps unavailable saved options off and requests access only when you enable one.
+- **Move shortcut before recording** — the configured Move shortcut, including Space, now moves the selected recording area before recording starts.
+- **Recordings stopped right after starting produced nothing** — stopping within the first moments left the capture stream running with nothing able to stop it, kept the microphone active, and ended the session silently. Recording failures are now reported instead of disappearing with the HUD.
+- **Screenshots that couldn't be saved vanished without a word** — a full disk or an unmounted save folder now shows an error instead of dismissing the overlay as if the capture had been written. The same applies to a capture that can't be stored in history.
+- **Annotations lost from older captures** — captures saved by earlier versions failed to load their annotations, and a single damaged entry discarded every annotation in that capture. Beautify settings and the capture list itself had the same flaw.
+- **Over-saturated screenshots with crushed greys** — the Vivid effect could stay silently enabled from a much older version, tinting every capture. That state is now cleared once on launch. (#345)
+- **Invert Colors with a window-snapped selection** — inverted the screen behind the capture instead of the capture itself, and image effects were dropped entirely when beautify's window snap was on. (#88)
+- **Scroll capture HUD hidden under the notch** — the Auto Scroll and Stop buttons could land behind the camera housing, leaving no way to stop the capture from the HUD. Stop also works now while the first frame is still settling. (#153)
+- **Unexpected quits** — several code paths crashed when macOS reported no available display, which happens while displays sleep or are being reconfigured. (#387)
+- **Scroll capture stitching** — header and scrollbar detection now respects row padding and pixel byte order. Invalid registration shifts are rejected before converting them to pixel offsets.
+- **Large uploads** — recordings stream from owned files, and screenshot encoding and multipart preparation run in the background. Requests have independent progress; Drive retries preserve the submitted bytes and file identity, and delayed responses cannot restore signed-out account state.
+- **Pinning copied web content** — HTML imports supported formatting without passing remote resources or arbitrary styles to the importer. Rich-input size limits apply before parsing; oversized HTML can fall back to the plain-text clipboard flavor.
+- **Undo/redo shortcuts** — Return, Escape and Tab could trigger a bound command when they shouldn't.
+- Missing or damaged accents across Slovak, Romanian, Portuguese, Spanish, Catalan, Croatian, Finnish and Dutch — roughly 1,300 labels repaired, plus duplicate entries removed from every language.
+- GIF export no longer mis-times frames when the requested frame rate is above the 30 fps cap or below 1.
+- **Long recordings** — motion resuming after an idle period no longer rejects the first resumed frame. Static tails, pause timing and separate audio tracks are retained; lower-quality export preserves a mono microphone track.
+- **Video export** — Low and Medium use source-aware bitrate targets instead of live-recording minimums. Size estimates appear when the source supports a meaningful comparison; misleading estimates for sparse recordings are omitted. GIF export streams frames with bounded memory, preserves edits and static holds, and avoids an intermittent missing-frame error at freeze boundaries. File size still depends on the content and selected format.
+- **Video editor controls** — file information and save status have a separate row so they remain visible in compact windows. Toolbar buttons expose accessible labels and format selection, and the audio-merge sliders identify their audio sources.
+- **Saving and quitting** — image encoding and large file copying run in the background, destination replacement is atomic, and pending save/export/upload jobs keep their inputs alive until completion. Video exports offer cancellation, and recording originals remain available after a failed export.
+- **Screenshot edits and history** — images, annotations and effects save together. Failed saves keep the editor open, edits made during a save remain dirty, and undo followed by a different edit still prompts before closing. Pending history snapshots are bounded; saturation reports a failed save instead of silently dropping a capture.
+- **Reopening saved captures** — invalid saved values and embedded images are checked before rendering. If an annotation or an existing sidecar cannot be restored, the editor uses the flattened capture rather than omitting that annotation or effect. Snapped-window previews also keep the selected effects when drawing their final image.
+
+### Changed
+
+- Video editor menus open upward from the bottom toolbar, and taller editor windows show up to eight effect rows. (#405, #406)
+- Automated tests and Release builds run on every push and pull request for both the normal and Offline variants. The runner fails on empty or unreadable test results instead of reporting false success.
+- History now stores immutable revisions selected by an atomic index. Older builds cannot directly read the new layout; see [local recovery and downgrade instructions](docs/history-recovery.md) before downgrading.
+
+## [4.2.2-beta.5] - 2026-09-17
+
+### Added
+
+- **Element snapping** — press Tab on the capture screen to cycle Window → Off → Element snapping. Element mode highlights individual buttons, panels, and fields under the pointer, including Chromium and Electron apps (can be turned off in Settings). Requires Accessibility permission, which macshot asks for the first time you switch to it. (#360)
+- **Google Drive destination folder** — choose which Drive folder uploads go to. (#372)
+- **Letterbox thumbnail preview** — optional setting to fit very wide or tall captures inside the floating thumbnail instead of cropping them. (#366)
+- **Close editor after copying** — optional setting to close the editor window after copying. (#394, #395)
+
+### Changed
+
+- The video editor remembers the last export scale and quality. (#363, #376)
+
+### Fixed
+
+- Missing accents in several Slovak, Croatian, Romanian, and Catalan labels.
+
+## [4.2.2-beta.4] - 2026-09-17
+
+### Added
+
+- **S3 public-read uploads** — opt-in "Make uploads publicly readable" setting sends the `public-read` ACL so links work on AWS S3, DigitalOcean Spaces, MinIO, and Backblaze B2. (#352)
+
+### Fixed
+
+- **Clipboard compatibility** — copied screenshots now contain image data only, matching the macOS screenshot tool. Pasting works in Microsoft Teams, Photopea, and remote desktop clients without granting Full Disk Access, and Teams embeds the image inline instead of uploading it as a file. On macOS 27, Finder can still paste screenshots as files. On earlier macOS versions, use Save instead. (#309, #393)
+
 ## [4.2.2-beta.3] - 2026-08-29
 
 ### Added

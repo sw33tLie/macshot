@@ -35,6 +35,10 @@ enum SaveDirectoryAccess {
                                   options: .withSecurityScope,
                                   relativeTo: nil,
                                   bookmarkDataIsStale: &isStale) else { return nil }
+        guard url.startAccessingSecurityScopedResource() else { return nil }
+        // Re-creating a security-scoped bookmark requires active scoped access,
+        // so this has to come after startAccessing — doing it before meant the
+        // refresh always failed and the bookmark stayed stale on every save.
         if isStale {
             if let fresh = try? url.bookmarkData(options: .withSecurityScope,
                                                   includingResourceValuesForKeys: nil,
@@ -42,7 +46,6 @@ enum SaveDirectoryAccess {
                 UserDefaults.standard.set(fresh, forKey: bookmarkKey)
             }
         }
-        guard url.startAccessingSecurityScopedResource() else { return nil }
         return url
     }
 
@@ -110,6 +113,9 @@ enum SaveDirectoryAccess {
                                   options: .withSecurityScope,
                                   relativeTo: nil,
                                   bookmarkDataIsStale: &isStale) else { return nil }
+        guard url.startAccessingSecurityScopedResource() else { return nil }
+        // Same ordering requirement as resolveIfAccessible: refreshing a
+        // security-scoped bookmark needs active scoped access.
         if isStale {
             if let fresh = try? url.bookmarkData(options: .withSecurityScope,
                                                   includingResourceValuesForKeys: nil,
@@ -117,7 +123,6 @@ enum SaveDirectoryAccess {
                 UserDefaults.standard.set(fresh, forKey: recBookmarkKey)
             }
         }
-        guard url.startAccessingSecurityScopedResource() else { return nil }
         return url
     }
 

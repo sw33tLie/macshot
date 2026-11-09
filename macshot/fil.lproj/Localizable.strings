@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "Kopyahin";
-"Save As..." = "I-save Bilang...";
 "Open in Editor" = "Buksan sa Editor";
 "Pin to Screen" = "I-pin sa Screen";
 "Quick Look" = "Mabilisang Tingin";
@@ -54,7 +53,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "Isara Lahat";
-"Save All to Folder…" = "I-save Lahat sa Folder…";
 "Save" = "I-save";
 
 /* Editor Top Bar */
@@ -172,6 +170,7 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "I-click ang window  ·  I-drag para sa custom na lugar  ·  F para sa buong screen";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "I-click ang elemento  ·  I-drag para sa custom na lugar  ·  F para sa buong screen";
 "Drag to select  ·  Click for full screen" = "I-drag upang pumili  ·  I-click para sa buong screen";
 "Release to annotate and edit" = "Bitawan upang mag-annotate at mag-edit";
 "Release to finish" = "Bitawan upang tapusin";
@@ -179,9 +178,13 @@
 "Hold Space to move. Release to finish" = "Pindutin ang Space upang ilipat. Bitawan upang tapusin";
 "Space" = "Space";
 "Window snap: " = "Window snap: ";
+"Snap mode: " = "Snap mode: ";
 "ON" = "ON";
 "OFF" = "OFF";
+"WINDOW" = "WINDOW";
+"ELEMENT" = "ELEMENT";
 "  (Tab to toggle)" = "  (Tab upang i-toggle)";
+"  (Tab to switch)" = "  (Tab upang magpalit)";
 "Right-click to copy" = "I-right-click upang kopyahin";
 "Copied %@" = "Nakopya ang %@";
 "Set color %@" = "Itakda ang kulay %@";
@@ -226,6 +229,8 @@
 "Launch at login" = "Buksan kapag nag-login";
 "Show snap alignment guides" = "Ipakita ang mga gabay sa pagkakahanay";
 "Snap selection edges to image boundaries" = "I-snap ang mga gilid ng seleksiyon sa hangganan ng imahe";
+"Enhance browser and Electron element snapping" = "Pahusayin ang element snapping ng browser at Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Gumagawa ng accessibility tree ng target app sa Element mode. I-disable ito kung mabagal ang browser o Electron app o may mga problema sa input.";
 "Capture mouse cursor in screenshot" = "Isama ang cursor ng mouse sa screenshot";
 "Double-click selection to copy" = "I-double-click ang pinili upang kopyahin";
 "Hide capture instructions" = "Itago ang mga tagubilin sa pagkuha ng screenshot";
@@ -248,6 +253,8 @@
 "Replace (show only latest)" = "Palitan (ipakita lang ang pinakabago)";
 "Output" = "Output";
 "Image format:" = "Format ng larawan:";
+"Also copy to the clipboard in this format" = "Kopyahin din sa clipboard sa format na ito";
+"PNG is always included so every app can paste" = "Laging kasama ang PNG para makapag-paste ang anumang app";
 "Quality:" = "Kalidad:";
 "%d%%" = "%d%%";
 "Save at standard resolution (1x)" = "I-save sa standard na resolusyon (1x)";
@@ -339,6 +346,7 @@
 "Signed in" = "Naka-sign in";
 "Not signed in" = "Hindi naka-sign in";
 "Account:" = "Account:";
+"Folder:" = "Folder:";
 "Test Connection" = "Subukan ang Koneksyon";
 "Fill in endpoint, bucket, and credentials first" = "Punan muna ang endpoint, bucket, at mga kredensyal";
 "Testing..." = "Sinusubukan...";
@@ -351,11 +359,13 @@
 "Secret Key:" = "Secret Key:";
 "Public URL:" = "Public URL:";
 "Path Prefix:" = "Path Prefix:";
+"Make uploads publicly readable" = "Gawing pampublikong nababasa ang mga upload";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Nagpapadala ng public-read ACL para makita ng kahit sino na may link ang mga na-upload na file. Kailangan para sa AWS S3, DigitalOcean Spaces, MinIO at Backblaze B2 na nag-iimbak ng mga object nang pribado bilang default. I-off para sa Cloudflare R2 na walang ACL at tinatanggihan ang header.";
 "API key:" = "API key:";
 "Upload History" = "Kasaysayan ng Pag-upload";
 "No uploads yet." = "Wala pang mga upload.";
 "Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "Base URL para sa pampublikong access. Kung walang laman, ang S3 endpoint URL ang gagamitin (maaaring hindi pampublikong ma-access).";
-"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "May kasamang shared key — kumuha ng sariling libreng key sa imgbb.com/api kung naabot ang rate limit. Mga larawan lamang (walang suporta sa video).";
+"A shared key is included. Get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "May kasamang shared key, kumuha ng sariling libreng key sa imgbb.com/api kung naabot ang rate limit. Mga larawan lamang (walang suporta sa video).";
 "Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "Gumagana sa AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, at iba pang S3-compatible na serbisyo. Sumusuporta sa mga larawan at video.";
 "Configure S3 in Preferences" = "I-configure ang S3 sa Mga Kagustuhan";
 "Sign in to Google Drive in Preferences" = "Mag-sign in sa Google Drive sa Mga Kagustuhan";
@@ -366,7 +376,7 @@
 "Version %@ (%@)" = "Bersyon %@ (%@)";
 "Made by" = "Ginawa ni";
 "Licensed under the GPLv3" = "Lisensiyado sa ilalim ng GPLv3";
-"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "Isang libre at open-source na kasangkapan sa screenshot at pag-record ng screen para sa macOS.\nGanap na native — binuo gamit ang Swift at AppKit.";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native, built with Swift and AppKit." = "Isang libre at open-source na kasangkapan sa screenshot at pag-record ng screen para sa macOS.\nGanap na native, binuo gamit ang Swift at AppKit.";
 
 /* Alerts */
 "No Image on Clipboard" = "Walang Larawan sa Clipboard";
@@ -388,6 +398,9 @@
 
 /* Permission Onboarding */
 "Welcome to macshot" = "Maligayang pagdating sa macshot";
+"Welcome back to macshot" = "Maligayang pagbabalik sa macshot";
+"Turn Screen Recording back on" = "Buksan muli ang Screen Recording";
+"After some updates, macOS asks you to allow macshot again. Your settings and captures are safe. If macshot is already in the list, select it, click the minus button (−) to remove it, then click the plus button (+) and add macshot again." = "Pagkatapos ng ilang update, hinihiling ng macOS na payagan mo ulit ang macshot. Ligtas ang iyong mga setting at capture. Kung nasa listahan na ang macshot, piliin ito, i-click ang minus button (−) para alisin ito, pagkatapos ay i-click ang plus button (+) at idagdag ulit ang macshot.";
 "macshot needs one permission" = "Kailangan ng macshot ang isang permission";
 "Screen Recording not yet granted" = "Hindi pa naibibigay ang Screen Recording";
 "Screen Recording granted!" = "Naibigay na ang Screen Recording!";
@@ -417,6 +430,7 @@
 /* Recording Toast */
 "Recording saved" = "Na-save ang recording";
 "%@ • Recording saved" = "%@ • Na-save ang recording";
+"Recording failed: %@" = "Nabigo ang pag-record: %@";
 "Copy Path" = "Kopyahin ang Path";
 "Path copied!" = "Nakopya ang path!";
 
@@ -427,6 +441,9 @@
 "Export failed" = "Nabigo ang pag-export";
 "Saved to %@" = "Na-save sa %@";
 "Save failed" = "Nabigo ang pag-save";
+"Could not encode the screenshot." = "Hindi ma-encode ang screenshot.";
+"Could not save the screenshot: %@" = "Hindi ma-save ang screenshot: %@";
+"Could not save the screenshot to history." = "Hindi ma-save ang screenshot sa history.";
 
 /* Barcode Detector */
 /* "Open" and "Copy" are shared with other sections */
@@ -466,8 +483,8 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Kinakailangan ang Input Monitoring";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "Kailangan ng macshot ang Input Monitoring permission upang ipakita ang mga keystroke habang nagre-record. Pakibigyan ng access sa System Settings, pagkatapos ay subukang muli.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "Kailangan ng macshot ang Accessibility permission upang ipakita ang mga keystroke habang nagre-record. Pakibigyan ng access sa System Settings, pagkatapos ay subukang muli.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "Kailangan ng macshot ang pahintulot sa Input Monitoring upang i-highlight ang mga pag-click ng mouse o ipakita ang mga keystroke habang nagre-record. Magbigay ng access sa System Settings, pagkatapos ay subukang muli.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "Kailangan ng macshot ang Accessibility permission para sa pag-snap sa mga indibidwal na elemento ng interface. Mangyaring bigyan ng access sa System Settings, pagkatapos subukan muli.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Ipakita ang mga Keystroke";
@@ -505,6 +522,8 @@
 "Settings..." = "Mga Setting...";
 "macshot Settings" = "Mga Setting ng macshot";
 "Also open in Editor" = "Buksan din sa Editor";
+"Open in Editor right after selection" = "Buksan sa Editor agad pagkatapos pumili";
+"Close editor after copying" = "Isara ang editor pagkatapos kumopya";
 "Hide controls" = "Itago ang mga kontrol";
 "Hide recording controls" = "Itago ang mga kontrol sa pag-record";
 "Stop recording from the menu bar icon instead." = "Ihinto ang pag-record mula sa icon sa menu bar.";
@@ -551,12 +570,13 @@
 
 "Same as screenshots" = "Kapareho ng mga screenshot";
 "  Preview size:" = "  Laki ng preview:";
+"Fit image in preview (letterbox)" = "Ipakita ang buong larawan sa preview (letterbox)";
 "(0 = off)" = "(0 = off)";
 "Clear All" = "I-clear Lahat";
 "Clear History?" = "I-clear ang History?";
 "This will permanently delete all screenshots from history." = "Permanenteng mabubura ang lahat ng screenshot mula sa history.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "I-click ang \"Set\" at pindutin ang kombinasyon ng key na may kahit isang modifier (⌘, ⌥, ⌃, ⇧) upang magtakda ng shortcut.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Ina-upload ang mga file sa isang \"macshot\" na folder sa iyong Google Drive. Nananatiling pribado ang lahat — walang ibinabahagi nang publiko.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused. A new one is created instead. Everything stays private and nothing is shared publicly." = "Ina-upload ang mga file sa folder na ito sa iyong Google Drive. Iwanang blangko para gamitin ang \"macshot\". Maaari lamang gamitin ng macshot ang mga folder na nilikha nito, kaya ang folder na may parehong pangalan na ginawa mo sa Drive ay hindi gagamitin muli, sa halip ay lilikha ng bagong folder. Nananatiling pribado ang lahat, walang ibinabahagi nang publiko.";
 
 "Pressure" = "Pressure";
 
@@ -626,7 +646,7 @@
 "Open this settings window" = "Buksan ang settings window na ito";
 "Quick capture (uses your Enter action)" = "Mabilisang pagkuha (ginagamit ang iyong Enter action)";
 "Re-capture the last selected area" = "Kunang muli ang huling napiling lugar";
-"Screenshots only — captured window title (blank otherwise)" = "Mga screenshot lamang — pamagat ng nakunang window (blangko kung hindi)";
+"Captured window title (screenshots only, blank otherwise)" = "Mga screenshot lamang, pamagat ng nakunang window (blangko kung hindi)";
 "Show available filename tokens" = "Ipakita ang mga available na filename token";
 "Show supported URL scheme commands" = "Ipakita ang mga suportadong URL scheme command";
 "Start area capture" = "Simulan ang pagkuha ng lugar";
@@ -682,3 +702,162 @@
 "Selection is already aligned" = "Naka-align na ang pinili";
 "Space to move. Release to annotate and edit" = "Pindutin nang matagal ang Space para ilipat. Bitawan para mag-anotate at mag-edit";
 "Space to move. Release to finish" = "Pindutin nang matagal ang Space para ilipat. Bitawan para tapusin";
+
+"Saving..." = "Sine-save…";
+
+"Show Recordings in Finder" = "Ipakita ang mga recording sa Finder";
+
+"Cancelled" = "Kinansela";
+
+"Cancelling..." = "Kinakansela...";
+"Preparing video..." = "Inihahanda ang video...";
+"History is busy saving. Please try again shortly." = "Sine-save ang kasaysayan. Pakisubukang muli sa ilang sandali.";
+
+// Video editor accessibility
+"Play" = "I-play";
+"Mute" = "I-mute";
+"Unmute" = "I-unmute";
+
+/* Video editor (Studio) */
+"%.1f× · follows pointer" = "%.1f× · sumusunod sa pointer";
+"Add" = "Magdagdag";
+"Add Cut Here" = "Magdagdag ng Cut Dito";
+"Add Text Here" = "Magdagdag ng Teksto Dito";
+"Add Zoom Here" = "Magdagdag ng Zoom Dito";
+"Added %d captions" = "Nagdagdag ng %d caption";
+"Added %d zooms" = "Nagdagdag ng %d zoom";
+"Apply Default Zoom to All" = "Ilapat ang Default na Zoom sa Lahat";
+"Auto" = "Auto";
+"Auto Zoom" = "Auto Zoom";
+"Auto Zoom needs pointer data, which macshot records with every new recording. You can still add zooms by double-clicking the zoom lane." = "Kailangan ng Auto Zoom ang pointer data, na nire-record ng macshot sa bawat bagong recording. Maaari ka pa ring magdagdag ng zoom sa pamamagitan ng pag-double-click sa zoom lane.";
+"Background blur" = "Blur ng background";
+"Background color" = "Kulay ng background";
+"Background, padding, rounded corners and shadow" = "Background, padding, bilugang sulok at anino";
+"Bold Italic" = "Bold Italic";
+"Box" = "Kahon";
+"Camera" = "Camera";
+"Caption" = "Caption";
+"Captions" = "Mga Caption";
+"Captions are transcribed on this Mac. Nothing is uploaded." = "Tina-transcribe ang mga caption sa Mac na ito. Walang ina-upload.";
+"Choose Image…" = "Pumili ng Larawan…";
+"Click color" = "Kulay ng click";
+"Clicks" = "Mga Click";
+"Clip" = "Clip";
+"Colors" = "Mga Kulay";
+"Connect nearby zooms" = "Pagdugtungin ang magkalapit na zoom";
+"Copy the edited video to the clipboard" = "Kopyahin ang na-edit na video sa clipboard";
+"Corner radius" = "Radius ng sulok";
+"Creates zooms that follow the pointer wherever you click or type. Adjust or delete them on the timeline." = "Gumagawa ng mga zoom na sumusunod sa pointer saanman ka mag-click o mag-type. Ayusin o tanggalin ang mga ito sa timeline.";
+"Custom color" = "Custom na kulay";
+"Cut" = "Cut";
+"Cuts, speed and freeze frames" = "Mga cut, bilis at freeze frame";
+"Default zoom" = "Default na zoom";
+"Dot" = "Tuldok";
+"Double-click the text on the preview to edit it." = "I-double-click ang teksto sa preview para i-edit ito.";
+"Double-click to add a zoom" = "I-double-click para magdagdag ng zoom";
+"Double-click to add a zoom, or use Auto Zoom" = "I-double-click para magdagdag ng zoom, o gamitin ang Auto Zoom";
+"Drag the frame on the preview to choose where the zoom looks." = "I-drag ang frame sa preview para piliin kung saan titingin ang zoom.";
+"Duration" = "Tagal";
+"Edge highlight" = "Highlight sa gilid";
+"Edit Text" = "I-edit ang Teksto";
+"Editable pointer, clicks and keystrokes" = "Nae-edit na pointer, mga click at keystroke";
+"Edits" = "Mga Edit";
+"Export" = "I-export";
+"Export Subtitles (.srt)…" = "I-export ang Subtitles (.srt)…";
+"Fade in" = "Fade in";
+"Fade out" = "Fade out";
+"Fit" = "Ipagkasya";
+"Fixed" = "Nakapirmi";
+"Fixed point" = "Nakapirming punto";
+"Focus" = "Focus";
+"Follow" = "Sundan";
+"Follow Pointer" = "Sundan ang Pointer";
+"Follow pointer" = "Sundan ang pointer";
+"Follow tightness" = "Higpit ng pagsunod";
+"Format" = "Format";
+"Frame" = "Frame";
+"Frame rate" = "Frame rate";
+"Frame the recording" = "I-frame ang recording";
+"Freeze Frame" = "Freeze Frame";
+"Generate Captions" = "Gumawa ng mga Caption";
+"Gentle" = "Banayad";
+"Gradient" = "Gradient";
+"Hide ordinary typing, show key combinations" = "Itago ang karaniwang pag-type, ipakita ang mga key combination";
+"Hide when idle" = "Itago kapag idle";
+"Hide while typing" = "Itago habang nagta-type";
+"Hold Focus" = "Panatilihin ang Focus";
+"Idle delay" = "Delay bago ma-idle";
+"Image" = "Larawan";
+"Keystrokes" = "Mga Keystroke";
+"Keystrokes in this recording are part of the video pixels." = "Bahagi na ng mga pixel ng video ang mga keystroke sa recording na ito.";
+"Light appearance" = "Maliwanag na itsura";
+"Makes looping GIFs seamless" = "Ginagawang tuloy-tuloy ang mga umuulit na GIF";
+"Mirror" = "I-mirror";
+"Motion" = "Galaw";
+"Motion blur" = "Motion blur";
+"Next edit" = "Susunod na edit";
+"No clicks or typing found to zoom into" = "Walang nakitang click o pag-type na maaaring i-zoom";
+"No speech was recognized" = "Walang nakilalang pananalita";
+"No system wallpapers were found. Choose an image instead." = "Walang nakitang system wallpaper. Pumili na lang ng larawan.";
+"Off" = "Off";
+"On-device speech recognition isn't available for your language on this Mac." = "Hindi available ang on-device speech recognition para sa iyong wika sa Mac na ito.";
+"Original" = "Orihinal";
+"Outline color" = "Kulay ng balangkas";
+"Outline width" = "Kapal ng balangkas";
+"Overlays" = "Mga Overlay";
+"Pan between zooms instead of zooming out" = "Mag-pan sa pagitan ng mga zoom sa halip na mag-zoom out";
+"Pill" = "Pill";
+"Pointer" = "Pointer";
+"Position" = "Posisyon";
+"Press animation" = "Animation sa pagpindot";
+"Previous edit" = "Nakaraang edit";
+"Quality" = "Kalidad";
+"Regenerate Captions" = "Gawing Muli ang mga Caption";
+"Regular" = "Regular";
+"Remove Automatic Zooms" = "Alisin ang mga Awtomatikong Zoom";
+"Remove Captions" = "Alisin ang mga Caption";
+"Removes %.1f seconds from the video. Drag its edges on the timeline to adjust." = "Tinatanggal ang %.1f segundo mula sa video. I-drag ang mga gilid nito sa timeline para ayusin.";
+"Return to start at the end" = "Bumalik sa simula sa dulo";
+"Ring" = "Singsing";
+"Ripple" = "Ripple";
+"Save As…" = "I-save Bilang…";
+"Shape" = "Hugis";
+"Shortcuts only" = "Mga shortcut lang";
+"Show camera" = "Ipakita ang camera";
+"Show captions" = "Ipakita ang mga caption";
+"Show keystrokes" = "Ipakita ang mga keystroke";
+"Show pointer" = "Ipakita ang pointer";
+"Shrink during zooms" = "Paliitin habang naka-zoom";
+"Smoothing" = "Pagpapakinis";
+"Snappy" = "Mabilis";
+"Speech recognition is turned off for macshot in System Settings › Privacy & Security." = "Naka-off ang speech recognition para sa macshot sa System Settings › Privacy & Security.";
+"Speed" = "Bilis";
+"Spotlight" = "Spotlight";
+"Square" = "Parisukat";
+"Style" = "Estilo";
+"Tall" = "Patayo";
+"Text and blur" = "Teksto at blur";
+"The recording's audio could not be read." = "Hindi mabasa ang audio ng recording.";
+"This recording already shows the pointer in its pixels, so it can't be restyled. Zooms can still follow it." = "Nakikita na ang pointer sa mga pixel ng recording na ito, kaya hindi na mababago ang estilo nito. Maaari pa rin itong sundan ng mga zoom.";
+"This recording has no audio to transcribe." = "Walang audio na maaaring i-transcribe sa recording na ito.";
+"This video has no recorded pointer data. Recordings made with macshot that open in the editor let you restyle, smooth and resize the pointer after recording." = "Walang naka-record na pointer data ang video na ito. Sa mga recording na ginawa gamit ang macshot na binubuksan sa editor, maaari mong baguhin ang estilo, pakinisin at baguhin ang laki ng pointer pagkatapos mag-record.";
+"Title" = "Pamagat";
+"Transcribing…" = "Nagta-transcribe…";
+"Transition" = "Transition";
+"Turn on Show Keystrokes before recording. macshot then records them separately so you can style them here." = "I-on ang Ipakita ang mga Keystroke bago mag-record. Ire-record ng macshot ang mga ito nang hiwalay para ma-style mo ang mga ito dito.";
+"Turn on the camera before recording. macshot records it separately so you can move, resize, restyle or hide it here, and shrink it during zooms." = "I-on ang camera bago mag-record. Nire-record ito ng macshot nang hiwalay para mailipat, mabago ang laki, mabago ang estilo o maitago mo ito dito, at paliitin ito habang naka-zoom.";
+"Use Solid to hide sensitive information: blur and pixelation can sometimes be reversed." = "Gamitin ang Solid para itago ang sensitibong impormasyon: minsan ay maaaring maibalik ang blur at pixelation.";
+"Visibility" = "Visibility";
+"Wallpaper" = "Wallpaper";
+"When recordings open in the editor, the pointer is recorded separately so you can smooth, resize, restyle or hide it, and add zooms that follow it." = "Kapag binubuksan ang mga recording sa editor, hiwalay na nire-record ang pointer para mapakinis, mabago ang laki, mabago ang estilo o maitago mo ito, at makapagdagdag ng mga zoom na sumusunod dito.";
+"Wide" = "Malapad";
+"Zoom in" = "Zoom in";
+"Zoom in timeline" = "I-zoom in ang timeline";
+"Zoom level" = "Antas ng zoom";
+"Zoom out" = "Zoom out";
+"Zoom out timeline" = "I-zoom out ang timeline";
+"macOS" = "macOS";
+"Sway" = "Pag-ugoy";
+
+"Snap webcam to corners when moved" = "Idikit ang webcam sa mga sulok kapag inililipat";
+"Search emoji" = "Maghanap ng emoji";

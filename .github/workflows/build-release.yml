@@ -11,11 +11,19 @@ on:
       tag:
         description: 'Tag to build (e.g. v3.8.0-beta.2)'
         required: true
+      resume_run:
+        description: 'Run ID whose notarized images to publish (skips building; see the Notarize step)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write   # create releases
+  actions: read     # restore images from an earlier run when resuming
 
 jobs:
   release:
     runs-on: macos-26        # Xcode 26 + macOS 26 SDK (needed for NSGlassEffectView / Liquid Glass)
-    timeout-minutes: 60
+    timeout-minutes: 360
 
     steps:
       # ── 1. Checkout ────────────────────────────────────────────────────────
@@ -53,6 +61,7 @@ jobs:
 
       # ── 3. Import Developer ID certificate into a temporary keychain ───────
       - name: Import signing certificate
+        if: ${{ !inputs.resume_run }}
         env:
           CERT_P12_BASE64:  ${{ secrets.DEVELOPER_ID_CERT_P12 }}
           CERT_PASSWORD:    ${{ secrets.DEVELOPER_ID_CERT_PASSWORD }}
@@ -90,6 +99,7 @@ jobs:
 
       # ── 4. Resolve SPM packages + Build ───────────────────────────────────
       - name: Build normal and offline apps
+        if: ${{ !inputs.resume_run }}
         run: |
           xcodebuild \
             -project macshot.xcodeproj \
@@ -155,6 +165,7 @@ jobs:
 
       # ── 5. Sign the .apps with Developer ID ───────────────────────────────
       - name: Sign apps
+        if: ${{ !inputs.resume_run }}
         run: |
           python3 << 'PYEOF'
           import plistlib
@@ -241,6 +252,7 @@ jobs:
 
       # ── 6. Package into DMGs ───────────────────────────────────────────────
       - name: Package DMGs
+        if: ${{ !inputs.resume_run }}
         run: |
           brew install create-dmg
 
@@ -277,30 +289,115 @@ jobs:
           package_dmg "build-offline/Build/Products/Release/macshot Offline.app" "MacShot-Offline.dmg" "macshot Offline" "/tmp/dmg-staging-offline"
 
       # ── 7. Notarize ────────────────────────────────────────────────────────
-      - name: Notarize
+      # A new developer team's first submissions can take hours at Apple. The
+      # signed images and their submission IDs are kept as an artifact, so a
+      # run that stops waiting can be resumed later without rebuilding and
+      # resubmitting (which only adds to Apple's queue).
+      - name: Submit for notarization
+        if: ${{ !inputs.resume_run }}
         env:
           ASC_API_KEY_BASE64: ${{ secrets.ASC_API_KEY }}
           ASC_API_KEY_ID:     ${{ secrets.ASC_API_KEY_ID }}
           ASC_API_ISSUER_ID:  ${{ secrets.ASC_API_ISSUER_ID }}
         run: |
           mkdir -p ~/.appstoreconnect/private_keys
-          echo "$ASC_API_KEY_BASE64" | base64 --decode \
-            > ~/.appstoreconnect/private_keys/AuthKey_${ASC_API_KEY_ID}.p8
+          KEY=~/.appstoreconnect/private_keys/AuthKey_${ASC_API_KEY_ID}.p8
+          echo "$ASC_API_KEY_BASE64" | base64 --decode > "$KEY"
+          AUTH=(--key "$KEY" --key-id "$ASC_API_KEY_ID" --issuer "$ASC_API_ISSUER_ID")
+          submit() {
+            xcrun notarytool submit "$1" "${AUTH[@]}" --output-format json \
+              | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])'
+          }
+          echo "MAIN=$(submit MacShot.dmg)" > notarization-ids.txt
+          echo "OFFLINE=$(submit MacShot-Offline.dmg)" >> notarization-ids.txt
+          echo "$BUILD_NUMBER" > build-number.txt
+          cat notarization-ids.txt
+
+      - name: Keep images for resuming
+        if: ${{ !inputs.resume_run }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: notarization-${{ env.VERSION }}
+          path: |
+            MacShot.dmg
+            MacShot-Offline.dmg
+            notarization-ids.txt
+            build-number.txt
+          retention-days: 14
+
+      - name: Restore images from the earlier run
+        if: ${{ inputs.resume_run }}
+        uses: actions/download-artifact@v4
+        with:
+          name: notarization-${{ env.VERSION }}
+          run-id: ${{ inputs.resume_run }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Use the earlier run's build number
+        if: ${{ inputs.resume_run }}
+        run: |
+          # The appcast must carry the build number baked into these images.
+          echo "BUILD_NUMBER=$(cat build-number.txt)" >> $GITHUB_ENV
+          cat notarization-ids.txt
+
+      - name: Notarize
+        env:
+          ASC_API_KEY_BASE64: ${{ secrets.ASC_API_KEY }}
+          ASC_API_KEY_ID:     ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_ISSUER_ID:  ${{ secrets.ASC_API_ISSUER_ID }}
+          SOURCE_RUN:         ${{ inputs.resume_run || github.run_id }}
+          TAG:                ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          KEY=~/.appstoreconnect/private_keys/AuthKey_${ASC_API_KEY_ID}.p8
+          echo "$ASC_API_KEY_BASE64" | base64 --decode > "$KEY"
+          AUTH=(--key "$KEY" --key-id "$ASC_API_KEY_ID" --issuer "$ASC_API_ISSUER_ID")
+          . ./notarization-ids.txt
+
+          # Wait for both submissions together.
+          xcrun notarytool wait "$MAIN" "${AUTH[@]}" --timeout 120m & PID_MAIN=$!
+          xcrun notarytool wait "$OFFLINE" "${AUTH[@]}" --timeout 120m & PID_OFFLINE=$!
+          wait "$PID_MAIN" || true
+          wait "$PID_OFFLINE" || true
+
+          pending=0
+          for pair in "MacShot.dmg:$MAIN" "MacShot-Offline.dmg:$OFFLINE"; do
+            dmg=${pair%%:*}; id=${pair#*:}
+            # Retry: a brief network drop on the runner must not fail the run.
+            status=""
+            for try in 1 2 3 4 5 6; do
+              status=$(xcrun notarytool info "$id" "${AUTH[@]}" --output-format json 2>/dev/null \
+                | python3 -c 'import json,sys; print(json.load(sys.stdin)["status"])' 2>/dev/null) && break
+              echo "Could not read the status of $dmg (attempt $try), retrying in 30 s"
+              sleep 30
+            done
+            [ -n "$status" ] || status="In Progress"
+            echo "$dmg ($id): $status"
+            case "$status" in
+              Accepted) ;;
+              "In Progress") pending=1 ;;
+              *) xcrun notarytool log "$id" "${AUTH[@]}" || true; exit 1 ;;
+            esac
+          done
+          if [ "$pending" = 1 ]; then
+            echo "::error::Apple is still processing. Nothing was published. Once 'xcrun notarytool history' shows both as Accepted, resume without rebuilding:"
+            echo "gh workflow run build-release.yml --ref main -f tag=$TAG -f resume_run=$SOURCE_RUN"
+            exit 1
+          fi
 
           for dmg in MacShot.dmg MacShot-Offline.dmg; do
-            xcrun notarytool submit "$dmg" \
-              --key ~/.appstoreconnect/private_keys/AuthKey_${ASC_API_KEY_ID}.p8 \
-              --key-id "$ASC_API_KEY_ID" \
-              --issuer "$ASC_API_ISSUER_ID" \
-              --wait \
-              --timeout 20m
-
-            xcrun stapler staple "$dmg"
+            # Apple's ticket service sometimes throttles right after acceptance
+            # (stapler error 68 with a retry-after); the ticket still exists.
+            for attempt in 1 2 3 4 5 6 7 8; do
+              if xcrun stapler staple "$dmg"; then break; fi
+              if [ "$attempt" = 8 ]; then echo "Stapling $dmg failed"; exit 1; fi
+              echo "Staple attempt $attempt failed, retrying in 3 minutes"
+              sleep 180
+            done
           done
 
           echo "✅ Notarization complete"
-
-          rm -f ~/.appstoreconnect/private_keys/AuthKey_${ASC_API_KEY_ID}.p8
+          rm -f "$KEY"
 
       # ── 8. Get SHA256 for Homebrew ─────────────────────────────────────────
       - name: Compute SHA256
@@ -528,10 +625,39 @@ jobs:
         run: |
           git clone https://x-access-token:${GH_TOKEN}@github.com/sw33tLie/homebrew-macshot.git /tmp/tap
 
-          sed -i '' \
-            -e "s/version \".*\"/version \"$VERSION\"/" \
-            -e "s/sha256 \".*\"/sha256 \"$SHA256\"/" \
-            /tmp/tap/Casks/macshot.rb
+          # Generated like the offline cask. No postflight block: Homebrew
+          # deprecated `postflight` (#458), and Sparkle updates the app itself.
+          cat > /tmp/tap/Casks/macshot.rb <<EOF
+          cask "macshot" do
+            version "$VERSION"
+            sha256 "$SHA256"
+
+            url "https://github.com/sw33tLie/macshot/releases/download/v#{version}/MacShot.dmg"
+            name "macshot"
+            desc "Native screenshot tool inspired by Flameshot"
+            homepage "https://github.com/sw33tLie/macshot"
+
+            livecheck do
+              url "https://raw.githubusercontent.com/sw33tLie/macshot/main/appcast.xml"
+              strategy :sparkle do |items|
+                items.find { |item| item.channel.nil? }&.short_version
+              end
+            end
+
+            auto_updates true
+            depends_on macos: :monterey
+
+            app "macshot.app"
+
+            uninstall quit: "com.sw33tlie.macshot.macshot"
+
+            zap trash: [
+              "~/Library/Application Scripts/com.sw33tlie.macshot.macshot",
+              "~/Library/Containers/com.sw33tlie.macshot.macshot",
+              "~/Library/Preferences/com.sw33tlie.macshot.macshot.plist",
+            ]
+          end
+          EOF
 
           OFFLINE_CASK="/tmp/tap/Casks/macshot-offline.rb"
           cat > "$OFFLINE_CASK" <<EOF
@@ -541,7 +667,7 @@ jobs:
 
             url "https://github.com/sw33tLie/macshot/releases/download/v#{version}/MacShot-Offline.dmg"
             name "macshot Offline"
-            desc "Native macOS screenshot tool without upload integrations"
+            desc "Native screenshot tool without upload integrations"
             homepage "https://github.com/sw33tLie/macshot"
 
             livecheck do

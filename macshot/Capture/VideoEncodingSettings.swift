@@ -2,18 +2,10 @@ import Foundation
 import AVFoundation
 import VideoToolbox
 
-/// Video encoding quality tiers for both live recording and post-recording export.
-///
-/// Each tier targets a "bits per pixel per frame" ratio (bppf) rather than a fixed
-/// bitrate. Screen content with sharp text and any motion needs camera-equivalent
-/// bitrates — H.264's psy-tuned DCT softens high-contrast edges below ~0.30 bppf,
-/// so "low entropy UI" assumptions bite hard the moment scrolling or animation
-/// enters the frame. Targets are tuned for screen recording at common resolutions:
-///   .high @ 1440p30 → ~40 Mbit/s (industry-normal for sharp text)
-///   .high @ 1080p60 → ~52 Mbit/s
-///   .high @ 4K30    → ~64 Mbit/s (with built-in 4K+ taper applied)
-/// Min/max bounds prevent pathological results on very small or very large frames.
-enum VideoQuality: String {
+/// Quality choices share a pixel budget, but live capture and offline export
+/// have different minimums. VideoExportEncodingPlan also considers the source.
+/// These targets are tuning heuristics, not measured visual-quality guarantees.
+enum VideoQuality: String, Sendable {
     case low, medium, high
 
     var bitsPerPixelPerFrame: Double {
@@ -68,7 +60,7 @@ enum VideoCodec {
         }
     }
 
-    /// HEVC needs ~10–15% less bitrate for comparable visual quality.
+    /// Current live-capture tuning; not a codec-independent quality equivalence.
     var bitrateMultiplier: Double {
         switch self {
         case .h264: return 1.0
@@ -134,15 +126,16 @@ enum VideoEncodingSettings {
 
     /// AVAssetWriter output settings for a video input.
     ///
-    /// Tuned for screen content: B-frames disabled (they buy little for
-    /// low-motion screen content and complicate live encode), CABAC entropy
-    /// for H.264, one keyframe per second for reasonable seek granularity.
+    /// Shared encoder/container configuration, using live-capture rate targets.
+    /// Offline plans replace the bitrate. B-frames are disabled for low latency;
+    /// CABAC and a one-second keyframe interval apply to both paths.
     static func outputSettings(width: Int, height: Int, fps: Int, codec: VideoCodec, quality: VideoQuality) -> [String: Any] {
         let bps = bitrate(width: width, height: height, fps: fps, codec: codec, quality: quality)
         var compression: [String: Any] = [
             AVVideoAverageBitRateKey: bps,
             AVVideoExpectedSourceFrameRateKey: fps,
             AVVideoMaxKeyFrameIntervalKey: max(fps, 1),   // one keyframe per second
+            AVVideoMaxKeyFrameIntervalDurationKey: 1.0,   // also bound variable/idle-frame cadence
             AVVideoAllowFrameReorderingKey: false,         // no B-frames: lower latency, marginal cost
         ]
         if codec == .h264 {

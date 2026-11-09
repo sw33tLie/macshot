@@ -25,10 +25,10 @@ struct CaptureEditState: Codable, Equatable {
     var effectsConfig: ImageEffectsConfig {
         ImageEffectsConfig(
             preset: effectsPreset,
-            brightness: effectsBrightness,
-            contrast: effectsContrast,
-            saturation: effectsSaturation,
-            sharpness: effectsSharpness
+            brightness: SavedCaptureValidation.bounded(effectsBrightness, -0.5...0.5, fallback: 0),
+            contrast: SavedCaptureValidation.bounded(effectsContrast, 0.5...2, fallback: 1),
+            saturation: SavedCaptureValidation.bounded(effectsSaturation, 0...2, fallback: 1),
+            sharpness: SavedCaptureValidation.bounded(effectsSharpness, 0...2, fallback: 0)
         )
     }
 
@@ -40,25 +40,67 @@ struct CaptureEditState: Codable, Equatable {
     }
 
     var customBeautifyBackground: NSImage? {
-        customBeautifyBackgroundPNG.flatMap { NSImage(data: $0) }
+        customBeautifyBackgroundPNG.flatMap { SavedCaptureValidation.image($0) }
     }
 
     func beautifyConfig() -> BeautifyConfig {
         var config = BeautifyConfig(
             mode: beautifyMode,
             styleIndex: beautifyStyleIndex,
-            padding: CGFloat(beautifyPadding),
-            cornerRadius: CGFloat(beautifyCornerRadius),
-            shadowRadius: CGFloat(beautifyShadowRadius),
+            padding: CGFloat(SavedCaptureValidation.bounded(beautifyPadding, 0...1024, fallback: 48)),
+            cornerRadius: CGFloat(SavedCaptureValidation.bounded(beautifyCornerRadius, 0...1024, fallback: 10)),
+            shadowRadius: CGFloat(SavedCaptureValidation.bounded(beautifyShadowRadius, 0...100, fallback: 20)),
             bgRadius: 0,
             isWindowSnap: beautifyIsWindowSnap,
             customBackgroundImage: customBeautifyBackground,
-            backgroundBlur: CGFloat(beautifyBackgroundBlur)
+            backgroundBlur: CGFloat(SavedCaptureValidation.bounded(beautifyBackgroundBlur, 0...50, fallback: 0))
         )
         if config.customBackgroundImage != nil {
             config.prepareBackgroundCache()
         }
         return config
+    }
+}
+
+extension CaptureEditState {
+
+    /// Decoded field by field so edit state saved before a field existed still
+    /// loads. The synthesized decoder throws `keyNotFound` for a missing key
+    /// even though every field here has a default, which would silently discard
+    /// the whole post-processing state of that capture. See `LenientDecoding.swift`.
+    /// Declared in an extension so the memberwise initializer survives.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.init()
+        effectsPresetRaw = c.decode(.effectsPresetRaw, or: ImageEffectPreset.none.rawValue)
+        effectsBrightness = c.decode(.effectsBrightness, or: 0)
+        effectsContrast = c.decode(.effectsContrast, or: 1)
+        effectsSaturation = c.decode(.effectsSaturation, or: 1)
+        effectsSharpness = c.decode(.effectsSharpness, or: 0)
+        beautifyEnabled = c.decode(.beautifyEnabled, or: false)
+        beautifyModeRaw = c.decode(.beautifyModeRaw, or: BeautifyMode.window.rawValue)
+        beautifyStyleIndex = c.decode(.beautifyStyleIndex, or: 0)
+        beautifyPadding = c.decode(.beautifyPadding, or: 48)
+        beautifyCornerRadius = c.decode(.beautifyCornerRadius, or: 10)
+        beautifyShadowRadius = c.decode(.beautifyShadowRadius, or: 20)
+        beautifyBackgroundBlur = c.decode(.beautifyBackgroundBlur, or: 0)
+        beautifyIsWindowSnap = c.decode(.beautifyIsWindowSnap, or: false)
+        customBeautifyBackgroundPNG = c.decodeOptional(.customBeautifyBackgroundPNG)
+        normalizeValues()
+    }
+
+    mutating func normalizeValues() {
+        let effects = effectsConfig
+        effectsBrightness = effects.brightness
+        effectsContrast = effects.contrast
+        effectsSaturation = effects.saturation
+        effectsSharpness = effects.sharpness
+        // Preserve legacy padding/radius values beyond today's sliders while
+        // preventing invalid or unbounded canvas expansion.
+        beautifyPadding = SavedCaptureValidation.bounded(beautifyPadding, 0...1024, fallback: 48)
+        beautifyCornerRadius = SavedCaptureValidation.bounded(beautifyCornerRadius, 0...1024, fallback: 10)
+        beautifyShadowRadius = SavedCaptureValidation.bounded(beautifyShadowRadius, 0...100, fallback: 20)
+        beautifyBackgroundBlur = SavedCaptureValidation.bounded(beautifyBackgroundBlur, 0...50, fallback: 0)
     }
 }
 
@@ -90,6 +132,8 @@ extension OverlayView {
     }
 
     func applyCaptureEditState(_ state: CaptureEditState) {
+        var state = state
+        state.normalizeValues()
         effectsPreset = state.effectsPreset
         effectsBrightness = state.effectsBrightness
         effectsContrast = state.effectsContrast
@@ -125,7 +169,7 @@ extension OverlayView {
         let annotationPart = AnnotationSerializer.encode(movableAnnotations)?.base64EncodedString() ?? ""
         let editData = try? JSONEncoder().encode(captureEditState())
         let editPart = editData?.base64EncodedString() ?? ""
-        let imagePart = screenshotImage.map { "\(Int($0.size.width.rounded()))x\(Int($0.size.height.rounded()))" } ?? "nil"
+        let imagePart = screenshotImage.map { "\(SafeNumerics.int($0.size.width))x\(SafeNumerics.int($0.size.height))" } ?? "nil"
         return "\(imagePart)|\(editPart)|\(annotationPart)"
     }
 }

@@ -30,21 +30,19 @@ enum TranslateOverlay {
         }
 
         DispatchQueue.global(qos: .userInitiated).async {
-            VisionOCR.performTextRecognition(cgImage: cgImage) { request, error in
+            VisionOCR.performTextRecognition(cgImage: cgImage) { observations, error in
                 if let error = error {
                     DispatchQueue.main.async { onError("OCR failed: \(error.localizedDescription)") }
                     return
                 }
 
-                guard let observations = request.results as? [VNRecognizedTextObservation],
-                      !observations.isEmpty else {
+                guard !observations.isEmpty else {
                     DispatchQueue.main.async { onError("No text found in selection.") }
                     return
                 }
 
                 let blocks = observations.compactMap { obs -> (text: String, box: CGRect)? in
-                    guard let top = obs.topCandidates(1).first else { return nil }
-                    let t = top.string.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let t = obs.text.trimmingCharacters(in: .whitespacesAndNewlines)
                     guard !t.isEmpty else { return nil }
                     return (t, obs.boundingBox)
                 }

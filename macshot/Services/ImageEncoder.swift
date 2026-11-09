@@ -6,12 +6,32 @@ import WebP
 /// Shared image encoding with user-configurable format, quality, and resolution.
 enum ImageEncoder {
 
-    enum Format: String, CaseIterable {
+    enum Format: String, CaseIterable, Sendable {
         case png = "png"
         case jpeg = "jpeg"
         case heic = "heic"
         case webp = "webp"
         case avif = "avif"
+
+        nonisolated var fileExtension: String {
+            switch self {
+            case .png: return "png"
+            case .jpeg: return "jpg"
+            case .heic: return "heic"
+            case .webp: return "webp"
+            case .avif: return "avif"
+            }
+        }
+
+        nonisolated var utType: UTType {
+            switch self {
+            case .png: return .png
+            case .jpeg: return .jpeg
+            case .heic: return .heic
+            case .webp: return .webP
+            case .avif: return UTType("public.avif") ?? .image
+            }
+        }
 
         nonisolated var hasQuality: Bool {
             switch self {
@@ -43,7 +63,7 @@ enum ImageEncoder {
     /// Lossy quality 0.0–1.0 (used for JPEG, HEIC, WebP, and AVIF)
     static var quality: CGFloat {
         if let q = UserDefaults.standard.object(forKey: "imageQuality") as? Double {
-            return CGFloat(max(0.1, min(1.0, q)))
+            return q.isFinite ? CGFloat(max(0.1, min(1.0, q))) : 0.85
         }
         return 0.85
     }
@@ -53,25 +73,8 @@ enum ImageEncoder {
         UserDefaults.standard.bool(forKey: "downscaleRetina")
     }
 
-    static var fileExtension: String {
-        switch format {
-        case .png: return "png"
-        case .jpeg: return "jpg"
-        case .heic: return "heic"
-        case .webp: return "webp"
-        case .avif: return "avif"
-        }
-    }
-
-    static var utType: UTType {
-        switch format {
-        case .png: return .png
-        case .jpeg: return .jpeg
-        case .heic: return .heic
-        case .webp: return .webP
-        case .avif: return UTType("public.avif") ?? .image
-        }
-    }
+    static var fileExtension: String { format.fileExtension }
+    static var utType: UTType { format.utType }
 
     nonisolated static var availableFormats: [Format] {
         Format.allCases.filter { isFormatAvailable($0) }
@@ -91,122 +94,102 @@ enum ImageEncoder {
         }
     }
 
-    // MARK: - Shared bitmap creation
+    /// Owns immutable pixels and settings from the instant the user requests
+    /// output. AppKit stays on the main actor; encoding can run on a worker.
+    struct PreparedImage: Sendable {
+        let image: HistoryImageSnapshot.Image
+        let format: Format
+        let quality: CGFloat
+        let downscaleRetina: Bool
 
-    /// Create a bitmap representation from an NSImage, optionally downscaling from Retina.
-    /// This is the single conversion point — all encode paths go through here.
-    /// Uses cgImage(forProposedRect:) instead of tiffRepresentation to preserve
-    /// exact pixel data regardless of the current display's backing scale factor.
-    private static func makeBitmap(_ image: NSImage) -> NSBitmapImageRep? {
-        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
-            // Fallback for images without a CGImage backing (e.g. PDF/EPS vectors)
-            guard let tiffData = image.tiffRepresentation,
-                  let bitmap = NSBitmapImageRep(data: tiffData) else { return nil }
-            return bitmap
+        @MainActor init(_ source: NSImage) throws {
+            image = try HistoryImageSnapshot.Image(source)
+            format = ImageEncoder.format
+            quality = ImageEncoder.quality
+            downscaleRetina = ImageEncoder.downscaleRetina
         }
-        let bitmap = NSBitmapImageRep(cgImage: cgImage)
 
-        if downscaleRetina {
-            let logicalW = Int(image.size.width)
-            let logicalH = Int(image.size.height)
-            let pixelW = bitmap.pixelsWide
-            let pixelH = bitmap.pixelsHigh
+        nonisolated func pixelsForEncoding() throws -> CGImage {
+            let pixels = image.pixels
+            guard downscaleRetina, Double(pixels.width) > image.pointSize.width,
+                  Double(pixels.height) > image.pointSize.height else { return pixels }
+            // Clamp before converting to Int; malformed point sizes must not
+            // trap, overflow a row stride or allocate an enormous bitmap.
+            let width = max(1, Int(min(Double(pixels.width), image.pointSize.width)))
+            let height = max(1, Int(min(Double(pixels.height), image.pointSize.height)))
+            return try HistoryImageSnapshot.Image.render(pixels, width: width, height: height)
+        }
 
-            if pixelW > logicalW && pixelH > logicalH {
-                let cs = cgImage.colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB)!
-                let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue
-                guard let ctx = CGContext(
-                    data: nil,
-                    width: logicalW, height: logicalH,
-                    bitsPerComponent: 8,
-                    bytesPerRow: logicalW * 4,
-                    space: cs,
-                    bitmapInfo: bitmapInfo
-                ) else { return bitmap }
-                ctx.interpolationQuality = .high
-                ctx.draw(cgImage, in: CGRect(x: 0, y: 0, width: logicalW, height: logicalH))
-                guard let downscaled = ctx.makeImage() else { return bitmap }
-                return NSBitmapImageRep(cgImage: downscaled)
+        nonisolated func encode() -> Data? {
+            guard let pixels = try? pixelsForEncoding() else { return nil }
+            return encode(pixels: pixels)
+        }
+
+        nonisolated func encode(pixels: CGImage) -> Data? {
+            switch format {
+            case .png: return ImageEncoder.encodeWithCGImageDestination(cgImage: pixels, type: "public.png", lossyQuality: nil)
+            case .jpeg: return ImageEncoder.encodeWithCGImageDestination(cgImage: pixels, type: "public.jpeg", lossyQuality: quality)
+            case .heic: return ImageEncoder.encodeWithCGImageDestination(cgImage: pixels, type: "public.heic", lossyQuality: quality)
+            case .avif: return ImageEncoder.encodeWithCGImageDestination(cgImage: pixels, type: "public.avif", lossyQuality: quality)
+            case .webp: return ImageEncoder.encodeWebP(cgImage: pixels, quality: quality)
             }
         }
-
-        return bitmap
     }
 
-    // MARK: - Encoding
-
-    /// Encode an NSImage to Data in the configured format.
     static func encode(_ image: NSImage) -> Data? {
-        guard let bitmap = makeBitmap(image) else { return nil }
-
-        switch format {
-        case .png:
-            return encodePNG(bitmap: bitmap)
-        case .jpeg:
-            return encodeJPEG(bitmap: bitmap, quality: quality)
-        case .heic:
-            return encodeHEIC(bitmap: bitmap, quality: quality)
-        case .webp:
-            return encodeWebP(bitmap: bitmap, quality: quality)
-        case .avif:
-            return encodeAVIF(bitmap: bitmap, quality: quality)
-        }
-    }
-
-    /// Encode PNG with native color profile embedded.
-    private static func encodePNG(bitmap: NSBitmapImageRep) -> Data? {
-        guard let cgImage = bitmap.cgImage else {
-            return bitmap.representation(using: .png, properties: [:])
-        }
-        return encodeWithCGImageDestination(cgImage: cgImage, type: "public.png", lossyQuality: nil)
-    }
-
-    /// Encode JPEG with native color profile embedded.
-    private static func encodeJPEG(bitmap: NSBitmapImageRep, quality: CGFloat) -> Data? {
-        guard let cgImage = bitmap.cgImage else {
-            return bitmap.representation(using: .jpeg, properties: [.compressionFactor: quality])
-        }
-        return encodeWithCGImageDestination(cgImage: cgImage, type: "public.jpeg", lossyQuality: quality)
-    }
-
-    /// Encode HEIC via CGImageDestination (NSBitmapImageRep doesn't support HEIC).
-    private static func encodeHEIC(bitmap: NSBitmapImageRep, quality: CGFloat) -> Data? {
-        guard let cgImage = bitmap.cgImage else { return nil }
-        return encodeWithCGImageDestination(cgImage: cgImage, type: "public.heic", lossyQuality: quality)
-    }
-
-    /// Encode AVIF via native ImageIO/CGImageDestination.
-    private static func encodeAVIF(bitmap: NSBitmapImageRep, quality: CGFloat) -> Data? {
-        guard isFormatAvailable(.avif), let cgImage = bitmap.cgImage else { return nil }
-        return encodeWithCGImageDestination(cgImage: cgImage, type: "public.avif", lossyQuality: quality)
+        (try? PreparedImage(image))?.encode()
     }
 
     /// Encode WebP via Swift-WebP (libwebp).
-    /// Uses the CGImage RGBA path directly — the library's NSImage path has a bug
+    /// Uses a raw RGBA buffer: the library's NSImage path has a bug
     /// (assumes RGB stride and logical size instead of pixel size).
-    private static func encodeWebP(bitmap: NSBitmapImageRep, quality: CGFloat) -> Data? {
-        guard let srcImage = bitmap.cgImage else { return nil }
+    nonisolated private static func encodeWebP(cgImage srcImage: CGImage, quality: CGFloat) -> Data? {
         let w = srcImage.width
         let h = srcImage.height
-        // Re-render into a known premultipliedLast RGBA context (preserving source color space)
+        // WebP cannot exceed 16383 px per side; refuse before allocating.
+        guard w > 0, h > 0, w <= webPMaximumDimension, h <= webPMaximumDimension else { return nil }
+        let stride = w * 4
+        let (byteCount, overflow) = stride.multipliedReportingOverflow(by: h)
+        // Fallible allocation: a huge capture must fail the save, not the app.
+        guard !overflow, let memory = calloc(byteCount, 1) else { return nil }
+        defer { free(memory) }
+        // CGContext only draws premultiplied RGBA, but libwebp expects straight
+        // alpha: without undoing it, semi-transparent edges encode darker.
         let cs = srcImage.colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB)!
         guard let ctx = CGContext(
-            data: nil, width: w, height: h,
-            bitsPerComponent: 8, bytesPerRow: w * 4,
+            data: memory, width: w, height: h,
+            bitsPerComponent: 8, bytesPerRow: stride,
             space: cs, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
         ) else { return nil }
         ctx.draw(srcImage, in: CGRect(x: 0, y: 0, width: w, height: h))
-        guard let rgbaImage = ctx.makeImage() else { return nil }
+        let pixels = memory.bindMemory(to: UInt8.self, capacity: byteCount)
+        unpremultiplyRGBA(UnsafeMutableBufferPointer(start: pixels, count: byteCount))
 
-        let encoder = WebPEncoder()
         let config = WebPEncoderConfig.preset(.picture, quality: Float(quality * 100))
-        return try? encoder.encode(RGBA: rgbaImage, config: config)
+        return try? WebPEncoder().encode(RGBA: pixels, config: config, originWidth: w, originHeight: h, stride: stride)
+    }
+
+    nonisolated static let webPMaximumDimension = 16_383
+
+    /// Converts premultiplied RGBA8 to straight alpha in place, rounding to nearest.
+    nonisolated static func unpremultiplyRGBA(_ pixels: UnsafeMutableBufferPointer<UInt8>) {
+        var index = 0
+        while index + 3 < pixels.count {
+            let alpha = Int(pixels[index + 3])
+            if alpha > 0 && alpha < 255 {
+                for channel in 0..<3 {
+                    let value = (Int(pixels[index + channel]) * 255 + alpha / 2) / alpha
+                    pixels[index + channel] = UInt8(min(255, value))
+                }
+            }
+            index += 4
+        }
     }
 
     /// Generic CGImageDestination encoder — embeds the source color profile.
     /// The CGImage already carries its display's ICC profile (e.g. Display P3).
     /// CGImageDestination embeds it automatically — no pixel conversion needed.
-    private static func encodeWithCGImageDestination(cgImage: CGImage, type: String, lossyQuality: CGFloat?) -> Data? {
+    nonisolated static func encodeWithCGImageDestination(cgImage: CGImage, type: String, lossyQuality: CGFloat?) -> Data? {
         let data = NSMutableData()
         guard let dest = CGImageDestinationCreateWithData(data as CFMutableData, type as CFString, 1, nil) else { return nil }
 
@@ -224,42 +207,50 @@ enum ImageEncoder {
     private static let clipboardGenerationLock = NSLock()
     private static var clipboardGeneration = 0
 
-    /// Copy image to pasteboard as PNG.
-    /// Explicitly sets PNG data so receiving apps (browsers, editors) get
-    /// a lossless PNG instead of the TIFF that NSImage.writeObjects provides.
-    /// Also writes a retained backing file so Finder paste works and clipboard
-    /// history tools do not keep references to deleted `/tmp` files.
-    static func copyToClipboard(_ image: NSImage, sourceFileURL: URL? = nil) {
+    /// No file URL: it points into our sandbox, which Teams/RDP/web apps prefer but can't read (#309, #393).
+    /// Opt-in: also offer the configured format (e.g. AVIF) to apps that read it (#373).
+    static var clipboardIncludesImageFormat: Bool {
+        UserDefaults.standard.bool(forKey: "clipboardIncludesImageFormat")
+    }
+
+    static func copyToClipboard(_ image: NSImage) {
         let pasteboard = NSPasteboard.general
         let generation = beginClipboardCopy()
+        let changeCount = pasteboard.changeCount
+        let includeFormat = clipboardIncludesImageFormat
+        guard let prepared = try? PreparedImage(image) else { return }
 
         DispatchQueue.global(qos: .userInitiated).async {
-            let validSourceURL = reusableSourceURL(sourceFileURL)
-            guard let bitmap = makeBitmap(image),
-                  let pngData = bitmap.representation(using: .png, properties: [:]) else {
-                if let validSourceURL {
-                    DispatchQueue.main.async {
-                        guard isCurrentClipboardCopy(generation) else { return }
-                        pasteboard.clearContents()
-                        pasteboard.writeObjects([validSourceURL as NSURL])
-                    }
-                }
-                return
-            }
-
-            let backingURL = validSourceURL ?? ClipboardBackingStore.writeImageData(pngData)
-            let tiffData = bitmap.representation(using: .tiff, properties: [:])
+            let representations = clipboardRepresentations(for: prepared, includeConfiguredFormat: includeFormat)
+            guard !representations.isEmpty else { return }
 
             DispatchQueue.main.async {
-                guard isCurrentClipboardCopy(generation) else { return }
-                writeImagePasteboard(
-                    pasteboard,
-                    backingURL: backingURL,
-                    pngData: pngData,
-                    tiffData: tiffData
-                )
+                guard isCurrentClipboardCopy(generation), pasteboard.changeCount == changeCount else { return }
+                writeImagePasteboard(pasteboard, representations: representations)
             }
         }
+    }
+
+    /// Pasteboard flavors in preference order. PNG and TIFF are always present
+    /// so apps that only read those (Teams, browsers, RDP) keep working; the
+    /// configured format goes first when opted in so apps that read it get the
+    /// smaller file. Returns nothing only if PNG encoding fails.
+    nonisolated static func clipboardRepresentations(for prepared: PreparedImage,
+                                                     includeConfiguredFormat: Bool) -> [(type: NSPasteboard.PasteboardType, data: Data)] {
+        guard let pixels = try? prepared.pixelsForEncoding(),
+              let pngData = encodeWithCGImageDestination(cgImage: pixels, type: "public.png", lossyQuality: nil) else {
+            return []
+        }
+        var representations: [(type: NSPasteboard.PasteboardType, data: Data)] = []
+        if includeConfiguredFormat, prepared.format != .png,
+           let data = prepared.encode(pixels: pixels) {
+            representations.append((NSPasteboard.PasteboardType(prepared.format.utType.identifier), data))
+        }
+        representations.append((.png, pngData))
+        if let tiffData = encodeWithCGImageDestination(cgImage: pixels, type: "public.tiff", lossyQuality: nil) {
+            representations.append((.tiff, tiffData))
+        }
+        return representations
     }
 
     private static func beginClipboardCopy() -> Int {
@@ -275,43 +266,16 @@ enum ImageEncoder {
         return generation == clipboardGeneration
     }
 
-    private static func reusableSourceURL(_ url: URL?) -> URL? {
-        guard let url else { return nil }
-        guard !downscaleRetina else { return nil }
-        guard url.pathExtension.lowercased() == "png" else { return nil }
-        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
-        return url
-    }
-
-    private static func writeImagePasteboard(
+    static func writeImagePasteboard(
         _ pasteboard: NSPasteboard,
-        backingURL: URL?,
-        pngData: Data,
-        tiffData: Data?
+        representations: [(type: NSPasteboard.PasteboardType, data: Data)]
     ) {
-        pasteboard.clearContents()
-
-        if let backingURL, pasteboard.writeObjects([backingURL as NSURL]) {
-            var extraTypes: [NSPasteboard.PasteboardType] = [.png]
-            if tiffData != nil {
-                extraTypes.append(.tiff)
-            }
-            pasteboard.addTypes(extraTypes, owner: nil)
-            pasteboard.setData(pngData, forType: .png)
-            if let tiffData {
-                pasteboard.setData(tiffData, forType: .tiff)
-            }
-            return
-        }
-
-        var types: [NSPasteboard.PasteboardType] = [.png]
-        if tiffData != nil {
-            types.append(.tiff)
-        }
-        pasteboard.declareTypes(types, owner: nil)
-        pasteboard.setData(pngData, forType: .png)
-        if let tiffData {
-            pasteboard.setData(tiffData, forType: .tiff)
+        // declareTypes clears the pasteboard itself. A clearContents() before it
+        // counts as a second change, and clipboard managers that watch
+        // changeCount recorded every copy twice (#483).
+        pasteboard.declareTypes(representations.map(\.type), owner: nil)
+        for representation in representations {
+            pasteboard.setData(representation.data, forType: representation.type)
         }
     }
 }

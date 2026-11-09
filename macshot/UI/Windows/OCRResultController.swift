@@ -36,7 +36,7 @@ class OCRResultController: NSObject {
         let previewW: CGFloat = image != nil ? 240 : 0
         let gap: CGFloat = 0
 
-        let screen = NSScreen.main ?? NSScreen.screens[0]
+        guard let screen = NSScreen.preferred else { return }
         let origin = NSPoint(
             x: screen.visibleFrame.midX - W / 2,
             y: screen.visibleFrame.midY - H / 2

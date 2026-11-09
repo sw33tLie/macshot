@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "Másolás";
-"Save As..." = "Mentés másként...";
 "Open in Editor" = "Megnyitás a szerkesztőben";
 "Open With" = "Megnyitás ezzel";
 "Open Link" = "Hivatkozás megnyitása";
@@ -57,7 +56,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "Összes bezárása";
-"Save All to Folder…" = "Összes mentése mappába…";
 "Save" = "Mentés";
 
 /* Editor Top Bar */
@@ -178,6 +176,13 @@
 "ON" = "BE";
 "OFF" = "KI";
 "  (Tab to toggle)" = "  (Tab a váltáshoz)";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Kattintson egy elemre  ·  Húzzon egyéni területhez  ·  F a teljes képernyőhöz";
+"Snap mode: " = "Illesztés mód: ";
+"WINDOW" = "ABLAK";
+"ELEMENT" = "ELEM";
+"  (Tab to switch)" = "  (Tab a váltáshoz)";
+"Enhance browser and Electron element snapping" = "Böngésző és Electron elem illesztésének javítása";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Építi a célalkalmazás akadálymentesítési fastruktúráját Elem módban. Tiltsa le, ha egy böngésző vagy Electron alkalmazás lassúvá válik vagy bemeneti problémái vannak.";
 "Right-click to copy" = "Jobb kattintás a másoláshoz";
 "Copied %@" = "%@ másolva";
 "Set color %@" = "Szín beállítva: %@";
@@ -242,6 +247,8 @@
 "Move down" = "Mozgatás lefelé";
 "Output" = "Kimenet";
 "Image format:" = "Képformátum:";
+"Also copy to the clipboard in this format" = "Másolás a vágólapra ebben a formátumban is";
+"PNG is always included so every app can paste" = "A PNG mindig benne van, így bármely alkalmazás be tudja illeszteni";
 "Quality:" = "Minőség:";
 "%d%%" = "%d%%";
 "Save at standard resolution (1x)" = "Mentés szabványos felbontásban (1x)";
@@ -338,6 +345,7 @@
 "Signed in" = "Bejelentkezve";
 "Not signed in" = "Nincs bejelentkezve";
 "Account:" = "Fiók:";
+"Folder:" = "Mappa:";
 "Test Connection" = "Kapcsolat tesztelése";
 "Fill in endpoint, bucket, and credentials first" = "Előbb add meg a végpontot, a tárolót és a hitelesítési adatokat";
 "Testing..." = "Tesztelés...";
@@ -350,11 +358,13 @@
 "Secret Key:" = "Titkos kulcs:";
 "Public URL:" = "Nyilvános URL:";
 "Path Prefix:" = "Útvonal előtag:";
+"Make uploads publicly readable" = "Feltöltések nyilvánosan olvashatóvá tétele";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "A public-read ACL-t küldi, így a feltöltött fájlok bárki számára megtekinthetők a linkkel. Szükséges az AWS S3, DigitalOcean Spaces, MinIO és Backblaze B2 számára, amelyek alapértelmezetten privát módon tárolják az objektumokat. Hagyja kikapcsolva a Cloudflare R2-nél, amely nem támogatja az ACL-eket és elutasítja a fejlécet.";
 "API key:" = "API kulcs:";
 "Upload History" = "Feltöltési előzmények";
 "No uploads yet." = "Még nincsenek feltöltések.";
 "Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "Alap URL a nyilvános hozzáféréshez. Ha üres, az S3 végpont URL kerül használatra (lehet, hogy nem nyilvánosan elérhető).";
-"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "Egy megosztott kulcs már benne van — szerezd be a saját ingyenes kulcsodat az imgbb.com/api oldalon, ha eléred a sebességkorlátot. Csak képek (nincs videó támogatás).";
+"A shared key is included. Get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "Egy megosztott kulcs már benne van, szerezd be a saját ingyenes kulcsodat az imgbb.com/api oldalon, ha eléred a sebességkorlátot. Csak képek (nincs videó támogatás).";
 "Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "Működik AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 és más S3-kompatibilis szolgáltatásokkal. Képeket és videókat támogat.";
 "Configure S3 in Preferences" = "S3 beállítása a Beállításokban";
 "Sign in to Google Drive in Preferences" = "Jelentkezz be a Google Drive-ba a Beállításokban";
@@ -365,7 +375,7 @@
 "Version %@ (%@)" = "Verzió %@ (%@)";
 "Made by" = "Készítette";
 "Licensed under the GPLv3" = "GPLv3 licenc alatt";
-"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "Egy ingyenes, nyílt forráskódú képernyőkép- és képernyőfelvétel-eszköz macOS-re.\nTeljesen natív — Swift-tel és AppKit-tel építve.";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native, built with Swift and AppKit." = "Egy ingyenes, nyílt forráskódú képernyőkép- és képernyőfelvétel-eszköz macOS-re.\nTeljesen natív, Swift-tel és AppKit-tel építve.";
 
 /* Alerts */
 "No Image on Clipboard" = "Nincs kép a vágólapon";
@@ -387,6 +397,9 @@
 
 /* Permission Onboarding */
 "Welcome to macshot" = "Üdvözöl a macshot";
+"Welcome back to macshot" = "Üdv újra a macshotban";
+"Turn Screen Recording back on" = "Kapcsold be újra a képernyőfelvételt";
+"After some updates, macOS asks you to allow macshot again. Your settings and captures are safe. If macshot is already in the list, select it, click the minus button (−) to remove it, then click the plus button (+) and add macshot again." = "Egyes frissítések után a macOS újra engedélyt kér a macshot számára. A beállításaid és a felvételeid megmaradtak. Ha a macshot már szerepel a listában, jelöld ki, kattints a mínusz gombra (−) az eltávolításához, majd kattints a plusz gombra (+), és add hozzá újra a macshotot.";
 "macshot needs one permission" = "A macshot-nak egy engedélyre van szüksége";
 "Screen Recording not yet granted" = "Képernyőfelvétel engedélye még nem adott";
 "Screen Recording granted!" = "Képernyőfelvétel engedélyezve!";
@@ -418,6 +431,7 @@
 /* Recording Toast */
 "Recording saved" = "Felvétel mentve";
 "%@ • Recording saved" = "%@ • Felvétel mentve";
+"Recording failed: %@" = "Felvétel sikertelen: %@";
 "Copy Path" = "Útvonal másolása";
 "Path copied!" = "Útvonal másolva!";
 
@@ -436,6 +450,9 @@
 "Save As..." = "Mentés másként...";
 "Choose a folder" = "Válassz mappát";
 "Save All to Folder…" = "Összes mentése mappába…";
+"Could not encode the screenshot." = "Nem sikerült kódolni a képernyőképet.";
+"Could not save the screenshot: %@" = "Nem sikerült menteni a képernyőképet: %@";
+"Could not save the screenshot to history." = "Nem sikerült menteni a képernyőképet az előzményekbe.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Automatikus görgetés";
@@ -467,8 +484,8 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Bevitelfigyelés szükséges";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "A macshot-nak Bevitelfigyelés engedélyre van szüksége a billentyűleütések megjelenítéséhez felvétel közben. Kérlek, adj hozzáférést a System Settings-ben, majd próbáld újra.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "A macshot-nak Akadálymentesítési engedélyre van szüksége a billentyűleütések megjelenítéséhez felvétel közben. Kérlek, adj hozzáférést a System Settings-ben, majd próbáld újra.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "A macshot-nak Bevitelfigyelés engedélyre van szüksége az egérkattintások kiemeléséhez vagy a billentyűleütések megjelenítéséhez felvétel közben. Adj hozzáférést a Rendszerbeállításokban, majd próbáld újra.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "A macshot alkalmazásnak Kisegítő lehetőségek engedélyre van szüksége az egyes felületelemekhez való illesztéshez. Kérjük, engedélyezze a hozzáférést a Rendszerbeállításokban, majd próbálja újra.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Billentyűleütések megjelenítése";
@@ -508,6 +525,8 @@
 "Settings..." = "Beállítások...";
 "macshot Settings" = "macshot beállítások";
 "Also open in Editor" = "Megnyitás a szerkesztőben is";
+"Open in Editor right after selection" = "Megnyitás a szerkesztőben közvetlenül a kijelölés után";
+"Close editor after copying" = "Szerkesztő bezárása másolás után";
 "Hide controls" = "Vezérlők elrejtése";
 "Hide recording controls" = "Felvételi vezérlők elrejtése";
 "Stop recording from the menu bar icon instead." = "Állítsd le a felvételt a menüsor ikonjából.";
@@ -551,12 +570,13 @@
 
 "Same as screenshots" = "Megegyezik a képernyőképekkel";
 "  Preview size:" = "  Előnézet mérete:";
+"Fit image in preview (letterbox)" = "Kép igazítása az előnézetbe (sávokkal)";
 "(0 = off)" = "(0 = ki)";
 "Clear All" = "Összes törlése";
 "Clear History?" = "Törli az előzményeket?";
 "This will permanently delete all screenshots from history." = "Ez véglegesen törli az összes képernyőképet az előzményekből.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Kattintson a \"Beállítás\" gombra, majd nyomjon meg egy billentyűkombinációt legalább egy módosítóbillentyűvel (⌘, ⌥, ⌃, ⇧) a gyorsbillentyű beállításához.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "A fájlok a Google Drive-on lévő \"macshot\" mappába töltődnek fel. Minden privát marad — semmi nem kerül nyilvános megosztásra.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused. A new one is created instead. Everything stays private and nothing is shared publicly." = "A fájlok ebbe a mappába töltődnek fel a Google Drive-on. Hagyd üresen a \"macshot\" használatához. A macshot csak az általa létrehozott mappákat tudja használni, ezért a Drive-ban általad létrehozott, azonos nevű mappát nem használja újra, helyette új mappát hoz létre. Minden privát marad, semmi nem kerül nyilvános megosztásra.";
 
 "Pressure" = "Nyomás";
 
@@ -626,7 +646,7 @@
 "Open this settings window" = "Ezen beállítások ablak megnyitása";
 "Quick capture (uses your Enter action)" = "Gyors rögzítés (az Enter műveletedet használja)";
 "Re-capture the last selected area" = "Utoljára kiválasztott terület újbóli rögzítése";
-"Screenshots only — captured window title (blank otherwise)" = "Csak képernyőképeknél — rögzített ablak címe (egyébként üres)";
+"Captured window title (screenshots only, blank otherwise)" = "Csak képernyőképeknél, rögzített ablak címe (egyébként üres)";
 "Show available filename tokens" = "Elérhető fájlnév tokenek megjelenítése";
 "Enable macshot:// URL scheme" = "macshot:// URL séma engedélyezése";
 "Show supported URL scheme commands" = "Támogatott URL séma parancsok megjelenítése";
@@ -680,3 +700,162 @@
 "Selection is already aligned" = "A kijelölés már igazítva van";
 "Space to move. Release to annotate and edit" = "Tartsd lenyomva a szóközt a mozgatáshoz. Engedd fel a jegyzeteléshez és szerkesztéshez";
 "Space to move. Release to finish" = "Tartsd lenyomva a szóközt a mozgatáshoz. Engedd fel a befejezéshez";
+
+"Saving..." = "Mentés…";
+
+"Show Recordings in Finder" = "Felvételek megjelenítése a Finderben";
+
+"Cancelled" = "Megszakítva";
+
+"Cancelling..." = "Megszakítás...";
+"Preparing video..." = "Videó előkészítése...";
+"History is busy saving. Please try again shortly." = "Az előzmények mentése folyamatban van. Próbáld újra egy kis idő múlva.";
+
+// Video editor accessibility
+"Play" = "Lejátszás";
+"Mute" = "Némítás";
+"Unmute" = "Némítás feloldása";
+
+/* Video editor (Studio) */
+"%.1f× · follows pointer" = "%.1f× · követi a mutatót";
+"Add" = "Hozzáadás";
+"Add Cut Here" = "Vágás hozzáadása itt";
+"Add Text Here" = "Szöveg hozzáadása itt";
+"Add Zoom Here" = "Nagyítás hozzáadása itt";
+"Added %d captions" = "%d felirat hozzáadva";
+"Added %d zooms" = "%d nagyítás hozzáadva";
+"Apply Default Zoom to All" = "Alapértelmezett nagyítás alkalmazása mindre";
+"Auto" = "Auto";
+"Auto Zoom" = "Automatikus nagyítás";
+"Auto Zoom needs pointer data, which macshot records with every new recording. You can still add zooms by double-clicking the zoom lane." = "Az automatikus nagyításhoz mutatóadatok kellenek, amelyeket a macshot minden új felvételnél rögzít. Nagyításokat továbbra is hozzáadhatsz a nagyítássávra duplán kattintva.";
+"Background blur" = "Háttér elmosása";
+"Background color" = "Háttérszín";
+"Background, padding, rounded corners and shadow" = "Háttér, margó, lekerekített sarkok és árnyék";
+"Bold Italic" = "Félkövér dőlt";
+"Box" = "Doboz";
+"Camera" = "Kamera";
+"Caption" = "Felirat";
+"Captions" = "Feliratok";
+"Captions are transcribed on this Mac. Nothing is uploaded." = "A feliratok leírása ezen a Macen történik. Semmi sem kerül feltöltésre.";
+"Choose Image…" = "Kép kiválasztása…";
+"Click color" = "Kattintás színe";
+"Clicks" = "Kattintások";
+"Clip" = "Klip";
+"Colors" = "Színek";
+"Connect nearby zooms" = "Közeli nagyítások összekötése";
+"Copy the edited video to the clipboard" = "A szerkesztett videó másolása a vágólapra";
+"Corner radius" = "Saroksugár";
+"Creates zooms that follow the pointer wherever you click or type. Adjust or delete them on the timeline." = "Olyan nagyításokat hoz létre, amelyek követik a mutatót, bárhol kattintasz vagy gépelsz. Az idővonalon módosíthatod vagy törölheted őket.";
+"Custom color" = "Egyéni szín";
+"Cut" = "Vágás";
+"Cuts, speed and freeze frames" = "Vágások, sebesség és kimerevített képkockák";
+"Default zoom" = "Alapértelmezett nagyítás";
+"Dot" = "Pont";
+"Double-click the text on the preview to edit it." = "Kattints duplán a szövegre az előnézetben a szerkesztéséhez.";
+"Double-click to add a zoom" = "Kattints duplán nagyítás hozzáadásához";
+"Double-click to add a zoom, or use Auto Zoom" = "Kattints duplán nagyítás hozzáadásához, vagy használd az automatikus nagyítást";
+"Drag the frame on the preview to choose where the zoom looks." = "Húzd a keretet az előnézetben, hogy kiválaszd, hová nézzen a nagyítás.";
+"Duration" = "Időtartam";
+"Edge highlight" = "Szélkiemelés";
+"Edit Text" = "Szöveg szerkesztése";
+"Editable pointer, clicks and keystrokes" = "Szerkeszthető mutató, kattintások és billentyűleütések";
+"Edits" = "Szerkesztések";
+"Export" = "Exportálás";
+"Export Subtitles (.srt)…" = "Feliratok exportálása (.srt)…";
+"Fade in" = "Beúszás";
+"Fade out" = "Kiúszás";
+"Fit" = "Illesztés";
+"Fixed" = "Rögzített";
+"Fixed point" = "Rögzített pont";
+"Focus" = "Fókusz";
+"Follow" = "Követés";
+"Follow Pointer" = "Mutató követése";
+"Follow pointer" = "Mutató követése";
+"Follow tightness" = "Követés szorossága";
+"Format" = "Formátum";
+"Frame" = "Keret";
+"Frame rate" = "Képkockaszám";
+"Frame the recording" = "Felvétel keretezése";
+"Freeze Frame" = "Kimerevített kép";
+"Generate Captions" = "Feliratok létrehozása";
+"Gentle" = "Lágy";
+"Gradient" = "Színátmenet";
+"Hide ordinary typing, show key combinations" = "Hétköznapi gépelés elrejtése, billentyűkombinációk mutatása";
+"Hide when idle" = "Elrejtés tétlenség esetén";
+"Hide while typing" = "Elrejtés gépelés közben";
+"Hold Focus" = "Fókusz rögzítése";
+"Idle delay" = "Tétlenségi késleltetés";
+"Image" = "Kép";
+"Keystrokes" = "Billentyűleütések";
+"Keystrokes in this recording are part of the video pixels." = "A felvételen a billentyűleütések a videó képpontjainak részei.";
+"Light appearance" = "Világos megjelenés";
+"Makes looping GIFs seamless" = "Zökkenőmentessé teszi az ismétlődő GIF-eket";
+"Mirror" = "Tükrözés";
+"Motion" = "Mozgás";
+"Motion blur" = "Mozgási elmosódás";
+"Next edit" = "Következő szerkesztés";
+"No clicks or typing found to zoom into" = "Nem található kattintás vagy gépelés, amelyre nagyítani lehetne";
+"No speech was recognized" = "Nem sikerült beszédet felismerni";
+"No system wallpapers were found. Choose an image instead." = "Nem találhatók rendszerháttérképek. Válassz helyette egy képet.";
+"Off" = "Ki";
+"On-device speech recognition isn't available for your language on this Mac." = "Az eszközön végzett beszédfelismerés nem érhető el a nyelveden ezen a Macen.";
+"Original" = "Eredeti";
+"Outline color" = "Körvonal színe";
+"Outline width" = "Körvonal vastagsága";
+"Overlays" = "Rátétek";
+"Pan between zooms instead of zooming out" = "Pásztázás a nagyítások között kicsinyítés helyett";
+"Pill" = "Kapszula";
+"Pointer" = "Mutató";
+"Position" = "Pozíció";
+"Press animation" = "Kattintási animáció";
+"Previous edit" = "Előző szerkesztés";
+"Quality" = "Minőség";
+"Regenerate Captions" = "Feliratok újragenerálása";
+"Regular" = "Normál";
+"Remove Automatic Zooms" = "Automatikus nagyítások eltávolítása";
+"Remove Captions" = "Feliratok eltávolítása";
+"Removes %.1f seconds from the video. Drag its edges on the timeline to adjust." = "%.1f másodpercet távolít el a videóból. Az igazításhoz húzd a széleit az idővonalon.";
+"Return to start at the end" = "Visszatérés a kezdőpontra a végén";
+"Ring" = "Gyűrű";
+"Ripple" = "Hullám";
+"Save As…" = "Mentés másként…";
+"Shape" = "Alak";
+"Shortcuts only" = "Csak billentyűparancsok";
+"Show camera" = "Kamera megjelenítése";
+"Show captions" = "Feliratok megjelenítése";
+"Show keystrokes" = "Billentyűleütések megjelenítése";
+"Show pointer" = "Mutató megjelenítése";
+"Shrink during zooms" = "Zsugorítás nagyításkor";
+"Smoothing" = "Simítás";
+"Snappy" = "Pörgős";
+"Speech recognition is turned off for macshot in System Settings › Privacy & Security." = "A beszédfelismerés ki van kapcsolva a macshot számára a Rendszerbeállítások › Adatvédelem és biztonság menüpontban.";
+"Speed" = "Sebesség";
+"Spotlight" = "Reflektor";
+"Square" = "Négyzet";
+"Style" = "Stílus";
+"Tall" = "Álló";
+"Text and blur" = "Szöveg és elmosás";
+"The recording's audio could not be read." = "A felvétel hangját nem sikerült beolvasni.";
+"This recording already shows the pointer in its pixels, so it can't be restyled. Zooms can still follow it." = "Ez a felvétel már a képpontjaiban tartalmazza a mutatót, ezért nem lehet átformázni. A nagyítások továbbra is követhetik.";
+"This recording has no audio to transcribe." = "Ebben a felvételben nincs leírható hang.";
+"This video has no recorded pointer data. Recordings made with macshot that open in the editor let you restyle, smooth and resize the pointer after recording." = "Ebben a videóban nincsenek rögzített mutatóadatok. A macshot-tal készült, szerkesztőben megnyíló felvételeknél a mutató stílusa, simítása és mérete felvétel után is módosítható.";
+"Title" = "Cím";
+"Transcribing…" = "Leírás folyamatban…";
+"Transition" = "Átmenet";
+"Turn on Show Keystrokes before recording. macshot then records them separately so you can style them here." = "Felvétel előtt kapcsold be a Billentyűleütések megjelenítése opciót. A macshot ekkor külön rögzíti őket, így itt formázhatod őket.";
+"Turn on the camera before recording. macshot records it separately so you can move, resize, restyle or hide it here, and shrink it during zooms." = "Felvétel előtt kapcsold be a kamerát. A macshot külön rögzíti, így itt áthelyezheted, átméretezheted, átformázhatod vagy elrejtheted, és nagyításkor összezsugoríthatod.";
+"Use Solid to hide sensitive information: blur and pixelation can sometimes be reversed." = "Érzékeny adatok elrejtéséhez használd a Színátfedés lehetőséget: az elmosás és a pixelezés néha visszafordítható.";
+"Visibility" = "Láthatóság";
+"Wallpaper" = "Háttérkép";
+"When recordings open in the editor, the pointer is recorded separately so you can smooth, resize, restyle or hide it, and add zooms that follow it." = "Ha a felvételek a szerkesztőben nyílnak meg, a mutató külön rögzül, így simíthatod, átméretezheted, átformázhatod vagy elrejtheted, és olyan nagyításokat adhatsz hozzá, amelyek követik.";
+"Wide" = "Széles";
+"Zoom in" = "Ránagyítás";
+"Zoom in timeline" = "Idővonal nagyítása";
+"Zoom level" = "Nagyítás mértéke";
+"Zoom out" = "Visszakicsinyítés";
+"Zoom out timeline" = "Idővonal kicsinyítése";
+"macOS" = "macOS";
+"Sway" = "Billegés";
+
+"Snap webcam to corners when moved" = "Webkamera sarkokhoz igazítása mozgatáskor";
+"Search emoji" = "Emoji keresése";

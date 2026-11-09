@@ -39,7 +39,6 @@
 
 /* History Panel */
 "Copy" = "העתק";
-"Save As..." = "שמור בשם...";
 "Open in Editor" = "פתח בעורך";
 "Open With" = "פתח באמצעות";
 "Open Link" = "פתח קישור";
@@ -56,7 +55,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "סגור הכל";
-"Save All to Folder…" = "שמור הכל לתיקייה…";
 "Save" = "שמור";
 
 /* Editor Top Bar */
@@ -174,6 +172,13 @@
 "ON" = "פעיל";
 "OFF" = "כבוי";
 "  (Tab to toggle)" = "  (Tab להחלפה)";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "לחץ על אלמנט  ·  גרור לאזור מותאם אישית  ·  F למסך מלא";
+"Snap mode: " = "מצב הצמדה: ";
+"WINDOW" = "חלון";
+"ELEMENT" = "אלמנט";
+"  (Tab to switch)" = "  (Tab להחלפה)";
+"Enhance browser and Electron element snapping" = "שיפור הצמדת אלמנטים בדפדפן ובאפליקציות Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "בונה את עץ הנגישות של האפליקצייה היעד במצב אלמנט. השבת זאת אם דפדפן או אפליקציית Electron הופכים איטיים או יש להם בעיות קלט.";
 "Right-click to copy" = "לחץ ימני להעתקה";
 "Copied %@" = "הועתק %@";
 "Set color %@" = "הגדר צבע %@";
@@ -234,6 +239,8 @@
 "Move down" = "הזז למטה";
 "Output" = "פלט";
 "Image format:" = "פורמט תמונה:";
+"Also copy to the clipboard in this format" = "להעתיק ללוח גם בפורמט הזה";
+"PNG is always included so every app can paste" = "PNG תמיד כלול כדי שכל אפליקציה תוכל להדביק";
 "Quality:" = "איכות:";
 "%d%%" = "%d%%";
 "Save at standard resolution (1x)" = "שמור ברזולוציה רגילה (1x)";
@@ -332,6 +339,7 @@
 "Signed in" = "מחובר";
 "Not signed in" = "לא מחובר";
 "Account:" = "חשבון:";
+"Folder:" = "תיקייה:";
 "Test Connection" = "בדוק חיבור";
 "Fill in endpoint, bucket, and credentials first" = "מלא קודם כתובת שרת, bucket ופרטי גישה";
 "Testing..." = "בודק...";
@@ -344,11 +352,13 @@
 "Secret Key:" = "מפתח סודי:";
 "Public URL:" = "כתובת URL ציבורית:";
 "Path Prefix:" = "קידומת נתיב:";
+"Make uploads publicly readable" = "הפוך העלאות לקריאה ציבורית";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "שולח ACL מסוג public-read כדי שקבצים שהועלו יהיו נגישים לכל מי שיש לו את הקישור. נדרש עבור AWS S3, DigitalOcean Spaces, MinIO ו-Backblaze B2, ששומרים אובייקטים באופן פרטי כברירת מחדל. השאר כבוי עבור Cloudflare R2, שאינו תומך ב-ACLs ודוחה את הכותרת.";
 "API key:" = "מפתח API:";
 "Upload History" = "היסטוריית העלאות";
 "No uploads yet." = "אין העלאות עדיין.";
 "Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "כתובת URL בסיסית לגישה ציבורית. אם ריק, נעשה שימוש בכתובת שרת S3 (ייתכן שלא נגיש לציבור).";
-"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "מפתח משותף כלול — קבל מפתח חינמי משלך ב-imgbb.com/api אם הגעת למגבלת קצב. תמונות בלבד (ללא תמיכה בווידאו).";
+"A shared key is included. Get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "מפתח משותף כלול, קבל מפתח חינמי משלך ב-imgbb.com/api אם הגעת למגבלת קצב. תמונות בלבד (ללא תמיכה בווידאו).";
 "Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "עובד עם AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 ושירותים תואמי S3 אחרים. תומך בתמונות וסרטונים.";
 "Configure S3 in Preferences" = "הגדר S3 בהעדפות";
 "Sign in to Google Drive in Preferences" = "התחבר ל-Google Drive בהעדפות";
@@ -359,7 +369,7 @@
 "Version %@ (%@)" = "גרסה %@ (%@)";
 "Made by" = "נוצר על ידי";
 "Licensed under the GPLv3" = "מורשה תחת GPLv3";
-"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "כלי חינמי וקוד פתוח לצילום מסך והקלטת מסך עבור macOS.\nנייטיב לחלוטין — בנוי עם Swift ו-AppKit.";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native, built with Swift and AppKit." = "כלי חינמי וקוד פתוח לצילום מסך והקלטת מסך עבור macOS.\nנייטיב לחלוטין, בנוי עם Swift ו-AppKit.";
 
 /* Alerts */
 "No Image on Clipboard" = "אין תמונה בלוח";
@@ -381,6 +391,9 @@
 
 /* Permission Onboarding */
 "Welcome to macshot" = "ברוכים הבאים ל-macshot";
+"Welcome back to macshot" = "ברוכים השבים ל-macshot";
+"Turn Screen Recording back on" = "הפעילו שוב את הקלטת המסך";
+"After some updates, macOS asks you to allow macshot again. Your settings and captures are safe. If macshot is already in the list, select it, click the minus button (−) to remove it, then click the plus button (+) and add macshot again." = "אחרי חלק מהעדכונים, macOS מבקש לאשר שוב את macshot. ההגדרות והצילומים שלכם שמורים. אם macshot כבר מופיע ברשימה, בחרו בו, לחצו על כפתור המינוס (−) כדי להסיר אותו, ואז לחצו על כפתור הפלוס (+) והוסיפו את macshot מחדש.";
 "macshot needs one permission" = "macshot זקוק להרשאה אחת";
 "Screen Recording not yet granted" = "הרשאת הקלטת מסך טרם ניתנה";
 "Screen Recording granted!" = "הרשאת הקלטת מסך אושרה!";
@@ -410,6 +423,7 @@
 /* Recording Toast */
 "Recording saved" = "ההקלטה נשמרה";
 "%@ • Recording saved" = "%@ • ההקלטה נשמרה";
+"Recording failed: %@" = "ההקלטה נכשלה: %@";
 "Copy Path" = "העתק נתיב";
 "Path copied!" = "הנתיב הועתק!";
 
@@ -428,6 +442,9 @@
 "Save As..." = "שמור בשם...";
 "Choose a folder" = "בחר תיקייה";
 "Save All to Folder…" = "שמור הכל לתיקייה…";
+"Could not encode the screenshot." = "לא ניתן היה לקודד את צילום המסך.";
+"Could not save the screenshot: %@" = "לא ניתן היה לשמור את צילום המסך: %@";
+"Could not save the screenshot to history." = "לא ניתן היה לשמור את צילום המסך בהיסטוריה.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "גלילה אוטומטית";
@@ -459,8 +476,8 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "נדרש ניטור קלט";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot זקוק להרשאת ניטור קלט כדי להציג הקשות מקשים בזמן הקלטה. אנא אשר גישה ב-System Settings ונסה שוב.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot זקוק להרשאת נגישות כדי להציג הקשות מקשים בזמן הקלטה. אנא אשר גישה ב-System Settings ונסה שוב.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot זקוק להרשאת ניטור קלט כדי להדגיש לחיצות עכבר או להציג הקשות מקשים בזמן הקלטה. יש לאשר גישה בהגדרות המערכת ולנסות שוב.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot זקוק להרשאת נגישות כדי להיצמד לרכיבי ממשק בודדים. אנא הענק גישה בהגדרות המערכת ונסה שוב.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "הצג הקשות מקשים";
@@ -498,6 +515,8 @@
 "Settings..." = "הגדרות...";
 "macshot Settings" = "הגדרות macshot";
 "Also open in Editor" = "פתח גם בעורך";
+"Open in Editor right after selection" = "פתח בעורך מיד לאחר הבחירה";
+"Close editor after copying" = "סגור את העורך לאחר ההעתקה";
 "Hide controls" = "הסתר פקדים";
 "Hide recording controls" = "הסתר פקדי הקלטה";
 "Stop recording from the menu bar icon instead." = "עצור הקלטה מסמל שורת התפריטים במקום.";
@@ -543,12 +562,13 @@
 
 "Same as screenshots" = "זהה לצילומי המסך";
 "  Preview size:" = "  גודל תצוגה מקדימה:";
+"Fit image in preview (letterbox)" = "התאם את התמונה לתצוגה המקדימה (עם פסים)";
 "(0 = off)" = "(0 = כבוי)";
 "Clear All" = "נקה הכל";
 "Clear History?" = "לנקות את ההיסטוריה?";
 "This will permanently delete all screenshots from history." = "פעולה זו תמחק לצמיתות את כל צילומי המסך מההיסטוריה.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "לחץ על \"הגדר\" ולחץ על צירוף מקשים עם לפחות משנה אחד (⌘, ⌥, ⌃, ⇧) כדי להגדיר קיצור דרך.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "הקבצים מועלים לתיקייה \"macshot\" ב-Google Drive שלך. הכל נשאר פרטי — שום דבר אינו משותף באופן ציבורי.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused. A new one is created instead. Everything stays private and nothing is shared publicly." = "הקבצים מועלים לתיקייה זו ב-Google Drive שלך. השאר ריק כדי להשתמש ב-\"macshot\". macshot יכול להשתמש רק בתיקיות שהוא יצר בעצמו, ולכן תיקייה שיצרת ב-Drive עם אותו שם לא תנוצל מחדש, במקומה תיווצר תיקייה חדשה. הכל נשאר פרטי, שום דבר אינו משותף באופן ציבורי.";
 
 "Pressure" = "לחץ";
 
@@ -626,7 +646,7 @@
 "Open this settings window" = "פתח חלון הגדרות זה";
 "Quick capture (uses your Enter action)" = "לכידה מהירה (משתמשת בפעולת Enter שלך)";
 "Re-capture the last selected area" = "לכוד שוב את האזור שנבחר אחרון";
-"Screenshots only — captured window title (blank otherwise)" = "צילומי מסך בלבד — כותרת החלון שנלכד (ריק אחרת)";
+"Captured window title (screenshots only, blank otherwise)" = "צילומי מסך בלבד, כותרת החלון שנלכד (ריק אחרת)";
 "Show available filename tokens" = "הצג אסימוני שם קובץ זמינים";
 "Enable macshot:// URL scheme" = "הפעל סכמת URL של macshot://";
 "Show supported URL scheme commands" = "הצג פקודות סכמת URL נתמכות";
@@ -682,3 +702,162 @@
 "Selection is already aligned" = "הבחירה כבר מיושרת";
 "Space to move. Release to annotate and edit" = "החזיקו את מקש הרווח כדי להזיז. שחררו כדי להוסיף הערות ולערוך";
 "Space to move. Release to finish" = "החזיקו את מקש הרווח כדי להזיז. שחררו כדי לסיים";
+
+"Saving..." = "שומר…";
+
+"Show Recordings in Finder" = "הצגת ההקלטות ב-Finder";
+
+"Cancelled" = "בוטל";
+
+"Cancelling..." = "מבטל...";
+"Preparing video..." = "מכין סרטון...";
+"History is busy saving. Please try again shortly." = "ההיסטוריה נשמרת כעת. נא לנסות שוב בעוד רגע.";
+
+// Video editor accessibility
+"Play" = "הפעל";
+"Mute" = "השתק";
+"Unmute" = "בטל השתקה";
+
+/* Video editor (Studio) */
+"%.1f× · follows pointer" = "%.1f× · עוקב אחר הסמן";
+"Add" = "הוסף";
+"Add Cut Here" = "הוסף חיתוך כאן";
+"Add Text Here" = "הוסף טקסט כאן";
+"Add Zoom Here" = "הוסף זום כאן";
+"Added %d captions" = "נוספו %d כתוביות";
+"Added %d zooms" = "נוספו %d זומים";
+"Apply Default Zoom to All" = "החל זום ברירת מחדל על הכול";
+"Auto" = "אוטו׳";
+"Auto Zoom" = "זום אוטומטי";
+"Auto Zoom needs pointer data, which macshot records with every new recording. You can still add zooms by double-clicking the zoom lane." = "זום אוטומטי זקוק לנתוני סמן, ש-macshot מקליט בכל הקלטה חדשה. עדיין אפשר להוסיף זומים בלחיצה כפולה על מסלול הזום.";
+"Background blur" = "טשטוש רקע";
+"Background color" = "צבע רקע";
+"Background, padding, rounded corners and shadow" = "רקע, ריפוד, פינות מעוגלות וצל";
+"Bold Italic" = "מודגש נטוי";
+"Box" = "תיבה";
+"Camera" = "מצלמה";
+"Caption" = "כתובית";
+"Captions" = "כתוביות";
+"Captions are transcribed on this Mac. Nothing is uploaded." = "הכתוביות מתומללות במק הזה. שום דבר לא מועלה.";
+"Choose Image…" = "בחר תמונה…";
+"Click color" = "צבע לחיצה";
+"Clicks" = "לחיצות";
+"Clip" = "קליפ";
+"Colors" = "צבעים";
+"Connect nearby zooms" = "חבר זומים סמוכים";
+"Copy the edited video to the clipboard" = "העתק את הווידאו הערוך ללוח";
+"Corner radius" = "רדיוס פינה";
+"Creates zooms that follow the pointer wherever you click or type. Adjust or delete them on the timeline." = "יוצר זומים שעוקבים אחר הסמן בכל מקום שבו אתה לוחץ או מקליד. ניתן לכוונן או למחוק אותם בציר הזמן.";
+"Custom color" = "צבע מותאם אישית";
+"Cut" = "חיתוך";
+"Cuts, speed and freeze frames" = "חיתוכים, מהירות ופריימים מוקפאים";
+"Default zoom" = "זום ברירת מחדל";
+"Dot" = "נקודה";
+"Double-click the text on the preview to edit it." = "לחץ פעמיים על הטקסט בתצוגה המקדימה כדי לערוך אותו.";
+"Double-click to add a zoom" = "לחץ פעמיים כדי להוסיף זום";
+"Double-click to add a zoom, or use Auto Zoom" = "לחץ פעמיים כדי להוסיף זום, או השתמש בזום אוטומטי";
+"Drag the frame on the preview to choose where the zoom looks." = "גרור את המסגרת בתצוגה המקדימה כדי לבחור לאן הזום מכוון.";
+"Duration" = "משך";
+"Edge highlight" = "הדגשת שוליים";
+"Edit Text" = "ערוך טקסט";
+"Editable pointer, clicks and keystrokes" = "סמן, לחיצות והקשות מקשים ניתנים לעריכה";
+"Edits" = "עריכות";
+"Export" = "ייצוא";
+"Export Subtitles (.srt)…" = "ייצא כתוביות (.srt)…";
+"Fade in" = "הופעה הדרגתית";
+"Fade out" = "היעלמות הדרגתית";
+"Fit" = "התאם";
+"Fixed" = "קבוע";
+"Fixed point" = "נקודה קבועה";
+"Focus" = "מיקוד";
+"Follow" = "מעקב";
+"Follow Pointer" = "עקוב אחר הסמן";
+"Follow pointer" = "מעקב אחר הסמן";
+"Follow tightness" = "הדוקות המעקב";
+"Format" = "תבנית";
+"Frame" = "מסגרת";
+"Frame rate" = "קצב פריימים";
+"Frame the recording" = "מסגר את ההקלטה";
+"Freeze Frame" = "הקפאת פריים";
+"Generate Captions" = "צור כתוביות";
+"Gentle" = "עדין";
+"Gradient" = "מעבר צבע";
+"Hide ordinary typing, show key combinations" = "הסתר הקלדה רגילה, הצג צירופי מקשים";
+"Hide when idle" = "הסתר בזמן חוסר פעילות";
+"Hide while typing" = "הסתר בזמן הקלדה";
+"Hold Focus" = "החזק מיקוד";
+"Idle delay" = "השהיית חוסר פעילות";
+"Image" = "תמונה";
+"Keystrokes" = "הקשות מקשים";
+"Keystrokes in this recording are part of the video pixels." = "הקשות המקשים בהקלטה זו הן חלק מהפיקסלים של הווידאו.";
+"Light appearance" = "מראה בהיר";
+"Makes looping GIFs seamless" = "הופך לולאות GIF לחלקות";
+"Mirror" = "שיקוף";
+"Motion" = "תנועה";
+"Motion blur" = "טשטוש תנועה";
+"Next edit" = "העריכה הבאה";
+"No clicks or typing found to zoom into" = "לא נמצאו לחיצות או הקלדות להתמקד בהן";
+"No speech was recognized" = "לא זוהה דיבור";
+"No system wallpapers were found. Choose an image instead." = "לא נמצאו תמונות רקע של המערכת. בחר תמונה במקום זאת.";
+"Off" = "כבוי";
+"On-device speech recognition isn't available for your language on this Mac." = "זיהוי דיבור במכשיר אינו זמין לשפה שלך במק הזה.";
+"Original" = "מקורי";
+"Outline color" = "צבע קו מתאר";
+"Outline width" = "עובי קו מתאר";
+"Overlays" = "שכבות";
+"Pan between zooms instead of zooming out" = "מעבר בין זומים במקום התרחקות";
+"Pill" = "גלולה";
+"Pointer" = "סמן";
+"Position" = "מיקום";
+"Press animation" = "הנפשת לחיצה";
+"Previous edit" = "העריכה הקודמת";
+"Quality" = "איכות";
+"Regenerate Captions" = "צור כתוביות מחדש";
+"Regular" = "רגיל";
+"Remove Automatic Zooms" = "הסר זומים אוטומטיים";
+"Remove Captions" = "הסר כתוביות";
+"Removes %.1f seconds from the video. Drag its edges on the timeline to adjust." = "מסיר %.1f שניות מהווידאו. גרור את הקצוות שלו בציר הזמן כדי לכוונן.";
+"Return to start at the end" = "חזור להתחלה בסוף";
+"Ring" = "טבעת";
+"Ripple" = "אדווה";
+"Save As…" = "שמור בשם…";
+"Shape" = "צורה";
+"Shortcuts only" = "קיצורי מקשים בלבד";
+"Show camera" = "הצג מצלמה";
+"Show captions" = "הצג כתוביות";
+"Show keystrokes" = "הצג הקשות מקשים";
+"Show pointer" = "הצג סמן";
+"Shrink during zooms" = "כווץ בזמן זום";
+"Smoothing" = "החלקה";
+"Snappy" = "מהיר";
+"Speech recognition is turned off for macshot in System Settings › Privacy & Security." = "זיהוי הדיבור כבוי עבור macshot בהגדרות המערכת › פרטיות ואבטחה.";
+"Speed" = "מהירות";
+"Spotlight" = "זרקור";
+"Square" = "ריבוע";
+"Style" = "סגנון";
+"Tall" = "גבוה";
+"Text and blur" = "טקסט וטשטוש";
+"The recording's audio could not be read." = "לא ניתן היה לקרוא את השמע של ההקלטה.";
+"This recording already shows the pointer in its pixels, so it can't be restyled. Zooms can still follow it." = "הסמן כבר מופיע בפיקסלים של הקלטה זו, ולכן לא ניתן לשנות את הסגנון שלו. זומים עדיין יכולים לעקוב אחריו.";
+"This recording has no audio to transcribe." = "להקלטה זו אין שמע לתמלול.";
+"This video has no recorded pointer data. Recordings made with macshot that open in the editor let you restyle, smooth and resize the pointer after recording." = "לסרטון זה אין נתוני סמן מוקלטים. הקלטות שנוצרו ב-macshot ונפתחות בעורך מאפשרות לשנות את הסגנון, ההחלקה והגודל של הסמן לאחר ההקלטה.";
+"Title" = "כותרת";
+"Transcribing…" = "מתמלל…";
+"Transition" = "מעבר";
+"Turn on Show Keystrokes before recording. macshot then records them separately so you can style them here." = "הפעל את „הצג הקשות מקשים” לפני ההקלטה. macshot יקליט אותן אז בנפרד כדי שתוכל לעצב אותן כאן.";
+"Turn on the camera before recording. macshot records it separately so you can move, resize, restyle or hide it here, and shrink it during zooms." = "הפעל את המצלמה לפני ההקלטה. macshot מקליט אותה בנפרד כדי שתוכל להזיז, לשנות גודל, לשנות סגנון או להסתיר אותה כאן, ולכווץ אותה בזמן זום.";
+"Use Solid to hide sensitive information: blur and pixelation can sometimes be reversed." = "השתמש ב„מילוי” כדי להסתיר מידע רגיש: לעיתים ניתן לבטל טשטוש ופיקסול.";
+"Visibility" = "נראות";
+"Wallpaper" = "תמונת רקע";
+"When recordings open in the editor, the pointer is recorded separately so you can smooth, resize, restyle or hide it, and add zooms that follow it." = "כשהקלטות נפתחות בעורך, הסמן מוקלט בנפרד כדי שתוכל להחליק, לשנות גודל, לשנות סגנון או להסתיר אותו, ולהוסיף זומים שעוקבים אחריו.";
+"Wide" = "רחב";
+"Zoom in" = "התקרבות";
+"Zoom in timeline" = "הגדל את ציר הזמן";
+"Zoom level" = "רמת זום";
+"Zoom out" = "התרחקות";
+"Zoom out timeline" = "הקטן את ציר הזמן";
+"macOS" = "macOS";
+"Sway" = "נטייה";
+
+"Snap webcam to corners when moved" = "הצמדת מצלמת הרשת לפינות בעת הזזה";
+"Search emoji" = "חיפוש אמוג׳י";

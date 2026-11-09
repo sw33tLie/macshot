@@ -7,6 +7,12 @@ enum FilenameFormatter {
     static let defaultRecordingTemplate = "Recording {date} at {time}"
     static let recordingUserDefaultsKey = "recordingFilenameTemplate"
 
+    /// Optional template used instead of the main one when it contains `{app}`
+    /// but no app is known (e.g. a whole-display capture). Empty or missing
+    /// means "use the main template anyway".
+    static let noAppUserDefaultsKey = "filenameTemplateNoApp"
+    static let recordingNoAppUserDefaultsKey = "recordingFilenameTemplateNoApp"
+
     /// Renders a filename *without* extension from a user-editable template.
     ///
     /// Supported tokens (case-sensitive, lowercase):
@@ -17,31 +23,82 @@ enum FilenameFormatter {
     ///   {window}     sanitized window title, or "" when nil/empty
     ///   {index}      1, 2, …; "" when nil
     ///   {random}     8-char lowercase base36 (0-9a-z), fresh per call
+    ///   {app}        name of the captured app, or "" when unknown
+    ///   {yyyy} {MM} {dd} {HH} {mm} {ss} {ms}   date/time parts (ms = 000-999)
     ///
     /// Unknown tokens are left verbatim so typos are visible.
     /// The result is sanitized for macOS filesystems (strips `/`, `:`, NUL,
-    /// leading/trailing whitespace and dots) and capped to 200 UTF-8 bytes.
+    /// control characters, surrounding whitespace and trailing dots), capped
+    /// to 200 UTF-8 bytes without splitting a Unicode character.
     /// If the final result is empty, the default template is re-rendered.
     static func format(
         template: String,
         windowTitle: String? = nil,
+        appName: String? = nil,
         index: Int? = nil,
         date: Date = Date(),
         fallback: String = defaultTemplate
     ) -> String {
         let effective = template.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? fallback : template
-        let rendered = render(template: effective, windowTitle: windowTitle, index: index, date: date)
-        let sanitized = sanitize(rendered)
+        let rendered = render(template: effective, windowTitle: windowTitle, appName: appName, index: index, date: date)
+        let sanitized = FilenameSanitizer.sanitize(rendered)
         if sanitized.isEmpty && effective != fallback {
-            return format(template: fallback, windowTitle: windowTitle, index: index, date: date, fallback: fallback)
+            return format(template: fallback, windowTitle: windowTitle, appName: appName, index: index, date: date, fallback: fallback)
         }
         return sanitized.isEmpty ? "Untitled" : sanitized
     }
 
-    private static func render(template: String, windowTitle: String?, index: Int?, date: Date) -> String {
+    /// Like `format`, but each `/` in the template starts a subfolder, so
+    /// `{yyyy}/{MM}/{dd}/{app}-{HH}.{mm}.{ss}` files captures by day.
+    /// Returns sanitized path components; the last one is the filename
+    /// (without extension). Empty, `.` and `..` components are dropped, so the
+    /// result always stays inside the save folder.
+    ///
+    /// When the template uses `{app}` but `appName` is empty and a non-empty
+    /// `noAppTemplate` is given, that template is rendered instead.
+    static func formatRelativePath(
+        template: String,
+        noAppTemplate: String? = nil,
+        windowTitle: String? = nil,
+        appName: String? = nil,
+        index: Int? = nil,
+        date: Date = Date(),
+        fallback: String = defaultTemplate
+    ) -> [String] {
+        var effective = template.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? fallback : template
+        let hasApp = !(appName?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+        if !hasApp, effective.contains("{app}"),
+           let noApp = noAppTemplate?.trimmingCharacters(in: .whitespacesAndNewlines), !noApp.isEmpty {
+            effective = noApp
+        }
+        let pieces = effective.split(separator: "/", omittingEmptySubsequences: true).map(String.init)
+        var components: [String] = []
+        for piece in pieces {
+            let rendered = render(template: piece, windowTitle: windowTitle, appName: appName, index: index, date: date)
+            let sanitized = FilenameSanitizer.sanitize(rendered)
+            guard !sanitized.isEmpty, sanitized != ".", sanitized != ".." else { continue }
+            components.append(sanitized)
+        }
+        if components.isEmpty {
+            return [format(template: fallback, windowTitle: windowTitle, appName: appName, index: index, date: date, fallback: fallback)]
+        }
+        return components
+    }
+
+    /// Frontmost-app / window-owner name suitable for `{app}`: nil for macshot
+    /// itself and for empty names.
+    static func appNameForTemplate(_ name: String?) -> String? {
+        guard let trimmed = name?.trimmingCharacters(in: .whitespacesAndNewlines), !trimmed.isEmpty else { return nil }
+        let ownName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
+        return trimmed == ownName ? nil : trimmed
+    }
+
+    private static func render(template: String, windowTitle: String?, appName: String?, index: Int?, date: Date) -> String {
         let dateStr = dateFormatter("yyyy-MM-dd").string(from: date)
         let timeStr = dateFormatter("HH-mm-ss").string(from: date)
-        let window = sanitizeWindowTitle(windowTitle)
+        let window = windowTitle?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let app = appName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let millis = Int((date.timeIntervalSince1970 * 1000).rounded(.down)) % 1000
 
         let values: [String: String] = [
             "{date}": dateStr,
@@ -49,18 +106,33 @@ enum FilenameFormatter {
             "{timestamp}": "\(dateStr)_\(timeStr)",
             "{unix}": String(Int(date.timeIntervalSince1970)),
             "{window}": window,
+            "{app}": app,
             "{index}": index.map(String.init) ?? "",
+            "{yyyy}": dateFormatter("yyyy").string(from: date),
+            "{MM}": dateFormatter("MM").string(from: date),
+            "{dd}": dateFormatter("dd").string(from: date),
+            "{HH}": dateFormatter("HH").string(from: date),
+            "{mm}": dateFormatter("mm").string(from: date),
+            "{ss}": dateFormatter("ss").string(from: date),
+            "{ms}": String(format: "%03d", Int32(millis)),
         ]
 
-        var out = template
-        for (token, value) in values {
-            out = out.replacingOccurrences(of: token, with: value)
+        // Expand the template once. Inserted window titles are literal data,
+        // even when a title itself contains a token such as {random} or {date}.
+        var out = ""
+        var cursor = template.startIndex
+        while let open = template[cursor...].firstIndex(of: "{") {
+            out += template[cursor..<open]
+            guard let close = template[open...].firstIndex(of: "}") else {
+                out += template[open...]
+                cursor = template.endIndex
+                break
+            }
+            let token = String(template[open...close])
+            out += token == "{random}" ? randomToken() : (values[token] ?? token)
+            cursor = template.index(after: close)
         }
-        // {random} is substituted per-occurrence so multiple tokens in one
-        // template (rare but cheap to support) produce distinct values.
-        while let range = out.range(of: "{random}") {
-            out.replaceSubrange(range, with: randomToken())
-        }
+        out += template[cursor...]
         return out
     }
 
@@ -72,58 +144,6 @@ enum FilenameFormatter {
             s.append(randomAlphabet[Int.random(in: 0..<randomAlphabet.count)])
         }
         return s
-    }
-
-    private static func sanitizeWindowTitle(_ title: String?) -> String {
-        guard let title = title else { return "" }
-        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.isEmpty { return "" }
-        var cleaned = ""
-        cleaned.reserveCapacity(trimmed.count)
-        for scalar in trimmed.unicodeScalars {
-            switch scalar {
-            case "/", ":", "\0":
-                cleaned.append("-")
-            default:
-                if scalar.value < 0x20 { continue } // strip control chars
-                cleaned.unicodeScalars.append(scalar)
-            }
-        }
-        return cleaned
-    }
-
-    /// Final pass on the fully-rendered filename.
-    private static func sanitize(_ s: String) -> String {
-        var result = ""
-        result.reserveCapacity(s.count)
-        for scalar in s.unicodeScalars {
-            switch scalar {
-            case "/", ":", "\0":
-                result.append("-")
-            default:
-                if scalar.value < 0x20 { continue }
-                result.unicodeScalars.append(scalar)
-            }
-        }
-        // Trim whitespace and trailing dots (macOS hides trailing dots).
-        result = result.trimmingCharacters(in: .whitespacesAndNewlines)
-        while result.hasSuffix(".") { result.removeLast() }
-        result = result.trimmingCharacters(in: .whitespacesAndNewlines)
-        return capToByteLength(result, bytes: 200)
-    }
-
-    /// Truncates at a Unicode scalar boundary so the UTF-8 byte count ≤ `bytes`.
-    private static func capToByteLength(_ s: String, bytes: Int) -> String {
-        if s.utf8.count <= bytes { return s }
-        var out = ""
-        var used = 0
-        for scalar in s.unicodeScalars {
-            let scalarBytes = String(scalar).utf8.count
-            if used + scalarBytes > bytes { break }
-            out.unicodeScalars.append(scalar)
-            used += scalarBytes
-        }
-        return out.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     /// Convenience: current user screenshot template + extension.

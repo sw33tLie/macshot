@@ -1667,8 +1667,10 @@ class Annotation {
 
     /// Re-render the text image from attributedText with current formatting properties.
     /// Call after changing fontSize, bold, italic, font family, alignment, etc. on a committed text annotation.
-    func reRenderTextImage() {
-        guard tool == .text, let attrText = attributedText, textDrawRect != .zero else { return }
+    @discardableResult
+    func reRenderTextImage() -> Bool {
+        guard tool == .text, let attrText = attributedText,
+              SavedCaptureValidation.canRenderText(size: textDrawRect.size) else { return false }
 
         // Rebuild attributed string with updated properties
         let mutable = NSMutableAttributedString(attributedString: attrText)
@@ -1715,12 +1717,13 @@ class Annotation {
 
         // Calculate new size using the current textDrawRect width
         let inset: CGFloat = 4
-        let drawWidth = textDrawRect.width - inset * 2
+        let drawWidth = max(1, textDrawRect.width - inset * 2)
         let boundingRect = mutable.boundingRect(
             with: NSSize(width: drawWidth, height: .greatestFiniteMagnitude),
             options: [.usesLineFragmentOrigin, .usesFontLeading])
         let newHeight = max(textDrawRect.height, ceil(boundingRect.height) + inset * 2)
         let imgSize = NSSize(width: textDrawRect.width, height: newHeight)
+        guard SavedCaptureValidation.canRenderText(size: imgSize) else { return false }
 
         // Re-render image through the outline layout manager so the per-glyph
         // outline is drawn outside the fill (matches the live editor).
@@ -1737,6 +1740,7 @@ class Annotation {
         }
 
         outlineGlowImage = nil
+        return true
     }
 
     private func drawNumber() {

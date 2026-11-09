@@ -104,7 +104,8 @@ final class PencilToolHandler: AnnotationToolHandler {
             // last raw point so the moving average converges to the true endpoint
             // naturally — no abrupt straight segment needed.
             let padCount = smoothWindowSize - 1
-            let padded = rawPointBuffer + Array(repeating: rawPointBuffer.last!, count: padCount)
+            guard let lastPoint = rawPointBuffer.last else { return }
+            let padded = rawPointBuffer + Array(repeating: lastPoint, count: padCount)
             let smoothed = Self.movingAverageSmooth(padded, windowSize: smoothWindowSize)
             let final = Self.chaikinSmooth(smoothed, iterations: 2)
             annotation.points = final
@@ -112,7 +113,7 @@ final class PencilToolHandler: AnnotationToolHandler {
             // Use gentle smoothing (moving average only, no Chaikin) to preserve
             // the user's pressure intent, then linearly interpolate to match point count.
             if annotation.pressures != nil {
-                let paddedP = rawPressureBuffer + Array(repeating: rawPressureBuffer.last!, count: padCount)
+                let paddedP = rawPressureBuffer + Array(repeating: rawPressureBuffer.last ?? 1, count: padCount)
                 let smoothedP = Self.movingAverageSmoothValues(paddedP, windowSize: max(smoothWindowSize / 2, 3))
                 let finalP = Self.interpolateToCount(smoothedP, targetCount: final.count)
                 annotation.pressures = finalP

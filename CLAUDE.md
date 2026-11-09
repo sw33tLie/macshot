@@ -40,27 +40,48 @@ macshot/
 ├── AppDelegate.swift                   # App lifecycle, status bar, hotkey, capture orchestration
 │
 ├── Model/
-│   └── Annotation.swift                # Data model + drawing for all annotation types
+│   ├── Annotation.swift                # Data model + drawing for all annotation types
+│   └── LenientDecoding.swift           # Backward/forward-compatible Codable helpers
 │
 ├── Capture/
 │   ├── ScreenCaptureManager.swift      # Multi-screen capture via ScreenCaptureKit (async/await)
-│   ├── RecordingEngine.swift           # Screen recording (MP4 via AVAssetWriter, GIF via GIFEncoder)
-│   ├── ScrollCaptureController.swift   # Scroll capture with SAD-based stitching
-│   └── GIFEncoder.swift               # Animated GIF from video frames
+│   ├── RecordingEngine.swift           # Screen recording to durable MP4 originals
+│   ├── ScrollCaptureController.swift   # Scroll capture session: frame grabs, manual/auto scroll, HUD callbacks
+│   ├── ScrollFrameMatcher.swift        # Pure: exact scroll shift, ignoring navbars, sidebars, fixed backgrounds, pinned boxes
+│   ├── ScrollStitcher.swift            # Pure: appends new rows; sticky content appears once (tested pixel-exact)
+│   ├── ScrollFrameAnalyzer.swift       # Pure pixel access + frozen header / scrollbar helpers
+│   ├── GIFExporter.swift              # Edited timeline → timestamped GIF frames
+│   ├── GIFEncoder.swift               # Bounded-memory streaming GIF writer
+│   ├── CursorTelemetry.swift          # Pointer/click/key data file format + media-clock view (CursorRecording)
+│   ├── CursorTelemetryRecorder.swift  # Samples the pointer during a take (no permissions needed)
+│   ├── CursorMotion.swift             # Spring smoothing, idle/typing hiding, click timing
+│   ├── VideoSceneGeometry.swift       # Canvas/frame layout, camera path (zooms), auto-zoom planner
+│   ├── VideoSceneRenderer.swift       # Per-frame Core Image scene: frame, camera, cursor, overlays, webcam
+│   ├── VideoSceneBuilder.swift        # Main-actor snapshot builder: background art, sprites
+│   ├── KeystrokeTimeline.swift        # Keystroke labels + caption segmentation/SRT
+│   ├── VideoCameraRecorder.swift      # Separate webcam file aligned to the screen clock
+│   ├── CameraPlacementTrack.swift     # Webcam bubble moves/resizes during a take, replayed by the editor
+│   └── VideoCaptionTranscriber.swift  # On-device speech → caption words
 │
 ├── Services/
 │   ├── ImageEncoder.swift              # PNG/JPEG/HEIC/WebP encoding, clipboard copy, resolution scaling
 │   ├── BeautifyRenderer.swift          # Gradient frame / background beautification (linear + mesh gradients)
 │   ├── AutoRedactor.swift              # PII regex detection + Vision OCR → redaction annotations
-│   ├── BarcodeDetector.swift           # Async Vision barcode/QR scanning, badge drawing, hit-testing
 │   ├── TranslationOverlay.swift        # OCR → translate → overlay annotations
 │   ├── TranslationService.swift        # Google Translate API wrapper
 │   ├── VisionOCR.swift                 # Vision text recognition request factory
 │   ├── HotkeyManager.swift            # Global keyboard shortcut (Carbon RegisterEventHotKey)
+│   ├── KeyboardShortcutMatcher.swift   # Layout-aware character matching for shortcuts
+│   ├── ToolShortcutManager.swift       # Single-key overlay tool shortcuts
+│   ├── EditorCommandShortcutManager.swift  # Configurable undo/redo chords
+│   ├── FilenameFormatter.swift         # Filename templates ({date}, {window}, {random}, …)
+│   ├── SettingsPortability.swift       # Settings export/import + the secret filter
+│   ├── LanguageManager.swift           # Locale resolution + L("…") lookup
 │   ├── ScreenshotHistory.swift         # Local history in ~/Library/Application Support/
 │   └── SaveDirectoryAccess.swift       # Security-scoped bookmark for save directory
 │
 ├── Upload/
+│   ├── UploadPayload.swift             # Streamed upload bodies (chunking, incremental SHA256, multipart on disk)
 │   ├── ImgbbUploader.swift             # imgbb image upload
 │   ├── GoogleDriveUploader.swift       # Google Drive OAuth2 upload
 │   └── S3Uploader.swift               # S3-compatible upload
@@ -80,7 +101,8 @@ macshot/
 │   │   ├── DetachedEditorWindowController.swift  # Standalone editor window (resizable, titled)
 │   │   ├── EditorTopBarView.swift      # NSView with crop, flip, zoom buttons
 │   │   ├── CenteringClipView.swift     # NSClipView subclass that centers document when smaller than clip
-│   │   └── VideoEditorWindowController.swift  # Standalone video editor (trim, export, upload)
+│   │   ├── VideoEditorWindowController(+Export).swift  # Studio video editor window, actions, exports
+│   │   └── Video/                      # Editor document, playback, planner, exporter, inspector, stage, timeline
 │   │
 │   ├── Toolbar/
 │   │   ├── ToolbarDefinitions.swift    # ToolbarButtonAction enum, ToolbarButton struct, ToolbarLayout constants
@@ -208,6 +230,16 @@ AnnotationCanvas                 — OverlayView state interface for tool handle
 TextEditingCanvas                — Coordinate transforms + annotation storage for TextEditingController
 ```
 
+### Video editor (Studio)
+
+The video editor is built around `VideoEditorDocument` (one `VideoProject`: timeline edits plus the look — frame/background, pointer, zoom, keystrokes, camera, captions). Views observe it; they never keep copies. Undo is a stack of encoded project snapshots; group continuous interactions with `beginGesture()`/`endGesture()`. Projects autosave beside a recording (`<take>.project.json`) or in `VideoProjects/` for other files, and decode leniently.
+
+- **One render path.** `VideoRenderPlanner` builds every composition (preview and all exports) and the compositor renders `VideoSceneSnapshot` through `VideoSceneRenderer`: censors in content space → crop and framed placement → camera over the whole canvas (with motion blur) → text, pointer, clicks, camera bubble, keystrokes and captions in output space. Preview only lowers the render scale. Don't add effects to one path only.
+- **Recorded pointer data.** Every take writes `cursor.mstl` (`CursorTelemetry`) beside the MP4. Takes that open in the editor with "Editable pointer" hide the system cursor from ScreenCaptureKit and exclude the click/keystroke/webcam overlay windows; the editor redraws them. Any other destination keeps them in the pixels. Telemetry is host-clock based and anchored to the writer's first frame (`MP4WriterSession` `onSessionStart`); pauses are removed exactly like the writer removes them. Telemetry and camera failures never affect the screen recording.
+- **Time-dependent motion is precomputed and pure.** Cursor smoothing (`CursorMotion`) and the camera path (`CameraPathBuilder`) are sampled deterministically so scrubbing, playback and export produce identical frames. Motion-blur averaging must weight alpha only (Core Image color matrices are unpremultiplied).
+- **Webcam.** When the camera records separately, `VideoCompositionBuilder` adds its track in lockstep with every cut/speed/freeze piece.
+- **Visual checks.** `scripts/probe-video-editor.sh` builds the real editor into an isolated app; with `-D VIDEO_EDITOR_PROBE` it accepts scripted commands (`PROBE_COMMANDS` file) and renders in-process snapshots, including the preview frame. `scripts/make-studio-fixture.swift` generates a synthetic recording with pointer data.
+
 ### Undo/Redo
 
 `UndoEntry` enum: `.added(Annotation)`, `.deleted(Annotation, Int)`, `.imageTransform(...)`. Stacks: `undoStack` / `redoStack`. Batch undo via `groupID` (e.g. auto-redact creates multiple annotations with same groupID, all undone together).
@@ -223,21 +255,21 @@ TextEditingCanvas                — Coordinate transforms + annotation storage 
 ### Persistence (UserDefaults)
 - Drawing: `currentStrokeWidth`, `numberStrokeWidth`, `markerStrokeWidth`
 - Hotkey: `hotkeyKeyCode`, `hotkeyModifiers`
-- Output: `saveDirectory`, `autoCopyToClipboard`, `playCopySound`
+- Output: `saveDirectory`, `quickCaptureMode`, `copyPathAfterSave`, `playCopySound`
 - Selection: `lastSelectionRect`, `lastSelectionScreenFrame`, `rememberLastSelection`
 - Thumbnails: `showFloatingThumbnail`, `thumbnailStacking`, `thumbnailAutoDismissSeconds`
-- Image: `imageFormat` (png/jpeg/heic/webp), `imageQuality` (0.0–1.0), `downscaleRetina` (bool)
+- Image: `imageFormat` (png/jpeg/heic/webp/avif), `imageQuality` (0.0–1.0), `downscaleRetina` (bool), `clipboardIncludesImageFormat` (bool, opt-in: adds the configured format ahead of PNG/TIFF on the clipboard)
 - Recording: `recordingFormat` (mp4/gif), `recordingFPS`, `recordingOnStop`
 - History: `historySize`
 - Tools: `enabledTools`, `knownToolRawValues`
 - Features: `imgbbAPIKey`, `beautifyEnabled`, `beautifyStyleIndex`, `beautifyMode`, `beautifyPadding`, `beautifyCornerRadius`, `beautifyShadowRadius`, `pencilSmoothEnabled`, `loupeSize`, `stampSize`, `translateTargetLang`
 - Styles: `currentLineStyle`, `currentArrowStyle`, `currentRectFillStyle`, `currentRectCornerRadius`
-- Upload: `uploadProvider` (imgbb/gdrive), `googleDriveRefreshToken`, `uploadConfirmEnabled`
+- Upload: `uploadProvider` (imgbb/gdrive), `googleDriveRefreshToken`, `gdriveFolderName` (Drive destination folder, defaults to "macshot"), `uploadConfirmEnabled`
 
 ### Threading Model
-- **Capture:** Async/await TaskGroup for concurrent multi-display capture
+- **Capture:** Displays are captured one at a time, the one under the pointer first (on macOS 26 `replayd` serializes concurrent screenshot requests and charges far more per queued request). Each display's overlay is shown as soon as its capture lands; keyboard focus stays on the display with a selection, else the one under the pointer, and a partial failure falls back only for the displays not yet shown.
 - **Recording:** SCStream output on background thread, main actor for state updates
-- **Scroll capture:** Background throttle/settlement timers, serialized captureAndStitch
+- **Scroll capture:** Frames grabbed every 50 ms while scrolling (a mouse wheel animates without events) plus a settled capture after; matching/stitching on main, serialized by `isCapturing`
 - **OCR:** VNImageRequestHandler on background thread, results to main
 - **Upload:** URLSession background task
 - **GIF:** Frame encoding on background thread
@@ -246,7 +278,7 @@ TextEditingCanvas                — Coordinate transforms + annotation storage 
 ## Features
 
 ### Core
-- Multi-screen capture (one overlay per screen, concurrent ScreenCaptureKit calls)
+- Multi-screen capture (one overlay per screen, pointer display first, each shown as it lands)
 - Rubber-band selection with 8-point resize handles
 - Full-screen capture (single click without drag)
 - Remember last selection rectangle
@@ -267,7 +299,7 @@ Copy to clipboard, Save to file (PNG/JPEG/HEIC/WebP), Pin (floating always-on-to
 - **Editor Window:** Standalone resizable window for post-capture editing, full annotation tools, zoom 0.1x–8x via NSScrollView
 - **Video Editor:** Standalone video editor window for trimming, exporting, and uploading recorded videos
 - **Screen Recording:** MP4/GIF, annotation mode during recording, configurable FPS (up to 120fps), mouse click highlighting, system audio capture
-- **Scroll Capture:** Automatic scroll detection + stitching via SAD matching
+- **Scroll Capture:** Automatic scroll detection + stitching. `ScrollFrameMatcher` matches only the columns that scroll, cancels fixed backgrounds and leaves out navbars (translucent too) and pinned boxes; `ScrollStitcher` shows headers, sidebars and bottom banners once
 - **Auto-Redact:** Right-click filled rect → regex patterns (emails, phones, SSN, credit cards, IPs, AWS keys, bearer tokens)
 - **Barcode/QR Detection:** Live Vision detection with decoded payload, open/copy actions
 - **Floating Thumbnail:** Stackable, draggable, auto-dismiss, quick actions
@@ -291,20 +323,47 @@ Copy to clipboard, Save to file (PNG/JPEG/HEIC/WebP), Pin (floating always-on-to
 - `[weak self]` in all closures to avoid retain cycles
 - Tear down overlay windows and images promptly after capture
 - UserDefaults for all preferences (no Core Data, no plist files)
-- Annotation is a class (reference type) for mutation during drag/resize — use `clone()` for safe copies. **When adding new properties to Annotation, update three places:** the property declaration, `clone()`, and `CodableAnnotation` in `AnnotationCodable.swift` (`toCodable` + `fromCodable`). The compiler won't catch missing fields — annotations will silently lose data on clone or history reload.
+- Annotation is a class (reference type) for mutation during drag/resize — use `clone()` for safe copies. **When adding new properties to Annotation, update four places:** the property declaration, `clone()`, `CodableAnnotation` in `AnnotationCodable.swift` (the struct field, `toCodable`, `fromCodable`, and a line in its `init(from:)`), and the census in `macshotTests/AnnotationPersistenceTests.swift`. The compiler won't catch a missing field — annotations silently lose data on clone or history reload — but the census test will: it reflects over every stored property and fails naming the new one.
+- **Persisted models must decode leniently.** Swift's synthesized `init(from:)` requires a key for every non-optional property *even when it has a default value*, so adding a field silently breaks every file written by an older build. Any `Codable` type that is written to disk or UserDefaults needs a hand-written `init(from:)` using `decode(_:or:)` / `decodeOptional(_:)` from `Model/LenientDecoding.swift`, and arrays of them should decode through `LenientArrayDecoder` so one corrupt entry doesn't discard the file. This applies to `CodableAnnotation`, `CaptureEditState`, `ScreenshotHistory.IndexEntry`, and anything new that joins them.
+- **History cleanup is conservative.** Missing or salvaged indexes do not establish orphanhood. `HistoryFileCleanup` only reclaims old unreferenced thumbnails/previews using a captured cutoff; captures, raw images, annotations and edit state remain for recovery. Explicit retention/deletion owns those files. Index identifiers must remain UUIDs, extensions must be recognized image types, and duplicate rows must be removed before enforcing retention.
+- **History writes are transactions.** `HistoryImageSnapshot` owns composited/raw pixels and serialized annotations before enqueueing. `HistoryStorage` serializes saves, deletion and retention; a new immutable revision becomes current only after atomic index publication. Do not publish unwritten rows or delete the previous revision before success. Resolve preview URLs on the main actor, decode bounded pixels in ImageIO on the worker, and discard obsolete preview completions. Quit drains pending history writes.
+- **Reopen editable history as a unit.** Use `loadEditableCapture`; if an existing sidecar or annotation cannot be restored, use the flattened capture rather than exposing raw pixels with an omitted annotation/effect. `AnnotationSerializer` still supports lenient salvage for callers that explicitly want it. `SavedCaptureValidation` validates embedded PNG dimensions before decoding, bounds saved numeric settings, and rejects impossible canvas geometry. Keep the full capture available when editable data exceeds these limits. See `docs/history-recovery.md` for the revision layout and downgrade limitations.
+- **History queues retain a bounded amount of snapshot data.** Admission counts pixel buffers and serialized sidecars, with defaults of 512 MiB and 32 pending saves. A single oversized capture may save alone. Report saturation through the normal failed-save completion and visible error; never silently drop a queued capture or replace a committed revision. Release reservations on both success and failure before invoking the caller's completion.
+- **Screenshot clipboard is image data only.** Never put a file URL on the pasteboard for a screenshot: it points into the sandbox, and Teams, Photopea and RDP clients prefer it over the image data but can't read it (#309, #393). PNG and TIFF are always present; the opt-in configured format (#373) is added first, never instead.
+- **Clipboard HTML is formatting-only.** Generate import markup through `ClipboardHTML` after local parsing with external entities disabled. Copy only supported tags and validated style values; never pass source markup, resource attributes, declarations or arbitrary CSS to AppKit's HTML importer. Apply rich-input byte limits before parsing and text limits before layout, preserving composed characters when truncating.
+- **Editor saves keep their original state.** Capture the image, cloned annotations, edit state and editor revision together before showing a save panel or starting an asynchronous output. Save completion must not combine an older image with current annotations, overwrite an already submitted newer history edit, mark subsequent edits clean, or close the editor after failure.
+- **Filename components are sanitized one by one.** Both rendered templates and direct recording names use `FilenameSanitizer`. Template expansion is one pass: window titles containing `{date}` or `{random}` stay literal. Preserve complete Unicode characters while capping UTF-8 length, and sanitize again at the direct recording boundary. A `/` in an image filename template creates subfolders (`FilenameFormatter.formatRelativePath`): every component is sanitized separately, empty/`.`/`..` components are dropped so saves stay inside the save folder, and `ImageSaveService.createSubfolders` only creates folders below an existing save folder. Slashes inside token values (window titles, app names) never create folders.
+- **Report failures the user can't otherwise see.** A capture that fails to save or a recording that produces no file used to disappear silently (a `#if DEBUG` log at most). Anything that can lose a user's capture must surface: `ImageSaveService.onFailure` is wired to `AppDelegate.showFailureToast(_:)` at launch, and the recording completion handler reports its error the same way. Never swallow such a failure into an ignored `false` completion.
+- **Recording originals are durable.** `RecordingSessionStore` gives each take a unique Application Support folder. Do not delete or sweep these on editor close or failed export. `AtomicMediaSave` stages output on the destination volume and publishes it atomically; keep heavy copying off the main thread and preserve the old destination on failure.
+- **Sparse system audio must not starve the writer.** `RecordingAudioSilence` provides bounded PCM chunks only when an empty system queue holds up another writer input. Never allocate silence for an entire gap, synthesize microphone samples, or discard the final audio queue when an encoder temporarily refuses input. Finish readiness callbacks must keep draining queued real audio; persistent overload remains a visible failure.
+- **Exports outlive their windows.** Register media exports, audio mixes and recording copies with `MediaExportCoordinator`. Retain their input/directory leases until the worker actually completes, including cancellation. Gate atomic publication with `MediaExportCancellation.beginPublication` so a completed save cannot be reported as cancelled. `ApplicationTerminationCoordinator` keeps the normal event loop running while work drains, then retries Quit; `terminateLater` stalled MainActor completions in the native macOS 27 probe.
+- **Video sources stay stable.** Open through `VideoSourceSnapshot` and `PreparedVideoSource`; use the working `mediaURL` for reads and `originalURL` for names. A later save can replace the public file without changing the active timeline's input. Prepared assets and thumbnail callbacks retain the read lease. Clipboard URLs need their own published copy so closing the editor cannot remove their backing file. Only the snapshot service cleans temporary working folders, honoring live-reader locks; durable original backups are never part of that sweep.
+- **Offline bitrate targets differ from capture.** Medium/Low MP4 exports use `VideoExportEncodingPlan`, with source metadata loaded during preparation. Do not apply live-recording bitrate minimums or estimate size by multiplying input bytes by a quality percentage. For comparable H.264 sources with near-uniform cadence, estimates use the same target settings and edited duration as export, including audio. Omit estimates for sparse or unknown cadence, different codecs, High and GIF; fallback encoder budgets are not size predictions. Keep file/track metadata reads out of editor drawing.
+- **Video cadence is not the shortest sample.** Idle heartbeats and final tails produce variable timing. `VideoFrameCadence` stores the intended interval in MP4's supported software metadata field and performs a bounded background timing inspection for unmarked files. Cache that interval during preparation and reuse it for preview, rendering and bitrate targets; preserve it through audio mixing and MP4 exports. Do not derive rendering FPS from a single minimum interval or the average across long idle gaps.
+- **GIF export streams.** Use `GIFExporter` with the processed timeline and an explicit output cadence. `GIFEncoder` consumes presentation timestamps and writes one ImageIO-encoded frame at a time, combining unchanged pixels into holds. Do not accumulate an animation in one ImageIO destination, decimate by guessed source FPS, or spool every frame into scratch PNGs.
+- **Uploads stream, they don't buffer.** A recording is routinely larger than the memory the app can hold, so uploaders take an `UploadPayload` (`.file` for recordings, `.data` for encoded screenshots). `UploadPayload` chunks, hashes incrementally for SigV4, and `MultipartBodyWriter` writes request bodies straight to a temp file. Don't reintroduce `Data(contentsOf:)` on a recording.
+- **Upload bodies and callbacks belong to one job.** Prepare `PreparedUploadBody` off the main actor, hash the bytes while writing that owned body, and retain it through every retry. Never reread the public source for a retry or put progress on a shared uploader property. `UploadJob` participates in the existing quit drain; completion owns source leases until the request finishes. Drive retries reuse one pre-generated file ID and one multipart body. Account/cache changes stay on the main actor, and stale responses must not restore signed-out credentials or folders. Verify requests with local fixtures, not live cloud uploads.
 - **Keyboard shortcuts:** Character-based commands must go through `KeyboardShortcutMatcher`; do not compare raw letter key codes or read `charactersIgnoringModifiers` directly. The matcher follows the character produced by rearranged Latin layouts such as QWERTZ, AZERTY, and Dvorak, while falling back through the user's ASCII-capable layout for non-Latin input sources such as Russian or Arabic. Use `EditorCommandShortcutManager` for configurable Undo/Redo chords and `ToolShortcutManager` plus `KeyboardShortcutMatcher.toolCharacters(for:)` for single-key overlay tools. Raw `event.keyCode` checks are appropriate only for layout-independent non-character keys such as Escape, Return, Tab, Space, Delete, arrows, and function keys. Global Carbon hotkeys remain physical key-code bindings; translate them only for display with `KeyboardShortcutMatcher.currentLayoutCharacter(for:)`, and disable `NSMenuItem` automatic key-equivalent localization after applying an already-translated physical binding.
 - `autoreleasepool` for overlay teardown to prevent memory spikes
 - Extension files (`OverlayView+Feature.swift`) for self-contained feature code that accesses OverlayView state but is logically separate (recording overlays, scroll capture HUD, window snapping, popovers)
 - **Light/dark mode:** The toolbar and popovers always use a dark background regardless of system appearance. `ToolOptionsRowView` and `PopoverHelper` force `NSAppearance(named: .darkAqua)` so system controls render with light text. Never use system-adaptive colors (`.labelColor`, `.secondaryLabelColor`) for text in toolbar/popover contexts without verifying contrast against the dark background. Always test new toolbar UI elements in both light and dark system appearance.
 - **Focus management:** macshot is an `LSUIElement` (menu bar app) that temporarily shows windows. All focus return is handled by `AppDelegate.returnFocusIfNeeded()` — one centralized method. Rules:
   - `previousApp` is captured in `startCapture()` before the overlay steals focus. Cleared after single use.
-  - `returnFocusIfNeeded()` checks for visible titled windows, switches to `.accessory` policy, activates `previousApp`. Falls back to `NSApp.hide(nil)` when `previousApp` is nil (editor/OCR/preferences close).
+  - `returnFocusIfNeeded()` checks for visible titled windows, switches to `.accessory` policy, activates `previousApp`. When `previousApp` is nil it activates the frontmost non-macshot app instead. It deliberately does **not** call `NSApp.hide(nil)`: that can suspend the Carbon event loop and break global hotkeys.
   - `dismissOverlays(refocusPreviousApp: true)` (default) calls `returnFocusIfNeeded()`. Pass `false` only when macshot creates floating panels immediately after (pin, upload toast, recording HUD).
-  - **Critical pattern for pin/upload/OCR-window paths:** `returnFocusIfNeeded()` uses `NSApp.hide(nil)` as fallback, which hides ALL windows — including floating panels with `hidesOnDeactivate = false`. So any overlay dismiss that creates a floating panel afterward MUST: (1) save `previousApp` locally, (2) `dismissOverlays(refocusPreviousApp: false)`, (3) create the panel, (4) manually `app.activate(options: .activateIgnoringOtherApps)` on the saved app. See `overlayDidRequestPin` and `overlayDidRequestUpload` for the pattern.
+  - **Pattern for pin/upload/OCR-window paths:** an overlay dismiss that creates a floating panel afterward should: (1) save `previousApp` locally, (2) `dismissOverlays(refocusPreviousApp: false)`, (3) create the panel, (4) manually `app.activate(options: .activateIgnoringOtherApps)` on the saved app. See `overlayDidRequestPin` and `overlayDidRequestUpload`. (This originally guarded against the `NSApp.hide(nil)` fallback, which no longer exists; the ordering still gives the panel a clean hand-off.)
   - Every window close (editor, video editor, OCR, preferences) calls `returnFocusIfNeeded()` — never inline `setActivationPolicy`/`activate` directly.
   - All floating panels (thumbnails, pins, upload toasts, HUD, overlays) must set `hidesOnDeactivate = false` so they survive app deactivation. Pin windows must use `orderFrontRegardless()` instead of `makeKeyAndOrderFront` to avoid activating macshot.
   - `NSApp.activate(options: .activateIgnoringOtherApps)` is the only reliable way to switch focus to another app — plain `activate()` and `NSApp.deactivate()` do not reliably transfer focus on macOS 26.
-  - `NSApp.hide(nil)` reliably transfers focus (activates next app in line) but hides ALL windows — only safe as last resort when no floating panels are expected.
+  - `NSApp.hide(nil)` transfers focus but hides ALL windows and can suspend the Carbon event loop that global hotkeys depend on — don't reintroduce it.
+
+## Tests
+
+- `scripts/run-tests.sh` runs everything; add `--offline` for the offline variant, and pass `ClassName` or `ClassName/testName` to narrow it. It reports failures and preserves the full log/result bundle on failure. Set `MACSHOT_KEEP_TEST_RESULTS=1` to preserve successful results too. Empty/all-skipped runs are errors.
+- The `macshotTests` target compiles the app sources directly (a synchronized group over `macshot/`, minus `main.swift`), so there is **no host app**: tests run headless, with no Screen Recording permission and no window server dependency. `internal` symbols are reachable without `@testable import`; `private` ones are not.
+- Shared helpers live in `macshotTests/TestSupport.swift`: `withDefaults` (isolated UserDefaults), `ImageProbe` (scale-independent fixture images + pixel probes — never build fixtures with `lockFocus`, it produces 2x buffers on Retina and 1x in CI), `TestKeyEvent` (synthesized `NSEvent`s), and `Reflect`/`FieldDescriber` (compare every stored property of a value at once).
+- Logic that is worth testing but buried in a permission-gated class should be extracted rather than left untested — see `ScrollFrameAnalyzer` and `RecordingEngine.cropRect(for:displayBounds:)`.
+- `.github/workflows/tests.yml` runs the suite plus a Release build of both variants on every push and PR. The Release build is what catches strict-concurrency errors that Debug builds let through.
 
 ## Build & Run
 

@@ -1,7 +1,6 @@
 import Cocoa
 import Translation
 import XCTest
-@testable import macshot
 
 final class TranslationLifecycleTests: XCTestCase {
     @MainActor

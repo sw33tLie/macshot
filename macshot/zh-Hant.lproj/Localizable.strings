@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "拷貝";
-"Save As..." = "另存新檔⋯";
 "Open in Editor" = "在編輯器中開啟";
 "Pin to Screen" = "釘選至螢幕";
 "Quick Look" = "快速查看";
@@ -54,7 +53,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "全部關閉";
-"Save All to Folder…" = "全部儲存至檔案夾⋯";
 "Save" = "儲存";
 
 /* Editor Top Bar */
@@ -171,6 +169,7 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "點按視窗  ·  拖移以自訂區域  ·  F 全螢幕";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "點按元素  ·  拖移以自訂區域  ·  F 全螢幕";
 "Drag to select  ·  Click for full screen" = "拖移以選取  ·  點按以全螢幕";
 "Release to annotate and edit" = "放開以標註與編輯";
 "Release to finish" = "放開以完成";
@@ -178,9 +177,13 @@
 "Hold Space to move. Release to finish" = "按住空白鍵以移動。放開以完成";
 "Space" = "空白鍵";
 "Window snap: " = "視窗吸附：";
+"Snap mode: " = "吸附模式：";
 "ON" = "開";
 "OFF" = "關";
+"WINDOW" = "視窗";
+"ELEMENT" = "元素";
 "  (Tab to toggle)" = "  （Tab 切換）";
+"  (Tab to switch)" = "  （Tab 切換）";
 "Right-click to copy" = "右鍵點按以拷貝";
 "Copied %@" = "已拷貝 %@";
 "Set color %@" = "設定顏色 %@";
@@ -225,6 +228,8 @@
 "Launch at login" = "登入時啟動";
 "Show snap alignment guides" = "顯示對齊輔助線";
 "Snap selection edges to image boundaries" = "將選取範圍邊緣貼齊影像邊界";
+"Enhance browser and Electron element snapping" = "增強瀏覽器與 Electron 元素吸附";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "在元素模式下建立目標應用程式的輔助使用樹狀結構。如果瀏覽器或 Electron 應用程式變慢或出現輸入問題，請關閉此選項。";
 "Capture mouse cursor in screenshot" = "在螢幕截圖中擷取滑鼠游標";
 "Double-click selection to copy" = "雙擊選取範圍以複製";
 "Hide capture instructions" = "隱藏截圖操作提示";
@@ -251,6 +256,8 @@
 "Replace (show only latest)" = "取代（僅顯示最新）";
 "Output" = "輸出";
 "Image format:" = "影像格式：";
+"Also copy to the clipboard in this format" = "同時以此格式拷貝到剪貼板";
+"PNG is always included so every app can paste" = "一律包含 PNG，確保所有 App 都能貼上";
 "Quality:" = "品質：";
 "%d%%" = "%d%%";
 "Save at standard resolution (1x)" = "以標準解析度 (1x) 儲存";
@@ -338,6 +345,7 @@
 "Signed in" = "已登入";
 "Not signed in" = "未登入";
 "Account:" = "帳號：";
+"Folder:" = "資料夾：";
 "Test Connection" = "測試連線";
 "Fill in endpoint, bucket, and credentials first" = "請先填寫端點、儲存貯體及憑證";
 "Testing..." = "測試中⋯";
@@ -350,11 +358,13 @@
 "Secret Key:" = "秘密金鑰：";
 "Public URL:" = "公開 URL：";
 "Path Prefix:" = "路徑前綴：";
+"Make uploads publicly readable" = "將上傳檔案設為公開可讀";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "傳送 public-read ACL，讓上傳的檔案可被任何擁有連結的人檢視。AWS S3、DigitalOcean Spaces、MinIO 和 Backblaze B2 預設以私有方式儲存物件，需要啟用此選項。Cloudflare R2 不支援 ACL 且會拒絕此標頭，請保持關閉。";
 "API key:" = "API 金鑰：";
 "Upload History" = "上傳歷史記錄";
 "No uploads yet." = "尚無上傳記錄。";
 "Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "用於公開存取的基礎 URL。若為空，將使用 S3 端點 URL（可能無法公開存取）。";
-"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "已包含共用金鑰 — 如遇到速率限制，請至 imgbb.com/api 取得您自己的免費金鑰。僅支援影像（不支援影片）。";
+"A shared key is included. Get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "已包含共用金鑰, 如遇到速率限制，請至 imgbb.com/api 取得您自己的免費金鑰。僅支援影像（不支援影片）。";
 "Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "支援 AWS S3、Cloudflare R2、MinIO、DigitalOcean Spaces、Backblaze B2 及其他 S3 相容服務。支援影像和影片。";
 "Configure S3 in Preferences" = "在偏好設定中設定 S3";
 "Sign in to Google Drive in Preferences" = "在偏好設定中登入 Google Drive";
@@ -365,7 +375,7 @@
 "Version %@ (%@)" = "版本 %@（%@）";
 "Made by" = "開發者";
 "Licensed under the GPLv3" = "以 GPLv3 授權";
-"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "免費、開放原始碼的 macOS 螢幕截圖與錄製工具。\n完全原生 — 以 Swift 和 AppKit 打造。";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native, built with Swift and AppKit." = "免費、開放原始碼的 macOS 螢幕截圖與錄製工具。\n完全原生, 以 Swift 和 AppKit 打造。";
 
 /* Alerts */
 "No Image on Clipboard" = "剪貼簿中沒有影像";
@@ -387,6 +397,9 @@
 
 /* Permission Onboarding */
 "Welcome to macshot" = "歡迎使用 macshot";
+"Welcome back to macshot" = "歡迎回到 macshot";
+"Turn Screen Recording back on" = "重新開啟螢幕錄製";
+"After some updates, macOS asks you to allow macshot again. Your settings and captures are safe. If macshot is already in the list, select it, click the minus button (−) to remove it, then click the plus button (+) and add macshot again." = "部分更新後，macOS 會要求你再次允許 macshot。你的設定和擷取內容都完好無損。如果列表中已有 macshot，請選取它，按一下減號按鈕（−）將其移除，然後按一下加號按鈕（+）重新加入 macshot。";
 "macshot needs one permission" = "macshot 需要一項權限";
 "Screen Recording not yet granted" = "尚未授予螢幕錄製權限";
 "Screen Recording granted!" = "螢幕錄製權限已授予！";
@@ -417,6 +430,7 @@
 /* Recording Toast */
 "Recording saved" = "錄製已儲存";
 "%@ • Recording saved" = "%@ · 錄製已儲存";
+"Recording failed: %@" = "錄製失敗：%@";
 "Copy Path" = "拷貝路徑";
 "Path copied!" = "路徑已拷貝！";
 
@@ -427,6 +441,9 @@
 "Export failed" = "輸出失敗";
 "Saved to %@" = "已儲存至 %@";
 "Save failed" = "儲存失敗";
+"Could not encode the screenshot." = "無法編碼螢幕截圖。";
+"Could not save the screenshot: %@" = "無法儲存螢幕截圖：%@";
+"Could not save the screenshot to history." = "無法將螢幕截圖儲存到歷史記錄。";
 
 /* Barcode Detector */
 /* "Open" and "Copy" are shared with other sections */
@@ -466,8 +483,8 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "需要輸入監控權限";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot 需要「輸入監控」權限才能在錄製時顯示按鍵。請在 System Settings 中授予權限，然後再試一次。";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot 需要「輔助使用」權限才能在錄製時顯示按鍵。請在 System Settings 中授予權限，然後再試一次。";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot 需要「輸入監控」權限才能在錄製時醒目顯示滑鼠點擊或顯示按鍵。請在系統設定中授予權限，然後再試一次。";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot 需要輔助使用權限才能貼齊個別介面元素。請在系統設定中授予存取權限，然後重試。";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "顯示按鍵";
@@ -506,6 +523,8 @@
 "Settings..." = "設定...";
 "macshot Settings" = "macshot 設定";
 "Also open in Editor" = "同時在編輯器中開啟";
+"Open in Editor right after selection" = "選取後立即在編輯器中開啟";
+"Close editor after copying" = "複製後關閉編輯器";
 "Hide controls" = "隱藏控制";
 "Hide recording controls" = "隱藏錄製控制";
 "Stop recording from the menu bar icon instead." = "改為從選單列圖像停止錄製。";
@@ -553,12 +572,13 @@
 
 "Same as screenshots" = "與截圖相同";
 "  Preview size:" = "  預覽大小:";
+"Fit image in preview (letterbox)" = "在預覽中完整顯示圖片 (黑邊填充)";
 "(0 = off)" = "(0 = 關閉)";
 "Clear All" = "清除全部";
 "Clear History?" = "清除歷史記錄？";
 "This will permanently delete all screenshots from history." = "這將從歷史記錄中永久刪除所有截圖。";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "點擊\"設定\"，然後按下包含至少一個修飾鍵（⌘、⌥、⌃、⇧）的組合鍵來設定快捷鍵。";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "檔案將上傳至您 Google Drive 中的\"macshot\"資料夾。所有內容均保持私密——不會公開分享任何內容。";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused. A new one is created instead. Everything stays private and nothing is shared publicly." = "檔案將上傳至您 Google Drive 中的此資料夾。留空則使用\"macshot\"。macshot 只能使用由它自己建立的資料夾，因此您在 Drive 中自行建立的同名資料夾不會被重複使用，而是會建立新的資料夾。所有內容均保持私密, , 不會公開分享任何內容。";
 
 "Pressure" = "壓感";
 
@@ -628,7 +648,7 @@
 "Open this settings window" = "開啟此設定視窗";
 "Quick capture (uses your Enter action)" = "快速擷取（使用您的 Enter 動作）";
 "Re-capture the last selected area" = "重新擷取上次選取的區域";
-"Screenshots only — captured window title (blank otherwise)" = "僅螢幕截圖 — 已擷取的視窗標題（否則為空白）";
+"Captured window title (screenshots only, blank otherwise)" = "僅螢幕截圖, 已擷取的視窗標題（否則為空白）";
 "Show available filename tokens" = "顯示可用的檔案名稱代碼";
 "Show supported URL scheme commands" = "顯示支援的 URL scheme 指令";
 "Start area capture" = "開始區域擷取";
@@ -713,3 +733,162 @@
 "Selection is already aligned" = "選取範圍已對齊";
 "Space to move. Release to annotate and edit" = "按住空白鍵移動。放開後進行標註和編輯";
 "Space to move. Release to finish" = "按住空白鍵移動。放開後完成";
+
+"Saving..." = "正在儲存…";
+
+"Show Recordings in Finder" = "在Finder中顯示錄製檔案";
+
+"Cancelled" = "已取消";
+
+"Cancelling..." = "正在取消...";
+"Preparing video..." = "正在準備影片...";
+"History is busy saving. Please try again shortly." = "正在儲存歷史記錄。請稍後再試。";
+
+// Video editor accessibility
+"Play" = "播放";
+"Mute" = "靜音";
+"Unmute" = "取消靜音";
+
+/* Video editor (Studio) */
+"%.1f× · follows pointer" = "%.1f× · 跟隨指標";
+"Add" = "加入";
+"Add Cut Here" = "在此加入剪除";
+"Add Text Here" = "在此加入文字";
+"Add Zoom Here" = "在此加入縮放";
+"Added %d captions" = "已加入 %d 則字幕";
+"Added %d zooms" = "已加入 %d 個縮放";
+"Apply Default Zoom to All" = "將預設縮放套用至全部";
+"Auto" = "自動";
+"Auto Zoom" = "自動縮放";
+"Auto Zoom needs pointer data, which macshot records with every new recording. You can still add zooms by double-clicking the zoom lane." = "自動縮放需要指標資料，macshot 會在每次新錄製時記錄這些資料。你仍可按兩下縮放軌道來加入縮放。";
+"Background blur" = "背景模糊";
+"Background color" = "背景顏色";
+"Background, padding, rounded corners and shadow" = "背景、間距、圓角和陰影";
+"Bold Italic" = "粗斜體";
+"Box" = "方框";
+"Camera" = "攝影機";
+"Caption" = "字幕";
+"Captions" = "字幕";
+"Captions are transcribed on this Mac. Nothing is uploaded." = "字幕會在這部 Mac 上轉錄，不會上傳任何內容。";
+"Choose Image…" = "選擇影像…";
+"Click color" = "點按顏色";
+"Clicks" = "點按";
+"Clip" = "片段";
+"Colors" = "顏色";
+"Connect nearby zooms" = "連接鄰近的縮放";
+"Copy the edited video to the clipboard" = "將編輯後的影片拷貝到剪貼簿";
+"Corner radius" = "圓角半徑";
+"Creates zooms that follow the pointer wherever you click or type. Adjust or delete them on the timeline." = "在你點按或輸入的位置建立跟隨指標的縮放。可在時間軸上調整或刪除。";
+"Custom color" = "自訂顏色";
+"Cut" = "剪除";
+"Cuts, speed and freeze frames" = "剪除、速度和定格";
+"Default zoom" = "預設縮放";
+"Dot" = "圓點";
+"Double-click the text on the preview to edit it." = "在預覽中按兩下文字即可編輯。";
+"Double-click to add a zoom" = "按兩下以加入縮放";
+"Double-click to add a zoom, or use Auto Zoom" = "按兩下以加入縮放, 或使用自動縮放";
+"Drag the frame on the preview to choose where the zoom looks." = "在預覽中拖移框架以選擇縮放位置。";
+"Duration" = "持續時間";
+"Edge highlight" = "邊緣高光";
+"Edit Text" = "編輯文字";
+"Editable pointer, clicks and keystrokes" = "可編輯的指標、點按和按鍵";
+"Edits" = "編輯";
+"Export" = "輸出";
+"Export Subtitles (.srt)…" = "輸出字幕 (.srt)…";
+"Fade in" = "淡入";
+"Fade out" = "淡出";
+"Fit" = "符合大小";
+"Fixed" = "固定";
+"Fixed point" = "固定點";
+"Focus" = "焦點";
+"Follow" = "跟隨";
+"Follow Pointer" = "跟隨指標";
+"Follow pointer" = "跟隨指標";
+"Follow tightness" = "跟隨緊密度";
+"Format" = "格式";
+"Frame" = "邊框";
+"Frame rate" = "影格率";
+"Frame the recording" = "為錄製內容加上邊框";
+"Freeze Frame" = "定格";
+"Generate Captions" = "產生字幕";
+"Gentle" = "柔和";
+"Gradient" = "漸層";
+"Hide ordinary typing, show key combinations" = "隱藏一般輸入，顯示組合鍵";
+"Hide when idle" = "閒置時隱藏";
+"Hide while typing" = "輸入時隱藏";
+"Hold Focus" = "保持焦點";
+"Idle delay" = "閒置延遲";
+"Image" = "影像";
+"Keystrokes" = "按鍵";
+"Keystrokes in this recording are part of the video pixels." = "此錄製內容中的按鍵已是影片像素的一部分。";
+"Light appearance" = "淺色外觀";
+"Makes looping GIFs seamless" = "讓循環 GIF 無縫銜接";
+"Mirror" = "鏡像";
+"Motion" = "動態";
+"Motion blur" = "動態模糊";
+"Next edit" = "下一個編輯點";
+"No clicks or typing found to zoom into" = "找不到可縮放的點按或輸入";
+"No speech was recognized" = "未辨識到語音";
+"No system wallpapers were found. Choose an image instead." = "找不到系統桌布。請改為選擇影像。";
+"Off" = "關閉";
+"On-device speech recognition isn't available for your language on this Mac." = "這部 Mac 無法為你的語言使用裝置端語音辨識。";
+"Original" = "原始";
+"Outline color" = "外框顏色";
+"Outline width" = "外框寬度";
+"Overlays" = "疊加層";
+"Pan between zooms instead of zooming out" = "在縮放之間平移，而不縮小";
+"Pill" = "膠囊";
+"Pointer" = "指標";
+"Position" = "位置";
+"Press animation" = "按下動畫";
+"Previous edit" = "上一個編輯點";
+"Quality" = "品質";
+"Regenerate Captions" = "重新產生字幕";
+"Regular" = "標準";
+"Remove Automatic Zooms" = "移除自動縮放";
+"Remove Captions" = "移除字幕";
+"Removes %.1f seconds from the video. Drag its edges on the timeline to adjust." = "從影片中移除 %.1f 秒。在時間軸上拖移其邊緣以調整。";
+"Return to start at the end" = "結束時回到起點";
+"Ring" = "圓環";
+"Ripple" = "漣漪";
+"Save As…" = "另存新檔…";
+"Shape" = "形狀";
+"Shortcuts only" = "僅限快速鍵";
+"Show camera" = "顯示攝影機";
+"Show captions" = "顯示字幕";
+"Show keystrokes" = "顯示按鍵";
+"Show pointer" = "顯示指標";
+"Shrink during zooms" = "縮放時縮小";
+"Smoothing" = "平滑度";
+"Snappy" = "迅捷";
+"Speech recognition is turned off for macshot in System Settings › Privacy & Security." = "macshot 的語音辨識已在「系統設定」›「隱私權與安全性」中關閉。";
+"Speed" = "速度";
+"Spotlight" = "聚光燈";
+"Square" = "正方形";
+"Style" = "樣式";
+"Tall" = "直向";
+"Text and blur" = "文字和模糊";
+"The recording's audio could not be read." = "無法讀取錄製內容的音訊。";
+"This recording already shows the pointer in its pixels, so it can't be restyled. Zooms can still follow it." = "此錄製內容的像素中已包含指標，因此無法更改樣式。縮放仍可跟隨指標。";
+"This recording has no audio to transcribe." = "此錄製內容沒有可轉錄的音訊。";
+"This video has no recorded pointer data. Recordings made with macshot that open in the editor let you restyle, smooth and resize the pointer after recording." = "此影片沒有記錄指標資料。使用 macshot 錄製並在編輯器中打開的錄製內容，可在錄製後更改指標的樣式、平滑度和大小。";
+"Title" = "標題";
+"Transcribing…" = "正在轉錄…";
+"Transition" = "轉場";
+"Turn on Show Keystrokes before recording. macshot then records them separately so you can style them here." = "錄製前請開啟「顯示按鍵」。macshot 接著會分開記錄按鍵，讓你在此設定樣式。";
+"Turn on the camera before recording. macshot records it separately so you can move, resize, restyle or hide it here, and shrink it during zooms." = "錄製前請開啟攝影機。macshot 會分開錄製攝影機畫面，讓你在此移動、調整大小、更改樣式或隱藏它, 並在縮放時將其縮小。";
+"Use Solid to hide sensitive information: blur and pixelation can sometimes be reversed." = "請使用「填色」隱藏敏感資訊：模糊和馬賽克有時可以被還原。";
+"Visibility" = "可見性";
+"Wallpaper" = "桌布";
+"When recordings open in the editor, the pointer is recorded separately so you can smooth, resize, restyle or hide it, and add zooms that follow it." = "在編輯器中打開錄製內容時，指標會分開記錄，讓你可以平滑化、調整大小、更改樣式或隱藏指標，並加入跟隨指標的縮放。";
+"Wide" = "橫向";
+"Zoom in" = "放大";
+"Zoom in timeline" = "放大時間軸";
+"Zoom level" = "縮放等級";
+"Zoom out" = "縮小";
+"Zoom out timeline" = "縮小時間軸";
+"macOS" = "macOS";
+"Sway" = "擺動";
+
+"Snap webcam to corners when moved" = "移動時將攝影機吸附至角落";
+"Search emoji" = "搜尋表情符號";

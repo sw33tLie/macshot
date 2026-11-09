@@ -39,7 +39,6 @@
 
 /* History Panel */
 "Copy" = "کپی";
-"Save As..." = "ذخیره به عنوان...";
 "Open in Editor" = "باز کردن در ویرایشگر";
 "Open With" = "باز کردن با";
 "Open Link" = "باز کردن پیوند";
@@ -56,7 +55,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "بستن همه";
-"Save All to Folder…" = "ذخیره همه در پوشه…";
 "Save" = "ذخیره";
 
 /* Editor Top Bar */
@@ -174,6 +172,13 @@
 "ON" = "روشن";
 "OFF" = "خاموش";
 "  (Tab to toggle)" = "  (Tab برای تغییر)";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "روی یک عنصر کلیک کنید  ·  برای منطقه سفارشی بکشید  ·  F برای تمام صفحه";
+"Snap mode: " = "حالت چسبش: ";
+"WINDOW" = "پنجره";
+"ELEMENT" = "عنصر";
+"  (Tab to switch)" = "  (Tab برای تغییر)";
+"Enhance browser and Electron element snapping" = "بهبود چسبش عناصر مرورگر و الکترون";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "درخت دسترسی‌پذیری برنامه هدف را در حالت عنصر می‌سازد. اگر مرورگر یا برنامه الکترون کند می‌شود یا مشکلات ورودی دارد، این را غیرفعال کنید.";
 "Right-click to copy" = "کلیک راست برای کپی";
 "Copied %@" = "کپی شد %@";
 "Set color %@" = "تنظیم رنگ %@";
@@ -234,6 +239,8 @@
 "Move down" = "انتقال به پایین";
 "Output" = "خروجی";
 "Image format:" = "فرمت تصویر:";
+"Also copy to the clipboard in this format" = "در کلیپ‌بورد با این قالب هم کپی شود";
+"PNG is always included so every app can paste" = "PNG همیشه گنجانده می‌شود تا هر برنامه‌ای بتواند جای‌گذاری کند";
 "Quality:" = "کیفیت:";
 "%d%%" = "%d%%";
 "Save at standard resolution (1x)" = "ذخیره با وضوح استاندارد (1x)";
@@ -332,6 +339,7 @@
 "Signed in" = "وارد شده";
 "Not signed in" = "وارد نشده";
 "Account:" = "حساب کاربری:";
+"Folder:" = "پوشه:";
 "Test Connection" = "تست اتصال";
 "Fill in endpoint, bucket, and credentials first" = "ابتدا آدرس، باکت و اطلاعات ورود را پر کنید";
 "Testing..." = "در حال تست...";
@@ -344,11 +352,13 @@
 "Secret Key:" = "کلید محرمانه:";
 "Public URL:" = "آدرس عمومی:";
 "Path Prefix:" = "پیشوند مسیر:";
+"Make uploads publicly readable" = "قابل خواندن عمومی کردن بارگذاری‌ها";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "ACL از نوع public-read ارسال می‌کند تا فایل‌های بارگذاری‌شده برای هر کسی که لینک را دارد قابل مشاهده باشند. برای AWS S3، DigitalOcean Spaces، MinIO و Backblaze B2 که اشیاء را به صورت خصوصی ذخیره می‌کنند لازم است. برای Cloudflare R2 که ACLs ندارد و هدر را رد می‌کند، خاموش بگذارید.";
 "API key:" = "کلید API:";
 "Upload History" = "تاریخچه بارگذاری";
 "No uploads yet." = "هنوز بارگذاری‌ای انجام نشده.";
 "Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "آدرس پایه برای دسترسی عمومی. اگر خالی باشد، آدرس S3 استفاده می‌شود (ممکن است به صورت عمومی قابل دسترسی نباشد).";
-"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "یک کلید مشترک موجود است — اگر به محدودیت نرخ رسیدید، کلید رایگان خود را از imgbb.com/api دریافت کنید. فقط تصاویر (بدون پشتیبانی ویدیو).";
+"A shared key is included. Get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "یک کلید مشترک موجود است, اگر به محدودیت نرخ رسیدید، کلید رایگان خود را از imgbb.com/api دریافت کنید. فقط تصاویر (بدون پشتیبانی ویدیو).";
 "Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "با AWS S3، Cloudflare R2، MinIO، DigitalOcean Spaces، Backblaze B2 و سایر سرویس‌های سازگار با S3 کار می‌کند. از تصاویر و ویدیوها پشتیبانی می‌کند.";
 "Configure S3 in Preferences" = "پیکربندی S3 در تنظیمات";
 "Sign in to Google Drive in Preferences" = "ورود به Google Drive در تنظیمات";
@@ -359,7 +369,7 @@
 "Version %@ (%@)" = "نسخه %@ (%@)";
 "Made by" = "ساخته شده توسط";
 "Licensed under the GPLv3" = "تحت مجوز GPLv3";
-"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "ابزار رایگان و متن‌باز تصویربرداری و ضبط ویدیو از صفحه برای macOS.\nکاملا بومی — ساخته شده با Swift و AppKit.";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native, built with Swift and AppKit." = "ابزار رایگان و متن‌باز تصویربرداری و ضبط ویدیو از صفحه برای macOS.\nکاملا بومی, ساخته شده با Swift و AppKit.";
 
 /* Alerts */
 "No Image on Clipboard" = "تصویری در کلیپ‌بورد نیست";
@@ -381,6 +391,9 @@
 
 /* Permission Onboarding */
 "Welcome to macshot" = "به macshot خوش آمدید";
+"Welcome back to macshot" = "به macshot خوش برگشتید";
+"Turn Screen Recording back on" = "ضبط صفحه را دوباره روشن کنید";
+"After some updates, macOS asks you to allow macshot again. Your settings and captures are safe. If macshot is already in the list, select it, click the minus button (−) to remove it, then click the plus button (+) and add macshot again." = "پس از برخی به‌روزرسانی‌ها، macOS دوباره از شما می‌خواهد به macshot اجازه دهید. تنظیمات و تصاویر شما امن هستند. اگر macshot از قبل در فهرست هست، آن را انتخاب کنید، روی دکمهٔ منها (−) بزنید تا حذف شود، سپس روی دکمهٔ به‌علاوه (+) بزنید و macshot را دوباره اضافه کنید.";
 "macshot needs one permission" = "macshot به یک مجوز نیاز دارد";
 "Screen Recording not yet granted" = "مجوز ضبط صفحه هنوز اعطا نشده";
 "Screen Recording granted!" = "مجوز ضبط صفحه اعطا شد!";
@@ -410,6 +423,7 @@
 /* Recording Toast */
 "Recording saved" = "ضبط ویدیو ذخیره شد";
 "%@ • Recording saved" = "%@ • ضبط ویدیو ذخیره شد";
+"Recording failed: %@" = "ضبط ویدیو ناموفق: %@";
 "Copy Path" = "کپی مسیر";
 "Path copied!" = "مسیر کپی شد!";
 
@@ -428,6 +442,9 @@
 "Save As..." = "ذخیره به عنوان...";
 "Choose a folder" = "یک پوشه انتخاب کنید";
 "Save All to Folder…" = "ذخیره همه در پوشه…";
+"Could not encode the screenshot." = "کدگذاری تصویر صفحه ممکن نشد.";
+"Could not save the screenshot: %@" = "ذخیره تصویر صفحه ممکن نشد: %@";
+"Could not save the screenshot to history." = "ذخیره تصویر صفحه در تاریخچه ممکن نشد.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "پیمایش خودکار";
@@ -459,8 +476,8 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "نظارت بر ورودی لازم است";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot برای نمایش کلیدهای فشرده‌شده هنگام ضبط ویدیو به مجوز نظارت بر ورودی نیاز دارد. لطفا دسترسی را در System Settings اعطا کنید و دوباره تلاش کنید.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot برای نمایش کلیدهای فشرده‌شده هنگام ضبط ویدیو به مجوز دسترسی‌پذیری نیاز دارد. لطفا دسترسی را در System Settings اعطا کنید و دوباره تلاش کنید.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot برای برجسته کردن کلیک‌های ماوس یا نمایش کلیدهای فشرده‌شده هنگام ضبط به مجوز نظارت بر ورودی نیاز دارد. لطفاً دسترسی را در تنظیمات سیستم اعطا کنید و دوباره تلاش کنید.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot برای چسبیدن به عناصر جداگانهٔ رابط کاربری به مجوز دسترس‌پذیری نیاز دارد. لطفاً در تنظیمات سیستم دسترسی بدهید و دوباره امتحان کنید.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "نمایش کلیدهای فشرده‌شده";
@@ -498,6 +515,8 @@
 "Settings..." = "تنظیمات...";
 "macshot Settings" = "تنظیمات macshot";
 "Also open in Editor" = "باز کردن در ویرایشگر نیز";
+"Open in Editor right after selection" = "باز کردن در ویرایشگر بلافاصله پس از انتخاب";
+"Close editor after copying" = "بستن ویرایشگر پس از کپی";
 "Hide controls" = "پنهان کردن کنترل‌ها";
 "Hide recording controls" = "پنهان کردن کنترل‌های ضبط ویدیو";
 "Stop recording from the menu bar icon instead." = "به جای آن، ضبط ویدیو را از آیکون نوار منو متوقف کنید.";
@@ -543,12 +562,13 @@
 
 "Same as screenshots" = "مشابه اسکرین‌شات‌ها";
 "  Preview size:" = "  اندازه پیش‌نمایش:";
+"Fit image in preview (letterbox)" = "جا دادن تصویر در پیش‌نمایش (با نوار)";
 "(0 = off)" = "(0 = خاموش)";
 "Clear All" = "پاک کردن همه";
 "Clear History?" = "پاک کردن تاریخچه؟";
 "This will permanently delete all screenshots from history." = "این کار تمام اسکرین‌شات‌ها را به‌طور دائمی از تاریخچه حذف می‌کند.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "روی \"تنظیم\" کلیک کنید و یک ترکیب کلید با حداقل یک کلید تغییردهنده (⌘, ⌥, ⌃, ⇧) را برای تعیین میانبر فشار دهید.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "فایل‌ها در پوشه‌ای به نام \"macshot\" در Google Drive شما بارگذاری می‌شوند. همه چیز خصوصی می‌ماند — هیچ چیز به‌صورت عمومی به اشتراک گذاشته نمی‌شود.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused. A new one is created instead. Everything stays private and nothing is shared publicly." = "فایل‌ها در این پوشه در Google Drive شما بارگذاری می‌شوند. برای استفاده از \"macshot\" خالی بگذارید. macshot فقط می‌تواند از پوشه‌هایی استفاده کند که خودش ساخته است، بنابراین پوشه‌ای که خودتان با همین نام در Drive ساخته‌اید دوباره استفاده نمی‌شود, به‌جای آن یک پوشهٔ جدید ساخته می‌شود. همه چیز خصوصی می‌ماند, هیچ چیز به‌صورت عمومی به اشتراک گذاشته نمی‌شود.";
 
 "Pressure" = "فشار";
 
@@ -626,7 +646,7 @@
 "Open this settings window" = "باز کردن این پنجره تنظیمات";
 "Quick capture (uses your Enter action)" = "ضبط سریع (از عملکرد Enter شما استفاده می‌کند)";
 "Re-capture the last selected area" = "ضبط مجدد آخرین ناحیه انتخاب‌شده";
-"Screenshots only — captured window title (blank otherwise)" = "فقط اسکرین‌شات — عنوان پنجره ضبط‌شده (در غیر این صورت خالی)";
+"Captured window title (screenshots only, blank otherwise)" = "فقط اسکرین‌شات, عنوان پنجره ضبط‌شده (در غیر این صورت خالی)";
 "Show available filename tokens" = "نمایش توکن‌های موجود نام فایل";
 "Enable macshot:// URL scheme" = "فعال‌سازی طرح URL با macshot://";
 "Show supported URL scheme commands" = "نمایش دستورات پشتیبانی‌شده طرح URL";
@@ -682,3 +702,162 @@
 "Selection is already aligned" = "محدودهٔ انتخاب از قبل تراز است";
 "Space to move. Release to annotate and edit" = "برای جابه‌جایی، کلید فاصله را نگه دارید. برای حاشیه‌نویسی و ویرایش رها کنید";
 "Space to move. Release to finish" = "برای جابه‌جایی، کلید فاصله را نگه دارید. برای پایان دادن رها کنید";
+
+"Saving..." = "در حال ذخیره…";
+
+"Show Recordings in Finder" = "نمایش ضبط‌ها در Finder";
+
+"Cancelled" = "لغو شد";
+
+"Cancelling..." = "در حال لغو...";
+"Preparing video..." = "در حال آماده‌سازی ویدیو...";
+"History is busy saving. Please try again shortly." = "تاریخچه در حال ذخیره شدن است. لطفاً کمی بعد دوباره تلاش کنید.";
+
+// Video editor accessibility
+"Play" = "پخش";
+"Mute" = "بی‌صدا کردن";
+"Unmute" = "فعال کردن صدا";
+
+/* Video editor (Studio) */
+"%.1f× · follows pointer" = "%.1f× · دنبال‌کردن نشانگر";
+"Add" = "افزودن";
+"Add Cut Here" = "افزودن برش در اینجا";
+"Add Text Here" = "افزودن متن در اینجا";
+"Add Zoom Here" = "افزودن بزرگ‌نمایی در اینجا";
+"Added %d captions" = "%d زیرنویس اضافه شد";
+"Added %d zooms" = "%d بزرگ‌نمایی اضافه شد";
+"Apply Default Zoom to All" = "اعمال بزرگ‌نمایی پیش‌فرض بر همه";
+"Auto" = "خودکار";
+"Auto Zoom" = "بزرگ‌نمایی خودکار";
+"Auto Zoom needs pointer data, which macshot records with every new recording. You can still add zooms by double-clicking the zoom lane." = "بزرگ‌نمایی خودکار به داده‌های نشانگر نیاز دارد که macshot در هر ضبط جدید ثبت می‌کند. همچنان می‌توانید با دوبار کلیک روی مسیر بزرگ‌نمایی، بزرگ‌نمایی اضافه کنید.";
+"Background blur" = "تاری پس‌زمینه";
+"Background color" = "رنگ پس‌زمینه";
+"Background, padding, rounded corners and shadow" = "پس‌زمینه، فاصله داخلی، گوشه‌های گرد و سایه";
+"Bold Italic" = "توپر مورب";
+"Box" = "جعبه";
+"Camera" = "دوربین";
+"Caption" = "زیرنویس";
+"Captions" = "زیرنویس‌ها";
+"Captions are transcribed on this Mac. Nothing is uploaded." = "زیرنویس‌ها روی همین Mac رونویسی می‌شوند. هیچ چیزی بارگذاری نمی‌شود.";
+"Choose Image…" = "انتخاب تصویر…";
+"Click color" = "رنگ کلیک";
+"Clicks" = "کلیک‌ها";
+"Clip" = "کلیپ";
+"Colors" = "رنگ‌ها";
+"Connect nearby zooms" = "اتصال بزرگ‌نمایی‌های نزدیک";
+"Copy the edited video to the clipboard" = "کپی ویدیوی ویرایش‌شده در کلیپ‌بورد";
+"Corner radius" = "شعاع گوشه";
+"Creates zooms that follow the pointer wherever you click or type. Adjust or delete them on the timeline." = "بزرگ‌نمایی‌هایی می‌سازد که نشانگر را هر جا کلیک یا تایپ کنید دنبال می‌کنند. آن‌ها را در خط زمانی تنظیم یا حذف کنید.";
+"Custom color" = "رنگ سفارشی";
+"Cut" = "برش";
+"Cuts, speed and freeze frames" = "برش‌ها، سرعت و فریم‌های ثابت";
+"Default zoom" = "بزرگ‌نمایی پیش‌فرض";
+"Dot" = "نقطه";
+"Double-click the text on the preview to edit it." = "برای ویرایش متن، روی آن در پیش‌نمایش دوبار کلیک کنید.";
+"Double-click to add a zoom" = "برای افزودن بزرگ‌نمایی دوبار کلیک کنید";
+"Double-click to add a zoom, or use Auto Zoom" = "برای افزودن بزرگ‌نمایی دوبار کلیک کنید, یا از بزرگ‌نمایی خودکار استفاده کنید";
+"Drag the frame on the preview to choose where the zoom looks." = "کادر را در پیش‌نمایش بکشید تا نقطه‌ای را که بزرگ‌نمایی به آن نگاه می‌کند انتخاب کنید.";
+"Duration" = "مدت";
+"Edge highlight" = "برجسته‌سازی لبه";
+"Edit Text" = "ویرایش متن";
+"Editable pointer, clicks and keystrokes" = "نشانگر، کلیک‌ها و کلیدهای قابل ویرایش";
+"Edits" = "ویرایش‌ها";
+"Export" = "خروجی";
+"Export Subtitles (.srt)…" = "خروجی زیرنویس (.srt)…";
+"Fade in" = "محو شدن ورودی";
+"Fade out" = "محو شدن خروجی";
+"Fit" = "متناسب‌سازی";
+"Fixed" = "ثابت";
+"Fixed point" = "نقطه ثابت";
+"Focus" = "تمرکز";
+"Follow" = "دنبال‌کردن";
+"Follow Pointer" = "دنبال‌کردن نشانگر";
+"Follow pointer" = "دنبال‌کردن نشانگر";
+"Follow tightness" = "دقت دنبال‌کردن";
+"Format" = "قالب";
+"Frame" = "قاب";
+"Frame rate" = "نرخ فریم";
+"Frame the recording" = "قاب‌بندی ضبط";
+"Freeze Frame" = "فریم ثابت";
+"Generate Captions" = "ساخت زیرنویس";
+"Gentle" = "ملایم";
+"Gradient" = "گرادیان";
+"Hide ordinary typing, show key combinations" = "پنهان کردن تایپ عادی، نمایش ترکیب کلیدها";
+"Hide when idle" = "پنهان کردن هنگام بیکاری";
+"Hide while typing" = "پنهان کردن هنگام تایپ";
+"Hold Focus" = "حفظ تمرکز";
+"Idle delay" = "تأخیر بیکاری";
+"Image" = "تصویر";
+"Keystrokes" = "کلیدهای فشرده‌شده";
+"Keystrokes in this recording are part of the video pixels." = "کلیدهای فشرده‌شده در این ضبط بخشی از پیکسل‌های ویدیو هستند.";
+"Light appearance" = "ظاهر روشن";
+"Makes looping GIFs seamless" = "تکرار GIFها را یکپارچه می‌کند";
+"Mirror" = "قرینه";
+"Motion" = "حرکت";
+"Motion blur" = "تاری حرکت";
+"Next edit" = "ویرایش بعدی";
+"No clicks or typing found to zoom into" = "هیچ کلیک یا تایپی برای بزرگ‌نمایی پیدا نشد";
+"No speech was recognized" = "هیچ گفتاری تشخیص داده نشد";
+"No system wallpapers were found. Choose an image instead." = "هیچ تصویر زمینه سیستمی پیدا نشد. به جای آن یک تصویر انتخاب کنید.";
+"Off" = "خاموش";
+"On-device speech recognition isn't available for your language on this Mac." = "تشخیص گفتار روی دستگاه برای زبان شما روی این Mac در دسترس نیست.";
+"Original" = "اصلی";
+"Outline color" = "رنگ حاشیه";
+"Outline width" = "ضخامت حاشیه";
+"Overlays" = "لایه‌ها";
+"Pan between zooms instead of zooming out" = "جابه‌جایی بین بزرگ‌نمایی‌ها به جای کوچک‌نمایی";
+"Pill" = "کپسولی";
+"Pointer" = "نشانگر";
+"Position" = "موقعیت";
+"Press animation" = "انیمیشن فشار";
+"Previous edit" = "ویرایش قبلی";
+"Quality" = "کیفیت";
+"Regenerate Captions" = "ساخت دوباره زیرنویس";
+"Regular" = "معمولی";
+"Remove Automatic Zooms" = "حذف بزرگ‌نمایی‌های خودکار";
+"Remove Captions" = "حذف زیرنویس‌ها";
+"Removes %.1f seconds from the video. Drag its edges on the timeline to adjust." = "%.1f ثانیه از ویدیو حذف می‌کند. برای تنظیم، لبه‌های آن را در خط زمانی بکشید.";
+"Return to start at the end" = "بازگشت به ابتدا در پایان";
+"Ring" = "حلقه";
+"Ripple" = "موج";
+"Save As…" = "ذخیره با نام…";
+"Shape" = "شکل";
+"Shortcuts only" = "فقط میان‌برها";
+"Show camera" = "نمایش دوربین";
+"Show captions" = "نمایش زیرنویس‌ها";
+"Show keystrokes" = "نمایش کلیدهای فشرده‌شده";
+"Show pointer" = "نمایش نشانگر";
+"Shrink during zooms" = "کوچک شدن هنگام بزرگ‌نمایی";
+"Smoothing" = "هموارسازی";
+"Snappy" = "سریع";
+"Speech recognition is turned off for macshot in System Settings › Privacy & Security." = "تشخیص گفتار برای macshot در تنظیمات سیستم › حریم خصوصی و امنیت خاموش است.";
+"Speed" = "سرعت";
+"Spotlight" = "نورافکن";
+"Square" = "مربع";
+"Style" = "سبک";
+"Tall" = "عمودی";
+"Text and blur" = "متن و تاری";
+"The recording's audio could not be read." = "صدای ضبط خوانده نشد.";
+"This recording already shows the pointer in its pixels, so it can't be restyled. Zooms can still follow it." = "این ضبط از قبل نشانگر را در پیکسل‌های خود دارد، بنابراین سبک آن قابل تغییر نیست. بزرگ‌نمایی‌ها همچنان می‌توانند آن را دنبال کنند.";
+"This recording has no audio to transcribe." = "این ضبط صدایی برای رونویسی ندارد.";
+"This video has no recorded pointer data. Recordings made with macshot that open in the editor let you restyle, smooth and resize the pointer after recording." = "این ویدیو داده‌ی ضبط‌شده‌ی نشانگر ندارد. ضبط‌هایی که با macshot انجام شده و در ویرایشگر باز می‌شوند، امکان تغییر سبک، هموارسازی و تغییر اندازه نشانگر را پس از ضبط فراهم می‌کنند.";
+"Title" = "عنوان";
+"Transcribing…" = "در حال رونویسی…";
+"Transition" = "گذار";
+"Turn on Show Keystrokes before recording. macshot then records them separately so you can style them here." = "پیش از ضبط «نمایش کلیدهای فشرده‌شده» را روشن کنید. سپس macshot آن‌ها را جداگانه ضبط می‌کند تا بتوانید در اینجا سبکشان را تنظیم کنید.";
+"Turn on the camera before recording. macshot records it separately so you can move, resize, restyle or hide it here, and shrink it during zooms." = "پیش از ضبط دوربین را روشن کنید. macshot آن را جداگانه ضبط می‌کند تا بتوانید آن را در اینجا جابه‌جا کنید، اندازه یا سبکش را تغییر دهید یا پنهانش کنید, و هنگام بزرگ‌نمایی کوچکش کنید.";
+"Use Solid to hide sensitive information: blur and pixelation can sometimes be reversed." = "برای پنهان کردن اطلاعات حساس از «توپر» استفاده کنید: تاری و پیکسلی کردن گاهی قابل بازگردانی هستند.";
+"Visibility" = "نمایان بودن";
+"Wallpaper" = "تصویر زمینه";
+"When recordings open in the editor, the pointer is recorded separately so you can smooth, resize, restyle or hide it, and add zooms that follow it." = "وقتی ضبط‌ها در ویرایشگر باز می‌شوند، نشانگر جداگانه ضبط می‌شود تا بتوانید آن را هموار کنید، اندازه یا سبکش را تغییر دهید یا پنهانش کنید، و بزرگ‌نمایی‌هایی اضافه کنید که آن را دنبال می‌کنند.";
+"Wide" = "افقی";
+"Zoom in" = "بزرگ‌نمایی";
+"Zoom in timeline" = "بزرگ‌نمایی خط زمانی";
+"Zoom level" = "سطح بزرگ‌نمایی";
+"Zoom out" = "کوچک‌نمایی";
+"Zoom out timeline" = "کوچک‌نمایی خط زمانی";
+"macOS" = "macOS";
+"Sway" = "تاب‌خوردن";
+
+"Snap webcam to corners when moved" = "چسباندن وب‌کم به گوشه‌ها هنگام جابه‌جایی";
+"Search emoji" = "جستجوی ایموجی";

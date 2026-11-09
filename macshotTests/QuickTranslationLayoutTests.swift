@@ -1,14 +1,14 @@
 import Cocoa
 import XCTest
-@testable import macshot
 
 final class QuickTranslationLayoutTests: XCTestCase {
     @MainActor
     func testCloseShortcutUsesCharacterInsteadOfPhysicalKey() throws {
-        let existingWindows = Set(NSApp.windows.map(ObjectIdentifier.init))
+        let application = NSApplication.shared
+        let existingWindows = Set(application.windows.map(ObjectIdentifier.init))
         let controller = QuickTranslationController()
         defer { controller.close() }
-        let panel = try XCTUnwrap(NSApp.windows.first {
+        let panel = try XCTUnwrap(application.windows.first {
             !existingWindows.contains(ObjectIdentifier($0))
         })
         var closed = false
@@ -32,10 +32,11 @@ final class QuickTranslationLayoutTests: XCTestCase {
 
     @MainActor
     func testControlsFitAtMinimumContentSize() throws {
-        let existingWindows = Set(NSApp.windows.map(ObjectIdentifier.init))
+        let application = NSApplication.shared
+        let existingWindows = Set(application.windows.map(ObjectIdentifier.init))
         let controller = QuickTranslationController()
         defer { controller.close() }
-        let panel = try XCTUnwrap(NSApp.windows.first {
+        let panel = try XCTUnwrap(application.windows.first {
             !existingWindows.contains(ObjectIdentifier($0))
         })
         panel.setContentSize(panel.contentMinSize)

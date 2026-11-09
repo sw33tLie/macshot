@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "Копирај";
-"Save As..." = "Сачувај као...";
 "Open in Editor" = "Отвори у уређивачу";
 "Pin to Screen" = "Закачи на екран";
 "Quick Look" = "Брзи преглед";
@@ -54,7 +53,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "Затвори све";
-"Save All to Folder…" = "Сачувај све у фасциклу…";
 "Save" = "Сачувај";
 
 /* Editor Top Bar */
@@ -185,15 +183,20 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Кликни на прозор  ·  Превуци за произвољну област  ·  F за цео екран";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Кликни на елемент  ·  Превуци за произвољну област  ·  F за цео екран";
 "Drag to select  ·  Click for full screen" = "Превуци за селекцију  ·  Кликни за цео екран";
 "Release to annotate and edit" = "Отпусти за означавање и уређивање";
 "Release to finish" = "Отпусти за завршетак";
 "Hold Space to move. Release to annotate and edit" = "Држи Размак за померање. Отпусти за означавање и уређивање";
 "Hold Space to move. Release to finish" = "Држи Размак за померање. Отпусти за завршетак";
 "Window snap: " = "Прилепљивање на прозор: ";
+"Snap mode: " = "Режим прилепљивања: ";
 "ON" = "УКЉУЧЕНО";
 "OFF" = "ИСКЉУЧЕНО";
+"WINDOW" = "ПРОЗОР";
+"ELEMENT" = "ЕЛЕМЕНТ";
 "  (Tab to toggle)" = "  (Tab за пребацивање)";
+"  (Tab to switch)" = "  (Tab за пребацивање)";
 "Space" = "Размак";
 "Right-click to copy" = "Десни клик за копирање";
 "Copied %@" = "Копирано %@";
@@ -228,6 +231,8 @@
 "Launch at login" = "Покрени при пријављивању";
 "Show snap alignment guides" = "Прикажи водиље за поравнање";
 "Snap selection edges to image boundaries" = "Привежи ивице избора уз границе слике";
+"Enhance browser and Electron element snapping" = "Побољшај лепљење елемената у прегледачу и Electron-у";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Гради стабло доступности циљне апликације у режиму елемената. Онемогућите ако прегледач или Electron апликација постане спора или има проблема са уносом.";
 "Capture mouse cursor in screenshot" = "Сними курсор миша на снимку екрана";
 "Double-click selection to copy" = "Копирај двокликом на селекцију";
 "Hide capture instructions" = "Сакриј упутства при снимању";
@@ -244,6 +249,8 @@
 "Replace (show only latest)" = "Замена (прикажи само најновије)";
 "Output" = "Излаз";
 "Image format:" = "Формат слике:";
+"Also copy to the clipboard in this format" = "Копирај у привремену меморију и у овом формату";
+"PNG is always included so every app can paste" = "PNG је увек укључен да би свака апликација могла да налепи";
 "Quality:" = "Квалитет:";
 "%d%%" = "%d%%";
 "Save at standard resolution (1x)" = "Сачувај у стандардној резолуцији (1x)";
@@ -339,6 +346,7 @@
 "Signed in" = "Пријављени";
 "Not signed in" = "Нисте пријављени";
 "Account:" = "Налог:";
+"Folder:" = "Фасцикла:";
 "Test Connection" = "Тестирај конекцију";
 "Fill in endpoint, bucket, and credentials first" = "Прво попуните крајњу тачку, кошару и акредитиве";
 "Testing..." = "Тестирање...";
@@ -351,11 +359,13 @@
 "Secret Key:" = "Тајни кључ:";
 "Public URL:" = "Јавни URL:";
 "Path Prefix:" = "Префикс путање:";
+"Make uploads publicly readable" = "Учини отпремања јавно читљивим";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Шаље ACL public-read тако да отпремљени фајлови буду доступни свима са линком. Потребно за AWS S3, DigitalOcean Spaces, MinIO и Backblaze B2, који подразумевано чувају објекте приватно. Оставите искључено за Cloudflare R2, који не подржава ACL и одбија ово заглавље.";
 "API key:" = "API кључ:";
 "Upload History" = "Историја отпремања";
 "No uploads yet." = "Још нема отпремања.";
 "Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "Основни URL за јавни приступ. Ако је празно, користи се URL S3 крајње тачке (можда неће бити јавно доступан).";
-"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "Укључен је заједнички кључ — набавите свој бесплатни кључ на imgbb.com/api ако достигнете ограничења. Само слике (без подршке за видео).";
+"A shared key is included. Get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "Укључен је заједнички кључ, набавите свој бесплатни кључ на imgbb.com/api ако достигнете ограничења. Само слике (без подршке за видео).";
 "Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "Ради са AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 и другим S3-компатибилним сервисима. Подржава слике и видео.";
 "Configure S3 in Preferences" = "Подесите S3 у подешавањима";
 "Sign in to Google Drive in Preferences" = "Пријавите се на Google Drive у подешавањима";
@@ -366,7 +376,7 @@
 "Version %@ (%@)" = "Верзија %@ (%@)";
 "Made by" = "Направио";
 "Licensed under the GPLv3" = "Лиценцирано под GPLv3";
-"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "Бесплатан алат отвореног кода за снимање екрана и снимање видеа на macOS.\nПотпуно нативан — направљен у Swift и AppKit.";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native, built with Swift and AppKit." = "Бесплатан алат отвореног кода за снимање екрана и снимање видеа на macOS.\nПотпуно нативан, направљен у Swift и AppKit.";
 
 /* Alerts */
 "No Image on Clipboard" = "Нема слике у остави";
@@ -388,6 +398,9 @@
 
 /* Permission Onboarding */
 "Welcome to macshot" = "Добродошли у macshot";
+"Welcome back to macshot" = "Добро дошли назад у macshot";
+"Turn Screen Recording back on" = "Поново укључите снимање екрана";
+"After some updates, macOS asks you to allow macshot again. Your settings and captures are safe. If macshot is already in the list, select it, click the minus button (−) to remove it, then click the plus button (+) and add macshot again." = "После неких ажурирања macOS тражи да поново дозволите macshot. Ваша подешавања и снимци су безбедни. Ако је macshot већ на листи, изаберите га, кликните на дугме минус (−) да бисте га уклонили, а затим кликните на дугме плус (+) и поново додајте macshot.";
 "macshot needs one permission" = "macshot захтева једну дозволу";
 "Screen Recording not yet granted" = "Снимање екрана још није одобрено";
 "Screen Recording granted!" = "Снимање екрана је одобрено!";
@@ -417,6 +430,7 @@
 /* Recording Toast */
 "Recording saved" = "Снимак сачуван";
 "%@ • Recording saved" = "%@ • Снимак сачуван";
+"Recording failed: %@" = "Снимање неуспешно: %@";
 "Copy Path" = "Копирај путању";
 "Path copied!" = "Путања копирана!";
 
@@ -435,6 +449,9 @@
 "Save As..." = "Сачувај као...";
 "Choose a folder" = "Изаберите фасциклу";
 "Save All to Folder…" = "Сачувај све у фасциклу…";
+"Could not encode the screenshot." = "Није могуће кодирати снимак екрана.";
+"Could not save the screenshot: %@" = "Није могуће сачувати снимак екрана: %@";
+"Could not save the screenshot to history." = "Није могуће сачувати снимак екрана у историју.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Аутоматско скроловање";
@@ -466,8 +483,8 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Потребно праћење уноса";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot захтева дозволу за праћење уноса да би приказивао притиске тастера током снимања. Одобрите приступ у System Settings, па покушајте поново.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot захтева дозволу приступачности да би приказивао притиске тастера током снимања. Одобрите приступ у System Settings, па покушајте поново.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot захтева дозволу за праћење уноса да би истицао кликове миша или приказивао притиске тастера током снимања. Одобрите приступ у системским подешавањима, па покушајте поново.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot-у је потребна дозвола приступачности за прилепљивање уз појединачне елементе интерфејса. Одобрите приступ у Подешавањима система и покушајте поново.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Прикажи притиске тастера";
@@ -506,6 +523,8 @@
 "Settings" = "Подешавања";
 "macshot Settings" = "macshot подешавања";
 "Also open in Editor" = "Отвори и у уређивачу";
+"Open in Editor right after selection" = "Отвори у уређивачу одмах након избора";
+"Close editor after copying" = "Затвори уређивач након копирања";
 "Hide controls" = "Сакриј контроле";
 "Hide recording controls" = "Сакриј контроле снимања";
 "Stop recording from the menu bar icon instead." = "Уместо тога, зауставите снимање преко иконице у траци менија.";
@@ -553,12 +572,13 @@
 
 "Same as screenshots" = "Isto kao snimci ekrana";
 "  Preview size:" = "  Veličina pregleda:";
+"Fit image in preview (letterbox)" = "Uklopi sliku u pregled (sa trakama)";
 "(0 = off)" = "(0 = isključeno)";
 "Clear All" = "Obriši sve";
 "Clear History?" = "Obrisati istoriju?";
 "This will permanently delete all screenshots from history." = "Ovo će trajno obrisati sve snimke ekrana iz istorije.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Kliknite \"Postavi\" i pritisnite kombinaciju tastera sa barem jednim modifikatorom (⌘, ⌥, ⌃, ⇧) da biste postavili prečicu.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Fajlovi se otpremaju u fasciklu \"macshot\" na vašem Google disku. Sve ostaje privatno — ništa se ne deli javno.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused. A new one is created instead. Everything stays private and nothing is shared publicly." = "Фајлови се отпремају у ову фасциклу на вашем Google диску. Оставите празно да бисте користили \"macshot\". macshot може да користи само фасцикле које је сам направио, па фасцикла са истим именом коју сте ви направили на Диску неће бити поново искоришћена, уместо ње биће направљена нова. Све остаје приватно, ништа се не дели јавно.";
 
 "Pressure" = "Pritisak";
 
@@ -628,7 +648,7 @@
 "Open this settings window" = "Отвори овај прозор подешавања";
 "Quick capture (uses your Enter action)" = "Брзо снимање (користи вашу Enter радњу)";
 "Re-capture the last selected area" = "Поново сними последње изабрану област";
-"Screenshots only — captured window title (blank otherwise)" = "Само снимци екрана — наслов снимљеног прозора (иначе празно)";
+"Captured window title (screenshots only, blank otherwise)" = "Само снимци екрана, наслов снимљеног прозора (иначе празно)";
 "Show available filename tokens" = "Прикажи доступне ознаке имена датотеке";
 "Show supported URL scheme commands" = "Прикажи подржане команде URL шеме";
 "Start area capture" = "Започни снимање области";
@@ -682,3 +702,162 @@
 "Selection is already aligned" = "Izbor je već poravnat";
 "Space to move. Release to annotate and edit" = "Držite razmaknicu za pomeranje. Otpustite za dodavanje napomena i uređivanje";
 "Space to move. Release to finish" = "Držite razmaknicu za pomeranje. Otpustite da završite";
+
+"Saving..." = "Чување…";
+
+"Show Recordings in Finder" = "Прикажи снимке у Finder-у";
+
+"Cancelled" = "Отказано";
+
+"Cancelling..." = "Отказивање...";
+"Preparing video..." = "Припрема видеа...";
+"History is busy saving. Please try again shortly." = "Историја се чува. Покушајте поново за неколико тренутака.";
+
+// Video editor accessibility
+"Play" = "Репродукуј";
+"Mute" = "Искључи звук";
+"Unmute" = "Укључи звук";
+
+/* Video editor (Studio) */
+"%.1f× · follows pointer" = "%.1f× · прати показивач";
+"Add" = "Додај";
+"Add Cut Here" = "Додај рез овде";
+"Add Text Here" = "Додај текст овде";
+"Add Zoom Here" = "Додај увеличање овде";
+"Added %d captions" = "Додато титлова: %d";
+"Added %d zooms" = "Додато увеличања: %d";
+"Apply Default Zoom to All" = "Примени подразумевано увеличање на све";
+"Auto" = "Ауто";
+"Auto Zoom" = "Аутоувеличање";
+"Auto Zoom needs pointer data, which macshot records with every new recording. You can still add zooms by double-clicking the zoom lane." = "Аутоувеличању су потребни подаци о показивачу, које macshot бележи при сваком новом снимању. Увеличања и даље можете додавати двокликом на траку увеличања.";
+"Background blur" = "Замућење позадине";
+"Background color" = "Боја позадине";
+"Background, padding, rounded corners and shadow" = "Позадина, размак, заобљени углови и сенка";
+"Bold Italic" = "Подебљани курзив";
+"Box" = "Оквир";
+"Camera" = "Камера";
+"Caption" = "Титл";
+"Captions" = "Титлови";
+"Captions are transcribed on this Mac. Nothing is uploaded." = "Титлови се транскрибују на овом Mac-у. Ништа се не отпрема.";
+"Choose Image…" = "Изабери слику…";
+"Click color" = "Боја клика";
+"Clicks" = "Кликови";
+"Clip" = "Клип";
+"Colors" = "Боје";
+"Connect nearby zooms" = "Повежи блиска увеличања";
+"Copy the edited video to the clipboard" = "Копирај уређени видео у оставу";
+"Corner radius" = "Полупречник углова";
+"Creates zooms that follow the pointer wherever you click or type. Adjust or delete them on the timeline." = "Прави увеличања која прате показивач где год кликнете или куцате. Подесите их или обришите на временској линији.";
+"Custom color" = "Прилагођена боја";
+"Cut" = "Рез";
+"Cuts, speed and freeze frames" = "Резови, брзина и замрзнути кадрови";
+"Default zoom" = "Подразумевано увеличање";
+"Dot" = "Тачка";
+"Double-click the text on the preview to edit it." = "Двапут кликните на текст у прегледу да бисте га изменили.";
+"Double-click to add a zoom" = "Двапут кликните да додате увеличање";
+"Double-click to add a zoom, or use Auto Zoom" = "Двапут кликните да додате увеличање, или користите Аутоувеличање";
+"Drag the frame on the preview to choose where the zoom looks." = "Превуците оквир у прегледу да бисте изабрали где увеличање гледа.";
+"Duration" = "Трајање";
+"Edge highlight" = "Истицање ивица";
+"Edit Text" = "Измени текст";
+"Editable pointer, clicks and keystrokes" = "Изменљиви показивач, кликови и притисци тастера";
+"Edits" = "Измене";
+"Export" = "Извези";
+"Export Subtitles (.srt)…" = "Извези титлове (.srt)…";
+"Fade in" = "Појављивање";
+"Fade out" = "Нестајање";
+"Fit" = "Уклопи";
+"Fixed" = "Фиксно";
+"Fixed point" = "Фиксна тачка";
+"Focus" = "Фокус";
+"Follow" = "Праћење";
+"Follow Pointer" = "Прати показивач";
+"Follow pointer" = "Прати показивач";
+"Follow tightness" = "Чврстина праћења";
+"Format" = "Формат";
+"Frame" = "Оквир";
+"Frame rate" = "Брзина кадрова";
+"Frame the recording" = "Уоквири снимак";
+"Freeze Frame" = "Замрзнути кадар";
+"Generate Captions" = "Генериши титлове";
+"Gentle" = "Благо";
+"Gradient" = "Градијент";
+"Hide ordinary typing, show key combinations" = "Сакриј обично куцање, прикажи комбинације тастера";
+"Hide when idle" = "Сакриј у мировању";
+"Hide while typing" = "Сакриј током куцања";
+"Hold Focus" = "Задржи фокус";
+"Idle delay" = "Кашњење мировања";
+"Image" = "Слика";
+"Keystrokes" = "Притисци тастера";
+"Keystrokes in this recording are part of the video pixels." = "Притисци тастера су у овом снимку део слике видеа.";
+"Light appearance" = "Светли изглед";
+"Makes looping GIFs seamless" = "Чини GIF петље непрекидним";
+"Mirror" = "Огледало";
+"Motion" = "Покрет";
+"Motion blur" = "Замућење покрета";
+"Next edit" = "Следећа измена";
+"No clicks or typing found to zoom into" = "Нису пронађени кликови ни куцање за увеличање";
+"No speech was recognized" = "Говор није препознат";
+"No system wallpapers were found. Choose an image instead." = "Нису пронађене системске позадине. Уместо тога изаберите слику.";
+"Off" = "Иск.";
+"On-device speech recognition isn't available for your language on this Mac." = "Препознавање говора на уређају није доступно за ваш језик на овом Mac-у.";
+"Original" = "Оригинал";
+"Outline color" = "Боја обриса";
+"Outline width" = "Ширина обриса";
+"Overlays" = "Слојеви";
+"Pan between zooms instead of zooming out" = "Прелази између увеличања уместо умањивања";
+"Pill" = "Капсула";
+"Pointer" = "Показивач";
+"Position" = "Положај";
+"Press animation" = "Анимација притиска";
+"Previous edit" = "Претходна измена";
+"Quality" = "Квалитет";
+"Regenerate Captions" = "Поново генериши титлове";
+"Regular" = "Обично";
+"Remove Automatic Zooms" = "Уклони аутоматска увеличања";
+"Remove Captions" = "Уклони титлове";
+"Removes %.1f seconds from the video. Drag its edges on the timeline to adjust." = "Уклања %.1f с из видеа. Превуците ивице на временској линији да бисте подесили.";
+"Return to start at the end" = "Врати се на почетак на крају";
+"Ring" = "Прстен";
+"Ripple" = "Талас";
+"Save As…" = "Сачувај као…";
+"Shape" = "Облик";
+"Shortcuts only" = "Само пречице";
+"Show camera" = "Прикажи камеру";
+"Show captions" = "Прикажи титлове";
+"Show keystrokes" = "Прикажи притиске тастера";
+"Show pointer" = "Прикажи показивач";
+"Shrink during zooms" = "Смањи током увеличања";
+"Smoothing" = "Изглађивање";
+"Snappy" = "Брзо";
+"Speech recognition is turned off for macshot in System Settings › Privacy & Security." = "Препознавање говора је искључено за macshot у Подешавањима система › Приватност и безбедност.";
+"Speed" = "Брзина";
+"Spotlight" = "Рефлектор";
+"Square" = "Квадрат";
+"Style" = "Стил";
+"Tall" = "Високо";
+"Text and blur" = "Текст и замућење";
+"The recording's audio could not be read." = "Звук снимка није могуће прочитати.";
+"This recording already shows the pointer in its pixels, so it can't be restyled. Zooms can still follow it." = "Овај снимак већ садржи показивач у слици, па му се стил не може променити. Увеличања и даље могу да га прате.";
+"This recording has no audio to transcribe." = "Овај снимак нема звук за транскрипцију.";
+"This video has no recorded pointer data. Recordings made with macshot that open in the editor let you restyle, smooth and resize the pointer after recording." = "Овај видео нема снимљене податке о показивачу. Снимци направљени у macshot-у који се отварају у уређивачу омогућавају промену стила, изглађивање и промену величине показивача након снимања.";
+"Title" = "Наслов";
+"Transcribing…" = "Транскрибовање…";
+"Transition" = "Прелаз";
+"Turn on Show Keystrokes before recording. macshot then records them separately so you can style them here." = "Укључите „Прикажи притиске тастера“ пре снимања. macshot ће их тада снимити засебно како бисте их овде стилизовали.";
+"Turn on the camera before recording. macshot records it separately so you can move, resize, restyle or hide it here, and shrink it during zooms." = "Укључите камеру пре снимања. macshot је снима засебно, па је овде можете померати, мењати јој величину и стил, сакрити је, и смањити током увеличања.";
+"Use Solid to hide sensitive information: blur and pixelation can sometimes be reversed." = "Користите „Попуна“ да сакријете осетљиве податке: замућење и пикселизација се понекад могу поништити.";
+"Visibility" = "Видљивост";
+"Wallpaper" = "Позадинска слика";
+"When recordings open in the editor, the pointer is recorded separately so you can smooth, resize, restyle or hide it, and add zooms that follow it." = "Када се снимци отварају у уређивачу, показивач се снима засебно, па га можете изгладити, променити му величину и стил, сакрити га и додати увеличања која га прате.";
+"Wide" = "Широко";
+"Zoom in" = "Увеличавање";
+"Zoom in timeline" = "Увећај временску линију";
+"Zoom level" = "Ниво увеличања";
+"Zoom out" = "Умањивање";
+"Zoom out timeline" = "Умањи временску линију";
+"macOS" = "macOS";
+"Sway" = "Њихање";
+
+"Snap webcam to corners when moved" = "Приањање веб-камере уз углове при померању";
+"Search emoji" = "Претражи емоџије";

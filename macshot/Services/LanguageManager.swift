@@ -85,7 +85,7 @@ final class LanguageManager {
                     let withScript = "\(parts[0])-\(parts[1])"
                     if supported.contains(withScript) { return withScript }
                 }
-                let base = String(parts[0])
+                let base = String(parts.first ?? "")
                 if supported.contains(base) { return base }
             }
             return "en"

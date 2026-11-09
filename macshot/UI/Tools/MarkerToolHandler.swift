@@ -14,7 +14,7 @@ final class MarkerToolHandler: AnnotationToolHandler {
     private var shiftAnchor: NSPoint = .zero
 
     /// Cached OCR observations for the current selection, to avoid re-running OCR on every stroke.
-    private var cachedObservations: [VNRecognizedTextObservation]?
+    private var cachedObservations: [OCRTextObservation]?
     private var cachedSelectionRect: NSRect = .zero
 
     var cursor: NSCursor? { nil }  // dot preview replaces system cursor in normal mode
@@ -178,9 +178,8 @@ final class MarkerToolHandler: AnnotationToolHandler {
         }
 
         DispatchQueue.global(qos: .userInitiated).async {
-            VisionOCR.performTextRecognition(cgImage: cgImage) { [weak self, weak canvas] request, _ in
+            VisionOCR.performTextRecognition(cgImage: cgImage) { [weak self, weak canvas] observations, _ in
                 guard let self = self, let canvas = canvas else { return }
-                let observations = request.results as? [VNRecognizedTextObservation] ?? []
                 DispatchQueue.main.async {
                     self.cachedObservations = observations
                     self.cachedSelectionRect = selectionRect
@@ -194,13 +193,13 @@ final class MarkerToolHandler: AnnotationToolHandler {
 
     private func applySmartSnap(
         annotation: Annotation,
-        observations: [VNRecognizedTextObservation],
+        observations: [OCRTextObservation],
         strokeMinX: CGFloat, strokeMaxX: CGFloat, strokeY: CGFloat,
         selectionRect: NSRect,
         canvas: AnnotationCanvas
     ) {
         // Find the text line whose bounding box best overlaps with the stroke
-        var bestObservation: VNRecognizedTextObservation?
+        var bestObservation: OCRTextObservation?
         var bestOverlap: CGFloat = 0
 
         for observation in observations {
@@ -283,8 +282,7 @@ final class MarkerToolHandler: AnnotationToolHandler {
         }
 
         DispatchQueue.global(qos: .userInitiated).async {
-            VisionOCR.performTextRecognition(cgImage: cgImage) { [weak self] request, _ in
-                let observations = request.results as? [VNRecognizedTextObservation] ?? []
+            VisionOCR.performTextRecognition(cgImage: cgImage) { [weak self] observations, _ in
                 DispatchQueue.main.async { [weak self] in
                     self?.cachedObservations = observations
                     self?.cachedSelectionRect = selectionRect

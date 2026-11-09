@@ -1,5 +1,8 @@
 # macshot
 
+> [!IMPORTANT]
+> **Updating to 4.4.0 from 4.3.x or earlier?** macshot's developer signature changed in 4.4.0, so macOS may require you to grant permissions again. If Screen Recording looks enabled but capture fails, remove macshot with the minus button (−) in System Settings, then add it back from Applications with the plus button (+). Re-enable Accessibility or Input Monitoring if prompted. Your settings, history and recordings are preserved. If you already restored permissions on a 4.4.0 beta (beta.3 or later), you don't need to do this again.
+
 <p align="center">
   <img src="assets/logo.svg" alt="macshot logo" width="200"/>
 </p>
@@ -20,7 +23,7 @@
 </p>
 
 <p align="center">
-  <img src="assets/preview-editor.png" alt="macshot video editor — timeline with cut, speed, freeze, zoom and censor effects" width="700"/>
+  <img src="assets/preview-studio.png" alt="macshot Studio video editor — background, pointer, zoom, keystrokes, camera and captions, with a timeline for zooms, cuts and titles" width="700"/>
 </p>
 
 ---
@@ -98,7 +101,7 @@ brew install --cask macshot
 
 ### Output & Upload
 - **Formats** — PNG, JPEG, HEIC, WebP, AVIF with quality slider
-- **Google Drive** — sign in once, uploads to a private "macshot" folder
+- **Google Drive** — sign in once, uploads to a private folder (defaults to "macshot", configurable in Settings)
 - **imgbb** — anonymous image hosting with shareable links
 - **S3-compatible** — upload to Cloudflare R2, AWS S3, MinIO, DigitalOcean Spaces, Backblaze B2, etc.
 - **Retina downscale** — optional 1x export for smaller files

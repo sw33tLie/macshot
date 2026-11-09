@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "복사";
-"Save As..." = "다른 이름으로 저장...";
 "Open in Editor" = "편집기에서 열기";
 "Pin to Screen" = "화면에 고정";
 "Quick Look" = "훑어보기";
@@ -54,7 +53,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "모두 닫기";
-"Save All to Folder…" = "모두 폴더에 저장…";
 "Save" = "저장";
 
 /* Editor Top Bar */
@@ -165,6 +163,7 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "윈도우 클릭  ·  드래그하여 영역 선택  ·  F 전체 화면";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "요소 클릭  ·  드래그하여 영역 선택  ·  F 전체 화면";
 "Drag to select  ·  Click for full screen" = "드래그하여 선택  ·  클릭하여 전체 화면";
 "Release to annotate and edit" = "놓으면 주석 및 편집";
 "Release to finish" = "놓으면 완료";
@@ -172,9 +171,13 @@
 "Hold Space to move. Release to finish" = "스페이스바를 누른 채로 이동. 놓으면 완료";
 "Space" = "스페이스";
 "Window snap: " = "윈도우 스냅: ";
+"Snap mode: " = "스냅 모드: ";
 "ON" = "켜짐";
 "OFF" = "꺼짐";
+"WINDOW" = "창";
+"ELEMENT" = "요소";
 "  (Tab to toggle)" = "  (Tab으로 전환)";
+"  (Tab to switch)" = "  (Tab으로 전환)";
 "Right-click to copy" = "우클릭하여 복사";
 "Copied %@" = "%@ 복사됨";
 "Set color %@" = "색상 %@ 설정됨";
@@ -208,6 +211,8 @@
 "Launch at login" = "로그인 시 실행";
 "Show snap alignment guides" = "스냅 정렬 가이드 표시";
 "Snap selection edges to image boundaries" = "선택 영역 가장자리를 이미지 경계에 스냅";
+"Enhance browser and Electron element snapping" = "브라우저 및 Electron 요소 스냅 향상";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "요소 모드에서 대상 앱의 접근성 트리를 구축합니다. 브라우저 또는 Electron 앱이 느려지거나 입력 문제가 있는 경우 비활성화하세요.";
 "Capture mouse cursor in screenshot" = "스크린샷에 마우스 커서 포함";
 "Double-click selection to copy" = "선택 영역 더블 클릭으로 복사";
 "Hide capture instructions" = "캡처 안내 숨기기";
@@ -228,6 +233,8 @@
 "Replace (show only latest)" = "교체 (최신만 표시)";
 "Output" = "출력";
 "Image format:" = "이미지 포맷:";
+"Also copy to the clipboard in this format" = "이 형식으로도 클립보드에 복사";
+"PNG is always included so every app can paste" = "모든 앱에서 붙여넣을 수 있도록 PNG는 항상 포함됩니다";
 "Quality:" = "품질:";
 "%d%%" = "%d%%";
 "Save at standard resolution (1x)" = "표준 해상도(1x)로 저장";
@@ -321,6 +328,7 @@
 "Signed in" = "로그인됨";
 "Not signed in" = "로그인되지 않음";
 "Account:" = "계정:";
+"Folder:" = "폴더:";
 "Test Connection" = "연결 테스트";
 "Fill in endpoint, bucket, and credentials first" = "먼저 엔드포인트, 버킷, 자격 증명을 입력하세요";
 "Testing..." = "테스트 중...";
@@ -333,11 +341,13 @@
 "Secret Key:" = "시크릿 키:";
 "Public URL:" = "공개 URL:";
 "Path Prefix:" = "경로 접두사:";
+"Make uploads publicly readable" = "업로드를 공개 읽기 가능으로 설정";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "public-read ACL을 전송하여 업로드된 파일을 링크가 있는 누구나 볼 수 있게 합니다. 기본적으로 객체를 비공개로 저장하는 AWS S3, DigitalOcean Spaces, MinIO, Backblaze B2에 필요합니다. ACL이 없고 헤더를 거부하는 Cloudflare R2에서는 끄세요.";
 "API key:" = "API 키:";
 "Upload History" = "업로드 기록";
 "No uploads yet." = "아직 업로드가 없습니다.";
 "Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "공개 접근용 기본 URL입니다. 비어 있으면 S3 엔드포인트 URL이 사용됩니다 (공개 접근이 불가능할 수 있음).";
-"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "공유 키가 포함되어 있습니다. 요청 제한에 도달하면 imgbb.com/api에서 무료 키를 받으세요. 이미지만 지원됩니다 (동영상 미지원).";
+"A shared key is included. Get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "공유 키가 포함되어 있습니다. 요청 제한에 도달하면 imgbb.com/api에서 무료 키를 받으세요. 이미지만 지원됩니다 (동영상 미지원).";
 "Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 및 기타 S3 호환 서비스와 사용할 수 있습니다. 이미지와 동영상을 지원합니다.";
 "Configure S3 in Preferences" = "환경설정에서 S3 구성";
 "Sign in to Google Drive in Preferences" = "환경설정에서 Google Drive에 로그인";
@@ -348,7 +358,7 @@
 "Version %@ (%@)" = "버전 %@ (%@)";
 "Made by" = "제작자";
 "Licensed under the GPLv3" = "GPLv3 라이선스";
-"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "macOS용 무료 오픈소스 스크린샷 및 화면 녹화 도구입니다.\nSwift와 AppKit으로 제작된 완전한 네이티브 앱입니다.";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native, built with Swift and AppKit." = "macOS용 무료 오픈소스 스크린샷 및 화면 녹화 도구입니다.\nSwift와 AppKit으로 제작된 완전한 네이티브 앱입니다.";
 
 /* Alerts */
 "No Image on Clipboard" = "클립보드에 이미지 없음";
@@ -370,6 +380,9 @@
 
 /* Permission Onboarding */
 "Welcome to macshot" = "macshot에 오신 것을 환영합니다";
+"Welcome back to macshot" = "macshot에 다시 오신 것을 환영합니다";
+"Turn Screen Recording back on" = "화면 기록을 다시 켜 주세요";
+"After some updates, macOS asks you to allow macshot again. Your settings and captures are safe. If macshot is already in the list, select it, click the minus button (−) to remove it, then click the plus button (+) and add macshot again." = "일부 업데이트 후에는 macOS에서 macshot을 다시 허용하라고 요청합니다. 설정과 캡처는 안전하게 남아 있습니다. 목록에 macshot이 이미 있다면 선택한 뒤 빼기 버튼(−)을 눌러 제거하고, 더하기 버튼(+)을 눌러 macshot을 다시 추가하세요.";
 "macshot needs one permission" = "macshot에 권한 하나가 필요합니다";
 "Screen Recording not yet granted" = "화면 기록 권한이 아직 허용되지 않았습니다";
 "Screen Recording granted!" = "화면 기록 권한이 허용되었습니다!";
@@ -406,6 +419,7 @@
 /* Recording Toast */
 "Recording saved" = "녹화 저장됨";
 "%@ • Recording saved" = "%@ · 녹화 저장됨";
+"Recording failed: %@" = "녹화 실패: %@";
 "Copy Path" = "경로 복사";
 "Path copied!" = "경로가 복사되었습니다!";
 
@@ -416,6 +430,9 @@
 "Export failed" = "내보내기 실패";
 "Saved to %@" = "%@에 저장됨";
 "Save failed" = "저장 실패";
+"Could not encode the screenshot." = "스크린샷을 인코딩할 수 없습니다.";
+"Could not save the screenshot: %@" = "스크린샷을 저장할 수 없습니다: %@";
+"Could not save the screenshot to history." = "스크린샷을 기록에 저장할 수 없습니다.";
 
 /* Barcode Detector */
 /* "Open" and "Copy" are shared with other sections */
@@ -455,8 +472,8 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "입력 모니터링 권한 필요";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot이 녹화 중 키 입력을 표시하려면 입력 모니터링 권한이 필요합니다. 시스템 설정에서 접근 권한을 부여한 후 다시 시도하세요.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot이 녹화 중 키 입력을 표시하려면 손쉬운 사용 권한이 필요합니다. 시스템 설정에서 접근 권한을 부여한 후 다시 시도하세요.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot이 녹화 중 마우스 클릭을 강조하거나 키 입력을 표시하려면 입력 모니터링 권한이 필요합니다. 시스템 설정에서 접근 권한을 부여한 후 다시 시도하세요.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "개별 인터페이스 요소에 스냅하려면 macshot에 손쉬운 사용 권한이 필요합니다. 시스템 설정에서 접근 권한을 부여한 후 다시 시도해 주세요.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "키 입력 표시";
@@ -496,6 +513,8 @@
 "Settings..." = "설정...";
 "macshot Settings" = "macshot 설정";
 "Also open in Editor" = "편집기에서도 열기";
+"Open in Editor right after selection" = "선택 직후 편집기에서 열기";
+"Close editor after copying" = "복사 후 편집기 닫기";
 "Hide controls" = "컨트롤 숨기기";
 "Hide recording controls" = "녹화 컨트롤 숨기기";
 "Stop recording from the menu bar icon instead." = "대신 메뉴 막대 아이콘에서 녹화를 중지하세요.";
@@ -542,12 +561,13 @@
 
 "Same as screenshots" = "스크린샷과 동일";
 "  Preview size:" = "  미리보기 크기:";
+"Fit image in preview (letterbox)" = "미리보기에 이미지 전체 맞추기 (레터박스)";
 "(0 = off)" = "(0 = 끄기)";
 "Clear All" = "모두 지우기";
 "Clear History?" = "기록을 지우시겠습니까?";
 "This will permanently delete all screenshots from history." = "기록에서 모든 스크린샷이 영구적으로 삭제됩니다.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "\"설정\" 을 클릭하고 적어도 하나의 수정 키 (⌘, ⌥, ⌃, ⇧) 가 포함된 키 조합을 눌러 단축키를 설정하세요.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "파일은 Google Drive의 \"macshot\" 폴더에 업로드됩니다. 모든 것은 비공개로 유지되며 공개적으로 공유되지 않습니다.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused. A new one is created instead. Everything stays private and nothing is shared publicly." = "파일은 Google Drive의 이 폴더에 업로드됩니다. 비워 두면 \"macshot\" 폴더를 사용합니다. macshot은 직접 생성한 폴더만 사용할 수 있으므로, Drive에서 직접 만든 같은 이름의 폴더는 재사용되지 않고 새 폴더가 생성됩니다. 모든 것은 비공개로 유지되며 공개적으로 공유되지 않습니다.";
 
 "Pressure" = "필압";
 
@@ -617,7 +637,7 @@
 "Open this settings window" = "이 설정 윈도우 열기";
 "Quick capture (uses your Enter action)" = "빠른 캡처 (Enter 동작 사용)";
 "Re-capture the last selected area" = "마지막 선택 영역 다시 캡처";
-"Screenshots only — captured window title (blank otherwise)" = "스크린샷 전용 — 캡처된 윈도우 제목 (그 외에는 비어 있음)";
+"Captured window title (screenshots only, blank otherwise)" = "스크린샷 전용, 캡처된 윈도우 제목 (그 외에는 비어 있음)";
 "Show available filename tokens" = "사용 가능한 파일명 토큰 표시";
 "Show supported URL scheme commands" = "지원되는 URL 스킴 명령 표시";
 "Start area capture" = "영역 캡처 시작";
@@ -682,3 +702,162 @@
 "Selection is already aligned" = "선택 영역이 이미 정렬되어 있습니다";
 "Space to move. Release to annotate and edit" = "스페이스바로 이동. 놓으면 주석 및 편집";
 "Space to move. Release to finish" = "스페이스바로 이동. 놓으면 완료";
+
+"Saving..." = "저장 중…";
+
+"Show Recordings in Finder" = "Finder에서 녹화 파일 보기";
+
+"Cancelled" = "취소됨";
+
+"Cancelling..." = "취소 중...";
+"Preparing video..." = "비디오 준비 중...";
+"History is busy saving. Please try again shortly." = "기록을 저장하고 있습니다. 잠시 후 다시 시도해 주세요.";
+
+// Video editor accessibility
+"Play" = "재생";
+"Mute" = "음소거";
+"Unmute" = "음소거 해제";
+
+/* Video editor (Studio) */
+"%.1f× · follows pointer" = "%.1f× · 포인터 따라가기";
+"Add" = "추가";
+"Add Cut Here" = "여기에 컷 추가";
+"Add Text Here" = "여기에 텍스트 추가";
+"Add Zoom Here" = "여기에 줌 추가";
+"Added %d captions" = "자막 %d개 추가됨";
+"Added %d zooms" = "줌 %d개 추가됨";
+"Apply Default Zoom to All" = "기본 줌을 모두에 적용";
+"Auto" = "자동";
+"Auto Zoom" = "자동 줌";
+"Auto Zoom needs pointer data, which macshot records with every new recording. You can still add zooms by double-clicking the zoom lane." = "자동 줌에는 포인터 데이터가 필요하며, macshot은 새로 녹화할 때마다 이 데이터를 기록합니다. 줌 레인을 이중 클릭하여 줌을 추가할 수도 있습니다.";
+"Background blur" = "배경 흐림";
+"Background color" = "배경 색상";
+"Background, padding, rounded corners and shadow" = "배경, 여백, 둥근 모서리 및 그림자";
+"Bold Italic" = "굵은 기울임";
+"Box" = "상자";
+"Camera" = "카메라";
+"Caption" = "자막";
+"Captions" = "자막";
+"Captions are transcribed on this Mac. Nothing is uploaded." = "자막은 이 Mac에서 변환됩니다. 아무것도 업로드되지 않습니다.";
+"Choose Image…" = "이미지 선택…";
+"Click color" = "클릭 색상";
+"Clicks" = "클릭";
+"Clip" = "클립";
+"Colors" = "색상";
+"Connect nearby zooms" = "가까운 줌 연결";
+"Copy the edited video to the clipboard" = "편집한 비디오를 클립보드에 복사";
+"Corner radius" = "모서리 반경";
+"Creates zooms that follow the pointer wherever you click or type. Adjust or delete them on the timeline." = "클릭하거나 입력하는 곳마다 포인터를 따라가는 줌을 만듭니다. 타임라인에서 조정하거나 삭제할 수 있습니다.";
+"Custom color" = "사용자 지정 색상";
+"Cut" = "컷";
+"Cuts, speed and freeze frames" = "컷, 속도 및 정지 화면";
+"Default zoom" = "기본 줌";
+"Dot" = "점";
+"Double-click the text on the preview to edit it." = "미리보기에서 텍스트를 이중 클릭하여 편집하세요.";
+"Double-click to add a zoom" = "이중 클릭하여 줌 추가";
+"Double-click to add a zoom, or use Auto Zoom" = "이중 클릭하여 줌 추가, 또는 자동 줌 사용";
+"Drag the frame on the preview to choose where the zoom looks." = "미리보기에서 프레임을 드래그하여 줌할 위치를 선택하세요.";
+"Duration" = "지속 시간";
+"Edge highlight" = "가장자리 강조";
+"Edit Text" = "텍스트 편집";
+"Editable pointer, clicks and keystrokes" = "편집 가능한 포인터, 클릭 및 키 입력";
+"Edits" = "편집";
+"Export" = "내보내기";
+"Export Subtitles (.srt)…" = "자막 내보내기(.srt)…";
+"Fade in" = "페이드 인";
+"Fade out" = "페이드 아웃";
+"Fit" = "맞춤";
+"Fixed" = "고정";
+"Fixed point" = "고정 지점";
+"Focus" = "초점";
+"Follow" = "따라가기";
+"Follow Pointer" = "포인터 따라가기";
+"Follow pointer" = "포인터 따라가기";
+"Follow tightness" = "따라가기 정도";
+"Format" = "포맷";
+"Frame" = "프레임";
+"Frame rate" = "프레임 레이트";
+"Frame the recording" = "녹화에 프레임 적용";
+"Freeze Frame" = "정지 화면";
+"Generate Captions" = "자막 생성";
+"Gentle" = "완만하게";
+"Gradient" = "그라데이션";
+"Hide ordinary typing, show key combinations" = "일반 입력은 숨기고 키 조합만 표시";
+"Hide when idle" = "유휴 시 숨기기";
+"Hide while typing" = "입력 중 숨기기";
+"Hold Focus" = "초점 고정";
+"Idle delay" = "유휴 지연";
+"Image" = "이미지";
+"Keystrokes" = "키 입력";
+"Keystrokes in this recording are part of the video pixels." = "이 녹화의 키 입력은 비디오 픽셀의 일부입니다.";
+"Light appearance" = "밝은 모양";
+"Makes looping GIFs seamless" = "반복 GIF를 매끄럽게 연결합니다";
+"Mirror" = "좌우 반전";
+"Motion" = "모션";
+"Motion blur" = "모션 블러";
+"Next edit" = "다음 편집 지점";
+"No clicks or typing found to zoom into" = "줌할 클릭이나 입력을 찾지 못했습니다";
+"No speech was recognized" = "인식된 음성이 없습니다";
+"No system wallpapers were found. Choose an image instead." = "시스템 배경화면을 찾을 수 없습니다. 대신 이미지를 선택하세요.";
+"Off" = "끔";
+"On-device speech recognition isn't available for your language on this Mac." = "이 Mac에서는 사용자의 언어에 대한 온디바이스 음성 인식을 사용할 수 없습니다.";
+"Original" = "원본";
+"Outline color" = "외곽선 색상";
+"Outline width" = "외곽선 두께";
+"Overlays" = "오버레이";
+"Pan between zooms instead of zooming out" = "줌 아웃하지 않고 줌 사이를 이동";
+"Pill" = "알약형";
+"Pointer" = "포인터";
+"Position" = "위치";
+"Press animation" = "누르기 애니메이션";
+"Previous edit" = "이전 편집 지점";
+"Quality" = "품질";
+"Regenerate Captions" = "자막 다시 생성";
+"Regular" = "보통";
+"Remove Automatic Zooms" = "자동 줌 제거";
+"Remove Captions" = "자막 제거";
+"Removes %.1f seconds from the video. Drag its edges on the timeline to adjust." = "비디오에서 %.1f초를 제거합니다. 타임라인에서 가장자리를 드래그하여 조정하세요.";
+"Return to start at the end" = "끝에서 시작 위치로 돌아가기";
+"Ring" = "링";
+"Ripple" = "물결";
+"Save As…" = "다른 이름으로 저장…";
+"Shape" = "모양";
+"Shortcuts only" = "단축키만";
+"Show camera" = "카메라 표시";
+"Show captions" = "자막 표시";
+"Show keystrokes" = "키 입력 표시";
+"Show pointer" = "포인터 표시";
+"Shrink during zooms" = "줌 중에 축소";
+"Smoothing" = "스무딩";
+"Snappy" = "빠르게";
+"Speech recognition is turned off for macshot in System Settings › Privacy & Security." = "시스템 설정 › 개인정보 보호 및 보안에서 macshot의 음성 인식이 꺼져 있습니다.";
+"Speed" = "속도";
+"Spotlight" = "스포트라이트";
+"Square" = "정사각형";
+"Style" = "스타일";
+"Tall" = "세로형";
+"Text and blur" = "텍스트 및 흐리게";
+"The recording's audio could not be read." = "녹화의 오디오를 읽을 수 없습니다.";
+"This recording already shows the pointer in its pixels, so it can't be restyled. Zooms can still follow it." = "이 녹화는 이미 픽셀에 포인터가 포함되어 있어 스타일을 변경할 수 없습니다. 줌은 계속 포인터를 따라갈 수 있습니다.";
+"This recording has no audio to transcribe." = "이 녹화에는 변환할 오디오가 없습니다.";
+"This video has no recorded pointer data. Recordings made with macshot that open in the editor let you restyle, smooth and resize the pointer after recording." = "이 비디오에는 기록된 포인터 데이터가 없습니다. macshot으로 녹화하고 편집기에서 여는 녹화는 녹화 후에 포인터의 스타일, 부드러움, 크기를 변경할 수 있습니다.";
+"Title" = "제목";
+"Transcribing…" = "변환 중…";
+"Transition" = "전환";
+"Turn on Show Keystrokes before recording. macshot then records them separately so you can style them here." = "녹화 전에 키 입력 표시를 켜세요. 그러면 macshot이 키 입력을 별도로 기록하여 여기에서 스타일을 지정할 수 있습니다.";
+"Turn on the camera before recording. macshot records it separately so you can move, resize, restyle or hide it here, and shrink it during zooms." = "녹화 전에 카메라를 켜세요. macshot이 카메라를 별도로 녹화하므로 여기에서 이동, 크기 조정, 스타일 변경 또는 숨기기를 할 수 있으며, 줌 중에 축소할 수도 있습니다.";
+"Use Solid to hide sensitive information: blur and pixelation can sometimes be reversed." = "민감한 정보를 숨기려면 단색을 사용하세요. 흐리게와 모자이크는 복원될 수 있습니다.";
+"Visibility" = "표시 여부";
+"Wallpaper" = "배경화면";
+"When recordings open in the editor, the pointer is recorded separately so you can smooth, resize, restyle or hide it, and add zooms that follow it." = "녹화가 편집기에서 열리면 포인터가 별도로 기록되므로 부드럽게 하기, 크기 조정, 스타일 변경, 숨기기가 가능하며 포인터를 따라가는 줌을 추가할 수 있습니다.";
+"Wide" = "가로형";
+"Zoom in" = "줌 인";
+"Zoom in timeline" = "타임라인 확대";
+"Zoom level" = "줌 레벨";
+"Zoom out" = "줌 아웃";
+"Zoom out timeline" = "타임라인 축소";
+"macOS" = "macOS";
+"Sway" = "흔들림";
+
+"Snap webcam to corners when moved" = "이동할 때 웹캠을 모서리에 맞추기";
+"Search emoji" = "이모티콘 검색";

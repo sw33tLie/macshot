@@ -4,32 +4,13 @@
         <title>macshot</title>
         <link>https://github.com/sw33tLie/macshot</link>
         <description>macshot updates</description>
-<item xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
-    <title>v4.2.1</title>
-    <pubDate>Fri, 10 Jul 2026 17:51:12 +0000</pubDate>
-    <sparkle:version>99</sparkle:version>
-    <sparkle:shortVersionString>4.2.1</sparkle:shortVersionString>
+<item>
+    <title>v4.4.0</title>
+    <pubDate>Sun, 01 Nov 2026 16:41:31 +0000</pubDate>
+    <sparkle:version>119</sparkle:version>
+    <sparkle:shortVersionString>4.4.0</sparkle:shortVersionString>
     <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
 
-    <description>
-      &lt;style&gt;
-        body { font-family: -apple-system, sans-serif; font-size: 13px; padding: 12px; }
-        h3 { font-size: 14px; margin: 12px 0 6px 0; }
-        h3:first-child { margin-top: 0; }
-        ul { padding-left: 18px; margin: 4px 0; }
-        li { margin: 4px 0; line-height: 1.5; }
-      &lt;/style&gt;
-      &lt;h3&gt;Added&lt;/h3&gt;&lt;ul&gt;  &lt;li&gt;&lt;b&gt;Stamp size control&lt;/b&gt; — a Size slider in the stamp options row sets the default stamp/emoji size (remembered across captures). Stamps keep their aspect ratio when resized from any handle, and resizing an emoji stamp carries that size forward to the next one. (#289)&lt;/li&gt; &lt;li&gt;&lt;b&gt;Measure: "Limit to selection"&lt;/b&gt; — the ruler clamps to the capture area across drag-drawing, auto-measure (hold 1/2), and endpoint handle resizing. On by default; toggle in the measure options row. (#212)&lt;/li&gt; &lt;li&gt;&lt;b&gt;Option = draw-through&lt;/b&gt; — with a drawing tool active, hold Option to draw or place right over existing annotations instead of selecting them.&lt;/li&gt;  &lt;/ul&gt;&lt;h3&gt;Fixed&lt;/h3&gt;&lt;ul&gt;  &lt;li&gt;&lt;b&gt;Multi-monitor capture on macOS 26&lt;/b&gt; — external displays no longer capture shifted upward with a black bar at the bottom. (#291, #294)&lt;/li&gt; &lt;li&gt;&lt;b&gt;Shortcuts bound to Space work again&lt;/b&gt; — actions like Copy on the Space key were swallowed by 4.2.0's hold-Space-to-reposition feature. (#292)&lt;/li&gt; &lt;li&gt;&lt;b&gt;Shortcut names on non-QWERTY layouts&lt;/b&gt; — hotkey display resolves keys through the active keyboard layout, so Dvorak/Colemak/AZERTY users see the keys they actually press. (#214)&lt;/li&gt; &lt;li&gt;&lt;b&gt;Video editor Copy includes pending edits&lt;/b&gt; — trim, cuts, speed, zoom/censor/text, and mute are applied before copying to the clipboard. (#193)&lt;/li&gt; &lt;li&gt;&lt;b&gt;Multi-monitor: restored selection gets keyboard focus&lt;/b&gt; — Cmd+C, F, and Enter act on the display that shows the restored selection. (#281)&lt;/li&gt; &lt;li&gt;Stamp hover preview no longer leaves trails at larger stamp sizes.&lt;/li&gt;&lt;/ul&gt;
-    </description>
-    <enclosure url="https://github.com/sw33tLie/macshot/releases/download/v4.2.1/MacShot.dmg" length="6747619" type="application/octet-stream" sparkle:edSignature="hVBqpp6GDMI7MmpHxkPsr1edooUjddMcqhalz8gKXEM4+tJ36rw0n1wBR/bZECQcIBaGmo2Ijh6zpuDs/h42BA==" />
-</item>
-<item>
-    <title>v4.2.2-beta.3</title>
-    <pubDate>Sat, 29 Aug 2026 00:47:21 +0000</pubDate>
-    <sparkle:version>102</sparkle:version>
-    <sparkle:shortVersionString>4.2.2-beta.3</sparkle:shortVersionString>
-    <sparkle:minimumSystemVersion>12.3</sparkle:minimumSystemVersion>
-    <sparkle:channel>beta</sparkle:channel>
     <description><![CDATA[
       <style>
         body { font-family: -apple-system, sans-serif; font-size: 13px; padding: 12px; }
@@ -38,13 +19,13 @@
         ul { padding-left: 18px; margin: 4px 0; }
         li { margin: 4px 0; line-height: 1.5; }
       </style>
-      <h3>Added</h3><ul>  <li><b>Auto-adjust selection</b> — refine all four sides of a rough selection to nearby visual edges from the size presets panel or a configurable shortcut. (#317)</li> <li><b>Configurable Undo/Redo shortcuts</b> — customize, disable, or reset editor command shortcuts in Settings, with semantic key matching across keyboard layouts.</li>  </ul><h3>Changed</h3><ul>  <li><b>Beautify controls</b> — the effect toggle is clearer, disabled controls reflect the current state, and webcam sizing now uses a continuous 80–480 px slider that stays within the recording area.</li>  </ul><h3>Fixed</h3><ul>  <li>Window captures preserve their native shadows.</li> <li>The color sampler reads from the composited canvas and keeps its cursor stable over annotations.</li> <li>Recording setup failures now stop their active ScreenCaptureKit stream instead of leaking work in `replayd`. (#367)</li> <li><b>Close Window</b> (Command-W) now routes through the standard File menu to the active window. (#364)</li> <li><b>Video editor Copy</b> writes playable MP4 data for Mail, Notes, and other paste targets while retaining safe fallbacks for MOV and large files. (#329, #337)</li></ul>
+      <h3>Before you update</h3><ul>  <li><b>macshot has a new developer signature</b>, so macOS may ask you to allow Screen Recording again (and Accessibility or Input Monitoring if you use them). If macshot looks enabled in System Settings but capture fails, remove it with the minus button (−) and add it back from Applications with the plus button (+). Your settings, history and recordings are kept.</li>  </ul><h3>New</h3><ul>  <li><b>Studio, a redesigned video editor</b>: a sidebar for background, pointer, zoom, keystrokes, camera and captions, a multi-lane timeline with thumbnails, waveform and snapping, undo/redo, and autosaved projects.</li> <li><b>Editable pointer and Auto Zoom</b>: restyle, resize, smooth or hide the cursor and its click effects after recording, and get zooms generated from your clicks and typing that follow the pointer.</li> <li><b>Backgrounds and framing</b> for recordings: gradients, macOS wallpapers, colors or your own image, with padding, rounded corners, shadow and aspect ratio presets.</li> <li><b>Webcam as its own track</b>: move and resize it while recording, and change its shape, size and position afterwards. (#429)</li> <li><b>Captions and keystroke labels</b>, transcribed on your Mac and exportable as SRT.</li> <li><b>Record GIF</b> from the menu or its own hotkey; press a record hotkey again to stop. (#423)</li> <li><b>Every emoji in the stamp tool</b>, with search by name. (#473)</li> <li><b>Filename tokens and date folders</b>: `{app}`, `{yyyy}`, `{MM}`, `{dd}` and more, and a `/` files screenshots into subfolders. (#422)</li> <li><b>Press R</b> on the capture screen to bring back the last area. (#359)</li> <li>Smaller additions: open the Editor right after selecting (#474), copy screenshots in your image format as well as PNG (#373), date folders for S3 uploads (#417), and "Open With" macshot for videos in Finder (#461).</li>  </ul><h3>Improved</h3><ul>  <li><b>Much faster capture on multiple displays</b>: 4.2 s down to 0.2 s on four displays. (#349)</li> <li><b>Scroll capture rebuilt</b>: translucent navbars, sticky sidebars, cookie banners and pinned boxes appear once instead of repeating, videos stay whole, mouse wheels no longer lose content, and ⌘C or Return finishes the capture. (#484, #437)</li> <li><b>macOS 27</b>: OCR no longer hangs, and the capture and record menu items keep their icons. (#439, #313)</li> <li>Exported MP4s start playing before they have fully downloaded, and recordings play in Telegram and FFmpeg-based players. (#452, #450, #449)</li> <li>The text tool's icon is a plain "T" in every language. (#485)</li>  </ul><h3>Fixed</h3><ul>  <li>Recordings with system audio stopping with "Audio encoding could not keep up". (#444, #453, #455)</li> <li>OCR garbling Chinese, Japanese and other non-Latin text on lines that also contain English. (#462)</li> <li>A trackpad double-tap drag copying the capture instead of drawing. (#467)</li> <li>Captures confirming themselves when another app sent ⌘C after a drag. (#477)</li> <li>Screenshots appearing twice in clipboard managers. (#483)</li> <li>Global hotkeys that silently did nothing when two actions shared a shortcut. (#445)</li> <li>Capture OCR doing nothing after right-click, F or R selection. (#440)</li> <li>macshot missing from the Screen Recording list on first launch. (#299)</li> <li>macshot freezing for seconds when confirming a capture with a slow audio device. (#418)</li> <li>Microphone recordings failing after a restart because a stale default microphone had been saved.</li>  Thanks to @ivanilsonsousa, @mdtoupin, @defia, @mjjjjaazing, @DasCanard, @zkmn73, @a1exsun, @Redth, @ClmntCh7 and @hhktony for their contributions.</ul>
     ]]></description>
     <enclosure
-        url="https://github.com/sw33tLie/macshot/releases/download/v4.2.2-beta.3/MacShot.dmg"
-        length="6910783"
+        url="https://github.com/sw33tLie/macshot/releases/download/v4.4.0/MacShot.dmg"
+        length="8854707"
         type="application/octet-stream"
-        sparkle:edSignature="0V+QcN4PGo4Gxuwt90B/VXV7NqW2flwPfxk4GSFDRXv1/pOtYVnZs5GTNgbnzgKITlMCFTXrZyNN3rPbNmVoCg=="
+        sparkle:edSignature="MO1jtm++Xg2eAvAJiGk8Ty4mRIOMfUKED9IL9NRo1I4plsoESUdUN3jYa0vCFmrKzx12tE+9b75/VgcM14tPDg=="
     />
 </item>
     </channel>

@@ -16,7 +16,7 @@ class UploadToastController {
     private let cornerRadius: CGFloat = 14
 
     func show(status: String) {
-        let screen = NSScreen.main ?? NSScreen.screens[0]
+        guard let screen = NSScreen.preferred else { return }
         let screenFrame = screen.frame
         let visibleFrame = screen.visibleFrame
         let toastHeight: CGFloat = 56
@@ -116,7 +116,7 @@ class UploadToastController {
         let toastHeight = max(64, linkH + 42)
 
         // Resize and reposition (stay top-center)
-        let screen = NSScreen.main ?? NSScreen.screens[0]
+        guard let screen = NSScreen.preferred else { return }
         let visibleFrame = screen.visibleFrame
         let topPadding: CGFloat = 12
         let x = screen.frame.midX - toastWidth / 2
@@ -164,7 +164,10 @@ class UploadToastController {
         scheduleDismiss(seconds: 8)
     }
 
-    func showError(message: String) {
+    /// `asUploadFailure` prefixes the message with "Upload failed:". Failures
+    /// that aren't uploads (a save that couldn't be written, a recording that
+    /// produced nothing) pass false and supply their own wording.
+    func showError(message: String, asUploadFailure: Bool = true) {
         spinner?.stopAnimation(nil)
         spinner?.removeFromSuperview()
         spinner = nil
@@ -172,7 +175,7 @@ class UploadToastController {
 
         guard let panel = window, let contentView = panel.contentView else { return }
 
-        let fullMessage = String(format: L("Upload failed: %@"), message)
+        let fullMessage = asUploadFailure ? String(format: L("Upload failed: %@"), message) : message
         let labelFont = NSFont.systemFont(ofSize: 13, weight: .medium)
         let maxLabelW = toastWidth - 66  // 50 left pad + 16 right pad
         let textSize = (fullMessage as NSString).boundingRect(
@@ -184,7 +187,7 @@ class UploadToastController {
         let toastHeight = max(56, ceil(textSize.height) + 28)
 
         // Resize and reposition
-        let screen = NSScreen.main ?? NSScreen.screens[0]
+        guard let screen = NSScreen.preferred else { return }
         let visibleFrame = screen.visibleFrame
         let topPadding: CGFloat = 12
         let x = screen.frame.midX - toastWidth / 2
@@ -243,7 +246,7 @@ class UploadToastController {
     private func animateOut() {
         guard let window = window else { return }
         let frame = window.frame
-        let screen = NSScreen.main ?? NSScreen.screens[0]
+        guard let screen = NSScreen.preferred else { dismiss(); return }
         let offscreenY = screen.visibleFrame.maxY + 10
 
         NSAnimationContext.runAnimationGroup({ ctx in

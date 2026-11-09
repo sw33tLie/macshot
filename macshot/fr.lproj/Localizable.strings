@@ -39,7 +39,6 @@
 
 /* History Panel */
 "Copy" = "Copier";
-"Save As..." = "Enregistrer sous...";
 "Open in Editor" = "Ouvrir dans l'éditeur";
 "Pin to Screen" = "Épingler à l'écran";
 "Quick Look" = "Coup d'œil";
@@ -52,7 +51,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "Tout fermer";
-"Save All to Folder…" = "Tout enregistrer dans un dossier…";
 "Save" = "Enregistrer";
 
 /* Editor Top Bar */
@@ -172,15 +170,20 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Cliquer sur une fenêtre  ·  Glisser pour une zone  ·  F pour plein écran";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Cliquer sur un élément  ·  Glisser pour une zone  ·  F pour plein écran";
 "Drag to select  ·  Click for full screen" = "Glisser pour sélectionner  ·  Cliquer pour plein écran";
 "Release to annotate and edit" = "Relâcher pour annoter et modifier";
 "Release to finish" = "Relâcher pour terminer";
 "Hold Space to move. Release to annotate and edit" = "Maintenir Espace pour déplacer. Relâcher pour annoter et modifier";
 "Hold Space to move. Release to finish" = "Maintenir Espace pour déplacer. Relâcher pour terminer";
 "Window snap: " = "Accrochage fenêtre : ";
+"Snap mode: " = "Mode d'accrochage : ";
 "ON" = "OUI";
 "OFF" = "NON";
+"WINDOW" = "FENÊTRE";
+"ELEMENT" = "ÉLÉMENT";
 "  (Tab to toggle)" = "  (Tab pour basculer)";
+"  (Tab to switch)" = "  (Tab pour changer)";
 "Right-click to copy" = "Clic droit pour copier";
 "Aspect ratio & resolution presets" = "Préréglages de ratio et de résolution";
 "Aspect ratio" = "Ratio d'aspect";
@@ -221,6 +224,8 @@
 "Launch at login" = "Lancer au démarrage";
 "Show snap alignment guides" = "Afficher les guides d'alignement";
 "Snap selection edges to image boundaries" = "Aligner les bords de la sélection sur les limites de l'image";
+"Enhance browser and Electron element snapping" = "Améliorer l'accrochage des éléments des navigateurs et apps Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Construit l'arbre d'accessibilité de l'app cible en mode Élément. Désactivez si un navigateur ou une app Electron devient lent ou a des problèmes de saisie.";
 "Capture mouse cursor in screenshot" = "Capturer le curseur dans la capture d'écran";
 "Double-click selection to copy" = "Double-cliquer sur la sélection pour copier";
 "Hide capture instructions" = "Masquer les instructions de capture";
@@ -244,6 +249,8 @@
 "Move down" = "Déplacer vers le bas";
 "Output" = "Sortie";
 "Image format:" = "Format d'image :";
+"Also copy to the clipboard in this format" = "Copier aussi dans le presse-papiers dans ce format";
+"PNG is always included so every app can paste" = "Le PNG est toujours inclus pour que toutes les apps puissent coller";
 "Quality:" = "Qualité :";
 "%d%%" = "%d%%";
 "Save at standard resolution (1x)" = "Enregistrer en résolution standard (1x)";
@@ -336,6 +343,7 @@
 "Signed in" = "Connecté";
 "Not signed in" = "Non connecté";
 "Account:" = "Compte :";
+"Folder:" = "Dossier :";
 "Test Connection" = "Tester la connexion";
 "Fill in endpoint, bucket, and credentials first" = "Renseignez d'abord le point d'accès, le bucket et les identifiants";
 "Testing..." = "Test en cours...";
@@ -348,11 +356,13 @@
 "Secret Key:" = "Clé secrète :";
 "Public URL:" = "URL publique :";
 "Path Prefix:" = "Préfixe de chemin :";
+"Make uploads publicly readable" = "Rendre les envois lisibles publiquement";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Envoie l'ACL public-read pour que les fichiers téléversés soient visibles par toute personne disposant du lien. Nécessaire pour AWS S3, DigitalOcean Spaces, MinIO et Backblaze B2, qui stockent les objets en privé par défaut. À désactiver pour Cloudflare R2, qui ne prend pas en charge les ACL et rejette l'en-tête.";
 "API key:" = "Clé API :";
 "Upload History" = "Historique des téléversements";
 "No uploads yet." = "Aucun téléversement pour le moment.";
 "Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "URL de base pour l'accès public. Si vide, l'URL du point d'accès S3 est utilisée (peut ne pas être accessible publiquement).";
-"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "Une clé partagée est incluse — obtenez votre propre clé gratuite sur imgbb.com/api en cas de limites. Images uniquement (pas de prise en charge vidéo).";
+"A shared key is included. Get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "Une clé partagée est incluse, obtenez votre propre clé gratuite sur imgbb.com/api en cas de limites. Images uniquement (pas de prise en charge vidéo).";
 "Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "Compatible avec AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 et autres services S3-Compatible. Prend en charge les images et les vidéos.";
 "Configure S3 in Preferences" = "Configurer S3 dans les Préférences";
 "Sign in to Google Drive in Preferences" = "Connectez-vous à Google Drive dans les Préférences";
@@ -363,7 +373,7 @@
 "Version %@ (%@)" = "Version %@ (%@)";
 "Made by" = "Créé par";
 "Licensed under the GPLv3" = "Sous licence GPLv3";
-"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "Un outil gratuit et open source de capture et d'enregistrement d'écran pour macOS.\nEntièrement natif — développé avec Swift et AppKit.";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native, built with Swift and AppKit." = "Un outil gratuit et open source de capture et d'enregistrement d'écran pour macOS.\nEntièrement natif, développé avec Swift et AppKit.";
 
 /* Alerts */
 "No Image on Clipboard" = "Aucune image dans le presse-papiers";
@@ -385,6 +395,9 @@
 
 /* Permission Onboarding */
 "Welcome to macshot" = "Bienvenue dans macshot";
+"Welcome back to macshot" = "Bon retour dans macshot";
+"Turn Screen Recording back on" = "Réactivez l'enregistrement de l'écran";
+"After some updates, macOS asks you to allow macshot again. Your settings and captures are safe. If macshot is already in the list, select it, click the minus button (−) to remove it, then click the plus button (+) and add macshot again." = "Après certaines mises à jour, macOS vous demande d'autoriser à nouveau macshot. Vos réglages et vos captures sont conservés. Si macshot figure déjà dans la liste, sélectionnez-le, cliquez sur le bouton moins (−) pour le retirer, puis cliquez sur le bouton plus (+) et ajoutez à nouveau macshot.";
 "macshot needs one permission" = "macshot a besoin d'une autorisation";
 "Screen Recording not yet granted" = "Enregistrement d'écran non autorisé";
 "Screen Recording granted!" = "Enregistrement d'écran autorisé !";
@@ -414,6 +427,7 @@
 /* Recording Toast */
 "Recording saved" = "Enregistrement sauvegardé";
 "%@ • Recording saved" = "%@ • Enregistrement sauvegardé";
+"Recording failed: %@" = "Échec de l'enregistrement vidéo : %@";
 "Copy Path" = "Copier le chemin";
 "Path copied!" = "Chemin copié !";
 
@@ -433,6 +447,9 @@
 "Save Recording" = "Enregistrer la vidéo";
 "Choose a folder" = "Choisir un dossier";
 "Save All to Folder…" = "Tout enregistrer dans un dossier…";
+"Could not encode the screenshot." = "Impossible d'encoder la capture d'écran.";
+"Could not save the screenshot: %@" = "Impossible d'enregistrer la capture d'écran : %@";
+"Could not save the screenshot to history." = "Impossible d'enregistrer la capture d'écran dans l'historique.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Défilement auto.";
@@ -464,8 +481,8 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Surveillance des entrées requise";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot a besoin de l'autorisation Surveillance des entrées pour afficher les frappes pendant l'enregistrement. Veuillez accorder l'accès dans System Settings, puis réessayez.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot a besoin de l'autorisation Accessibilité pour afficher les frappes pendant l'enregistrement. Veuillez accorder l'accès dans System Settings, puis réessayez.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot a besoin de l’autorisation Surveillance des entrées pour mettre en évidence les clics de souris ou afficher les frappes pendant l’enregistrement. Accordez l’accès dans les Réglages Système, puis réessayez.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot a besoin de l'autorisation Accessibilité pour s'aligner sur des éléments d'interface individuels. Veuillez accorder l'accès dans les Réglages Système, puis réessayez.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Afficher les frappes";
@@ -503,6 +520,8 @@
 "Settings..." = "Réglages...";
 "macshot Settings" = "Réglages macshot";
 "Also open in Editor" = "Ouvrir aussi dans l'éditeur";
+"Open in Editor right after selection" = "Ouvrir dans l'éditeur dès la sélection";
+"Close editor after copying" = "Fermer l'éditeur après la copie";
 "Hide controls" = "Masquer les contrôles";
 "Hide recording controls" = "Masquer les contrôles d'enregistrement";
 "Stop recording from the menu bar icon instead." = "Arrêtez l'enregistrement depuis l'icône de la barre des menus.";
@@ -546,12 +565,13 @@
 
 "Same as screenshots" = "Identique aux captures d'écran";
 "  Preview size:" = "  Taille de l'aperçu :";
+"Fit image in preview (letterbox)" = "Ajuster l'image dans l'aperçu (bandes noires)";
 "(0 = off)" = "(0 = désactivé)";
 "Clear All" = "Tout effacer";
 "Clear History?" = "Effacer l'historique ?";
 "This will permanently delete all screenshots from history." = "Cela supprimera définitivement toutes les captures d'écran de l'historique.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Cliquez sur \"Définir\" et appuyez sur une combinaison de touches avec au moins un modificateur (⌘, ⌥, ⌃, ⇧) pour définir un raccourci.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Les fichiers sont téléversés dans un dossier \"macshot\" de votre Google Drive. Tout reste privé — rien n'est partagé publiquement.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused. A new one is created instead. Everything stays private and nothing is shared publicly." = "Les fichiers sont téléversés dans ce dossier de votre Google Drive. Laissez vide pour utiliser \"macshot\". macshot ne peut utiliser que les dossiers qu'il a lui-même créés : un dossier du même nom que vous avez créé dans Drive ne sera donc pas réutilisé, un nouveau dossier sera créé à la place. Tout reste privé, rien n'est partagé publiquement.";
 
 "Pressure" = "Pression";
 
@@ -621,7 +641,7 @@
 "Open this settings window" = "Ouvrir cette fenêtre de réglages";
 "Quick capture (uses your Enter action)" = "Capture rapide (utilise votre action Entrée)";
 "Re-capture the last selected area" = "Recapturer la dernière zone sélectionnée";
-"Screenshots only — captured window title (blank otherwise)" = "Captures d'écran uniquement — titre de la fenêtre capturée (vide sinon)";
+"Captured window title (screenshots only, blank otherwise)" = "Captures d'écran uniquement, titre de la fenêtre capturée (vide sinon)";
 "Show available filename tokens" = "Afficher les jetons de nom de fichier disponibles";
 "Show supported URL scheme commands" = "Afficher les commandes de schéma d'URL prises en charge";
 "Enable macshot:// URL scheme" = "Activer le schéma d'URL macshot://";
@@ -680,3 +700,162 @@
 "Selection is already aligned" = "La sélection est déjà alignée";
 "Space to move. Release to annotate and edit" = "Maintenez la barre d'espace pour déplacer. Relâchez pour annoter et modifier";
 "Space to move. Release to finish" = "Maintenez la barre d'espace pour déplacer. Relâchez pour terminer";
+
+"Saving..." = "Enregistrement…";
+
+"Show Recordings in Finder" = "Afficher les enregistrements dans le Finder";
+
+"Cancelled" = "Annulé";
+
+"Cancelling..." = "Annulation...";
+"Preparing video..." = "Préparation de la vidéo...";
+"History is busy saving. Please try again shortly." = "L’historique est en cours d’enregistrement. Réessayez dans un instant.";
+
+// Video editor accessibility
+"Play" = "Lire";
+"Mute" = "Couper le son";
+"Unmute" = "Rétablir le son";
+
+/* Video editor (Studio) */
+"%.1f× · follows pointer" = "%.1f× · suit le pointeur";
+"Add" = "Ajouter";
+"Add Cut Here" = "Ajouter une coupe ici";
+"Add Text Here" = "Ajouter du texte ici";
+"Add Zoom Here" = "Ajouter un zoom ici";
+"Added %d captions" = "%d sous-titres ajoutés";
+"Added %d zooms" = "%d zooms ajoutés";
+"Apply Default Zoom to All" = "Appliquer le zoom par défaut à tous";
+"Auto" = "Auto";
+"Auto Zoom" = "Zoom auto";
+"Auto Zoom needs pointer data, which macshot records with every new recording. You can still add zooms by double-clicking the zoom lane." = "Le zoom auto nécessite les données du pointeur, que macshot enregistre à chaque nouvel enregistrement. Vous pouvez toujours ajouter des zooms en double-cliquant sur la piste de zoom.";
+"Background blur" = "Flou d'arrière-plan";
+"Background color" = "Couleur de fond";
+"Background, padding, rounded corners and shadow" = "Fond, marge, coins arrondis et ombre";
+"Bold Italic" = "Gras italique";
+"Box" = "Boîte";
+"Camera" = "Caméra";
+"Caption" = "Sous-titre";
+"Captions" = "Sous-titres";
+"Captions are transcribed on this Mac. Nothing is uploaded." = "Les sous-titres sont transcrits sur ce Mac. Rien n'est envoyé.";
+"Choose Image…" = "Choisir une image…";
+"Click color" = "Couleur des clics";
+"Clicks" = "Clics";
+"Clip" = "Clip";
+"Colors" = "Couleurs";
+"Connect nearby zooms" = "Relier les zooms proches";
+"Copy the edited video to the clipboard" = "Copier la vidéo modifiée dans le presse-papiers";
+"Corner radius" = "Rayon des coins";
+"Creates zooms that follow the pointer wherever you click or type. Adjust or delete them on the timeline." = "Crée des zooms qui suivent le pointeur partout où vous cliquez ou tapez. Ajustez-les ou supprimez-les dans la chronologie.";
+"Custom color" = "Couleur personnalisée";
+"Cut" = "Coupe";
+"Cuts, speed and freeze frames" = "Coupes, vitesse et arrêts sur image";
+"Default zoom" = "Zoom par défaut";
+"Dot" = "Point";
+"Double-click the text on the preview to edit it." = "Double-cliquez sur le texte dans l'aperçu pour le modifier.";
+"Double-click to add a zoom" = "Double-cliquez pour ajouter un zoom";
+"Double-click to add a zoom, or use Auto Zoom" = "Double-cliquez pour ajouter un zoom, ou utilisez le zoom auto";
+"Drag the frame on the preview to choose where the zoom looks." = "Faites glisser le cadre dans l'aperçu pour choisir où le zoom se porte.";
+"Duration" = "Durée";
+"Edge highlight" = "Liseré lumineux";
+"Edit Text" = "Modifier le texte";
+"Editable pointer, clicks and keystrokes" = "Pointeur, clics et frappes modifiables";
+"Edits" = "Modifications";
+"Export" = "Exporter";
+"Export Subtitles (.srt)…" = "Exporter les sous-titres (.srt)…";
+"Fade in" = "Fondu entrant";
+"Fade out" = "Fondu sortant";
+"Fit" = "Ajuster";
+"Fixed" = "Fixe";
+"Fixed point" = "Point fixe";
+"Focus" = "Cible";
+"Follow" = "Suivi";
+"Follow Pointer" = "Suivre le pointeur";
+"Follow pointer" = "Suivre le pointeur";
+"Follow tightness" = "Précision du suivi";
+"Format" = "Format";
+"Frame" = "Cadre";
+"Frame rate" = "Fréquence d'images";
+"Frame the recording" = "Encadrer l'enregistrement";
+"Freeze Frame" = "Arrêt sur image";
+"Generate Captions" = "Générer les sous-titres";
+"Gentle" = "Doux";
+"Gradient" = "Dégradé";
+"Hide ordinary typing, show key combinations" = "Masquer la saisie ordinaire, afficher les combinaisons de touches";
+"Hide when idle" = "Masquer si inactif";
+"Hide while typing" = "Masquer pendant la saisie";
+"Hold Focus" = "Maintenir le cadrage";
+"Idle delay" = "Délai d'inactivité";
+"Image" = "Image";
+"Keystrokes" = "Frappes";
+"Keystrokes in this recording are part of the video pixels." = "Les frappes de cet enregistrement font partie des pixels de la vidéo.";
+"Light appearance" = "Apparence claire";
+"Makes looping GIFs seamless" = "Rend les GIF en boucle fluides";
+"Mirror" = "Miroir";
+"Motion" = "Mouvement";
+"Motion blur" = "Flou de mouvement";
+"Next edit" = "Modification suivante";
+"No clicks or typing found to zoom into" = "Aucun clic ni saisie trouvé pour zoomer";
+"No speech was recognized" = "Aucune parole n'a été reconnue";
+"No system wallpapers were found. Choose an image instead." = "Aucun fond d'écran système trouvé. Choisissez plutôt une image.";
+"Off" = "Désactivé";
+"On-device speech recognition isn't available for your language on this Mac." = "La reconnaissance vocale sur l'appareil n'est pas disponible pour votre langue sur ce Mac.";
+"Original" = "Original";
+"Outline color" = "Couleur du contour";
+"Outline width" = "Épaisseur du contour";
+"Overlays" = "Superpositions";
+"Pan between zooms instead of zooming out" = "Passer d'un zoom à l'autre sans dézoomer";
+"Pill" = "Pilule";
+"Pointer" = "Pointeur";
+"Position" = "Position";
+"Press animation" = "Animation de clic";
+"Previous edit" = "Modification précédente";
+"Quality" = "Qualité";
+"Regenerate Captions" = "Régénérer les sous-titres";
+"Regular" = "Normal";
+"Remove Automatic Zooms" = "Supprimer les zooms automatiques";
+"Remove Captions" = "Supprimer les sous-titres";
+"Removes %.1f seconds from the video. Drag its edges on the timeline to adjust." = "Retire %.1f secondes de la vidéo. Faites glisser ses bords dans la chronologie pour l'ajuster.";
+"Return to start at the end" = "Revenir au début à la fin";
+"Ring" = "Anneau";
+"Ripple" = "Onde";
+"Save As…" = "Enregistrer sous…";
+"Shape" = "Forme";
+"Shortcuts only" = "Raccourcis uniquement";
+"Show camera" = "Afficher la caméra";
+"Show captions" = "Afficher les sous-titres";
+"Show keystrokes" = "Afficher les frappes";
+"Show pointer" = "Afficher le pointeur";
+"Shrink during zooms" = "Réduire pendant les zooms";
+"Smoothing" = "Lissage";
+"Snappy" = "Vif";
+"Speech recognition is turned off for macshot in System Settings › Privacy & Security." = "La reconnaissance vocale est désactivée pour macshot dans Réglages Système › Confidentialité et sécurité.";
+"Speed" = "Vitesse";
+"Spotlight" = "Projecteur";
+"Square" = "Carré";
+"Style" = "Style";
+"Tall" = "Portrait";
+"Text and blur" = "Texte et flou";
+"The recording's audio could not be read." = "Impossible de lire l'audio de l'enregistrement.";
+"This recording already shows the pointer in its pixels, so it can't be restyled. Zooms can still follow it." = "Cet enregistrement contient déjà le pointeur dans ses pixels : son style ne peut donc pas être modifié. Les zooms peuvent toujours le suivre.";
+"This recording has no audio to transcribe." = "Cet enregistrement ne contient aucun audio à transcrire.";
+"This video has no recorded pointer data. Recordings made with macshot that open in the editor let you restyle, smooth and resize the pointer after recording." = "Cette vidéo ne contient aucune donnée de pointeur. Les enregistrements macshot ouverts dans l'éditeur vous permettent de modifier le style, de lisser et de redimensionner le pointeur après l'enregistrement.";
+"Title" = "Titre";
+"Transcribing…" = "Transcription…";
+"Transition" = "Transition";
+"Turn on Show Keystrokes before recording. macshot then records them separately so you can style them here." = "Activez Afficher les frappes avant d'enregistrer. macshot les enregistre alors séparément pour que vous puissiez les styliser ici.";
+"Turn on the camera before recording. macshot records it separately so you can move, resize, restyle or hide it here, and shrink it during zooms." = "Activez la caméra avant d'enregistrer. macshot l'enregistre séparément pour que vous puissiez la déplacer, la redimensionner, modifier son style ou la masquer ici, et la réduire pendant les zooms.";
+"Use Solid to hide sensitive information: blur and pixelation can sometimes be reversed." = "Utilisez Opaque pour masquer les informations sensibles : le flou et la pixélisation peuvent parfois être inversés.";
+"Visibility" = "Visibilité";
+"Wallpaper" = "Fond d'écran";
+"When recordings open in the editor, the pointer is recorded separately so you can smooth, resize, restyle or hide it, and add zooms that follow it." = "Lorsque les enregistrements s'ouvrent dans l'éditeur, le pointeur est enregistré séparément pour que vous puissiez le lisser, le redimensionner, modifier son style ou le masquer, et ajouter des zooms qui le suivent.";
+"Wide" = "Paysage";
+"Zoom in" = "Zoom avant";
+"Zoom in timeline" = "Agrandir la chronologie";
+"Zoom level" = "Niveau de zoom";
+"Zoom out" = "Zoom arrière";
+"Zoom out timeline" = "Réduire la chronologie";
+"macOS" = "macOS";
+"Sway" = "Balancement";
+
+"Snap webcam to corners when moved" = "Aligner la webcam sur les coins lors du déplacement";
+"Search emoji" = "Rechercher un emoji";

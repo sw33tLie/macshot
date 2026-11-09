@@ -9,14 +9,40 @@ enum ClipboardTextPinRenderer {
     private static let importedTableBlockSpacing: CGFloat = 8
     private static let maxImportedParagraphSpacing: CGFloat = 8
 
+    /// A pin is a screenshot of some text, not a document viewer. Laying out a
+    /// copied log file or JSON blob costs Text Kit a pass over every glyph on
+    /// the main thread, which beachballs the app (and the global hotkeys with
+    /// it). Far more than fits on screen is pointless anyway.
+    static let maxCharacters = 20_000
+
+    /// Truncates text that is too long to lay out, marking the cut so the pin
+    /// doesn't look like the content simply ended.
+    static func truncatedForPinning(_ text: String) -> String {
+        guard text.count > maxCharacters else { return text }
+        return String(text.prefix(maxCharacters)) + "\n…"
+    }
+
+    static func truncatedForPinning(_ attributed: NSAttributedString) -> NSAttributedString {
+        guard attributed.length > maxCharacters else { return attributed }
+        let boundary = (attributed.string as NSString).rangeOfComposedCharacterSequence(at: maxCharacters).location
+        let clipped = NSMutableAttributedString(attributedString: attributed.attributedSubstring(
+            from: NSRange(location: 0, length: boundary)))
+        clipped.append(NSAttributedString(string: "\n…"))
+        return clipped
+    }
+
+    /// Only generated formatting markup reaches AppKit's HTML importer.
     static func attributedString(html data: Data) -> NSAttributedString? {
-        attributedString(
-            data: data,
-            options: [
-                .documentType: NSAttributedString.DocumentType.html,
-                .characterEncoding: String.Encoding.utf8.rawValue,
-            ]
-        )
+        let safe = sanitizedHTML(data)
+        guard !safe.isEmpty else { return nil }
+        return attributedString(data: safe, options: [
+            .documentType: NSAttributedString.DocumentType.html,
+            .characterEncoding: String.Encoding.utf8.rawValue,
+        ])
+    }
+
+    static func sanitizedHTML(_ data: Data) -> Data {
+        ClipboardHTML.sanitized(data, maximumCharacters: maxCharacters)
     }
 
     static func attributedString(rtf data: Data) -> NSAttributedString? {
@@ -37,6 +63,7 @@ enum ClipboardTextPinRenderer {
         data: Data,
         options: [NSAttributedString.DocumentReadingOptionKey: Any]
     ) -> NSAttributedString? {
+        guard data.count <= ClipboardHTML.maximumInputBytes else { return nil }
         var documentAttributes: NSDictionary?
         guard let attributed = try? NSAttributedString(
             data: data,
@@ -44,7 +71,7 @@ enum ClipboardTextPinRenderer {
             documentAttributes: &documentAttributes
         ) else { return nil }
 
-        let mutable = NSMutableAttributedString(attributedString: attributed)
+        let mutable = NSMutableAttributedString(attributedString: truncatedForPinning(attributed))
         normalizeImportedListMarkers(in: mutable)
         removeRedundantImportedBlankParagraphs(in: mutable)
         restoreSpacingAfterImportedTables(in: mutable)
@@ -96,11 +123,12 @@ enum ClipboardTextPinRenderer {
         let maxContentWidth = max(320, min(980, screenFrame.width * 0.72))
         let maxImageHeight = max(240, screenFrame.height * 0.82)
 
-        let normalized = NSMutableAttributedString(attributedString: attributed)
+        let normalized = NSMutableAttributedString(attributedString: truncatedForPinning(attributed))
         normalizeParagraphs(in: normalized)
 
         let contentSize = measuredSize(for: normalized, maxWidth: maxContentWidth)
-        guard contentSize.width > 0, contentSize.height > 0 else { return nil }
+        guard contentSize.width.isFinite, contentSize.height.isFinite,
+              contentSize.width > 0, contentSize.height > 0 else { return nil }
 
         var imageWidth = ceil(contentSize.width + padding.left + padding.right)
         var imageHeight = ceil(contentSize.height + padding.top + padding.bottom)

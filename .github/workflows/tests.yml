@@ -1,0 +1,139 @@
+name: Tests
+
+# Runs on every push and pull request. The unit tests compile the app sources
+# into a test bundle with no host app, so nothing here needs Screen Recording
+# permission or a logged-in GUI session.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: macos-26
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Select Xcode
+        run: |
+          # Match the release build's toolchain so the tests see the same SDK.
+          XC=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$XC" ]; then XC=$(ls -d /Applications/Xcode*.app | sort -V | tail -1); fi
+          echo "Using $XC"
+          sudo xcode-select -s "$XC/Contents/Developer"
+          xcodebuild -version
+
+      - name: Cache SwiftPM dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData/**/SourcePackages
+          key: ${{ runner.os }}-spm-${{ hashFiles('macshot.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: ${{ runner.os }}-spm-
+
+      - name: Run unit tests
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -scheme macshotTests \
+            -configuration Debug \
+            -destination 'platform=macOS' \
+            -resultBundlePath TestResults.xcresult \
+            -parallel-testing-enabled NO \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee xcodebuild-test.log \
+            | { grep -E "Test (Suite|Case|session)|error:|warning: .*(deprecated|unused)|\*\*" || true; }
+          exit ${PIPESTATUS[0]}
+
+      # The offline variant is a shipping product with upload code compiled
+      # out, so the suite has to build and pass there too.
+      - name: Run unit tests (offline variant)
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -scheme macshotTests \
+            -configuration Debug \
+            -destination 'platform=macOS' \
+            -resultBundlePath OfflineTestResults.xcresult \
+            -parallel-testing-enabled NO \
+            CODE_SIGNING_ALLOWED=NO \
+            SWIFT_ACTIVE_COMPILATION_CONDITIONS='$(inherited) OFFLINE' \
+            | tee xcodebuild-test-offline.log \
+            | { grep -E "Executed .* tests|error:|\*\*" || true; }
+          exit ${PIPESTATUS[0]}
+
+      - name: Summarize failures
+        if: always()
+        run: |
+          [ -d TestResults.xcresult ] || exit 0
+          xcrun xcresulttool get test-results summary --path TestResults.xcresult --format json 2>/dev/null \
+            | python3 -c '
+          import json, sys
+          try:
+              d = json.load(sys.stdin)
+          except Exception:
+              sys.exit(0)
+          print("## Tests: %d passed, %d failed, %d skipped" % (
+              d.get("passedTests", 0), d.get("failedTests", 0), d.get("skippedTests", 0)))
+          for t in d.get("testFailures", []):
+              print("\n**FAIL** `%s`" % t.get("testName", ""))
+              print("```\n%s\n```" % (t.get("failureText") or "").strip())
+          ' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            TestResults.xcresult
+            OfflineTestResults.xcresult
+            xcodebuild-test.log
+            xcodebuild-test-offline.log
+          retention-days: 7
+
+  # The release build uses -Owholemodule with strict concurrency, which Debug
+  # builds don't enforce. Catching that here keeps it out of a tagged release.
+  release-build:
+    runs-on: macos-26
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Select Xcode
+        run: |
+          XC=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$XC" ]; then XC=$(ls -d /Applications/Xcode*.app | sort -V | tail -1); fi
+          sudo xcode-select -s "$XC/Contents/Developer"
+
+      - name: Build Release (normal variant)
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -scheme macshot \
+            -configuration Release \
+            -destination 'platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            | { grep -E "error:|\*\* BUILD" || true; }
+          exit ${PIPESTATUS[0]}
+
+      - name: Build Release (offline variant)
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -scheme macshot \
+            -configuration Release \
+            -destination 'platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            SWIFT_ACTIVE_COMPILATION_CONDITIONS='$(inherited) OFFLINE' \
+            | { grep -E "error:|\*\* BUILD" || true; }
+          exit ${PIPESTATUS[0]}

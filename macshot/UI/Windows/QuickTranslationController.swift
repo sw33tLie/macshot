@@ -94,6 +94,7 @@ final class QuickTranslationController: NSObject {
         let targetLabel = NSTextField(labelWithString: L("Translate to:"))
         targetLabel.font = NSFont.systemFont(ofSize: 12)
         targetLabel.textColor = .secondaryLabelColor
+        targetLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         header.addArrangedSubview(targetLabel)
 
         let popup = NSPopUpButton()
@@ -121,7 +122,7 @@ final class QuickTranslationController: NSObject {
         let providerLabel = NSTextField(labelWithString: L("Provider:"))
         providerLabel.font = NSFont.systemFont(ofSize: 12)
         providerLabel.textColor = .secondaryLabelColor
-        providerLabel.setContentHuggingPriority(.required, for: .horizontal)
+        providerLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         providerRow.addArrangedSubview(providerLabel)
 
         let providerSelector = NSPopUpButton(frame: .zero, pullsDown: false)
@@ -326,8 +327,8 @@ final class QuickTranslationController: NSObject {
         retryButton?.isHidden = true
 
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            VisionOCR.performTextRecognition(cgImage: cgImage) { request, error in
-                let recognizedText = VisionOCR.recognizedText(from: request)
+            VisionOCR.performTextRecognition(cgImage: cgImage) { observations, error in
+                let recognizedText = observations.map(\.text).joined(separator: "\n")
                 DispatchQueue.main.async { [weak self] in
                     guard let self, self.requestID == activeRequestID, self.window != nil else {
                         return

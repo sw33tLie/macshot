@@ -4,48 +4,55 @@ import Security
 import CryptoKit
 import AuthenticationServices
 
-/// Google Drive uploader using OAuth2 with PKCE.
-/// Files are uploaded to a "macshot" folder in the user's Drive, kept private (not shared).
+/// Google Drive uploads remain private in the configured destination folder.
 final class GoogleDriveUploader: NSObject, ASWebAuthenticationPresentationContextProviding {
-
     static let shared = GoogleDriveUploader()
-
-    // GCP OAuth iOS client — no secret needed for native apps using PKCE
     private let clientID = "92758256085-8gkpg2b9to7bu7to0vgh9c7af755hp5d.apps.googleusercontent.com"
-    /// Reversed client ID used as custom URL scheme for OAuth redirect.
-    private var callbackScheme: String {
-        clientID.components(separatedBy: ".").reversed().joined(separator: ".")
-    }
+    private var callbackScheme: String { clientID.components(separatedBy: ".").reversed().joined(separator: ".") }
     private let scopes = "https://www.googleapis.com/auth/drive.file"
-
     private let tokenURL = "https://oauth2.googleapis.com/token"
     private let uploadURL = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart"
     private let filesURL = "https://www.googleapis.com/drive/v3/files"
-
-    private var macShotFolderID: String?
+    private let session: URLSession
+    private let tokenFileOverride: URL?
+    private let defaults: UserDefaults
+    private let retryDelay: UInt64
+    private var authGeneration = UUID()
+    private var folderGeneration = UUID()
+    private var tokenRefresh: (id: UUID, task: Task<String, Error>)?
+    private var folderRequests: [String: (id: UUID, task: Task<String, Error>)] = [:]
+    private var cachedFolderID: String?
+    private var cachedFolderName: String?
     private var authSession: ASWebAuthenticationSession?
     private weak var presentationWindow: NSWindow?
 
-    /// Dedicated session for uploads with longer timeouts to avoid "connection lost" on large files.
-    private lazy var uploadSession: URLSession = {
+    init(session: URLSession? = nil, tokenFileURL: URL? = nil,
+         defaults: UserDefaults = .standard, retryDelayNanoseconds: UInt64 = 2_000_000_000) {
         let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = 300   // 5 min per request
-        config.timeoutIntervalForResource = 600  // 10 min total
-        return URLSession(configuration: config)
-    }()
-
-    // MARK: - Public API
-
-    var isSignedIn: Bool {
-        loadRefreshToken() != nil
+        config.timeoutIntervalForRequest = 300
+        config.timeoutIntervalForResource = 600
+        self.session = session ?? URLSession(configuration: config)
+        self.tokenFileOverride = tokenFileURL
+        self.defaults = defaults
+        self.retryDelay = retryDelayNanoseconds
+        super.init()
     }
 
-    var userEmail: String? {
-        UserDefaults.standard.string(forKey: "gdriveUserEmail")
+    var isSignedIn: Bool { loadRefreshToken() != nil }
+    var userEmail: String? { defaults.string(forKey: "gdriveUserEmail") }
+    private var folderName: String {
+        let name = defaults.string(forKey: "gdriveFolderName")?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return name.isEmpty ? "macshot" : name
     }
 
     /// Start the OAuth2 sign-in flow using ASWebAuthenticationSession.
     func signIn(from window: NSWindow?, completion: @escaping (Bool) -> Void) {
+        authGeneration = UUID()
+        let generation = authGeneration
+        authSession?.cancel()
+        tokenRefresh?.task.cancel()
+        tokenRefresh = nil
+        invalidateFolderCache()
         let codeVerifier = generateCodeVerifier()
         let codeChallenge = generateCodeChallenge(from: codeVerifier)
         let redirectURI = "\(callbackScheme):/oauthredirect"
@@ -66,21 +73,23 @@ final class GoogleDriveUploader: NSObject, ASWebAuthenticationPresentationContex
 
         presentationWindow = window
         let session = ASWebAuthenticationSession(url: authURL, callbackURLScheme: callbackScheme) { [weak self] callbackURL, error in
-            guard let self = self else { return }
-            self.authSession = nil
+            Task { @MainActor [weak self] in
+                guard let self, self.authGeneration == generation else { completion(false); return }
+                self.authSession = nil
 
-            guard let callbackURL = callbackURL, error == nil,
-                  let urlComponents = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false),
-                  let code = urlComponents.queryItems?.first(where: { $0.name == "code" })?.value else {
-                DispatchQueue.main.async { completion(false) }
-                return
+                guard let callbackURL = callbackURL, error == nil,
+                      let urlComponents = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false),
+                      let code = urlComponents.queryItems?.first(where: { $0.name == "code" })?.value else {
+                    DispatchQueue.main.async { completion(false) }
+                    return
+                }
+                self.exchangeCodeWithRedirect(code, codeVerifier: codeVerifier, redirectURI: redirectURI, completion: completion)
             }
-            self.exchangeCodeWithRedirect(code, codeVerifier: codeVerifier, redirectURI: redirectURI, completion: completion)
         }
         session.presentationContextProvider = self
         session.prefersEphemeralWebBrowserSession = false
         authSession = session
-        session.start()
+        if !session.start() { authSession = nil; completion(false) }
     }
 
     // MARK: - ASWebAuthenticationPresentationContextProviding
@@ -90,374 +99,237 @@ final class GoogleDriveUploader: NSObject, ASWebAuthenticationPresentationContex
     }
 
     func signOut() {
+        authGeneration = UUID()
+        authSession?.cancel()
+        authSession = nil
+        tokenRefresh?.task.cancel()
+        tokenRefresh = nil
+        invalidateFolderCache()
         deleteTokens()
-        UserDefaults.standard.removeObject(forKey: "gdriveUserEmail")
-        macShotFolderID = nil
+        defaults.removeObject(forKey: "gdriveUserEmail")
     }
 
-    /// Progress callback: percentage 0.0–1.0
-    var onProgress: ((Double) -> Void)?
-
-    /// Upload a file (image or video) to the macshot folder.
-    func upload(data: Data, filename: String, mimeType: String, completion: @escaping (Result<String, Error>) -> Void) {
-        ensureValidToken { [weak self] success in
-            guard let self = self, success else {
-                completion(.failure(Self.error("Not signed in")))
-                return
-            }
-            self.ensureMacShotFolder { result in
-                switch result {
-                case .success(let folderID):
-                    self.uploadFile(data: data, filename: filename, mimeType: mimeType, folderID: folderID, completion: completion)
-                case .failure(let error):
-                    completion(.failure(error))
-                }
-            }
-        }
+    func upload(data: Data, filename: String, mimeType: String,
+                progress: (@MainActor @Sendable (Double) -> Void)? = nil,
+                completion: @escaping (Result<String, Error>) -> Void) {
+        upload(payload: .data(data), filename: filename, mimeType: mimeType, progress: progress, completion: completion)
     }
 
-    /// Upload an NSImage.
-    func uploadImage(_ image: NSImage, completion: @escaping (Result<String, Error>) -> Void) {
-        guard let tiffData = image.tiffRepresentation,
-              let bitmap = NSBitmapImageRep(data: tiffData),
-              let pngData = bitmap.representation(using: .png, properties: [:]) else {
-            completion(.failure(Self.error("Failed to encode image")))
-            return
-        }
-        let template = UserDefaults.standard.string(forKey: FilenameFormatter.userDefaultsKey) ?? FilenameFormatter.defaultTemplate
-        let base = FilenameFormatter.format(template: template)
-        let filename = "\(base).png"
-        upload(data: pngData, filename: filename, mimeType: "image/png", completion: completion)
+    func upload(payload: UploadPayload, filename: String, mimeType: String,
+                progress: (@MainActor @Sendable (Double) -> Void)? = nil,
+                completion: @escaping (Result<String, Error>) -> Void) {
+        let generation = authGeneration
+        let name = folderName
+        UploadJob.start(filename: filename, operation: { [weak self] in
+            guard let self else { throw CancellationError() }
+            let source = try await MediaExportIO.perform { try PreparedUploadBody(payload: payload) }
+            try checkAccount(generation)
+            _ = try await validToken()
+            let folder = try await destinationFolder(name: name, generation: generation)
+            return try await uploadFile(source: source, filename: filename, mimeType: mimeType,
+                                        folderID: folder, generation: generation, progress: progress)
+        }, completion: completion)
     }
 
-    /// Upload a video file from URL.
-    func uploadVideo(url: URL, completion: @escaping (Result<String, Error>) -> Void) {
-        guard let data = try? Data(contentsOf: url) else {
-            completion(.failure(Self.error("Failed to read video file")))
-            return
-        }
-        let ext = url.pathExtension.lowercased()
-        let mime = ext == "gif" ? "image/gif" : "video/mp4"
-        let filename = url.lastPathComponent
-        upload(data: data, filename: filename, mimeType: mime, completion: completion)
+    func uploadImage(_ image: NSImage, progress: (@MainActor @Sendable (Double) -> Void)? = nil,
+                     completion: @escaping (Result<String, Error>) -> Void) {
+        do {
+            let pixels = try HistoryImageSnapshot.Image(image)
+            let template = defaults.string(forKey: FilenameFormatter.userDefaultsKey) ?? FilenameFormatter.defaultTemplate
+            upload(payload: .image(pixels), filename: FilenameFormatter.format(template: template) + ".png",
+                   mimeType: "image/png", progress: progress, completion: completion)
+        } catch { completion(.failure(error)) }
     }
 
-    // MARK: - OAuth Token Exchange
+    func uploadVideo(url: URL, progress: (@MainActor @Sendable (Double) -> Void)? = nil,
+                     completion: @escaping (Result<String, Error>) -> Void) {
+        upload(payload: .file(url), filename: url.lastPathComponent,
+               mimeType: url.pathExtension.lowercased() == "gif" ? "image/gif" : "video/mp4",
+               progress: progress, completion: completion)
+    }
 
-    private func exchangeCodeWithRedirect(_ code: String, codeVerifier: String, redirectURI: String, completion: @escaping (Bool) -> Void) {
+    // All account/cache mutation resumes on the main actor. A response from
+    // before sign-out can neither restore credentials nor start another upload.
+    private func checkAccount(_ generation: UUID) throws {
+        guard generation == authGeneration else { throw Self.error("Account changed during upload") }
+    }
+
+    private func tokenRequest(_ values: [String: String]) -> URLRequest {
         var request = URLRequest(url: URL(string: tokenURL)!)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.httpBody = UploadTransport.formBody(values)
+        return request
+    }
 
-        let body = [
-            "code": code,
-            "client_id": clientID,
-            "redirect_uri": redirectURI,
-            "grant_type": "authorization_code",
-            "code_verifier": codeVerifier,
-        ].map { "\($0.key)=\($0.value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)" }
-         .joined(separator: "&")
-
-        request.httpBody = body.data(using: .utf8)
-
-        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
-            guard let self = self else { return }
-            guard let data = data, error == nil,
-                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let accessToken = json["access_token"] as? String else {
-                DispatchQueue.main.async { completion(false) }
-                return
-            }
-
-            let refreshToken = json["refresh_token"] as? String ?? self.loadRefreshToken()
-            guard let finalRefreshToken = refreshToken else {
-                DispatchQueue.main.async { completion(false) }
-                return
-            }
-
-            let expiresIn = json["expires_in"] as? Int ?? 3600
-            let expiry = Date().addingTimeInterval(TimeInterval(expiresIn - 60))
-
-            self.saveToken(accessToken: accessToken, refreshToken: finalRefreshToken, expiry: expiry.timeIntervalSince1970)
-
-            self.fetchUserEmail(accessToken: accessToken)
-
-            DispatchQueue.main.async {
+    private func exchangeCodeWithRedirect(_ code: String, codeVerifier: String, redirectURI: String,
+                                          completion: @escaping (Bool) -> Void) {
+        let generation = authGeneration
+        let request = tokenRequest(["code": code, "client_id": clientID, "redirect_uri": redirectURI,
+                                    "grant_type": "authorization_code", "code_verifier": codeVerifier])
+        Task { [weak self] in
+            guard let self else { completion(false); return }
+            do {
+                let json = try await jsonResponse(request)
+                try checkAccount(generation)
+                guard let access = json["access_token"] as? String,
+                      let refresh = json["refresh_token"] as? String ?? loadRefreshToken() else {
+                    throw Self.error("Invalid authentication response")
+                }
+                let expiry = Date().addingTimeInterval(TimeInterval((json["expires_in"] as? Int ?? 3600) - 60))
+                saveToken(accessToken: access, refreshToken: refresh, expiry: expiry.timeIntervalSince1970)
+                guard loadAccessToken() == access else { throw Self.error("Could not save authentication") }
+                fetchUserEmail(accessToken: access)
                 NSApp.activate(ignoringOtherApps: true)
                 completion(true)
-            }
-        }.resume()
+            } catch { completion(false) }
+        }
     }
 
-    private func refreshAccessToken(completion: @escaping (Bool) -> Void) {
-        guard let refreshToken = loadRefreshToken() else {
-            completion(false)
-            return
+    private func validToken(forceRefresh: Bool = false) async throws -> String {
+        let generation = authGeneration
+        if !forceRefresh, let expiry = loadExpiry(), Date().timeIntervalSince1970 < expiry,
+           let token = loadAccessToken() { return token }
+        if let pending = tokenRefresh { return try await pending.task.value }
+        guard let refresh = loadRefreshToken() else { throw Self.error("Not signed in") }
+        let id = UUID()
+        let task = Task { [weak self] () throws -> String in
+            guard let self else { throw CancellationError() }
+            let json = try await jsonResponse(tokenRequest(["refresh_token": refresh, "client_id": clientID,
+                                                           "grant_type": "refresh_token"]))
+            try checkAccount(generation)
+            guard let access = json["access_token"] as? String else { throw Self.error("Authentication expired") }
+            let expiry = Date().addingTimeInterval(TimeInterval((json["expires_in"] as? Int ?? 3600) - 60))
+            saveToken(accessToken: access, refreshToken: json["refresh_token"] as? String ?? refresh,
+                      expiry: expiry.timeIntervalSince1970)
+            guard loadAccessToken() == access else { throw Self.error("Could not save authentication") }
+            return access
         }
-
-        var request = URLRequest(url: URL(string: tokenURL)!)
-        request.httpMethod = "POST"
-        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-
-        let body = [
-            "refresh_token": refreshToken,
-            "client_id": clientID,
-            "grant_type": "refresh_token",
-        ].map { "\($0.key)=\($0.value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)" }
-         .joined(separator: "&")
-
-        request.httpBody = body.data(using: .utf8)
-
-        URLSession.shared.dataTask(with: request) { [weak self] data, _, error in
-            guard let self = self, let data = data, error == nil,
-                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let accessToken = json["access_token"] as? String else {
-                DispatchQueue.main.async { completion(false) }
-                return
-            }
-
-            let expiresIn = json["expires_in"] as? Int ?? 3600
-            let expiry = Date().addingTimeInterval(TimeInterval(expiresIn - 60))
-
-            var tokens = self.loadTokens()
-            tokens.accessToken = accessToken
-            tokens.expiry = expiry.timeIntervalSince1970
-            self.saveTokens(tokens)
-
-            DispatchQueue.main.async { completion(true) }
-        }.resume()
-    }
-
-    private func ensureValidToken(completion: @escaping (Bool) -> Void) {
-        guard let expiry = loadExpiry() else {
-            completion(false)
-            return
-        }
-
-        if Date().timeIntervalSince1970 < expiry, loadAccessToken() != nil {
-            completion(true)
-        } else {
-            refreshAccessToken(completion: completion)
-        }
+        tokenRefresh = (id, task)
+        defer { if tokenRefresh?.id == id { tokenRefresh = nil } }
+        return try await task.value
     }
 
     func fetchUserEmail(accessToken: String? = nil, completion: (() -> Void)? = nil) {
-        let token = accessToken ?? loadAccessToken()
-        guard let token = token else { completion?(); return }
+        guard let token = accessToken ?? loadAccessToken() else { completion?(); return }
+        let generation = authGeneration
         var request = URLRequest(url: URL(string: "https://www.googleapis.com/oauth2/v2/userinfo")!)
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        URLSession.shared.dataTask(with: request) { data, _, _ in
-            if let data = data,
-               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let email = json["email"] as? String {
-                DispatchQueue.main.async {
-                    UserDefaults.standard.set(email, forKey: "gdriveUserEmail")
-                    completion?()
-                }
-            } else {
-                DispatchQueue.main.async { completion?() }
-            }
-        }.resume()
-    }
-
-    // MARK: - Drive Operations
-
-    private func ensureMacShotFolder(completion: @escaping (Result<String, Error>) -> Void) {
-        if let id = macShotFolderID { completion(.success(id)); return }
-
-        guard let token = loadAccessToken() else {
-            completion(.failure(Self.error("No access token")))
-            return
+        Task { [weak self] in
+            guard let self else { completion?(); return }
+            if let json = try? await jsonResponse(request), generation == authGeneration,
+               let email = json["email"] as? String { defaults.set(email, forKey: "gdriveUserEmail") }
+            completion?()
         }
-
-        // Search for existing macshot folder
-        let query = "name='macshot' and mimeType='application/vnd.google-apps.folder' and trashed=false"
-        var searchURL = URLComponents(string: filesURL)!
-        searchURL.queryItems = [URLQueryItem(name: "q", value: query), URLQueryItem(name: "fields", value: "files(id)")]
-
-        var request = URLRequest(url: searchURL.url!)
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-
-        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
-            guard let self = self else { return }
-            if let error = error {
-                DispatchQueue.main.async { completion(.failure(Self.error("Folder search failed: \(error.localizedDescription)"))) }
-                return
-            }
-            guard let data = data else {
-                DispatchQueue.main.async { completion(.failure(Self.error("Folder search returned no data"))) }
-                return
-            }
-
-            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
-            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                DispatchQueue.main.async { completion(.failure(Self.error("Folder search: invalid response (HTTP \(statusCode))"))) }
-                return
-            }
-
-            if let apiError = json["error"] as? [String: Any],
-               let message = apiError["message"] as? String {
-                DispatchQueue.main.async { completion(.failure(Self.error("Folder search: \(message) (HTTP \(statusCode))"))) }
-                return
-            }
-
-            guard let files = json["files"] as? [[String: Any]] else {
-                DispatchQueue.main.async { completion(.failure(Self.error("Folder search: unexpected response format (HTTP \(statusCode))"))) }
-                return
-            }
-
-            if let existing = files.first, let id = existing["id"] as? String {
-                self.macShotFolderID = id
-                DispatchQueue.main.async { completion(.success(id)) }
-            } else {
-                self.createMacShotFolder(token: token, completion: completion)
-            }
-        }.resume()
     }
 
-    private func createMacShotFolder(token: String, completion: @escaping (Result<String, Error>) -> Void) {
-        var request = URLRequest(url: URL(string: filesURL)!)
-        request.httpMethod = "POST"
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        let metadata: [String: Any] = [
-            "name": "macshot",
-            "mimeType": "application/vnd.google-apps.folder",
-        ]
-        request.httpBody = try? JSONSerialization.data(withJSONObject: metadata)
-
-        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
-            if let error = error {
-                DispatchQueue.main.async { completion(.failure(Self.error("Create folder failed: \(error.localizedDescription)"))) }
-                return
-            }
-            guard let data = data else {
-                DispatchQueue.main.async { completion(.failure(Self.error("Create folder returned no data"))) }
-                return
-            }
-
-            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
-            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                DispatchQueue.main.async { completion(.failure(Self.error("Create folder: invalid response (HTTP \(statusCode))"))) }
-                return
-            }
-
-            if let apiError = json["error"] as? [String: Any],
-               let message = apiError["message"] as? String {
-                DispatchQueue.main.async { completion(.failure(Self.error("Create folder: \(message) (HTTP \(statusCode))"))) }
-                return
-            }
-
-            guard let id = json["id"] as? String else {
-                DispatchQueue.main.async { completion(.failure(Self.error("Create folder: missing folder ID in response (HTTP \(statusCode))"))) }
-                return
-            }
-            self?.macShotFolderID = id
-            DispatchQueue.main.async { completion(.success(id)) }
-        }.resume()
+    func invalidateFolderCache() {
+        folderGeneration = UUID()
+        cachedFolderID = nil
+        cachedFolderName = nil
+        folderRequests.removeAll()
     }
 
-    private func uploadFile(data: Data, filename: String, mimeType: String, folderID: String, completion: @escaping (Result<String, Error>) -> Void) {
-        uploadFileWithRetry(data: data, filename: filename, mimeType: mimeType, folderID: folderID, attempt: 1, completion: completion)
-    }
-
-    private func uploadFileWithRetry(data fileData: Data, filename: String, mimeType: String, folderID: String, attempt: Int, completion: @escaping (Result<String, Error>) -> Void) {
-        guard let token = loadAccessToken() else {
-            completion(.failure(Self.error("No access token")))
-            return
+    private func destinationFolder(name: String, generation: UUID) async throws -> String {
+        try checkAccount(generation)
+        if let id = cachedFolderID, cachedFolderName == name { return id }
+        if let pending = folderRequests[name] { return try await pending.task.value }
+        let id = UUID()
+        let cacheGeneration = folderGeneration
+        let task = Task { [weak self] () throws -> String in
+            guard let self else { throw CancellationError() }
+            let token = try await validToken()
+            try checkAccount(generation)
+            var url = URLComponents(string: filesURL)!
+            url.queryItems = [URLQueryItem(name: "q", value: "name='\(escapeForDriveQuery(name))' and mimeType='application/vnd.google-apps.folder' and trashed=false"),
+                              URLQueryItem(name: "fields", value: "files(id)")]
+            var request = URLRequest(url: url.url!)
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            let json = try await jsonResponse(request)
+            try checkAccount(generation)
+            guard let files = json["files"] as? [[String: Any]] else { throw Self.error("Folder search returned an invalid response") }
+            let folderID: String
+            if let existing = files.first?["id"] as? String, !existing.isEmpty { folderID = existing }
+            else {
+                var create = URLRequest(url: URL(string: filesURL)!)
+                create.httpMethod = "POST"
+                create.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                create.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                create.httpBody = try JSONSerialization.data(withJSONObject: ["name": name, "mimeType": "application/vnd.google-apps.folder"])
+                let response = try await jsonResponse(create)
+                try checkAccount(generation)
+                guard let created = response["id"] as? String, !created.isEmpty else { throw Self.error("Create folder returned no ID") }
+                folderID = created
+            }
+            if folderGeneration == cacheGeneration {
+                cachedFolderID = folderID
+                cachedFolderName = name
+            }
+            return folderID
         }
+        folderRequests[name] = (id, task)
+        defer { if folderRequests[name]?.id == id { folderRequests.removeValue(forKey: name) } }
+        return try await task.value
+    }
 
+    private func uploadFile(source: PreparedUploadBody, filename: String, mimeType: String,
+                            folderID: String, generation: UUID,
+                            progress: (@MainActor @Sendable (Double) -> Void)?) async throws -> String {
+        // A fixed Drive-generated ID makes a lost-response retry idempotent.
+        // https://developers.google.com/workspace/drive/api/guides/manage-uploads#use_a_pre-generated_id_to_upload_files
+        try checkAccount(generation)
+        var idsRequest = URLRequest(url: URL(string: filesURL + "/generateIds?count=1&space=drive")!)
+        idsRequest.setValue("Bearer \(try await validToken())", forHTTPHeaderField: "Authorization")
+        try checkAccount(generation)
+        let ids = try await jsonResponse(idsRequest)
+        try checkAccount(generation)
+        guard let fileID = (ids["ids"] as? [String])?.first, !fileID.isEmpty else { throw Self.error("Drive returned no upload ID") }
+        let metadata = try JSONSerialization.data(withJSONObject: ["id": fileID, "name": filename, "parents": [folderID]])
         let boundary = UUID().uuidString
-        var request = URLRequest(url: URL(string: uploadURL)!)
-        request.httpMethod = "POST"
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("multipart/related; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-
-        let metadata: [String: Any] = [
-            "name": filename,
-            "parents": [folderID],
-        ]
-        let metadataData = try! JSONSerialization.data(withJSONObject: metadata)
-
-        var body = Data()
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Type: application/json; charset=UTF-8\r\n\r\n".data(using: .utf8)!)
-        body.append(metadataData)
-        body.append("\r\n--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
-        body.append(fileData)
-        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
-
-        // Write body to temp file for uploadTask (enables progress tracking)
-        let tmpFile = FileManager.default.temporaryDirectory.appendingPathComponent("macshot_upload_\(UUID().uuidString).tmp")
-        try? body.write(to: tmpFile)
-
-        let maxRetries = 3
-        let task = uploadSession.uploadTask(with: request, fromFile: tmpFile) { [weak self] data, response, error in
-            try? FileManager.default.removeItem(at: tmpFile)
-
-            // Retry on transient network errors
-            if let error = error as? URLError,
-               [.networkConnectionLost, .timedOut, .notConnectedToInternet].contains(error.code),
-               attempt < maxRetries {
-                let delay = Double(attempt) * 2.0
-                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                    self?.uploadFileWithRetry(data: fileData, filename: filename, mimeType: mimeType,
-                                              folderID: folderID, attempt: attempt + 1, completion: completion)
+        let body = try await MediaExportIO.perform {
+            try PreparedUploadBody(relatedTo: source, metadata: metadata, mimeType: mimeType, boundary: boundary)
+        }
+        for attempt in 1...3 {
+            try checkAccount(generation)
+            var request = URLRequest(url: URL(string: uploadURL)!)
+            request.httpMethod = "POST"
+            request.setValue("Bearer \(try await validToken())", forHTTPHeaderField: "Authorization")
+            request.setValue("multipart/related; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+            request.setValue(String(body.byteCount), forHTTPHeaderField: "Content-Length")
+            try checkAccount(generation)
+            do {
+                let (data, response) = try await UploadTransport.upload(session: session, request: request, body: body, progress: progress)
+                try checkAccount(generation)
+                if response.statusCode == 401, attempt < 3 { _ = try await validToken(forceRefresh: true); continue }
+                // Drive documents 409 after a successful attempt with this ID.
+                if response.statusCode == 409, attempt > 1 { return "https://drive.google.com/file/d/\(fileID)/view" }
+                if (500...599).contains(response.statusCode), attempt < 3 {
+                    try await Task.sleep(nanoseconds: retryDelay * UInt64(attempt)); continue
                 }
-                return
-            }
-
-            if let error = error {
-                DispatchQueue.main.async { completion(.failure(error)) }
-                return
-            }
-
-            // Retry on 401 (token expired mid-upload) — refresh token and try again
-            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 401, attempt < maxRetries {
-                self?.refreshAccessToken { success in
-                    guard success else {
-                        completion(.failure(Self.error("Authentication expired")))
-                        return
-                    }
-                    self?.uploadFileWithRetry(data: fileData, filename: filename, mimeType: mimeType,
-                                              folderID: folderID, attempt: attempt + 1, completion: completion)
-                }
-                return
-            }
-            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
-            guard let data = data else {
-                DispatchQueue.main.async { completion(.failure(Self.error("Upload returned no data (HTTP \(statusCode))"))) }
-                return
-            }
-            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-            if let apiError = json?["error"] as? [String: Any],
-               let message = apiError["message"] as? String {
-                DispatchQueue.main.async { completion(.failure(Self.error("Upload: \(message) (HTTP \(statusCode))"))) }
-                return
-            }
-            guard let fileID = json?["id"] as? String else {
-                DispatchQueue.main.async { completion(.failure(Self.error("Upload failed (HTTP \(statusCode))"))) }
-                return
-            }
-            let viewLink = "https://drive.google.com/file/d/\(fileID)/view"
-            DispatchQueue.main.async {
-                self?.onProgress = nil
-                completion(.success(viewLink))
+                if response.statusCode == 404, cachedFolderID == folderID { invalidateFolderCache() }
+                let json = try Self.parseResponse(data, response: response)
+                guard json["id"] as? String == fileID else { throw Self.error("Upload returned an unexpected file ID") }
+                return "https://drive.google.com/file/d/\(fileID)/view"
+            } catch let error as URLError where attempt < 3 && [.networkConnectionLost, .timedOut, .notConnectedToInternet].contains(error.code) {
+                try await Task.sleep(nanoseconds: retryDelay * UInt64(attempt))
             }
         }
+        throw Self.error("Upload could not be completed")
+    }
 
-        // Observe upload progress
-        let observation = task.progress.observe(\.fractionCompleted) { [weak self] progress, _ in
-            DispatchQueue.main.async {
-                self?.onProgress?(progress.fractionCompleted)
-            }
+    private func jsonResponse(_ request: URLRequest) async throws -> [String: Any] {
+        let (data, response) = try await session.data(for: request)
+        guard let response = response as? HTTPURLResponse else { throw Self.error("No response from server") }
+        return try Self.parseResponse(data, response: response)
+    }
+
+    private static func parseResponse(_ data: Data, response: HTTPURLResponse) throws -> [String: Any] {
+        let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        guard (200...299).contains(response.statusCode), let json, json["error"] == nil else {
+            let message = (json?["error"] as? [String: Any])?["message"] as? String ?? "Invalid server response"
+            throw error("\(message) (HTTP \(response.statusCode))")
         }
-        // Store observation to keep it alive; released when task completes
-        objc_setAssociatedObject(task, "progressObservation", observation, .OBJC_ASSOCIATION_RETAIN)
-
-        task.resume()
+        return json
     }
 
     // MARK: - PKCE
@@ -489,6 +361,7 @@ final class GoogleDriveUploader: NSObject, ASWebAuthenticationPresentationContex
     }
 
     private var tokenFileURL: URL {
+        if let tokenFileOverride { return tokenFileOverride }
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         let dir = appSupport.appendingPathComponent("com.sw33tlie.macshot")
         if !FileManager.default.fileExists(atPath: dir.path) {
@@ -508,8 +381,10 @@ final class GoogleDriveUploader: NSObject, ASWebAuthenticationPresentationContex
 
     private func saveTokens(_ tokens: TokenData) {
         guard let data = try? JSONEncoder().encode(tokens) else { return }
-        FileManager.default.createFile(atPath: tokenFileURL.path, contents: data,
-                                        attributes: [.posixPermissions: 0o600])
+        do {
+            try data.write(to: tokenFileURL, options: .atomic)
+            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: tokenFileURL.path)
+        } catch { /* A failed token write is handled by the next token lookup. */ }
     }
 
     private func deleteTokens() {
@@ -530,6 +405,12 @@ final class GoogleDriveUploader: NSObject, ASWebAuthenticationPresentationContex
     private func loadExpiry() -> Double? { loadTokens().expiry }
 
     // MARK: - Helpers
+
+    /// Escapes a value for safe interpolation into a Drive API `q` query string.
+    private func escapeForDriveQuery(_ value: String) -> String {
+        value.replacingOccurrences(of: "\\", with: "\\\\")
+             .replacingOccurrences(of: "'", with: "\\'")
+    }
 
     private static func error(_ msg: String) -> NSError {
         NSError(domain: "GoogleDriveUploader", code: 1, userInfo: [NSLocalizedDescriptionKey: msg])

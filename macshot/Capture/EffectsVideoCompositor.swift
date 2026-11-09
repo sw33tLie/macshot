@@ -22,7 +22,7 @@ final class EffectsCompositionInstruction: NSObject, AVVideoCompositionInstructi
     /// entry per kept range (still factor 1, but `sourceStart != compStart`).
     /// Speed segments split a kept range into multiple entries with
     /// `factor != 1` for the sped-up pieces.
-    struct TimeMapEntry {
+    struct TimeMapEntry: Sendable {
         /// Start of this piece on the composition clock (seconds).
         let compStart: Double
         /// End of this piece on the composition clock (seconds).
@@ -43,7 +43,12 @@ final class EffectsCompositionInstruction: NSObject, AVVideoCompositionInstructi
     let timeRange: CMTimeRange
     let enablePostProcessing: Bool = false
     let containsTweening: Bool = true
-    let requiredSourceTrackIDs: [NSValue]?
+    var requiredSourceTrackIDs: [NSValue]? {
+        if let webcamTrackID = scene?.webcam?.trackID {
+            return [NSNumber(value: videoTrackID), NSNumber(value: webcamTrackID)]
+        }
+        return [NSNumber(value: videoTrackID)]
+    }
     let passthroughTrackID: CMPersistentTrackID = kCMPersistentTrackID_Invalid
 
     // MARK: Our payload
@@ -52,18 +57,22 @@ final class EffectsCompositionInstruction: NSObject, AVVideoCompositionInstructi
     let renderSize: CGSize
     let baseTransform: CGAffineTransform
     let timeMap: [TimeMapEntry]
-    let zoomSegments: [VideoZoomSegment]
-    let censorSegments: [VideoCensorSegment]
+    let zoomSegments: [VideoZoomSnapshot]
+    let censorSegments: [VideoCensorSnapshot]
     /// Text segments paired with their pre-rasterized images. Keeping the
     /// CIImage inside the snapshot means per-frame rendering does no font
     /// shaping or NSAttributedString work — we just composite the cached
     /// image. Built on the main actor at snapshot time and never mutated.
     let textSnapshots: [TextSnapshot]
+    /// Framed scene (background, camera, cursor…). When present `renderSize`
+    /// is the canvas size and `baseTransform` yields the upright source at
+    /// its natural size.
+    let scene: VideoSceneSnapshot?
 
     /// Pre-rasterized text overlay paired with timing/positioning.
     /// `image` extent is in pixels; the compositor scales it to the segment's
     /// rect in render-space at draw time.
-    struct TextSnapshot {
+    struct TextSnapshot: Sendable {
         let id: UUID
         let startTime: Double
         let endTime: Double
@@ -75,21 +84,9 @@ final class EffectsCompositionInstruction: NSObject, AVVideoCompositionInstructi
         let fadeOut: Double
         let image: CIImage
 
-        func opacity(at t: Double) -> CGFloat {
-            guard t >= startTime, t <= endTime, endTime > startTime else { return 0 }
-            let dur = endTime - startTime
-            let fIn = min(max(fadeIn, 0), max(0, dur / 2 - 0.001))
-            let fOut = min(max(fadeOut, 0), max(0, dur / 2 - 0.001))
-            let into = t - startTime
-            let toEnd = endTime - t
-            if into < fIn, fIn > 0 {
-                let c = max(0, min(1, CGFloat(into / fIn)))
-                return c * c * (3 - 2 * c)
-            } else if toEnd < fOut, fOut > 0 {
-                let c = max(0, min(1, CGFloat(toEnd / fOut)))
-                return c * c * (3 - 2 * c)
-            }
-            return 1.0
+        nonisolated func opacity(at t: Double) -> CGFloat {
+            VideoEffectTiming.opacity(at: t, start: startTime, end: endTime,
+                                      fadeIn: fadeIn, fadeOut: fadeOut)
         }
     }
 
@@ -99,9 +96,10 @@ final class EffectsCompositionInstruction: NSObject, AVVideoCompositionInstructi
          renderSize: CGSize,
          baseTransform: CGAffineTransform,
          timeMap: [TimeMapEntry],
-         zoomSegments: [VideoZoomSegment],
-         censorSegments: [VideoCensorSegment],
-         textSnapshots: [TextSnapshot] = []) {
+         zoomSegments: [VideoZoomSnapshot],
+         censorSegments: [VideoCensorSnapshot],
+         textSnapshots: [TextSnapshot] = [],
+         scene: VideoSceneSnapshot? = nil) {
         self.timeRange = timeRange
         self.videoTrackID = videoTrackID
         self.naturalSize = naturalSize
@@ -111,7 +109,7 @@ final class EffectsCompositionInstruction: NSObject, AVVideoCompositionInstructi
         self.zoomSegments = zoomSegments
         self.censorSegments = censorSegments
         self.textSnapshots = textSnapshots
-        self.requiredSourceTrackIDs = [NSNumber(value: Int(videoTrackID))]
+        self.scene = scene
         super.init()
     }
 }
@@ -132,7 +130,7 @@ final class EffectsVideoCompositor: NSObject, AVVideoCompositing {
     // MARK: Required attributes
 
     /// What we can accept from the asset reader.
-    let sourcePixelBufferAttributes: [String: Any]? = [
+    let sourcePixelBufferAttributes: [String: any Sendable]? = [
         kCVPixelBufferPixelFormatTypeKey as String: [
             kCVPixelFormatType_32BGRA,
         ],
@@ -140,17 +138,14 @@ final class EffectsVideoCompositor: NSObject, AVVideoCompositing {
     ]
 
     /// What we produce. Must be compatible with the render context.
-    let requiredPixelBufferAttributesForRenderContext: [String: Any] = [
+    let requiredPixelBufferAttributesForRenderContext: [String: any Sendable] = [
         kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
         kCVPixelBufferMetalCompatibilityKey as String: true,
     ]
 
     // MARK: - Rendering context
 
-    /// Guarded by `contextQueue`.
-    private var renderContext: AVVideoCompositionRenderContext?
-    private let contextQueue = DispatchQueue(label: "macshot.effects.context")
-    private let renderQueue = DispatchQueue(label: "macshot.effects.render", qos: .userInitiated)
+    private let renderQueue = CancellableRenderQueue()
     private lazy var ciContext: CIContext = {
         // Blur/pixelate filters do per-pixel math and must happen in a linear
         // color space to avoid gamma shifts (sRGB working space "washes out"
@@ -169,45 +164,40 @@ final class EffectsVideoCompositor: NSObject, AVVideoCompositing {
     }()
 
     func renderContextChanged(_ newRenderContext: AVVideoCompositionRenderContext) {
-        contextQueue.sync {
-            self.renderContext = newRenderContext
-        }
+        // Each request supplies its own context; no global pool to replace.
     }
 
     // MARK: - Request handling
 
     func startRequest(_ request: AVAsynchronousVideoCompositionRequest) {
-        guard let instruction = request.videoCompositionInstruction as? EffectsCompositionInstruction else {
-            request.finish(with: CompositorError.missingInstruction)
-            return
-        }
-        guard let sourceBuffer = request.sourceFrame(byTrackID: instruction.videoTrackID) else {
-            request.finish(with: CompositorError.missingSource)
-            return
-        }
-        let outputBuffer: CVPixelBuffer? = contextQueue.sync { renderContext?.newPixelBuffer() }
-        guard let outBuf = outputBuffer else {
-            request.finish(with: CompositorError.noOutputBuffer)
-            return
-        }
-
-        renderQueue.async { [weak self] in
-            guard let self = self else {
-                request.finishCancelledRequest()
-                return
-            }
+        renderQueue.submit(work: { [weak self] in
+            guard let self else { request.finishCancelledRequest(); return }
             autoreleasepool {
-                self.render(request: request,
-                             instruction: instruction,
-                             sourceBuffer: sourceBuffer,
-                             outBuf: outBuf)
+                guard let instruction = request.videoCompositionInstruction as? EffectsCompositionInstruction else {
+                    request.finish(with: CompositorError.missingInstruction)
+                    return
+                }
+                guard let sourceBuffer = request.sourceFrame(byTrackID: instruction.videoTrackID) else {
+                    request.finish(with: CompositorError.missingSource)
+                    return
+                }
+                // A request owns the context for its particular render size.
+                // A newer renderContextChanged notification must not change a
+                // previously queued request's output pool.
+                guard let outBuf = request.renderContext.newPixelBuffer() else {
+                    request.finish(with: CompositorError.noOutputBuffer)
+                    return
+                }
+                self.render(request: request, instruction: instruction,
+                            sourceBuffer: sourceBuffer, outBuf: outBuf)
             }
-        }
+        }, onCancel: {
+            request.finishCancelledRequest()
+        })
     }
 
     func cancelAllPendingVideoCompositionRequests() {
-        // Nothing queued ourselves — each request completes independently and
-        // honors cancellation via finishCancelledRequest elsewhere if needed.
+        renderQueue.cancelAll()
     }
 
     // MARK: - Core render
@@ -232,6 +222,11 @@ final class EffectsVideoCompositor: NSObject, AVVideoCompositing {
             }
             return compTime
         }()
+        if let scene = instruction.scene {
+            renderScene(request: request, instruction: instruction, scene: scene, sourceBuffer: sourceBuffer,
+                        outBuf: outBuf, assetTime: assetTime)
+            return
+        }
         let renderSize = instruction.renderSize
         let naturalSize = instruction.naturalSize
 
@@ -253,14 +248,8 @@ final class EffectsVideoCompositor: NSObject, AVVideoCompositing {
         //    the video ends up showing content from the bottom.
         let (zoomLevel, zoomTranslation) = activeZoom(at: assetTime, segments: instruction.zoomSegments, naturalSize: naturalSize)
         if zoomLevel > 1.0001 {
-            let renderCx = renderSize.width / 2
-            let renderCy = renderSize.height / 2
-            let scaleX = renderSize.width / naturalSize.width
-            let scaleY = renderSize.height / naturalSize.height
-            var t = CGAffineTransform(translationX: -renderCx, y: -renderCy)
-            t = t.concatenating(CGAffineTransform(scaleX: zoomLevel, y: zoomLevel))
-            t = t.concatenating(CGAffineTransform(translationX: renderCx + zoomTranslation.x * scaleX * zoomLevel,
-                                                   y: renderCy - zoomTranslation.y * scaleY * zoomLevel))
+            let t = VideoRenderGeometry.zoomTransform(zoom: zoomLevel, translation: zoomTranslation,
+                                                       naturalSize: naturalSize, renderSize: renderSize)
             image = image.transformed(by: t)
         }
 
@@ -340,12 +329,37 @@ final class EffectsVideoCompositor: NSObject, AVVideoCompositing {
         request.finish(withComposedVideoFrame: outBuf)
     }
 
+    /// Framed-scene rendering. Output buffers may be smaller than the canvas
+    /// (preview render scale); the whole scene is scaled to fit.
+    private func renderScene(request: AVAsynchronousVideoCompositionRequest,
+                             instruction: EffectsCompositionInstruction, scene: VideoSceneSnapshot,
+                             sourceBuffer: CVPixelBuffer, outBuf: CVPixelBuffer, assetTime: Double) {
+        let content = CIImage(cvPixelBuffer: sourceBuffer).transformed(by: instruction.baseTransform)
+        var webcamFrame: CIImage?
+        if let webcam = scene.webcam, let buffer = request.sourceFrame(byTrackID: webcam.trackID) {
+            webcamFrame = CIImage(cvPixelBuffer: buffer).transformed(by: webcam.uprightTransform)
+        }
+        var image = VideoSceneRenderer.render(content: content, time: assetTime, scene: scene,
+                                              censors: instruction.censorSegments, texts: instruction.textSnapshots,
+                                              webcamFrame: webcamFrame)
+        let canvas = scene.layout.canvasSize
+        let outW = CGFloat(CVPixelBufferGetWidth(outBuf)), outH = CGFloat(CVPixelBufferGetHeight(outBuf))
+        if abs(outW - canvas.width) > 0.5 || abs(outH - canvas.height) > 0.5, canvas.width > 0, canvas.height > 0 {
+            image = image.transformed(by: CGAffineTransform(scaleX: outW / canvas.width, y: outH / canvas.height))
+        }
+        let bounds = CGRect(x: 0, y: 0, width: outW, height: outH)
+        let colorSpace = CVImageBufferGetColorSpace(sourceBuffer)?.takeUnretainedValue()
+            ?? CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
+        ciContext.render(image.cropped(to: bounds), to: outBuf, bounds: bounds, colorSpace: colorSpace)
+        request.finish(withComposedVideoFrame: outBuf)
+    }
+
     // MARK: - Helpers
 
     /// Pick the single active zoom segment for `assetTime` (segments don't
     /// overlap, so at most one wins) and return the interpolated zoom level
     /// plus translation vector.
-    private func activeZoom(at t: Double, segments: [VideoZoomSegment], naturalSize: CGSize) -> (CGFloat, CGPoint) {
+    private func activeZoom(at t: Double, segments: [VideoZoomSnapshot], naturalSize: CGSize) -> (CGFloat, CGPoint) {
         for seg in segments where t >= seg.startTime && t <= seg.endTime {
             let z = seg.zoomLevel(at: t)
             let tr = seg.translation(zoom: z, videoSize: naturalSize)
@@ -361,53 +375,8 @@ final class EffectsVideoCompositor: NSObject, AVVideoCompositing {
                                    naturalSize: CGSize,
                                    zoomLevel: CGFloat,
                                    zoomTranslation: CGPoint) -> CGRect {
-        // Rect in natural-image pixel coords, y-top origin
-        let x = normalizedRect.origin.x * naturalSize.width
-        let yTop = normalizedRect.origin.y * naturalSize.height
-        let w = normalizedRect.size.width * naturalSize.width
-        let h = normalizedRect.size.height * naturalSize.height
-
-        // Convert to render-space by applying the same scale as the base
-        // orientation/render-size transform (renderSize / naturalSize), then
-        // flipping y since CIImage is y-bottom.
-        let scaleX = renderSize.width / naturalSize.width
-        let scaleY = renderSize.height / naturalSize.height
-        var renderX = x * scaleX
-        var renderY = renderSize.height - (yTop + h) * scaleY  // flip y
-        var renderW = w * scaleX
-        var renderH = h * scaleY
-
-        // Apply zoom transform if active (same formula as the image transform,
-        // evaluated on the rect's origin + size).
-        if zoomLevel > 1.0001 {
-            let cx = renderSize.width / 2
-            let cy = renderSize.height / 2
-            // Translate rect origin about render center, scale, translate back
-            let rectLeft = renderX
-            let rectRight = renderX + renderW
-            let rectBottom = renderY
-            let rectTop = renderY + renderH
-
-            func transformPoint(_ px: CGFloat, _ py: CGFloat) -> (CGFloat, CGFloat) {
-                let dx = px - cx
-                let dy = py - cy
-                let sx = dx * zoomLevel
-                let sy = dy * zoomLevel
-                // zoomTranslation.y is in image-space (y-down); flip to match
-                // CIImage's y-up convention — same correction applied in the
-                // main zoom transform above.
-                return (cx + sx + zoomTranslation.x * scaleX * zoomLevel,
-                        cy + sy - zoomTranslation.y * scaleY * zoomLevel)
-            }
-            let (lx, ly) = transformPoint(rectLeft, rectBottom)
-            let (rx, ry) = transformPoint(rectRight, rectTop)
-            renderX = min(lx, rx)
-            renderY = min(ly, ry)
-            renderW = abs(rx - lx)
-            renderH = abs(ry - ly)
-        }
-
-        return CGRect(x: renderX, y: renderY, width: renderW, height: renderH)
+        VideoRenderGeometry.overlayRect(normalizedRect, naturalSize: naturalSize, renderSize: renderSize,
+                                         zoom: zoomLevel, translation: zoomTranslation)
     }
 
     /// Create a censor overlay (solid / pixelate / blur) inside `rectInRenderSpace`

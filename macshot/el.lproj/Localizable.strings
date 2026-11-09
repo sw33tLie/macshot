@@ -42,7 +42,6 @@
 
 /* History Panel */
 "Copy" = "Αντιγραφή";
-"Save As..." = "Αποθήκευση ως...";
 "Open in Editor" = "Άνοιγμα σε επεξεργαστή";
 "Open Link" = "Άνοιγμα συνδέσμου";
 "Open With" = "Άνοιγμα με";
@@ -58,7 +57,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "Κλείσιμο όλων";
-"Save All to Folder…" = "Αποθήκευση όλων σε φάκελο…";
 "Save" = "Αποθήκευση";
 
 /* Editor Top Bar */
@@ -186,6 +184,13 @@
 "ON" = "ON";
 "OFF" = "OFF";
 "  (Tab to toggle)" = "  (Tab για εναλλαγή)";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Κλικ σε στοιχείο  ·  Σύρσιμο για προσαρμοσμένη περιοχή  ·  F για πλήρη οθόνη";
+"Snap mode: " = "Λειτουργία κουμπώματος: ";
+"WINDOW" = "ΠΑΡΑΘΥΡΟ";
+"ELEMENT" = "ΣΤΟΙΧΕΙΟ";
+"  (Tab to switch)" = "  (Tab για εναλλαγή)";
+"Enhance browser and Electron element snapping" = "Βελτίωση της κούμπωσης στοιχείων σε προγράμματα περιήγησης και Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Κατασκευάζει το δέντρο προσβασιμότητας της εφαρμογής-στόχου στη λειτουργία Στοιχείο. Απενεργοποιήστε το αν ένα πρόγραμμα περιήγησης ή Electron γίνει αργό ή έχει προβλήματα εισαγωγής.";
 "Right-click to copy" = "Δεξί κλικ για αντιγραφή";
 "Copied %@" = "Αντιγράφηκε %@";
 "Set color %@" = "Ορισμός χρώματος %@";
@@ -246,6 +251,8 @@
 "Move down" = "Μετακίνηση κάτω";
 "Output" = "Έξοδος";
 "Image format:" = "Μορφή εικόνας:";
+"Also copy to the clipboard in this format" = "Αντιγραφή στο πρόχειρο και σε αυτή τη μορφή";
+"PNG is always included so every app can paste" = "Το PNG περιλαμβάνεται πάντα, ώστε κάθε εφαρμογή να μπορεί να κάνει επικόλληση";
 "Quality:" = "Ποιότητα:";
 "%d%%" = "%d%%";
 "Save at standard resolution (1x)" = "Αποθήκευση σε τυπική ανάλυση (1x)";
@@ -339,6 +346,7 @@
 "Signed in" = "Συνδεδεμένος";
 "Not signed in" = "Μη συνδεδεμένος";
 "Account:" = "Λογαριασμός:";
+"Folder:" = "Φάκελος:";
 "Test Connection" = "Δοκιμή σύνδεσης";
 "Fill in endpoint, bucket, and credentials first" = "Συμπληρώστε πρώτα το endpoint, το bucket και τα διαπιστευτήρια";
 "Testing..." = "Δοκιμή...";
@@ -351,11 +359,13 @@
 "Secret Key:" = "Μυστικό κλειδί:";
 "Public URL:" = "Δημόσιο URL:";
 "Path Prefix:" = "Πρόθεμα διαδρομής:";
+"Make uploads publicly readable" = "Δημόσια αναγνώσιμες μεταφορτώσεις";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Στέλνει το ACL public-read ώστε τα μεταφορτωμένα αρχεία να είναι ορατά σε οποιονδήποτε έχει τον σύνδεσμο. Απαιτείται για AWS S3, DigitalOcean Spaces, MinIO και Backblaze B2, που αποθηκεύουν αντικείμενα ιδιωτικά από προεπιλογή. Αφήστε το απενεργοποιημένο για Cloudflare R2, που δεν υποστηρίζει ACLs και απορρίπτει την κεφαλίδα.";
 "API key:" = "Κλειδί API:";
 "Upload History" = "Ιστορικό μεταφορτώσεων";
 "No uploads yet." = "Δεν υπάρχουν μεταφορτώσεις ακόμα.";
 "Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "Βασικό URL για δημόσια πρόσβαση. Αν είναι κενό, χρησιμοποιείται το URL του S3 endpoint (μπορεί να μην είναι δημόσια προσβάσιμο).";
-"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "Περιλαμβάνεται κοινόχρηστο κλειδί — αποκτήστε το δικό σας δωρεάν κλειδί στο imgbb.com/api αν φτάσετε τα όρια. Μόνο εικόνες (χωρίς υποστήριξη βίντεο).";
+"A shared key is included. Get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "Περιλαμβάνεται κοινόχρηστο κλειδί, αποκτήστε το δικό σας δωρεάν κλειδί στο imgbb.com/api αν φτάσετε τα όρια. Μόνο εικόνες (χωρίς υποστήριξη βίντεο).";
 "Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "Λειτουργεί με AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 και άλλες υπηρεσίες συμβατές με S3. Υποστηρίζει εικόνες και βίντεο.";
 "Configure S3 in Preferences" = "Ρύθμιση S3 στις Προτιμήσεις";
 "Sign in to Google Drive in Preferences" = "Σύνδεση στο Google Drive στις Προτιμήσεις";
@@ -366,7 +376,7 @@
 "Version %@ (%@)" = "Έκδοση %@ (%@)";
 "Made by" = "Δημιουργήθηκε από";
 "Licensed under the GPLv3" = "Με άδεια GPLv3";
-"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "Ένα δωρεάν εργαλείο στιγμιοτύπων και εγγραφής οθόνης ανοιχτού κώδικα για macOS.\nΠλήρως εγγενές — κατασκευασμένο με Swift και AppKit.";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native, built with Swift and AppKit." = "Ένα δωρεάν εργαλείο στιγμιοτύπων και εγγραφής οθόνης ανοιχτού κώδικα για macOS.\nΠλήρως εγγενές, κατασκευασμένο με Swift και AppKit.";
 
 /* Alerts */
 "No Image on Clipboard" = "Δεν υπάρχει εικόνα στο πρόχειρο";
@@ -388,6 +398,9 @@
 
 /* Permission Onboarding */
 "Welcome to macshot" = "Καλώς ήρθατε στο macshot";
+"Welcome back to macshot" = "Καλώς ήρθατε ξανά στο macshot";
+"Turn Screen Recording back on" = "Ενεργοποιήστε ξανά την εγγραφή οθόνης";
+"After some updates, macOS asks you to allow macshot again. Your settings and captures are safe. If macshot is already in the list, select it, click the minus button (−) to remove it, then click the plus button (+) and add macshot again." = "Μετά από ορισμένες ενημερώσεις, το macOS σάς ζητά να επιτρέψετε ξανά το macshot. Οι ρυθμίσεις και οι λήψεις σας είναι ασφαλείς. Αν το macshot υπάρχει ήδη στη λίστα, επιλέξτε το, πατήστε το κουμπί μείον (−) για να το αφαιρέσετε, έπειτα πατήστε το κουμπί συν (+) και προσθέστε ξανά το macshot.";
 "macshot needs one permission" = "Το macshot χρειάζεται μία άδεια";
 "Screen Recording not yet granted" = "Η εγγραφή οθόνης δεν έχει παραχωρηθεί ακόμα";
 "Screen Recording granted!" = "Η εγγραφή οθόνης παραχωρήθηκε!";
@@ -418,6 +431,7 @@
 /* Recording Toast */
 "Recording saved" = "Η εγγραφή αποθηκεύτηκε";
 "%@ • Recording saved" = "%@ • Η εγγραφή αποθηκεύτηκε";
+"Recording failed: %@" = "Αποτυχία εγγραφής: %@";
 "Copy Path" = "Αντιγραφή διαδρομής";
 "Path copied!" = "Η διαδρομή αντιγράφηκε!";
 
@@ -436,6 +450,9 @@
 "Save As..." = "Αποθήκευση ως...";
 "Choose a folder" = "Επιλέξτε φάκελο";
 "Save All to Folder…" = "Αποθήκευση όλων σε φάκελο…";
+"Could not encode the screenshot." = "Δεν ήταν δυνατή η κωδικοποίηση του στιγμιότυπου.";
+"Could not save the screenshot: %@" = "Δεν ήταν δυνατή η αποθήκευση του στιγμιότυπου: %@";
+"Could not save the screenshot to history." = "Δεν ήταν δυνατή η αποθήκευση του στιγμιότυπου στο ιστορικό.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Αυτόματη κύλιση";
@@ -467,8 +484,8 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Απαιτείται παρακολούθηση εισόδου";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "Το macshot χρειάζεται άδεια παρακολούθησης εισόδου για να εμφανίζει τα πλήκτρα κατά την εγγραφή. Παραχωρήστε πρόσβαση στις System Settings και δοκιμάστε ξανά.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "Το macshot χρειάζεται άδεια προσβασιμότητας για να εμφανίζει τα πλήκτρα κατά την εγγραφή. Παραχωρήστε πρόσβαση στις System Settings και δοκιμάστε ξανά.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "Το macshot χρειάζεται άδεια παρακολούθησης εισόδου για να επισημαίνει τα κλικ του ποντικιού ή να εμφανίζει τα πατήματα πλήκτρων κατά την εγγραφή. Παραχωρήστε πρόσβαση στις Ρυθμίσεις συστήματος και δοκιμάστε ξανά.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "Το macshot χρειάζεται άδεια Προσβασιμότητας για προσκόλληση σε μεμονωμένα στοιχεία της διεπαφής. Παραχωρήστε πρόσβαση στις Ρυθμίσεις Συστήματος και δοκιμάστε ξανά.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Εμφάνιση πλήκτρων";
@@ -507,6 +524,8 @@
 "Settings..." = "Ρυθμίσεις...";
 "macshot Settings" = "Ρυθμίσεις macshot";
 "Also open in Editor" = "Άνοιγμα και σε επεξεργαστή";
+"Open in Editor right after selection" = "Άνοιγμα σε επεξεργαστή αμέσως μετά την επιλογή";
+"Close editor after copying" = "Κλείσιμο του επεξεργαστή μετά την αντιγραφή";
 "Hide controls" = "Απόκρυψη χειριστηρίων";
 "Hide recording controls" = "Απόκρυψη χειριστηρίων εγγραφής";
 "Stop recording from the menu bar icon instead." = "Σταματήστε την εγγραφή από το εικονίδιο στη γραμμή μενού.";
@@ -553,12 +572,13 @@
 
 "Same as screenshots" = "Ίδιο με τα στιγμιότυπα";
 "  Preview size:" = "  Μέγεθος προεπισκόπησης:";
+"Fit image in preview (letterbox)" = "Προσαρμογή εικόνας στην προεπισκόπηση (letterbox)";
 "(0 = off)" = "(0 = απενεργοποίηση)";
 "Clear All" = "Εκκαθάριση όλων";
 "Clear History?" = "Εκκαθάριση ιστορικού;";
 "This will permanently delete all screenshots from history." = "Αυτό θα διαγράψει μόνιμα όλα τα στιγμιότυπα από το ιστορικό.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Κάνε κλικ στο \"Ορισμός\" και πάτησε έναν συνδυασμό πλήκτρων με τουλάχιστον έναν τροποποιητή (⌘, ⌥, ⌃, ⇧) για να ορίσεις μια συντόμευση.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Τα αρχεία ανεβαίνουν σε έναν φάκελο \"macshot\" στο Google Drive σου. Όλα παραμένουν ιδιωτικά — τίποτα δεν κοινοποιείται δημόσια.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused. A new one is created instead. Everything stays private and nothing is shared publicly." = "Τα αρχεία ανεβαίνουν σε αυτόν τον φάκελο στο Google Drive σου. Άφησέ το κενό για να χρησιμοποιηθεί ο \"macshot\". Το macshot μπορεί να χρησιμοποιήσει μόνο φακέλους που δημιούργησε το ίδιο, οπότε ένας φάκελος με το ίδιο όνομα που δημιούργησες στο Drive δεν θα επαναχρησιμοποιηθεί, αντί γι' αυτό δημιουργείται νέος. Όλα παραμένουν ιδιωτικά, τίποτα δεν κοινοποιείται δημόσια.";
 
 "Pressure" = "Πίεση";
 
@@ -628,7 +648,7 @@
 "Open this settings window" = "Άνοιγμα αυτού του παραθύρου ρυθμίσεων";
 "Quick capture (uses your Enter action)" = "Γρήγορη λήψη (χρησιμοποιεί την ενέργεια Enter)";
 "Re-capture the last selected area" = "Επανάληψη λήψης της τελευταίας επιλεγμένης περιοχής";
-"Screenshots only — captured window title (blank otherwise)" = "Μόνο στιγμιότυπα — τίτλος παραθύρου λήψης (κενό διαφορετικά)";
+"Captured window title (screenshots only, blank otherwise)" = "Μόνο στιγμιότυπα, τίτλος παραθύρου λήψης (κενό διαφορετικά)";
 "Show available filename tokens" = "Εμφάνιση διαθέσιμων διακριτικών ονόματος αρχείου";
 "Enable macshot:// URL scheme" = "Ενεργοποίηση URL scheme macshot://";
 "Show supported URL scheme commands" = "Εμφάνιση υποστηριζόμενων εντολών URL scheme";
@@ -682,3 +702,162 @@
 "Selection is already aligned" = "Η επιλογή είναι ήδη ευθυγραμμισμένη";
 "Space to move. Release to annotate and edit" = "Κρατήστε πατημένο το πλήκτρο διαστήματος για μετακίνηση. Αφήστε το για σχολιασμό και επεξεργασία";
 "Space to move. Release to finish" = "Κρατήστε πατημένο το πλήκτρο διαστήματος για μετακίνηση. Αφήστε το για ολοκλήρωση";
+
+"Saving..." = "Αποθήκευση…";
+
+"Show Recordings in Finder" = "Εμφάνιση εγγραφών στο Finder";
+
+"Cancelled" = "Ακυρώθηκε";
+
+"Cancelling..." = "Ακύρωση...";
+"Preparing video..." = "Προετοιμασία βίντεο...";
+"History is busy saving. Please try again shortly." = "Γίνεται αποθήκευση του ιστορικού. Δοκιμάστε ξανά σε λίγο.";
+
+// Video editor accessibility
+"Play" = "Αναπαραγωγή";
+"Mute" = "Σίγαση";
+"Unmute" = "Κατάργηση σίγασης";
+
+/* Video editor (Studio) */
+"%.1f× · follows pointer" = "%.1f× · ακολουθεί τον δείκτη";
+"Add" = "Προσθήκη";
+"Add Cut Here" = "Προσθήκη αποκοπής εδώ";
+"Add Text Here" = "Προσθήκη κειμένου εδώ";
+"Add Zoom Here" = "Προσθήκη ζουμ εδώ";
+"Added %d captions" = "Προστέθηκαν %d υπότιτλοι";
+"Added %d zooms" = "Προστέθηκαν %d ζουμ";
+"Apply Default Zoom to All" = "Εφαρμογή προεπιλεγμένου ζουμ σε όλα";
+"Auto" = "Αυτόμ.";
+"Auto Zoom" = "Αυτόματο ζουμ";
+"Auto Zoom needs pointer data, which macshot records with every new recording. You can still add zooms by double-clicking the zoom lane." = "Το αυτόματο ζουμ χρειάζεται δεδομένα δείκτη, τα οποία το macshot καταγράφει σε κάθε νέα εγγραφή. Μπορείτε ακόμα να προσθέσετε ζουμ κάνοντας διπλό κλικ στη λωρίδα ζουμ.";
+"Background blur" = "Θόλωμα φόντου";
+"Background color" = "Χρώμα φόντου";
+"Background, padding, rounded corners and shadow" = "Φόντο, περιθώριο, στρογγυλεμένες γωνίες και σκιά";
+"Bold Italic" = "Έντονα πλάγια";
+"Box" = "Πλαίσιο";
+"Camera" = "Κάμερα";
+"Caption" = "Υπότιτλος";
+"Captions" = "Υπότιτλοι";
+"Captions are transcribed on this Mac. Nothing is uploaded." = "Οι υπότιτλοι απομαγνητοφωνούνται σε αυτό το Mac. Τίποτα δεν αποστέλλεται.";
+"Choose Image…" = "Επιλογή εικόνας…";
+"Click color" = "Χρώμα κλικ";
+"Clicks" = "Κλικ";
+"Clip" = "Κλιπ";
+"Colors" = "Χρώματα";
+"Connect nearby zooms" = "Σύνδεση κοντινών ζουμ";
+"Copy the edited video to the clipboard" = "Αντιγραφή του επεξεργασμένου βίντεο στο πρόχειρο";
+"Corner radius" = "Ακτίνα γωνίας";
+"Creates zooms that follow the pointer wherever you click or type. Adjust or delete them on the timeline." = "Δημιουργεί ζουμ που ακολουθούν τον δείκτη όπου κάνετε κλικ ή πληκτρολογείτε. Προσαρμόστε ή διαγράψτε τα στη λωρίδα χρόνου.";
+"Custom color" = "Προσαρμοσμένο χρώμα";
+"Cut" = "Αποκοπή";
+"Cuts, speed and freeze frames" = "Αποκοπές, ταχύτητα και παγωμένα καρέ";
+"Default zoom" = "Προεπιλεγμένο ζουμ";
+"Dot" = "Κουκκίδα";
+"Double-click the text on the preview to edit it." = "Κάντε διπλό κλικ στο κείμενο στην προεπισκόπηση για να το επεξεργαστείτε.";
+"Double-click to add a zoom" = "Κάντε διπλό κλικ για προσθήκη ζουμ";
+"Double-click to add a zoom, or use Auto Zoom" = "Κάντε διπλό κλικ για προσθήκη ζουμ, ή χρησιμοποιήστε το αυτόματο ζουμ";
+"Drag the frame on the preview to choose where the zoom looks." = "Σύρετε το πλαίσιο στην προεπισκόπηση για να επιλέξετε πού εστιάζει το ζουμ.";
+"Duration" = "Διάρκεια";
+"Edge highlight" = "Φωτισμός άκρων";
+"Edit Text" = "Επεξεργασία κειμένου";
+"Editable pointer, clicks and keystrokes" = "Επεξεργάσιμος δείκτης, κλικ και πλήκτρα";
+"Edits" = "Επεξεργασίες";
+"Export" = "Εξαγωγή";
+"Export Subtitles (.srt)…" = "Εξαγωγή υποτίτλων (.srt)…";
+"Fade in" = "Σταδιακή εμφάνιση";
+"Fade out" = "Σταδιακή απόκρυψη";
+"Fit" = "Προσαρμογή";
+"Fixed" = "Σταθερό";
+"Fixed point" = "Σταθερό σημείο";
+"Focus" = "Εστίαση";
+"Follow" = "Παρακολούθηση";
+"Follow Pointer" = "Παρακολούθηση δείκτη";
+"Follow pointer" = "Παρακολούθηση δείκτη";
+"Follow tightness" = "Ακρίβεια παρακολούθησης";
+"Format" = "Μορφή";
+"Frame" = "Πλαίσιο";
+"Frame rate" = "Ρυθμός καρέ";
+"Frame the recording" = "Πλαισίωση εγγραφής";
+"Freeze Frame" = "Πάγωμα καρέ";
+"Generate Captions" = "Δημιουργία υποτίτλων";
+"Gentle" = "Ήπιο";
+"Gradient" = "Διαβάθμιση";
+"Hide ordinary typing, show key combinations" = "Απόκρυψη απλής πληκτρολόγησης, εμφάνιση συνδυασμών πλήκτρων";
+"Hide when idle" = "Απόκρυψη σε αδράνεια";
+"Hide while typing" = "Απόκρυψη κατά την πληκτρολόγηση";
+"Hold Focus" = "Διατήρηση εστίασης";
+"Idle delay" = "Καθυστέρηση αδράνειας";
+"Image" = "Εικόνα";
+"Keystrokes" = "Πλήκτρα";
+"Keystrokes in this recording are part of the video pixels." = "Τα πλήκτρα σε αυτή την εγγραφή αποτελούν μέρος των pixel του βίντεο.";
+"Light appearance" = "Φωτεινή εμφάνιση";
+"Makes looping GIFs seamless" = "Κάνει τα επαναλαμβανόμενα GIF ομαλά";
+"Mirror" = "Κατοπτρισμός";
+"Motion" = "Κίνηση";
+"Motion blur" = "Θόλωμα κίνησης";
+"Next edit" = "Επόμενη επεξεργασία";
+"No clicks or typing found to zoom into" = "Δεν βρέθηκαν κλικ ή πληκτρολόγηση για ζουμ";
+"No speech was recognized" = "Δεν αναγνωρίστηκε ομιλία";
+"No system wallpapers were found. Choose an image instead." = "Δεν βρέθηκαν ταπετσαρίες συστήματος. Επιλέξτε μια εικόνα.";
+"Off" = "Ανενεργό";
+"On-device speech recognition isn't available for your language on this Mac." = "Η αναγνώριση ομιλίας στη συσκευή δεν είναι διαθέσιμη για τη γλώσσα σας σε αυτό το Mac.";
+"Original" = "Αρχικό";
+"Outline color" = "Χρώμα περιγράμματος";
+"Outline width" = "Πάχος περιγράμματος";
+"Overlays" = "Επικαλύψεις";
+"Pan between zooms instead of zooming out" = "Μετακίνηση μεταξύ ζουμ αντί για σμίκρυνση";
+"Pill" = "Κάψουλα";
+"Pointer" = "Δείκτης";
+"Position" = "Θέση";
+"Press animation" = "Κίνηση πατήματος";
+"Previous edit" = "Προηγούμενη επεξεργασία";
+"Quality" = "Ποιότητα";
+"Regenerate Captions" = "Αναδημιουργία υποτίτλων";
+"Regular" = "Κανονικά";
+"Remove Automatic Zooms" = "Αφαίρεση αυτόματων ζουμ";
+"Remove Captions" = "Αφαίρεση υποτίτλων";
+"Removes %.1f seconds from the video. Drag its edges on the timeline to adjust." = "Αφαιρεί %.1f δευτερόλεπτα από το βίντεο. Σύρετε τα άκρα του στη λωρίδα χρόνου για προσαρμογή.";
+"Return to start at the end" = "Επιστροφή στην αρχή στο τέλος";
+"Ring" = "Δακτύλιος";
+"Ripple" = "Κυματισμός";
+"Save As…" = "Αποθήκευση ως…";
+"Shape" = "Σχήμα";
+"Shortcuts only" = "Μόνο συντομεύσεις";
+"Show camera" = "Εμφάνιση κάμερας";
+"Show captions" = "Εμφάνιση υποτίτλων";
+"Show keystrokes" = "Εμφάνιση πλήκτρων";
+"Show pointer" = "Εμφάνιση δείκτη";
+"Shrink during zooms" = "Σμίκρυνση κατά το ζουμ";
+"Smoothing" = "Εξομάλυνση";
+"Snappy" = "Γρήγορο";
+"Speech recognition is turned off for macshot in System Settings › Privacy & Security." = "Η αναγνώριση ομιλίας είναι απενεργοποιημένη για το macshot στις Ρυθμίσεις συστήματος › Απόρρητο και ασφάλεια.";
+"Speed" = "Ταχύτητα";
+"Spotlight" = "Προβολέας";
+"Square" = "Τετράγωνο";
+"Style" = "Στυλ";
+"Tall" = "Κάθετο";
+"Text and blur" = "Κείμενο και θόλωμα";
+"The recording's audio could not be read." = "Δεν ήταν δυνατή η ανάγνωση του ήχου της εγγραφής.";
+"This recording already shows the pointer in its pixels, so it can't be restyled. Zooms can still follow it." = "Αυτή η εγγραφή δείχνει ήδη τον δείκτη στα pixel της, οπότε δεν μπορεί να αλλάξει στυλ. Τα ζουμ μπορούν ακόμα να τον ακολουθούν.";
+"This recording has no audio to transcribe." = "Αυτή η εγγραφή δεν έχει ήχο για απομαγνητοφώνηση.";
+"This video has no recorded pointer data. Recordings made with macshot that open in the editor let you restyle, smooth and resize the pointer after recording." = "Αυτό το βίντεο δεν έχει καταγεγραμμένα δεδομένα δείκτη. Οι εγγραφές του macshot που ανοίγουν στον επεξεργαστή σάς επιτρέπουν να αλλάξετε το στυλ, την εξομάλυνση και το μέγεθος του δείκτη μετά την εγγραφή.";
+"Title" = "Τίτλος";
+"Transcribing…" = "Απομαγνητοφώνηση…";
+"Transition" = "Μετάβαση";
+"Turn on Show Keystrokes before recording. macshot then records them separately so you can style them here." = "Ενεργοποιήστε την Εμφάνιση πλήκτρων πριν από την εγγραφή. Το macshot θα τα καταγράψει ξεχωριστά ώστε να μπορείτε να τα μορφοποιήσετε εδώ.";
+"Turn on the camera before recording. macshot records it separately so you can move, resize, restyle or hide it here, and shrink it during zooms." = "Ενεργοποιήστε την κάμερα πριν από την εγγραφή. Το macshot την καταγράφει ξεχωριστά ώστε να μπορείτε να τη μετακινήσετε, να αλλάξετε το μέγεθος ή το στυλ της ή να την αποκρύψετε εδώ, και να τη σμικρύνετε κατά το ζουμ.";
+"Use Solid to hide sensitive information: blur and pixelation can sometimes be reversed." = "Χρησιμοποιήστε το Συμπαγές για απόκρυψη ευαίσθητων πληροφοριών: το θόλωμα και τα εικονοστοιχεία μπορούν μερικές φορές να αντιστραφούν.";
+"Visibility" = "Ορατότητα";
+"Wallpaper" = "Ταπετσαρία";
+"When recordings open in the editor, the pointer is recorded separately so you can smooth, resize, restyle or hide it, and add zooms that follow it." = "Όταν οι εγγραφές ανοίγουν στον επεξεργαστή, ο δείκτης καταγράφεται ξεχωριστά ώστε να μπορείτε να τον εξομαλύνετε, να αλλάξετε το μέγεθος ή το στυλ του ή να τον αποκρύψετε, και να προσθέσετε ζουμ που τον ακολουθούν.";
+"Wide" = "Φαρδύ";
+"Zoom in" = "Μεγέθυνση";
+"Zoom in timeline" = "Μεγέθυνση λωρίδας χρόνου";
+"Zoom level" = "Επίπεδο ζουμ";
+"Zoom out" = "Σμίκρυνση";
+"Zoom out timeline" = "Σμίκρυνση λωρίδας χρόνου";
+"macOS" = "macOS";
+"Sway" = "Ταλάντευση";
+
+"Snap webcam to corners when moved" = "Προσκόλληση της κάμερας στις γωνίες κατά τη μετακίνηση";
+"Search emoji" = "Αναζήτηση emoji";

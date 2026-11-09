@@ -22,7 +22,8 @@ class HotkeyManager {
         case captureLastArea = 10
         case pinFromClipboard = 11
         case clearHistory = 12
-        case captureTranslate = 13
+        case recordGIF = 13
+        case captureTranslate = 14
 
         var keyCodeKey: String {
             switch self {
@@ -38,6 +39,7 @@ class HotkeyManager {
             case .captureLastArea: return "hotkeyCaptureLastAreaKeyCode"
             case .pinFromClipboard: return "hotkeyPinClipboardKeyCode"
             case .clearHistory: return "hotkeyClearHistoryKeyCode"
+            case .recordGIF: return "hotkeyRecordGIFKeyCode"
             case .captureTranslate: return "hotkeyCaptureTranslateKeyCode"
             }
         }
@@ -56,6 +58,7 @@ class HotkeyManager {
             case .captureLastArea: return "hotkeyCaptureLastAreaModifiers"
             case .pinFromClipboard: return "hotkeyPinClipboardModifiers"
             case .clearHistory: return "hotkeyClearHistoryModifiers"
+            case .recordGIF: return "hotkeyRecordGIFModifiers"
             case .captureTranslate: return "hotkeyCaptureTranslateModifiers"
             }
         }
@@ -78,6 +81,7 @@ class HotkeyManager {
             case .captureLastArea: return L("Capture Last Area")
             case .pinFromClipboard: return L("Pin from Clipboard")
             case .clearHistory: return L("Clear History")
+            case .recordGIF: return "\(L("Record")) \(L("GIF"))"
             case .captureTranslate: return L("Capture Translate")
             }
         }
@@ -96,6 +100,7 @@ class HotkeyManager {
             case .captureLastArea: return 0    // no default hotkey
             case .pinFromClipboard: return 0    // no default hotkey
             case .clearHistory: return 0        // no default hotkey
+            case .recordGIF: return 0           // no default hotkey
             case .captureTranslate: return 0    // no default hotkey
             }
         }
@@ -103,7 +108,7 @@ class HotkeyManager {
         var defaultModifiers: UInt32 {
             switch self {
             case .recordScreen, .scrollCapture, .openFromClipboard, .captureLastArea,
-                 .pinFromClipboard, .clearHistory, .captureTranslate:
+                 .pinFromClipboard, .clearHistory, .recordGIF, .captureTranslate:
                 return 0
             default: return UInt32(cmdKey | shiftKey)
             }
@@ -112,6 +117,9 @@ class HotkeyManager {
 
     private var hotKeyRefs: [HotkeySlot: EventHotKeyRef] = [:]
     private var callbacks: [HotkeySlot: () -> Void] = [:]
+    /// While Settings records a shortcut, re-registration (menu reorder,
+    /// settings import) only stores callbacks; `resume()` arms them.
+    private(set) var isSuspended = false
     private var eventHandlerRef: EventHandlerRef?
 
     private init() {}
@@ -126,6 +134,7 @@ class HotkeyManager {
             hotKeyRefs[slot] = nil
         }
 
+        guard !isSuspended else { return }
         let (keyCode, modifiers) = Self.readHotkey(for: slot)
         guard modifiers != 0 || Self.isFunctionKey(keyCode) else { return }  // no modifiers = disabled (unless function key)
 
@@ -156,9 +165,11 @@ class HotkeyManager {
         openFromClipboard: @escaping () -> Void,
         captureLastArea: @escaping () -> Void,
         pinFromClipboard: @escaping () -> Void,
-        clearHistory: @escaping () -> Void
+        clearHistory: @escaping () -> Void,
+        recordGIF: @escaping () -> Void
     ) {
         unregisterAll()
+        Self.resolveDuplicateHotkeys()
         register(slot: .captureArea, callback: captureArea)
         register(slot: .captureFullScreen, callback: captureFullScreen)
         register(slot: .recordArea, callback: recordArea)
@@ -172,6 +183,7 @@ class HotkeyManager {
         register(slot: .captureLastArea, callback: captureLastArea)
         register(slot: .pinFromClipboard, callback: pinFromClipboard)
         register(slot: .clearHistory, callback: clearHistory)
+        register(slot: .recordGIF, callback: recordGIF)
     }
 
     private func installEventHandler() {
@@ -223,6 +235,26 @@ class HotkeyManager {
     /// Legacy — kept for backward compatibility.
     func unregister() { unregisterAll() }
 
+    /// Stop every global hotkey without forgetting its callback. Carbon hotkeys
+    /// are taken before any window sees the key, so while Settings records a
+    /// shortcut they must be off, or pressing a bound chord fires its action
+    /// instead of being recorded.
+    func suspend() {
+        isSuspended = true
+        for (_, ref) in hotKeyRefs {
+            UnregisterEventHotKey(ref)
+        }
+        hotKeyRefs.removeAll()
+    }
+
+    /// Re-register every slot that has a callback, from the stored bindings.
+    func resume() {
+        isSuspended = false
+        for (slot, callback) in callbacks {
+            register(slot: slot, callback: callback)
+        }
+    }
+
     deinit { unregisterAll() }
 
     // MARK: - UserDefaults Helpers
@@ -240,6 +272,40 @@ class HotkeyManager {
             return (slot.defaultKeyCode, slot.defaultModifiers)
         }
         return (storedKey, storedMods)
+    }
+
+    /// Bind `slot` to a chord, taking it away from any other slot that has it,
+    /// including through its default. Two slots can't share a chord: the second
+    /// registration fails and that slot silently does nothing. Returns the
+    /// slots that lost the chord.
+    @discardableResult
+    static func assignHotkey(for slot: HotkeySlot, keyCode: UInt32, modifiers: UInt32) -> [HotkeySlot] {
+        let displaced = HotkeySlot.allCases.filter { other in
+            guard other != slot else { return false }
+            let bound = readHotkey(for: other)
+            return bound.keyCode == keyCode && bound.modifiers == modifiers
+        }
+        for other in displaced {
+            disableHotkey(for: other)
+        }
+        saveHotkey(for: slot, keyCode: keyCode, modifiers: modifiers)
+        return displaced
+    }
+
+    /// Clear any slot whose chord an earlier slot already has. Settings import
+    /// and older builds can leave duplicates behind; registration order follows
+    /// `allCases`, so the slot that keeps the chord is the one that already
+    /// worked, and the dead one now shows "None" instead of a shortcut that
+    /// never fires.
+    static func resolveDuplicateHotkeys() {
+        var taken = Set<[UInt32]>()
+        for slot in HotkeySlot.allCases {
+            let bound = readHotkey(for: slot)
+            guard bound.modifiers != 0 || isFunctionKey(bound.keyCode) else { continue }
+            if !taken.insert([bound.keyCode, bound.modifiers]).inserted {
+                disableHotkey(for: slot)
+            }
+        }
     }
 
     /// Save a hotkey to UserDefaults.

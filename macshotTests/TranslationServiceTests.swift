@@ -1,5 +1,4 @@
 import XCTest
-@testable import macshot
 
 final class TranslationServiceTests: XCTestCase {
     func testExplicitProviderDoesNotChangeSavedProvider() {

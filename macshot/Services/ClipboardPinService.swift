@@ -44,14 +44,10 @@ enum ClipboardPinService {
     }
 
     private static func textImageFromItem(_ item: NSPasteboardItem) -> NSImage? {
-        if let data = item.data(forType: .html),
-           let attributed = ClipboardTextPinRenderer.attributedString(html: data),
-           !ClipboardTextPinRenderer.containsAttachments(attributed) {
-            if let image = ClipboardTextPinRenderer.render(attributed) {
-                return image
-            }
-        }
-
+        // RTF flavors first: they carry the same styling as the HTML one, but
+        // the HTML importer is WebKit and resolves remote subresources while
+        // parsing, so preferring it would turn a local pin into a network
+        // request to whichever site the text was copied from.
         if let data = item.data(forType: .rtf),
            let attributed = ClipboardTextPinRenderer.attributedString(rtf: data),
            let image = ClipboardTextPinRenderer.render(attributed) {
@@ -63,6 +59,14 @@ enum ClipboardPinService {
            let attributed = ClipboardTextPinRenderer.attributedString(rtfd: data),
            let image = ClipboardTextPinRenderer.render(attributed) {
             return image
+        }
+
+        if let data = item.data(forType: .html),
+           let attributed = ClipboardTextPinRenderer.attributedString(html: data),
+           !ClipboardTextPinRenderer.containsAttachments(attributed) {
+            if let image = ClipboardTextPinRenderer.render(attributed) {
+                return image
+            }
         }
 
         if let string = item.string(forType: .string),
@@ -97,6 +101,7 @@ enum ClipboardPinService {
     }
 
     private static func isUsable(_ image: NSImage) -> Bool {
-        image.isValid && image.size.width > 0 && image.size.height > 0
+        image.isValid && image.size.width.isFinite && image.size.height.isFinite
+            && image.size.width > 0 && image.size.height > 0
     }
 }

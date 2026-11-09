@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "कॉपी करें";
-"Save As..." = "इस रूप में सहेजें...";
 "Open in Editor" = "संपादक में खोलें";
 "Open Link" = "लिंक खोलें";
 "Open With" = "इसके साथ खोलें";
@@ -56,7 +55,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "सभी बंद करें";
-"Save All to Folder…" = "सभी को फ़ोल्डर में सहेजें…";
 "Save" = "सहेजें";
 
 /* Editor Top Bar */
@@ -174,6 +172,13 @@
 "ON" = "चालू";
 "OFF" = "बंद";
 "  (Tab to toggle)" = "  (टॉगल के लिए Tab)";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "किसी तत्व पर क्लिक करें  ·  कस्टम क्षेत्र के लिए खींचें  ·  पूर्ण स्क्रीन के लिए F";
+"Snap mode: " = "स्नैप मोड: ";
+"WINDOW" = "विंडो";
+"ELEMENT" = "तत्व";
+"  (Tab to switch)" = "  (स्विच करने के लिए Tab)";
+"Enhance browser and Electron element snapping" = "ब्राउज़र और इलेक्ट्रॉन तत्व स्नैपिंग को बेहतर करें";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "तत्व मोड में लक्ष्य ऐप की ऐक्सेसिबिलिटी ट्री बनाता है। यदि कोई ब्राउज़र या इलेक्ट्रॉन ऐप धीमा हो जाता है या इनपुट समस्याएं होती हैं, तो इसे अक्षम करें।";
 "Right-click to copy" = "कॉपी करने के लिए राइट-क्लिक करें";
 "Copied %@" = "%@ कॉपी किया";
 "Set color %@" = "रंग सेट किया %@";
@@ -238,6 +243,8 @@
 "Move down" = "नीचे ले जाएँ";
 "Output" = "आउटपुट";
 "Image format:" = "छवि प्रारूप:";
+"Also copy to the clipboard in this format" = "क्लिपबोर्ड पर इस फ़ॉर्मैट में भी कॉपी करें";
+"PNG is always included so every app can paste" = "PNG हमेशा शामिल रहता है ताकि हर ऐप पेस्ट कर सके";
 "Quality:" = "गुणवत्ता:";
 "%d%%" = "%d%%";
 "Save at standard resolution (1x)" = "मानक रिज़ॉल्यूशन (1x) में सहेजें";
@@ -337,6 +344,7 @@
 "Signed in" = "साइन इन किया हुआ";
 "Not signed in" = "साइन इन नहीं किया";
 "Account:" = "खाता:";
+"Folder:" = "फ़ोल्डर:";
 "Test Connection" = "कनेक्शन परीक्षण";
 "Fill in endpoint, bucket, and credentials first" = "पहले एंडपॉइंट, बकेट और क्रेडेंशियल भरें";
 "Testing..." = "परीक्षण हो रहा है...";
@@ -349,13 +357,15 @@
 "Secret Key:" = "सीक्रेट कुंजी:";
 "Public URL:" = "सार्वजनिक URL:";
 "Path Prefix:" = "पथ उपसर्ग:";
+"Make uploads publicly readable" = "अपलोड को सार्वजनिक रूप से पठनीय बनाएं";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "public-read ACL भेजता है ताकि अपलोड की गई फ़ाइलें लिंक रखने वाले किसी भी व्यक्ति को दिखाई दें। AWS S3, DigitalOcean Spaces, MinIO और Backblaze B2 के लिए आवश्यक है जो डिफ़ॉल्ट रूप से ऑब्जेक्ट्स को निजी रखते हैं। Cloudflare R2 के लिए बंद रखें जो ACLs का समर्थन नहीं करता और हेडर अस्वीकार करता है।";
 "API key:" = "API कुंजी:";
 "Upload History" = "अपलोड इतिहास";
 "No uploads yet." = "अभी तक कोई अपलोड नहीं।";
 "No Apps Available" = "कोई ऐप उपलब्ध नहीं";
 "No Share Services" = "कोई साझा सेवा नहीं";
 "Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "सार्वजनिक पहुँच के लिए बेस URL। यदि खाली है, तो S3 एंडपॉइंट URL उपयोग होता है (सार्वजनिक रूप से सुलभ नहीं हो सकता)।";
-"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "एक साझा कुंजी शामिल है — यदि दर सीमा तक पहुँचें तो imgbb.com/api पर अपनी मुफ़्त कुंजी प्राप्त करें। केवल चित्र (वीडियो समर्थन नहीं)।";
+"A shared key is included. Get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "एक साझा कुंजी शामिल है, यदि दर सीमा तक पहुँचें तो imgbb.com/api पर अपनी मुफ़्त कुंजी प्राप्त करें। केवल चित्र (वीडियो समर्थन नहीं)।";
 "Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, और अन्य S3-संगत सेवाओं के साथ काम करता है। चित्र और वीडियो समर्थित हैं।";
 "Configure S3 in Preferences" = "प्राथमिकताओं में S3 कॉन्फ़िगर करें";
 "Sign in to Google Drive in Preferences" = "प्राथमिकताओं में Google Drive से साइन इन करें";
@@ -366,7 +376,7 @@
 "Version %@ (%@)" = "संस्करण %@ (%@)";
 "Made by" = "निर्माता";
 "Licensed under the GPLv3" = "GPLv3 के अंतर्गत लाइसेंसीकृत";
-"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "macOS के लिए एक मुफ़्त, ओपन-सोर्स स्क्रीनशॉट और स्क्रीन रिकॉर्डिंग उपकरण।\nपूर्णतः नेटिव — Swift और AppKit से निर्मित।";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native, built with Swift and AppKit." = "macOS के लिए एक मुफ़्त, ओपन-सोर्स स्क्रीनशॉट और स्क्रीन रिकॉर्डिंग उपकरण।\nपूर्णतः नेटिव, Swift और AppKit से निर्मित।";
 
 /* Alerts */
 "No Image on Clipboard" = "क्लिपबोर्ड पर कोई छवि नहीं";
@@ -388,6 +398,9 @@
 
 /* Permission Onboarding */
 "Welcome to macshot" = "macshot में आपका स्वागत है";
+"Welcome back to macshot" = "macshot में फिर से स्वागत है";
+"Turn Screen Recording back on" = "स्क्रीन रिकॉर्डिंग फिर से चालू करें";
+"After some updates, macOS asks you to allow macshot again. Your settings and captures are safe. If macshot is already in the list, select it, click the minus button (−) to remove it, then click the plus button (+) and add macshot again." = "कुछ अपडेट के बाद macOS आपसे macshot को फिर से अनुमति देने के लिए कहता है। आपकी सेटिंग्स और कैप्चर सुरक्षित हैं। अगर macshot पहले से सूची में है, तो उसे चुनें, हटाने के लिए माइनस बटन (−) पर क्लिक करें, फिर प्लस बटन (+) पर क्लिक करके macshot को दोबारा जोड़ें।";
 "macshot needs one permission" = "macshot को एक अनुमति चाहिए";
 "Screen Recording not yet granted" = "स्क्रीन रिकॉर्डिंग अभी तक प्रदान नहीं की गई";
 "Screen Recording granted!" = "स्क्रीन रिकॉर्डिंग प्रदान की गई!";
@@ -418,6 +431,7 @@
 /* Recording Toast */
 "Recording saved" = "रिकॉर्डिंग सहेजी गई";
 "%@ • Recording saved" = "%@ • रिकॉर्डिंग सहेजी गई";
+"Recording failed: %@" = "रिकॉर्डिंग विफल: %@";
 "Copy Path" = "पथ कॉपी करें";
 "Path copied!" = "पथ कॉपी किया गया!";
 
@@ -436,6 +450,9 @@
 "Save As..." = "इस रूप में सहेजें...";
 "Choose a folder" = "फ़ोल्डर चुनें";
 "Save All to Folder…" = "सभी को फ़ोल्डर में सहेजें…";
+"Could not encode the screenshot." = "स्क्रीनशॉट को एन्कोड नहीं किया जा सका।";
+"Could not save the screenshot: %@" = "स्क्रीनशॉट सहेजा नहीं जा सका: %@";
+"Could not save the screenshot to history." = "स्क्रीनशॉट इतिहास में सहेजा नहीं जा सका।";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "स्वतः स्क्रॉल";
@@ -467,8 +484,8 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "इनपुट मॉनिटरिंग आवश्यक";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot को रिकॉर्डिंग के दौरान कीस्ट्रोक दिखाने के लिए इनपुट मॉनिटरिंग अनुमति चाहिए। कृपया System Settings में पहुँच प्रदान करें, फिर पुनः प्रयास करें।";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot को रिकॉर्डिंग के दौरान कीस्ट्रोक दिखाने के लिए सुलभता अनुमति चाहिए। कृपया System Settings में पहुँच प्रदान करें, फिर पुनः प्रयास करें।";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "रिकॉर्डिंग के दौरान माउस क्लिक हाइलाइट करने या कीस्ट्रोक दिखाने के लिए macshot को इनपुट मॉनिटरिंग की अनुमति चाहिए। सिस्टम सेटिंग्स में ऐक्सेस की अनुमति दें, फिर दोबारा कोशिश करें।";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "अलग-अलग इंटरफ़ेस तत्वों पर स्नैप करने के लिए macshot को एक्सेसिबिलिटी अनुमति चाहिए। कृपया सिस्टम सेटिंग्स में एक्सेस दें, फिर पुनः प्रयास करें।";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "कीस्ट्रोक दिखाएँ";
@@ -506,6 +523,8 @@
 "Settings..." = "सेटिंग्स...";
 "macshot Settings" = "macshot सेटिंग्स";
 "Also open in Editor" = "संपादक में भी खोलें";
+"Open in Editor right after selection" = "चयन के तुरंत बाद संपादक में खोलें";
+"Close editor after copying" = "कॉपी करने के बाद संपादक बंद करें";
 "Hide controls" = "नियंत्रण छिपाएँ";
 "Hide recording controls" = "रिकॉर्डिंग नियंत्रण छिपाएँ";
 "Stop recording from the menu bar icon instead." = "इसके बजाय मेनू बार आइकन से रिकॉर्डिंग बंद करें।";
@@ -551,12 +570,13 @@
 
 "Same as screenshots" = "स्क्रीनशॉट के समान";
 "  Preview size:" = "  पूर्वावलोकन आकार:";
+"Fit image in preview (letterbox)" = "पूर्वावलोकन में पूरी छवि फ़िट करें (लेटरबॉक्स)";
 "(0 = off)" = "(0 = बंद)";
 "Clear All" = "सब साफ़ करें";
 "Clear History?" = "इतिहास साफ़ करें?";
 "This will permanently delete all screenshots from history." = "यह इतिहास से सभी स्क्रीनशॉट स्थायी रूप से हटा देगा।";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "\"सेट\" पर क्लिक करें और कम से कम एक मॉडिफ़ायर (⌘, ⌥, ⌃, ⇧) के साथ एक कुंजी संयोजन दबाएं।";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "फ़ाइलें आपके Google Drive में एक \"macshot\" फ़ोल्डर में अपलोड की जाती हैं। सब कुछ निजी रहता है — कुछ भी सार्वजनिक रूप से साझा नहीं किया जाता।";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused. A new one is created instead. Everything stays private and nothing is shared publicly." = "फ़ाइलें आपके Google Drive में इस फ़ोल्डर में अपलोड की जाती हैं। \"macshot\" का उपयोग करने के लिए खाली छोड़ें। macshot केवल उन्हीं फ़ोल्डरों का उपयोग कर सकता है जिन्हें उसने स्वयं बनाया है, इसलिए Drive में आपके द्वारा उसी नाम से बनाया गया फ़ोल्डर दोबारा उपयोग नहीं किया जाएगा, इसके बजाय एक नया फ़ोल्डर बनाया जाता है। सब कुछ निजी रहता है, कुछ भी सार्वजनिक रूप से साझा नहीं किया जाता।";
 
 "Pressure" = "दबाव";
 
@@ -626,7 +646,7 @@
 "Open this settings window" = "यह सेटिंग्स विंडो खोलें";
 "Quick capture (uses your Enter action)" = "त्वरित कैप्चर (आपकी Enter क्रिया का उपयोग करता है)";
 "Re-capture the last selected area" = "अंतिम चयनित क्षेत्र पुनः कैप्चर करें";
-"Screenshots only — captured window title (blank otherwise)" = "केवल स्क्रीनशॉट — कैप्चर किए गए विंडो का शीर्षक (अन्यथा खाली)";
+"Captured window title (screenshots only, blank otherwise)" = "केवल स्क्रीनशॉट, कैप्चर किए गए विंडो का शीर्षक (अन्यथा खाली)";
 "Show available filename tokens" = "उपलब्ध फ़ाइलनाम टोकन दिखाएँ";
 "Enable macshot:// URL scheme" = "macshot:// URL स्कीम सक्षम करें";
 "Show supported URL scheme commands" = "समर्थित URL स्कीम कमांड दिखाएँ";
@@ -682,3 +702,162 @@
 "Selection is already aligned" = "चयन पहले से संरेखित है";
 "Space to move. Release to annotate and edit" = "स्थानांतरित करने के लिए Spacebar दबाए रखें। एनोटेट और संपादित करने के लिए छोड़ें";
 "Space to move. Release to finish" = "स्थानांतरित करने के लिए Spacebar दबाए रखें। समाप्त करने के लिए छोड़ें";
+
+"Saving..." = "सहेजा जा रहा है…";
+
+"Show Recordings in Finder" = "Finder में रिकॉर्डिंग दिखाएँ";
+
+"Cancelled" = "रद्द किया गया";
+
+"Cancelling..." = "रद्द किया जा रहा है...";
+"Preparing video..." = "वीडियो तैयार किया जा रहा है...";
+"History is busy saving. Please try again shortly." = "इतिहास सहेजा जा रहा है। कृपया थोड़ी देर बाद फिर कोशिश करें।";
+
+// Video editor accessibility
+"Play" = "चलाएँ";
+"Mute" = "म्यूट करें";
+"Unmute" = "अनम्यूट करें";
+
+/* Video editor (Studio) */
+"%.1f× · follows pointer" = "%.1f× · पॉइंटर का अनुसरण";
+"Add" = "जोड़ें";
+"Add Cut Here" = "यहाँ कट जोड़ें";
+"Add Text Here" = "यहाँ पाठ जोड़ें";
+"Add Zoom Here" = "यहाँ ज़ूम जोड़ें";
+"Added %d captions" = "%d कैप्शन जोड़े गए";
+"Added %d zooms" = "%d ज़ूम जोड़े गए";
+"Apply Default Zoom to All" = "डिफ़ॉल्ट ज़ूम सभी पर लागू करें";
+"Auto" = "ऑटो";
+"Auto Zoom" = "ऑटो ज़ूम";
+"Auto Zoom needs pointer data, which macshot records with every new recording. You can still add zooms by double-clicking the zoom lane." = "ऑटो ज़ूम को पॉइंटर डेटा चाहिए, जिसे macshot हर नई रिकॉर्डिंग के साथ रिकॉर्ड करता है। आप अब भी ज़ूम लेन पर डबल-क्लिक करके ज़ूम जोड़ सकते हैं।";
+"Background blur" = "पृष्ठभूमि ब्लर";
+"Background color" = "पृष्ठभूमि रंग";
+"Background, padding, rounded corners and shadow" = "पृष्ठभूमि, पैडिंग, गोल कोने और छाया";
+"Bold Italic" = "बोल्ड इटैलिक";
+"Box" = "बॉक्स";
+"Camera" = "कैमरा";
+"Caption" = "कैप्शन";
+"Captions" = "कैप्शन";
+"Captions are transcribed on this Mac. Nothing is uploaded." = "कैप्शन इसी Mac पर ट्रांसक्राइब होते हैं। कुछ भी अपलोड नहीं होता।";
+"Choose Image…" = "छवि चुनें…";
+"Click color" = "क्लिक का रंग";
+"Clicks" = "क्लिक";
+"Clip" = "क्लिप";
+"Colors" = "रंग";
+"Connect nearby zooms" = "पास-पास के ज़ूम जोड़ें";
+"Copy the edited video to the clipboard" = "संपादित वीडियो क्लिपबोर्ड पर कॉपी करें";
+"Corner radius" = "कोने की त्रिज्या";
+"Creates zooms that follow the pointer wherever you click or type. Adjust or delete them on the timeline." = "ऐसे ज़ूम बनाता है जो आपके क्लिक करने या टाइप करने की जगह पर पॉइंटर का अनुसरण करते हैं। उन्हें टाइमलाइन पर समायोजित करें या हटाएँ।";
+"Custom color" = "कस्टम रंग";
+"Cut" = "कट";
+"Cuts, speed and freeze frames" = "कट, गति और फ़्रीज़ फ़्रेम";
+"Default zoom" = "डिफ़ॉल्ट ज़ूम";
+"Dot" = "बिंदु";
+"Double-click the text on the preview to edit it." = "संपादित करने के लिए पूर्वावलोकन में पाठ पर डबल-क्लिक करें।";
+"Double-click to add a zoom" = "ज़ूम जोड़ने के लिए डबल-क्लिक करें";
+"Double-click to add a zoom, or use Auto Zoom" = "ज़ूम जोड़ने के लिए डबल-क्लिक करें, या ऑटो ज़ूम का उपयोग करें";
+"Drag the frame on the preview to choose where the zoom looks." = "ज़ूम कहाँ देखे, यह चुनने के लिए पूर्वावलोकन में फ़्रेम को खींचें।";
+"Duration" = "अवधि";
+"Edge highlight" = "किनारा हाइलाइट";
+"Edit Text" = "पाठ संपादित करें";
+"Editable pointer, clicks and keystrokes" = "संपादन योग्य पॉइंटर, क्लिक और कीस्ट्रोक";
+"Edits" = "संपादन";
+"Export" = "निर्यात करें";
+"Export Subtitles (.srt)…" = "सबटाइटल निर्यात करें (.srt)…";
+"Fade in" = "फ़ेड इन";
+"Fade out" = "फ़ेड आउट";
+"Fit" = "फ़िट";
+"Fixed" = "स्थिर";
+"Fixed point" = "स्थिर बिंदु";
+"Focus" = "फ़ोकस";
+"Follow" = "अनुसरण";
+"Follow Pointer" = "पॉइंटर का अनुसरण करें";
+"Follow pointer" = "पॉइंटर का अनुसरण";
+"Follow tightness" = "अनुसरण की सघनता";
+"Format" = "फ़ॉर्मैट";
+"Frame" = "फ़्रेम";
+"Frame rate" = "फ़्रेम दर";
+"Frame the recording" = "रिकॉर्डिंग को फ़्रेम करें";
+"Freeze Frame" = "फ़्रीज़ फ़्रेम";
+"Generate Captions" = "कैप्शन बनाएँ";
+"Gentle" = "धीमा";
+"Gradient" = "ग्रेडिएंट";
+"Hide ordinary typing, show key combinations" = "सामान्य टाइपिंग छिपाएँ, कुंजी संयोजन दिखाएँ";
+"Hide when idle" = "निष्क्रिय होने पर छिपाएँ";
+"Hide while typing" = "टाइप करते समय छिपाएँ";
+"Hold Focus" = "फ़ोकस स्थिर रखें";
+"Idle delay" = "निष्क्रियता विलंब";
+"Image" = "छवि";
+"Keystrokes" = "कीस्ट्रोक";
+"Keystrokes in this recording are part of the video pixels." = "इस रिकॉर्डिंग में कीस्ट्रोक वीडियो के पिक्सेल का हिस्सा हैं।";
+"Light appearance" = "हल्का रूप";
+"Makes looping GIFs seamless" = "लूप होने वाले GIF को निर्बाध बनाता है";
+"Mirror" = "मिरर";
+"Motion" = "मोशन";
+"Motion blur" = "मोशन ब्लर";
+"Next edit" = "अगला संपादन";
+"No clicks or typing found to zoom into" = "ज़ूम करने के लिए कोई क्लिक या टाइपिंग नहीं मिली";
+"No speech was recognized" = "कोई वाणी पहचानी नहीं गई";
+"No system wallpapers were found. Choose an image instead." = "कोई सिस्टम वॉलपेपर नहीं मिला। इसके बजाय कोई छवि चुनें।";
+"Off" = "बंद";
+"On-device speech recognition isn't available for your language on this Mac." = "इस Mac पर आपकी भाषा के लिए ऑन-डिवाइस वाणी पहचान उपलब्ध नहीं है।";
+"Original" = "मूल";
+"Outline color" = "आउटलाइन रंग";
+"Outline width" = "आउटलाइन चौड़ाई";
+"Overlays" = "ओवरले";
+"Pan between zooms instead of zooming out" = "ज़ूम आउट करने के बजाय ज़ूम के बीच पैन करें";
+"Pill" = "पिल";
+"Pointer" = "पॉइंटर";
+"Position" = "स्थिति";
+"Press animation" = "दबाने का एनिमेशन";
+"Previous edit" = "पिछला संपादन";
+"Quality" = "गुणवत्ता";
+"Regenerate Captions" = "कैप्शन फिर से बनाएँ";
+"Regular" = "सामान्य";
+"Remove Automatic Zooms" = "स्वचालित ज़ूम हटाएँ";
+"Remove Captions" = "कैप्शन हटाएँ";
+"Removes %.1f seconds from the video. Drag its edges on the timeline to adjust." = "वीडियो से %.1f सेकंड हटाता है। समायोजित करने के लिए टाइमलाइन पर इसके किनारे खींचें।";
+"Return to start at the end" = "अंत में शुरुआत पर लौटें";
+"Ring" = "रिंग";
+"Ripple" = "लहर";
+"Save As…" = "इस रूप में सहेजें…";
+"Shape" = "आकृति";
+"Shortcuts only" = "केवल शॉर्टकट";
+"Show camera" = "कैमरा दिखाएँ";
+"Show captions" = "कैप्शन दिखाएँ";
+"Show keystrokes" = "कीस्ट्रोक दिखाएँ";
+"Show pointer" = "पॉइंटर दिखाएँ";
+"Shrink during zooms" = "ज़ूम के दौरान छोटा करें";
+"Smoothing" = "स्मूदिंग";
+"Snappy" = "तेज़";
+"Speech recognition is turned off for macshot in System Settings › Privacy & Security." = "macshot के लिए वाणी पहचान सिस्टम सेटिंग्स › गोपनीयता और सुरक्षा में बंद है।";
+"Speed" = "गति";
+"Spotlight" = "स्पॉटलाइट";
+"Square" = "वर्ग";
+"Style" = "शैली";
+"Tall" = "लंबा";
+"Text and blur" = "पाठ और ब्लर";
+"The recording's audio could not be read." = "रिकॉर्डिंग का ऑडियो पढ़ा नहीं जा सका।";
+"This recording already shows the pointer in its pixels, so it can't be restyled. Zooms can still follow it." = "यह रिकॉर्डिंग पहले से ही अपने पिक्सेल में पॉइंटर दिखाती है, इसलिए इसकी शैली बदली नहीं जा सकती। ज़ूम फिर भी इसका अनुसरण कर सकते हैं।";
+"This recording has no audio to transcribe." = "इस रिकॉर्डिंग में ट्रांसक्राइब करने के लिए कोई ऑडियो नहीं है।";
+"This video has no recorded pointer data. Recordings made with macshot that open in the editor let you restyle, smooth and resize the pointer after recording." = "इस वीडियो में कोई रिकॉर्ड किया गया पॉइंटर डेटा नहीं है। macshot से बनी जो रिकॉर्डिंग एडिटर में खुलती हैं, उनमें रिकॉर्डिंग के बाद पॉइंटर की शैली, स्मूदिंग और आकार बदला जा सकता है।";
+"Title" = "शीर्षक";
+"Transcribing…" = "ट्रांसक्राइब हो रहा है…";
+"Transition" = "ट्रांज़िशन";
+"Turn on Show Keystrokes before recording. macshot then records them separately so you can style them here." = "रिकॉर्डिंग से पहले \"कीस्ट्रोक दिखाएँ\" चालू करें। तब macshot उन्हें अलग से रिकॉर्ड करता है ताकि आप उन्हें यहाँ स्टाइल कर सकें।";
+"Turn on the camera before recording. macshot records it separately so you can move, resize, restyle or hide it here, and shrink it during zooms." = "रिकॉर्डिंग से पहले कैमरा चालू करें। macshot इसे अलग से रिकॉर्ड करता है ताकि आप इसे यहाँ खिसका सकें, आकार बदल सकें, शैली बदल सकें या छिपा सकें, और ज़ूम के दौरान छोटा कर सकें।";
+"Use Solid to hide sensitive information: blur and pixelation can sometimes be reversed." = "संवेदनशील जानकारी छिपाने के लिए ठोस का उपयोग करें: ब्लर और पिक्सलेशन को कभी-कभी उलटा जा सकता है।";
+"Visibility" = "दृश्यता";
+"Wallpaper" = "वॉलपेपर";
+"When recordings open in the editor, the pointer is recorded separately so you can smooth, resize, restyle or hide it, and add zooms that follow it." = "जब रिकॉर्डिंग एडिटर में खुलती हैं, तो पॉइंटर अलग से रिकॉर्ड होता है ताकि आप उसे स्मूद कर सकें, उसका आकार या शैली बदल सकें या उसे छिपा सकें, और उसका अनुसरण करने वाले ज़ूम जोड़ सकें।";
+"Wide" = "चौड़ा";
+"Zoom in" = "ज़ूम इन";
+"Zoom in timeline" = "टाइमलाइन ज़ूम इन करें";
+"Zoom level" = "ज़ूम स्तर";
+"Zoom out" = "ज़ूम आउट";
+"Zoom out timeline" = "टाइमलाइन ज़ूम आउट करें";
+"macOS" = "macOS";
+"Sway" = "झुकाव";
+
+"Snap webcam to corners when moved" = "वेबकैम को खिसकाते समय कोनों से चिपकाएँ";
+"Search emoji" = "इमोजी खोजें";

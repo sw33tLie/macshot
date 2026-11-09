@@ -37,6 +37,11 @@ class KeystrokeOverlay: NSPanel {
             height: rect.height)
     }
 
+    /// Receives every key press (key code, device-independent modifier
+    /// flags, display text) for the editor's keystroke track. Called on the
+    /// main thread.
+    var onKey: ((UInt16, UInt32, String) -> Void)?
+
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
 
@@ -111,6 +116,14 @@ class KeystrokeOverlay: NSPanel {
         let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
         let flags = NSEvent.ModifierFlags(rawValue: UInt(event.flags.rawValue))
 
+        // Recorded keystrokes keep the typed case; the live overlay shows
+        // key caps. Both skip bare modifier presses.
+        let recorded = Self.typedText(keyCode, event: event)
+        if !recorded.isEmpty {
+            let mods = UInt32(truncatingIfNeeded: flags.intersection([.command, .control, .option, .shift]).rawValue)
+            DispatchQueue.main.async { [weak self] in self?.onKey?(keyCode, mods, recorded) }
+        }
+
         let showAll = UserDefaults.standard.bool(forKey: "keystrokeShowAll")
         let hasModifier = !flags.intersection([.command, .control, .option]).isEmpty
         if !showAll && !hasModifier { return }
@@ -142,6 +155,19 @@ class KeystrokeOverlay: NSPanel {
         if flags.contains(.command) { parts.append("⌘") }
         if flags.contains(.capsLock) { parts.append("⇪") }
         return parts.joined(separator: " ")
+    }
+
+    /// Display text for a recorded key: symbols for special keys, the typed
+    /// character (with its case) otherwise.
+    nonisolated private static func typedText(_ keyCode: UInt16, event: CGEvent) -> String {
+        let name = keyNameFromCode(keyCode, event: event)
+        guard name.count == 1 else { return name }
+        var length = 0
+        var chars = [UniChar](repeating: 0, count: 4)
+        event.keyboardGetUnicodeString(maxStringLength: 4, actualStringLength: &length, unicodeString: &chars)
+        let typed = length > 0 ? String(utf16CodeUnits: chars, count: length) : name
+        // Control characters (from ⌃-combinations) fall back to the key cap.
+        return typed.unicodeScalars.allSatisfy({ $0.value >= 0x20 }) ? typed : name
     }
 
     /// Convert a key code to a display name. For printable keys, uses CGEvent's

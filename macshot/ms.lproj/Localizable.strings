@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "Salin";
-"Save As..." = "Simpan Sebagai...";
 "Open in Editor" = "Buka dalam Editor";
 "Pin to Screen" = "Semat ke Skrin";
 "Quick Look" = "Imbas Pantas";
@@ -54,7 +53,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "Tutup Semua";
-"Save All to Folder…" = "Simpan Semua ke Folder…";
 "Save" = "Simpan";
 
 /* Editor Top Bar */
@@ -172,6 +170,7 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "Klik tetingkap  ·  Seret untuk kawasan tersuai  ·  F untuk skrin penuh";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "Klik elemen  ·  Seret untuk kawasan tersuai  ·  F untuk skrin penuh";
 "Drag to select  ·  Click for full screen" = "Seret untuk memilih  ·  Klik untuk skrin penuh";
 "Release to annotate and edit" = "Lepaskan untuk anotasi dan sunting";
 "Release to finish" = "Lepaskan untuk selesai";
@@ -179,9 +178,13 @@
 "Hold Space to move. Release to finish" = "Tahan Space untuk alih. Lepaskan untuk selesai";
 "Space" = "Space";
 "Window snap: " = "Lekat tetingkap: ";
+"Snap mode: " = "Mod lekat: ";
 "ON" = "HIDUP";
 "OFF" = "MATI";
+"WINDOW" = "TINGKAP";
+"ELEMENT" = "ELEMEN";
 "  (Tab to toggle)" = "  (Tab untuk togol)";
+"  (Tab to switch)" = "  (Tab untuk tukar)";
 "Right-click to copy" = "Klik kanan untuk salin";
 "Copied %@" = "Disalin %@";
 "Set color %@" = "Tetapkan warna %@";
@@ -226,6 +229,8 @@
 "Launch at login" = "Lancar semasa log masuk";
 "Show snap alignment guides" = "Tunjuk panduan penjajaran lekat";
 "Snap selection edges to image boundaries" = "Lekatkan tepi pilihan pada sempadan imej";
+"Enhance browser and Electron element snapping" = "Tingkatkan penjerapan elemen penyegerak dan Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Membina pokok aksesibilitas aplikasi sasaran dalam Mod Elemen. Lumpuhkan ini jika penyegerak atau aplikasi Electron menjadi perlahan atau mempunyai masukan input.";
 "Capture mouse cursor in screenshot" = "Tangkap kursor tetikus dalam tangkapan skrin";
 "Double-click selection to copy" = "Dwiklik pilihan untuk menyalin";
 "Hide capture instructions" = "Sembunyikan arahan tangkapan skrin";
@@ -248,6 +253,8 @@
 "Replace (show only latest)" = "Ganti (tunjuk terkini sahaja)";
 "Output" = "Output";
 "Image format:" = "Format imej:";
+"Also copy to the clipboard in this format" = "Salin juga ke papan klip dalam format ini";
+"PNG is always included so every app can paste" = "PNG sentiasa disertakan supaya semua apl boleh menampal";
 "Quality:" = "Kualiti:";
 "%d%%" = "%d%%";
 "Save at standard resolution (1x)" = "Simpan pada resolusi standard (1x)";
@@ -339,6 +346,7 @@
 "Signed in" = "Sudah log masuk";
 "Not signed in" = "Belum log masuk";
 "Account:" = "Akaun:";
+"Folder:" = "Folder:";
 "Test Connection" = "Uji Sambungan";
 "Fill in endpoint, bucket, and credentials first" = "Isi endpoint, bucket, dan kelayakan dahulu";
 "Testing..." = "Menguji...";
@@ -351,11 +359,13 @@
 "Secret Key:" = "Kunci Rahsia:";
 "Public URL:" = "URL Awam:";
 "Path Prefix:" = "Awalan Laluan:";
+"Make uploads publicly readable" = "Jadikan muat naik boleh dibaca secara awam";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "Menghantar ACL public-read supaya fail yang dimuat naik boleh dilihat oleh sesiapa yang mempunyai pautan. Diperlukan untuk AWS S3, DigitalOcean Spaces, MinIO dan Backblaze B2 yang menyimpan objek secara peribadi secara lalai. Matikan untuk Cloudflare R2 yang tiada ACL dan menolak header ini.";
 "API key:" = "Kunci API:";
 "Upload History" = "Sejarah Muat Naik";
 "No uploads yet." = "Belum ada muat naik.";
 "Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "URL asas untuk akses awam. Jika kosong, URL endpoint S3 digunakan (mungkin tidak boleh diakses secara awam).";
-"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "Kunci dikongsi disertakan — dapatkan kunci percuma anda sendiri di imgbb.com/api jika anda terkena had kadar. Imej sahaja (tiada sokongan video).";
+"A shared key is included. Get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "Kunci dikongsi disertakan, dapatkan kunci percuma anda sendiri di imgbb.com/api jika anda terkena had kadar. Imej sahaja (tiada sokongan video).";
 "Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "Berfungsi dengan AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, dan perkhidmatan serasi S3 yang lain. Menyokong imej dan video.";
 "Configure S3 in Preferences" = "Konfigurasi S3 dalam Keutamaan";
 "Sign in to Google Drive in Preferences" = "Log masuk ke Google Drive dalam Keutamaan";
@@ -366,7 +376,7 @@
 "Version %@ (%@)" = "Versi %@ (%@)";
 "Made by" = "Dibuat oleh";
 "Licensed under the GPLv3" = "Dilesenkan di bawah GPLv3";
-"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "Alat tangkapan skrin & rakaman skrin sumber terbuka percuma untuk macOS.\nSepenuhnya natif — dibina dengan Swift dan AppKit.";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native, built with Swift and AppKit." = "Alat tangkapan skrin & rakaman skrin sumber terbuka percuma untuk macOS.\nSepenuhnya natif, dibina dengan Swift dan AppKit.";
 
 /* Alerts */
 "No Image on Clipboard" = "Tiada Imej pada Papan Keratan";
@@ -388,6 +398,9 @@
 
 /* Permission Onboarding */
 "Welcome to macshot" = "Selamat datang ke macshot";
+"Welcome back to macshot" = "Selamat kembali ke macshot";
+"Turn Screen Recording back on" = "Hidupkan semula Rakaman Skrin";
+"After some updates, macOS asks you to allow macshot again. Your settings and captures are safe. If macshot is already in the list, select it, click the minus button (−) to remove it, then click the plus button (+) and add macshot again." = "Selepas beberapa kemas kini, macOS meminta anda membenarkan macshot sekali lagi. Tetapan dan tangkapan anda selamat. Jika macshot sudah ada dalam senarai, pilihnya, klik butang tolak (−) untuk mengalihkannya, kemudian klik butang tambah (+) dan tambah macshot semula.";
 "macshot needs one permission" = "macshot memerlukan satu kebenaran";
 "Screen Recording not yet granted" = "Rakaman Skrin belum diberikan";
 "Screen Recording granted!" = "Rakaman Skrin diberikan!";
@@ -417,6 +430,7 @@
 /* Recording Toast */
 "Recording saved" = "Rakaman disimpan";
 "%@ • Recording saved" = "%@ • Rakaman disimpan";
+"Recording failed: %@" = "Rakaman gagal: %@";
 "Copy Path" = "Salin Laluan";
 "Path copied!" = "Laluan disalin!";
 
@@ -427,6 +441,9 @@
 "Export failed" = "Eksport gagal";
 "Saved to %@" = "Disimpan ke %@";
 "Save failed" = "Simpan gagal";
+"Could not encode the screenshot." = "Tidak dapat mengekod tangkapan skrin.";
+"Could not save the screenshot: %@" = "Tidak dapat menyimpan tangkapan skrin: %@";
+"Could not save the screenshot to history." = "Tidak dapat menyimpan tangkapan skrin ke sejarah.";
 
 /* Barcode Detector */
 /* "Open" and "Copy" are shared with other sections */
@@ -466,8 +483,8 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "Pemantauan Input Diperlukan";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot memerlukan kebenaran Pemantauan Input untuk menunjukkan ketukan kekunci semasa rakaman. Sila berikan akses dalam System Settings, kemudian cuba lagi.";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot memerlukan kebenaran Kebolehcapaian untuk menunjukkan ketukan kekunci semasa rakaman. Sila berikan akses dalam System Settings, kemudian cuba lagi.";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot memerlukan kebenaran Pemantauan Input untuk menyerlahkan klik tetikus atau menunjukkan ketukan kekunci semasa rakaman. Berikan akses dalam Tetapan Sistem, kemudian cuba lagi.";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot memerlukan kebenaran Kebolehcapaian untuk melekap pada elemen antara muka individu. Sila berikan akses dalam Tetapan Sistem, kemudian cuba lagi.";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "Tunjuk Ketukan Kekunci";
@@ -507,6 +524,8 @@
 "Settings..." = "Tetapan...";
 "macshot Settings" = "Tetapan macshot";
 "Also open in Editor" = "Buka juga dalam Editor";
+"Open in Editor right after selection" = "Buka dalam Editor sejurus selepas memilih";
+"Close editor after copying" = "Tutup editor selepas menyalin";
 "Hide controls" = "Sembunyikan kawalan";
 "Hide recording controls" = "Sembunyikan kawalan rakaman";
 "Stop recording from the menu bar icon instead." = "Hentikan rakaman dari ikon bar menu sebaliknya.";
@@ -553,12 +572,13 @@
 
 "Same as screenshots" = "Sama seperti tangkapan skrin";
 "  Preview size:" = "  Saiz pratonton:";
+"Fit image in preview (letterbox)" = "Muatkan imej dalam pratonton (letterbox)";
 "(0 = off)" = "(0 = mati)";
 "Clear All" = "Kosongkan Semua";
 "Clear History?" = "Kosongkan Sejarah?";
 "This will permanently delete all screenshots from history." = "Ini akan memadamkan semua tangkapan skrin daripada sejarah secara kekal.";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Klik \"Tetapkan\" dan tekan kombinasi kekunci dengan sekurang-kurangnya satu pengubah suai (⌘, ⌥, ⌃, ⇧) untuk menetapkan pintasan.";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "Fail dimuat naik ke folder \"macshot\" dalam Google Drive anda. Semua maklumat kekal peribadi — tiada apa yang dikongsi secara awam.";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused. A new one is created instead. Everything stays private and nothing is shared publicly." = "Fail dimuat naik ke folder ini dalam Google Drive anda. Biarkan kosong untuk menggunakan \"macshot\". macshot hanya boleh menggunakan folder yang diciptakannya sendiri, jadi folder dengan nama yang sama yang anda cipta dalam Drive tidak akan digunakan semula, folder baharu akan dicipta sebaliknya. Semua maklumat kekal peribadi, tiada apa yang dikongsi secara awam.";
 
 "Pressure" = "Tekanan";
 
@@ -628,7 +648,7 @@
 "Open this settings window" = "Buka tetingkap tetapan ini";
 "Quick capture (uses your Enter action)" = "Tangkapan pantas (menggunakan tindakan Enter anda)";
 "Re-capture the last selected area" = "Tangkap semula kawasan yang dipilih terakhir";
-"Screenshots only — captured window title (blank otherwise)" = "Tangkapan skrin sahaja — tajuk tetingkap yang ditangkap (kosong sebaliknya)";
+"Captured window title (screenshots only, blank otherwise)" = "Tangkapan skrin sahaja, tajuk tetingkap yang ditangkap (kosong sebaliknya)";
 "Show available filename tokens" = "Tunjuk token nama fail yang tersedia";
 "Show supported URL scheme commands" = "Tunjuk arahan skema URL yang disokong";
 "Start area capture" = "Mulakan tangkapan kawasan";
@@ -682,3 +702,162 @@
 "Selection is already aligned" = "Pilihan sudah sejajar";
 "Space to move. Release to annotate and edit" = "Space untuk alih. Lepaskan untuk anotasi dan sunting";
 "Space to move. Release to finish" = "Space untuk alih. Lepaskan untuk selesai";
+
+"Saving..." = "Menyimpan…";
+
+"Show Recordings in Finder" = "Tunjukkan Rakaman dalam Finder";
+
+"Cancelled" = "Dibatalkan";
+
+"Cancelling..." = "Membatalkan...";
+"Preparing video..." = "Menyediakan video...";
+"History is busy saving. Please try again shortly." = "Sejarah sedang disimpan. Sila cuba lagi sebentar lagi.";
+
+// Video editor accessibility
+"Play" = "Mainkan";
+"Mute" = "Senyapkan";
+"Unmute" = "Nyahsenyap";
+
+/* Video editor (Studio) */
+"%.1f× · follows pointer" = "%.1f× · ikut penuding";
+"Add" = "Tambah";
+"Add Cut Here" = "Tambah Potongan di Sini";
+"Add Text Here" = "Tambah Teks di Sini";
+"Add Zoom Here" = "Tambah Zum di Sini";
+"Added %d captions" = "%d kapsyen ditambah";
+"Added %d zooms" = "%d zum ditambah";
+"Apply Default Zoom to All" = "Guna Zum Lalai pada Semua";
+"Auto" = "Auto";
+"Auto Zoom" = "Zum Auto";
+"Auto Zoom needs pointer data, which macshot records with every new recording. You can still add zooms by double-clicking the zoom lane." = "Zum Auto memerlukan data penuding, yang dirakam oleh macshot dalam setiap rakaman baharu. Anda masih boleh menambah zum dengan mengklik dua kali lorong zum.";
+"Background blur" = "Kabur latar belakang";
+"Background color" = "Warna latar belakang";
+"Background, padding, rounded corners and shadow" = "Latar belakang, pelapik, bucu bulat dan bayang";
+"Bold Italic" = "Tebal Condong";
+"Box" = "Kotak";
+"Camera" = "Kamera";
+"Caption" = "Kapsyen";
+"Captions" = "Kapsyen";
+"Captions are transcribed on this Mac. Nothing is uploaded." = "Kapsyen ditranskripsi pada Mac ini. Tiada apa-apa dimuat naik.";
+"Choose Image…" = "Pilih Imej…";
+"Click color" = "Warna klik";
+"Clicks" = "Klik";
+"Clip" = "Klip";
+"Colors" = "Warna";
+"Connect nearby zooms" = "Sambung zum berdekatan";
+"Copy the edited video to the clipboard" = "Salin video yang diedit ke papan keratan";
+"Corner radius" = "Jejari bucu";
+"Creates zooms that follow the pointer wherever you click or type. Adjust or delete them on the timeline." = "Mencipta zum yang mengikut penuding di mana sahaja anda klik atau menaip. Laraskan atau padamkannya pada garis masa.";
+"Custom color" = "Warna tersuai";
+"Cut" = "Potong";
+"Cuts, speed and freeze frames" = "Potongan, kelajuan dan bingkai beku";
+"Default zoom" = "Zum lalai";
+"Dot" = "Titik";
+"Double-click the text on the preview to edit it." = "Klik dua kali teks pada pratonton untuk mengeditnya.";
+"Double-click to add a zoom" = "Klik dua kali untuk menambah zum";
+"Double-click to add a zoom, or use Auto Zoom" = "Klik dua kali untuk menambah zum, atau guna Zum Auto";
+"Drag the frame on the preview to choose where the zoom looks." = "Seret bingkai pada pratonton untuk memilih kawasan yang dizum.";
+"Duration" = "Tempoh";
+"Edge highlight" = "Serlahan tepi";
+"Edit Text" = "Edit Teks";
+"Editable pointer, clicks and keystrokes" = "Penuding, klik dan ketukan kekunci boleh edit";
+"Edits" = "Suntingan";
+"Export" = "Eksport";
+"Export Subtitles (.srt)…" = "Eksport Sari Kata (.srt)…";
+"Fade in" = "Resap masuk";
+"Fade out" = "Resap keluar";
+"Fit" = "Muat";
+"Fixed" = "Tetap";
+"Fixed point" = "Titik tetap";
+"Focus" = "Fokus";
+"Follow" = "Ikut";
+"Follow Pointer" = "Ikut Penuding";
+"Follow pointer" = "Ikut penuding";
+"Follow tightness" = "Ketepatan ikutan";
+"Format" = "Format";
+"Frame" = "Bingkai";
+"Frame rate" = "Kadar bingkai";
+"Frame the recording" = "Bingkaikan rakaman";
+"Freeze Frame" = "Bingkai Beku";
+"Generate Captions" = "Jana Kapsyen";
+"Gentle" = "Perlahan";
+"Gradient" = "Kecerunan";
+"Hide ordinary typing, show key combinations" = "Sembunyikan taipan biasa, tunjuk gabungan kekunci";
+"Hide when idle" = "Sembunyi apabila melahu";
+"Hide while typing" = "Sembunyi semasa menaip";
+"Hold Focus" = "Kekalkan Fokus";
+"Idle delay" = "Lengah melahu";
+"Image" = "Imej";
+"Keystrokes" = "Ketukan Kekunci";
+"Keystrokes in this recording are part of the video pixels." = "Ketukan kekunci dalam rakaman ini adalah sebahagian daripada piksel video.";
+"Light appearance" = "Penampilan cerah";
+"Makes looping GIFs seamless" = "Menjadikan GIF berulang bersambung lancar";
+"Mirror" = "Cermin";
+"Motion" = "Gerakan";
+"Motion blur" = "Kabur gerakan";
+"Next edit" = "Suntingan seterusnya";
+"No clicks or typing found to zoom into" = "Tiada klik atau taipan ditemui untuk dizum";
+"No speech was recognized" = "Tiada pertuturan dikenali";
+"No system wallpapers were found. Choose an image instead." = "Tiada kertas dinding sistem ditemui. Pilih imej sebagai gantinya.";
+"Off" = "Mati";
+"On-device speech recognition isn't available for your language on this Mac." = "Pengecaman pertuturan pada peranti tidak tersedia untuk bahasa anda pada Mac ini.";
+"Original" = "Asal";
+"Outline color" = "Warna rangka";
+"Outline width" = "Lebar rangka";
+"Overlays" = "Tindanan";
+"Pan between zooms instead of zooming out" = "Pan antara zum dan bukannya zum keluar";
+"Pill" = "Pil";
+"Pointer" = "Penuding";
+"Position" = "Kedudukan";
+"Press animation" = "Animasi tekan";
+"Previous edit" = "Suntingan sebelumnya";
+"Quality" = "Kualiti";
+"Regenerate Captions" = "Jana Semula Kapsyen";
+"Regular" = "Biasa";
+"Remove Automatic Zooms" = "Buang Zum Automatik";
+"Remove Captions" = "Buang Kapsyen";
+"Removes %.1f seconds from the video. Drag its edges on the timeline to adjust." = "Membuang %.1f saat daripada video. Seret tepinya pada garis masa untuk melaraskan.";
+"Return to start at the end" = "Kembali ke permulaan pada akhir";
+"Ring" = "Cincin";
+"Ripple" = "Riak";
+"Save As…" = "Simpan Sebagai…";
+"Shape" = "Bentuk";
+"Shortcuts only" = "Pintasan sahaja";
+"Show camera" = "Tunjuk kamera";
+"Show captions" = "Tunjuk kapsyen";
+"Show keystrokes" = "Tunjuk ketukan kekunci";
+"Show pointer" = "Tunjuk penuding";
+"Shrink during zooms" = "Kecilkan semasa zum";
+"Smoothing" = "Pelicinan";
+"Snappy" = "Pantas";
+"Speech recognition is turned off for macshot in System Settings › Privacy & Security." = "Pengecaman pertuturan dimatikan untuk macshot dalam Tetapan Sistem › Privasi & Keselamatan.";
+"Speed" = "Kelajuan";
+"Spotlight" = "Lampu Sorot";
+"Square" = "Segi Empat Sama";
+"Style" = "Gaya";
+"Tall" = "Tinggi";
+"Text and blur" = "Teks dan kabur";
+"The recording's audio could not be read." = "Audio rakaman tidak dapat dibaca.";
+"This recording already shows the pointer in its pixels, so it can't be restyled. Zooms can still follow it." = "Rakaman ini sudah menunjukkan penuding dalam pikselnya, jadi gayanya tidak boleh diubah. Zum masih boleh mengikutnya.";
+"This recording has no audio to transcribe." = "Rakaman ini tiada audio untuk ditranskripsi.";
+"This video has no recorded pointer data. Recordings made with macshot that open in the editor let you restyle, smooth and resize the pointer after recording." = "Video ini tiada data penuding yang dirakam. Rakaman yang dibuat dengan macshot dan dibuka dalam editor membolehkan anda menukar gaya, melicinkan dan mengubah saiz penuding selepas merakam.";
+"Title" = "Tajuk";
+"Transcribing…" = "Mentranskripsi…";
+"Transition" = "Peralihan";
+"Turn on Show Keystrokes before recording. macshot then records them separately so you can style them here." = "Hidupkan Tunjuk Ketukan Kekunci sebelum merakam. macshot kemudian merakamnya secara berasingan supaya anda boleh menggayakannya di sini.";
+"Turn on the camera before recording. macshot records it separately so you can move, resize, restyle or hide it here, and shrink it during zooms." = "Hidupkan kamera sebelum merakam. macshot merakamnya secara berasingan supaya anda boleh mengalih, mengubah saiz, menukar gaya atau menyembunyikannya di sini, dan mengecilkannya semasa zum.";
+"Use Solid to hide sensitive information: blur and pixelation can sometimes be reversed." = "Guna Padu untuk menyembunyikan maklumat sensitif: kabur dan piksel kadangkala boleh diterbalikkan.";
+"Visibility" = "Keterlihatan";
+"Wallpaper" = "Kertas Dinding";
+"When recordings open in the editor, the pointer is recorded separately so you can smooth, resize, restyle or hide it, and add zooms that follow it." = "Apabila rakaman dibuka dalam editor, penuding dirakam secara berasingan supaya anda boleh melicinkan, mengubah saiz, menukar gaya atau menyembunyikannya, serta menambah zum yang mengikutinya.";
+"Wide" = "Lebar";
+"Zoom in" = "Zum masuk";
+"Zoom in timeline" = "Zum masuk garis masa";
+"Zoom level" = "Tahap zum";
+"Zoom out" = "Zum keluar";
+"Zoom out timeline" = "Zum keluar garis masa";
+"macOS" = "macOS";
+"Sway" = "Hayunan";
+
+"Snap webcam to corners when moved" = "Lekatkan kamera web ke sudut apabila dialihkan";
+"Search emoji" = "Cari emoji";

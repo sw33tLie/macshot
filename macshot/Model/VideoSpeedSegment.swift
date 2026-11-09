@@ -45,6 +45,17 @@ final class VideoSpeedSegment: Codable {
         self.speedFactor = VideoSpeedSegment.clampFactor(speedFactor)
     }
 
+    private enum CodingKeys: String, CodingKey { case id, startTime, endTime, speedFactor }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = c.decode(.id, or: UUID())
+        startTime = c.decode(.startTime, or: 0)
+        endTime = c.decode(.endTime, or: 0)
+        let factor = c.decode(.speedFactor, or: 2.0)
+        speedFactor = VideoSpeedSegment.clampFactor(factor.isFinite ? factor : 2)
+    }
+
     /// Source-asset duration of the segment (before speed scaling).
     var sourceDuration: Double { max(0, endTime - startTime) }
 
@@ -71,150 +82,65 @@ final class VideoSpeedSegment: Codable {
 /// a cut is silently dropped.
 enum VideoSpeeds {
 
-    /// One contiguous composition-clock segment describing what the user
-    /// sees in that time window.
-    ///
-    /// The compositor maps composition-time → source-time via
-    ///     `sourceTime = srcStart + (compTime - compStart) * factor`
-    /// This single formula handles all three cases:
-    ///   - `.normal`: factor = 1, comp duration = source duration.
-    ///   - `.speed(factor)`: factor = user-chosen speed. Comp duration =
-    ///     sourceDuration / factor.
-    ///   - `.freeze`: `srcEnd = srcStart + tinyFreezeSlice`, factor is
-    ///     effectively zero (slice / holdDuration), so the source time
-    ///     barely advances within the frame and the compositor renders
-    ///     the same frame for the whole hold.
-    struct Piece {
-        enum Kind { case normal, speed, freeze }
-
+    /// Immutable source-to-output mapping. A freeze consumes no source time;
+    /// the composition builder separately locates the frame to repeat.
+    struct Piece: Sendable {
+        enum Kind: Int, Sendable { case normal, speed, freeze }
         let kind: Kind
-        /// Source-asset range this piece covers. For freezes this is
-        /// `[freezePoint, freezePoint + freezeSourceSlice]` — a tiny
-        /// slice so `AVMutableCompositionTrack.insertTimeRange` actually
-        /// inserts something we can then scaleTimeRange-stretch.
         let srcStart: Double
         let srcEnd: Double
-        /// Composition-clock duration of this piece. Stored explicitly
-        /// (not derived) so freezes can decouple it from source width.
         let compositionDuration: Double
 
-        /// Factor passed to the compositor's time-map entry. Derived.
-        var factor: Double {
-            guard compositionDuration > 0 else { return 1.0 }
+        nonisolated var factor: Double {
+            guard compositionDuration > 0 else { return 1 }
             return (srcEnd - srcStart) / compositionDuration
         }
-
-        var sourceDuration: Double { max(0, srcEnd - srcStart) }
-
-        /// Thin slice of source time used to back a freeze. Small enough
-        /// that the compositor reads the same underlying frame during
-        /// the entire hold, but non-zero so `insertTimeRange` actually
-        /// inserts a usable range before we scale it up.
-        static let freezeSourceSlice: Double = 1.0 / 600.0
+        nonisolated var sourceDuration: Double { max(0, srcEnd - srcStart) }
     }
 
-    /// Build the piece list from kept ranges + speed segments + freeze
-    /// segments. Pieces are laid out in composition order (normal → speed
-    /// → freeze → normal → …). Freezes are inserted AT their `atTime`
-    /// and split the surrounding normal/speed piece in two.
-    ///
-    /// Defensive against bad input: freezes inside cuts are dropped,
-    /// overlapping speeds are truncated (later one wins), and a freeze
-    /// whose `atTime` falls outside all kept ranges is dropped.
+    /// Kept ranges use half-open source intervals. Freezes at the start are
+    /// included; those inside cuts or at the exclusive end are omitted.
+    /// Later-starting speed segments take precedence during overlaps, then
+    /// the earlier speed resumes. Equal starts use the later input entry.
     static func pieces(keptRanges: [(Double, Double)],
                        speeds: [VideoSpeedSegment],
                        freezes: [VideoFreezeSegment] = []) -> [Piece] {
-        // Normalize + clamp speeds.
-        let normalizedSpeeds = speeds
-            .filter { $0.endTime > $0.startTime && $0.speedFactor > 0 }
-            .sorted { $0.startTime < $1.startTime }
-
-        var cleanSpeeds: [(Double, Double, Double)] = []
-        for s in normalizedSpeeds {
-            if let last = cleanSpeeds.last, s.startTime < last.1 {
-                cleanSpeeds[cleanSpeeds.count - 1] = (last.0, max(last.0, s.startTime), last.2)
-            }
-            if s.endTime > s.startTime {
-                cleanSpeeds.append((s.startTime, s.endTime, s.speedFactor))
-            }
-        }
-
-        // Build the set of freeze points, sorted by atTime. Multiple
-        // freezes at the same atTime are kept in input order — the
-        // effects band UI prevents this in practice but we still emit
-        // all of them if it happens.
-        let sortedFreezes = freezes
-            .filter { $0.holdDuration > 0 }
-            .sorted { $0.atTime < $1.atTime }
-
+        let normalizedSpeeds = speeds.enumerated()
+            .filter { $0.element.startTime.isFinite && $0.element.endTime.isFinite &&
+                $0.element.endTime > $0.element.startTime && $0.element.speedFactor.isFinite &&
+                $0.element.speedFactor > 0 }
+            .sorted { lhs, rhs in
+                lhs.element.startTime == rhs.element.startTime ? lhs.offset < rhs.offset
+                    : lhs.element.startTime < rhs.element.startTime
+            }.map(\.element)
+        let normalizedFreezes = freezes.enumerated()
+            .filter { $0.element.atTime.isFinite && $0.element.holdDuration.isFinite && $0.element.holdDuration > 0 }
+            .sorted { lhs, rhs in
+                lhs.element.atTime == rhs.element.atTime ? lhs.offset < rhs.offset
+                    : lhs.element.atTime < rhs.element.atTime
+            }.map(\.element)
         var result: [Piece] = []
-        for (rStart, rEnd) in keptRanges {
-            guard rEnd > rStart else { continue }
-            // Freezes falling inside this kept range, in order.
-            let rangeFreezes = sortedFreezes.filter { $0.atTime > rStart && $0.atTime < rEnd }
-
-            // Walk the kept range, emitting normal/speed pieces split by
-            // any freeze points that fall inside.
-            var cursor = rStart
-            var freezeIdx = 0
-
-            // Helper: emit normal/speed pieces covering [cursor, until],
-            // split further by speed segment boundaries.
-            func emitSpeedSliced(until: Double) {
-                guard until > cursor else { return }
-                for (sStart, sEnd, factor) in cleanSpeeds {
-                    if sEnd <= cursor { continue }
-                    if sStart >= until { break }
-                    let speedStart = max(sStart, cursor)
-                    let speedEnd = min(sEnd, until)
-                    if speedStart > cursor {
-                        let src = cursor
-                        let end = speedStart
-                        result.append(Piece(kind: .normal, srcStart: src, srcEnd: end,
-                                             compositionDuration: end - src))
-                    }
-                    if speedEnd > speedStart {
-                        let src = speedStart
-                        let end = speedEnd
-                        result.append(Piece(kind: .speed, srcStart: src, srcEnd: end,
-                                             compositionDuration: (end - src) / factor))
-                        cursor = end
-                    }
-                }
-                if cursor < until {
-                    let src = cursor
-                    let end = until
-                    result.append(Piece(kind: .normal, srcStart: src, srcEnd: end,
-                                         compositionDuration: end - src))
-                    cursor = end
-                }
+        for (start, end) in keptRanges {
+            guard start.isFinite, end.isFinite, start >= 0, end > start else { continue }
+            let activeSpeeds = normalizedSpeeds.filter { $0.startTime < end && $0.endTime > start }
+            let activeFreezes = normalizedFreezes.filter { $0.atTime >= start && $0.atTime < end }
+            var boundaries: Set<Double> = [start, end]
+            for speed in activeSpeeds {
+                boundaries.insert(max(start, speed.startTime))
+                boundaries.insert(min(end, speed.endTime))
             }
-
-            while freezeIdx < rangeFreezes.count {
-                let freeze = rangeFreezes[freezeIdx]
-                // Emit everything up to the freeze point — but only if
-                // cursor hasn't already passed `atTime` due to a
-                // previous freeze's source slice overrunning it.
-                if freeze.atTime > cursor {
-                    emitSpeedSliced(until: freeze.atTime)
+            for freeze in activeFreezes { boundaries.insert(freeze.atTime) }
+            let points = boundaries.sorted()
+            for (left, right) in zip(points, points.dropFirst()) {
+                for freeze in activeFreezes where freeze.atTime == left {
+                    result.append(Piece(kind: .freeze, srcStart: left, srcEnd: left,
+                        compositionDuration: VideoFreezeSegment.clampDuration(freeze.holdDuration)))
                 }
-                // Insert the freeze piece. Source slice is tiny; scaled
-                // up to holdDuration by the composition-insertion layer.
-                // `src = max(atTime, cursor)` preserves monotonicity
-                // when two freezes stack at (or very near) the same
-                // atTime — rare, but handled gracefully.
-                let src = max(freeze.atTime, cursor)
-                let end = min(rEnd, src + Piece.freezeSourceSlice)
-                if end > src {
-                    result.append(Piece(kind: .freeze, srcStart: src, srcEnd: end,
-                                         compositionDuration: freeze.holdDuration))
-                    cursor = end
-                }
-                freezeIdx += 1
+                let speed = activeSpeeds.last { $0.startTime <= left && $0.endTime >= right }
+                let factor = speed.map { VideoSpeedSegment.clampFactor($0.speedFactor) } ?? 1
+                result.append(Piece(kind: factor == 1 ? .normal : .speed, srcStart: left, srcEnd: right,
+                                    compositionDuration: (right - left) / factor))
             }
-
-            // Tail after the last freeze.
-            emitSpeedSliced(until: rEnd)
         }
         return result
     }

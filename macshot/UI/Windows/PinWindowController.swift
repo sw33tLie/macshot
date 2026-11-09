@@ -22,8 +22,10 @@ class PinWindowController {
         self.image = image
 
         let size = image.size
-        let screen = NSScreen.main ?? NSScreen.screens[0]
-        let screenFrame = screen.visibleFrame
+        // An initializer can't bail, and a pin is worth showing even if macOS
+        // reports no display right now (it will land on one when a display
+        // returns), so fall back to a plausible frame.
+        let screenFrame = NSScreen.preferredVisibleFrame
 
         // Center on screen, cap at 80% of screen size
         let maxW = screenFrame.width * 0.8

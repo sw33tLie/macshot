@@ -9,21 +9,13 @@
 /* Begin PBXBuildFile section */
 		2F98BCF22F6D83A1006ADDC3 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000022F61B60100B71643 /* Sparkle */; };
 		2F98BCF32F6D83A1006ADDC3 /* WebP in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000052F61B60100B71643 /* WebP */; };
+		2FAA000D2F00000100AA0001 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 2FAA000B2F00000100AA0001 /* Sparkle */; };
+		2FAA000E2F00000100AA0001 /* WebP in Frameworks */ = {isa = PBXBuildFile; productRef = 2FAA000C2F00000100AA0001 /* WebP */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXContainerItemProxy section */
-		B10000000000000000000007 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 2F4EB11A2F61B60100B71643 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 2F4EB1212F61B60100B71643;
-			remoteInfo = macshot;
-		};
-/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		2F4EB1222F61B60100B71643 /* macshot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = macshot.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		B10000000000000000000001 /* macshotTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = macshotTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2FAA00012F00000100AA0001 /* macshotTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = macshotTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -34,6 +26,14 @@
 			);
 			target = 2F4EB1212F61B60100B71643 /* macshot */;
 		};
+		2FAA00032F00000100AA0001 /* Exceptions for "macshot" folder in "macshotTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+				main.swift,
+			);
+			target = 2FAA00042F00000100AA0001 /* macshotTests */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -41,11 +41,12 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				2F4EB1342F61B65B00B71643 /* Exceptions for "macshot" folder in "macshot" target */,
+				2FAA00032F00000100AA0001 /* Exceptions for "macshot" folder in "macshotTests" target */,
 			);
 			path = macshot;
 			sourceTree = "<group>";
 		};
-		B10000000000000000000002 /* macshotTests */ = {
+		2FAA00022F00000100AA0001 /* macshotTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = macshotTests;
 			sourceTree = "<group>";
@@ -62,10 +63,12 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		B10000000000000000000003 /* Frameworks */ = {
+		2FAA00062F00000100AA0001 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2FAA000D2F00000100AA0001 /* Sparkle in Frameworks */,
+				2FAA000E2F00000100AA0001 /* WebP in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -76,7 +79,7 @@
 			isa = PBXGroup;
 			children = (
 				2F4EB1242F61B60100B71643 /* macshot */,
-				B10000000000000000000002 /* macshotTests */,
+				2FAA00022F00000100AA0001 /* macshotTests */,
 				2F4EB1232F61B60100B71643 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -85,7 +88,7 @@
 			isa = PBXGroup;
 			children = (
 				2F4EB1222F61B60100B71643 /* macshot.app */,
-				B10000000000000000000001 /* macshotTests.xctest */,
+				2FAA00012F00000100AA0001 /* macshotTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -117,27 +120,29 @@
 			productReference = 2F4EB1222F61B60100B71643 /* macshot.app */;
 			productType = "com.apple.product-type.application";
 		};
-		B10000000000000000000006 /* macshotTests */ = {
+		2FAA00042F00000100AA0001 /* macshotTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = B1000000000000000000000B /* Build configuration list for PBXNativeTarget "macshotTests" */;
+			buildConfigurationList = 2FAA000A2F00000100AA0001 /* Build configuration list for PBXNativeTarget "macshotTests" */;
 			buildPhases = (
-				B10000000000000000000004 /* Sources */,
-				B10000000000000000000003 /* Frameworks */,
-				B10000000000000000000005 /* Resources */,
+				2FAA00052F00000100AA0001 /* Sources */,
+				2FAA00062F00000100AA0001 /* Frameworks */,
+				2FAA00072F00000100AA0001 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				B10000000000000000000008 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				B10000000000000000000002 /* macshotTests */,
+				2F4EB1242F61B60100B71643 /* macshot */,
+				2FAA00022F00000100AA0001 /* macshotTests */,
 			);
 			name = macshotTests;
 			packageProductDependencies = (
+				2FAA000B2F00000100AA0001 /* Sparkle */,
+				2FAA000C2F00000100AA0001 /* WebP */,
 			);
 			productName = macshotTests;
-			productReference = B10000000000000000000001 /* macshotTests.xctest */;
+			productReference = 2FAA00012F00000100AA0001 /* macshotTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -153,9 +158,8 @@
 					2F4EB1212F61B60100B71643 = {
 						CreatedOnToolsVersion = 26.3;
 					};
-					B10000000000000000000006 = {
-						CreatedOnToolsVersion = 26.3;
-						TestTargetID = 2F4EB1212F61B60100B71643;
+					2FAA00042F00000100AA0001 = {
+						CreatedOnToolsVersion = 27.0;
 					};
 				};
 			};
@@ -217,7 +221,7 @@
 			projectRoot = "";
 			targets = (
 				2F4EB1212F61B60100B71643 /* macshot */,
-				B10000000000000000000006 /* macshotTests */,
+				2FAA00042F00000100AA0001 /* macshotTests */,
 			);
 		};
 /* End PBXProject section */
@@ -230,7 +234,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		B10000000000000000000005 /* Resources */ = {
+		2FAA00072F00000100AA0001 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -247,7 +251,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		B10000000000000000000004 /* Sources */ = {
+		2FAA00052F00000100AA0001 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -255,14 +259,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		B10000000000000000000008 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 2F4EB1212F61B60100B71643 /* macshot */;
-			targetProxy = B10000000000000000000007 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		2F4EB12E2F61B60200B71643 /* Debug */ = {
@@ -459,31 +455,71 @@
 			};
 			name = Release;
 		};
-		B10000000000000000000009 /* Debug */ = {
+		2FAA00082F00000100AA0001 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = NO;
 				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_APP_SANDBOX = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-weak_framework",
+					ScreenCaptureKit,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.sw33tlie.macshot.macshotTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/macshot.app/Contents/MacOS/macshot";
 			};
 			name = Debug;
 		};
-		B1000000000000000000000A /* Release */ = {
+		2FAA00092F00000100AA0001 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = NO;
 				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_APP_SANDBOX = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-weak_framework",
+					ScreenCaptureKit,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.sw33tlie.macshot.macshotTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/macshot.app/Contents/MacOS/macshot";
 			};
 			name = Release;
 		};
@@ -508,11 +544,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		B1000000000000000000000B /* Build configuration list for PBXNativeTarget "macshotTests" */ = {
+		2FAA000A2F00000100AA0001 /* Build configuration list for PBXNativeTarget "macshotTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				B10000000000000000000009 /* Debug */,
-				B1000000000000000000000A /* Release */,
+				2FAA00082F00000100AA0001 /* Debug */,
+				2FAA00092F00000100AA0001 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -539,6 +575,16 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		2FAA000B2F00000100AA0001 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA0000032F61B60100B71643 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+		2FAA000C2F00000100AA0001 /* WebP */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA0000042F61B60100B71643 /* XCRemoteSwiftPackageReference "Swift-WebP" */;
+			productName = WebP;
+		};
 		AA0000022F61B60100B71643 /* Sparkle */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = AA0000032F61B60100B71643 /* XCRemoteSwiftPackageReference "Sparkle" */;

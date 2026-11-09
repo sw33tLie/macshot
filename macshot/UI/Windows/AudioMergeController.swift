@@ -9,6 +9,11 @@ final class AudioMergeController: NSObject {
     private var window: NSPanel?
     private var micSlider: NSSlider!
     private var systemSlider: NSSlider!
+    private var mergeButton: NSButton?
+    private var skipButton: NSButton?
+    private var titleLabel: NSTextField?
+    private var progressIndicator: NSProgressIndicator?
+    private var mergeJob: MediaExportCoordinator.Job?
 
     /// Merge the audio tracks and call completion with the final URL.
     /// If the user skips merging, completion is called with the original URL.
@@ -31,6 +36,8 @@ final class AudioMergeController: NSObject {
         )
         panel.title = L("Audio Tracks")
         panel.isFloatingPanel = true
+        panel.hidesOnDeactivate = false
+        panel.worksWhenModal = true
         panel.level = .floating
         panel.center()
         panel.isReleasedWhenClosed = false
@@ -43,6 +50,7 @@ final class AudioMergeController: NSObject {
         title.font = NSFont.systemFont(ofSize: 12, weight: .medium)
         title.frame = NSRect(x: 20, y: panelH - 32, width: panelW - 40, height: 18)
         content.addSubview(title)
+        titleLabel = title
 
         // Mic volume row
         let micLabel = NSTextField(labelWithString: L("Microphone:"))
@@ -50,9 +58,10 @@ final class AudioMergeController: NSObject {
         micLabel.frame = NSRect(x: 20, y: panelH - 62, width: 90, height: 18)
         content.addSubview(micLabel)
 
-        micSlider = NSSlider(value: 1.0, minValue: 0.0, maxValue: 1.5, target: nil, action: nil)
+        micSlider = NSSlider(value: 1.0, minValue: 0.0, maxValue: 1.0, target: nil, action: nil)
         micSlider.frame = NSRect(x: 115, y: panelH - 64, width: panelW - 155, height: 22)
         micSlider.isContinuous = true
+        micSlider.setAccessibilityLabel(L("Microphone:"))
         content.addSubview(micSlider)
 
         // System volume row
@@ -61,9 +70,10 @@ final class AudioMergeController: NSObject {
         sysLabel.frame = NSRect(x: 20, y: panelH - 92, width: 90, height: 18)
         content.addSubview(sysLabel)
 
-        systemSlider = NSSlider(value: 1.0, minValue: 0.0, maxValue: 1.5, target: nil, action: nil)
+        systemSlider = NSSlider(value: 1.0, minValue: 0.0, maxValue: 1.0, target: nil, action: nil)
         systemSlider.frame = NSRect(x: 115, y: panelH - 94, width: panelW - 155, height: 22)
         systemSlider.isContinuous = true
+        systemSlider.setAccessibilityLabel(L("System audio:"))
         content.addSubview(systemSlider)
 
         // Buttons
@@ -72,15 +82,17 @@ final class AudioMergeController: NSObject {
         mergeBtn.keyEquivalent = "\r"
         mergeBtn.frame = NSRect(x: panelW - 130, y: 12, width: 115, height: 30)
         content.addSubview(mergeBtn)
+        mergeButton = mergeBtn
 
         let skipBtn = NSButton(title: L("Keep Separate"), target: nil, action: nil)
         skipBtn.bezelStyle = .rounded
         skipBtn.keyEquivalent = "\u{1b}"
         skipBtn.frame = NSRect(x: panelW - 255, y: 12, width: 115, height: 30)
         content.addSubview(skipBtn)
+        skipButton = skipBtn
 
         panel.contentView = content
-        panel.delegate = self   // treat title-bar red-X as "skip" (see windowWillClose)
+        panel.delegate = self
         self.window = panel
 
         mergeBtn.target = self
@@ -100,128 +112,83 @@ final class AudioMergeController: NSObject {
     private var _completion: ((URL) -> Void)!
 
     @objc private func mergeClicked() {
-        let micVol = Float(micSlider.doubleValue)
-        let sysVol = Float(systemSlider.doubleValue)
-        let url = _url!
-        // Take the completion so windowWillClose (fired by close() below) won't
-        // deliver a second time.
-        let completion = _completion
-        _completion = nil
-        window?.close()
-        window = nil
+        guard mergeJob == nil, let source = _url else { return }
+        let volumes = [Float(micSlider.doubleValue), Float(systemSlider.doubleValue)]
+        let destination = source.deletingLastPathComponent().appendingPathComponent(
+            source.deletingPathExtension().lastPathComponent + "_mixed_" + UUID().uuidString + ".mp4")
+        micSlider.isEnabled = false
+        systemSlider.isEnabled = false
+        mergeButton?.isEnabled = false
+        skipButton?.title = L("Cancel")
+        titleLabel?.stringValue = L("Exporting...") + " 0%"
+        let indicator = NSProgressIndicator(frame: NSRect(x: 20, y: 116, width: 340, height: 8))
+        indicator.style = .bar
+        indicator.isIndeterminate = false
+        indicator.minValue = 0
+        indicator.maxValue = 1
+        window?.contentView?.addSubview(indicator)
+        progressIndicator = indicator
 
-        mergeAudioTracks(url: url, micVolume: micVol, systemVolume: sysVol) { mergedURL in
-            DispatchQueue.main.async {
-                completion?(mergedURL ?? url)
+        let job = MediaExportCoordinator.shared.start(title: source.lastPathComponent, status: L("Exporting..."),
+            operation: { cancellation, progress in
+                try await AudioTrackMixer.export(source: source, destination: destination,
+                    volumes: volumes, cancellation: cancellation, progress: progress)
+            }, completion: { [weak self] result in
+                self?.mergeJob = nil
+                switch result {
+                case .success:
+                    self?.deliverAndClose(destination)
+                case .failure(let error):
+                    if !(error is CancellationError) {
+                        (NSApp.delegate as? AppDelegate)?.showFailureToast(L("Export failed") + ": " + error.localizedDescription)
+                    }
+                    self?.deliverAndClose(source)
+                }
+            })
+        mergeJob = job
+        job.onChange = { [weak self, weak job] in
+            guard let self, let job, !job.isFinished else { return }
+            self.skipButton?.isEnabled = job.canCancel
+            self.titleLabel?.stringValue = job.isCancelling ? L("Cancelling...") : job.status
+            if let fraction = job.progress, !job.isCancelling {
+                self.progressIndicator?.doubleValue = fraction
+                self.titleLabel?.stringValue += " \(Int(fraction * 100))%"
             }
         }
     }
 
-    @objc private func skipClicked() {
-        deliverOriginalAndClose()
+    @objc private func skipClicked() { deliverOriginalAndClose() }
+
+    private func deliverOriginalAndClose() {
+        guard let url = _url else { return }
+        if let job = mergeJob {
+            // Keep ownership and the progress panel until the writer actually
+            // stops. Publication may already have won the cancellation race.
+            job.cancel()
+            return
+        }
+        deliverAndClose(url)
     }
 
-    /// Deliver the un-merged recording and close. Used by the Skip button and by
-    /// a title-bar red-X close (windowWillClose), which must not silently drop
-    /// the just-finished recording.
-    private func deliverOriginalAndClose() {
+    private func deliverAndClose(_ url: URL) {
         guard let completion = _completion else { return }
-        let url = _url!
         _completion = nil
         window?.close()
         window = nil
         completion(url)
-    }
-
-    // MARK: - Audio Merge
-
-    private func mergeAudioTracks(url: URL, micVolume: Float, systemVolume: Float,
-                                   completion: @escaping (URL?) -> Void) {
-        let asset = AVAsset(url: url)
-        let audioTracks = asset.tracks(withMediaType: .audio)
-        guard audioTracks.count >= 2,
-              let videoTrack = asset.tracks(withMediaType: .video).first else {
-            completion(nil)
-            return
-        }
-
-        // Track 0 = mic (added first), Track 1 = system audio
-        let micTrack = audioTracks[0]
-        let systemTrack = audioTracks[1]
-
-        let composition = AVMutableComposition()
-
-        // Add video
-        guard let compVideoTrack = composition.addMutableTrack(
-            withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid) else {
-            completion(nil)
-            return
-        }
-        let timeRange = CMTimeRange(start: .zero, duration: asset.duration)
-        try? compVideoTrack.insertTimeRange(timeRange, of: videoTrack, at: .zero)
-
-        // Add both audio tracks into the same composition audio track
-        // so they play simultaneously (mixed)
-        guard let compAudioTrack1 = composition.addMutableTrack(
-            withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid) else {
-            completion(nil)
-            return
-        }
-        try? compAudioTrack1.insertTimeRange(timeRange, of: micTrack, at: .zero)
-
-        guard let compAudioTrack2 = composition.addMutableTrack(
-            withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid) else {
-            completion(nil)
-            return
-        }
-        try? compAudioTrack2.insertTimeRange(timeRange, of: systemTrack, at: .zero)
-
-        // Audio mix with volume parameters
-        let audioMix = AVMutableAudioMix()
-        let micParams = AVMutableAudioMixInputParameters(track: compAudioTrack1)
-        micParams.setVolume(micVolume, at: .zero)
-        let sysParams = AVMutableAudioMixInputParameters(track: compAudioTrack2)
-        sysParams.setVolume(systemVolume, at: .zero)
-        audioMix.inputParameters = [micParams, sysParams]
-
-        // Export to a new file
-        let mergedURL = url.deletingLastPathComponent()
-            .appendingPathComponent(url.deletingPathExtension().lastPathComponent + "_merged.mp4")
-        try? FileManager.default.removeItem(at: mergedURL)
-
-        guard let exporter = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetPassthrough) else {
-            completion(nil)
-            return
-        }
-        exporter.outputURL = mergedURL
-        exporter.outputFileType = .mp4
-        exporter.audioMix = audioMix
-
-        exporter.exportAsynchronously {
-            if exporter.status == .completed {
-                // Replace original with merged version
-                do {
-                    try FileManager.default.removeItem(at: url)
-                    try FileManager.default.moveItem(at: mergedURL, to: url)
-                    completion(url)
-                } catch {
-                    completion(mergedURL)
-                }
-            } else {
-                #if DEBUG
-                print("Audio merge export failed: \(exporter.error?.localizedDescription ?? "unknown")")
-                #endif
-                completion(nil)
-            }
-        }
+        (NSApp.delegate as? AppDelegate)?.returnFocusIfNeeded()
     }
 }
 
 extension AudioMergeController: NSWindowDelegate {
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        guard let job = mergeJob else { return true }
+        job.cancel()
+        return false
+    }
+
     func windowWillClose(_ notification: Notification) {
-        // Title-bar red-X: behave like Skip so the finished recording is still
-        // delivered instead of silently lost. No-op if a button already handled
-        // it (deliverOriginalAndClose / mergeClicked nil out _completion first).
+        // Normal completion clears the callback before closing the window.
         deliverOriginalAndClose()
     }
 }

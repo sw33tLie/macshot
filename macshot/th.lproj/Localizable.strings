@@ -41,7 +41,6 @@
 
 /* History Panel */
 "Copy" = "คัดลอก";
-"Save As..." = "บันทึกเป็น...";
 "Open in Editor" = "เปิดในตัวแก้ไข";
 "Pin to Screen" = "ปักหมุดบนหน้าจอ";
 "Quick Look" = "ดูตัวอย่าง";
@@ -54,7 +53,6 @@
 
 /* Floating Thumbnail */
 "Close All" = "ปิดทั้งหมด";
-"Save All to Folder…" = "บันทึกทั้งหมดไปยังโฟลเดอร์…";
 "Save" = "บันทึก";
 
 /* Editor Top Bar */
@@ -171,6 +169,7 @@
 
 /* Overlay / Canvas */
 "Click a window  ·  Drag for custom area  ·  F for full screen" = "คลิกที่หน้าต่าง  ·  ลากเพื่อเลือกพื้นที่  ·  F เพื่อเต็มจอ";
+"Click an element  ·  Drag for custom area  ·  F for full screen" = "คลิกที่องค์ประกอบ  ·  ลากเพื่อเลือกพื้นที่  ·  F เพื่อเต็มจอ";
 "Drag to select  ·  Click for full screen" = "ลากเพื่อเลือก  ·  คลิกเพื่อเต็มจอ";
 "Release to annotate and edit" = "ปล่อยเพื่อใส่คำอธิบายและแก้ไข";
 "Release to finish" = "ปล่อยเพื่อเสร็จสิ้น";
@@ -178,9 +177,13 @@
 "Hold Space to move. Release to finish" = "กด Space ค้างเพื่อย้าย ปล่อยเพื่อเสร็จสิ้น";
 "Space" = "Space";
 "Window snap: " = "จับหน้าต่าง: ";
+"Snap mode: " = "โหมดจับ: ";
 "ON" = "เปิด";
 "OFF" = "ปิด";
+"WINDOW" = "หน้าต่าง";
+"ELEMENT" = "องค์ประกอบ";
 "  (Tab to toggle)" = "  (Tab เพื่อสลับ)";
+"  (Tab to switch)" = "  (Tab เพื่อสลับ)";
 "Right-click to copy" = "คลิกขวาเพื่อคัดลอก";
 "Copied %@" = "คัดลอก %@ แล้ว";
 "Set color %@" = "ตั้งสี %@";
@@ -225,6 +228,8 @@
 "Launch at login" = "เปิดเมื่อเข้าสู่ระบบ";
 "Show snap alignment guides" = "แสดงเส้นจัดแนว";
 "Snap selection edges to image boundaries" = "ดูดขอบพื้นที่เลือกเข้ากับขอบเขตของภาพ";
+"Enhance browser and Electron element snapping" = "เพิ่มการจับองค์ประกอบของเบราว์เซอร์และ Electron";
+"Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "สร้าง accessibility tree ของแอปเป้าหมายในโหมดองค์ประกอบ ปิดการใช้งานนี้หากเบราว์เซอร์หรือแอป Electron ทำงานช้ากว่าปกติหรือมีปัญหาในการรับข้อมูล";
 "Capture mouse cursor in screenshot" = "จับภาพเคอร์เซอร์เมาส์ในภาพหน้าจอ";
 "Double-click selection to copy" = "ดับเบิลคลิกที่พื้นที่ที่เลือกเพื่อคัดลอก";
 "Hide capture instructions" = "ซ่อนคำแนะนำการจับภาพหน้าจอ";
@@ -251,6 +256,8 @@
 "Replace (show only latest)" = "แทนที่ (แสดงล่าสุดเท่านั้น)";
 "Output" = "ผลลัพธ์";
 "Image format:" = "รูปแบบภาพ:";
+"Also copy to the clipboard in this format" = "คัดลอกไปยังคลิปบอร์ดในรูปแบบนี้ด้วย";
+"PNG is always included so every app can paste" = "มี PNG รวมอยู่เสมอ เพื่อให้ทุกแอปวางได้";
 "Quality:" = "คุณภาพ:";
 "%d%%" = "%d%%";
 "Save at standard resolution (1x)" = "บันทึกที่ความละเอียดมาตรฐาน (1x)";
@@ -338,6 +345,7 @@
 "Signed in" = "เข้าสู่ระบบแล้ว";
 "Not signed in" = "ยังไม่ได้เข้าสู่ระบบ";
 "Account:" = "บัญชี:";
+"Folder:" = "โฟลเดอร์:";
 "Test Connection" = "ทดสอบการเชื่อมต่อ";
 "Fill in endpoint, bucket, and credentials first" = "กรอก endpoint, bucket และข้อมูลรับรองก่อน";
 "Testing..." = "กำลังทดสอบ...";
@@ -350,11 +358,13 @@
 "Secret Key:" = "Secret Key:";
 "Public URL:" = "Public URL:";
 "Path Prefix:" = "Path Prefix:";
+"Make uploads publicly readable" = "ทำให้ไฟล์ที่อัปโหลดเป็นสาธารณะ";
+"Sends the public-read ACL so uploaded files are viewable by anyone with the link. Needed for AWS S3, DigitalOcean Spaces, MinIO and Backblaze B2, which store objects privately by default. Leave off for Cloudflare R2, which has no ACLs and rejects the header." = "ส่ง ACL แบบ public-read เพื่อให้ไฟล์ที่อัปโหลดสามารถดูได้โดยทุกคนที่มีลิงก์ จำเป็นสำหรับ AWS S3, DigitalOcean Spaces, MinIO และ Backblaze B2 ซึ่งจัดเก็บอ็อบเจกต์แบบส่วนตัวโดยค่าเริ่มต้น ปิดไว้สำหรับ Cloudflare R2 ซึ่งไม่มี ACL และจะปฏิเสธ header";
 "API key:" = "API key:";
 "Upload History" = "ประวัติการอัปโหลด";
 "No uploads yet." = "ยังไม่มีการอัปโหลด";
 "Base URL for public access. If empty, the S3 endpoint URL is used (may not be publicly accessible)." = "URL พื้นฐานสำหรับการเข้าถึงสาธารณะ หากปล่อยว่าง จะใช้ URL ของ S3 endpoint (อาจไม่สามารถเข้าถึงแบบสาธารณะได้)";
-"A shared key is included — get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "มีคีย์สาธารณะให้ใช้ — รับคีย์ฟรีของคุณเองที่ imgbb.com/api หากถึงขีดจำกัดอัตรา รองรับเฉพาะรูปภาพ (ไม่รองรับวิดีโอ)";
+"A shared key is included. Get your own free key at imgbb.com/api if you hit rate limits. Images only (no video support)." = "มีคีย์สาธารณะให้ใช้, รับคีย์ฟรีของคุณเองที่ imgbb.com/api หากถึงขีดจำกัดอัตรา รองรับเฉพาะรูปภาพ (ไม่รองรับวิดีโอ)";
 "Works with AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, and other S3-compatible services. Supports images and videos." = "ใช้งานได้กับ AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2 และบริการอื่นที่เข้ากันได้กับ S3 รองรับรูปภาพและวิดีโอ";
 "Configure S3 in Preferences" = "ตั้งค่า S3 ในการตั้งค่า";
 "Sign in to Google Drive in Preferences" = "ลงชื่อเข้าใช้ Google Drive ในการตั้งค่า";
@@ -365,7 +375,7 @@
 "Version %@ (%@)" = "เวอร์ชัน %@ (%@)";
 "Made by" = "สร้างโดย";
 "Licensed under the GPLv3" = "อนุญาตภายใต้ GPLv3";
-"A free, open-source screenshot & screen recording tool for macOS.\nFully native — built with Swift and AppKit." = "เครื่องมือจับภาพหน้าจอและบันทึกหน้าจอฟรีแบบโอเพนซอร์สสำหรับ macOS\nเนทีฟเต็มรูปแบบ — สร้างด้วย Swift และ AppKit";
+"A free, open-source screenshot & screen recording tool for macOS.\nFully native, built with Swift and AppKit." = "เครื่องมือจับภาพหน้าจอและบันทึกหน้าจอฟรีแบบโอเพนซอร์สสำหรับ macOS\nเนทีฟเต็มรูปแบบ, สร้างด้วย Swift และ AppKit";
 
 /* Alerts */
 "No Image on Clipboard" = "ไม่มีรูปภาพในคลิปบอร์ด";
@@ -387,6 +397,9 @@
 
 /* Permission Onboarding */
 "Welcome to macshot" = "ยินดีต้อนรับสู่ macshot";
+"Welcome back to macshot" = "ยินดีต้อนรับกลับสู่ macshot";
+"Turn Screen Recording back on" = "เปิดการบันทึกหน้าจออีกครั้ง";
+"After some updates, macOS asks you to allow macshot again. Your settings and captures are safe. If macshot is already in the list, select it, click the minus button (−) to remove it, then click the plus button (+) and add macshot again." = "หลังการอัปเดตบางครั้ง macOS จะขอให้คุณอนุญาต macshot อีกครั้ง การตั้งค่าและภาพที่จับไว้ของคุณยังอยู่ครบ หาก macshot อยู่ในรายการแล้ว ให้เลือก คลิกปุ่มลบ (−) เพื่อนำออก จากนั้นคลิกปุ่มเพิ่ม (+) แล้วเพิ่ม macshot อีกครั้ง";
 "macshot needs one permission" = "macshot ต้องการสิทธิ์หนึ่งอย่าง";
 "Screen Recording not yet granted" = "ยังไม่ได้อนุญาตการบันทึกหน้าจอ";
 "Screen Recording granted!" = "อนุญาตการบันทึกหน้าจอแล้ว!";
@@ -417,6 +430,7 @@
 /* Recording Toast */
 "Recording saved" = "บันทึกการอัดแล้ว";
 "%@ • Recording saved" = "%@ • บันทึกการอัดแล้ว";
+"Recording failed: %@" = "การอัดล้มเหลว: %@";
 "Copy Path" = "คัดลอกเส้นทาง";
 "Path copied!" = "คัดลอกเส้นทางแล้ว!";
 
@@ -427,6 +441,9 @@
 "Export failed" = "ส่งออกล้มเหลว";
 "Saved to %@" = "บันทึกไปยัง %@";
 "Save failed" = "บันทึกล้มเหลว";
+"Could not encode the screenshot." = "ไม่สามารถเข้ารหัสภาพหน้าจอได้";
+"Could not save the screenshot: %@" = "ไม่สามารถบันทึกภาพหน้าจอได้: %@";
+"Could not save the screenshot to history." = "ไม่สามารถบันทึกภาพหน้าจอลงในประวัติได้";
 
 /* Barcode Detector */
 /* "Open" and "Copy" are shared with other sections */
@@ -466,8 +483,8 @@
 
 /* Recording — Input Monitoring Permission */
 "Input Monitoring Required" = "ต้องการสิทธิ์การตรวจสอบอินพุต";
-"macshot needs Input Monitoring permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot ต้องการสิทธิ์การตรวจสอบอินพุตเพื่อแสดงการกดปุ่มขณะบันทึก กรุณาอนุญาตใน System Settings แล้วลองอีกครั้ง";
-"macshot needs Accessibility permission to show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot ต้องการสิทธิ์การช่วยการเข้าถึงเพื่อแสดงการกดปุ่มขณะบันทึก กรุณาอนุญาตใน System Settings แล้วลองอีกครั้ง";
+"macshot needs Input Monitoring permission to highlight mouse clicks or show keystrokes during recording. Please grant access in System Settings, then try again." = "macshot ต้องการสิทธิ์การตรวจสอบอินพุตเพื่อไฮไลต์การคลิกเมาส์หรือแสดงการกดปุ่มขณะบันทึก โปรดอนุญาตการเข้าถึงในการตั้งค่าระบบ แล้วลองอีกครั้ง";
+"macshot needs Accessibility permission to snap to individual interface elements. Please grant access in System Settings, then try again." = "macshot ต้องการสิทธิ์การช่วยการเข้าถึงเพื่อสแนปไปยังองค์ประกอบอินเทอร์เฟซแต่ละรายการ กรุณาให้สิทธิ์ในการตั้งค่าระบบ แล้วลองอีกครั้ง";
 
 /* Recording — Keystroke Overlay */
 "Show Keystrokes" = "แสดงการกดปุ่ม";
@@ -506,6 +523,8 @@
 "Settings..." = "การตั้งค่า...";
 "macshot Settings" = "การตั้งค่า macshot";
 "Also open in Editor" = "เปิดในตัวแก้ไขด้วย";
+"Open in Editor right after selection" = "เปิดในตัวแก้ไขทันทีหลังเลือก";
+"Close editor after copying" = "ปิดตัวแก้ไขหลังคัดลอก";
 "Hide controls" = "ซ่อนตัวควบคุม";
 "Hide recording controls" = "ซ่อนตัวควบคุมการบันทึก";
 "Stop recording from the menu bar icon instead." = "หยุดบันทึกจากไอคอนแถบเมนูแทน";
@@ -551,12 +570,13 @@
 
 "Same as screenshots" = "เหมือนกับภาพหน้าจอ";
 "  Preview size:" = "  ขนาดตัวอย่าง:";
+"Fit image in preview (letterbox)" = "ปรับภาพให้พอดีกับตัวอย่าง (มีแถบดำ)";
 "(0 = off)" = "(0 = ปิด)";
 "Clear All" = "ล้างทั้งหมด";
 "Clear History?" = "ล้างประวัติ?";
 "This will permanently delete all screenshots from history." = "การดำเนินการนี้จะลบภาพหน้าจอทั้งหมดออกจากประวัติอย่างถาวร";
 "Click \"Set\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "คลิก \"ตั้งค่า\" แล้วกดคีย์ผสมที่มีปุ่มตัวแก้ไขอย่างน้อยหนึ่งปุ่ม (⌘, ⌥, ⌃, ⇧) เพื่อตั้งค่าทางลัด";
-"Files are uploaded to a \"macshot\" folder in your Google Drive. Everything stays private — nothing is shared publicly." = "ไฟล์จะถูกอัปโหลดไปยังโฟลเดอร์ \"macshot\" ใน Google Drive ของคุณ ทุกอย่างเป็นส่วนตัว — ไม่มีการแชร์สาธารณะ";
+"Files are uploaded to this folder in your Google Drive. Leave empty to use \"macshot\". macshot can only use folders it created itself, so a folder you made in Drive with the same name won't be reused. A new one is created instead. Everything stays private and nothing is shared publicly." = "ไฟล์จะถูกอัปโหลดไปยังโฟลเดอร์นี้ใน Google Drive ของคุณ เว้นว่างไว้เพื่อใช้ \"macshot\" macshot สามารถใช้ได้เฉพาะโฟลเดอร์ที่ตัวเองสร้างขึ้นเท่านั้น ดังนั้นโฟลเดอร์ชื่อเดียวกันที่คุณสร้างเองใน Drive จะไม่ถูกนำมาใช้ซ้ำ, แต่จะสร้างโฟลเดอร์ใหม่แทน ทุกอย่างเป็นส่วนตัว, ไม่มีการแชร์สาธารณะ";
 
 "Pressure" = "แรงกด";
 
@@ -626,7 +646,7 @@
 "Open this settings window" = "เปิดหน้าต่างการตั้งค่านี้";
 "Quick capture (uses your Enter action)" = "จับภาพด่วน (ใช้การดำเนินการ Enter ของคุณ)";
 "Re-capture the last selected area" = "จับภาพพื้นที่ที่เลือกล่าสุดอีกครั้ง";
-"Screenshots only — captured window title (blank otherwise)" = "เฉพาะภาพหน้าจอ — ชื่อหน้าต่างที่จับภาพ (ว่างในกรณีอื่น)";
+"Captured window title (screenshots only, blank otherwise)" = "เฉพาะภาพหน้าจอ, ชื่อหน้าต่างที่จับภาพ (ว่างในกรณีอื่น)";
 "Show available filename tokens" = "แสดงโทเคนชื่อไฟล์ที่ใช้ได้";
 "Show supported URL scheme commands" = "แสดงคำสั่ง URL scheme ที่รองรับ";
 "Start area capture" = "เริ่มจับภาพพื้นที่";
@@ -680,3 +700,162 @@
 "Selection is already aligned" = "ขอบเขตการเลือกตรงแนวอยู่แล้ว";
 "Space to move. Release to annotate and edit" = "กด Space ค้างไว้เพื่อย้าย ปล่อยเพื่อใส่คำอธิบายประกอบและแก้ไข";
 "Space to move. Release to finish" = "กด Space ค้างไว้เพื่อย้าย ปล่อยเพื่อเสร็จสิ้น";
+
+"Saving..." = "กำลังบันทึก…";
+
+"Show Recordings in Finder" = "แสดงไฟล์บันทึกใน Finder";
+
+"Cancelled" = "ยกเลิกแล้ว";
+
+"Cancelling..." = "กำลังยกเลิก...";
+"Preparing video..." = "กำลังเตรียมวิดีโอ...";
+"History is busy saving. Please try again shortly." = "กำลังบันทึกประวัติ โปรดลองอีกครั้งในอีกสักครู่";
+
+// Video editor accessibility
+"Play" = "เล่น";
+"Mute" = "ปิดเสียง";
+"Unmute" = "เปิดเสียง";
+
+/* Video editor (Studio) */
+"%.1f× · follows pointer" = "%.1f× · ติดตามตัวชี้";
+"Add" = "เพิ่ม";
+"Add Cut Here" = "เพิ่มการตัดที่นี่";
+"Add Text Here" = "เพิ่มข้อความที่นี่";
+"Add Zoom Here" = "เพิ่มการซูมที่นี่";
+"Added %d captions" = "เพิ่มคำบรรยาย %d รายการแล้ว";
+"Added %d zooms" = "เพิ่มการซูม %d รายการแล้ว";
+"Apply Default Zoom to All" = "ใช้ซูมเริ่มต้นกับทั้งหมด";
+"Auto" = "อัตโนมัติ";
+"Auto Zoom" = "ซูมอัตโนมัติ";
+"Auto Zoom needs pointer data, which macshot records with every new recording. You can still add zooms by double-clicking the zoom lane." = "ซูมอัตโนมัติต้องใช้ข้อมูลตัวชี้ ซึ่ง macshot บันทึกไว้ในการบันทึกใหม่ทุกครั้ง คุณยังคงเพิ่มการซูมได้โดยคลิกสองครั้งที่แทร็กซูม";
+"Background blur" = "เบลอพื้นหลัง";
+"Background color" = "สีพื้นหลัง";
+"Background, padding, rounded corners and shadow" = "พื้นหลัง ระยะห่าง มุมมน และเงา";
+"Bold Italic" = "ตัวหนาเอียง";
+"Box" = "กล่อง";
+"Camera" = "กล้อง";
+"Caption" = "คำบรรยาย";
+"Captions" = "คำบรรยาย";
+"Captions are transcribed on this Mac. Nothing is uploaded." = "คำบรรยายถูกถอดความบน Mac เครื่องนี้ ไม่มีสิ่งใดถูกอัปโหลด";
+"Choose Image…" = "เลือกภาพ…";
+"Click color" = "สีการคลิก";
+"Clicks" = "การคลิก";
+"Clip" = "คลิป";
+"Colors" = "สี";
+"Connect nearby zooms" = "เชื่อมการซูมที่อยู่ใกล้กัน";
+"Copy the edited video to the clipboard" = "คัดลอกวิดีโอที่แก้ไขไปยังคลิปบอร์ด";
+"Corner radius" = "รัศมีมุม";
+"Creates zooms that follow the pointer wherever you click or type. Adjust or delete them on the timeline." = "สร้างการซูมที่ติดตามตัวชี้ทุกที่ที่คุณคลิกหรือพิมพ์ ปรับหรือลบได้บนไทม์ไลน์";
+"Custom color" = "สีกำหนดเอง";
+"Cut" = "ตัด";
+"Cuts, speed and freeze frames" = "การตัด ความเร็ว และเฟรมค้าง";
+"Default zoom" = "ซูมเริ่มต้น";
+"Dot" = "จุด";
+"Double-click the text on the preview to edit it." = "คลิกสองครั้งที่ข้อความบนภาพตัวอย่างเพื่อแก้ไข";
+"Double-click to add a zoom" = "คลิกสองครั้งเพื่อเพิ่มการซูม";
+"Double-click to add a zoom, or use Auto Zoom" = "คลิกสองครั้งเพื่อเพิ่มการซูม, หรือใช้ซูมอัตโนมัติ";
+"Drag the frame on the preview to choose where the zoom looks." = "ลากกรอบบนภาพตัวอย่างเพื่อเลือกตำแหน่งที่จะซูม";
+"Duration" = "ระยะเวลา";
+"Edge highlight" = "ไฮไลต์ขอบ";
+"Edit Text" = "แก้ไขข้อความ";
+"Editable pointer, clicks and keystrokes" = "ตัวชี้ การคลิก และการกดปุ่มที่แก้ไขได้";
+"Edits" = "การแก้ไข";
+"Export" = "ส่งออก";
+"Export Subtitles (.srt)…" = "ส่งออกคำบรรยาย (.srt)…";
+"Fade in" = "เฟดเข้า";
+"Fade out" = "เฟดออก";
+"Fit" = "พอดี";
+"Fixed" = "คงที่";
+"Fixed point" = "จุดคงที่";
+"Focus" = "โฟกัส";
+"Follow" = "ติดตาม";
+"Follow Pointer" = "ติดตามตัวชี้";
+"Follow pointer" = "ติดตามตัวชี้";
+"Follow tightness" = "ความใกล้ชิดในการติดตาม";
+"Format" = "รูปแบบ";
+"Frame" = "กรอบ";
+"Frame rate" = "อัตราเฟรม";
+"Frame the recording" = "ใส่กรอบให้การบันทึก";
+"Freeze Frame" = "เฟรมค้าง";
+"Generate Captions" = "สร้างคำบรรยาย";
+"Gentle" = "นุ่มนวล";
+"Gradient" = "ไล่สี";
+"Hide ordinary typing, show key combinations" = "ซ่อนการพิมพ์ปกติ แสดงคีย์ผสม";
+"Hide when idle" = "ซ่อนเมื่อไม่ใช้งาน";
+"Hide while typing" = "ซ่อนขณะพิมพ์";
+"Hold Focus" = "คงโฟกัส";
+"Idle delay" = "หน่วงเวลาไม่ใช้งาน";
+"Image" = "ภาพ";
+"Keystrokes" = "การกดปุ่ม";
+"Keystrokes in this recording are part of the video pixels." = "การกดปุ่มในการบันทึกนี้เป็นส่วนหนึ่งของพิกเซลวิดีโอ";
+"Light appearance" = "ลักษณะสว่าง";
+"Makes looping GIFs seamless" = "ทำให้ GIF แบบวนซ้ำต่อเนื่องไร้รอยต่อ";
+"Mirror" = "กลับด้าน";
+"Motion" = "การเคลื่อนไหว";
+"Motion blur" = "เบลอการเคลื่อนไหว";
+"Next edit" = "จุดแก้ไขถัดไป";
+"No clicks or typing found to zoom into" = "ไม่พบการคลิกหรือการพิมพ์ที่จะซูม";
+"No speech was recognized" = "ไม่พบเสียงพูดที่จดจำได้";
+"No system wallpapers were found. Choose an image instead." = "ไม่พบวอลเปเปอร์ระบบ โปรดเลือกภาพแทน";
+"Off" = "ปิด";
+"On-device speech recognition isn't available for your language on this Mac." = "การรู้จำเสียงพูดบนอุปกรณ์ไม่พร้อมใช้งานสำหรับภาษาของคุณบน Mac เครื่องนี้";
+"Original" = "ต้นฉบับ";
+"Outline color" = "สีเส้นกรอบ";
+"Outline width" = "ความกว้างเส้นกรอบ";
+"Overlays" = "โอเวอร์เลย์";
+"Pan between zooms instead of zooming out" = "เลื่อนระหว่างการซูมแทนการซูมออก";
+"Pill" = "แคปซูล";
+"Pointer" = "ตัวชี้";
+"Position" = "ตำแหน่ง";
+"Press animation" = "แอนิเมชันการกด";
+"Previous edit" = "จุดแก้ไขก่อนหน้า";
+"Quality" = "คุณภาพ";
+"Regenerate Captions" = "สร้างคำบรรยายใหม่";
+"Regular" = "ปกติ";
+"Remove Automatic Zooms" = "ลบการซูมอัตโนมัติ";
+"Remove Captions" = "ลบคำบรรยาย";
+"Removes %.1f seconds from the video. Drag its edges on the timeline to adjust." = "ลบ %.1f วินาทีออกจากวิดีโอ ลากขอบบนไทม์ไลน์เพื่อปรับ";
+"Return to start at the end" = "กลับไปจุดเริ่มต้นเมื่อจบ";
+"Ring" = "วงแหวน";
+"Ripple" = "ระลอกคลื่น";
+"Save As…" = "บันทึกเป็น…";
+"Shape" = "รูปทรง";
+"Shortcuts only" = "เฉพาะคีย์ลัด";
+"Show camera" = "แสดงกล้อง";
+"Show captions" = "แสดงคำบรรยาย";
+"Show keystrokes" = "แสดงการกดปุ่ม";
+"Show pointer" = "แสดงตัวชี้";
+"Shrink during zooms" = "ย่อขณะซูม";
+"Smoothing" = "ความเรียบ";
+"Snappy" = "ฉับไว";
+"Speech recognition is turned off for macshot in System Settings › Privacy & Security." = "การรู้จำเสียงพูดถูกปิดสำหรับ macshot ในการตั้งค่าระบบ › ความเป็นส่วนตัวและความปลอดภัย";
+"Speed" = "ความเร็ว";
+"Spotlight" = "สปอตไลท์";
+"Square" = "สี่เหลี่ยมจัตุรัส";
+"Style" = "สไตล์";
+"Tall" = "แนวตั้ง";
+"Text and blur" = "ข้อความและเบลอ";
+"The recording's audio could not be read." = "ไม่สามารถอ่านเสียงของการบันทึกได้";
+"This recording already shows the pointer in its pixels, so it can't be restyled. Zooms can still follow it." = "การบันทึกนี้มีตัวชี้อยู่ในพิกเซลแล้ว จึงไม่สามารถเปลี่ยนสไตล์ได้ แต่การซูมยังคงติดตามตัวชี้ได้";
+"This recording has no audio to transcribe." = "การบันทึกนี้ไม่มีเสียงให้ถอดความ";
+"This video has no recorded pointer data. Recordings made with macshot that open in the editor let you restyle, smooth and resize the pointer after recording." = "วิดีโอนี้ไม่มีข้อมูลตัวชี้ที่บันทึกไว้ การบันทึกที่สร้างด้วย macshot และเปิดในตัวแก้ไขจะให้คุณเปลี่ยนสไตล์ ปรับให้เรียบ และปรับขนาดตัวชี้ได้หลังการบันทึก";
+"Title" = "ชื่อเรื่อง";
+"Transcribing…" = "กำลังถอดความ…";
+"Transition" = "การเปลี่ยนผ่าน";
+"Turn on Show Keystrokes before recording. macshot then records them separately so you can style them here." = "เปิด “แสดงการกดปุ่ม” ก่อนบันทึก จากนั้น macshot จะบันทึกการกดปุ่มแยกต่างหากเพื่อให้คุณปรับสไตล์ได้ที่นี่";
+"Turn on the camera before recording. macshot records it separately so you can move, resize, restyle or hide it here, and shrink it during zooms." = "เปิดกล้องก่อนบันทึก macshot จะบันทึกกล้องแยกต่างหากเพื่อให้คุณย้าย ปรับขนาด เปลี่ยนสไตล์ หรือซ่อนได้ที่นี่, และย่อลงขณะซูม";
+"Use Solid to hide sensitive information: blur and pixelation can sometimes be reversed." = "ใช้ “ทึบ” เพื่อซ่อนข้อมูลที่ละเอียดอ่อน: การเบลอและการทำพิกเซลบางครั้งสามารถย้อนกลับได้";
+"Visibility" = "การแสดงผล";
+"Wallpaper" = "วอลเปเปอร์";
+"When recordings open in the editor, the pointer is recorded separately so you can smooth, resize, restyle or hide it, and add zooms that follow it." = "เมื่อเปิดการบันทึกในตัวแก้ไข ตัวชี้จะถูกบันทึกแยกต่างหาก คุณจึงปรับให้เรียบ ปรับขนาด เปลี่ยนสไตล์ หรือซ่อนตัวชี้ได้ และเพิ่มการซูมที่ติดตามตัวชี้ได้";
+"Wide" = "แนวนอน";
+"Zoom in" = "ซูมเข้า";
+"Zoom in timeline" = "ซูมเข้าไทม์ไลน์";
+"Zoom level" = "ระดับการซูม";
+"Zoom out" = "ซูมออก";
+"Zoom out timeline" = "ซูมออกไทม์ไลน์";
+"macOS" = "macOS";
+"Sway" = "การเอียง";
+
+"Snap webcam to corners when moved" = "จัดเว็บแคมให้ชิดมุมเมื่อย้าย";
+"Search emoji" = "ค้นหาอีโมจิ";

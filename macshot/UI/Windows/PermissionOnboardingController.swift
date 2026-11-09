@@ -17,16 +17,33 @@ class PermissionOnboardingController: NSWindowController {
     private var pollTimer: Timer?
     private var permissionGranted = false
 
+    /// Someone who has used macshot before is asked to turn the permission
+    /// back on (macOS can require it again after an update, e.g. when the
+    /// signing identity changes) rather than greeted as a new user.
+    private let isReturningUser: Bool
+
+    private static let grantedBeforeKey = "screenRecordingGrantedBefore"
+
+    /// Sparkle records the first launch; the flag covers later grants.
+    static func isReturningUser(_ defaults: UserDefaults = .standard) -> Bool {
+        defaults.bool(forKey: grantedBeforeKey) || defaults.bool(forKey: "SUHasLaunchedBefore")
+    }
+
+    static func rememberGranted(_ defaults: UserDefaults = .standard) {
+        defaults.set(true, forKey: grantedBeforeKey)
+    }
+
     // MARK: - Init
 
-    init() {
+    init(returningUser: Bool = PermissionOnboardingController.isReturningUser()) {
+        isReturningUser = returningUser
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 400, height: 520),
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: returningUser ? 610 : 520),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
         )
-        window.title = L("Welcome to macshot")
+        window.title = returningUser ? L("Welcome back to macshot") : L("Welcome to macshot")
         window.center()
         window.isReleasedWhenClosed = false
         window.titlebarAppearsTransparent = false
@@ -63,12 +80,22 @@ class PermissionOnboardingController: NSWindowController {
         cv.addSubview(logoView)
 
         // Title
-        let title = NSTextField(labelWithString: L("macshot needs one permission"))
+        let title = NSTextField(labelWithString: isReturningUser ? L("Turn Screen Recording back on") : L("macshot needs one permission"))
         title.font = NSFont.systemFont(ofSize: 15, weight: .semibold)
         title.textColor = .labelColor
         title.alignment = .center
         title.translatesAutoresizingMaskIntoConstraints = false
         cv.addSubview(title)
+
+        // Returning users: reassure, and give the fix for a stale entry that
+        // still shows as on in System Settings.
+        let note = NSTextField(wrappingLabelWithString: L("After some updates, macOS asks you to allow macshot again. Your settings and captures are safe. If macshot is already in the list, select it, click the minus button (−) to remove it, then click the plus button (+) and add macshot again."))
+        note.font = NSFont.systemFont(ofSize: 12)
+        note.textColor = .secondaryLabelColor
+        note.alignment = .center
+        note.isHidden = !isReturningUser
+        note.translatesAutoresizingMaskIntoConstraints = false
+        cv.addSubview(note)
 
         // Guide image — always visible, shows how to enable permission
         let imgView = NSImageView()
@@ -149,8 +176,12 @@ class PermissionOnboardingController: NSWindowController {
             title.leadingAnchor.constraint(equalTo: cv.leadingAnchor, constant: 24),
             title.trailingAnchor.constraint(equalTo: cv.trailingAnchor, constant: -24),
 
+            note.topAnchor.constraint(equalTo: title.bottomAnchor, constant: 6),
+            note.leadingAnchor.constraint(equalTo: cv.leadingAnchor, constant: 28),
+            note.trailingAnchor.constraint(equalTo: cv.trailingAnchor, constant: -28),
+
             // Guide image — fixed small size, centered, just enough to orient the user
-            imgView.topAnchor.constraint(equalTo: title.bottomAnchor, constant: 12),
+            imgView.topAnchor.constraint(equalTo: isReturningUser ? note.bottomAnchor : title.bottomAnchor, constant: 12),
             imgView.centerXAnchor.constraint(equalTo: cv.centerXAnchor),
             imgView.widthAnchor.constraint(equalToConstant: 360),
             imgView.heightAnchor.constraint(equalToConstant: floor(360 * imgAspect)),
@@ -240,6 +271,7 @@ class PermissionOnboardingController: NSWindowController {
     }
 
     private func showGranted() {
+        Self.rememberGranted()
         spinner?.stopAnimation(nil)
         spinner?.isHidden = true
         checkmark?.isHidden = false
@@ -258,10 +290,14 @@ class PermissionOnboardingController: NSWindowController {
     // MARK: - Actions
 
     @objc private func openSettings() {
+        // macOS lists an app under Screen Recording only once it has asked.
+        // The preflight polling never asks, and captures don't run until the
+        // permission exists, so the list had no macshot to switch on (#299).
+        // Ask once before opening Settings: the first call adds macshot to
+        // the list (switched off) and shows the system prompt; later calls
+        // return immediately without a dialog.
+        _ = CGRequestScreenCaptureAccess()
         // Deep-link directly to Privacy & Security → Screen Recording.
-        // macOS will add macshot to the list automatically when it first
-        // attempts a capture — no CGRequestScreenCaptureAccess() call needed
-        // (that API shows the redundant native dialog we want to avoid).
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
             NSWorkspace.shared.open(url)
         }

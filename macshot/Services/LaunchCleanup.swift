@@ -30,6 +30,7 @@ enum DirectorySweeper {
     @discardableResult
     static func sweep(directory: URL,
                       olderThan ttl: TimeInterval?,
+                      now: Date = Date(),
                       shouldDelete: (String) -> Bool) -> Result {
         let fm = FileManager.default
         guard let contents = try? fm.contentsOfDirectory(
@@ -38,7 +39,7 @@ enum DirectorySweeper {
             options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants]
         ) else { return Result() }
 
-        let cutoff: Date? = ttl.map { Date().addingTimeInterval(-$0) }
+        let cutoff: Date? = ttl.map { now.addingTimeInterval(-$0) }
         var result = Result()
 
         for url in contents {
@@ -59,6 +60,48 @@ enum DirectorySweeper {
             }
         }
         return result
+    }
+
+    /// Same idea for subdirectories, which `sweep` deliberately skips. Used for
+    /// the share scratch folder, where each share gets its own directory so two
+    /// files with the same name can't collide.
+    @discardableResult
+    static func sweepDirectories(in directory: URL,
+                                 olderThan ttl: TimeInterval,
+                                 shouldDelete: (String) -> Bool = { _ in true }) -> Result {
+        let fm = FileManager.default
+        guard let contents = try? fm.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: [.contentModificationDateKey, .isDirectoryKey],
+            options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants]
+        ) else { return Result() }
+
+        let cutoff = Date().addingTimeInterval(-ttl)
+        var result = Result()
+
+        for url in contents {
+            guard shouldDelete(url.lastPathComponent) else { continue }
+            guard let values = try? url.resourceValues(forKeys: [.contentModificationDateKey, .isDirectoryKey]),
+                  values.isDirectory == true,
+                  let modified = values.contentModificationDate,
+                  modified < cutoff else { continue }
+
+            let size = directorySize(at: url)
+            if (try? fm.removeItem(at: url)) != nil {
+                result.removed += 1
+                result.bytesFreed += size
+            }
+        }
+        return result
+    }
+
+    private static func directorySize(at url: URL) -> UInt64 {
+        let contents = (try? FileManager.default.contentsOfDirectory(
+            at: url, includingPropertiesForKeys: [.fileSizeKey],
+            options: [.skipsSubdirectoryDescendants])) ?? []
+        return contents.reduce(0) { total, file in
+            total + UInt64((try? file.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0)
+        }
     }
 }
 
@@ -85,8 +128,9 @@ enum LaunchCleanup {
     /// `LaunchCleaner`-conforming type.
     static let all: [LaunchCleaner] = [
         TmpFileCleaner(),
+        EditorSourceCleaner(),
         ScratchDirectoryCleaner(),
-        ClipboardDirectoryCleaner(),
+        LegacyClipboardBackingDirectoryCleaner(),
         LegacyClipboardTmpDirectoryCleaner(),
     ]
 
@@ -108,6 +152,15 @@ enum LaunchCleanup {
 
 // MARK: - Concrete cleaners
 
+private struct EditorSourceCleaner: LaunchCleaner {
+    let name = "EditorSourceCleaner"
+    func sweep() -> DirectorySweeper.Result {
+        // APFS clones can share blocks with the original, so a file's logical
+        // size is not a meaningful estimate of reclaimed storage here.
+        DirectorySweeper.Result(removed: VideoSourceSnapshot.removeAbandonedTemporaryCopies())
+    }
+}
+
 /// Sweeps macshot-owned files from `NSTemporaryDirectory()` that match
 /// known stale patterns — legacy UUID-named clipboard PNGs, date-named
 /// captures, microphone scratch, debug logs, upload intermediates,
@@ -116,8 +169,10 @@ enum LaunchCleanup {
 /// Preserves:
 ///   - `macshot-clipboard.png` and `macshot-clipboard-recording.*`
 ///     (fixed paths that are always-overwritten by design).
-///   - `Recording *` files (user-visible when `recordingOnStop = "finder"`;
-///     auto-deleting would silently lose their recording).
+///
+/// `Recording *` files ARE swept after the 24-hour TTL — see the rationale on
+/// `stalePrefixes` below. (An older version of this comment claimed they were
+/// preserved, which contradicted the code.)
 ///
 /// 24-hour TTL so in-flight operations can't get clobbered.
 private struct TmpFileCleaner: LaunchCleaner {
@@ -199,22 +254,44 @@ private struct ScratchDirectoryCleaner: LaunchCleaner {
     private let ttl: TimeInterval = 5 * 60
 
     func sweep() -> DirectorySweeper.Result {
-        return DirectorySweeper.sweep(
+        // Each share writes into its own subfolder (see TmpScratchDirectory),
+        // so both loose files from older builds and those folders need sweeping.
+        var result = DirectorySweeper.sweep(
             directory: TmpScratchDirectory.url,
             olderThan: ttl,
             shouldDelete: { _ in true }
         )
+        let directories = DirectorySweeper.sweepDirectories(
+            in: TmpScratchDirectory.url,
+            olderThan: ttl
+        )
+        result.removed += directories.removed
+        result.bytesFreed += directories.bytesFreed
+        return result
     }
 }
 
-/// Sweeps retained clipboard backing files from Application Support.
-/// These files intentionally outlive a single pasteboard write so external
-/// clipboard history apps can read old entries after later captures.
-private struct ClipboardDirectoryCleaner: LaunchCleaner {
-    let name = "ClipboardDirectoryCleaner"
+/// Sweeps the legacy clipboard backing folder from builds that put file URLs on the pasteboard.
+/// The 7-day TTL matches the old retention so clipboard history entries don't break on update.
+private struct LegacyClipboardBackingDirectoryCleaner: LaunchCleaner {
+    let name = "LegacyClipboardBackingDirectoryCleaner"
 
     func sweep() -> DirectorySweeper.Result {
-        ClipboardBackingStore.cleanup()
+        guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            return DirectorySweeper.Result()
+        }
+        let dir = appSupport
+            .appendingPathComponent("com.sw33tlie.macshot", isDirectory: true)
+            .appendingPathComponent("clipboard", isDirectory: true)
+        let result = DirectorySweeper.sweep(
+            directory: dir,
+            olderThan: 7 * 24 * 60 * 60,
+            shouldDelete: { _ in true }
+        )
+        if let remaining = try? FileManager.default.contentsOfDirectory(atPath: dir.path), remaining.isEmpty {
+            try? FileManager.default.removeItem(at: dir)
+        }
+        return result
     }
 }
 

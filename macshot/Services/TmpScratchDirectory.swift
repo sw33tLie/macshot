@@ -25,9 +25,18 @@ enum TmpScratchDirectory {
         return dir
     }()
 
-    /// Build a URL inside the scratch dir with the given filename.
-    /// Callers write their data here.
+    /// Build a URL inside the scratch dir with the given filename, in its own
+    /// subfolder so two shares can't collide.
+    ///
+    /// The destination app sees the filename the user configured, but a second
+    /// share of the same name no longer overwrites the first — which used to
+    /// swap the attachment under an open Mail draft whenever two captures
+    /// rendered the same name (easy with a `{date}`-only template, and possible
+    /// with the default one for two captures in the same second).
     static func makeURL(filename: String) -> URL {
-        return url.appendingPathComponent(filename)
+        let safeName = filename.isEmpty ? "macshot" : filename
+        let container = url.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try? FileManager.default.createDirectory(at: container, withIntermediateDirectories: true)
+        return container.appendingPathComponent(safeName)
     }
 }

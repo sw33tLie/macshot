@@ -16,7 +16,13 @@ enum KeyboardShortcutMatcher {
         modifiers: NSEvent.ModifierFlags
     ) -> Bool {
         guard self.modifiers(in: event) == modifiers.intersection(relevantModifiers) else { return false }
-        return semanticCharacter(for: event) == normalize(character)
+        // Both sides must resolve to a real character. Comparing the optionals
+        // directly would treat "no character on either side" as a match, so a
+        // non-character key (Return, Escape, Tab) would fire any binding whose
+        // stored character doesn't normalize.
+        guard let expected = normalize(character),
+              let actual = semanticCharacter(for: event) else { return false }
+        return actual == expected
     }
 
     /// The logical character for a command shortcut. Latin layouts use the
