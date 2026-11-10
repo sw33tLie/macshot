@@ -104,6 +104,12 @@ final class FilenameFormatterTests: XCTestCase {
         XCTAssertEqual(name, "docs-README- draft")
     }
 
+    func testPipesAreReplacedInCapturePaths() {
+        let path = FilenameFormatter.formatRelativePath(template: "Work|Notes/{window}",
+                                                        windowTitle: "Review | Safari", date: fixedDate)
+        XCTAssertEqual(path, ["Work-Notes", "Review - Safari"])
+    }
+
     func testColonsAreReplacedBecauseFinderShowsThemAsSlashes() {
         XCTAssertEqual(FilenameFormatter.format(template: "a:b", date: fixedDate), "a-b")
     }

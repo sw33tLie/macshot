@@ -27,9 +27,9 @@ enum FilenameFormatter {
     ///   {yyyy} {MM} {dd} {HH} {mm} {ss} {ms}   date/time parts (ms = 000-999)
     ///
     /// Unknown tokens are left verbatim so typos are visible.
-    /// The result is sanitized for macOS filesystems (strips `/`, `:`, NUL,
-    /// control characters, surrounding whitespace and trailing dots), capped
-    /// to 200 UTF-8 bytes without splitting a Unicode character.
+    /// The result replaces `/`, `:`, `|` and NUL with hyphens, removes other
+    /// control characters, and trims surrounding whitespace and trailing dots.
+    /// It is capped to 200 UTF-8 bytes without splitting a Unicode character.
     /// If the final result is empty, the default template is re-rendered.
     static func format(
         template: String,
