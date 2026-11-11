@@ -24,7 +24,11 @@ import ScreenCaptureKit
 ///   fixed sidebars beside the scrolling column are cropped away.
 /// - **Continuous grabs while scrolling** — frames are taken every 50 ms during
 ///   a scroll, so a mouse wheel's large silent jumps can't outrun the overlap.
-/// - **Max height: 30,000 pixels** (configurable via UserDefaults).
+/// - **Either axis** — `ScrollCaptureStitcher` measures each frame vertically
+///   and (transposed) horizontally until the first strip is appended, then
+///   locks to that axis; auto-scroll follows a horizontal lock.
+/// - **Max length: 30,000 pixels** along the scroll axis (configurable via
+///   UserDefaults, `scrollMaxHeight`).
 @MainActor
 final class ScrollCaptureController {
 
@@ -71,7 +75,7 @@ final class ScrollCaptureController {
 
     // Frame state
     private var lastComparedTIFF: Data?  // TIFF of last settled frame for byte comparison
-    private var stitcher: ScrollStitcher?
+    private var stitcher: ScrollCaptureStitcher?
 
     // Match tracking
     private var matchNotFoundCount: Int = 0
@@ -88,6 +92,13 @@ final class ScrollCaptureController {
     // Auto-scroll
     private(set) var autoScrollActive: Bool = false
     private var autoScrollTask: Task<Void, Never>?
+    /// The wheel the auto-scroll posts on: horizontal only when the capture was
+    /// already locked horizontal (by manual scrolling) when auto-scroll began.
+    private var autoScrollAxis: ScrollAxis = .vertical
+
+    // Scroll event direction, accumulated until the stitcher decides the axis
+    private var scrolledX: CGFloat = 0
+    private var scrolledY: CGFloat = 0
 
     // Manual scroll throttle
     private let manualCaptureInterval: TimeInterval = 0.05
@@ -150,7 +161,9 @@ final class ScrollCaptureController {
         guard !isCancelled else { return }
 
         isActive = true
-        stitcher = ScrollStitcher(firstFrame: firstFrame, handlesPinnedContent: frozenDetectionEnabled)
+        stitcher = ScrollCaptureStitcher(firstFrame: firstFrame, handlesPinnedContent: frozenDetectionEnabled)
+        scrolledX = 0
+        scrolledY = 0
         matchNotFoundCount = 0
         didReportFirstMatch = false
         hasScrolledOnce = false
@@ -353,8 +366,16 @@ final class ScrollCaptureController {
 
     // MARK: - Auto-scroll
 
+    /// Starts posting synthetic scroll-wheel events at the capture region and
+    /// stitching after each burst. Warps the pointer to the region's centre and
+    /// activates the target app so the events reach it. Scrolls right instead
+    /// of down when the capture is already locked horizontal; otherwise down,
+    /// keeping that wheel even if the frames then lock horizontal (the page
+    /// evidently maps it sideways). No return value; runs until stopped, the
+    /// length limit is reached or matching keeps failing.
     private func startAutoScroll() {
         autoScrollActive = true
+        autoScrollAxis = stitcher?.axis ?? .vertical
         onAutoScrollStarted?()
 
         let primaryScreenH = NSScreen.screens.first?.frame.height ?? screen.frame.height
@@ -387,13 +408,22 @@ final class ScrollCaptureController {
         }
     }
 
-    /// Core auto-scroll loop: scroll → captureAndCompare → repeat.
+    /// Core auto-scroll loop: scroll → captureAndCompare → repeat, on the
+    /// `autoScrollAxis` wheel. Stops the session (delivering the image) after
+    /// too many failed matches, at the length limit, or when the page stops
+    /// moving. No return value.
+    /// - Parameters:
+    ///   - linesPerTick: lines per synthetic wheel event.
+    ///   - burstCount: wheel events posted before each settled capture.
     private func autoScrollLoop(linesPerTick: Int32, burstCount: Int) async {
         while isActive && autoScrollActive {
-            // Post scroll event(s)
+            // Post scroll event(s): wheel 1 is vertical (negative scrolls
+            // down), wheel 2 horizontal (negative scrolls right).
+            let horizontal = autoScrollAxis == .horizontal
             for _ in 0..<burstCount {
-                if let event = CGEvent(scrollWheelEvent2Source: nil, units: .line, wheelCount: 1,
-                                       wheel1: -linesPerTick, wheel2: 0, wheel3: 0) {
+                if let event = CGEvent(scrollWheelEvent2Source: nil, units: .line, wheelCount: horizontal ? 2 : 1,
+                                       wheel1: horizontal ? 0 : -linesPerTick,
+                                       wheel2: horizontal ? -linesPerTick : 0, wheel3: 0) {
                     event.post(tap: .cghidEventTap)
                 }
             }
@@ -420,12 +450,10 @@ final class ScrollCaptureController {
                 matchNotFoundCount = 0
             }
 
-            // Check max height
-            if let merged = stitcher?.image, maxScrollHeight > 0 {
-                if merged.height >= maxScrollHeight {
-                    stopSession()
-                    return
-                }
+            // Check max length along the scroll axis
+            if let stitcher, maxScrollHeight > 0, stitcher.length >= maxScrollHeight {
+                stopSession()
+                return
             }
 
             // Small breathing room
@@ -495,7 +523,6 @@ final class ScrollCaptureController {
 
     // MARK: - Stitching
 
-    /// Feeds a frame to the stitcher and reports new strips.
     /// The mouse pointer's area in a captured frame (pixels, top-left origin),
     /// generous enough for the large accessibility pointer sizes.
     private func pointerRect(in frame: CGImage) -> CGRect? {
@@ -507,9 +534,24 @@ final class ScrollCaptureController {
         return CGRect(x: x - 8 * scale, y: y - 8 * scale, width: 48 * scale, height: 56 * scale)
     }
 
+    /// The axis the user's scrolling points to, for the stitcher's tie-break
+    /// while the axis is undecided: the auto-scroll wheel while it runs,
+    /// otherwise whichever of the accumulated manual deltas is larger. Nil
+    /// before any scroll event.
+    private var preferredAxis: ScrollAxis? {
+        if autoScrollActive { return autoScrollAxis }
+        guard scrolledX + scrolledY > 0 else { return nil }
+        return scrolledX > scrolledY ? .horizontal : .vertical
+    }
+
+    /// Feeds a frame to the stitcher and reports new strips: on an append it
+    /// updates `stripCount` and the stitched image/size, emits a preview and
+    /// calls `onStripAdded`.
+    /// - Parameter frame: a just-captured frame of the capture region.
+    /// - Returns: the stitcher's outcome; `.noMatch` before the session starts.
     private func process(_ frame: CGImage) -> ScrollStitcher.Outcome {
         guard let stitcher else { return .noMatch }
-        let outcome = stitcher.add(frame, pointer: pointerRect(in: frame))
+        let outcome = stitcher.add(frame, pointer: pointerRect(in: frame), preferredAxis: preferredAxis)
         if outcome == .appended {
             hasScrolledOnce = true
             stripCount += 1
@@ -542,12 +584,14 @@ final class ScrollCaptureController {
 
     // MARK: - Manual scroll
 
+    /// Watches scroll-wheel events in every app (and macshot itself, passing
+    /// them on unchanged) to drive grabs while the user scrolls. No return value.
     private func startManualScrollMonitors() {
-        scrollMonitorGlobal = NSEvent.addGlobalMonitorForEvents(matching: .scrollWheel) { [weak self] _ in
-            self?.onManualScrollEvent()
+        scrollMonitorGlobal = NSEvent.addGlobalMonitorForEvents(matching: .scrollWheel) { [weak self] event in
+            self?.onManualScrollEvent(event)
         }
         scrollMonitorLocal = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [weak self] event in
-            self?.onManualScrollEvent()
+            self?.onManualScrollEvent(event)
             return event
         }
     }
@@ -556,8 +600,15 @@ final class ScrollCaptureController {
     /// per notch and then animates the page silently. Grabbing only on events
     /// let a fast wheel move the page past the overlap between grabs (#484), so
     /// keep grabbing on a timer until the page has been still for a moment.
-    private func onManualScrollEvent() {
+    /// - Parameter event: the scroll event; until the stitcher decides the
+    ///   axis its deltas are accumulated as the tie-break for `preferredAxis`
+    ///   (Shift + wheel and sideways trackpad swipes arrive as X deltas).
+    private func onManualScrollEvent(_ event: NSEvent) {
         guard isActive else { return }
+        if stitcher?.axis == nil {
+            scrolledX += abs(event.scrollingDeltaX)
+            scrolledY += abs(event.scrollingDeltaY)
+        }
         lastScrollEventTime = ProcessInfo.processInfo.systemUptime
         settlementTimer?.invalidate(); settlementTimer = nil
         guard burstTimer == nil else { return }
