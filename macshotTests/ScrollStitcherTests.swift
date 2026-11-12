@@ -82,6 +82,22 @@ final class ScrollStitcherTests: XCTestCase {
         assertSameRows(stitched, expected, rows: 0..<total)
     }
 
+    func testFinishingAutoScrollKeepsTheLastSmallShift() {
+        let lastShift = 9
+        let first = image(height: height) { drawPage($0, scroll: 0, height: height) }
+        let last = image(height: height) { drawPage($0, scroll: lastShift, height: height) }
+        let stitcher = ScrollStitcher(firstFrame: first, handlesPinnedContent: false)
+
+        XCTAssertEqual(stitcher.add(last), .pending)
+        XCTAssertEqual(stitcher.add(last, includeSmallShift: true), .appended)
+
+        let total = height + lastShift
+        let stitched = stitcher.finish()
+        XCTAssertEqual(stitched.height, total)
+        let expected = image(height: total) { drawPage($0, scroll: 0, height: total) }
+        assertSameRows(stitched, expected, rows: 0..<total)
+    }
+
     /// Scrolling back up and down again must not add those rows twice.
     func testScrollingBackUpAddsNothingTwice() {
         let path = [0, 80, 160, 100, 40, 120, 200, 280]

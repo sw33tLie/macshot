@@ -97,7 +97,7 @@ final class ScrollStitcher {
     ///   top-left origin), if the frames include it. It stays put while the
     ///   page scrolls under it, so it looks like a small changing region; it
     ///   must not be pasted into the image as one.
-    func add(_ frame: CGImage, pointer: CGRect? = nil) -> Outcome {
+    func add(_ frame: CGImage, pointer: CGRect? = nil, includeSmallShift: Bool = false) -> Outcome {
         guard !finished else { return .pending }
         guard let referenceSamples, frame.width == reference.width, frame.height == reference.height,
               let samples = ScrollFrameMatcher.samples(of: frame) else {
@@ -123,7 +123,7 @@ final class ScrollStitcher {
         if match.shift == 0 { return .noMovement }
         // Let small moves accumulate against the same reference: fewer seams,
         // and one exact large shift beats many small ones.
-        guard abs(match.shift) >= max(6, frame.height / 24) else { return .pending }
+        guard includeSmallShift || abs(match.shift) >= max(6, frame.height / 24) else { return .pending }
 
         lastShift = match.shift / max(1, framesSinceReference)
         if match.shift > 0, lastShift == 0 { lastShift = 1 }
