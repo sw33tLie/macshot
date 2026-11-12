@@ -394,7 +394,12 @@ final class ScrollCaptureController {
             for _ in 0..<burstCount {
                 if let event = CGEvent(scrollWheelEvent2Source: nil, units: .line, wheelCount: 1,
                                        wheel1: -linesPerTick, wheel2: 0, wheel3: 0) {
-                    event.post(tap: .cghidEventTap)
+                    // Post at the session tap, not the HID tap. Mouse utilities
+                    // such as Mac Mouse Fix and LinearMouse rewrite wheel
+                    // events at the HID tap and would apply the user's "reverse
+                    // direction" setting to this synthetic event too, scrolling
+                    // the page up instead of down (#186).
+                    event.post(tap: .cgSessionEventTap)
                 }
             }
 
