@@ -213,6 +213,7 @@
 "Play sound on capture" = "Reproduzir som ao capturar";
 "Play sound on copy" = "Reproduzir som ao copiar";
 "Remember last selected tool" = "Recordar última ferramenta selecionada";
+"Start captures in move mode" = "Iniciar capturas no modo de deslocação";
 "Show shortcuts in tooltips" = "Mostrar atalhos nas descrições";
 "Show floating thumbnail after capture" = "Mostrar miniatura flutuante após captura";
 "Launch at login" = "Iniciar ao arrancar";

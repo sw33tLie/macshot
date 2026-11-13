@@ -220,6 +220,7 @@
 "Play sound on capture" = "Hang lejátszása rögzítéskor";
 "Play sound on copy" = "Hang lejátszása másoláskor";
 "Remember last selected tool" = "Utolsó kiválasztott eszköz megjegyzése";
+"Start captures in move mode" = "Képernyőképek indítása mozgatási módban";
 "Show floating thumbnail after capture" = "Lebegő bélyegkép megjelenítése rögzítés után";
 "Launch at login" = "Indítás bejelentkezéskor";
 "Show snap alignment guides" = "Illesztési segédvonalak megjelenítése";

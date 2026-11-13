@@ -220,6 +220,7 @@
 "Play sound on capture" = "Αναπαραγωγή ήχου κατά τη λήψη";
 "Play sound on copy" = "Αναπαραγωγή ήχου κατά την αντιγραφή";
 "Remember last selected tool" = "Απομνημόνευση τελευταίου επιλεγμένου εργαλείου";
+"Start captures in move mode" = "Έναρξη λήψης σε λειτουργία μετακίνησης";
 "Show floating thumbnail after capture" = "Εμφάνιση αιωρούμενης μικρογραφίας μετά τη λήψη";
 "Launch at login" = "Εκκίνηση κατά τη σύνδεση";
 "Show snap alignment guides" = "Εμφάνιση οδηγών ευθυγράμμισης κουμπώματος";

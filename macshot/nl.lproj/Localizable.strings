@@ -212,6 +212,7 @@
 "Play sound on capture" = "Geluid afspelen bij opname";
 "Play sound on copy" = "Geluid afspelen bij kopiëren";
 "Remember last selected tool" = "Laatst geselecteerd gereedschap onthouden";
+"Start captures in move mode" = "Opnamen starten in verplaatsmodus";
 "Show floating thumbnail after capture" = "Zwevende miniatuur tonen na opname";
 "Launch at login" = "Open bij inloggen";
 "Show snap alignment guides" = "Uitlijnhulplijnen tonen";

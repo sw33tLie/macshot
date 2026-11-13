@@ -213,6 +213,7 @@
 "Play sound on capture" = "Ton bei Aufnahme abspielen";
 "Play sound on copy" = "Ton beim Kopieren abspielen";
 "Remember last selected tool" = "Letztes Werkzeug merken";
+"Start captures in move mode" = "Aufnahmen im Verschiebemodus starten";
 "Show floating thumbnail after capture" = "Schwebendes Vorschaubild nach Aufnahme anzeigen";
 "Launch at login" = "Bei Anmeldung starten";
 "Show snap alignment guides" = "Ausrichtungshilfen anzeigen";

@@ -207,6 +207,7 @@
 "Play sound on capture" = "캡처 시 소리 재생";
 "Play sound on copy" = "복사 시 소리 재생";
 "Remember last selected tool" = "마지막 선택 도구 기억";
+"Start captures in move mode" = "캡처를 이동 모드로 시작";
 "Show floating thumbnail after capture" = "캡처 후 플로팅 썸네일 표시";
 "Launch at login" = "로그인 시 실행";
 "Show snap alignment guides" = "스냅 정렬 가이드 표시";

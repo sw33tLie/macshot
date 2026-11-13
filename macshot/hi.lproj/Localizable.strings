@@ -208,6 +208,7 @@
 "Play sound on capture" = "कैप्चर पर ध्वनि चलाएं";
 "Play sound on copy" = "कॉपी पर ध्वनि बजाएँ";
 "Remember last selected tool" = "अंतिम चयनित उपकरण याद रखें";
+"Start captures in move mode" = "स्क्रीनशॉट की शुरुआत मूव मोड में करें";
 "Show floating thumbnail after capture" = "कैप्चर के बाद फ़्लोटिंग थंबनेल दिखाएँ";
 "Launch at login" = "लॉगिन पर लॉन्च करें";
 "Show snap alignment guides" = "स्नैप संरेखण गाइड दिखाएँ";

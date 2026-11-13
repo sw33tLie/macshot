@@ -225,6 +225,7 @@
 "Play sound on capture" = "Mag-play ng tunog sa pagkuha";
 "Play sound on copy" = "Magpatugtog ng tunog kapag kinopya";
 "Remember last selected tool" = "Tandaan ang huling napiling kasangkapan";
+"Start captures in move mode" = "Simulan ang pagkuha sa mode ng paglipat";
 "Show floating thumbnail after capture" = "Ipakita ang lumulutang na thumbnail pagkatapos kumuha";
 "Launch at login" = "Buksan kapag nag-login";
 "Show snap alignment guides" = "Ipakita ang mga gabay sa pagkakahanay";

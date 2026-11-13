@@ -221,6 +221,7 @@
 "Play sound on capture" = "Afspil lyd ved optagelse";
 "Play sound on copy" = "Afspil lyd ved kopiering";
 "Remember last selected tool" = "Husk sidst valgte v\U00E6rkt\U00F8j";
+"Start captures in move mode" = "Start skærmbilleder i flyttetilstand";
 "Show floating thumbnail after capture" = "Vis flydende miniature efter optagelse";
 "Launch at login" = "Start ved login";
 "Show snap alignment guides" = "Vis fastg\U00F8relses-hj\U00E6lpelinjer";

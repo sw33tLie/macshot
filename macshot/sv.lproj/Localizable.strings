@@ -221,6 +221,7 @@
 "Play sound on capture" = "Spela ljud vid skärmdump";
 "Play sound on copy" = "Spela ljud vid kopiering";
 "Remember last selected tool" = "Kom ih\U00E5g senast valt verktyg";
+"Start captures in move mode" = "Starta skärmbilder i flyttläge";
 "Show floating thumbnail after capture" = "Visa flytande miniatyrbild efter f\U00E5ngst";
 "Launch at login" = "Starta vid inloggning";
 "Show snap alignment guides" = "Visa f\U00E4stlinjer";

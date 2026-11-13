@@ -224,6 +224,7 @@
 "Play sound on capture" = "Phát âm thanh khi chụp";
 "Play sound on copy" = "Phát âm thanh khi sao chép";
 "Remember last selected tool" = "Nhớ công cụ đã chọn lần trước";
+"Start captures in move mode" = "Bắt đầu chụp ở chế độ di chuyển";
 "Show floating thumbnail after capture" = "Hiển thị ảnh thu nhỏ nổi sau khi chụp";
 "Launch at login" = "Khởi chạy khi đăng nhập";
 "Show snap alignment guides" = "Hiển thị đường căn chỉnh bắt dính";

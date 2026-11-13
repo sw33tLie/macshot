@@ -220,6 +220,7 @@
 "Play sound on capture" = "Jouer un son lors de la capture";
 "Play sound on copy" = "Son lors de la copie";
 "Remember last selected tool" = "Mémoriser le dernier outil sélectionné";
+"Start captures in move mode" = "Démarrer les captures en mode déplacement";
 "Show floating thumbnail after capture" = "Afficher la vignette flottante après la capture";
 "Launch at login" = "Lancer au démarrage";
 "Show snap alignment guides" = "Afficher les guides d'alignement";

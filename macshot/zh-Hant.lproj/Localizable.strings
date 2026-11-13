@@ -224,6 +224,7 @@
 "Play sound on capture" = "擷取時播放提示音";
 "Play sound on copy" = "拷貝時播放音效";
 "Remember last selected tool" = "記住上次選取的工具";
+"Start captures in move mode" = "截圖時預設移動選區";
 "Show floating thumbnail after capture" = "擷取後顯示浮動縮圖";
 "Launch at login" = "登入時啟動";
 "Show snap alignment guides" = "顯示對齊輔助線";

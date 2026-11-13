@@ -208,6 +208,7 @@
 "Play sound on capture" = "Redă sunet la captură";
 "Play sound on copy" = "Redă sunet la copiere";
 "Remember last selected tool" = "Reține ultimul instrument selectat";
+"Start captures in move mode" = "Începe capturile în modul de mutare";
 "Show floating thumbnail after capture" = "Afișează miniatura flotantă după captură";
 "Launch at login" = "Pornește la autentificare";
 "Show snap alignment guides" = "Afișează ghidajele de aliniere";

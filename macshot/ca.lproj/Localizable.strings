@@ -208,6 +208,7 @@
 "Play sound on capture" = "Reprodueix un so en capturar";
 "Play sound on copy" = "Reproduir so en copiar";
 "Remember last selected tool" = "Recordar l'última eina seleccionada";
+"Start captures in move mode" = "Inicia les captures en mode de moviment";
 "Show floating thumbnail after capture" = "Mostrar miniatura flotant després de la captura";
 "Launch at login" = "Iniciar en iniciar sessió";
 "Show snap alignment guides" = "Mostrar guies d'alineació";

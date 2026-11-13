@@ -206,6 +206,7 @@
 "Play sound on capture" = "Riproduci suono alla cattura";
 "Play sound on copy" = "Riproduci suono alla copia";
 "Remember last selected tool" = "Ricorda ultimo strumento selezionato";
+"Start captures in move mode" = "Avvia le catture in modalità spostamento";
 "Show floating thumbnail after capture" = "Mostra miniatura mobile dopo la cattura";
 "Launch at login" = "Avvia al login";
 "Show snap alignment guides" = "Mostra guide di allineamento";
