@@ -11,6 +11,7 @@ class EditorTopBarView: NSView {
     private var zoomButton: NSButton!
     private var doneButton: NSButton?
     private var toolButtons: [NSButton] = []
+    private let bottomBorder = NSView()
     var onDone: (() -> Void)?
 
     override init(frame: NSRect) {
@@ -40,9 +41,8 @@ class EditorTopBarView: NSView {
         zoomButton.action = #selector(zoomButtonClicked)
 
         // Bottom border
-        let border = NSView()
+        let border = bottomBorder
         border.wantsLayer = true
-        border.layer?.backgroundColor = NSColor(white: 0.25, alpha: 1.0).cgColor
         border.translatesAutoresizingMaskIntoConstraints = false
         addSubview(border)
 
@@ -108,13 +108,15 @@ class EditorTopBarView: NSView {
 
     private func applyHUDColors() {
         layer?.backgroundColor = ToolbarLayout.bgColor.cgColor
-        appearance = ToolbarLayout.appearance
+        bottomBorder.layer?.backgroundColor = (ToolbarLayout.usesLightPalette
+            ? NSColor(white: 0.82, alpha: 1.0) : NSColor(white: 0.25, alpha: 1.0)).cgColor
         sizeLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.45)
         zoomButton.contentTintColor = ToolbarLayout.iconColor.withAlphaComponent(0.45)
         for button in toolButtons {
             button.contentTintColor = ToolbarLayout.iconColor.withAlphaComponent(0.85)
         }
         doneButton?.contentTintColor = ToolbarLayout.accentColor
+        dragHandle.needsDisplay = true
     }
 
     required init?(coder: NSCoder) { fatalError() }

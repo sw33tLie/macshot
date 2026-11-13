@@ -289,7 +289,10 @@ class ColorPickerView: NSView {
     }
 
     private func drawHexDisplay(in rect: NSRect) {
-        NSColor(white: 0.2, alpha: 0.8).setFill()
+        // The hex text uses the icon color, so the field must contrast with it.
+        (ToolbarLayout.usesLightPalette
+            ? NSColor.black.withAlphaComponent(0.06)
+            : NSColor(white: 0.2, alpha: 0.8)).setFill()
         NSBezierPath(roundedRect: rect, xRadius: 4, yRadius: 4).fill()
 
         // Preview circle

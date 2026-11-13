@@ -2355,8 +2355,17 @@ class OverlayView: NSView {
     private static let helperFont = NSFont.systemFont(ofSize: 13, weight: .medium)
     private static let helperSmallFont = NSFont.systemFont(ofSize: 12, weight: .regular)
     private static let helperSmallBoldFont = NSFont.systemFont(ofSize: 12, weight: .semibold)
-    private var helperPrimaryColor: NSColor { ToolbarLayout.iconColor }
-    private var helperDimColor: NSColor { ToolbarLayout.iconColor.withAlphaComponent(0.7) }
+    // The capture hint pills keep their translucent black look in the dark
+    // palette and switch to the light toolbar palette only when it is active.
+    private var helperPrimaryColor: NSColor {
+        ToolbarLayout.usesLightPalette ? ToolbarLayout.iconColor : .white
+    }
+    private var helperDimColor: NSColor { helperPrimaryColor.withAlphaComponent(0.7) }
+    private var helperPillColor: NSColor {
+        ToolbarLayout.usesLightPalette
+            ? ToolbarLayout.bgColor.withAlphaComponent(0.92)
+            : NSColor.black.withAlphaComponent(0.65)
+    }
 
     private func drawIdleHelperText() {
         let line1: String
@@ -2410,7 +2419,7 @@ class OverlayView: NSView {
         let bgY = bounds.midY - bgHeight / 2
         let bgRect = NSRect(x: bgX, y: bgY, width: bgWidth, height: bgHeight)
 
-        ToolbarLayout.bgColor.setFill()
+        helperPillColor.setFill()
         NSBezierPath(roundedRect: bgRect, xRadius: 8, yRadius: 8).fill()
 
         if showPresetButton {
@@ -2469,7 +2478,7 @@ class OverlayView: NSView {
         labelX = max(bounds.minX + 4, min(labelX, bounds.maxX - bgWidth - 4))
 
         let bgRect = NSRect(x: labelX, y: labelY, width: bgWidth, height: bgHeight)
-        ToolbarLayout.bgColor.setFill()
+        helperPillColor.setFill()
         NSBezierPath(roundedRect: bgRect, xRadius: 6, yRadius: 6).fill()
 
         (text as NSString).draw(
@@ -10566,6 +10575,8 @@ private final class PreSelectionPresetButton: NSButton {
             bg = ToolbarLayout.accentColor.withAlphaComponent(0.28)
         } else if hovered {
             bg = ToolbarLayout.iconColor.withAlphaComponent(0.14)
+        } else if ToolbarLayout.usesLightPalette {
+            bg = NSColor.black.withAlphaComponent(0.05)
         } else {
             bg = NSColor.white.withAlphaComponent(0.07)
         }

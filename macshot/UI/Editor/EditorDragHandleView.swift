@@ -51,7 +51,8 @@ final class EditorDragHandleView: NSView, NSDraggingSource {
 
     override func draw(_ dirtyRect: NSRect) {
         if isHovered || isPressed {
-            NSColor.white.withAlphaComponent(isPressed ? 0.16 : 0.09).setFill()
+            let hover: NSColor = ToolbarLayout.usesLightPalette ? .black : .white
+            hover.withAlphaComponent(isPressed ? 0.16 : 0.09).setFill()
             NSBezierPath(roundedRect: bounds, xRadius: 5, yRadius: 5).fill()
         }
 

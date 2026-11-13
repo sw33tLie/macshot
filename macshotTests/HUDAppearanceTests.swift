@@ -64,4 +64,31 @@ final class HUDAppearanceTests: XCTestCase {
             XCTAssertGreaterThan(brightness(dark.icon), 0.9)
         }
     }
+
+    /// Existing installs have no `hudAppearance` key: the chrome must paint
+    /// exactly the stored theme colors, as before the setting existed.
+    func testDefaultChromeColorsAreTheStoredTheme() {
+        withDefaults([HUDAppearance.defaultsKey: nil]) {
+            XCTAssertFalse(ToolbarLayout.usesLightPalette)
+            XCTAssertEqual(ToolbarLayout.iconColor, ToolbarLayout.storedIconColor)
+            XCTAssertEqual(ToolbarLayout.bgColor, ToolbarLayout.storedBgColor)
+        }
+    }
+
+    func testUnknownStoredValueFallsBackToDark() {
+        withDefaults([HUDAppearance.defaultsKey: "sepia"]) {
+            XCTAssertEqual(HUDAppearance.current, .dark)
+            XCTAssertFalse(ToolbarLayout.usesLightPalette)
+        }
+    }
+
+    func testFixedLightUsesTheLightPaletteWithoutAnAppearance() {
+        withDefaults([HUDAppearance.defaultsKey: HUDAppearance.light.rawValue]) {
+            XCTAssertEqual(HUDAppearance.current.resolved, .light)
+            XCTAssertTrue(ToolbarLayout.usesLightPalette)
+            XCTAssertEqual(ToolbarLayout.bgColor, ToolbarLayout.lightBgColor)
+            XCTAssertEqual(ToolbarLayout.iconColor, ToolbarLayout.lightIconColor)
+            XCTAssertEqual(ToolbarLayout.appearance?.name, .aqua)
+        }
+    }
 }
