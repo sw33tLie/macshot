@@ -192,7 +192,13 @@ final class PinPlacementTests: XCTestCase {
 
             let snapped = view.pixelSnappedSelectionRect
             let captured = try XCTUnwrap(view.captureSelectedRegion())
-            let capturedCG = try XCTUnwrap(captured.cgImage(forProposedRect: nil, context: nil, hints: nil))
+            // The rendered bitmap itself. Asking the image with no hints lets
+            // AppKit re-render a half-point-sized image for a 1x main screen
+            // (CI's virtual display), and `pixelsWide` on this kind of rep
+            // follows the screen too; neither says anything about the capture.
+            let rep = try XCTUnwrap(captured.representations.first)
+            let capturedCG = try XCTUnwrap(rep.cgImage(forProposedRect: nil, context: nil,
+                                                       hints: [.ctm: NSAffineTransform()]))
             XCTAssertEqual(captured.size, snapped.size, "\(scale)x")
             XCTAssertEqual(CGFloat(capturedCG.width), snapped.width * CGFloat(scale), "\(scale)x")
             XCTAssertEqual(CGFloat(capturedCG.height), snapped.height * CGFloat(scale), "\(scale)x")
