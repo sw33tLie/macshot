@@ -195,7 +195,9 @@ brew install --cask macshot
 
 ## Permissions
 
-macshot requires **Screen Recording** permission. macOS will prompt you on first capture.
+macshot requires **Screen Recording** permission. On first launch, click **Open Screen Recording Settings** in macshot and enable it in System Settings. If macOS asks, choose **Quit & Reopen** before trying to capture again.
+
+If captures stop working after an update even though macshot is switched on, macshot shows a **Turn Screen Recording back on** window: remove macshot from the list and add it again. If that doesn't help, run the Terminal command shown in that window, which resets macshot's privacy entries, and restart macshot.
 
 ---
 
