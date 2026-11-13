@@ -726,14 +726,38 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     private func applyNormalStatusBarIcon() {
         if let button = statusItem.button {
             applyPreferredIconImage(to: button)
-            // Use the NATIVE status-item menu (no custom click action). Showing
-            // the menu by synthesizing a click from the button's mouse-down
-            // action re-enters AppKit's mouse-tracking loop and can hang the main
-            // thread (which also kills the global hotkey). The menu's delegate
-            // handles modal dismissal + prewarm in menuWillOpen instead.
-            button.target = nil
-            button.action = nil
-            statusItem.menu = statusBarMenu
+            if #available(macOS 27.0, *) {
+                button.target = self
+                button.action = #selector(showStatusBarMenu(_:))
+                button.sendAction(on: .leftMouseUp)
+            } else {
+                button.target = nil
+                button.action = nil
+                statusItem.menu = statusBarMenu
+            }
+        }
+    }
+
+    @objc private func showStatusBarMenu(_ button: NSStatusBarButton) {
+        guard let window = button.window else { return }
+        let bottom = button.isFlipped ? button.bounds.maxY : button.bounds.minY
+        let leading = NSApp.userInterfaceLayoutDirection == .rightToLeft
+            ? button.bounds.maxX : button.bounds.minX
+        let anchor = window.convertPoint(toScreen: button.convert(
+            NSPoint(x: leading, y: bottom), to: nil
+        ))
+
+        // Use a screen-space anchor so AppKit does not attach the menu to
+        // the status item's window in a different Space. Wait for the click
+        // to finish before starting the menu's own mouse-tracking loop.
+        RunLoop.main.perform(inModes: [.default, .modalPanel]) { [weak self, weak button] in
+            MainActor.assumeIsolated {
+                guard let self, let button, self.recordingEngine == nil,
+                      let menu = self.statusBarMenu else { return }
+                button.highlight(true)
+                defer { button.highlight(false) }
+                menu.popUp(positioning: nil, at: anchor, in: nil)
+            }
         }
     }
 
@@ -935,9 +959,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
         menu.delegate = self  // menuWillOpen dismisses any modal + prewarms capture
         statusBarMenu = menu
-        // Re-attach to the status item unless we're in recording mode (which owns
-        // the icon and uses a custom stop action with no menu).
-        if recordingEngine == nil {
+        if #unavailable(macOS 27.0), recordingEngine == nil {
             statusItem?.menu = menu
         }
     }
