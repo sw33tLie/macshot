@@ -97,12 +97,15 @@ final class ScrollStitcher {
     ///   top-left origin), if the frames include it. It stays put while the
     ///   page scrolls under it, so it looks like a small changing region; it
     ///   must not be pasted into the image as one.
-    func add(_ frame: CGImage, pointer: CGRect? = nil) -> Outcome {
+    func add(_ frame: CGImage, pointer: CGRect? = nil, includeSmallShift: Bool = false,
+             allowReanchoring: Bool = true) -> Outcome {
         guard !finished else { return .pending }
         guard let referenceSamples, frame.width == reference.width, frame.height == reference.height,
               let samples = ScrollFrameMatcher.samples(of: frame) else {
-            reference = frame
-            self.referenceSamples = ScrollFrameMatcher.samples(of: frame)
+            if allowReanchoring {
+                reference = frame
+                self.referenceSamples = ScrollFrameMatcher.samples(of: frame)
+            }
             return .noMatch
         }
         framesSinceReference += 1
@@ -111,7 +114,7 @@ final class ScrollStitcher {
             // Keep the reference: a transient mismatch (an animation, a blank
             // stretch) usually resolves on a later frame.
             consecutiveFailures += 1
-            if consecutiveFailures >= Self.reanchorAfterFailures {
+            if allowReanchoring, consecutiveFailures >= Self.reanchorAfterFailures {
                 consecutiveFailures = 0
                 reference = frame
                 self.referenceSamples = samples
@@ -123,7 +126,7 @@ final class ScrollStitcher {
         if match.shift == 0 { return .noMovement }
         // Let small moves accumulate against the same reference: fewer seams,
         // and one exact large shift beats many small ones.
-        guard abs(match.shift) >= max(6, frame.height / 24) else { return .pending }
+        guard includeSmallShift || abs(match.shift) >= max(6, frame.height / 24) else { return .pending }
 
         lastShift = match.shift / max(1, framesSinceReference)
         if match.shift > 0, lastShift == 0 { lastShift = 1 }
@@ -362,14 +365,92 @@ final class ScrollStitcher {
     }
 
     /// The finished image: adds the held-back bottom banner, once.
-    func finish() -> CGImage {
-        if !finished, geometryDecided, bottomRows > 0,
+    func finish(at settledEnd: CGImage? = nil) -> CGImage {
+        if !finished, let settledEnd, let end = reconciledEnd(settledEnd) {
+            image = end
+        } else if !finished, geometryDecided, bottomRows > 0,
            let strip = reference.cropping(to: CGRect(x: 0, y: reference.height - bottomRows,
                                                      width: reference.width, height: bottomRows)) {
             append(strip, sides: [], pastes: [], patches: [], pointer: nil, from: reference, frameBottom: 0, followingRows: 0..<0)
         }
         finished = true
         return image
+    }
+
+    /// The last moving frame can include elastic overscroll. Register the
+    /// stationary viewport against detail already in the image before using
+    /// its lower rows. Blank bands and ambiguous repeated patterns cannot
+    /// establish a new endpoint.
+    private func reconciledEnd(_ frame: CGImage) -> CGImage? {
+        guard appendedStrips > 0, !sideScores.contains(where: { $0 > 0.7 }),
+              frame.width == image.width, frame.height == reference.height,
+              let final = ScrollFrameMatcher.samples(of: frame, maximumColumns: 96) else { return nil }
+        let expectedTop = image.height + bottomRows - frame.height
+        let radius = frame.height / 4
+        let firstTop = max(0, expectedTop - radius)
+        let lastTop = max(0, expectedTop + radius)
+        let anchorStart = frame.height / 2
+        let anchorEnd = min(frame.height * 3 / 4, frame.height - bottomRows)
+        guard anchorEnd > anchorStart else { return nil }
+        let firstSeam = frame.height * 3 / 8
+        let bandStart = firstTop + firstSeam - 1
+        let bandEnd = min(image.height, lastTop + anchorEnd)
+        guard bandEnd > bandStart,
+              let band = image.cropping(to: CGRect(x: 0, y: bandStart, width: image.width, height: bandEnd - bandStart)),
+              let stitched = ScrollFrameMatcher.samples(of: band, maximumColumns: 96) else { return nil }
+        let columns = (final.columnCount / 4)..<(final.columnCount * 3 / 4)
+        let anchorRows = (anchorStart..<anchorEnd).filter { row in
+            columns.contains { abs(final.value(row, $0) - final.value(row - 1, $0)) > 32 }
+        }
+        guard anchorRows.count >= 6 else { return nil }
+        var bestTop = expectedTop, best = 0, runnerUp = 0
+        for top in firstTop...lastTop {
+            var matches = 0
+            for row in anchorRows where top + row < bandEnd {
+                let index = top + row - bandStart
+                if index > 0, columns.allSatisfy({
+                    abs(stitched.value(index, $0) - final.value(row, $0)) <= 2
+                        && abs(stitched.value(index - 1, $0) - final.value(row - 1, $0)) <= 2
+                }) {
+                    matches += 1
+                }
+            }
+            if matches > best {
+                runnerUp = best
+                best = matches
+                bestTop = top
+            } else {
+                runnerUp = max(runnerUp, matches)
+            }
+        }
+        guard bestTop < expectedTop, best * 2 >= anchorRows.count, best - runnerUp >= 4,
+              best * 4 >= anchorRows.count * 3 || best >= frame.height / 40 else { return nil }
+        // Start the replacement before the alignment band when the whole
+        // viewport agrees at the seam. This also repairs repeated strips
+        // above the last row of detail used to align the two images.
+        let seamRows = 16
+        guard let seam = (firstSeam..<anchorEnd).first(where: { row in
+            (row..<(row + seamRows)).allSatisfy { check in
+                let index = bestTop + check - bandStart
+                return index < stitched.height && (0..<final.columnCount).allSatisfy {
+                    abs(stitched.value(index, $0) - final.value(check, $0)) <= 2
+                }
+            } && (row..<(row + seamRows)).contains { check in
+                (0..<final.columnCount).contains {
+                    abs(final.value(check, $0) - final.value(check - 1, $0)) > 32
+                }
+            }
+        }) else { return nil }
+        let cut = bestTop + seam
+        guard cut > 0, cut <= image.height,
+              let prefix = image.cropping(to: CGRect(x: 0, y: 0, width: image.width, height: cut)),
+              let tail = frame.cropping(to: CGRect(x: 0, y: seam, width: frame.width, height: frame.height - seam)) else { return nil }
+        let original = image
+        image = prefix
+        append(tail, sides: [], pastes: [], patches: [], pointer: nil, from: frame, frameBottom: 0, followingRows: 0..<0)
+        let repaired = image.height > prefix.height ? image : nil
+        image = original
+        return repaired
     }
 
     /// Columns to plain-fill in this strip: those this pair judges fixed,

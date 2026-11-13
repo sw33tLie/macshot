@@ -3304,6 +3304,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         scrollCaptureCopyRequested = false
         let scc = ScrollCaptureController(captureRect: rect, screen: screen)
         scc.excludedWindowIDs = overlayControllers.map { $0.windowNumber }
+        scc.captureAnchorWindowID = controller.windowNumber
         scrollCaptureController = scc
 
         // Read max height for the overlay HUD progress bar
