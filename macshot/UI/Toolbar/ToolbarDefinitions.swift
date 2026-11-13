@@ -236,7 +236,8 @@ enum ToolbarActionPreferences {
     }
 }
 
-/// Screenshot HUD color scheme. Missing defaults stay dark so existing installs keep their look.
+/// Toolbar, popover and HUD color scheme (Settings > Appearance > Toolbar appearance).
+/// A missing default stays dark so existing installs keep their look.
 enum HUDAppearance: String, CaseIterable {
     case dark
     case light
@@ -266,15 +267,35 @@ enum HUDAppearance: String, CaseIterable {
         }
     }
 
+    /// Dark or light. Only `.system` reads the app's effective appearance, so the
+    /// fixed modes never touch `NSApp` (nil in headless tests).
     var resolved: HUDAppearance {
-        resolved(using: NSApp.effectiveAppearance)
+        guard self == .system, let app = NSApp else { return self == .light ? .light : .dark }
+        return resolved(using: app.effectiveAppearance)
     }
 }
 
-/// Observes menu-bar appearance. When the HUD follows the system, a change refreshes open chrome.
-final class HUDSystemAppearanceWatcher: NSView {
-    override func viewDidChangeEffectiveAppearance() {
-        super.viewDidChangeEffectiveAppearance()
+/// Posts `.toolbarColorsDidChange` when the system switches between light and
+/// dark while the toolbar follows it, so open chrome repaints. Observes
+/// `NSApp.effectiveAppearance` with KVO; the token is released with the owner.
+final class HUDSystemAppearanceObserver {
+    private var observation: NSKeyValueObservation?
+    private var systemIsLight: Bool
+
+    init(application: NSApplication) {
+        systemIsLight = HUDAppearance.system.resolved(using: application.effectiveAppearance) == .light
+        observation = application.observe(\.effectiveAppearance, options: [.new]) { [weak self] _, _ in
+            DispatchQueue.main.async { [weak self] in
+                self?.systemAppearanceMayHaveChanged()
+            }
+        }
+    }
+
+    private func systemAppearanceMayHaveChanged() {
+        guard let app = NSApp else { return }
+        let isLight = HUDAppearance.system.resolved(using: app.effectiveAppearance) == .light
+        guard isLight != systemIsLight else { return }
+        systemIsLight = isLight
         guard HUDAppearance.current == .system else { return }
         NotificationCenter.default.post(name: .toolbarColorsDidChange, object: nil)
     }
@@ -316,7 +337,11 @@ class ToolbarLayout {
 
     /// Colors chrome should paint for the current setting and a specific system appearance.
     static func colors(using systemAppearance: NSAppearance) -> (background: NSColor, icon: NSColor) {
-        switch HUDAppearance.current.resolved(using: systemAppearance) {
+        palette(for: HUDAppearance.current.resolved(using: systemAppearance))
+    }
+
+    private static func palette(for resolved: HUDAppearance) -> (background: NSColor, icon: NSColor) {
+        switch resolved {
         case .light:
             return (lightBgColor, lightIconColor)
         case .dark, .system:
@@ -324,8 +349,13 @@ class ToolbarLayout {
         }
     }
 
-    static var iconColor: NSColor { colors(using: NSApp.effectiveAppearance).icon }
-    static var bgColor: NSColor { colors(using: NSApp.effectiveAppearance).background }
+    /// True while the fixed light palette is in effect (Light, or Follow System in light mode).
+    /// Chrome that keeps hardcoded dark-palette details uses this to switch only in light mode,
+    /// so the dark look stays exactly as it was.
+    static var usesLightPalette: Bool { HUDAppearance.current.resolved == .light }
+
+    static var iconColor: NSColor { palette(for: HUDAppearance.current.resolved).icon }
+    static var bgColor: NSColor { palette(for: HUDAppearance.current.resolved).background }
     static var handleColor: NSColor { accentColor }
     static let cornerRadius: CGFloat = 6
 

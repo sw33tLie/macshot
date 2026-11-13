@@ -194,7 +194,7 @@ private final class CaptureTimingTrace: @unchecked Sendable {
 class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
     private var statusItem: NSStatusItem!
-    private var hudAppearanceWatcher: HUDSystemAppearanceWatcher?
+    private var hudAppearanceObserver: HUDSystemAppearanceObserver?
     private var updaterController: SPUStandardUpdaterController!
     private var overlayControllers: [OverlayWindowController] = []
     private var settingsController: SettingsWindowController?
@@ -716,15 +716,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         applyNormalStatusBarIcon()
         rebuildStatusBarMenu()
-        installHUDAppearanceWatcher()
-    }
-
-    /// A zero-size view on the status item sees menu-bar appearance changes without taking focus.
-    private func installHUDAppearanceWatcher() {
-        guard let button = statusItem.button, hudAppearanceWatcher == nil else { return }
-        let watcher = HUDSystemAppearanceWatcher(frame: .zero)
-        button.addSubview(watcher)
-        hudAppearanceWatcher = watcher
+        // Lets "Follow System" toolbars repaint when macOS switches light/dark.
+        if hudAppearanceObserver == nil {
+            hudAppearanceObserver = HUDSystemAppearanceObserver(application: NSApp)
+        }
     }
 
     // User-customizable menu bar icon (see Settings → General → Appearance).
