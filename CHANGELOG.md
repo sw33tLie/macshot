@@ -5,14 +5,14 @@
 ### New
 
 - **Drag the edited image out of the Editor**: the handle next to the zoom menu drops the image, with annotations and beautify, into Finder, Messages or any app that takes files. Click it to copy. (#514)
-- **Pins can open where they were captured**, on top of the original content. Settings > General > Pin position. Thanks @yohey03518. (#331, #465)
+- **Pins can open where they were captured**, on top of the original content. Settings > Capture > Pin position. Thanks @yohey03518. (#331, #465)
 - **Toolbar appearance**: Dark (the default, as before), Light or Follow System. Settings > General. Thanks @RyanStarFox. (#427, #459)
 - **Beautify without a background**: turn off Background to keep the padding transparent with the shadow on it. JPEG fills it with white. Thanks @RyanStarFox. (#460)
 - **Default colors**: choose the swatches the color picker offers. Settings > Tools. Thanks @cktgh. (#494)
 - **Type a hex color code** in the color picker. Thanks @cktgh. (#489)
 - **Hide the bottom toolbar** and pick tools with their keyboard shortcuts instead. Settings > Tools. Thanks @tnrich. (#490, #491)
-- **Floating preview options**: choose what clicking a preview does, and whether it stays, waits or closes while its capture is open in the Editor. Settings > General. Thanks @stepanenko3. (#492)
-- **Start captures in move mode** (off by default): dragging inside a new selection moves it until you pick a tool. Settings > General. Thanks @morefreefg. (#502)
+- **Floating preview options**: choose what clicking a preview does, and whether it stays, waits or closes while its capture is open in the Editor. Settings > Capture. Thanks @stepanenko3. (#492)
+- **Start captures in move mode** (off by default): dragging inside a new selection moves it until you pick a tool. Settings > Capture. Thanks @morefreefg. (#502)
 
 ### Improved
 
