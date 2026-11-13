@@ -37,6 +37,10 @@ nonisolated final class OCRServiceClient: @unchecked Sendable {
         case fastWhileServiceRestarts
         /// No usable service: the original in-process accurate/fast session.
         case inProcess
+        /// No usable service on macOS 27 or later, where an accurate request
+        /// in this process can hang and take every later request with it:
+        /// the fast model only.
+        case fastWithoutService
     }
 
     struct Timing: Sendable {
@@ -79,6 +83,13 @@ nonisolated final class OCRServiceClient: @unchecked Sendable {
     /// Three in a row means the service can't run here; use the in-process path.
     nonisolated(unsafe) private var consecutiveQuickFailures = 0
     nonisolated(unsafe) private var disabled = false
+    /// Bumped whenever this client drops its own connection. A request sent
+    /// on an older connection fails because of that, not because the service
+    /// can't run, so its failure must not count towards `disabled`.
+    nonisolated(unsafe) private var connectionGeneration: UInt64 = 0
+    /// Set when this client replaced the service. The first failure after
+    /// that can be a request that reached the old process as it exited.
+    nonisolated(unsafe) private var replacedSinceLastAnswer = false
     #if OCR_FAULT_INJECTION
     nonisolated(unsafe) private var nextDebugBehavior: String?
     #endif
@@ -151,7 +162,7 @@ nonisolated final class OCRServiceClient: @unchecked Sendable {
     private func start(image: CGImage, packed: (data: Data, width: Int, height: Int, bytesPerRow: Int)?,
                        languages: [String], includeCharacterBoxes: Bool, finish: Finish) {
         if disabled || packed == nil {
-            runInProcess(image, finish: finish)
+            runWithoutService(image, languages: languages, finish: finish)
             return
         }
         if serviceBusy {
@@ -177,11 +188,12 @@ nonisolated final class OCRServiceClient: @unchecked Sendable {
                                         accurate: true, preferredLanguages: languages,
                                         includeCharacterBoxes: includeCharacterBoxes,
                                         hardDeadline: timing.hardDeadline, debugBehavior: debugBehavior)
+        let generation = connectionGeneration
         guard let requestData = try? JSONEncoder().encode(request),
               let proxy = proxy(errorHandler: { [weak self] error in
-                  self?.queue.async { self?.serviceFailed(error, attempt: attempt) }
+                  self?.queue.async { self?.serviceFailed(error, attempt: attempt, generation: generation) }
               }) else {
-            runInProcess(image, finish: finish)
+            runWithoutService(image, languages: languages, finish: finish)
             return
         }
 
@@ -199,6 +211,7 @@ nonisolated final class OCRServiceClient: @unchecked Sendable {
         // Any answer means the service is responsive again.
         serviceBusy = false
         consecutiveQuickFailures = 0
+        replacedSinceLastAnswer = false
         guard let request = pending.removeValue(forKey: attempt) else { return } // already answered by fast
 
         guard message == nil, let data,
@@ -236,19 +249,32 @@ nonisolated final class OCRServiceClient: @unchecked Sendable {
 
     /// The service process went away (crash, its own deadline, or replacement)
     /// or never launched.
-    private func serviceFailed(_ error: Error, attempt: UInt64) {
+    private func serviceFailed(_ error: Error, attempt: UInt64, generation: UInt64) {
+        // This client dropped that connection itself (a replacement while
+        // this request was still queued behind another): the current service
+        // is not to blame, so neither its launch time nor the failure count
+        // change.
+        guard generation == connectionGeneration else {
+            guard let request = pending.removeValue(forKey: attempt) else { return }
+            runFast(request.image, languages: request.languages) { request.finish($0, $1, .fastAfterServiceFailure) }
+            return
+        }
         serviceEnded()
         // A request already answered by the fast model (a hang that hit the
         // service's own deadline) is expected and doesn't count.
         guard let request = pending.removeValue(forKey: attempt) else { return }
-        consecutiveQuickFailures += 1
+        if replacedSinceLastAnswer {
+            // Possibly sent to the replaced process as it exited.
+            replacedSinceLastAnswer = false
+        } else {
+            consecutiveQuickFailures += 1
+        }
         if consecutiveQuickFailures >= 3 {
             disabled = true
-            connection?.invalidate()
-            connection = nil
+            dropConnection()
         }
         if disabled {
-            runInProcess(request.image, finish: request.finish)
+            runWithoutService(request.image, languages: request.languages, finish: request.finish)
         } else {
             runFast(request.image, languages: request.languages) { request.finish($0, $1, .fastAfterServiceFailure) }
         }
@@ -257,9 +283,16 @@ nonisolated final class OCRServiceClient: @unchecked Sendable {
     /// Drop the connection; the service exits when it notices, and the next
     /// request gets a new process.
     private func replaceService() {
-        connection?.invalidate()
-        connection = nil
+        dropConnection()
+        replacedSinceLastAnswer = true
         serviceEnded()
+    }
+
+    private func dropConnection() {
+        guard let connection else { return }
+        connectionGeneration &+= 1
+        self.connection = nil
+        connection.invalidate()
     }
 
     /// The service process is gone or going. If it was young, launchd will
@@ -313,6 +346,22 @@ nonisolated final class OCRServiceClient: @unchecked Sendable {
         DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + timeout) {
             once([], OCRRecognitionSession.Failure.timedOut, .service)
         }
+    }
+
+    /// Used when the service can't be used. Before macOS 27 that is the
+    /// original in-process session; on macOS 27 an accurate request in this
+    /// process can block forever and poison every later one (FB25403069),
+    /// so only the fast model runs.
+    private func runWithoutService(_ image: CGImage, languages: [String], finish: Finish) {
+        if Self.inProcessAccurateIsUnsafe {
+            runFast(image, languages: languages) { finish($0, $1, .fastWithoutService) }
+        } else {
+            runInProcess(image, finish: finish)
+        }
+    }
+
+    static var inProcessAccurateIsUnsafe: Bool {
+        ProcessInfo.processInfo.operatingSystemVersion.majorVersion >= 27
     }
 
     private func runInProcess(_ image: CGImage, finish: Finish) {

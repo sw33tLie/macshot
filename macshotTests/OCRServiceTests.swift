@@ -143,8 +143,11 @@ final class OCRServiceTests: XCTestCase {
             routes.append(result.route)
             XCTAssertTrue(result.text.contains("Invoice"), "the user still gets text: \(result.text)")
         }
-        XCTAssertEqual(routes, [.fastAfterServiceFailure, .fastAfterServiceFailure, .inProcess, .inProcess],
-                       "the third launch failure hands that request and later ones to the original in-process path")
+        let withoutService: OCRServiceClient.Route =
+            OCRServiceClient.inProcessAccurateIsUnsafe ? .fastWithoutService : .inProcess
+        XCTAssertEqual(routes, [.fastAfterServiceFailure, .fastAfterServiceFailure, withoutService, withoutService],
+                       "the third launch failure stops trying the service: the original in-process path, "
+                       + "or only the fast model on macOS 27 where in-process accurate OCR can hang")
     }
 
     func testAReplacedYoungServiceIsNotWaitedOn() {
