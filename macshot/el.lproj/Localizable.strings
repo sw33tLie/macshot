@@ -864,3 +864,8 @@
 
 "Snap webcam to corners when moved" = "Προσκόλληση της κάμερας στις γωνίες κατά τη μετακίνηση";
 "Search emoji" = "Αναζήτηση emoji";
+
+"Default Colors" = "Προεπιλεγμένα χρώματα";
+"The preset swatches in the color picker." = "Τα προεπιλεγμένα δείγματα στην επιλογή χρώματος.";
+"Add Color" = "Προσθήκη χρώματος";
+"No default colors." = "Δεν υπάρχουν προεπιλεγμένα χρώματα.";

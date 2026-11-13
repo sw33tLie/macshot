@@ -864,3 +864,8 @@
 
 "Snap webcam to corners when moved" = "Webcam bij verplaatsen aan hoeken vastklikken";
 "Search emoji" = "Emoji zoeken";
+
+"Default Colors" = "Standaardkleuren";
+"The preset swatches in the color picker." = "De vooraf ingestelde kleuren in de kleurkiezer.";
+"Add Color" = "Kleur toevoegen";
+"No default colors." = "Geen standaardkleuren.";

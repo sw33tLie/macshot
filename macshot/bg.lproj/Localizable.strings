@@ -862,3 +862,8 @@
 
 "Snap webcam to corners when moved" = "Прилепване на уебкамерата към ъглите при преместване";
 "Search emoji" = "Търсене на емоджи";
+
+"Default Colors" = "Цветове по подразбиране";
+"The preset swatches in the color picker." = "Предварително зададените цветове в избора на цвят.";
+"Add Color" = "Добавяне на цвят";
+"No default colors." = "Няма цветове по подразбиране.";

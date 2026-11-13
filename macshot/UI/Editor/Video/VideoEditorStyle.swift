@@ -481,6 +481,7 @@ final class ColorSwatchButton: NSButton {
     @objc private func open() {
         let picker = ColorPickerView()
         picker.setColor(color.withAlphaComponent(1), opacity: color.alphaComponent)
+        picker.presetColors = PresetColorPalette.colors
         picker.onColorChanged = { [weak self] c in
             guard let self else { return }
             self.color = c.withAlphaComponent(self.color.alphaComponent)

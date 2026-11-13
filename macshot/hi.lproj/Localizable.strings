@@ -864,3 +864,8 @@
 
 "Snap webcam to corners when moved" = "वेबकैम को खिसकाते समय कोनों से चिपकाएँ";
 "Search emoji" = "इमोजी खोजें";
+
+"Default Colors" = "डिफ़ॉल्ट रंग";
+"The preset swatches in the color picker." = "रंग चयनकर्ता में प्रीसेट रंग।";
+"Add Color" = "रंग जोड़ें";
+"No default colors." = "कोई डिफ़ॉल्ट रंग नहीं।";

@@ -862,3 +862,8 @@
 
 "Snap webcam to corners when moved" = "Привязывать веб-камеру к углам при перемещении";
 "Search emoji" = "Поиск эмодзи";
+
+"Default Colors" = "Цвета по умолчанию";
+"The preset swatches in the color picker." = "Предустановленные образцы в палитре цветов.";
+"Add Color" = "Добавить цвет";
+"No default colors." = "Нет цветов по умолчанию.";

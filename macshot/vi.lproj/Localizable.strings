@@ -862,3 +862,8 @@
 
 "Snap webcam to corners when moved" = "Bám webcam vào các góc khi di chuyển";
 "Search emoji" = "Tìm biểu tượng cảm xúc";
+
+"Default Colors" = "Màu mặc định";
+"The preset swatches in the color picker." = "Các màu đặt trước trong bộ chọn màu.";
+"Add Color" = "Thêm màu";
+"No default colors." = "Không có màu mặc định.";

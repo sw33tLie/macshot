@@ -81,6 +81,7 @@ macshot/
 │   ├── EditorCommandShortcutManager.swift  # Configurable undo/redo chords
 │   ├── FilenameFormatter.swift         # Filename templates ({date}, {window}, {random}, …)
 │   ├── SettingsPortability.swift       # Settings export/import + the secret filter
+│   ├── PresetColorPalette.swift        # User-editable preset swatch list for the color picker
 │   ├── LanguageManager.swift           # Locale resolution + L("…") lookup
 │   ├── RelaunchHandoff.swift           # Lets a "Restart macshot" replacement pass the single-instance check
 │   ├── ScreenshotHistory.swift         # Local history in ~/Library/Application Support/
@@ -275,6 +276,7 @@ The video editor is built around `VideoEditorDocument` (one `VideoProject`: time
 - Tools: `enabledTools`, `knownToolRawValues`
 - Features: `imgbbAPIKey`, `beautifyEnabled`, `beautifyStyleIndex`, `beautifyMode`, `beautifyPadding`, `beautifyCornerRadius`, `beautifyShadowRadius`, `pencilSmoothEnabled`, `loupeSize`, `stampSize`, `translateTargetLang`
 - Styles: `currentLineStyle`, `currentArrowStyle`, `currentRectFillStyle`, `currentRectCornerRadius`
+- Picker: `presetColors` (hex list for the editable default swatches; unset means the shipped 12, and any length is allowed)
 - Upload: `uploadProvider` (imgbb/gdrive), `googleDriveRefreshToken`, `gdriveFolderName` (Drive destination folder, defaults to "macshot"), `uploadConfirmEnabled`
 
 ### Threading Model

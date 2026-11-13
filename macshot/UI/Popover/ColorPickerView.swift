@@ -25,6 +25,14 @@ class ColorPickerView: NSView {
     /// Called when custom colors change (for persistence).
     var onCustomColorsChanged: (([NSColor?]) -> Void)?
 
+    /// Swatch list above the custom slots; the picker height follows its row count.
+    var presetColors: [NSColor] = PresetColorPalette.colors {
+        didSet {
+            frame.size = preferredSize
+            needsDisplay = true
+        }
+    }
+
     func setColor(_ color: NSColor, opacity: CGFloat) {
         self.selectedColor = color
         self.opacity = opacity
@@ -33,11 +41,6 @@ class ColorPickerView: NSView {
     }
 
     // MARK: - Constants
-
-    private static let presetColors: [NSColor] = [
-        .systemRed, .systemOrange, .systemYellow, .systemGreen, .systemBlue, .systemPurple,
-        .systemPink, .white, .lightGray, .gray, .darkGray, .black,
-    ]
 
     private let cols = 6
     private let swatchSize: CGFloat = 24
@@ -64,6 +67,7 @@ class ColorPickerView: NSView {
     private var brightnessSliderRect: NSRect = .zero
     private var hexDisplayRect: NSRect = .zero
     private var customSlotRects: [NSRect] = []
+    private var presetSwatchRects: [NSRect] = []
 
     // MARK: - Drag state
 
@@ -73,10 +77,19 @@ class ColorPickerView: NSView {
 
     // MARK: - Preferred size
 
+    private var presetRows: Int {
+        Int(ceil(Double(presetColors.count) / Double(cols)))
+    }
+
+    private var presetSectionHeight: CGFloat {
+        // 0 when the user removed every default color, so the picker sheds the whole band
+        guard presetRows > 0 else { return 0 }
+        return padding + CGFloat(presetRows) * (swatchSize + padding)
+    }
+
     var preferredSize: NSSize {
         let pickerWidth = CGFloat(cols) * (swatchSize + padding) + padding
-        let presetH = CGFloat(2) * (swatchSize + padding)
-        let pickerHeight = padding + presetH + padding + customSlotSize + padding
+        let pickerHeight = presetSectionHeight + padding + customSlotSize + padding
             + opacityBarHeight + padding + gradientSize + padding + brightnessBarHeight
             + padding + hexRowHeight + padding
         return NSSize(width: pickerWidth, height: pickerHeight)
@@ -99,25 +112,29 @@ class ColorPickerView: NSView {
         var cursorY = bounds.maxY
 
         // --- 1. Preset color swatches ---
-        cursorY -= padding
-        for (i, color) in Self.presetColors.enumerated() {
-            let col = i % cols
-            let row = i / cols
-            let x = padding + CGFloat(col) * (swatchSize + padding)
-            let y = cursorY - swatchSize - CGFloat(row) * (swatchSize + padding)
-            let r = NSRect(x: x, y: y, width: swatchSize, height: swatchSize)
+        presetSwatchRects = []
+        if !presetColors.isEmpty {
+            cursorY -= padding
+            for (i, color) in presetColors.enumerated() {
+                let col = i % cols
+                let row = i / cols
+                let x = padding + CGFloat(col) * (swatchSize + padding)
+                let y = cursorY - swatchSize - CGFloat(row) * (swatchSize + padding)
+                let r = NSRect(x: x, y: y, width: swatchSize, height: swatchSize)
+                presetSwatchRects.append(r)
 
-            color.setFill()
-            NSBezierPath(roundedRect: r, xRadius: 4, yRadius: 4).fill()
+                color.setFill()
+                NSBezierPath(roundedRect: r, xRadius: 4, yRadius: 4).fill()
 
-            if colorsMatch(selectedColor, color) {
-                ToolbarLayout.iconColor.setStroke()
-                let border = NSBezierPath(roundedRect: r.insetBy(dx: -1, dy: -1), xRadius: 5, yRadius: 5)
-                border.lineWidth = 2
-                border.stroke()
+                if colorsMatch(selectedColor, color) {
+                    ToolbarLayout.iconColor.setStroke()
+                    let border = NSBezierPath(roundedRect: r.insetBy(dx: -1, dy: -1), xRadius: 5, yRadius: 5)
+                    border.lineWidth = 2
+                    border.stroke()
+                }
             }
+            cursorY -= CGFloat(presetRows) * (swatchSize + padding)
         }
-        cursorY -= CGFloat(2) * (swatchSize + padding)
 
         // --- 2. Custom color slots ---
         cursorY -= padding
@@ -322,18 +339,13 @@ class ColorPickerView: NSView {
         let point = convert(event.locationInWindow, from: nil)
 
         // Preset swatches
-        for (i, color) in Self.presetColors.enumerated() {
-            let col = i % cols
-            let row = i / cols
-            let x = padding + CGFloat(col) * (swatchSize + padding)
-            let y = bounds.maxY - padding - swatchSize - CGFloat(row) * (swatchSize + padding)
-            if NSRect(x: x, y: y, width: swatchSize, height: swatchSize).contains(point) {
-                selectedColor = color
-                syncHSBFromColor(color)
-                onColorChanged?(color)
-                needsDisplay = true
-                return
-            }
+        for (i, rect) in presetSwatchRects.enumerated() where rect.contains(point) {
+            let color = presetColors[i]
+            selectedColor = color
+            syncHSBFromColor(color)
+            onColorChanged?(color)
+            needsDisplay = true
+            return
         }
 
         // Custom slots

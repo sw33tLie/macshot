@@ -864,3 +864,8 @@
 
 "Snap webcam to corners when moved" = "Idikit ang webcam sa mga sulok kapag inililipat";
 "Search emoji" = "Maghanap ng emoji";
+
+"Default Colors" = "Mga Default na Kulay";
+"The preset swatches in the color picker." = "Ang mga preset na kulay sa color picker.";
+"Add Color" = "Magdagdag ng Kulay";
+"No default colors." = "Walang default na kulay.";

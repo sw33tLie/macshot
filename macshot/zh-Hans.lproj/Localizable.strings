@@ -864,3 +864,8 @@
 
 "Snap webcam to corners when moved" = "移动时将摄像头吸附到角落";
 "Search emoji" = "搜索表情符号";
+
+"Default Colors" = "默认颜色";
+"The preset swatches in the color picker." = "颜色选择器中的预设颜色。";
+"Add Color" = "添加颜色";
+"No default colors." = "没有默认颜色。";

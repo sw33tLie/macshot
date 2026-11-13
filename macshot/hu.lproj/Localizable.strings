@@ -862,3 +862,8 @@
 
 "Snap webcam to corners when moved" = "Webkamera sarkokhoz igazítása mozgatáskor";
 "Search emoji" = "Emoji keresése";
+
+"Default Colors" = "Alapértelmezett színek";
+"The preset swatches in the color picker." = "A színválasztó előre beállított színei.";
+"Add Color" = "Szín hozzáadása";
+"No default colors." = "Nincsenek alapértelmezett színek.";
