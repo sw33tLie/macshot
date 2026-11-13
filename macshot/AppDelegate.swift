@@ -738,10 +738,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         if let button = statusItem.button {
             applyPreferredIconImage(to: button)
             if #available(macOS 27.0, *) {
+                // macOS 27 can open the native status-item menu behind an app
+                // in a fullscreen Space (#511). Pop the same menu up ourselves
+                // after the click (see `showStatusBarMenu`). Right-click and
+                // Control-click open it too, as they do with the native menu.
                 button.target = self
                 button.action = #selector(showStatusBarMenu(_:))
-                button.sendAction(on: .leftMouseUp)
+                button.sendAction(on: [.leftMouseUp, .rightMouseUp])
             } else {
+                // Use the NATIVE status-item menu (no custom click action).
+                // Showing the menu by synthesizing a click from the button's
+                // mouse-down action re-enters AppKit's mouse-tracking loop and
+                // can hang the main thread (which also kills the global hotkey).
+                // The menu's delegate handles modal dismissal + prewarm in
+                // menuWillOpen instead.
                 button.target = nil
                 button.action = nil
                 statusItem.menu = statusBarMenu
@@ -749,8 +759,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         }
     }
 
+    /// macOS 27+: a status-bar click is waiting for its menu to pop up.
+    private var isStatusBarMenuPopUpPending = false
+
+    /// macOS 27+ only. Runs on mouse-up, once the button has finished tracking,
+    /// and pops the menu up on a later run-loop turn, so the menu's tracking
+    /// loop never nests inside the click (the hang described in
+    /// `applyNormalStatusBarIcon`). `menuWillOpen` still runs for a pop-up menu.
     @objc private func showStatusBarMenu(_ button: NSStatusBarButton) {
-        guard let window = button.window else { return }
+        guard !isStatusBarMenuPopUpPending, let window = button.window else { return }
         let bottom = button.isFlipped ? button.bounds.maxY : button.bounds.minY
         let leading = NSApp.userInterfaceLayoutDirection == .rightToLeft
             ? button.bounds.maxX : button.bounds.minX
@@ -761,8 +778,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // Use a screen-space anchor so AppKit does not attach the menu to
         // the status item's window in a different Space. Wait for the click
         // to finish before starting the menu's own mouse-tracking loop.
+        isStatusBarMenuPopUpPending = true
         RunLoop.main.perform(inModes: [.default, .modalPanel]) { [weak self, weak button] in
             MainActor.assumeIsolated {
+                self?.isStatusBarMenuPopUpPending = false
                 guard let self, let button, self.recordingEngine == nil,
                       let menu = self.statusBarMenu else { return }
                 button.highlight(true)
@@ -970,6 +989,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
         menu.delegate = self  // menuWillOpen dismisses any modal + prewarms capture
         statusBarMenu = menu
+        // Re-attach to the status item unless we're in recording mode (which owns
+        // the icon and uses a custom stop action with no menu). macOS 27 pops the
+        // menu up from the button action instead (see `applyNormalStatusBarIcon`).
         if #unavailable(macOS 27.0), recordingEngine == nil {
             statusItem?.menu = menu
         }
@@ -3128,6 +3150,11 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         statusItem.menu = nil
         statusItem.button?.target = self
         statusItem.button?.action = #selector(stopRecording)
+        if #available(macOS 27.0, *) {
+            // The normal macOS 27 icon also acts on right-click; stopping a take
+            // stays left-click only, as on earlier versions.
+            statusItem.button?.sendAction(on: .leftMouseUp)
+        }
     }
 
     private func exitRecordingMenuBarMode() {
