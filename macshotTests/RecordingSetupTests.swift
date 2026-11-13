@@ -188,6 +188,7 @@ private final class RecordingSetupDelegate: OverlayViewDelegate {
     func overlayViewDidRequestSaveAs() {}
     func overlayViewDidRequestPin() {}
     func overlayViewDidRequestOCR() {}
+    func overlayViewDidRequestQuickTranslation() {}
     func overlayViewDidRequestFileSave() {}
     func overlayViewDidRequestUpload() {}
     func overlayViewDidRequestShare(anchorView: NSView?) {}

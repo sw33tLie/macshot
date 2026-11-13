@@ -11,6 +11,7 @@ enum CaptureMenuItemID: String, CaseIterable {
     case captureArea = "captureArea"
     case captureScreen = "captureScreen"
     case captureOCR = "captureOCR"
+    case captureTranslate = "captureTranslate"
     case quickCapture = "quickCapture"
     case captureLastArea = "captureLastArea"
     case scrollCapture = "scrollCapture"
@@ -20,6 +21,7 @@ enum CaptureMenuItemID: String, CaseIterable {
         .captureArea,
         .captureScreen,
         .captureOCR,
+        .captureTranslate,
         .quickCapture,
         .captureLastArea,
         .scrollCapture,
@@ -30,6 +32,7 @@ enum CaptureMenuItemID: String, CaseIterable {
         case .captureArea: return L("Capture Area")
         case .captureScreen: return L("Capture Screen")
         case .captureOCR: return L("Capture OCR & QR")
+        case .captureTranslate: return L("Capture Translate")
         case .quickCapture: return L("Quick Capture")
         case .captureLastArea: return L("Capture Last Area")
         case .scrollCapture: return L("Scroll Capture")
@@ -41,6 +44,7 @@ enum CaptureMenuItemID: String, CaseIterable {
         case .captureArea: return "crop"
         case .captureScreen: return "desktopcomputer"
         case .captureOCR: return "text.viewfinder"
+        case .captureTranslate: return "translate"
         case .quickCapture: return "square.and.arrow.down"
         case .captureLastArea: return "arrow.counterclockwise.circle"
         case .scrollCapture: return "scroll"
@@ -52,6 +56,7 @@ enum CaptureMenuItemID: String, CaseIterable {
         case .captureArea: return .captureArea
         case .captureScreen: return .captureFullScreen
         case .captureOCR: return .captureOCR
+        case .captureTranslate: return .captureTranslate
         case .quickCapture: return .quickCapture
         case .captureLastArea: return .captureLastArea
         case .scrollCapture: return .scrollCapture
@@ -201,6 +206,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     private var pinControllers: [PinWindowController] = []
     private var thumbnailControllers: [FloatingThumbnailController] = []
     private var ocrController: OCRResultController?
+    private var quickTranslationController: QuickTranslationController?
     private var historyMenu: NSMenu?
     private var historyOverlayController: HistoryOverlayController?
     private var isCapturing = false
@@ -947,6 +953,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         case .captureArea: action = #selector(captureScreen)
         case .captureScreen: action = #selector(captureFullScreen)
         case .captureOCR: action = #selector(captureOCR)
+        case .captureTranslate: action = #selector(captureTranslate)
         case .quickCapture: action = #selector(quickCapture)
         case .captureLastArea: action = #selector(captureLastArea)
         case .scrollCapture: action = #selector(scrollCapture)
@@ -994,6 +1001,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                 stamp()
                 self?.perform(#selector(AppDelegate.captureOCRFromHotkey))
             },
+            captureTranslate: { [weak self] in
+                stamp()
+                self?.perform(#selector(AppDelegate.captureTranslateFromHotkey))
+            },
             quickCapture: { [weak self] in
                 stamp()
                 self?.perform(#selector(AppDelegate.quickCaptureFromHotkey))
@@ -1040,6 +1051,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     private var pendingFullScreenRecord: Bool = false
     private var pendingFullScreenRecordAutoStart: Bool = false
     private var pendingOCRMode: Bool = false
+    private var pendingQuickTranslationMode: Bool = false
     private var pendingTranslateOverlayMode: Bool = false
     private var pendingTranslateOverlayLang: String?
     private var pendingQuickCaptureMode: Bool = false
@@ -1165,6 +1177,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     private func beginCaptureOCR(fromMenu: Bool) {
         guard canStartCapture else { return }
         pendingOCRMode = true
+        startCapture(fromMenu: fromMenu)
+    }
+
+    @objc private func captureTranslate() {
+        beginCaptureQuickTranslation(fromMenu: true)
+    }
+
+    @objc private func captureTranslateFromHotkey() {
+        beginCaptureQuickTranslation(fromMenu: false)
+    }
+
+    private func beginCaptureQuickTranslation(fromMenu: Bool) {
+        guard canStartCapture else { return }
+        pendingQuickTranslationMode = true
         startCapture(fromMenu: fromMenu)
     }
 
@@ -1421,6 +1447,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         pendingFullScreenRecord = false
         pendingFullScreenRecordAutoStart = false
         pendingOCRMode = false
+        pendingQuickTranslationMode = false
         pendingTranslateOverlayMode = false
         pendingTranslateOverlayLang = nil
         pendingQuickCaptureMode = false
@@ -1464,6 +1491,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             controller.capturedAppName = FilenameFormatter.appNameForTemplate(previousApp?.localizedName)
             if pendingRecordMode { controller.setAutoRecordMode() }
             if pendingOCRMode { controller.setAutoOCRMode() }
+            if pendingQuickTranslationMode { controller.setAutoQuickTranslationMode() }
             if pendingTranslateOverlayMode { controller.setAutoTranslateOverlayMode(targetLang: pendingTranslateOverlayLang) }
             if pendingQuickCaptureMode { controller.setAutoQuickSaveMode() }
             if pendingScrollCaptureMode { controller.setAutoScrollCaptureMode() }
@@ -1477,6 +1505,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         let didApplyFullScreen = pendingFullScreen
         pendingFullScreenRecordAutoStart = false
         pendingOCRMode = false
+        pendingQuickTranslationMode = false
         pendingTranslateOverlayMode = false
         pendingTranslateOverlayLang = nil
         pendingQuickCaptureMode = false
@@ -2708,6 +2737,24 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         }
     }
 
+    func overlayDidRequestQuickTranslation(
+        _ controller: OverlayWindowController, image: NSImage, anchorRect: NSRect
+    ) {
+        dismissOverlays(refocusPreviousApp: false)
+
+        quickTranslationController?.onClose = nil
+        quickTranslationController?.close()
+
+        let quickTranslation = QuickTranslationController()
+        quickTranslation.onClose = { [weak self, weak quickTranslation] in
+            guard let self, self.quickTranslationController === quickTranslation else { return }
+            self.quickTranslationController = nil
+            self.returnFocusIfNeeded()
+        }
+        quickTranslationController = quickTranslation
+        quickTranslation.show(image: image, anchorRect: anchorRect)
+    }
+
     func overlayDidRequestUpload(_ controller: OverlayWindowController, image: NSImage, annotationData: CaptureAnnotationData?) {
         #if !OFFLINE
         ScreenshotHistory.shared.add(
@@ -3473,6 +3520,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
             other.clearSelection()
             other.setRemoteSelection(.zero)
             other.clearAutoTranslateOverlayMode()
+            other.clearAutoQuickTranslationMode()
         }
     }
 

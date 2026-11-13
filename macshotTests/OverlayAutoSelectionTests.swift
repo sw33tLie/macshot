@@ -93,6 +93,29 @@ final class OverlayAutoSelectionTests: XCTestCase {
         XCTAssertFalse(view.autoOCRMode)
     }
 
+    // MARK: - Capture Translate
+
+    func testQuickTranslationRunsOnceForEverySelectionPath() {
+        let paths: [(String, (OverlayView) -> Void)] = [
+            ("drag", { self.drag($0, from: NSPoint(x: 20, y: 20), to: NSPoint(x: 200, y: 150)) }),
+            ("anchored", { self.anchorSelect($0, from: NSPoint(x: 20, y: 20), to: NSPoint(x: 200, y: 150)) }),
+            ("full screen", { $0.keyDown(with: TestKeyEvent.keyDown(characters: "f", keyCode: TestKeyEvent.Code.f)) }),
+            ("restored", { $0.applySelection(NSRect(x: 30, y: 40, width: 120, height: 80)) }),
+        ]
+        for (name, select) in paths {
+            withDefaults(name == "full screen" ? snapOn : snapOff) {
+                let (view, delegate) = makeOverlay()
+                view.autoQuickTranslationMode = true
+                select(view)
+                XCTAssertEqual(delegate.quickTranslationRequests, 1, name)
+                XCTAssertFalse(view.autoQuickTranslationMode, name)
+                XCTAssertFalse(view.showToolbars, name)
+                XCTAssertEqual(delegate.ocrRequests, 0, name)
+                XCTAssertEqual(delegate.confirms, 0, name)
+            }
+        }
+    }
+
     // MARK: - Other one-shot entry points share the same paths
 
     func testRightClickAnchoredSelectionRunsEveryEntryPointAction() {
@@ -244,6 +267,7 @@ final class OverlayAutoSelectionTests: XCTestCase {
 @MainActor
 final class RecordingOverlayDelegate: OverlayViewDelegate {
     var ocrRequests = 0
+    var quickTranslationRequests = 0
     var quickSaveRequests = 0
     var confirms = 0
     var cancels = 0
@@ -251,6 +275,7 @@ final class RecordingOverlayDelegate: OverlayViewDelegate {
     var scrollCaptureRects: [NSRect] = []
 
     func overlayViewDidRequestOCR() { ocrRequests += 1 }
+    func overlayViewDidRequestQuickTranslation() { quickTranslationRequests += 1 }
     func overlayViewDidRequestQuickSave() { quickSaveRequests += 1 }
     func overlayViewDidConfirm() { confirms += 1 }
     func overlayViewDidCancel() { cancels += 1 }

@@ -12,6 +12,7 @@ protocol OverlayViewDelegate: AnyObject {
     func overlayViewDidRequestSaveAs()
     func overlayViewDidRequestPin()
     func overlayViewDidRequestOCR()
+    func overlayViewDidRequestQuickTranslation()
     func overlayViewDidRequestQuickSave()
     func overlayViewDidRequestFileSave()
     func overlayViewDidRequestUpload()
@@ -684,6 +685,8 @@ class OverlayView: NSView {
     private var cachedOpaqueRect: NSRect?  // cached opaque content bounds of screenshotImage
 
     var isTranslating: Bool = false
+    let translationRequestScope = UUID()
+    var translationRequestID: UInt = 0
     var translateEnabled: Bool = false
 
     /// Set while OCR runs on the selection. Shows a spinner over the selection
@@ -779,6 +782,7 @@ class OverlayView: NSView {
     }
     var autoEnterRecordingMode: Bool = false  // set by "Record Screen" menu — enters recording mode after selection
     var autoOCRMode: Bool = false  // set by "Capture OCR & QR" menu — triggers OCR immediately after selection
+    var autoQuickTranslationMode: Bool = false  // set by "Capture Translate" — OCR + translate in a compact panel
     var autoTranslateOverlayMode: Bool = false  // set by macshot://ocr-translate — OCR + translate + overlay after selection
     var autoTranslateOverlayLang: String?  // target language for autoTranslateOverlayMode (nil = saved default)
     var autoQuickSaveMode: Bool = false  // set by "Quick Capture" menu — quick-saves immediately after selection
@@ -2903,6 +2907,7 @@ class OverlayView: NSView {
             && !isEditorMode
             && !isRecording
             && !autoOCRMode
+            && !autoQuickTranslationMode
             && remoteSelectionRect.width < 1
             && remoteSelectionRect.height < 1
     }
@@ -6830,8 +6835,8 @@ class OverlayView: NSView {
 
     private func finishSelection() {
         let opensEditor = UserDefaults.standard.bool(forKey: "openEditorAfterSelection")
-            && !autoEnterRecordingMode && !autoOCRMode && !autoTranslateOverlayMode
-            && !autoQuickSaveMode && !autoScrollCaptureMode && !autoConfirmMode
+            && !autoEnterRecordingMode && !autoTranslateOverlayMode
+            && !hasPendingSelectionAction
         if selectionRect.width > 5 || selectionRect.height > 5 {
             // Real drag — use drawn rect as-is
             state = .selected
@@ -6878,10 +6883,10 @@ class OverlayView: NSView {
         needsDisplay = true
     }
 
-    /// True while the capture entry point (OCR, Quick Capture, Scroll Capture,
-    /// Add Capture) will act on the selection itself, so the toolbars stay hidden.
+    /// True while the capture entry point (OCR, Quick Translation, Quick Capture,
+    /// Scroll Capture, Add Capture) will act on the selection itself, so the toolbars stay hidden.
     private var hasPendingSelectionAction: Bool {
-        autoOCRMode || autoQuickSaveMode || autoScrollCaptureMode || autoConfirmMode
+        autoOCRMode || autoQuickTranslationMode || autoQuickSaveMode || autoScrollCaptureMode || autoConfirmMode
     }
 
     /// Run the one-shot action the capture entry point asked for. Every way of
@@ -6897,6 +6902,11 @@ class OverlayView: NSView {
         if autoOCRMode {
             autoOCRMode = false
             overlayDelegate?.overlayViewDidRequestOCR()
+        }
+        // Auto-trigger OCR + translation in the lightweight result panel.
+        if autoQuickTranslationMode {
+            autoQuickTranslationMode = false
+            overlayDelegate?.overlayViewDidRequestQuickTranslation()
         }
         // Auto-trigger OCR + translate + in-place overlay (macshot://ocr-translate).
         // Unlike OCR, this keeps the overlay open so the translated result can be
@@ -8439,6 +8449,7 @@ class OverlayView: NSView {
         case .translate:
             if translateEnabled {
                 // Toggle off: remove overlays, restore original
+                cancelTranslation()
                 translateEnabled = false
                 annotations.removeAll { $0.tool == .translateOverlay }
                 isTranslating = false
@@ -10293,6 +10304,7 @@ class OverlayView: NSView {
     }
 
     func reset() {
+        cancelTranslation()
         state = .idle
         selectionRect = .zero
         selectionIsWindowSnap = false
@@ -10384,6 +10396,7 @@ class OverlayView: NSView {
         // must NOT leak into the next session.
         autoEnterRecordingMode = false
         autoOCRMode = false
+        autoQuickTranslationMode = false
         autoTranslateOverlayMode = false
         autoTranslateOverlayLang = nil
         autoQuickSaveMode = false
