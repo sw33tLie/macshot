@@ -1,7 +1,7 @@
 import Cocoa
 
 /// Custom color picker view for use inside an NSPopover.
-/// Features: preset swatches, custom saveable slots, opacity slider, HSB gradient, brightness slider, hex display.
+/// Features: preset swatches, custom saveable slots, opacity slider, HSB gradient, brightness slider, hex entry.
 class ColorPickerView: NSView, NSTextFieldDelegate {
 
     // MARK: - Public interface
@@ -110,7 +110,10 @@ class ColorPickerView: NSView, NSTextFieldDelegate {
         hexField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .medium)
         hexField.isBordered = false
         hexField.drawsBackground = false
-        hexField.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.9)
+        // The bubble behind the field is always dark, whatever the toolbar theme, so the
+        // field (text, caret, selection, placeholder) is drawn for a dark background too.
+        hexField.appearance = NSAppearance(named: .darkAqua)
+        hexField.textColor = NSColor(white: 1, alpha: 0.9)
         hexField.focusRingType = .none
         hexField.placeholderString = "#RRGGBB"
         hexField.delegate = self
@@ -124,10 +127,28 @@ class ColorPickerView: NSView, NSTextFieldDelegate {
 
     required init?(coder: NSCoder) { fatalError() }
 
+    override func viewWillMove(toWindow newWindow: NSWindow?) {
+        // The popover can close (outside click, another popover) before Return is pressed;
+        // keep a complete code the user typed instead of discarding it with the window.
+        if let window, newWindow !== window {
+            commitTypedHexIfEditing()
+            NotificationCenter.default.removeObserver(self, name: NSWindow.didResignKeyNotification, object: window)
+        }
+        super.viewWillMove(toWindow: newWindow)
+    }
+
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
+        guard let window else { return }
         // Prevent auto focusing on editing the hex code input
-        window?.makeFirstResponder(self)
+        window.makeFirstResponder(self)
+        // Closing the popover resigns its window's key status first.
+        NotificationCenter.default.addObserver(self, selector: #selector(windowDidResignKey(_:)),
+                                               name: NSWindow.didResignKeyNotification, object: window)
+    }
+
+    @objc private func windowDidResignKey(_ note: Notification) {
+        commitTypedHexIfEditing()
     }
 
     override var acceptsFirstResponder: Bool { true }
@@ -514,9 +535,17 @@ class ColorPickerView: NSView, NSTextFieldDelegate {
         commitHexField()
     }
 
-    func commitHexField() {
+    /// Applies the typed code. An unreadable entry restores the current color's code unless
+    /// `revertingInvalid` is false (the window losing focus mid-edit keeps the partial text).
+    func commitHexField(revertingInvalid: Bool = true) {
         let text = hexField.currentEditor()?.string ?? hexField.stringValue
         guard let color = ColorCode.color(from: text) else {
+            if revertingInvalid { syncHexField(force: true) }
+            return
+        }
+        // Return and end-of-editing both commit, and focusing the field then clicking away
+        // commits its unchanged text: only an actual change may recolor the selection.
+        if colorToHex(color) == colorToHex(selectedColor) {
             syncHexField(force: true)
             return
         }
@@ -527,10 +556,30 @@ class ColorPickerView: NSView, NSTextFieldDelegate {
         needsDisplay = true
     }
 
+    private func commitTypedHexIfEditing() {
+        guard hexField.currentEditor() != nil else { return }
+        commitHexField(revertingInvalid: false)
+    }
+
     func controlTextDidEndEditing(_ obj: Notification) {
         commitHexField()
     }
 
+    func controlTextDidBeginEditing(_ obj: Notification) {
+        (obj.userInfo?["NSFieldEditor"] as? NSTextView)?.insertionPointColor = hexField.textColor ?? .white
+    }
+
+    func control(_ control: NSControl, textView: NSTextView, doCommandBy selector: Selector) -> Bool {
+        // Escape abandons the typed code and leaves the field; a second Escape closes the popover.
+        if selector == #selector(NSResponder.cancelOperation(_:)) {
+            syncHexField(force: true)
+            window?.makeFirstResponder(self)
+            return true
+        }
+        return false
+    }
+
+    /// Save the current color into the selected custom slot.
     func saveToSelectedSlot(_ color: NSColor) {
         guard selectedColorSlot >= 0, selectedColorSlot < customColors.count else { return }
         customColors[selectedColorSlot] = color.withAlphaComponent(1)

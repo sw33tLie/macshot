@@ -86,6 +86,35 @@ final class ColorPickerHexFieldTests: XCTestCase {
         XCTAssertEqual(field.stringValue, "#" + hex(of: .systemBlue))
     }
 
+    func testCommittingTheShownCodeDoesNotReapplyIt() {
+        // Return and end-of-editing both commit, and clicking into the field then away
+        // commits unchanged text; neither may recolor the selected annotation again.
+        let (picker, field) = makePicker()
+        picker.setColor(NSColor(srgbRed: 1, green: 59 / 255, blue: 48 / 255, alpha: 1), opacity: 1)
+        var changes = 0
+        picker.onColorChanged = { _ in changes += 1 }
+
+        picker.commitHexField()
+        field.stringValue = "ff3b30"
+        picker.commitHexField()
+
+        XCTAssertEqual(changes, 0)
+        XCTAssertEqual(field.stringValue, "#FF3B30")
+    }
+
+    func testFocusLossKeepsAPartialCode() {
+        let (picker, field) = makePicker()
+        picker.setColor(.systemBlue, opacity: 1)
+        var changes = 0
+        picker.onColorChanged = { _ in changes += 1 }
+
+        field.stringValue = "#12"
+        picker.commitHexField(revertingInvalid: false)
+
+        XCTAssertEqual(changes, 0)
+        XCTAssertEqual(field.stringValue, "#12", "a half-typed code survives the popover losing focus")
+    }
+
     private func hex(of color: NSColor) -> String {
         let rgb = color.usingColorSpace(.sRGB) ?? color
         return String(format: "%02X%02X%02X",
