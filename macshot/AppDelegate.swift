@@ -1630,9 +1630,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                 guard let self = self, self.isCapturing,
                       self.captureSessionID == sessionID else { return }
                 if progressive.shownAny {
+                    // Only displays this fallback actually captured. With none,
+                    // keep the overlays already shown: an empty install would
+                    // end the capture the user is working in.
+                    let fallback = finalCaptures.filter { capture in remaining.contains { $0.screen == capture.screen } }
+                    let covered = remaining.filter { controller in fallback.contains { $0.screen == controller.screen } }
+                    guard !covered.isEmpty else {
+                        trace?.mark("fallback covered none of the remaining displays")
+                        return
+                    }
                     self.installAndShowOverlays(
-                        captures: finalCaptures.filter { capture in remaining.contains { $0.screen == capture.screen } },
-                        controllers: remaining,
+                        captures: fallback,
+                        controllers: covered,
                         mouseScreen: mouseScreen,
                         applyFullScreen: didApplyFullScreen,
                         applyFullScreenRecord: didApplyFullScreenRecord,
@@ -2605,7 +2614,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                        PermissionOnboardingController.hasScreenRecordingPermission() {
                         markScreenCaptureReady()
                     }
-                    if !isReadyForScreenCapture {
+                    // Same way through as the menu and hotkeys: once the user
+                    // has opened Screen Recording settings from onboarding, let
+                    // the capture try even if the preflight still says no.
+                    if !isReadyForScreenCapture,
+                       !PermissionOnboardingController.didOpenScreenRecordingSettings {
                         pendingScreenCaptureURLs.append(url)
                         showOnboarding()
                         continue
