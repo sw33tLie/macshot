@@ -40,8 +40,8 @@ final class PresetColorPaletteTests: XCTestCase {
 
     func testTheListCanGrowAndShrink() {
         withEmptyPalette {
-            let expanded = PresetColorPalette.defaultColors + (0..<20).map {
-                NSColor(srgbRed: CGFloat($0) / 20, green: 0.5, blue: 0.5, alpha: 1)
+            let expanded = PresetColorPalette.defaultColors + (0..<8).map {
+                NSColor(srgbRed: CGFloat($0) / 8, green: 0.5, blue: 0.5, alpha: 1)
             }
             PresetColorPalette.save(expanded)
             XCTAssertEqual(PresetColorPalette.colors.count, expanded.count)
@@ -77,6 +77,51 @@ final class PresetColorPaletteTests: XCTestCase {
                 XCTAssertEqual(colors.count, 1)
                 XCTAssertEqual(hex(colors[0]), "00FF00")
             }
+        }
+    }
+
+    func testTheListIsCappedOnSave() {
+        withEmptyPalette {
+            let many = (0..<(PresetColorPalette.maxCount + 10)).map {
+                NSColor(srgbRed: CGFloat($0) / 40, green: 0.5, blue: 0.5, alpha: 1)
+            }
+            PresetColorPalette.save(many)
+            let stored = UserDefaults.standard.array(forKey: PresetColorPalette.defaultsKey)
+            XCTAssertEqual(stored?.count, PresetColorPalette.maxCount)
+            XCTAssertEqual(PresetColorPalette.colors.count, PresetColorPalette.maxCount)
+        }
+    }
+
+    func testAnOversizedStoredListIsCappedOnLoad() {
+        // An imported settings file or hand-edited plist can carry any length.
+        let stored = Array(repeating: "112233", count: PresetColorPalette.maxCount + 5)
+        try? withDefaults([PresetColorPalette.defaultsKey: stored]) {
+            XCTAssertEqual(PresetColorPalette.colors.count, PresetColorPalette.maxCount)
+        }
+    }
+
+    func testNonStringEntriesDoNotDiscardTheList() {
+        try? withDefaults([PresetColorPalette.defaultsKey: ["FF0000", 42, "0000FF"] as [Any]]) {
+            XCTAssertEqual(PresetColorPalette.colors.map(hex), ["FF0000", "0000FF"])
+        }
+    }
+
+    func testAValueThatIsNotAListFallsBackToTheShippedColors() {
+        try? withDefaults([PresetColorPalette.defaultsKey: "FF0000"]) {
+            XCTAssertEqual(PresetColorPalette.colors.count, PresetColorPalette.defaultColors.count)
+        }
+    }
+
+    func testSignedHexIsRejected() {
+        XCTAssertNil(NSColor(presetHex: "+FFFFF"))
+        XCTAssertNil(NSColor(presetHex: "-00000"))
+        XCTAssertNotNil(NSColor(presetHex: "abcdef"))
+    }
+
+    func testOpacityIsNotStored() {
+        withEmptyPalette {
+            PresetColorPalette.save([NSColor(srgbRed: 1, green: 0, blue: 0, alpha: 0.3)])
+            XCTAssertEqual(PresetColorPalette.colors.first?.alphaComponent, 1)
         }
     }
 

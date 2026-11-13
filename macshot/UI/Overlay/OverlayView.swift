@@ -10198,7 +10198,6 @@ class OverlayView: NSView {
                 ?? currentLoupeOutlineColor
         }
         picker.setColor(initialColor, opacity: currentColorOpacity)
-        picker.presetColors = PresetColorPalette.colors
         picker.customColors = customColors
         picker.selectedColorSlot = selectedColorSlot
 

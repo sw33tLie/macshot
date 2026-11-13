@@ -276,7 +276,7 @@ The video editor is built around `VideoEditorDocument` (one `VideoProject`: time
 - Tools: `enabledTools`, `knownToolRawValues`
 - Features: `imgbbAPIKey`, `beautifyEnabled`, `beautifyStyleIndex`, `beautifyMode`, `beautifyPadding`, `beautifyCornerRadius`, `beautifyShadowRadius`, `pencilSmoothEnabled`, `loupeSize`, `stampSize`, `translateTargetLang`
 - Styles: `currentLineStyle`, `currentArrowStyle`, `currentRectFillStyle`, `currentRectCornerRadius`
-- Picker: `presetColors` (hex list for the editable default swatches; unset means the shipped 12, and any length is allowed)
+- Picker: `presetColors` (hex list for the editable default swatches; unset means the shipped 12; capped at `PresetColorPalette.maxCount` (24) on save and load so the picker popover fits small displays)
 - Upload: `uploadProvider` (imgbb/gdrive), `googleDriveRefreshToken`, `gdriveFolderName` (Drive destination folder, defaults to "macshot"), `uploadConfirmEnabled`
 
 ### Threading Model
