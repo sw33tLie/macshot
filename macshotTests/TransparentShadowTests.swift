@@ -23,7 +23,6 @@ final class TransparentShadowTests: XCTestCase {
         let result = BeautifyRenderer.render(image: image, config: config)
         XCTAssertEqual(result.size.width, CGFloat(width) + padding * 2, accuracy: 0.01)
         XCTAssertEqual(result.size.height, CGFloat(height) + padding * 2, accuracy: 0.01)
-        XCTAssertTrue(result.flattensJPEGOntoWhite)
 
         let corner = ImageProbe.pixelColor(result, x: 0, y: 0)
         XCTAssertEqual(corner?.alphaComponent ?? 1, 0, accuracy: 0.02, "the padding corner stays clear")
@@ -80,7 +79,6 @@ final class TransparentShadowTests: XCTestCase {
         let corner = ImageProbe.pixelColor(result, x: 0, y: 0)
         XCTAssertEqual(corner?.alphaComponent ?? 0, 1, accuracy: 0.02,
                        "beautify's shadow is composited onto its background")
-        XCTAssertFalse(result.flattensJPEGOntoWhite)
     }
 
     func testJPEGMatsTheShadowOntoWhite() throws {
@@ -93,7 +91,6 @@ final class TransparentShadowTests: XCTestCase {
         config.shadowRadius = 12
         config.backgroundEnabled = false
         let shadowed = BeautifyRenderer.render(image: image, config: config)
-        XCTAssertTrue(shadowed.flattensJPEGOntoWhite)
 
         var data: Data?
         withDefaults(["imageFormat": "jpeg"]) {

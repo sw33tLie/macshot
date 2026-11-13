@@ -529,13 +529,6 @@ class BeautifyRenderer {
         drawGradientBackground(in: rect, config: config, context: context, prerenderedMesh: prerenderedMesh)
     }
 
-    private static func finishRendered(_ image: NSImage, config: BeautifyConfig) -> NSImage {
-        if !config.backgroundEnabled {
-            image.flattensJPEGOntoWhite = true
-        }
-        return image
-    }
-
     /// Draw a rounded-clipped image with its drop shadow cast from the image's
     /// OWN rounded edge — no separate opaque caster fill. This avoids the thin
     /// rim that the fill-a-rounded-rect approach leaves around the screenshot
@@ -851,7 +844,7 @@ class BeautifyRenderer {
             // Force the drawing handler to run so we can check `success`
             _ = result.cgImage(forProposedRect: nil, context: nil, hints: nil)
         }
-        return success ? finishRendered(result, config: config) : image
+        return success ? result : image
     }
 
     // MARK: - Snapped window mode (native window chrome, no synthetic title bar)
@@ -913,7 +906,7 @@ class BeautifyRenderer {
         if !success {
             _ = result.cgImage(forProposedRect: nil, context: nil, hints: nil)
         }
-        return success ? finishRendered(result, config: config) : image
+        return success ? result : image
     }
 
     // MARK: - Rounded mode (just rounded corners, no title bar)
@@ -956,6 +949,6 @@ class BeautifyRenderer {
         if !success {
             _ = result.cgImage(forProposedRect: nil, context: nil, hints: nil)
         }
-        return success ? finishRendered(result, config: config) : image
+        return success ? result : image
     }
 }

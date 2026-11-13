@@ -283,6 +283,58 @@ final class ImageEncoderTests: XCTestCase {
         let jpeg = try XCTUnwrap(NSImage(data: try encode(format: .jpeg, image: transparent)))
         let jpegPixel = try XCTUnwrap(ImageProbe.pixelColor(jpeg, x: 5, y: 5))
         XCTAssertEqual(jpegPixel.alphaComponent, 1, accuracy: 0.01, "JPEG has no alpha, so it flattens")
+        XCTAssertGreaterThan(jpegPixel.redComponent, 0.95, "transparency mattes onto white, not black")
+        XCTAssertGreaterThan(jpegPixel.greenComponent, 0.95)
+        XCTAssertGreaterThan(jpegPixel.blueComponent, 0.95)
+    }
+
+    /// The matte is applied by the encoder itself, not by a marker on one
+    /// NSImage instance: a copy of a translucent image (history re-save,
+    /// downscale, a new NSImage around the same pixels) still mattes.
+    func testJPEGMattesCopiesOfTranslucentImages() throws {
+        let original = ImageProbe.makeImage(width: 12, height: 12) { context in
+            context.setFillColor(CGColor(srgbRed: 0, green: 0, blue: 0, alpha: 0.5))
+            context.fill(CGRect(x: 0, y: 0, width: 12, height: 12))
+        }
+        let cgImage = try XCTUnwrap(original.cgImage(forProposedRect: nil, context: nil, hints: nil))
+        let copy = NSImage(cgImage: cgImage, size: original.size)
+        let jpeg = try XCTUnwrap(NSImage(data: try encode(format: .jpeg, image: copy)))
+        let pixel = try XCTUnwrap(ImageProbe.pixelColor(jpeg, x: 6, y: 6))
+        XCTAssertEqual(pixel.redComponent, 0.5, accuracy: 0.06, "half-black over white is mid grey")
+        XCTAssertEqual(pixel.greenComponent, 0.5, accuracy: 0.06)
+    }
+
+    func testMatteOntoWhiteBlendsAlphaAndDropsTheChannel() throws {
+        let source = ImageProbe.makeImage(width: 4, height: 2) { context in
+            context.setFillColor(CGColor(srgbRed: 1, green: 0, blue: 0, alpha: 0.5))
+            context.fill(CGRect(x: 0, y: 0, width: 2, height: 2))
+        }
+        let pixels = try XCTUnwrap(source.cgImage(forProposedRect: nil, context: nil, hints: nil))
+        let matted = ImageEncoder.compositeOverWhite(pixels)
+        XCTAssertEqual(matted.width, 4)
+        XCTAssertEqual(matted.height, 2)
+        XCTAssertTrue([.none, .noneSkipFirst, .noneSkipLast].contains(matted.alphaInfo),
+                      "the encoder must receive an opaque image")
+        let image = NSImage(cgImage: matted, size: NSSize(width: 4, height: 2))
+        let clear = try XCTUnwrap(ImageProbe.pixelColor(image, x: 3, y: 0))
+        XCTAssertEqual(clear.redComponent, 1, accuracy: 0.01)
+        XCTAssertEqual(clear.greenComponent, 1, accuracy: 0.01)
+        XCTAssertEqual(clear.blueComponent, 1, accuracy: 0.01)
+        let half = try XCTUnwrap(ImageProbe.pixelColor(image, x: 0, y: 0))
+        XCTAssertEqual(half.redComponent, 1, accuracy: 0.01)
+        XCTAssertEqual(half.greenComponent, 0.5, accuracy: 0.02)
+        XCTAssertEqual(half.alphaComponent, 1, accuracy: 0.01)
+    }
+
+    func testMatteLeavesOpaqueImagesAlone() throws {
+        let space = try XCTUnwrap(CGColorSpace(name: CGColorSpace.sRGB))
+        let context = try XCTUnwrap(CGContext(
+            data: nil, width: 3, height: 3, bitsPerComponent: 8, bytesPerRow: 0, space: space,
+            bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue))
+        context.setFillColor(CGColor(srgbRed: 0, green: 0, blue: 1, alpha: 1))
+        context.fill(CGRect(x: 0, y: 0, width: 3, height: 3))
+        let opaque = try XCTUnwrap(context.makeImage())
+        XCTAssertTrue(ImageEncoder.compositeOverWhite(opaque) === opaque)
     }
 
     // MARK: - Fixtures

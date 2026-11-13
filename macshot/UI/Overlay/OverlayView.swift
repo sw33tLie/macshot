@@ -498,7 +498,6 @@ class OverlayView: NSView {
         return v != nil ? CGFloat(v!) : 8
     }()
 
-    /// Drop shadow composited on a transparent canvas. Off by default.
     var customBeautifyBackground: NSImage? {
         didSet { cachedBeautifyBgCGImage = nil }
     }

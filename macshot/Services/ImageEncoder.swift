@@ -3,17 +3,6 @@ import UniformTypeIdentifiers
 import ImageIO
 import WebP
 
-private var flattensJPEGOntoWhiteKey: UInt8 = 0
-
-extension NSImage {
-    /// JPEG has no alpha. Set on images whose transparent pixels should be
-    /// composited onto white before a JPEG encode, so a drop shadow stays visible.
-    var flattensJPEGOntoWhite: Bool {
-        get { (objc_getAssociatedObject(self, &flattensJPEGOntoWhiteKey) as? Bool) ?? false }
-        set { objc_setAssociatedObject(self, &flattensJPEGOntoWhiteKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
-    }
-}
-
 /// Shared image encoding with user-configurable format, quality, and resolution.
 enum ImageEncoder {
 
@@ -112,14 +101,12 @@ enum ImageEncoder {
         let format: Format
         let quality: CGFloat
         let downscaleRetina: Bool
-        let matteTransparentJPEG: Bool
 
         @MainActor init(_ source: NSImage) throws {
             image = try HistoryImageSnapshot.Image(source)
             format = ImageEncoder.format
             quality = ImageEncoder.quality
             downscaleRetina = ImageEncoder.downscaleRetina
-            matteTransparentJPEG = source.flattensJPEGOntoWhite
         }
 
         nonisolated func pixelsForEncoding() throws -> CGImage {
@@ -139,8 +126,11 @@ enum ImageEncoder {
         }
 
         nonisolated func encode(pixels: CGImage) -> Data? {
-            let pixels = (format == .jpeg && matteTransparentJPEG)
-                ? ImageEncoder.compositeOverWhite(pixels) : pixels
+            // JPEG is the only output format without alpha. Matte every
+            // translucent pixel (a shadow on a clear beautify canvas, a
+            // window's rounded corners) onto white instead of leaving the
+            // result to the OS encoder, which has written black.
+            let pixels = format == .jpeg ? ImageEncoder.compositeOverWhite(pixels) : pixels
             switch format {
             case .png: return ImageEncoder.encodeWithCGImageDestination(cgImage: pixels, type: "public.png", lossyQuality: nil)
             case .jpeg: return ImageEncoder.encodeWithCGImageDestination(cgImage: pixels, type: "public.jpeg", lossyQuality: quality)
@@ -202,21 +192,27 @@ enum ImageEncoder {
     }
 
     /// Composite onto opaque white. JPEG stores no alpha, and unmatted
-    /// transparent pixels encode as black.
+    /// transparent pixels can encode as black. Opaque images pass through.
     nonisolated static func compositeOverWhite(_ image: CGImage) -> CGImage {
+        switch image.alphaInfo {
+        case .none, .noneSkipFirst, .noneSkipLast: return image
+        default: break
+        }
         let width = image.width
         let height = image.height
         guard width > 0, height > 0 else { return image }
-        let colorSpace = image.colorSpace?.model == .rgb ? image.colorSpace! : CGColorSpace(name: CGColorSpace.sRGB)!
+        let colorSpace = image.colorSpace.flatMap { $0.model == .rgb ? $0 : nil }
+            ?? CGColorSpace(name: CGColorSpace.sRGB)!
         guard let context = CGContext(
             data: nil, width: width, height: height,
-            bitsPerComponent: 8, bytesPerRow: width * 4,
+            bitsPerComponent: 8, bytesPerRow: 0,
             space: colorSpace,
-            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
         ) else { return image }
-        context.setFillColor(CGColor(gray: 1, alpha: 1))
-        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
-        context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        let rect = CGRect(x: 0, y: 0, width: width, height: height)
+        context.setFillColor(red: 1, green: 1, blue: 1, alpha: 1)
+        context.fill(rect)
+        context.draw(image, in: rect)
         return context.makeImage() ?? image
     }
 
