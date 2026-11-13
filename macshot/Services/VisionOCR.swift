@@ -25,27 +25,20 @@ struct OCRScanResult: Sendable {
     }
 }
 
+// Compiled into both the app and the macshotOCR XPC service. The entry points
+// that choose between them (performTextRecognition and friends) are app-only,
+// in VisionOCR+Routing.swift.
 enum VisionOCR {
 
-    /// All consumers share the same recovery path, including geometry-based tools.
-    nonisolated static func performTextRecognition(
+    /// The pre-service recovery path: accurate, then fast, in this process.
+    /// Used when the OCR service isn't embedded (unit tests) or can't launch.
+    nonisolated static func performTextRecognitionInProcess(
         cgImage: CGImage,
         completionHandler: @escaping ([OCRTextObservation], Error?) -> Void
     ) {
         OCRRecognitionSession(timeout: 10, startAttempt: { level, completion in
             startTextRecognition(cgImage: cgImage, recognitionLevel: level, completion: completion)
         }, completion: completionHandler).start()
-    }
-
-    nonisolated static func performTextAndQRCodeRecognition(
-        cgImage: CGImage,
-        completionHandler: @escaping (OCRScanResult) -> Void
-    ) {
-        performTextRecognition(cgImage: cgImage) { observations, _ in
-            let text = observations.map(\.text).joined(separator: "\n")
-            let qrCodes = detectQRCodes(cgImage: cgImage)
-            completionHandler(OCRScanResult(text: text, qrCodes: qrCodes))
-        }
     }
 
     /// Starts exactly one attempt. Cancellation is best effort: the session's
@@ -84,6 +77,29 @@ enum VisionOCR {
             return { task.cancel() }
         }
 
+        let request = makeLegacyRequest(recognitionLevel: recognitionLevel, preferredLanguages: preferredLanguages)
+        DispatchQueue.global(qos: .userInitiated).async {
+            completion(performLegacy(request, cgImage: cgImage))
+        }
+        return { request.cancel() }
+    }
+
+    /// Synchronous legacy-API recognition on the calling thread. The app's
+    /// fast fallback uses it on its own serial queue, so a slow request never
+    /// occupies a Swift concurrency thread.
+    nonisolated static func recognizeWithLegacyAPI(
+        cgImage: CGImage,
+        recognitionLevel: VNRequestTextRecognitionLevel,
+        preferredLanguages: [String]
+    ) -> Result<[OCRTextObservation], Error> {
+        performLegacy(makeLegacyRequest(recognitionLevel: recognitionLevel, preferredLanguages: preferredLanguages),
+                      cgImage: cgImage)
+    }
+
+    nonisolated private static func makeLegacyRequest(
+        recognitionLevel: VNRequestTextRecognitionLevel,
+        preferredLanguages: [String]
+    ) -> VNRecognizeTextRequest {
         let request = VNRecognizeTextRequest()
         request.recognitionLevel = recognitionLevel
         request.usesLanguageCorrection = true
@@ -94,21 +110,23 @@ enum VisionOCR {
                 supported: (try? request.supportedRecognitionLanguages()) ?? [])
             if !languages.isEmpty { request.recognitionLanguages = languages }
         }
-        DispatchQueue.global(qos: .userInitiated).async {
-            do {
-                try VNImageRequestHandler(cgImage: cgImage, options: [:]).perform([request])
-                let lines = (request.results ?? []).compactMap { observation -> OCRTextObservation? in
-                    guard let candidate = observation.topCandidates(1).first else { return nil }
-                    return OCRTextObservation(text: candidate.string,
-                        boundingBox: observation.boundingBox,
-                        substringBounds: { (try? candidate.boundingBox(for: $0))?.boundingBox })
-                }
-                completion(.success(lines))
-            } catch {
-                completion(.failure(error))
+        return request
+    }
+
+    nonisolated private static func performLegacy(_ request: VNRecognizeTextRequest,
+                                                  cgImage: CGImage) -> Result<[OCRTextObservation], Error> {
+        do {
+            try VNImageRequestHandler(cgImage: cgImage, options: [:]).perform([request])
+            let lines = (request.results ?? []).compactMap { observation -> OCRTextObservation? in
+                guard let candidate = observation.topCandidates(1).first else { return nil }
+                return OCRTextObservation(text: candidate.string,
+                    boundingBox: observation.boundingBox,
+                    substringBounds: { (try? candidate.boundingBox(for: $0))?.boundingBox })
             }
+            return .success(lines)
+        } catch {
+            return .failure(error)
         }
-        return { request.cancel() }
     }
 
     /// The user's languages: system order first, then macshot's own UI language.

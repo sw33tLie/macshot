@@ -22,6 +22,8 @@ macshot has two release variants:
 
 The offline build is selected with the `OFFLINE` Swift compilation condition. Use `BuildVariant.isOffline` / `BuildVariant.displayName` for runtime variant checks and display names. Upload and cloud storage integrations must be compiled out of the offline build with `#if !OFFLINE`, including upload UI, upload shortcuts, upload settings, upload context menu items, and uploader implementations.
 
+The variant's bundle ID and product name come from the project-level `MACSHOT_BUNDLE_ID` and `MACSHOT_PRODUCT_NAME` settings; override those, never `PRODUCT_BUNDLE_IDENTIFIER`/`PRODUCT_NAME`, on the command line. Command-line settings apply to every target, and the embedded OCR service derives its own ID (`$(MACSHOT_BUNDLE_ID).ocr`) and keeps its own product name.
+
 The release workflow builds both variants from the same tag. It patches the offline app's `SUFeedURL` to `appcast-offline.xml`, removes the Google OAuth URL scheme from the offline app, signs both apps, packages both DMGs, notarizes both DMGs, and writes both appcasts. Do not point the offline app at the normal appcast or vice versa; Sparkle updates must stay variant-specific so offline users never update into the normal app.
 
 Beta handling is shared: beta items get `<sparkle:channel>beta</sparkle:channel>`, and users opt in through the existing "Check for beta updates" setting. Stable offline releases will appear to offline users through `appcast-offline.xml` once a stable offline item exists.
@@ -69,7 +71,10 @@ macshot/
 │   ├── AutoRedactor.swift              # PII regex detection + Vision OCR → redaction annotations
 │   ├── TranslationOverlay.swift        # OCR → translate → overlay annotations
 │   ├── TranslationService.swift        # Google Translate API wrapper
-│   ├── VisionOCR.swift                 # Vision text recognition request factory
+│   ├── VisionOCR.swift                 # Vision text recognition (compiled into the app AND the OCR service)
+│   ├── VisionOCR+Routing.swift         # App-only OCR entry points: performTextRecognition → OCRServiceClient
+│   ├── OCRServiceClient.swift          # Sends OCR to macshotOCR.xpc; timeouts, fast fallback, service replacement
+│   ├── OCRServiceProtocol.swift        # Shared XPC interface + wire format (also compiled into the service)
 │   ├── HotkeyManager.swift            # Global keyboard shortcut (Carbon RegisterEventHotKey)
 │   ├── KeyboardShortcutMatcher.swift   # Layout-aware character matching for shortcuts
 │   ├── ToolShortcutManager.swift       # Single-key overlay tool shortcuts
@@ -151,6 +156,10 @@ macshot/
 ├── Info.plist
 ├── Assets.xcassets/
 └── Base.lproj/Main.storyboard
+
+macshotOCRService/                      # macshotOCR.xpc target, embedded in Contents/XPCServices
+├── main.swift                          # NSXPCListener; serial Vision reads; exits on stuck request or dropped connection
+└── Info.plist                          # XPCService / ServiceType = Application
 ```
 
 ### Component Overview
@@ -271,7 +280,7 @@ The video editor is built around `VideoEditorDocument` (one `VideoProject`: time
 - **Capture:** Displays are captured one at a time, the one under the pointer first (on macOS 26 `replayd` serializes concurrent screenshot requests and charges far more per queued request). Each display's overlay is shown as soon as its capture lands; keyboard focus stays on the display with a selection, else the one under the pointer, and a partial failure falls back only for the displays not yet shown.
 - **Recording:** SCStream output on background thread, main actor for state updates
 - **Scroll capture:** Frames grabbed every 50 ms while scrolling (a mouse wheel animates without events) plus a settled capture after; matching/stitching on main, serialized by `isCapturing`
-- **OCR:** VNImageRequestHandler on background thread, results to main
+- **OCR:** Accurate recognition runs in the `macshotOCR` XPC service, one request at a time; the fast fallback runs in-process on a serial GCD queue. Results to main
 - **Upload:** URLSession background task
 - **GIF:** Frame encoding on background thread
 - **UI:** All drawing, state changes, and user interaction on main thread
@@ -342,6 +351,7 @@ Copy to clipboard, Save to file (PNG/JPEG/HEIC/WebP), Pin (floating always-on-to
 - **Offline bitrate targets differ from capture.** Medium/Low MP4 exports use `VideoExportEncodingPlan`, with source metadata loaded during preparation. Do not apply live-recording bitrate minimums or estimate size by multiplying input bytes by a quality percentage. For comparable H.264 sources with near-uniform cadence, estimates use the same target settings and edited duration as export, including audio. Omit estimates for sparse or unknown cadence, different codecs, High and GIF; fallback encoder budgets are not size predictions. Keep file/track metadata reads out of editor drawing.
 - **Video cadence is not the shortest sample.** Idle heartbeats and final tails produce variable timing. `VideoFrameCadence` stores the intended interval in MP4's supported software metadata field and performs a bounded background timing inspection for unmarked files. Cache that interval during preparation and reuse it for preview, rendering and bitrate targets; preserve it through audio mixing and MP4 exports. Do not derive rendering FPS from a single minimum interval or the average across long idle gaps.
 - **GIF export streams.** Use `GIFExporter` with the processed timeline and an explicit output cadence. `GIFEncoder` consumes presentation timestamps and writes one ImageIO-encoded frame at a time, combining unchanged pixels into holds. Do not accumulate an animation in one ImageIO destination, decimate by guessed source FPS, or spool every frame into scratch PNGs.
+- **OCR goes through the service.** Call `VisionOCR.performTextRecognition` (or `performTextAndQRCodeRecognition`); never run an accurate `RecognizeTextRequest`/`VNRecognizeTextRequest` in the app process. On macOS 27 an accurate request can block forever, ignore `cancel()` and poison every later request in that process (FB25403069), and `RecognizeTextRequest.perform` blocks a Swift concurrency thread while it waits. `OCRServiceClient` gives the service `softTimeout` (10 s) before answering from the in-process fast model, lets the service keep running up to `hardDeadline` (120 s) so a cold model compile (44-66 s) can finish, and replaces the service after an error or an empty result the fast model contradicts. launchd won't relaunch a service younger than 10 s, so a replaced young service is skipped (fast model) until then. The service is unsandboxed (the release workflow fails if any `.xpc` carries a sandbox entitlement) and only decodes pixels it is sent. Files it shares with the app (`VisionOCR.swift`, `OCRServiceProtocol.swift`) must stay free of app state; it gets them through the `macshot` folder's membership exception for the `macshotOCR` target. `scripts/probe-ocr-service.sh` builds the real sandboxed app with `OCR_FAULT_INJECTION` and checks recovery from a hung, failing or silently empty service.
 - **Uploads stream, they don't buffer.** A recording is routinely larger than the memory the app can hold, so uploaders take an `UploadPayload` (`.file` for recordings, `.data` for encoded screenshots). `UploadPayload` chunks, hashes incrementally for SigV4, and `MultipartBodyWriter` writes request bodies straight to a temp file. Don't reintroduce `Data(contentsOf:)` on a recording.
 - **Upload bodies and callbacks belong to one job.** Prepare `PreparedUploadBody` off the main actor, hash the bytes while writing that owned body, and retain it through every retry. Never reread the public source for a retry or put progress on a shared uploader property. `UploadJob` participates in the existing quit drain; completion owns source leases until the request finishes. Drive retries reuse one pre-generated file ID and one multipart body. Account/cache changes stay on the main actor, and stale responses must not restore signed-out credentials or folders. Verify requests with local fixtures, not live cloud uploads.
 - **Keyboard shortcuts:** Character-based commands must go through `KeyboardShortcutMatcher`; do not compare raw letter key codes or read `charactersIgnoringModifiers` directly. The matcher follows the character produced by rearranged Latin layouts such as QWERTZ, AZERTY, and Dvorak, while falling back through the user's ASCII-capable layout for non-Latin input sources such as Russian or Arabic. Use `EditorCommandShortcutManager` for configurable Undo/Redo chords and `ToolShortcutManager` plus `KeyboardShortcutMatcher.toolCharacters(for:)` for single-key overlay tools. Raw `event.keyCode` checks are appropriate only for layout-independent non-character keys such as Escape, Return, Tab, Space, Delete, arrows, and function keys. Global Carbon hotkeys remain physical key-code bindings; translate them only for display with `KeyboardShortcutMatcher.currentLayoutCharacter(for:)`, and disable `NSMenuItem` automatic key-equivalent localization after applying an already-translated physical binding.

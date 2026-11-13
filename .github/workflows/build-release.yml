@@ -134,8 +134,8 @@ jobs:
             MARKETING_VERSION="$VERSION" \
             CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
             SWIFT_ACTIVE_COMPILATION_CONDITIONS="OFFLINE" \
-            PRODUCT_BUNDLE_IDENTIFIER="com.sw33tlie.macshot.offline" \
-            PRODUCT_NAME="macshot Offline" \
+            MACSHOT_BUNDLE_ID="com.sw33tlie.macshot.offline" \
+            MACSHOT_PRODUCT_NAME="macshot Offline" \
             INFOPLIST_KEY_CFBundleDisplayName="macshot Offline" \
             INFOPLIST_KEY_CFBundleName="macshot Offline" \
             INFOPLIST_KEY_SUFeedURL="https://raw.githubusercontent.com/sw33tLie/macshot/main/appcast-offline.xml" \
