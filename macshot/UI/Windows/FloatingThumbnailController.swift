@@ -497,8 +497,11 @@ class FloatingThumbnailController: NSObject, NSDraggingSource, QLPreviewPanelDat
             thumbnailView?.isDimmed = false
             slideBackIn(to: origin ?? targetFrame.origin)
         }
-        // Leaving the preview under the pointer reschedules it (onHoverExit).
-        if thumbnailView?.isHovering != true { scheduleAutoDismiss() }
+        // A preview under the pointer is rescheduled when the pointer leaves
+        // it (onHoverExit). Ask where the pointer is rather than the hover
+        // flag: a preview hidden while its editor was open never saw the
+        // pointer leave.
+        if !targetFrame.contains(NSEvent.mouseLocation) { scheduleAutoDismiss() }
     }
 
     /// An output re-showed this preview's capture: give it a full auto-dismiss
