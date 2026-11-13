@@ -100,6 +100,7 @@ macshot/
 │   │   ├── EditorView.swift            # OverlayView subclass: NSScrollView mode, no selection chrome
 │   │   ├── DetachedEditorWindowController.swift  # Standalone editor window (resizable, titled)
 │   │   ├── EditorTopBarView.swift      # NSView with crop, flip, zoom buttons
+│   │   ├── EditorDragHandleView.swift  # Top-bar handle: drag the edited image out as a file, click to copy
 │   │   ├── CenteringClipView.swift     # NSClipView subclass that centers document when smaller than clip
 │   │   ├── VideoEditorWindowController(+Export).swift  # Studio video editor window, actions, exports
 │   │   └── Video/                      # Editor document, playback, planner, exporter, inspector, stage, timeline

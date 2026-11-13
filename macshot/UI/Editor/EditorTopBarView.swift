@@ -1,10 +1,12 @@
 import Cocoa
 
 /// Real NSView top bar for the editor window. Pinned to top of container.
-/// Contains: pixel dimensions, crop/flip/add-capture buttons, zoom dropdown.
+/// Contains: pixel dimensions, crop/flip/add-capture buttons, drag-out handle, zoom dropdown.
 class EditorTopBarView: NSView {
 
     weak var overlayView: OverlayView?
+    /// Drags the current image into other apps; the editor controller supplies the image.
+    let dragHandle = EditorDragHandleView()
     private var sizeLabel: NSTextField!
     private var zoomButton: NSButton!
     private var doneButton: NSButton?
@@ -43,7 +45,7 @@ class EditorTopBarView: NSView {
         addSubview(border)
 
         // Layout with constraints
-        for v: NSView in [sizeLabel, cropBtn, flipHBtn, flipVBtn, addCaptureBtn, zoomButton] {
+        for v: NSView in [sizeLabel, cropBtn, flipHBtn, flipVBtn, addCaptureBtn, dragHandle, zoomButton] {
             v.translatesAutoresizingMaskIntoConstraints = false
             addSubview(v)
         }
@@ -76,6 +78,11 @@ class EditorTopBarView: NSView {
 
             zoomButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
             zoomButton.centerYAnchor.constraint(equalTo: centerYAnchor),
+
+            dragHandle.trailingAnchor.constraint(equalTo: zoomButton.leadingAnchor, constant: -10),
+            dragHandle.centerYAnchor.constraint(equalTo: centerYAnchor),
+            dragHandle.widthAnchor.constraint(equalToConstant: 40),
+            dragHandle.heightAnchor.constraint(equalToConstant: 22),
 
             border.leadingAnchor.constraint(equalTo: leadingAnchor),
             border.trailingAnchor.constraint(equalTo: trailingAnchor),
@@ -207,7 +214,7 @@ class EditorTopBarView: NSView {
         btn.translatesAutoresizingMaskIntoConstraints = false
         addSubview(btn)
         NSLayoutConstraint.activate([
-            btn.trailingAnchor.constraint(equalTo: zoomButton.leadingAnchor, constant: -12),
+            btn.trailingAnchor.constraint(equalTo: dragHandle.leadingAnchor, constant: -12),
             btn.centerYAnchor.constraint(equalTo: centerYAnchor),
         ])
         doneButton = btn

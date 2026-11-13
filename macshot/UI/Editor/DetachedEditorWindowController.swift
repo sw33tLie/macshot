@@ -45,6 +45,8 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
     /// When true, force beautify off on open (image already has beautify baked in).
     private var disableBeautifyOnOpen: Bool = false
     private var initialEditState: CaptureEditState?
+    /// The output captured when a drag-out started; recorded only if a destination accepts it.
+    private var pendingDragSave: HistorySave?
 
     /// Open an editor window with the given image (typically from captureSelectedRegion).
     /// When `disableBeautify` is true, beautify starts off regardless of UserDefaults
@@ -171,6 +173,12 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         // no Done until you draw). Wire the action now; visibility is driven by
         // refreshDoneButtonVisibility() via the view's onContentChanged hook.
         topBar.onDone = { [weak self] in self?.commitToHistory() }
+        topBar.dragHandle.imageProvider = { [weak self] in self?.beginDragOut() }
+        topBar.dragHandle.onDragEnded = { [weak self] accepted in self?.finishDragOut(accepted: accepted) }
+        topBar.dragHandle.onClick = { [weak self] in
+            self?.overlayView?.commitTextFieldIfNeeded()
+            self?.overlayViewDidConfirm()
+        }
         view.onContentChanged = { [weak self] in
             self?.contentRevision &+= 1
             self?.refreshDoneButtonVisibility()
@@ -401,6 +409,26 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
                 (NSApp.delegate as? AppDelegate)?.showFloatingThumbnail(image: save.image, annotationData: save.annotationData, historyEntryID: entryID)
             }
         }
+    }
+
+    // MARK: - Drag out (#514)
+
+    /// Snapshot the output for a drag from the top-bar handle. Like Copy, the
+    /// image includes annotations, effects and beautify as they are right now.
+    private func beginDragOut() -> NSImage? {
+        overlayView?.commitTextFieldIfNeeded()
+        guard let save = captureHistorySave() else { return nil }
+        pendingDragSave = save
+        return save.image
+    }
+
+    /// A dropped image counts as output (no "unsaved capture" warning on close)
+    /// and its exact state goes to history, just like Copy.
+    private func finishDragOut(accepted: Bool) {
+        guard let save = pendingDragSave else { return }
+        pendingDragSave = nil
+        guard accepted else { return }
+        autoSaveToHistoryIfNeeded(save)
     }
 
     /// Called by output actions (copy, save, etc.) to persist changes to history.
