@@ -38,6 +38,23 @@ final class CaptureCoverageTests: XCTestCase {
         XCTAssertTrue(ScreenCaptureManager.isUnderPaintedCapture(image))
     }
 
+    func testClearCornersAloneDoNotRejectACapture() throws {
+        // A fully painted display whose four corner pixels came back clear,
+        // as a rounded-corner mask would leave them.
+        let space = try XCTUnwrap(CGColorSpace(name: CGColorSpace.sRGB))
+        let context = try XCTUnwrap(CGContext(
+            data: nil, width: 512, height: 288,
+            bitsPerComponent: 8, bytesPerRow: 512 * 4, space: space,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        context.setFillColor(CGColor(srgbRed: 0.2, green: 0.4, blue: 0.8, alpha: 1))
+        context.fill(CGRect(x: 0, y: 0, width: 512, height: 288))
+        for corner in [CGPoint(x: 0, y: 0), CGPoint(x: 504, y: 0), CGPoint(x: 0, y: 280), CGPoint(x: 504, y: 280)] {
+            context.clear(CGRect(origin: corner, size: CGSize(width: 8, height: 8)))
+        }
+        let image = try XCTUnwrap(context.makeImage())
+        XCTAssertFalse(ScreenCaptureManager.isUnderPaintedCapture(image))
+    }
+
     func testAnEmptyCaptureIsRejected() throws {
         let image = try capture(width: 64, height: 36, paintedWidth: 0, paintedHeight: 0)
         XCTAssertTrue(ScreenCaptureManager.isUnderPaintedCapture(image))

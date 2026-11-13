@@ -289,7 +289,7 @@ class ScreenCaptureManager {
             // the 1x content painted top-left. The content-filter path
             // captures it correctly.
             if isUnderPaintedCapture(image) {
-                timing?("SCK rect capture under-painted screen=\(index) pixels=\(image.width)x\(image.height) — fallback")
+                timing?("SCK rect capture under-painted screen=\(index) pixels=\(image.width)x\(image.height), fallback")
                 return nil
             }
             let capture = ScreenCapture(screen: screen, image: image)
@@ -307,15 +307,19 @@ class ScreenCaptureManager {
     }
 
     /// True when a display capture has transparent pixels in its top-right,
-    /// bottom-left and bottom-right corners. A display is opaque everywhere,
-    /// so this means the buffer is larger than what was painted into it.
-    /// Reads three pixels, not the whole buffer.
+    /// bottom-left and bottom-right corners and inside its bottom-right
+    /// quadrant. A display is opaque everywhere, so this means the buffer is
+    /// larger than what was painted into it. The quadrant probe keeps a
+    /// display whose corners alone come back clear (rounded corners) from
+    /// being sent down the slower fallback on every capture.
+    /// Reads four pixels, not the whole buffer.
     static func isUnderPaintedCapture(_ image: CGImage) -> Bool {
         let width = image.width
         let height = image.height
         guard width > 0, height > 0 else { return true }
-        let corners = [(width - 1, 0), (0, height - 1), (width - 1, height - 1)]
-        return corners.allSatisfy { alpha(of: image, x: $0.0, y: $0.1) == 0 }
+        let probes = [(width - 1, 0), (0, height - 1), (width - 1, height - 1),
+                      (width * 3 / 4, height * 3 / 4)]
+        return probes.allSatisfy { alpha(of: image, x: $0.0, y: $0.1) == 0 }
     }
 
     /// Alpha of one pixel, `y` counted from the top. Nil if it can't be read.
