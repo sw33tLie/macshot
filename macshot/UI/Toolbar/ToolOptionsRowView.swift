@@ -1325,12 +1325,30 @@ class ToolOptionsRowView: NSView {
             curX = addBeautifySlider(at: curX, label: L("Radius"), value: ov.beautifyCornerRadius, min: 0, max: 30, isEnabled: controlsEnabled, action: #selector(beautifyCornerChanged(_:)))
         }
 
-        // Shadow slider
+        // Shadow slider. This is the same shadow beautify already draws.
         curX = addBeautifySlider(at: curX, label: L("Shadow"), value: ov.beautifyShadowRadius, min: 0, max: 100, isEnabled: controlsEnabled, action: #selector(beautifyShadowChanged(_:)))
+
+        let backgroundOn = ov.beautifyBackgroundEnabled
+        let bgBtn = NSButton(
+            checkboxWithTitle: L("Background"), target: self,
+            action: #selector(beautifyBackgroundChanged(_:)))
+        bgBtn.state = backgroundOn ? .on : .off
+        bgBtn.isEnabled = controlsEnabled
+        bgBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
+        if let cell = bgBtn.cell as? NSButtonCell {
+            cell.attributedTitle = NSAttributedString(string: L("Background"), attributes: [
+                .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(controlsEnabled ? 0.85 : 0.35),
+                .font: NSFont.systemFont(ofSize: 10, weight: .medium)
+            ])
+        }
+        bgBtn.sizeToFit()
+        bgBtn.frame.origin = NSPoint(x: curX, y: (rowHeight - bgBtn.frame.height) / 2)
+        addSubview(bgBtn)
+        curX += bgBtn.frame.width + 4
 
         // Blur slider — only shown for custom image backgrounds
         if ov.beautifyStyleIndex == -1 {
-            curX = addBeautifySlider(at: curX, label: L("Blur"), value: ov.beautifyBackgroundBlur, min: 0, max: 50, isEnabled: controlsEnabled, action: #selector(beautifyBlurChanged(_:)))
+            curX = addBeautifySlider(at: curX, label: L("Blur"), value: ov.beautifyBackgroundBlur, min: 0, max: 50, isEnabled: controlsEnabled && backgroundOn, action: #selector(beautifyBlurChanged(_:)))
         }
 
         curX = addSeparator(at: curX)
@@ -1345,7 +1363,7 @@ class ToolOptionsRowView: NSView {
         swatchBtn.imageScaling = .scaleProportionallyUpOrDown
         swatchBtn.target = self
         swatchBtn.action = #selector(beautifyGradientClicked(_:))
-        swatchBtn.isEnabled = controlsEnabled
+        swatchBtn.isEnabled = controlsEnabled && ov.beautifyBackgroundEnabled
         swatchBtn.toolTip = L("Gradient Style")
         swatchBtn.tag = 995
         addSubview(swatchBtn)
@@ -1358,7 +1376,7 @@ class ToolOptionsRowView: NSView {
             .withSymbolConfiguration(.init(pointSize: 9, weight: .semibold))
         arrowBtn.target = self
         arrowBtn.action = #selector(beautifyGradientClicked(_:))
-        arrowBtn.isEnabled = controlsEnabled
+        arrowBtn.isEnabled = controlsEnabled && ov.beautifyBackgroundEnabled
         addSubview(arrowBtn)
         arrowBtn.contentTintColor = ToolbarLayout.iconColor.withAlphaComponent(0.6)
         curX += 18
@@ -1409,6 +1427,16 @@ class ToolOptionsRowView: NSView {
         guard let ov = overlayView else { return }
         ov.beautifyCornerRadius = CGFloat(sender.floatValue)
         UserDefaults.standard.set(sender.doubleValue, forKey: "beautifyCornerRadius")
+        ov.needsDisplay = true
+        ov.onContentChanged?()
+    }
+
+    @objc private func beautifyBackgroundChanged(_ sender: NSButton) {
+        guard let ov = overlayView else { return }
+        ov.beautifyBackgroundEnabled = sender.state == .on
+        UserDefaults.standard.set(sender.state == .on, forKey: "beautifyBackgroundEnabled")
+        ov.cachedCompositedImage = nil
+        ov.rebuildToolbarLayout()
         ov.needsDisplay = true
         ov.onContentChanged?()
     }

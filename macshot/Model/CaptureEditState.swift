@@ -17,6 +17,8 @@ struct CaptureEditState: Codable, Equatable {
     var beautifyBackgroundBlur: Double = 0
     var beautifyIsWindowSnap: Bool = false
     var customBeautifyBackgroundPNG: Data?
+    /// Off leaves the padding clear and keeps beautify's existing shadow.
+    var beautifyBackgroundEnabled: Bool = true
 
     var effectsPreset: ImageEffectPreset {
         ImageEffectPreset(rawValue: effectsPresetRaw) ?? .none
@@ -53,7 +55,8 @@ struct CaptureEditState: Codable, Equatable {
             bgRadius: 0,
             isWindowSnap: beautifyIsWindowSnap,
             customBackgroundImage: customBeautifyBackground,
-            backgroundBlur: CGFloat(SavedCaptureValidation.bounded(beautifyBackgroundBlur, 0...50, fallback: 0))
+            backgroundBlur: CGFloat(SavedCaptureValidation.bounded(beautifyBackgroundBlur, 0...50, fallback: 0)),
+            backgroundEnabled: beautifyBackgroundEnabled
         )
         if config.customBackgroundImage != nil {
             config.prepareBackgroundCache()
@@ -86,6 +89,7 @@ extension CaptureEditState {
         beautifyBackgroundBlur = c.decode(.beautifyBackgroundBlur, or: 0)
         beautifyIsWindowSnap = c.decode(.beautifyIsWindowSnap, or: false)
         customBeautifyBackgroundPNG = c.decodeOptional(.customBeautifyBackgroundPNG)
+        beautifyBackgroundEnabled = c.decode(.beautifyBackgroundEnabled, or: true)
         normalizeValues()
     }
 
@@ -127,7 +131,8 @@ extension OverlayView {
             beautifyShadowRadius: Double(beautifyShadowRadius),
             beautifyBackgroundBlur: Double(beautifyBackgroundBlur),
             beautifyIsWindowSnap: selectionIsWindowSnap,
-            customBeautifyBackgroundPNG: customBackgroundData
+            customBeautifyBackgroundPNG: customBackgroundData,
+            beautifyBackgroundEnabled: beautifyBackgroundEnabled
         )
     }
 
@@ -150,6 +155,7 @@ extension OverlayView {
         beautifyBackgroundBlur = CGFloat(state.beautifyBackgroundBlur)
         selectionIsWindowSnap = state.beautifyIsWindowSnap
         customBeautifyBackground = state.customBeautifyBackground
+        beautifyBackgroundEnabled = state.beautifyBackgroundEnabled
         if customBeautifyBackground != nil {
             prepareBeautifyBackgroundCache()
         } else {
