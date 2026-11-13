@@ -862,3 +862,5 @@
 
 "Snap webcam to corners when moved" = "移動時にウェブカメラを四隅にスナップ";
 "Search emoji" = "絵文字を検索";
+"Hide the bottom toolbar" = "下部ツールバーを非表示";
+"Pick tools with their keyboard shortcuts instead." = "ツールはキーボードショートカットで選択します。";

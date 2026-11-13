@@ -864,3 +864,5 @@
 
 "Snap webcam to corners when moved" = "이동할 때 웹캠을 모서리에 맞추기";
 "Search emoji" = "이모티콘 검색";
+"Hide the bottom toolbar" = "하단 도구 막대 숨기기";
+"Pick tools with their keyboard shortcuts instead." = "대신 키보드 단축키로 도구를 선택하세요.";

@@ -864,3 +864,5 @@
 
 "Snap webcam to corners when moved" = "Webcam beim Verschieben an Ecken einrasten lassen";
 "Search emoji" = "Emoji suchen";
+"Hide the bottom toolbar" = "Untere Werkzeugleiste ausblenden";
+"Pick tools with their keyboard shortcuts instead." = "Werkzeuge stattdessen über ihre Tastaturkurzbefehle wählen.";

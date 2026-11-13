@@ -862,3 +862,5 @@
 
 "Snap webcam to corners when moved" = "Привязывать веб-камеру к углам при перемещении";
 "Search emoji" = "Поиск эмодзи";
+"Hide the bottom toolbar" = "Скрывать нижнюю панель инструментов";
+"Pick tools with their keyboard shortcuts instead." = "Выбирайте инструменты сочетаниями клавиш.";
