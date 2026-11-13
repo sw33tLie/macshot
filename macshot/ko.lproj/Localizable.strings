@@ -865,3 +865,12 @@
 
 "Snap webcam to corners when moved" = "이동할 때 웹캠을 모서리에 맞추기";
 "Search emoji" = "이모티콘 검색";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "닫기";
+"Copy & dismiss" = "복사 후 닫기";
+"Close preview" = "미리보기 닫기";
+"Keep in stack" = "스택에 유지";
+"Return to stack when editor closes" = "편집기를 닫으면 스택으로 복귀";
+"  Click on preview:" = "  미리보기 클릭 시:";
+"  When opened in Editor:" = "  편집기에서 열 때:";

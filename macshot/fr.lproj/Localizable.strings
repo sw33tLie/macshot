@@ -863,3 +863,12 @@
 
 "Snap webcam to corners when moved" = "Aligner la webcam sur les coins lors du déplacement";
 "Search emoji" = "Rechercher un emoji";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Fermer";
+"Copy & dismiss" = "Copier et fermer";
+"Close preview" = "Fermer l’aperçu";
+"Keep in stack" = "Garder dans la pile";
+"Return to stack when editor closes" = "Remettre dans la pile à la fermeture de l’éditeur";
+"  Click on preview:" = "  Clic sur l’aperçu :";
+"  When opened in Editor:" = "  À l’ouverture dans l’éditeur :";

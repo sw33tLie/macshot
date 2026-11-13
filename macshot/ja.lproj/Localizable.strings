@@ -863,3 +863,12 @@
 
 "Snap webcam to corners when moved" = "移動時にウェブカメラを四隅にスナップ";
 "Search emoji" = "絵文字を検索";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "閉じる";
+"Copy & dismiss" = "コピーして閉じる";
+"Close preview" = "プレビューを閉じる";
+"Keep in stack" = "スタックに残す";
+"Return to stack when editor closes" = "エディタを閉じたらスタックに戻す";
+"  Click on preview:" = "  プレビューをクリック:";
+"  When opened in Editor:" = "  エディタで開いたとき:";

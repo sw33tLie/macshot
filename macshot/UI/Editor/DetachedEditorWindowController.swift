@@ -48,6 +48,22 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
     /// The output captured when a drag-out started; recorded only if a destination accepts it.
     private var pendingDragSave: HistorySave?
 
+    /// Optional callbacks for whoever opened the editor (e.g. a floating preview).
+    struct Hooks {
+        /// Called after each successful save with the final image, its editable
+        /// data and the history entry it was written to (nil if history is off).
+        var onSaved: ((NSImage, CaptureAnnotationData?, String?) -> Void)?
+        /// Called once, after the editor window has closed.
+        var onClose: (() -> Void)?
+
+        init(onSaved: ((NSImage, CaptureAnnotationData?, String?) -> Void)? = nil,
+             onClose: (() -> Void)? = nil) {
+            self.onSaved = onSaved
+            self.onClose = onClose
+        }
+    }
+    private var hooks = Hooks()
+
     /// Open an editor window with the given image (typically from captureSelectedRegion).
     /// When `disableBeautify` is true, beautify starts off regardless of UserDefaults
     /// (used when the image already has beautify baked in).
@@ -59,9 +75,10 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
     /// here: writing `view.currentTool = .arrow` triggers the didSet that
     /// persists "arrow" globally, wiping the user's last-tool memory across
     /// the whole app.
-    static func open(image: NSImage, tool: AnnotationTool? = nil, color: NSColor? = nil, strokeWidth: CGFloat? = nil, annotations: [Annotation] = [], historyEntryID: String? = nil, fromCapture: Bool = false, disableBeautify: Bool = false, editState: CaptureEditState? = nil) {
+    static func open(image: NSImage, tool: AnnotationTool? = nil, color: NSColor? = nil, strokeWidth: CGFloat? = nil, annotations: [Annotation] = [], historyEntryID: String? = nil, fromCapture: Bool = false, disableBeautify: Bool = false, editState: CaptureEditState? = nil, hooks: Hooks = Hooks()) {
         let controller = DetachedEditorWindowController()
         controller.historyEntryID = historyEntryID
+        controller.hooks = hooks
         controller.disableBeautifyOnOpen = disableBeautify
         controller.initialEditState = editState
         // Only warn about unsaved capture if the image came from a live capture (not a file on disk)
@@ -333,6 +350,9 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         if Self.activeControllers.isEmpty {
             (NSApp.delegate as? AppDelegate)?.returnFocusIfNeeded()
         }
+        let onClose = hooks.onClose
+        hooks = Hooks()
+        onClose?()
     }
 
     /// One output action owns its image, editable data and clean-state marker.
@@ -376,6 +396,7 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
                 if let id = self.historyEntryID {
                     (NSApp.delegate as? AppDelegate)?.refreshThumbnail(for: id, image: finalImage, annotationData: data)
                 }
+                self.hooks.onSaved?(finalImage, data, self.historyEntryID)
             }
             completion?(success && unchanged)
         }

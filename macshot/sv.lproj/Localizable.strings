@@ -863,3 +863,12 @@
 
 "Snap webcam to corners when moved" = "Fäst webbkameran i hörnen när den flyttas";
 "Search emoji" = "Sök emoji";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Stäng";
+"Copy & dismiss" = "Kopiera och stäng";
+"Close preview" = "Stäng förhandsvisning";
+"Keep in stack" = "Behåll i stapeln";
+"Return to stack when editor closes" = "Tillbaka till stapeln när redigeraren stängs";
+"  Click on preview:" = "  Klick på förhandsvisning:";
+"  When opened in Editor:" = "  När den öppnas i redigeraren:";

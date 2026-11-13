@@ -865,3 +865,12 @@
 
 "Snap webcam to corners when moved" = "Ajusta la càmera web a les cantonades en moure-la";
 "Search emoji" = "Cerca emojis";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Tanca";
+"Copy & dismiss" = "Copia i tanca";
+"Close preview" = "Tanca la previsualització";
+"Keep in stack" = "Mantén a la pila";
+"Return to stack when editor closes" = "Torna a la pila en tancar l’editor";
+"  Click on preview:" = "  Clic a la previsualització:";
+"  When opened in Editor:" = "  En obrir a l’editor:";

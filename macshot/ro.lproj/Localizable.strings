@@ -863,3 +863,12 @@
 
 "Snap webcam to corners when moved" = "Aliniază webcamul la colțuri când este mutat";
 "Search emoji" = "Caută emoji";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Închide";
+"Copy & dismiss" = "Copiază și închide";
+"Close preview" = "Închide previzualizarea";
+"Keep in stack" = "Păstrează în stivă";
+"Return to stack when editor closes" = "Revino în stivă la închiderea editorului";
+"  Click on preview:" = "  Clic pe previzualizare:";
+"  When opened in Editor:" = "  La deschiderea în editor:";

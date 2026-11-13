@@ -865,3 +865,12 @@
 
 "Snap webcam to corners when moved" = "Idikit ang webcam sa mga sulok kapag inililipat";
 "Search emoji" = "Maghanap ng emoji";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Isara";
+"Copy & dismiss" = "Kopyahin at isara";
+"Close preview" = "Isara ang preview";
+"Keep in stack" = "Panatilihin sa stack";
+"Return to stack when editor closes" = "Ibalik sa stack kapag isinara ang editor";
+"  Click on preview:" = "  Pag-click sa preview:";
+"  When opened in Editor:" = "  Kapag binuksan sa Editor:";

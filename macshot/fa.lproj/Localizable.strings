@@ -865,3 +865,12 @@
 
 "Snap webcam to corners when moved" = "چسباندن وب‌کم به گوشه‌ها هنگام جابه‌جایی";
 "Search emoji" = "جستجوی ایموجی";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "بستن";
+"Copy & dismiss" = "کپی و بستن";
+"Close preview" = "بستن پیش‌نمایش";
+"Keep in stack" = "نگه‌داشتن در پشته";
+"Return to stack when editor closes" = "بازگشت به پشته پس از بستن ویرایشگر";
+"  Click on preview:" = "  کلیک روی پیش‌نمایش:";
+"  When opened in Editor:" = "  هنگام باز شدن در ویرایشگر:";

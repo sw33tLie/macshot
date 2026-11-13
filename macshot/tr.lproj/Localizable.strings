@@ -865,3 +865,12 @@
 
 "Snap webcam to corners when moved" = "Taşırken web kamerasını köşelere yasla";
 "Search emoji" = "Emoji ara";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Kapat";
+"Copy & dismiss" = "Kopyala ve kapat";
+"Close preview" = "Önizlemeyi kapat";
+"Keep in stack" = "Yığında tut";
+"Return to stack when editor closes" = "Düzenleyici kapanınca yığına geri dön";
+"  Click on preview:" = "  Önizlemeye tıklama:";
+"  When opened in Editor:" = "  Düzenleyicide açıldığında:";

@@ -865,3 +865,12 @@
 
 "Snap webcam to corners when moved" = "移動時將攝影機吸附至角落";
 "Search emoji" = "搜尋表情符號";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "關閉";
+"Copy & dismiss" = "複製並關閉";
+"Close preview" = "關閉預覽";
+"Keep in stack" = "保留在堆疊中";
+"Return to stack when editor closes" = "關閉編輯器後返回堆疊";
+"  Click on preview:" = "  按一下預覽:";
+"  When opened in Editor:" = "  在編輯器中開啟時:";

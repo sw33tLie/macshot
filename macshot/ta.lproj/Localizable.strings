@@ -865,3 +865,12 @@
 
 "Snap webcam to corners when moved" = "நகர்த்தும்போது வெப்கேமைக் மூலைகளில் பொருத்து";
 "Search emoji" = "எமோஜியைத் தேடு";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "மூடு";
+"Copy & dismiss" = "நகலெடுத்து மூடு";
+"Close preview" = "முன்னோட்டத்தை மூடு";
+"Keep in stack" = "அடுக்கில் வைத்திரு";
+"Return to stack when editor closes" = "எடிட்டர் மூடியதும் அடுக்கிற்குத் திருப்பு";
+"  Click on preview:" = "  முன்னோட்டத்தில் கிளிக்:";
+"  When opened in Editor:" = "  எடிட்டரில் திறக்கும்போது:";

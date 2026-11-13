@@ -865,3 +865,12 @@
 
 "Snap webcam to corners when moved" = "Προσκόλληση της κάμερας στις γωνίες κατά τη μετακίνηση";
 "Search emoji" = "Αναζήτηση emoji";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Κλείσιμο";
+"Copy & dismiss" = "Αντιγραφή και κλείσιμο";
+"Close preview" = "Κλείσιμο προεπισκόπησης";
+"Keep in stack" = "Διατήρηση στη στοίβα";
+"Return to stack when editor closes" = "Επιστροφή στη στοίβα όταν κλείσει ο επεξεργαστής";
+"  Click on preview:" = "  Κλικ στην προεπισκόπηση:";
+"  When opened in Editor:" = "  Όταν ανοίγει στον επεξεργαστή:";

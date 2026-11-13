@@ -863,3 +863,12 @@
 
 "Snap webcam to corners when moved" = "จัดเว็บแคมให้ชิดมุมเมื่อย้าย";
 "Search emoji" = "ค้นหาอีโมจิ";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "ปิด";
+"Copy & dismiss" = "คัดลอกและปิด";
+"Close preview" = "ปิดภาพตัวอย่าง";
+"Keep in stack" = "เก็บไว้ในกอง";
+"Return to stack when editor closes" = "กลับเข้ากองเมื่อปิดตัวแก้ไข";
+"  Click on preview:" = "  คลิกที่ภาพตัวอย่าง:";
+"  When opened in Editor:" = "  เมื่อเปิดในตัวแก้ไข:";

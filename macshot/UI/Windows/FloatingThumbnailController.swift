@@ -175,6 +175,37 @@ enum ImageContextMenu {
     }
 }
 
+/// What a plain click on the floating preview (outside its buttons) does.
+enum ThumbnailClickAction: String, CaseIterable {
+    case dismiss
+    case openEditor
+    case copy
+    case nothing
+
+    static let userDefaultsKey = "thumbnailClickAction"
+
+    static var current: ThumbnailClickAction {
+        UserDefaults.standard.string(forKey: userDefaultsKey).flatMap(Self.init(rawValue:)) ?? .dismiss
+    }
+}
+
+/// What happens to the floating preview while it is open in the editor.
+enum ThumbnailEditBehavior: String, CaseIterable {
+    /// Close the preview as soon as the editor opens.
+    case dismiss
+    /// Keep the preview in the stack; it updates whenever the editor saves.
+    case keep
+    /// Hide the preview while editing and bring it back on top of the stack
+    /// (with the edited image) when the editor closes.
+    case returnAfterClose
+
+    static let userDefaultsKey = "thumbnailEditBehavior"
+
+    static var current: ThumbnailEditBehavior {
+        UserDefaults.standard.string(forKey: userDefaultsKey).flatMap(Self.init(rawValue:)) ?? .dismiss
+    }
+}
+
 enum FloatingThumbnailCorner: String {
     case bottomRight
     case bottomLeft
@@ -215,6 +246,16 @@ class FloatingThumbnailController: NSObject, NSDraggingSource, QLPreviewPanelDat
     private var isScrollDismissHostActive = false
     private var quickLookURL: URL?
     var onDismiss: (() -> Void)?
+    /// Number of editor windows opened from this preview that are still open.
+    /// While non-zero the preview never auto-dismisses.
+    private var openEditorCount = 0
+    var isEditing: Bool { openEditorCount > 0 }
+    /// Window opacity when no gesture is fading it: half-transparent while editing.
+    private var restingAlpha: CGFloat { isEditing ? 0.5 : 1 }
+    /// True while the preview is hidden from the stack until its editor closes.
+    private(set) var isSuspended = false
+    /// Called when the preview leaves the stack to wait for its editor.
+    var onSuspended: (() -> Void)?
 
     // Action callbacks
     var onCopy:     (() -> Void)?
@@ -294,7 +335,8 @@ class FloatingThumbnailController: NSObject, NSDraggingSource, QLPreviewPanelDat
         view.onCopy     = { [weak self] in self?.onCopy?();     self?.dismiss() }
         view.onSave     = { [weak self] in self?.onSave?();     self?.dismiss() }
         view.onPin      = { [weak self] in self?.onPin?();      self?.dismiss() }
-        view.onEdit     = { [weak self] in self?.onEdit?();     self?.dismiss() }
+        view.onEdit     = { [weak self] in self?.openEditor() }
+        view.onBodyClick = { [weak self] in self?.handleBodyClick() }
         #if !OFFLINE
         view.onUpload   = { [weak self] in self?.onUpload?();   self?.dismiss() }
         #endif
@@ -330,11 +372,84 @@ class FloatingThumbnailController: NSObject, NSDraggingSource, QLPreviewPanelDat
     private func scheduleAutoDismiss() {
         dismissTask?.cancel()
         dismissTask = nil
+        guard !isEditing else { return }
         let seconds = UserDefaults.standard.object(forKey: "thumbnailAutoDismiss") as? Int ?? 5
         guard seconds > 0 else { return }
         let task = DispatchWorkItem { [weak self] in self?.animateOut() }
         dismissTask = task
         DispatchQueue.main.asyncAfter(deadline: .now() + Double(seconds), execute: task)
+    }
+
+    // MARK: - Editing
+
+    /// Open this preview in the editor, applying the "While editing" preference.
+    func openEditor() {
+        let behavior = ThumbnailEditBehavior.current
+        guard behavior != .dismiss else {
+            onEdit?()
+            dismiss()
+            return
+        }
+        openEditorCount += 1
+        updateEditingAppearance()
+        pauseAutoDismiss()
+        if behavior == .returnAfterClose && !isSuspended {
+            isSuspended = true
+            window?.orderOut(nil)
+            onSuspended?()
+        }
+        onEdit?()
+    }
+
+    /// Called when an editor opened from this preview closes. When the preview
+    /// was hidden, `origin` is where it should slide back in.
+    func editorDidClose(returnTo origin: NSPoint?) {
+        guard openEditorCount > 0 else { return }
+        openEditorCount -= 1
+        guard openEditorCount == 0 else { return }
+        if isSuspended {
+            isSuspended = false
+            thumbnailView?.isDimmed = false
+            slideBackIn(to: origin ?? targetFrame.origin)
+        } else {
+            updateEditingAppearance()
+        }
+        scheduleAutoDismiss()
+    }
+
+    /// Gray out and fade the preview while its editor is open, restore it after.
+    private func updateEditingAppearance() {
+        thumbnailView?.isDimmed = isEditing
+        guard let window, !isInteractiveDismissActive else { return }
+        NSAnimationContext.runAnimationGroup { ctx in
+            ctx.duration = 0.2
+            window.animator().alphaValue = restingAlpha
+        }
+    }
+
+    private func slideBackIn(to origin: NSPoint) {
+        guard let window = window, let screen = NSScreen.preferred else { return }
+        let finalFrame = NSRect(origin: origin, size: targetFrame.size)
+        targetFrame = finalFrame
+        let screenFrame = screen.visibleFrame
+        let startX = corner.isLeft ? screenFrame.minX - finalFrame.width - 10 : screenFrame.maxX + 10
+        window.alphaValue = restingAlpha
+        window.setFrame(NSRect(x: startX, y: finalFrame.minY, width: finalFrame.width, height: finalFrame.height), display: false)
+        window.orderFrontRegardless()
+        NSAnimationContext.runAnimationGroup({ ctx in
+            ctx.duration = 0.3
+            ctx.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            window.animator().setFrame(finalFrame, display: true)
+        })
+    }
+
+    private func handleBodyClick() {
+        switch ThumbnailClickAction.current {
+        case .dismiss:    dismiss()
+        case .openEditor: openEditor()
+        case .copy:       onCopy?(); dismiss()
+        case .nothing:    break
+        }
     }
 
     func dismiss() {
@@ -360,7 +475,10 @@ class FloatingThumbnailController: NSObject, NSDraggingSource, QLPreviewPanelDat
     }
 
     func hideWindow() { window?.orderOut(nil) }
-    func showWindow() { window?.orderFront(nil) }
+    func showWindow() {
+        guard !isSuspended else { return }
+        window?.orderFront(nil)
+    }
 
     /// Update the displayed image (e.g. after editor saves new annotations).
     func updateImage(_ newImage: NSImage, annotationData: CaptureAnnotationData? = nil) {
@@ -430,7 +548,7 @@ class FloatingThumbnailController: NSObject, NSDraggingSource, QLPreviewPanelDat
     #if !OFFLINE
     @objc private func contextUpload() { onUpload?(); dismiss() }
     #endif
-    @objc private func contextOpenEditor() { onEdit?(); dismiss() }
+    @objc private func contextOpenEditor() { openEditor() }
     @objc private func contextDelete() { onDelete?(); dismiss() }
     @objc private func contextCloseAll() { onCloseAll?() }
     @objc private func contextSaveAll() { onSaveAll?() }
@@ -567,7 +685,7 @@ class FloatingThumbnailController: NSObject, NSDraggingSource, QLPreviewPanelDat
 
         if isScrollDismissHostActive {
             thumbnailView?.dismissContentOffsetX = clampedOffset * dismissDirection
-            window.alphaValue = 1 - progress * 0.45
+            window.alphaValue = restingAlpha * (1 - progress * 0.45)
             return
         }
 
@@ -578,7 +696,7 @@ class FloatingThumbnailController: NSObject, NSDraggingSource, QLPreviewPanelDat
             height: startFrame.height
         )
         window.setFrame(frame, display: true)
-        window.alphaValue = 1 - progress * 0.45
+        window.alphaValue = restingAlpha * (1 - progress * 0.45)
     }
 
     private func endDismissDrag(offset: CGFloat) {
@@ -607,7 +725,7 @@ class FloatingThumbnailController: NSObject, NSDraggingSource, QLPreviewPanelDat
             } else {
                 window.animator().setFrame(restoreFrame, display: true)
             }
-            window.animator().alphaValue = 1
+            window.animator().alphaValue = restingAlpha
         }, completionHandler: { [weak self] in
             guard let self = self else { return }
             Task { @MainActor [self] in
@@ -685,6 +803,8 @@ private class ThumbnailView: NSView {
     var onSave:     (() -> Void)?
     var onPin:      (() -> Void)?
     var onEdit:     (() -> Void)?
+    /// Click on the image itself (outside the buttons).
+    var onBodyClick: (() -> Void)?
     #if !OFFLINE
     var onUpload:   (() -> Void)?
     #endif
@@ -704,6 +824,10 @@ private class ThumbnailView: NSView {
     }
     @objc dynamic var dismissContentOffsetX: CGFloat = 0 {
         didSet { needsDisplay = true }
+    }
+    /// Drawn grayed out while the capture is open in an editor.
+    var isDimmed: Bool = false {
+        didSet { if isDimmed != oldValue { needsDisplay = true } }
     }
 
     private var image: NSImage
@@ -862,6 +986,12 @@ private class ThumbnailView: NSView {
             height: drawH
         )
         image.draw(in: drawRect, from: .zero, operation: .copy, fraction: 1.0)
+
+        if isDimmed {
+            // A zero-saturation fill in saturation mode keeps only luminosity.
+            NSColor.gray.setFill()
+            r.fill(using: .saturation)
+        }
 
         // White border
         NSColor.white.withAlphaComponent(0.4).setStroke()
@@ -1039,8 +1169,8 @@ private class ThumbnailView: NSView {
         if copyBtnRect.contains(p)   { onCopy?();   return }
         if saveBtnRect.contains(p)   { onSave?();   return }
 
-        // Click anywhere else on thumbnail — dismiss
-        if isHovering { onClose?() }
+        // Click anywhere else on thumbnail — action from Settings
+        if isHovering { onBodyClick?() }
     }
 
     override func scrollWheel(with event: NSEvent) {

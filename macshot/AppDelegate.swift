@@ -1921,6 +1921,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         let enabled = UserDefaults.standard.object(forKey: "showFloatingThumbnail") as? Bool ?? true
         guard enabled else { return }
 
+        // The editor re-shows its capture on Done/Copy/Save. If that capture's
+        // preview is still in the stack (kept or waiting while editing), update
+        // it in place instead of stacking a duplicate.
+        if let historyEntryID,
+           let existing = thumbnailControllers.first(where: { $0.historyEntryID == historyEntryID }) {
+            existing.updateImage(image, annotationData: annotationData)
+            return
+        }
+
         let stacking = UserDefaults.standard.object(forKey: "thumbnailStacking") as? Bool ?? true
         if !stacking {
             // Replace mode: dismiss all existing thumbnails
@@ -1936,18 +1945,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         let thumbSize = FloatingThumbnailController.currentThumbnailSize()
         let xOrigin = thumbnailX(for: thumbSize.width, in: screenFrame, corner: corner, padding: padding)
 
-        // Compute Y: bottom corners stack upward, top corners stack downward.
-        var yOrigin = corner.isTop ? screenFrame.maxY - thumbSize.height - padding : screenFrame.minY + padding
-        if let topController = thumbnailControllers.last {
-            let topFrame = topController.windowFrame
-            yOrigin = corner.isTop ? topFrame.minY - thumbSize.height - gap : topFrame.maxY + gap
-        }
+        let yOrigin = nextThumbnailY(height: thumbSize.height, in: screenFrame, corner: corner, padding: padding, gap: gap)
 
         let controller = FloatingThumbnailController(image: image)
         controller.historyEntryID = historyEntryID
         controller.annotationData = annotationData
         controller.onDismiss = { [weak self] in
             self?.thumbnailControllers.removeAll { $0 === controller }
+            self?.reflowThumbnails()
+        }
+        controller.onSuspended = { [weak self] in
             self?.reflowThumbnails()
         }
         controller.onCopy = { [weak controller] in
@@ -1974,16 +1981,28 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             )
             self.showPin(image: image)
         }
-        controller.onEdit = { [weak controller] in
+        controller.onEdit = { [weak self, weak controller] in
             guard let controller else { return }
             let image = controller.image
             let id = controller.historyEntryID ?? historyEntryID
+            let hooks = DetachedEditorWindowController.Hooks(
+                onSaved: { [weak controller] savedImage, savedData, savedID in
+                    guard let controller else { return }
+                    if let savedID { controller.historyEntryID = savedID }
+                    controller.updateImage(savedImage, annotationData: savedData)
+                },
+                onClose: { [weak self, weak controller] in
+                    guard let self, let controller else { return }
+                    self.thumbnailEditorDidClose(controller)
+                }
+            )
             if let data = controller.annotationData {
                 DetachedEditorWindowController.open(
                     image: data.rawImage,
                     annotations: data.annotations,
                     historyEntryID: id,
-                    editState: data.editState
+                    editState: data.editState,
+                    hooks: hooks
                 )
                 return
             }
@@ -1994,12 +2013,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                     image: editable.rawImage,
                     annotations: editable.annotations,
                     historyEntryID: id,
-                    editState: editable.editState
+                    editState: editable.editState,
+                    hooks: hooks
                 )
                 return
             }
             // Image already has beautify/effects baked in — disable to avoid double-applying
-            DetachedEditorWindowController.open(image: image, historyEntryID: id, disableBeautify: true)
+            DetachedEditorWindowController.open(image: image, historyEntryID: id, disableBeautify: true, hooks: hooks)
         }
         #if !OFFLINE
         controller.onUpload = { [weak self, weak controller] in
@@ -2090,7 +2110,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         let frame = screen.visibleFrame
         let corner = thumbnailCorner()
         var y = corner.isTop ? frame.maxY - padding : frame.minY + padding
-        for c in thumbnailControllers {
+        for c in thumbnailControllers where !c.isSuspended {
             let size = c.windowFrame.size
             let x = thumbnailX(for: size.width, in: frame, corner: corner, padding: padding)
             let yOrigin: CGFloat
@@ -2104,6 +2124,42 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             }
             c.moveTo(origin: NSPoint(x: x, y: yOrigin))
         }
+    }
+
+    /// Y origin of the next free slot on top of the visible stack.
+    private func nextThumbnailY(
+        height: CGFloat,
+        in frame: NSRect,
+        corner: FloatingThumbnailCorner,
+        padding: CGFloat,
+        gap: CGFloat
+    ) -> CGFloat {
+        guard let top = thumbnailControllers.last(where: { !$0.isSuspended }) else {
+            return corner.isTop ? frame.maxY - height - padding : frame.minY + padding
+        }
+        let topFrame = top.windowFrame
+        return corner.isTop ? topFrame.minY - height - gap : topFrame.maxY + gap
+    }
+
+    /// An editor opened from a floating preview closed. A preview that waited
+    /// off-screen ("return after editor closes") goes back on top of the stack.
+    private func thumbnailEditorDidClose(_ controller: FloatingThumbnailController) {
+        guard thumbnailControllers.contains(where: { $0 === controller }) else { return }
+        guard controller.isSuspended, let screen = NSScreen.preferred else {
+            controller.editorDidClose(returnTo: nil)
+            return
+        }
+        thumbnailControllers.removeAll { $0 === controller }
+        reflowThumbnails()
+        let frame = screen.visibleFrame
+        let corner = thumbnailCorner()
+        let size = controller.windowFrame.size
+        let origin = NSPoint(
+            x: thumbnailX(for: size.width, in: frame, corner: corner, padding: 16),
+            y: nextThumbnailY(height: size.height, in: frame, corner: corner, padding: 16, gap: 8)
+        )
+        thumbnailControllers.append(controller)
+        controller.editorDidClose(returnTo: origin)
     }
 
     private func thumbnailCorner() -> FloatingThumbnailCorner {

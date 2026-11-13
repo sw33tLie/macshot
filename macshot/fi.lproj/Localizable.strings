@@ -863,3 +863,12 @@
 
 "Snap webcam to corners when moved" = "Kohdista verkkokamera kulmiin siirrettäessä";
 "Search emoji" = "Hae emojia";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Sulje";
+"Copy & dismiss" = "Kopioi ja sulje";
+"Close preview" = "Sulje esikatselu";
+"Keep in stack" = "Pidä pinossa";
+"Return to stack when editor closes" = "Palauta pinoon, kun editori suljetaan";
+"  Click on preview:" = "  Esikatselun napsautus:";
+"  When opened in Editor:" = "  Kun avataan editorissa:";

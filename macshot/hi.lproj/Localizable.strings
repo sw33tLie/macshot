@@ -865,3 +865,12 @@
 
 "Snap webcam to corners when moved" = "वेबकैम को खिसकाते समय कोनों से चिपकाएँ";
 "Search emoji" = "इमोजी खोजें";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "बंद करें";
+"Copy & dismiss" = "कॉपी करें और बंद करें";
+"Close preview" = "पूर्वावलोकन बंद करें";
+"Keep in stack" = "स्टैक में रखें";
+"Return to stack when editor closes" = "एडिटर बंद होने पर स्टैक में लौटाएँ";
+"  Click on preview:" = "  पूर्वावलोकन पर क्लिक:";
+"  When opened in Editor:" = "  एडिटर में खोलने पर:";

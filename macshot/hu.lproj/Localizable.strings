@@ -863,3 +863,12 @@
 
 "Snap webcam to corners when moved" = "Webkamera sarkokhoz igazítása mozgatáskor";
 "Search emoji" = "Emoji keresése";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Bezárás";
+"Copy & dismiss" = "Másolás és bezárás";
+"Close preview" = "Előnézet bezárása";
+"Keep in stack" = "Megtartás a veremben";
+"Return to stack when editor closes" = "Vissza a verembe a szerkesztő bezárásakor";
+"  Click on preview:" = "  Kattintás az előnézetre:";
+"  When opened in Editor:" = "  Szerkesztőben megnyitva:";

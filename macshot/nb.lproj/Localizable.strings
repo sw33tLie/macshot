@@ -863,3 +863,12 @@
 
 "Snap webcam to corners when moved" = "Fest webkameraet til hjørnene når det flyttes";
 "Search emoji" = "Søk etter emoji";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Lukk";
+"Copy & dismiss" = "Kopier og lukk";
+"Close preview" = "Lukk forhåndsvisning";
+"Keep in stack" = "Behold i stabelen";
+"Return to stack when editor closes" = "Tilbake i stabelen når redigeringsverktøyet lukkes";
+"  Click on preview:" = "  Klikk på forhåndsvisning:";
+"  When opened in Editor:" = "  Når den åpnes i redigering:";
