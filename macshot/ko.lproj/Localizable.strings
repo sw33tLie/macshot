@@ -627,7 +627,7 @@
 "Background" = "배경";
 "Custom" = "사용자 지정";
 "Theme:" = "테마:";
-"HUD:" = "HUD:";
+"Toolbar appearance:" = "도구 막대 모양:";
 "Dark" = "다크";
 "Light" = "라이트";
 "Follow System" = "시스템 설정 따르기";

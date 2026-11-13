@@ -636,7 +636,7 @@
 "Background" = "Фон";
 "Custom" = "По избор";
 "Theme:" = "Тема:";
-"HUD:" = "HUD:";
+"Toolbar appearance:" = "Лента с инструменти:";
 "Dark" = "Тъмна";
 "Light" = "Светла";
 "Follow System" = "Като системата";

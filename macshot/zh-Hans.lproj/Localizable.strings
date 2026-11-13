@@ -627,7 +627,7 @@
 "Background" = "背景";
 "Custom" = "自定义";
 "Theme:" = "主题:";
-"HUD:" = "界面：";
+"Toolbar appearance:" = "工具栏外观:";
 "Dark" = "深色";
 "Light" = "浅色";
 "Follow System" = "跟随系统";

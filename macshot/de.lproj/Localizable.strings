@@ -635,7 +635,7 @@
 "Background" = "Hintergrund";
 "Custom" = "Eigene";
 "Theme:" = "Thema:";
-"HUD:" = "HUD:";
+"Toolbar appearance:" = "Darstellung der Leiste:";
 "Dark" = "Dunkel";
 "Light" = "Hell";
 "Follow System" = "System folgen";

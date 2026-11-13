@@ -630,7 +630,7 @@
 "Background" = "Fons";
 "Custom" = "Personalitzat";
 "Theme:" = "Tema:";
-"HUD:" = "HUD:";
+"Toolbar appearance:" = "Aparença de la barra:";
 "Dark" = "Fosc";
 "Light" = "Clar";
 "Follow System" = "Segueix el sistema";

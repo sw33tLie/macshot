@@ -636,7 +636,7 @@
 "Background" = "Bakgrund";
 "Custom" = "Anpassad";
 "Theme:" = "Tema:";
-"HUD:" = "HUD:";
+"Toolbar appearance:" = "Verktygsfältets utseende:";
 "Dark" = "Mörkt";
 "Light" = "Ljust";
 "Follow System" = "Följ systemet";

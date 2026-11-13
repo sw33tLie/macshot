@@ -631,7 +631,7 @@
 "Background" = "Fond";
 "Custom" = "Personnalisé";
 "Theme:" = "Thème :";
-"HUD:" = "HUD :";
+"Toolbar appearance:" = "Apparence de la barre :";
 "Dark" = "Sombre";
 "Light" = "Clair";
 "Follow System" = "Suivre le système";
