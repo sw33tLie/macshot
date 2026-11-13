@@ -1647,7 +1647,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                         applyFullScreenRecord: didApplyFullScreenRecord,
                         autoStartRecord: didApplyFullScreenRecordAutoStart,
                         markInteractive: false)
-                    self.refocusOverlay(among: controllers, installed: nil)
+                    // Only overlays that are actually showing a capture may take focus.
+                    self.refocusOverlay(among: controllers,
+                                        installed: progressive.installed.union(covered.map { ObjectIdentifier($0) }))
                     return
                 }
                 self.installAndShowOverlays(
