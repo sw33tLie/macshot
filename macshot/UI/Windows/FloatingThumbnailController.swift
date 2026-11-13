@@ -332,6 +332,10 @@ class FloatingThumbnailController: NSObject, NSDraggingSource, QLPreviewPanelDat
     private var restingAlpha: CGFloat { isEditing ? 0.5 : 1 }
     /// True while the preview is hidden from the stack until its editor closes.
     var isSuspended: Bool { editing.isSuspended }
+    /// False once the preview is on its way out (auto-dismiss animation or a
+    /// dismiss gesture): an output must then stack a fresh preview instead of
+    /// updating one that is about to disappear.
+    var canUpdateInPlace: Bool { window != nil && !isInteractiveDismissActive }
     /// The next editor close brings this hidden preview back on the stack.
     var returnsToStackOnNextEditorClose: Bool { editing.returnsOnNextEditorClose }
     /// Called when the preview leaves the stack to wait for its editor.
@@ -493,7 +497,8 @@ class FloatingThumbnailController: NSObject, NSDraggingSource, QLPreviewPanelDat
             thumbnailView?.isDimmed = false
             slideBackIn(to: origin ?? targetFrame.origin)
         }
-        scheduleAutoDismiss()
+        // Leaving the preview under the pointer reschedules it (onHoverExit).
+        if thumbnailView?.isHovering != true { scheduleAutoDismiss() }
     }
 
     /// An output re-showed this preview's capture: give it a full auto-dismiss

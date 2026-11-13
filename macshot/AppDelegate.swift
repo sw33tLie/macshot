@@ -2014,7 +2014,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // closes every other preview.
         let stacking = UserDefaults.standard.object(forKey: "thumbnailStacking") as? Bool ?? true
         let plan = FloatingThumbnailStackPlan(
-            existingEntryIDs: thumbnailControllers.map(\.historyEntryID),
+            existingEntryIDs: thumbnailControllers.map { $0.canUpdateInPlace ? $0.historyEntryID : nil },
             newEntryID: historyEntryID, stacking: stacking)
         let existing = plan.updateIndex.map { thumbnailControllers[$0] }
         let replaced = plan.dismissIndices.map { thumbnailControllers[$0] }
@@ -2142,9 +2142,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         }
         controller.onCloseAll = { [weak self] in
             guard let self = self else { return }
-            let all = self.thumbnailControllers
-            self.thumbnailControllers.removeAll()
-            for c in all { c.dismiss() }
+            // A preview hidden while its editor is open isn't on screen; it
+            // stays so it can come back when that editor closes.
+            let visible = self.thumbnailControllers.filter { !$0.isSuspended }
+            self.thumbnailControllers.removeAll { controller in visible.contains { $0 === controller } }
+            for c in visible { c.dismiss() }
         }
         controller.onSaveAll = { [weak self] in
             self?.saveAllThumbnailsToFolder()
@@ -2154,7 +2156,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func saveAllThumbnailsToFolder() {
-        let images = thumbnailControllers.map { $0.image }
+        // Only what the user can see: not a preview hidden while it's edited.
+        let images = thumbnailControllers.filter { !$0.isSuspended }.map { $0.image }
         guard !images.isEmpty else { return }
 
         let panel = NSOpenPanel()
@@ -2183,10 +2186,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                         try? data.write(to: fileURL)
                     }
                     DispatchQueue.main.async {
-                        self?.playCopySound()
-                        let all = self?.thumbnailControllers ?? []
-                        self?.thumbnailControllers.removeAll()
-                        for c in all { c.dismiss() }
+                        guard let self else { return }
+                        self.playCopySound()
+                        let saved = self.thumbnailControllers.filter { !$0.isSuspended }
+                        self.thumbnailControllers.removeAll { controller in saved.contains { $0 === controller } }
+                        for c in saved { c.dismiss() }
                     }
                 }
             }
