@@ -578,6 +578,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         colorsRow.alignment = .top
         colorsRow.spacing = 20
         stack.addArrangedSubview(indented(colorsRow))
+        updateThemeColorWellsEnabled()
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // Sync preset popup to current colors
@@ -2839,6 +2840,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         if let index = HUDAppearance.allCases.firstIndex(of: HUDAppearance.current) {
             hudAppearancePopup.selectItem(at: index)
         }
+        updateThemeColorWellsEnabled()
 
         let historySize = UserDefaults.standard.object(forKey: "historySize") as? Int ?? 10
         historySizeField.integerValue = historySize
@@ -3263,7 +3265,17 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         let index = sender.indexOfSelectedItem
         guard index >= 0, index < modes.count else { return }
         UserDefaults.standard.set(modes[index].rawValue, forKey: HUDAppearance.defaultsKey)
+        updateThemeColorWellsEnabled()
         notifyToolbarColorChange()
+    }
+
+    /// The Light appearance uses its own icon and background colors, so the
+    /// theme's would seem to do nothing there. Follow System keeps them: they
+    /// apply whenever the system is dark.
+    private func updateThemeColorWellsEnabled() {
+        let usesThemeColors = HUDAppearance.current != .light
+        iconColorWell?.isEnabled = usesThemeColors
+        bgColorWell?.isEnabled = usesThemeColors
     }
 
     @objc private func themePresetChanged(_ sender: NSPopUpButton) {
