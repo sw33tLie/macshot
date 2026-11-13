@@ -207,6 +207,7 @@
 "Play sound on capture" = "截图时播放提示音";
 "Play sound on copy" = "拷贝时播放声音";
 "Remember last selected tool" = "记住上次选择的工具";
+"Start captures in move mode" = "截图时默认移动选区";
 "Show floating thumbnail after capture" = "捕获后显示浮动缩略图";
 "Launch at login" = "登录时启动";
 "Show snap alignment guides" = "显示对齐辅助线";
@@ -879,3 +880,12 @@
 "The preset swatches in the color picker." = "颜色选择器中的预设颜色。";
 "Add Color" = "添加颜色";
 "No default colors." = "没有默认颜色。";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "关闭";
+"Copy & dismiss" = "复制并关闭";
+"Close preview" = "关闭预览";
+"Keep in stack" = "保留在堆叠中";
+"Return to stack when editor closes" = "关闭编辑器后返回堆叠";
+"  Click on preview:" = "  点击预览:";
+"  When opened in Editor:" = "  在编辑器中打开时:";

@@ -160,7 +160,15 @@ class OverlayView: NSView {
         case selected
     }
 
-    private(set) var state: State = .idle
+    private(set) var state: State = .idle {
+        didSet {
+            // A capture starts when its selection does: read the move-mode
+            // preference then, never during mouse tracking.
+            if oldValue == .idle && state != .idle {
+                moveModeEnabledForCapture = OverlayView.startCapturesInMoveModeSetting
+            }
+        }
+    }
 
     // Zoom — the capture overlay no longer zooms (scroll/pinch zoom was
     // removed). These remain fixed at the identity values so the shared
@@ -286,10 +294,26 @@ class OverlayView: NSView {
         lastUsedTool = .arrow
         UserDefaults.standard.removeObject(forKey: "lastUsedTool")
     }
+    /// Opt-in "Start captures in move mode": a capture starts with no
+    /// annotation tool armed, so dragging inside the selection moves it until
+    /// a tool is chosen. The remembered tool is still used by the standalone
+    /// editor and whenever the setting is off (the default).
+    static let startCapturesInMoveModeKey = "startCapturesInMoveMode"
+    static var startCapturesInMoveModeSetting: Bool {
+        UserDefaults.standard.object(forKey: startCapturesInMoveModeKey) as? Bool ?? false
+    }
+    /// Snapshot of the preference for the current capture (see `state`).
+    private var moveModeEnabledForCapture = OverlayView.startCapturesInMoveModeSetting
+    private var hasChosenCaptureTool = false
+    private var startsInSelectionMoveMode: Bool {
+        moveModeEnabledForCapture && !hasChosenCaptureTool
+            && !isEditorMode && !isRecording && !isScrollCapturing
+    }
     var currentTool: AnnotationTool = {
         OverlayView.initialTool
     }() {
         didSet {
+            hasChosenCaptureTool = true
             // Persist drawing tool choices; skip transient/mode tools
             if OverlayView.shouldRememberLastTool && currentTool != .select && currentTool != .loupe {
                 OverlayView.lastUsedTool = currentTool
@@ -1247,6 +1271,11 @@ class OverlayView: NSView {
             return
         }
 
+        if state == .selected && startsInSelectionMoveMode {
+            updateCursorForPoint(point)
+            return
+        }
+
         // Stamp cursor preview — track in view coords (same as annotations)
         if currentTool == .stamp && currentStampImage != nil && state == .selected && !isRecording
             && !showBeautifyInOptionsRow
@@ -1464,6 +1493,15 @@ class OverlayView: NSView {
         // Selection resize handles (overlay only, not during scroll capture)
         if !isEditorMode && !isScrollCapturing, let handleCursor = resizeHandleCursor(at: point) {
             handleCursor.set()
+            return
+        }
+
+        if startsInSelectionMoveMode {
+            if pointIsInSelection(point) {
+                (isDraggingSelection ? NSCursor.closedHand : NSCursor.openHand).set()
+            } else {
+                NSCursor.arrow.set()
+            }
             return
         }
 
@@ -3511,6 +3549,7 @@ class OverlayView: NSView {
 
     /// Whether the current tool should show the options row
     var toolHasOptionsRow: Bool {
+        if startsInSelectionMoveMode && !showBeautifyInOptionsRow { return false }
         // Show options row for a selected annotation's tool even when currentTool is .select
         if selectedAnnotation != nil && toolOptionsRowView?.editingAnnotation != nil {
             return true
@@ -5211,7 +5250,7 @@ class OverlayView: NSView {
 
         let movableAnnotations = annotations.contains { $0.isMovable }
         bottomButtons = ToolbarLayout.bottomButtons(
-            selectedTool: currentTool, selectedColor: currentColor,
+            selectedTool: startsInSelectionMoveMode ? .select : currentTool, selectedColor: currentColor,
             beautifyEnabled: beautifyEnabled, beautifyStyleIndex: beautifyStyleIndex,
             hasAnnotations: movableAnnotations, isRecording: isRecording,
             effectsActive: effectsActive
@@ -5230,6 +5269,13 @@ class OverlayView: NSView {
             hasAnnotations: movableAnnotations, translateEnabled: translateEnabled,
             isRecording: isRecording,
             isEditorMode: isEditorMode)
+        if startsInSelectionMoveMode {
+            for i in rightButtons.indices {
+                if case .moveSelection = rightButtons[i].action {
+                    rightButtons[i].isSelected = true
+                }
+            }
+        }
 
         // Create strip views if needed — add to chrome parent (window content) when in scroll view
         let parent = chromeParentView ?? self
@@ -5728,7 +5774,7 @@ class OverlayView: NSView {
         // Control-click = right-click for color sampler (supports BetterTouchTool and other tools
         // that simulate right-click via control-click instead of rightMouseDown)
         if event.modifierFlags.contains(.control) && state == .selected
-            && currentTool == .colorSampler
+            && currentTool == .colorSampler && !startsInSelectionMoveMode
         {
             if let result = sampleCanvasColor(at: viewToCanvas(point)) {
                 NSPasteboard.general.clearContents()
@@ -5891,6 +5937,18 @@ class OverlayView: NSView {
                     resizeHandle = handle
                     return
                 }
+            }
+
+            // Until a tool is explicitly chosen, dragging inside a fresh
+            // capture moves its bounds instead of creating an annotation, and
+            // no tool (e.g. a remembered color sampler) acts on any click.
+            if startsInSelectionMoveMode {
+                if pointIsInSelection(point) {
+                    isDraggingSelection = true
+                    dragOffset = NSPoint(x: point.x - selectionRect.minX, y: point.y - selectionRect.minY)
+                    NSCursor.closedHand.set()
+                }
+                return
             }
 
             // Crop tool drag (use canvas coords so it aligns with the image)
@@ -6533,9 +6591,17 @@ class OverlayView: NSView {
                 cachedCompositedImage = nil
                 needsDisplay = true
             } else if isDraggingSelection {
+                let previousRect = selectionRect
                 var moved = selectionRect
                 moved.origin = NSPoint(x: point.x - dragOffset.x, y: point.y - dragOffset.y)
                 selectionRect = boundarySnappedMovedRect(moved, modifiers: event.modifierFlags)
+                if selectionIsWindowSnap && selectionRect != previousRect {
+                    selectionIsWindowSnap = false
+                    snappedWindowID = nil
+                    snappedWindowImage = nil
+                    rebuildToolbarLayout()
+                }
+                overlayDelegate?.overlayViewSelectionDidChange(selectionRect)
                 updateResolutionBox()
                 needsDisplay = true
             } else if isResizingSelection {
@@ -6726,6 +6792,7 @@ class OverlayView: NSView {
                 needsDisplay = true
             } else if isDraggingSelection {
                 isDraggingSelection = false
+                updateCursorForPoint(convert(event.locationInWindow, from: nil))
                 needsDisplay = true
             } else if isResizingSelection {
                 isResizingSelection = false
@@ -7204,7 +7271,7 @@ class OverlayView: NSView {
             }
         }
 
-        if state == .selected && currentTool == .colorSampler {
+        if state == .selected && currentTool == .colorSampler && !startsInSelectionMoveMode {
             // Right-click with color sampler: copy hex to clipboard
             if let result = sampleCanvasColor(at: viewToCanvas(point)) {
                 NSPasteboard.general.clearContents()
@@ -9501,7 +9568,7 @@ class OverlayView: NSView {
         default:
             // Auto-measure: hold "1" = vertical preview, hold "2" = horizontal preview
             if state == .selected && currentTool == .measure && textEditView == nil
-                && !event.modifierFlags.contains(.command)
+                && !startsInSelectionMoveMode && !event.modifierFlags.contains(.command)
             {
                 if let char = event.charactersIgnoringModifiers {
                     if char == "1" || char == "2" {
@@ -10353,6 +10420,8 @@ class OverlayView: NSView {
         redoStack.removeAll()
         currentAnnotation = nil
         currentTool = OverlayView.initialTool
+        hasChosenCaptureTool = false
+        isDraggingSelection = false
         numberCounter = 0
         showToolbars = false
         dismissResolutionBox()

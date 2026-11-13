@@ -213,6 +213,7 @@
 "Play sound on capture" = "Reproduzir som ao capturar";
 "Play sound on copy" = "Reproduzir som ao copiar";
 "Remember last selected tool" = "Recordar última ferramenta selecionada";
+"Start captures in move mode" = "Iniciar capturas no modo de deslocação";
 "Show shortcuts in tooltips" = "Mostrar atalhos nas descrições";
 "Show floating thumbnail after capture" = "Mostrar miniatura flutuante após captura";
 "Launch at login" = "Iniciar ao arrancar";
@@ -879,3 +880,12 @@
 "The preset swatches in the color picker." = "As amostras predefinidas no seletor de cores.";
 "Add Color" = "Adicionar cor";
 "No default colors." = "Sem cores predefinidas.";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Fechar";
+"Copy & dismiss" = "Copiar e fechar";
+"Close preview" = "Fechar pré-visualização";
+"Keep in stack" = "Manter na pilha";
+"Return to stack when editor closes" = "Voltar à pilha ao fechar o editor";
+"  Click on preview:" = "  Clique na pré-visualização:";
+"  When opened in Editor:" = "  Ao abrir no editor:";

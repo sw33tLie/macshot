@@ -221,6 +221,7 @@
 "Play sound on capture" = "Toista ääni kaappauksessa";
 "Play sound on copy" = "Toista ääni kopioitaessa";
 "Remember last selected tool" = "Muista viimeksi valittu työkalu";
+"Start captures in move mode" = "Aloita kuvakaappaukset siirtotilassa";
 "Show floating thumbnail after capture" = "Näytä kelluva pienoiskuva kaappauksen jälkeen";
 "Launch at login" = "Käynnistä kirjautumisen yhteydessä";
 "Show snap alignment guides" = "Näytä kohdistusapuviivat";
@@ -877,3 +878,12 @@
 "The preset swatches in the color picker." = "Värien esiasetukset värinvalitsimessa.";
 "Add Color" = "Lisää väri";
 "No default colors." = "Ei oletusvärejä.";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Sulje";
+"Copy & dismiss" = "Kopioi ja sulje";
+"Close preview" = "Sulje esikatselu";
+"Keep in stack" = "Pidä pinossa";
+"Return to stack when editor closes" = "Palauta pinoon, kun editori suljetaan";
+"  Click on preview:" = "  Esikatselun napsautus:";
+"  When opened in Editor:" = "  Kun avataan editorissa:";

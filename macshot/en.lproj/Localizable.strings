@@ -216,6 +216,7 @@
 "Capture" = "Capture";
 "Play sound on capture" = "Play sound on capture";
 "Remember last selected tool" = "Remember last selected tool";
+"Start captures in move mode" = "Start captures in move mode";
 "Show floating thumbnail after capture" = "Show floating thumbnail after capture";
 "Launch at login" = "Launch at login";
 "Show snap alignment guides" = "Show snap alignment guides";
@@ -878,3 +879,12 @@
 "The preset swatches in the color picker." = "The preset swatches in the color picker.";
 "Add Color" = "Add Color";
 "No default colors." = "No default colors.";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Dismiss";
+"Copy & dismiss" = "Copy & dismiss";
+"Close preview" = "Close preview";
+"Keep in stack" = "Keep in stack";
+"Return to stack when editor closes" = "Return to stack when editor closes";
+"  Click on preview:" = "  Click on preview:";
+"  When opened in Editor:" = "  When opened in Editor:";

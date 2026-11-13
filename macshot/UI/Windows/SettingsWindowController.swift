@@ -62,10 +62,13 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var copySoundCheckbox: NSButton!
     // rememberSelectionCheckbox removed — selection is always saved for "Capture Last Area"
     private var rememberToolCheckbox: NSButton!
+    private var startCapturesInMoveModeCheckbox: NSButton!
     private var thumbnailCheckbox: NSButton!
     private var thumbnailAutoDismissStepper: NSStepper!
     private var thumbnailAutoDismissField: NSTextField!
     private var thumbnailStackingPopup: NSPopUpButton!
+    private var thumbnailClickActionPopup: NSPopUpButton!
+    private var thumbnailEditBehaviorPopup: NSPopUpButton!
     private var thumbnailCornerPopup: NSPopUpButton!
     private var thumbnailLetterboxCheckbox: NSButton!
     private var historyUnlimitedCheckbox: NSButton!
@@ -814,6 +817,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         openEditorAfterSelectionCheckbox = NSButton(checkboxWithTitle: L("Open in Editor right after selection"), target: self, action: #selector(openEditorAfterSelectionChanged(_:)))
         copySoundCheckbox = NSButton(checkboxWithTitle: L("Play sound on capture"), target: self, action: #selector(copySoundChanged(_:)))
         rememberToolCheckbox = NSButton(checkboxWithTitle: L("Remember last selected tool"), target: self, action: #selector(rememberToolChanged(_:)))
+        startCapturesInMoveModeCheckbox = NSButton(checkboxWithTitle: L("Start captures in move mode"), target: self, action: #selector(startCapturesInMoveModeChanged(_:)))
         thumbnailCheckbox = NSButton(checkboxWithTitle: L("Show floating thumbnail after capture"), target: self, action: #selector(thumbnailChanged(_:)))
         snapGuidesCheckbox = NSButton(checkboxWithTitle: L("Show snap alignment guides"), target: self, action: #selector(snapGuidesChanged(_:)))
         boundarySnapCheckbox = NSButton(checkboxWithTitle: L("Snap selection edges to image boundaries"), target: self, action: #selector(boundarySnapChanged(_:)))
@@ -839,7 +843,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         filenameTemplatePreview.textColor = .secondaryLabelColor
         filenameTemplatePreview.lineBreakMode = .byTruncatingMiddle
 
-        for cb in [openEditorAfterSelectionCheckbox!, copySoundCheckbox!, rememberToolCheckbox!, thumbnailCheckbox!] {
+        for cb in [openEditorAfterSelectionCheckbox!, copySoundCheckbox!, startCapturesInMoveModeCheckbox!, rememberToolCheckbox!, thumbnailCheckbox!] {
             stack.addArrangedSubview(indented(cb))
             stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
         }
@@ -872,6 +876,39 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         thumbnailStackingPopup.action = #selector(thumbnailStackingChanged(_:))
 
         stack.addArrangedSubview(indented(labeledRow(L("  Multiple previews:"), controls: [thumbnailStackingPopup!])))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        // Click on the preview image itself
+        thumbnailClickActionPopup = NSPopUpButton()
+        let clickTitles: [(ThumbnailClickAction, String)] = [
+            (.dismiss, L("Dismiss")),
+            (.openEditor, L("Open in Editor")),
+            (.copy, L("Copy & dismiss")),
+            (.nothing, L("Do nothing")),
+        ]
+        for (action, title) in clickTitles {
+            thumbnailClickActionPopup.addItem(withTitle: title)
+            thumbnailClickActionPopup.lastItem?.representedObject = action.rawValue
+        }
+        thumbnailClickActionPopup.target = self
+        thumbnailClickActionPopup.action = #selector(thumbnailClickActionChanged(_:))
+        stack.addArrangedSubview(indented(labeledRow(L("  Click on preview:"), controls: [thumbnailClickActionPopup!])))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        // What happens to the preview while it is open in the editor
+        thumbnailEditBehaviorPopup = NSPopUpButton()
+        let editTitles: [(ThumbnailEditBehavior, String)] = [
+            (.dismiss, L("Close preview")),
+            (.keep, L("Keep in stack")),
+            (.returnAfterClose, L("Return to stack when editor closes")),
+        ]
+        for (behavior, title) in editTitles {
+            thumbnailEditBehaviorPopup.addItem(withTitle: title)
+            thumbnailEditBehaviorPopup.lastItem?.representedObject = behavior.rawValue
+        }
+        thumbnailEditBehaviorPopup.target = self
+        thumbnailEditBehaviorPopup.action = #selector(thumbnailEditBehaviorChanged(_:))
+        stack.addArrangedSubview(indented(labeledRow(L("  When opened in Editor:"), controls: [thumbnailEditBehaviorPopup!])))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         thumbnailCornerPopup = NSPopUpButton()
@@ -2733,6 +2770,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
         let rememberTool = UserDefaults.standard.object(forKey: "rememberLastTool") as? Bool ?? true
         rememberToolCheckbox.state = rememberTool ? .on : .off
+        startCapturesInMoveModeCheckbox.state = OverlayView.startCapturesInMoveModeSetting ? .on : .off
 
         let thumbnail = UserDefaults.standard.object(forKey: "showFloatingThumbnail") as? Bool ?? true
         thumbnailCheckbox.state = thumbnail ? .on : .off
@@ -2744,6 +2782,15 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
         let stacking = UserDefaults.standard.object(forKey: "thumbnailStacking") as? Bool ?? true
         thumbnailStackingPopup.selectItem(at: stacking ? 0 : 1)
+
+        let clickAction = ThumbnailClickAction.current.rawValue
+        if let item = thumbnailClickActionPopup.itemArray.first(where: { $0.representedObject as? String == clickAction }) {
+            thumbnailClickActionPopup.select(item)
+        }
+        let editBehavior = ThumbnailEditBehavior.current.rawValue
+        if let item = thumbnailEditBehaviorPopup.itemArray.first(where: { $0.representedObject as? String == editBehavior }) {
+            thumbnailEditBehaviorPopup.select(item)
+        }
 
         let thumbnailCorner = UserDefaults.standard.string(forKey: "thumbnailCorner") ?? "bottomRight"
         switch thumbnailCorner {
@@ -2939,6 +2986,9 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     @objc private func copySoundChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "playCopySound")
     }
+    @objc private func startCapturesInMoveModeChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: OverlayView.startCapturesInMoveModeKey)
+    }
     @objc private func rememberToolChanged(_ sender: NSButton) {
         let enabled = sender.state == .on
         UserDefaults.standard.set(enabled, forKey: "rememberLastTool")
@@ -2967,6 +3017,16 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
     @objc private func thumbnailStackingChanged(_ sender: NSPopUpButton) {
         UserDefaults.standard.set(sender.indexOfSelectedItem == 0, forKey: "thumbnailStacking")
+    }
+    @objc private func thumbnailClickActionChanged(_ sender: NSPopUpButton) {
+        guard let raw = sender.selectedItem?.representedObject as? String,
+              ThumbnailClickAction(rawValue: raw) != nil else { return }
+        UserDefaults.standard.set(raw, forKey: ThumbnailClickAction.userDefaultsKey)
+    }
+    @objc private func thumbnailEditBehaviorChanged(_ sender: NSPopUpButton) {
+        guard let raw = sender.selectedItem?.representedObject as? String,
+              ThumbnailEditBehavior(rawValue: raw) != nil else { return }
+        UserDefaults.standard.set(raw, forKey: ThumbnailEditBehavior.userDefaultsKey)
     }
     @objc private func thumbnailCornerChanged(_ sender: NSPopUpButton) {
         let values = ["bottomRight", "bottomLeft", "topRight", "topLeft"]

@@ -220,6 +220,7 @@
 "Play sound on capture" = "Hang lejátszása rögzítéskor";
 "Play sound on copy" = "Hang lejátszása másoláskor";
 "Remember last selected tool" = "Utolsó kiválasztott eszköz megjegyzése";
+"Start captures in move mode" = "Képernyőképek indítása mozgatási módban";
 "Show floating thumbnail after capture" = "Lebegő bélyegkép megjelenítése rögzítés után";
 "Launch at login" = "Indítás bejelentkezéskor";
 "Show snap alignment guides" = "Illesztési segédvonalak megjelenítése";
@@ -877,3 +878,12 @@
 "The preset swatches in the color picker." = "A színválasztó előre beállított színei.";
 "Add Color" = "Szín hozzáadása";
 "No default colors." = "Nincsenek alapértelmezett színek.";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Bezárás";
+"Copy & dismiss" = "Másolás és bezárás";
+"Close preview" = "Előnézet bezárása";
+"Keep in stack" = "Megtartás a veremben";
+"Return to stack when editor closes" = "Vissza a verembe a szerkesztő bezárásakor";
+"  Click on preview:" = "  Kattintás az előnézetre:";
+"  When opened in Editor:" = "  Szerkesztőben megnyitva:";

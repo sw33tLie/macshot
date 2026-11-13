@@ -225,6 +225,7 @@
 "Play sound on capture" = "Mag-play ng tunog sa pagkuha";
 "Play sound on copy" = "Magpatugtog ng tunog kapag kinopya";
 "Remember last selected tool" = "Tandaan ang huling napiling kasangkapan";
+"Start captures in move mode" = "Simulan ang pagkuha sa mode ng paglipat";
 "Show floating thumbnail after capture" = "Ipakita ang lumulutang na thumbnail pagkatapos kumuha";
 "Launch at login" = "Buksan kapag nag-login";
 "Show snap alignment guides" = "Ipakita ang mga gabay sa pagkakahanay";
@@ -879,3 +880,12 @@
 "The preset swatches in the color picker." = "Ang mga preset na kulay sa color picker.";
 "Add Color" = "Magdagdag ng Kulay";
 "No default colors." = "Walang default na kulay.";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Isara";
+"Copy & dismiss" = "Kopyahin at isara";
+"Close preview" = "Isara ang preview";
+"Keep in stack" = "Panatilihin sa stack";
+"Return to stack when editor closes" = "Ibalik sa stack kapag isinara ang editor";
+"  Click on preview:" = "  Pag-click sa preview:";
+"  When opened in Editor:" = "  Kapag binuksan sa Editor:";

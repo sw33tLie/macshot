@@ -224,6 +224,7 @@
 "Play sound on capture" = "Phát âm thanh khi chụp";
 "Play sound on copy" = "Phát âm thanh khi sao chép";
 "Remember last selected tool" = "Nhớ công cụ đã chọn lần trước";
+"Start captures in move mode" = "Bắt đầu chụp ở chế độ di chuyển";
 "Show floating thumbnail after capture" = "Hiển thị ảnh thu nhỏ nổi sau khi chụp";
 "Launch at login" = "Khởi chạy khi đăng nhập";
 "Show snap alignment guides" = "Hiển thị đường căn chỉnh bắt dính";
@@ -877,3 +878,12 @@
 "The preset swatches in the color picker." = "Các màu đặt trước trong bộ chọn màu.";
 "Add Color" = "Thêm màu";
 "No default colors." = "Không có màu mặc định.";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Đóng";
+"Copy & dismiss" = "Sao chép và đóng";
+"Close preview" = "Đóng bản xem trước";
+"Keep in stack" = "Giữ trong ngăn xếp";
+"Return to stack when editor closes" = "Trở lại ngăn xếp khi đóng trình chỉnh sửa";
+"  Click on preview:" = "  Nhấp vào bản xem trước:";
+"  When opened in Editor:" = "  Khi mở trong trình chỉnh sửa:";

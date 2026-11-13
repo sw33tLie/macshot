@@ -207,6 +207,7 @@
 "Play sound on capture" = "캡처 시 소리 재생";
 "Play sound on copy" = "복사 시 소리 재생";
 "Remember last selected tool" = "마지막 선택 도구 기억";
+"Start captures in move mode" = "캡처를 이동 모드로 시작";
 "Show floating thumbnail after capture" = "캡처 후 플로팅 썸네일 표시";
 "Launch at login" = "로그인 시 실행";
 "Show snap alignment guides" = "스냅 정렬 가이드 표시";
@@ -879,3 +880,12 @@
 "The preset swatches in the color picker." = "색상 선택기의 사전 설정 색상입니다.";
 "Add Color" = "색상 추가";
 "No default colors." = "기본 색상이 없습니다.";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "닫기";
+"Copy & dismiss" = "복사 후 닫기";
+"Close preview" = "미리보기 닫기";
+"Keep in stack" = "스택에 유지";
+"Return to stack when editor closes" = "편집기를 닫으면 스택으로 복귀";
+"  Click on preview:" = "  미리보기 클릭 시:";
+"  When opened in Editor:" = "  편집기에서 열 때:";

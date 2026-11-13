@@ -212,6 +212,7 @@
 "Play sound on capture" = "Geluid afspelen bij opname";
 "Play sound on copy" = "Geluid afspelen bij kopiëren";
 "Remember last selected tool" = "Laatst geselecteerd gereedschap onthouden";
+"Start captures in move mode" = "Opnamen starten in verplaatsmodus";
 "Show floating thumbnail after capture" = "Zwevende miniatuur tonen na opname";
 "Launch at login" = "Open bij inloggen";
 "Show snap alignment guides" = "Uitlijnhulplijnen tonen";
@@ -879,3 +880,12 @@
 "The preset swatches in the color picker." = "De vooraf ingestelde kleuren in de kleurkiezer.";
 "Add Color" = "Kleur toevoegen";
 "No default colors." = "Geen standaardkleuren.";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Sluiten";
+"Copy & dismiss" = "Kopiëren en sluiten";
+"Close preview" = "Voorvertoning sluiten";
+"Keep in stack" = "In stapel houden";
+"Return to stack when editor closes" = "Terug in stapel na sluiten editor";
+"  Click on preview:" = "  Klik op voorvertoning:";
+"  When opened in Editor:" = "  Bij openen in editor:";

@@ -208,6 +208,7 @@
 "Play sound on capture" = "Reprodueix un so en capturar";
 "Play sound on copy" = "Reproduir so en copiar";
 "Remember last selected tool" = "Recordar l'última eina seleccionada";
+"Start captures in move mode" = "Inicia les captures en mode de moviment";
 "Show floating thumbnail after capture" = "Mostrar miniatura flotant després de la captura";
 "Launch at login" = "Iniciar en iniciar sessió";
 "Show snap alignment guides" = "Mostrar guies d'alineació";
@@ -879,3 +880,12 @@
 "The preset swatches in the color picker." = "Els colors predefinits del selector de color.";
 "Add Color" = "Afegeix un color";
 "No default colors." = "Cap color per defecte.";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Tanca";
+"Copy & dismiss" = "Copia i tanca";
+"Close preview" = "Tanca la previsualització";
+"Keep in stack" = "Mantén a la pila";
+"Return to stack when editor closes" = "Torna a la pila en tancar l’editor";
+"  Click on preview:" = "  Clic a la previsualització:";
+"  When opened in Editor:" = "  En obrir a l’editor:";

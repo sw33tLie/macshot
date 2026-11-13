@@ -221,6 +221,7 @@
 "Play sound on capture" = "Spela ljud vid skärmdump";
 "Play sound on copy" = "Spela ljud vid kopiering";
 "Remember last selected tool" = "Kom ih\U00E5g senast valt verktyg";
+"Start captures in move mode" = "Starta skärmbilder i flyttläge";
 "Show floating thumbnail after capture" = "Visa flytande miniatyrbild efter f\U00E5ngst";
 "Launch at login" = "Starta vid inloggning";
 "Show snap alignment guides" = "Visa f\U00E4stlinjer";
@@ -877,3 +878,12 @@
 "The preset swatches in the color picker." = "De förinställda färgproverna i färgväljaren.";
 "Add Color" = "Lägg till färg";
 "No default colors." = "Inga standardfärger.";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Stäng";
+"Copy & dismiss" = "Kopiera och stäng";
+"Close preview" = "Stäng förhandsvisning";
+"Keep in stack" = "Behåll i stapeln";
+"Return to stack when editor closes" = "Tillbaka till stapeln när redigeraren stängs";
+"  Click on preview:" = "  Klick på förhandsvisning:";
+"  When opened in Editor:" = "  När den öppnas i redigeraren:";

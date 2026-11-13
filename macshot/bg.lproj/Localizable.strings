@@ -227,6 +227,7 @@
 "Play sound on capture" = "Възпроизвеждане на звук при заснемане";
 "Play sound on copy" = "Звук при копиране";
 "Remember last selected tool" = "Запомняне на последния избран инструмент";
+"Start captures in move mode" = "Започване на заснемането в режим на преместване";
 "Show floating thumbnail after capture" = "Показване на плаващ миниатюр след заснемане";
 "Launch at login" = "Стартиране при вход";
 "Show snap alignment guides" = "Показване на водачи за подравняване";
@@ -877,3 +878,12 @@
 "The preset swatches in the color picker." = "Предварително зададените цветове в избора на цвят.";
 "Add Color" = "Добавяне на цвят";
 "No default colors." = "Няма цветове по подразбиране.";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Затвори";
+"Copy & dismiss" = "Копирай и затвори";
+"Close preview" = "Затвори прегледа";
+"Keep in stack" = "Задръж в купчината";
+"Return to stack when editor closes" = "Върни в купчината след затваряне на редактора";
+"  Click on preview:" = "  Щракване върху прегледа:";
+"  When opened in Editor:" = "  При отваряне в редактора:";

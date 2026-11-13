@@ -72,6 +72,7 @@ brew install --cask macshot
 - **Multi-monitor** — captures all screens simultaneously; drag a selection across screens for a stitched image
 - **Quick save** — `Cmd+Shift+S` to select and save/copy instantly without annotation. Enter key also saves/copies based on preference.
 - **Quick OCR** — `Cmd+Shift+T` to select and extract text instantly
+- **Move mode (optional)** — turn on **Settings → General → Start captures in move mode** and dragging inside a new selection repositions it until you pick an annotation tool; Space and the Move Selection button move the area at any time
 
 ### Annotation Tools
 - **Arrow** — 5 styles: single, thick/banner, double, open, tail; flip direction toggle; right-click to add anchor points for complex curves

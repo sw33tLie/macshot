@@ -212,6 +212,7 @@
 "Play sound on capture" = "படமெடுக்கும்போது ஒலி எழுப்பு";
 "Play sound on copy" = "நகலெடுக்கும்போது ஒலி எழுப்பு";
 "Remember last selected tool" = "கடைசி தேர்ந்தெடுத்த கருவியை நினைவில் கொள்";
+"Start captures in move mode" = "திரைப்பிடிப்புகளை நகர்த்தும் பயன்முறையில் தொடங்கு";
 "Show floating thumbnail after capture" = "பிடிப்புக்குப் பிறகு மிதக்கும் சிறுபடத்தைக் காட்டு";
 "Launch at login" = "உள்நுழையும்போது தொடங்கு";
 "Show snap alignment guides" = "ஒட்டு சீரமைப்பு வழிகாட்டிகளைக் காட்டு";
@@ -879,3 +880,12 @@
 "The preset swatches in the color picker." = "நிறத் தேர்வியில் முன்னமைவு நிறங்கள்.";
 "Add Color" = "நிறம் சேர்";
 "No default colors." = "இயல்புநிலை நிறங்கள் இல்லை.";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "மூடு";
+"Copy & dismiss" = "நகலெடுத்து மூடு";
+"Close preview" = "முன்னோட்டத்தை மூடு";
+"Keep in stack" = "அடுக்கில் வைத்திரு";
+"Return to stack when editor closes" = "எடிட்டர் மூடியதும் அடுக்கிற்குத் திருப்பு";
+"  Click on preview:" = "  முன்னோட்டத்தில் கிளிக்:";
+"  When opened in Editor:" = "  எடிட்டரில் திறக்கும்போது:";

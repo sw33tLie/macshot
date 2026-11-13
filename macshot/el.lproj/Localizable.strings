@@ -220,6 +220,7 @@
 "Play sound on capture" = "Αναπαραγωγή ήχου κατά τη λήψη";
 "Play sound on copy" = "Αναπαραγωγή ήχου κατά την αντιγραφή";
 "Remember last selected tool" = "Απομνημόνευση τελευταίου επιλεγμένου εργαλείου";
+"Start captures in move mode" = "Έναρξη λήψης σε λειτουργία μετακίνησης";
 "Show floating thumbnail after capture" = "Εμφάνιση αιωρούμενης μικρογραφίας μετά τη λήψη";
 "Launch at login" = "Εκκίνηση κατά τη σύνδεση";
 "Show snap alignment guides" = "Εμφάνιση οδηγών ευθυγράμμισης κουμπώματος";
@@ -879,3 +880,12 @@
 "The preset swatches in the color picker." = "Τα προεπιλεγμένα δείγματα στην επιλογή χρώματος.";
 "Add Color" = "Προσθήκη χρώματος";
 "No default colors." = "Δεν υπάρχουν προεπιλεγμένα χρώματα.";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Κλείσιμο";
+"Copy & dismiss" = "Αντιγραφή και κλείσιμο";
+"Close preview" = "Κλείσιμο προεπισκόπησης";
+"Keep in stack" = "Διατήρηση στη στοίβα";
+"Return to stack when editor closes" = "Επιστροφή στη στοίβα όταν κλείσει ο επεξεργαστής";
+"  Click on preview:" = "  Κλικ στην προεπισκόπηση:";
+"  When opened in Editor:" = "  Όταν ανοίγει στον επεξεργαστή:";

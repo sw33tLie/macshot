@@ -225,6 +225,7 @@
 "Play sound on capture" = "Main bunyi semasa tangkapan";
 "Play sound on copy" = "Main bunyi semasa salin";
 "Remember last selected tool" = "Ingat alat pilihan terakhir";
+"Start captures in move mode" = "Mulakan tangkapan dalam mod alih";
 "Show floating thumbnail after capture" = "Tunjuk lakaran kecil terapung selepas tangkapan";
 "Launch at login" = "Lancar semasa log masuk";
 "Show snap alignment guides" = "Tunjuk panduan penjajaran lekat";
@@ -879,3 +880,12 @@
 "The preset swatches in the color picker." = "Warna pratetap dalam pemilih warna.";
 "Add Color" = "Tambah Warna";
 "No default colors." = "Tiada warna lalai.";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Tutup";
+"Copy & dismiss" = "Salin & tutup";
+"Close preview" = "Tutup pratonton";
+"Keep in stack" = "Kekal dalam timbunan";
+"Return to stack when editor closes" = "Kembali ke timbunan apabila editor ditutup";
+"  Click on preview:" = "  Klik pada pratonton:";
+"  When opened in Editor:" = "  Apabila dibuka dalam Editor:";

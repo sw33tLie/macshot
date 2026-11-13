@@ -208,6 +208,7 @@
 "Play sound on capture" = "تشغيل صوت عند الالتقاط";
 "Play sound on copy" = "تشغيل صوت عند النسخ";
 "Remember last selected tool" = "تذكّر آخر أداة محددة";
+"Start captures in move mode" = "بدء لقطات الشاشة في وضع التحريك";
 "Show floating thumbnail after capture" = "عرض الصورة المصغرة العائمة بعد الالتقاط";
 "Launch at login" = "التشغيل عند تسجيل الدخول";
 "Show snap alignment guides" = "عرض خطوط المحاذاة";
@@ -879,3 +880,12 @@
 "The preset swatches in the color picker." = "التبديلات المسبقة في منتقي الألوان.";
 "Add Color" = "إضافة لون";
 "No default colors." = "لا توجد ألوان افتراضية.";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "إغلاق";
+"Copy & dismiss" = "نسخ وإغلاق";
+"Close preview" = "إغلاق المعاينة";
+"Keep in stack" = "إبقاء في المكدس";
+"Return to stack when editor closes" = "إعادة إلى المكدس عند إغلاق المحرر";
+"  Click on preview:" = "  النقر على المعاينة:";
+"  When opened in Editor:" = "  عند الفتح في المحرر:";

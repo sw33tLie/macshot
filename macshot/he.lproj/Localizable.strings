@@ -208,6 +208,7 @@
 "Play sound on capture" = "השמע צליל בעת לכידה";
 "Play sound on copy" = "נגן צליל בהעתקה";
 "Remember last selected tool" = "זכור כלי שנבחר אחרון";
+"Start captures in move mode" = "התחלת צילומי מסך במצב הזזה";
 "Show floating thumbnail after capture" = "הצג תמונה ממוזערת צפה לאחר לכידה";
 "Launch at login" = "הפעל בהתחברות";
 "Show snap alignment guides" = "הצג קווי הצמדה";
@@ -879,3 +880,12 @@
 "The preset swatches in the color picker." = "הדוגמיות המוגדרות מראש בבורר הצבעים.";
 "Add Color" = "הוספת צבע";
 "No default colors." = "אין צבעי ברירת מחדל.";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "סגור";
+"Copy & dismiss" = "העתק וסגור";
+"Close preview" = "סגור תצוגה מקדימה";
+"Keep in stack" = "השאר בערימה";
+"Return to stack when editor closes" = "החזר לערימה כשהעורך נסגר";
+"  Click on preview:" = "  לחיצה על התצוגה המקדימה:";
+"  When opened in Editor:" = "  בעת פתיחה בעורך:";

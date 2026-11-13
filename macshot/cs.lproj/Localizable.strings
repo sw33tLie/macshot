@@ -227,6 +227,7 @@
 "Play sound on capture" = "Přehrát zvuk při snímání";
 "Play sound on copy" = "Přehrát zvuk při kopírování";
 "Remember last selected tool" = "Zapamatovat poslední vybraný nástroj";
+"Start captures in move mode" = "Zahajovat snímání v režimu přesouvání";
 "Show floating thumbnail after capture" = "Zobrazit plovoucí náhled po zachycení";
 "Launch at login" = "Spustit při přihlášení";
 "Show snap alignment guides" = "Zobrazit vodítka zarovnání";
@@ -877,3 +878,12 @@
 "The preset swatches in the color picker." = "Přednastavené vzorky v nástroji pro výběr barvy.";
 "Add Color" = "Přidat barvu";
 "No default colors." = "Žádné výchozí barvy.";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Zavřít";
+"Copy & dismiss" = "Kopírovat a zavřít";
+"Close preview" = "Zavřít náhled";
+"Keep in stack" = "Ponechat v zásobníku";
+"Return to stack when editor closes" = "Vrátit do zásobníku po zavření editoru";
+"  Click on preview:" = "  Kliknutí na náhled:";
+"  When opened in Editor:" = "  Při otevření v editoru:";

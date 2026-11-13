@@ -208,6 +208,7 @@
 "Play sound on capture" = "कैप्चर पर ध्वनि चलाएं";
 "Play sound on copy" = "कॉपी पर ध्वनि बजाएँ";
 "Remember last selected tool" = "अंतिम चयनित उपकरण याद रखें";
+"Start captures in move mode" = "स्क्रीनशॉट की शुरुआत मूव मोड में करें";
 "Show floating thumbnail after capture" = "कैप्चर के बाद फ़्लोटिंग थंबनेल दिखाएँ";
 "Launch at login" = "लॉगिन पर लॉन्च करें";
 "Show snap alignment guides" = "स्नैप संरेखण गाइड दिखाएँ";
@@ -879,3 +880,12 @@
 "The preset swatches in the color picker." = "रंग चयनकर्ता में प्रीसेट रंग।";
 "Add Color" = "रंग जोड़ें";
 "No default colors." = "कोई डिफ़ॉल्ट रंग नहीं।";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "बंद करें";
+"Copy & dismiss" = "कॉपी करें और बंद करें";
+"Close preview" = "पूर्वावलोकन बंद करें";
+"Keep in stack" = "स्टैक में रखें";
+"Return to stack when editor closes" = "एडिटर बंद होने पर स्टैक में लौटाएँ";
+"  Click on preview:" = "  पूर्वावलोकन पर क्लिक:";
+"  When opened in Editor:" = "  एडिटर में खोलने पर:";

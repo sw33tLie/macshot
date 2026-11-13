@@ -221,6 +221,7 @@
 "Play sound on capture" = "Afspil lyd ved optagelse";
 "Play sound on copy" = "Afspil lyd ved kopiering";
 "Remember last selected tool" = "Husk sidst valgte v\U00E6rkt\U00F8j";
+"Start captures in move mode" = "Start skærmbilleder i flyttetilstand";
 "Show floating thumbnail after capture" = "Vis flydende miniature efter optagelse";
 "Launch at login" = "Start ved login";
 "Show snap alignment guides" = "Vis fastg\U00F8relses-hj\U00E6lpelinjer";
@@ -877,3 +878,12 @@
 "The preset swatches in the color picker." = "De forudindstillede farvefelter i farvevælgeren.";
 "Add Color" = "Tilføj farve";
 "No default colors." = "Ingen standardfarver.";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Luk";
+"Copy & dismiss" = "Kopiér og luk";
+"Close preview" = "Luk forhåndsvisning";
+"Keep in stack" = "Behold i stakken";
+"Return to stack when editor closes" = "Tilbage i stakken når editoren lukkes";
+"  Click on preview:" = "  Klik på forhåndsvisning:";
+"  When opened in Editor:" = "  Når den åbnes i editoren:";
