@@ -140,15 +140,40 @@ final class VideoTimelineMediaTests: XCTestCase {
         let frozen = ids.filter { $0.0 >= 0.9 && $0.0 < 1.37 }
         XCTAssertEqual(Set(frozen.map(\.1)), [37])
         XCTAssertEqual(result.tracks(withMediaType: .audio).count, 2)
+        // Check the recording first, so a hole is attributed to the writer
+        // (the microphone track is never silence-filled) or to the export.
+        let recorded = try pcm(asset)
+        let recordedProfile = Self.rmsProfile(recorded)
+        XCTAssertEqual(recorded.count, 96_000, "Recorded microphone audio must cover the take")
+        for (index, value) in recordedProfile.enumerated() {
+            XCTAssertGreaterThan(value, 0.15, "Recorded microphone audio has a hole at \(Double(index) / 10)s: "
+                + Self.describe(recordedProfile))
+        }
         let samples = try pcm(result)
         func rms(_ range: Range<Int>) -> Double {
             sqrt(samples[range].reduce(0.0) { $0 + Double($1 * $1) } / Double(range.count))
         }
         XCTAssertGreaterThan(samples.count, 90_000)
         guard samples.count > 90_000 else { return }
-        XCTAssertGreaterThan(rms(9_600..<19_200), 0.1)
-        XCTAssertLessThan(rms(48_000..<60_000), 0.002, "The middle of a held frame must be silent")
-        XCTAssertGreaterThan(rms(76_800..<86_400), 0.1)
+        // Composition audio around time-scaled segments is not bit-identical
+        // between runs; on failure, record both profiles for comparison.
+        let profiles = "recorded " + Self.describe(recordedProfile)
+            + "; exported " + Self.describe(Self.rmsProfile(samples))
+        XCTAssertGreaterThan(rms(9_600..<19_200), 0.1, profiles)
+        XCTAssertLessThan(rms(48_000..<60_000), 0.002, "The middle of a held frame must be silent; " + profiles)
+        XCTAssertGreaterThan(rms(76_800..<86_400), 0.1, profiles)
+    }
+
+    /// RMS of each 100 ms of 48 kHz mono samples.
+    private static func rmsProfile(_ samples: [Float]) -> [Double] {
+        stride(from: 0, to: samples.count, by: 4_800).map { start in
+            let window = samples[start..<min(samples.count, start + 4_800)]
+            return sqrt(window.reduce(0.0) { $0 + Double($1 * $1) } / Double(window.count))
+        }
+    }
+
+    private static func describe(_ profile: [Double]) -> String {
+        profile.map { String(format: "%.2f", $0) }.joined(separator: " ")
     }
 
     func testInvalidTimelineFailsInsteadOfPublishingAPartialComposition() async throws {
