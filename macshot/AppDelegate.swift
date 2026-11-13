@@ -467,13 +467,24 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     @objc private func systemDidWake() {
-        guard isReadyForScreenCapture, !isCapturing, recordingEngine == nil else { return }
-        prewarmCapturePath()
+        guard !isCapturing, recordingEngine == nil else { return }
+        refreshCapturePathAfterSystemChange()
     }
 
     @objc private func screenParametersDidChange() {
-        guard isReadyForScreenCapture, !isCapturing, recordingEngine == nil else { return }
-        prewarmCapturePath()
+        guard !isCapturing, recordingEngine == nil else { return }
+        refreshCapturePathAfterSystemChange()
+    }
+
+    /// The overlay pool never touches ScreenCaptureKit, so it keeps following
+    /// display changes; the ScreenCaptureKit prewarm waits for access because
+    /// it can raise the system prompt.
+    private func refreshCapturePathAfterSystemChange() {
+        if isReadyForScreenCapture {
+            prewarmCapturePath()
+        } else {
+            rebuildOverlayPool()
+        }
     }
 
     /// Captured at the very start of every hotkey callback (before main thread
@@ -1299,19 +1310,48 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         }
     }
 
-    /// Check before setting any pending mode flags, so a blocked action cannot
-    /// affect the next capture (#276). While access is missing, send menu and
-    /// hotkey actions to onboarding before they can trigger a system prompt.
+    /// Whether a new capture can start right now. The `begin*` entry points set
+    /// their pending mode flag (pendingOCRMode, pendingRecordMode, …) BEFORE
+    /// calling `startCapture`. If `startCapture` were to bail at its guards after
+    /// the flag was set, the flag would strand and get applied to the *next*
+    /// capture — e.g. a stranded `pendingOCRMode` makes a later screenshot spawn
+    /// an unexpected OCR window (issue #276). So each `begin*` checks
+    /// `prepareToStartCapture()` FIRST and only sets its flag when a capture will
+    /// actually run. We must not clear the flags inside `startCapture`'s
+    /// `!isCapturing` guard, because during a delay-capture countdown
+    /// `isCapturing` is already true and the pending mode belongs to that
+    /// accepted (not-yet-consumed) capture.
+    private var canStartCapture: Bool {
+        !isCapturing && recordingEngine == nil
+    }
+
+    /// `canStartCapture`, plus the permission gate. While access is missing,
+    /// menu and hotkey actions open onboarding instead of asking
+    /// ScreenCaptureKit, which would raise the system prompt again (#493).
+    /// The preflight can lag behind a grant the capture itself would accept,
+    /// so once the user has been sent to Settings from onboarding, a capture
+    /// may try anyway; if it fails it lands on onboarding as before.
     private func prepareToStartCapture() -> Bool {
-        guard !isCapturing, recordingEngine == nil else { return false }
-        guard isReadyForScreenCapture || PermissionOnboardingController.hasScreenRecordingPermission() else {
-            showOnboarding()
-            return false
+        guard canStartCapture else { return false }
+        if !isReadyForScreenCapture {
+            if PermissionOnboardingController.hasScreenRecordingPermission() {
+                // Granted since launch without onboarding noticing (e.g. it
+                // was closed). This also replays capture URLs queued behind
+                // onboarding, which may have started a capture already.
+                markScreenCaptureReady()
+                guard canStartCapture else { return false }
+            } else if !PermissionOnboardingController.didOpenScreenRecordingSettings {
+                showOnboarding()
+                return false
+            }
         }
         return true
     }
 
     private func startCapture(fromMenu: Bool = false, recordingAsGIF: Bool = false) {
+        // Every caller checked `prepareToStartCapture()`; keep the guards so a
+        // future caller can't start a second capture over a running one.
+        guard canStartCapture else { return }
         nextRecordingIsGIF = recordingAsGIF
         let trace = makeCaptureTimingTrace()
         captureTimingTrace = trace

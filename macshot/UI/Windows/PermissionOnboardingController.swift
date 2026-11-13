@@ -23,7 +23,12 @@ class PermissionOnboardingController: NSWindowController {
     private let isReturningUser: Bool
 
     private static let grantedBeforeKey = "screenRecordingGrantedBefore"
+    /// The native request runs at most once per process (see `openSettings`).
     private static var didRequestScreenRecordingAccess = false
+    /// Whether the user opened the Screen Recording pane from this window in
+    /// this process. After that, captures are allowed to try even while the
+    /// preflight still says no (see `AppDelegate.prepareToStartCapture`).
+    private(set) static var didOpenScreenRecordingSettings = false
 
     /// Sparkle records the first launch; the flag covers later grants.
     static func isReturningUser(_ defaults: UserDefaults = .standard) -> Bool {
@@ -385,13 +390,17 @@ class PermissionOnboardingController: NSWindowController {
     // MARK: - Actions
 
     @objc private func openSettings() {
-        // First launch: register macshot in Settings (#299). Returning users
-        // need the pane to replace a possibly stale grant; requesting access
-        // again does not replace the old signing requirement.
-        if !isReturningUser && !Self.didRequestScreenRecordingAccess {
+        // macOS lists an app under Screen Recording only once it has asked
+        // (#299): the preflight polling never asks, and captures wait for the
+        // permission. Ask once per process. Returning users need it too: after
+        // the `tccutil reset` below (#496) macshot is gone from the list, and
+        // the restart that follows is a new process. Asking again in the same
+        // process can't replace a stale grant and only repeats the prompt.
+        if !Self.didRequestScreenRecordingAccess {
             Self.didRequestScreenRecordingAccess = true
             _ = CGRequestScreenCaptureAccess()
         }
+        Self.didOpenScreenRecordingSettings = true
         // Deep-link directly to Privacy & Security → Screen Recording.
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
             NSWorkspace.shared.open(url)
