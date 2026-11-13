@@ -199,7 +199,8 @@ final class OverlayAutoSelectionTests: XCTestCase {
     private func drainMainQueue() {
         let drained = expectation(description: "main queue drained")
         DispatchQueue.main.async { drained.fulfill() }
-        wait(for: [drained], timeout: 2)
+        // One main-queue hop; generous so a heavily loaded runner can't time it out.
+        wait(for: [drained], timeout: 10)
     }
 
     func testOCRResultEndsItsOwnSession() throws {
