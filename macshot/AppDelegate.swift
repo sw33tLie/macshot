@@ -1528,13 +1528,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                         if !isFirst { self.refocusOverlay(among: controllers, installed: progressive.installed) }
                     })
             }
-            if let captures, progressive.shownAny {
+            let remaining = controllers.filter { !progressive.installed.contains(ObjectIdentifier($0)) }
+            if let captures, progressive.shownAny, remaining.isEmpty {
                 trace?.mark("background screenshot end count=\(captures.count) (progressive)")
                 return
             }
             // No SCK result, or some displays failed after others were already
-            // shown: capture the rest with the fallback and install only those.
-            let remaining = controllers.filter { !progressive.installed.contains(ObjectIdentifier($0)) }
+            // shown (SCK may still have captured them through its content-filter
+            // path): install only the displays not yet shown.
             let finalCaptures = captures ?? ScreenCaptureManager.captureAllScreensImmediately(
                 context: captureContext,
                 timing: { label in trace?.mark(label) })
