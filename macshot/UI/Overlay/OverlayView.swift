@@ -9727,8 +9727,18 @@ class OverlayView: NSView {
         }
         redoStack.removeAll()
         selectedAnnotations = newAnnotations
+        selectToolForNewAnnotationsInMoveMode()
         cachedCompositedImage = nil
         needsDisplay = true
+    }
+
+    /// A capture still in move mode has no tool, so pasted or duplicated
+    /// annotations would show as selected but every drag would move the
+    /// selection. Switch to Select, as pasting an image already does.
+    private func selectToolForNewAnnotationsInMoveMode() {
+        guard startsInSelectionMoveMode else { return }
+        currentTool = .select
+        rebuildToolbarLayout()
     }
 
     /// Duplicate the selected annotations in place (Cmd+D) — same offset behavior
@@ -9751,6 +9761,7 @@ class OverlayView: NSView {
         }
         redoStack.removeAll()
         selectedAnnotations = newAnnotations
+        selectToolForNewAnnotationsInMoveMode()
         cachedCompositedImage = nil
         needsDisplay = true
     }
