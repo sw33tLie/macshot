@@ -16,7 +16,7 @@
 
 ### Improved
 
-- **OCR on macOS 27** runs in its own helper process. A recognition that gets stuck no longer makes later OCR slow or empty until macshot restarts; the fast model answers meanwhile and the helper is replaced. (#508)
+- **OCR runs in its own helper process.** On macOS 27, a recognition that gets stuck no longer makes later OCR slow or empty until macshot restarts; the fast model answers meanwhile and the helper is replaced. (#508)
 - **Screen Recording that won't come back after the signature change**: the "Turn Screen Recording back on" window shows the exact reset command with Copy and Restart buttons. (#496)
 - macshot no longer asks for Screen Recording again and again while access is being repaired, and new users no longer see the "Welcome back" version of the permission window. Thanks @newtonlorenz. (#493)
 
