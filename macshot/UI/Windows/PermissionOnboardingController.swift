@@ -33,12 +33,30 @@ class PermissionOnboardingController: NSWindowController {
         defaults.set(true, forKey: grantedBeforeKey)
     }
 
+    /// The Terminal command that clears every privacy record macOS keeps for
+    /// this app (#496). A record written for a build signed by another Team ID
+    /// stores that build's code requirement; macOS ignores it for the new
+    /// build but still shows it as on. Toggling the switch keeps the stale
+    /// requirement, and removing it with "−" can leave the system prompt
+    /// silent until a reboot (FB22261705). `tccutil reset` deletes the records
+    /// so the next request starts clean. `All` also covers Accessibility and
+    /// Input Monitoring, which went stale the same way.
+    static func permissionResetCommand(bundleID rawBundleID: String) -> String {
+        // An empty argument could read as "every app"; never emit that.
+        let bundleID = rawBundleID.isEmpty ? "com.sw33tlie.macshot.macshot" : rawBundleID
+        let isPlain = bundleID.unicodeScalars.allSatisfy {
+            CharacterSet.alphanumerics.contains($0) && $0.isASCII || $0 == "." || $0 == "-"
+        }
+        let quoted = isPlain ? bundleID : "'" + bundleID.replacingOccurrences(of: "'", with: "'\\''") + "'"
+        return "tccutil reset All \(quoted)"
+    }
+
     // MARK: - Init
 
     init(returningUser: Bool = PermissionOnboardingController.isReturningUser()) {
         isReturningUser = returningUser
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 400, height: returningUser ? 610 : 520),
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: returningUser ? 665 : 520),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -67,6 +85,12 @@ class PermissionOnboardingController: NSWindowController {
     private weak var continueButton: NSButton?
     private weak var spinner: NSProgressIndicator?
     private weak var checkmark: NSTextField?
+    private weak var copyCommandButton: NSButton?
+    private var copiedResetWork: DispatchWorkItem?
+
+    private var resetCommand: String {
+        Self.permissionResetCommand(bundleID: Bundle.main.bundleIdentifier ?? "com.sw33tlie.macshot.macshot")
+    }
 
     private func buildUI() {
         guard let cv = window?.contentView else { return }
@@ -163,8 +187,80 @@ class PermissionOnboardingController: NSWindowController {
         cv.addSubview(contBtn)
         self.continueButton = contBtn
 
+        // Returning users whose old entry won't let go: show the reset command
+        // itself (so they can see what they paste), a copy button and a restart.
+        let resetLabel = NSTextField(wrappingLabelWithString: L("Still not working? Run this command in Terminal, then restart macshot."))
+        resetLabel.font = NSFont.systemFont(ofSize: 11)
+        resetLabel.textColor = .secondaryLabelColor
+        resetLabel.alignment = .center
+        resetLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        let commandBox = NSBox()
+        commandBox.boxType = .custom
+        commandBox.fillColor = NSColor.quaternaryLabelColor.withAlphaComponent(0.12)
+        commandBox.borderColor = NSColor.separatorColor
+        commandBox.borderWidth = 1
+        commandBox.cornerRadius = 6
+        commandBox.translatesAutoresizingMaskIntoConstraints = false
+
+        let commandField = NSTextField(labelWithString: resetCommand)
+        commandField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        commandField.textColor = .labelColor
+        commandField.isSelectable = true
+        commandField.alignment = .center
+        commandField.lineBreakMode = .byCharWrapping
+        commandField.maximumNumberOfLines = 2
+        commandField.translatesAutoresizingMaskIntoConstraints = false
+        commandBox.addSubview(commandField)
+
+        let copyBtn = NSButton(title: L("Copy Command"), target: self, action: #selector(copyResetCommand))
+        copyBtn.bezelStyle = .rounded
+        copyBtn.controlSize = .small
+        self.copyCommandButton = copyBtn
+        let restartBtn = NSButton(title: L("Restart macshot"), target: self, action: #selector(restartApp))
+        restartBtn.bezelStyle = .rounded
+        restartBtn.controlSize = .small
+        let resetButtons = NSStackView(views: [copyBtn, restartBtn])
+        resetButtons.orientation = .horizontal
+        resetButtons.spacing = 8
+        resetButtons.setHuggingPriority(.required, for: .vertical)
+        resetButtons.translatesAutoresizingMaskIntoConstraints = false
+
+        if isReturningUser {
+            cv.addSubview(resetLabel)
+            cv.addSubview(commandBox)
+            cv.addSubview(resetButtons)
+        }
+
         // Image aspect ratio: 1405 × 892
         let imgAspect: CGFloat = 892.0 / 1405.0
+
+        if isReturningUser {
+            NSLayoutConstraint.activate([
+                resetLabel.topAnchor.constraint(equalTo: openBtn.bottomAnchor, constant: 22),
+                resetLabel.leadingAnchor.constraint(equalTo: cv.leadingAnchor, constant: 28),
+                resetLabel.trailingAnchor.constraint(equalTo: cv.trailingAnchor, constant: -28),
+
+                commandBox.topAnchor.constraint(equalTo: resetLabel.bottomAnchor, constant: 8),
+                commandBox.leadingAnchor.constraint(equalTo: cv.leadingAnchor, constant: 20),
+                commandBox.trailingAnchor.constraint(equalTo: cv.trailingAnchor, constant: -20),
+
+                commandField.topAnchor.constraint(equalTo: commandBox.topAnchor, constant: 7),
+                commandField.bottomAnchor.constraint(equalTo: commandBox.bottomAnchor, constant: -7),
+                commandField.leadingAnchor.constraint(equalTo: commandBox.leadingAnchor, constant: 10),
+                commandField.trailingAnchor.constraint(equalTo: commandBox.trailingAnchor, constant: -10),
+
+                resetButtons.topAnchor.constraint(equalTo: commandBox.bottomAnchor, constant: 10),
+                resetButtons.centerXAnchor.constraint(equalTo: cv.centerXAnchor),
+                // Spare height (longer translations wrap less) stays at the bottom.
+                resetButtons.bottomAnchor.constraint(lessThanOrEqualTo: cv.bottomAnchor, constant: -20),
+            ])
+        } else {
+            NSLayoutConstraint.activate([
+                openBtn.bottomAnchor.constraint(equalTo: cv.bottomAnchor, constant: -20),
+                contBtn.bottomAnchor.constraint(equalTo: cv.bottomAnchor, constant: -20),
+            ])
+        }
 
         NSLayoutConstraint.activate([
             logoView.centerXAnchor.constraint(equalTo: cv.centerXAnchor),
@@ -205,12 +301,10 @@ class PermissionOnboardingController: NSWindowController {
             openBtn.topAnchor.constraint(equalTo: stepBox.bottomAnchor, constant: 14),
             openBtn.centerXAnchor.constraint(equalTo: cv.centerXAnchor),
             openBtn.widthAnchor.constraint(equalToConstant: 260),
-            openBtn.bottomAnchor.constraint(equalTo: cv.bottomAnchor, constant: -20),
 
             contBtn.topAnchor.constraint(equalTo: stepBox.bottomAnchor, constant: 14),
             contBtn.centerXAnchor.constraint(equalTo: cv.centerXAnchor),
             contBtn.widthAnchor.constraint(equalToConstant: 260),
-            contBtn.bottomAnchor.constraint(equalTo: cv.bottomAnchor, constant: -20),
         ])
     }
 
@@ -303,6 +397,24 @@ class PermissionOnboardingController: NSWindowController {
         }
 
         statusLabel?.stringValue = L("Enable macshot, then try taking a screenshot")
+    }
+
+    @objc private func copyResetCommand() {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(resetCommand, forType: .string)
+        copyCommandButton?.title = L("Copied!")
+        copiedResetWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            self?.copyCommandButton?.title = L("Copy Command")
+        }
+        copiedResetWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: work)
+    }
+
+    /// A running process can keep the answer it already got, so the request
+    /// after a reset has to come from a fresh process.
+    @objc private func restartApp() {
+        AppDelegate.relaunchApp()
     }
 
     @objc private func continueClicked() {

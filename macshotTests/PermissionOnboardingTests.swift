@@ -36,6 +36,29 @@ final class PermissionOnboardingTests: XCTestCase {
             for view in content.subviews where !view.isHidden {
                 XCTAssertTrue(content.bounds.insetBy(dx: -0.5, dy: -0.5).contains(view.frame), "\(view) is clipped")
             }
+            // The reset fallback (#496) is only for returning users, sits below
+            // the main button, and shows the exact command it copies.
+            let buttons = allSubviews(of: content).compactMap { $0 as? NSButton }.filter { !$0.isHidden }
+            let copy = buttons.first { $0.title == L("Copy Command") }
+            let restart = buttons.first { $0.title == L("Restart macshot") }
+            XCTAssertEqual(copy != nil, returning)
+            XCTAssertEqual(restart != nil, returning)
+            let command = PermissionOnboardingController.permissionResetCommand(
+                bundleID: Bundle.main.bundleIdentifier ?? "com.sw33tlie.macshot.macshot")
+            let commandField = allSubviews(of: content).compactMap { $0 as? NSTextField }.first { $0.stringValue == command }
+            XCTAssertEqual(commandField != nil, returning)
+            if returning, let copy, let restart, let commandField {
+                let open = try XCTUnwrap(buttons.first { $0.title == L("Open Screen Recording Settings") })
+                let openFrame = open.convert(open.bounds, to: content)
+                for view in [copy, restart, commandField] as [NSView] {
+                    let frame = view.convert(view.bounds, to: content)
+                    XCTAssertLessThan(frame.maxY, openFrame.minY, "\(view) should sit below the main button")
+                    XCTAssertTrue(content.bounds.contains(frame), "\(view) is clipped")
+                }
+                let fieldWidth = commandField.convert(commandField.bounds, to: content).width
+                XCTAssertGreaterThanOrEqual(fieldWidth + 0.5, commandField.intrinsicContentSize.width,
+                                            "command is truncated")
+            }
             if returning {
                 let png = content.bitmapImageRepForCachingDisplay(in: content.bounds)
                 if let png { content.cacheDisplay(in: content.bounds, to: png)
@@ -44,5 +67,22 @@ final class PermissionOnboardingTests: XCTestCase {
             }
             controller.close()
         }
+    }
+
+    func testResetCommandTargetsOnlyThisApp() {
+        XCTAssertEqual(PermissionOnboardingController.permissionResetCommand(bundleID: "com.sw33tlie.macshot.macshot"),
+                       "tccutil reset All com.sw33tlie.macshot.macshot")
+        XCTAssertEqual(PermissionOnboardingController.permissionResetCommand(bundleID: "com.sw33tlie.macshot.offline"),
+                       "tccutil reset All com.sw33tlie.macshot.offline")
+        // Never let an unusual identifier become shell syntax, and never emit
+        // an unscoped reset that would wipe every app's permissions.
+        XCTAssertEqual(PermissionOnboardingController.permissionResetCommand(bundleID: "a b;rm 'x'"),
+                       "tccutil reset All 'a b;rm '\\''x'\\'''")
+        XCTAssertEqual(PermissionOnboardingController.permissionResetCommand(bundleID: ""),
+                       "tccutil reset All com.sw33tlie.macshot.macshot")
+    }
+
+    private func allSubviews(of view: NSView) -> [NSView] {
+        view.subviews + view.subviews.flatMap { allSubviews(of: $0) }
     }
 }

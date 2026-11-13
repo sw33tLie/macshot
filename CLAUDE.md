@@ -82,6 +82,7 @@ macshot/
 │   ├── FilenameFormatter.swift         # Filename templates ({date}, {window}, {random}, …)
 │   ├── SettingsPortability.swift       # Settings export/import + the secret filter
 │   ├── LanguageManager.swift           # Locale resolution + L("…") lookup
+│   ├── RelaunchHandoff.swift           # Lets a "Restart macshot" replacement pass the single-instance check
 │   ├── ScreenshotHistory.swift         # Local history in ~/Library/Application Support/
 │   └── SaveDirectoryAccess.swift       # Security-scoped bookmark for save directory
 │

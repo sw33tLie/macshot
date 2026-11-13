@@ -404,6 +404,9 @@
 "Screen Recording granted!" = "Ruudun nauhoituslupa myönnetty!";
 "Enable macshot, then try taking a screenshot" = "Ota macshot käyttöön ja kokeile kuvakaappausta";
 "Open Screen Recording Settings" = "Avaa ruudun nauhoitusasetukset";
+"Still not working? Run this command in Terminal, then restart macshot." = "Eikö toimi vieläkään? Suorita tämä komento Päätteessä ja käynnistä macshot sitten uudelleen.";
+"Copy Command" = "Kopioi komento";
+"Restart macshot" = "Käynnistä macshot uudelleen";
 "Continue" = "Jatka";
 
 /* OCR Window */

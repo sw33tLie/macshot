@@ -404,6 +404,9 @@
 "Screen Recording granted!" = "Sk\U00E4rminspelning beviljad!";
 "Enable macshot, then try taking a screenshot" = "Aktivera macshot och ta sedan en sk\U00E4rmbild";
 "Open Screen Recording Settings" = "\U00D6ppna inst\U00E4llningar f\U00F6r sk\U00E4rminspelning";
+"Still not working? Run this command in Terminal, then restart macshot." = "Fungerar det fortfarande inte? Kör det här kommandot i Terminal och starta sedan om macshot.";
+"Copy Command" = "Kopiera kommando";
+"Restart macshot" = "Starta om macshot";
 "Continue" = "Forts\U00E4tt";
 
 /* OCR Window */

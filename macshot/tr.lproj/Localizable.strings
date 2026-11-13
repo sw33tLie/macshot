@@ -399,6 +399,9 @@
 "Screen Recording granted!" = "Ekran Kaydı izni verildi!";
 "Enable macshot, then try taking a screenshot" = "macshot'u etkinleştirin, ardından ekran görüntüsü almayı deneyin";
 "Open Screen Recording Settings" = "Ekran Kaydı Ayarlarını Aç";
+"Still not working? Run this command in Terminal, then restart macshot." = "Hâlâ çalışmıyor mu? Bu komutu Terminal'de çalıştırın, ardından macshot'u yeniden başlatın.";
+"Copy Command" = "Komutu Kopyala";
+"Restart macshot" = "macshot'u Yeniden Başlat";
 "Continue" = "Devam";
 
 /* OCR Window */

@@ -258,7 +258,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // Prevent multiple instances — if already running, activate the existing one and quit
         let bundleID = Bundle.main.bundleIdentifier ?? "com.sw33tlie.macshot.macshot"
         let running = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
-        if running.count > 1 {
+        let ownPID = ProcessInfo.processInfo.processIdentifier
+        let otherPIDs = running.map(\.processIdentifier).filter { $0 != ownPID }
+        // A replacement started by `relaunchApp()` overlaps the instance that
+        // launched it until that one quits; it must not quit itself as a duplicate.
+        let isReplacement = RelaunchHandoff.claim(otherPIDs: otherPIDs)
+        if !otherPIDs.isEmpty && !isReplacement {
             // Tell the existing instance to show its icon and open Settings
             DistributedNotificationCenter.default().postNotificationName(
                 .init("com.sw33tlie.macshot.showAndOpenPrefs"),
@@ -794,11 +799,21 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     /// instance via NSWorkspace (no shell, no sleep), then terminates this one once the
     /// new copy is up. `createsNewApplicationInstance` lets the replacement start before
     /// this process exits, so there's no window where no instance is running.
+    /// `RelaunchHandoff` keeps the single-instance check at launch from making the
+    /// replacement quit while this one is still alive. If the launch fails, this
+    /// instance keeps running rather than leaving none.
     static func relaunchApp() {
         let config = NSWorkspace.OpenConfiguration()
         config.createsNewApplicationInstance = true
-        NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: config) { _, _ in
-            DispatchQueue.main.async { NSApp.terminate(nil) }
+        RelaunchHandoff.record()
+        NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: config) { app, _ in
+            DispatchQueue.main.async {
+                guard app != nil else {
+                    RelaunchHandoff.clear()
+                    return
+                }
+                NSApp.terminate(nil)
+            }
         }
     }
 

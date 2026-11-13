@@ -405,6 +405,9 @@
 "Screen Recording granted!" = "Képernyőfelvétel engedélyezve!";
 "Enable macshot, then try taking a screenshot" = "Engedélyezd a macshot-ot, majd próbálj képernyőképet készíteni";
 "Open Screen Recording Settings" = "Képernyőfelvétel beállításainak megnyitása";
+"Still not working? Run this command in Terminal, then restart macshot." = "Még mindig nem működik? Futtasd ezt a parancsot a Terminálban, majd indítsd újra a macshotot.";
+"Copy Command" = "Parancs másolása";
+"Restart macshot" = "macshot újraindítása";
 "Continue" = "Tovább";
 
 /* OCR Window */

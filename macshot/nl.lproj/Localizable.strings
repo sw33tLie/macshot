@@ -395,6 +395,9 @@
 "Screen Recording granted!" = "Schermopname toegestaan!";
 "Enable macshot, then try taking a screenshot" = "Schakel macshot in en probeer een schermafbeelding te maken";
 "Open Screen Recording Settings" = "Open schermopname-instellingen";
+"Still not working? Run this command in Terminal, then restart macshot." = "Werkt het nog steeds niet? Voer deze opdracht uit in Terminal en start macshot daarna opnieuw.";
+"Copy Command" = "Kopieer opdracht";
+"Restart macshot" = "Start macshot opnieuw";
 "Continue" = "Ga door";
 
 /* OCR Window */

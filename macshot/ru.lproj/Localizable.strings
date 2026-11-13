@@ -406,6 +406,9 @@
 "Screen Recording granted!" = "Разрешение на запись экрана получено!";
 "Enable macshot, then try taking a screenshot" = "Включите macshot, затем попробуйте сделать снимок экрана";
 "Open Screen Recording Settings" = "Открыть настройки записи экрана";
+"Still not working? Run this command in Terminal, then restart macshot." = "Всё ещё не работает? Выполните эту команду в Терминале, затем перезапустите macshot.";
+"Copy Command" = "Копировать команду";
+"Restart macshot" = "Перезапустить macshot";
 "Continue" = "Продолжить";
 
 /* OCR Window */

@@ -396,6 +396,9 @@
 "Screen Recording granted!" = "¡Grabación de pantalla concedida!";
 "Enable macshot, then try taking a screenshot" = "Activa macshot e intenta tomar una captura";
 "Open Screen Recording Settings" = "Abrir Ajustes de Grabación de Pantalla";
+"Still not working? Run this command in Terminal, then restart macshot." = "¿Sigue sin funcionar? Ejecuta este comando en Terminal y luego reinicia macshot.";
+"Copy Command" = "Copiar comando";
+"Restart macshot" = "Reiniciar macshot";
 "Continue" = "Continuar";
 
 /* OCR Window */

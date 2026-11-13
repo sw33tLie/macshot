@@ -260,6 +260,8 @@ final class LocalizationTests: XCTestCase {
         case "sv": validPlainWords = ["andra", "fast"]
         // "imleci" (the pointer, accusative) vs "imleç" (pointer).
         case "tr": validPlainWords = ["imleci"]
+        // "comanda" (the command) vs "comandă" (a command).
+        case "ro": validPlainWords = ["comanda"]
         default: validPlainWords = []
         }
         return plain.filter { accented.contains($0.key) && !validPlainWords.contains($0.key) }

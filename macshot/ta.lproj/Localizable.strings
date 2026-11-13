@@ -404,6 +404,9 @@
 "Screen Recording granted!" = "திரைப் பதிவு வழங்கப்பட்டது!";
 "Enable macshot, then try taking a screenshot" = "macshot ஐ இயக்கி, திரைப்பிடிப்பு எடுக்க முயற்சிக்கவும்";
 "Open Screen Recording Settings" = "திரைப் பதிவு அமைப்புகளைத் திற";
+"Still not working? Run this command in Terminal, then restart macshot." = "இன்னும் வேலை செய்யவில்லையா? டெர்மினலில் இந்தக் கட்டளையை இயக்கி, பின்னர் macshot-ஐ மீண்டும் தொடங்குங்கள்.";
+"Copy Command" = "கட்டளையை நகலெடு";
+"Restart macshot" = "macshot-ஐ மீண்டும் தொடங்கு";
 "Continue" = "தொடரவும்";
 
 /* OCR Window */

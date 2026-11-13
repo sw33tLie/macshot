@@ -405,6 +405,9 @@
 "Screen Recording granted!" = "Đã cấp quyền Quay màn hình!";
 "Enable macshot, then try taking a screenshot" = "Bật macshot, rồi thử chụp ảnh màn hình";
 "Open Screen Recording Settings" = "Mở Cài đặt Quay màn hình";
+"Still not working? Run this command in Terminal, then restart macshot." = "Vẫn không hoạt động? Hãy chạy lệnh này trong Terminal, sau đó khởi động lại macshot.";
+"Copy Command" = "Sao chép lệnh";
+"Restart macshot" = "Khởi động lại macshot";
 "Continue" = "Tiếp tục";
 
 /* OCR Window */

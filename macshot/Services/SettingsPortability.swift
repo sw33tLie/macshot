@@ -61,6 +61,7 @@ enum SettingsPortability {
         // or wrongly re-enables ones the user disabled. (enabledTools/enabledActions DO transfer.)
         "knownToolRawValues", "knownActionTags",
         "suppressMoveToApplications", "useWindowTitleInFilename",
+        RelaunchHandoff.pidKey, RelaunchHandoff.dateKey,
         // Account PII / history that isn't credential-named but shouldn't leave the machine.
         "gdriveUserEmail",
         "imgbbUploads",   // uploaded image links + delete URLs
