@@ -206,6 +206,85 @@ enum ThumbnailEditBehavior: String, CaseIterable {
     }
 }
 
+/// Bookkeeping for a floating preview whose capture is open in one or more
+/// editors. Pure (no windows) so it can be tested headless.
+struct ThumbnailEditingState: Equatable {
+    enum OpenResult: Equatable {
+        /// "Close preview": the preview goes away as the editor opens.
+        case dismissPreview
+        /// The preview stays where it is (dimmed) while editing.
+        case keepPreview
+        /// The preview leaves the stack until its last editor closes.
+        case suspendPreview
+    }
+
+    enum CloseResult: Equatable {
+        /// No editor opened from this preview was open.
+        case ignored
+        /// Another editor opened from this preview is still open.
+        case stillEditing
+        /// The last editor closed; the preview was visible all along.
+        case finishedEditing
+        /// The last editor closed; the hidden preview goes back on the stack.
+        case returnToStack
+    }
+
+    /// Editors opened from this preview that are still open. While non-zero
+    /// the preview never auto-dismisses.
+    private(set) var openEditorCount = 0
+    /// Hidden from the stack until its last editor closes.
+    private(set) var isSuspended = false
+
+    var isEditing: Bool { openEditorCount > 0 }
+    /// The next `editorDidClose()` brings the hidden preview back.
+    var returnsOnNextEditorClose: Bool { isSuspended && openEditorCount == 1 }
+
+    mutating func editorWillOpen(_ behavior: ThumbnailEditBehavior) -> OpenResult {
+        switch behavior {
+        case .dismiss:
+            return .dismissPreview
+        case .keep:
+            openEditorCount += 1
+            return .keepPreview
+        case .returnAfterClose:
+            openEditorCount += 1
+            if isSuspended { return .keepPreview }
+            isSuspended = true
+            return .suspendPreview
+        }
+    }
+
+    mutating func editorDidClose() -> CloseResult {
+        guard openEditorCount > 0 else { return .ignored }
+        openEditorCount -= 1
+        guard openEditorCount == 0 else { return .stillEditing }
+        guard isSuspended else { return .finishedEditing }
+        isSuspended = false
+        return .returnToStack
+    }
+}
+
+/// Which floating previews a new preview (or editor output) affects. Pure so
+/// the stacking rules can be tested without windows.
+struct FloatingThumbnailStackPlan: Equatable {
+    /// Index of a preview already showing this history entry; it is updated
+    /// in place instead of stacking a duplicate.
+    var updateIndex: Int?
+    /// Previews to close first ("Replace previous" stacking mode).
+    var dismissIndices: [Int]
+
+    init(updateIndex: Int?, dismissIndices: [Int]) {
+        self.updateIndex = updateIndex
+        self.dismissIndices = dismissIndices
+    }
+
+    init(existingEntryIDs: [String?], newEntryID: String?, stacking: Bool) {
+        let update = newEntryID.flatMap { id in existingEntryIDs.firstIndex { $0 == id } }
+        updateIndex = update
+        dismissIndices = stacking ? [] : existingEntryIDs.indices.filter { $0 != update }
+    }
+}
+
 enum FloatingThumbnailCorner: String {
     case bottomRight
     case bottomLeft
@@ -246,14 +325,15 @@ class FloatingThumbnailController: NSObject, NSDraggingSource, QLPreviewPanelDat
     private var isScrollDismissHostActive = false
     private var quickLookURL: URL?
     var onDismiss: (() -> Void)?
-    /// Number of editor windows opened from this preview that are still open.
-    /// While non-zero the preview never auto-dismisses.
-    private var openEditorCount = 0
-    var isEditing: Bool { openEditorCount > 0 }
+    /// Editors opened from this preview, and whether it waits off the stack.
+    private var editing = ThumbnailEditingState()
+    var isEditing: Bool { editing.isEditing }
     /// Window opacity when no gesture is fading it: half-transparent while editing.
     private var restingAlpha: CGFloat { isEditing ? 0.5 : 1 }
     /// True while the preview is hidden from the stack until its editor closes.
-    private(set) var isSuspended = false
+    var isSuspended: Bool { editing.isSuspended }
+    /// The next editor close brings this hidden preview back on the stack.
+    var returnsToStackOnNextEditorClose: Bool { editing.returnsOnNextEditorClose }
     /// Called when the preview leaves the stack to wait for its editor.
     var onSuspended: (() -> Void)?
 
@@ -384,17 +464,17 @@ class FloatingThumbnailController: NSObject, NSDraggingSource, QLPreviewPanelDat
 
     /// Open this preview in the editor, applying the "While editing" preference.
     func openEditor() {
-        let behavior = ThumbnailEditBehavior.current
-        guard behavior != .dismiss else {
+        switch editing.editorWillOpen(ThumbnailEditBehavior.current) {
+        case .dismissPreview:
             onEdit?()
             dismiss()
             return
-        }
-        openEditorCount += 1
-        updateEditingAppearance()
-        pauseAutoDismiss()
-        if behavior == .returnAfterClose && !isSuspended {
-            isSuspended = true
+        case .keepPreview:
+            updateEditingAppearance()
+            pauseAutoDismiss()
+        case .suspendPreview:
+            updateEditingAppearance()
+            pauseAutoDismiss()
             window?.orderOut(nil)
             onSuspended?()
         }
@@ -404,16 +484,23 @@ class FloatingThumbnailController: NSObject, NSDraggingSource, QLPreviewPanelDat
     /// Called when an editor opened from this preview closes. When the preview
     /// was hidden, `origin` is where it should slide back in.
     func editorDidClose(returnTo origin: NSPoint?) {
-        guard openEditorCount > 0 else { return }
-        openEditorCount -= 1
-        guard openEditorCount == 0 else { return }
-        if isSuspended {
-            isSuspended = false
+        switch editing.editorDidClose() {
+        case .ignored, .stillEditing:
+            return
+        case .finishedEditing:
+            updateEditingAppearance()
+        case .returnToStack:
             thumbnailView?.isDimmed = false
             slideBackIn(to: origin ?? targetFrame.origin)
-        } else {
-            updateEditingAppearance()
         }
+        scheduleAutoDismiss()
+    }
+
+    /// An output re-showed this preview's capture: give it a full auto-dismiss
+    /// period again (unless it is being edited or hovered).
+    func restartAutoDismiss() {
+        guard window != nil, !isEditing, !isInteractiveDismissActive,
+              thumbnailView?.isHovering != true else { return }
         scheduleAutoDismiss()
     }
 
@@ -842,7 +929,7 @@ private class ThumbnailView: NSView {
     private var scrollDismissEndTask: DispatchWorkItem?
     private var scrollDismissGlobalMonitor: Any?
     private var scrollDismissLocalMonitor: Any?
-    private var isHovering: Bool = false
+    private(set) var isHovering: Bool = false
     private var trackingArea: NSTrackingArea?
 
     // Corner button hit rects (in view coords, updated in draw)
@@ -1169,7 +1256,7 @@ private class ThumbnailView: NSView {
         if copyBtnRect.contains(p)   { onCopy?();   return }
         if saveBtnRect.contains(p)   { onSave?();   return }
 
-        // Click anywhere else on thumbnail — action from Settings
+        // Click anywhere else on the thumbnail: the action chosen in Settings
         if isHovering { onBodyClick?() }
     }
 

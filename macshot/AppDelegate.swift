@@ -1923,18 +1923,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
         // The editor re-shows its capture on Done/Copy/Save. If that capture's
         // preview is still in the stack (kept or waiting while editing), update
-        // it in place instead of stacking a duplicate.
-        if let historyEntryID,
-           let existing = thumbnailControllers.first(where: { $0.historyEntryID == historyEntryID }) {
-            existing.updateImage(image, annotationData: annotationData)
-            return
-        }
-
+        // it in place instead of stacking a duplicate. Replace mode still
+        // closes every other preview.
         let stacking = UserDefaults.standard.object(forKey: "thumbnailStacking") as? Bool ?? true
-        if !stacking {
-            // Replace mode: dismiss all existing thumbnails
-            thumbnailControllers.forEach { $0.dismiss() }
-            thumbnailControllers.removeAll()
+        let plan = FloatingThumbnailStackPlan(
+            existingEntryIDs: thumbnailControllers.map(\.historyEntryID),
+            newEntryID: historyEntryID, stacking: stacking)
+        let existing = plan.updateIndex.map { thumbnailControllers[$0] }
+        let replaced = plan.dismissIndices.map { thumbnailControllers[$0] }
+        if !replaced.isEmpty {
+            thumbnailControllers.removeAll { controller in replaced.contains { $0 === controller } }
+            replaced.forEach { $0.dismiss() }
+        }
+        if let existing {
+            existing.updateImage(image, annotationData: annotationData)
+            existing.restartAutoDismiss()
+            return
         }
 
         guard let screen = NSScreen.preferred else { return }
@@ -2145,7 +2149,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     /// off-screen ("return after editor closes") goes back on top of the stack.
     private func thumbnailEditorDidClose(_ controller: FloatingThumbnailController) {
         guard thumbnailControllers.contains(where: { $0 === controller }) else { return }
-        guard controller.isSuspended, let screen = NSScreen.preferred else {
+        // Only reposition when this close actually brings the preview back;
+        // another editor opened from it may still be open.
+        guard controller.returnsToStackOnNextEditorClose, let screen = NSScreen.preferred else {
             controller.editorDidClose(returnTo: nil)
             return
         }
