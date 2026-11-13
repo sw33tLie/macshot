@@ -868,3 +868,8 @@
 "Pin position:" = "Vị trí ghim:";
 "Center of screen" = "Giữa màn hình";
 "Original capture position" = "Vị trí chụp ban đầu";
+
+"Default Colors" = "Màu mặc định";
+"The preset swatches in the color picker." = "Các màu đặt trước trong bộ chọn màu.";
+"Add Color" = "Thêm màu";
+"No default colors." = "Không có màu mặc định.";

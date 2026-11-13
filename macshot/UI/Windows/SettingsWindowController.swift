@@ -101,6 +101,8 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var accentColorWell: NSColorWell!
     private var iconColorWell: NSColorWell!
     private var bgColorWell: NSColorWell!
+    private var presetColorStack: NSStackView?
+    private weak var presetColorAddButton: NSButton?
     private var themePresetPopup: NSPopUpButton!
     private var quickModePopup: NSPopUpButton!
     private var quickCaptureOpenEditorCheckbox: NSButton!
@@ -1740,6 +1742,35 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
                                               defaultsKey: "enabledActions", enabledValues: enabledActions)
         stack.addArrangedSubview(rightActionsGrid)
         rightActionsGrid.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -40).isActive = true
+        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
+
+        // ── Default Colors ───────────────────────────────────
+        stack.addArrangedSubview(sectionHeader(L("Default Colors")))
+        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+
+        let colorsNote = NSTextField(labelWithString: L("The preset swatches in the color picker."))
+        colorsNote.font = NSFont.systemFont(ofSize: 11)
+        colorsNote.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(colorsNote)
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        stack.addArrangedSubview(makeDefaultColorsGrid())
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        let addColorBtn = NSButton(title: L("Add Color"), target: self, action: #selector(addPresetColor(_:)))
+        addColorBtn.bezelStyle = .rounded
+        presetColorAddButton = addColorBtn
+        updatePresetColorAddButton()
+        let resetColorsBtn = NSButton(title: L("Reset to default"), target: self,
+                                      action: #selector(resetPresetColorsClicked(_:)))
+        resetColorsBtn.bezelStyle = .inline
+        resetColorsBtn.controlSize = .small
+
+        let colorsButtonsRow = NSStackView(views: [addColorBtn, resetColorsBtn])
+        colorsButtonsRow.orientation = .horizontal
+        colorsButtonsRow.spacing = 8
+        colorsButtonsRow.alignment = .centerY
+        stack.addArrangedSubview(colorsButtonsRow)
 
         let clipView = scroll.contentView
         scroll.documentView = stack
@@ -3196,6 +3227,125 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private func notifyToolbarColorChange() {
         NotificationCenter.default.post(name: .toolbarColorsDidChange, object: nil)
     }
+
+    // MARK: - Default colors
+
+    private func makeDefaultColorsGrid() -> NSView {
+        let stack = NSStackView()
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 10
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        presetColorStack = stack
+        rebuildPresetColorRows()
+        return stack
+    }
+
+    private func rebuildPresetColorRows() {
+        guard let stack = presetColorStack else { return }
+        // Release the shared color panel from a well that is about to go away; otherwise
+        // the panel keeps driving a removed well whose tag now names a different swatch.
+        deactivatePresetColorWells(in: stack)
+        stack.arrangedSubviews.forEach {
+            stack.removeArrangedSubview($0)
+            $0.removeFromSuperview()
+        }
+        updatePresetColorAddButton()
+
+        let colors = PresetColorPalette.colors
+        guard !colors.isEmpty else {
+            let empty = NSTextField(labelWithString: L("No default colors."))
+            empty.font = NSFont.systemFont(ofSize: 11)
+            empty.textColor = .secondaryLabelColor
+            stack.addArrangedSubview(empty)
+            return
+        }
+
+        for start in stride(from: 0, to: colors.count, by: Self.presetColorsPerRow) {
+            var cells: [NSView] = []
+            for index in start..<min(start + Self.presetColorsPerRow, colors.count) {
+                let well = OpaqueColorWell(frame: NSRect(x: 0, y: 0, width: 44, height: 32))
+                well.color = colors[index]
+                well.tag = index
+                well.target = self
+                well.action = #selector(presetColorChanged(_:))
+
+                let remove = NSButton(title: "", target: self, action: #selector(removePresetColor(_:)))
+                remove.image = NSImage(systemSymbolName: "minus.circle.fill", accessibilityDescription: L("Delete"))
+                remove.isBordered = false
+                remove.imagePosition = .imageOnly
+                remove.contentTintColor = .secondaryLabelColor
+                remove.toolTip = L("Delete")
+                remove.tag = index
+                remove.translatesAutoresizingMaskIntoConstraints = false
+                remove.widthAnchor.constraint(equalToConstant: 16).isActive = true
+                remove.heightAnchor.constraint(equalToConstant: 16).isActive = true
+
+                let cell = NSStackView(views: [well, remove])
+                cell.orientation = .horizontal
+                cell.spacing = 0
+                cell.alignment = .centerY
+                cells.append(cell)
+            }
+
+            let row = NSStackView(views: cells)
+            row.orientation = .horizontal
+            row.spacing = 12
+            row.alignment = .centerY
+            stack.addArrangedSubview(row)
+        }
+    }
+
+    /// Kept in step with `ColorPickerView`, so the settings grid folds the same way.
+    private static let presetColorsPerRow = 6
+
+    private func updatePresetColorAddButton() {
+        presetColorAddButton?.isEnabled = PresetColorPalette.colors.count < PresetColorPalette.maxCount
+    }
+
+    private func deactivatePresetColorWells(in view: NSView) {
+        for subview in view.subviews {
+            if let well = subview as? NSColorWell, well.isActive { well.deactivate() }
+            deactivatePresetColorWells(in: subview)
+        }
+    }
+
+    @objc private func presetColorChanged(_ sender: NSColorWell) {
+        var colors = PresetColorPalette.colors
+        // Swatches are stored as opaque sRGB hex; a color without an sRGB form (a pattern)
+        // can't be stored, so the well goes back to the saved swatch instead.
+        guard sender.tag < colors.count, PresetColorPalette.hex(sender.color) != nil else {
+            if sender.tag < colors.count { sender.color = colors[sender.tag] }
+            return
+        }
+        colors[sender.tag] = sender.color.withAlphaComponent(1)
+        PresetColorPalette.save(colors)
+    }
+
+    @objc private func addPresetColor(_ sender: NSButton) {
+        var colors = PresetColorPalette.colors
+        guard colors.count < PresetColorPalette.maxCount else {
+            updatePresetColorAddButton()
+            return
+        }
+        colors.append(colors.last ?? .systemRed)
+        PresetColorPalette.save(colors)
+        rebuildPresetColorRows()
+    }
+
+    @objc private func removePresetColor(_ sender: NSButton) {
+        var colors = PresetColorPalette.colors
+        guard sender.tag < colors.count else { return }
+        colors.remove(at: sender.tag)
+        PresetColorPalette.save(colors)
+        rebuildPresetColorRows()
+    }
+
+    @objc private func resetPresetColorsClicked(_ sender: NSButton) {
+        PresetColorPalette.reset()
+        rebuildPresetColorRows()
+    }
+
     @objc private func copyUploadURL(_ sender: NSButton) {
         guard let id = sender.identifier?.rawValue, id.hasPrefix("link::") else { return }
         let url = String(id.dropFirst(6))
@@ -3613,5 +3763,39 @@ extension SettingsWindowController {
         popover.behavior = .transient
         popover.show(relativeTo: sourceView.bounds, of: sourceView, preferredEdge: .maxY)
         filenameTemplateInfoPopover = popover
+    }
+}
+
+/// A color well for the opaque preset swatches: the color panel hides its opacity slider
+/// while this well drives it, since the swatches are stored as 6-digit hex.
+private final class OpaqueColorWell: NSColorWell {
+    private var panelShowedAlpha: Bool?
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        if #available(macOS 14.0, *) { supportsAlpha = false }
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        if #available(macOS 14.0, *) { supportsAlpha = false }
+    }
+
+    override func activate(_ exclusive: Bool) {
+        super.activate(exclusive)
+        if #available(macOS 14.0, *) { return }
+        // Before macOS 14 the panel's alpha setting is global; restore it for the
+        // toolbar theme wells, which do keep alpha.
+        let panel = NSColorPanel.shared
+        if panelShowedAlpha == nil { panelShowedAlpha = panel.showsAlpha }
+        panel.showsAlpha = false
+    }
+
+    override func deactivate() {
+        super.deactivate()
+        if let showed = panelShowedAlpha {
+            NSColorPanel.shared.showsAlpha = showed
+            panelShowedAlpha = nil
+        }
     }
 }

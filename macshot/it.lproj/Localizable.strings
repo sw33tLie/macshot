@@ -851,3 +851,8 @@
 "Pin position:" = "Posizione dell’immagine fissata:";
 "Center of screen" = "Centro dello schermo";
 "Original capture position" = "Posizione di cattura originale";
+
+"Default Colors" = "Colori predefiniti";
+"The preset swatches in the color picker." = "I campioni predefiniti nel selettore colore.";
+"Add Color" = "Aggiungi colore";
+"No default colors." = "Nessun colore predefinito.";

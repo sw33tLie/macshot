@@ -868,3 +868,8 @@
 "Pin position:" = "Poziția imaginii fixate:";
 "Center of screen" = "Centrul ecranului";
 "Original capture position" = "Poziția originală a capturii";
+
+"Default Colors" = "Culori implicite";
+"The preset swatches in the color picker." = "Culorile prestabilite din selectorul de culori.";
+"Add Color" = "Adaugă o culoare";
+"No default colors." = "Nicio culoare implicită.";

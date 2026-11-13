@@ -870,3 +870,8 @@
 "Pin position:" = "釘選位置：";
 "Center of screen" = "螢幕中央";
 "Original capture position" = "原始擷取位置";
+
+"Default Colors" = "預設顏色";
+"The preset swatches in the color picker." = "顏色選擇器中的預設顏色。";
+"Add Color" = "加入顏色";
+"No default colors." = "沒有預設顏色。";

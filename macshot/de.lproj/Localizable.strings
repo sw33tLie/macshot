@@ -870,3 +870,8 @@
 "Pin position:" = "Position beim Anheften:";
 "Center of screen" = "Bildschirmmitte";
 "Original capture position" = "Ursprüngliche Aufnahmeposition";
+
+"Default Colors" = "Standardfarben";
+"The preset swatches in the color picker." = "Die voreingestellten Farbfelder in der Farbauswahl.";
+"Add Color" = "Farbe hinzufügen";
+"No default colors." = "Keine Standardfarben.";

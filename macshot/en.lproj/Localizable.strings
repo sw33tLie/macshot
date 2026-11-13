@@ -869,3 +869,8 @@
 "Pin position:" = "Pin position:";
 "Center of screen" = "Center of screen";
 "Original capture position" = "Original capture position";
+
+"Default Colors" = "Default Colors";
+"The preset swatches in the color picker." = "The preset swatches in the color picker.";
+"Add Color" = "Add Color";
+"No default colors." = "No default colors.";

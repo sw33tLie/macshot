@@ -868,3 +868,8 @@
 "Pin position:" = "Позиция на закачането:";
 "Center of screen" = "Центъра на екрана";
 "Original capture position" = "Първоначалната позиция на заснемане";
+
+"Default Colors" = "Цветове по подразбиране";
+"The preset swatches in the color picker." = "Предварително зададените цветове в избора на цвят.";
+"Add Color" = "Добавяне на цвят";
+"No default colors." = "Няма цветове по подразбиране.";

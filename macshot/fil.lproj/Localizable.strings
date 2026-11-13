@@ -870,3 +870,8 @@
 "Pin position:" = "Posisyon ng pin:";
 "Center of screen" = "Gitna ng screen";
 "Original capture position" = "Orihinal na posisyon ng capture";
+
+"Default Colors" = "Mga Default na Kulay";
+"The preset swatches in the color picker." = "Ang mga preset na kulay sa color picker.";
+"Add Color" = "Magdagdag ng Kulay";
+"No default colors." = "Walang default na kulay.";

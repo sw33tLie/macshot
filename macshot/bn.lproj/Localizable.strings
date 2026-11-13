@@ -870,3 +870,8 @@
 "Pin position:" = "পিনের অবস্থান:";
 "Center of screen" = "স্ক্রিনের মাঝখানে";
 "Original capture position" = "মূল ক্যাপচারের অবস্থান";
+
+"Default Colors" = "ডিফল্ট রঙ";
+"The preset swatches in the color picker." = "রঙ নির্বাচকে প্রিসেট রংসমূহ।";
+"Add Color" = "রঙ যোগ করুন";
+"No default colors." = "কোনো ডিফল্ট রঙ নেই।";

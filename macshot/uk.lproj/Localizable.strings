@@ -868,3 +868,8 @@
 "Pin position:" = "Розташування закріпленого знімка:";
 "Center of screen" = "Центр екрана";
 "Original capture position" = "Початкове місце захоплення";
+
+"Default Colors" = "Кольори за замовчуванням";
+"The preset swatches in the color picker." = "Попередньо задані зразки у виборі кольору.";
+"Add Color" = "Додати колір";
+"No default colors." = "Немає кольорів за замовчуванням.";

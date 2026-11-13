@@ -868,3 +868,8 @@
 "Pin position:" = "Posisi sematan:";
 "Center of screen" = "Tengah layar";
 "Original capture position" = "Posisi tangkapan asli";
+
+"Default Colors" = "Warna Default";
+"The preset swatches in the color picker." = "Warna preset di pemilih warna.";
+"Add Color" = "Tambah Warna";
+"No default colors." = "Tidak ada warna default.";

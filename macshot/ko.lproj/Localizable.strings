@@ -870,3 +870,8 @@
 "Pin position:" = "고정 위치:";
 "Center of screen" = "화면 중앙";
 "Original capture position" = "원래 캡처 위치";
+
+"Default Colors" = "기본 색상";
+"The preset swatches in the color picker." = "색상 선택기의 사전 설정 색상입니다.";
+"Add Color" = "색상 추가";
+"No default colors." = "기본 색상이 없습니다.";

@@ -868,3 +868,8 @@
 "Pin position:" = "ピン留めの位置:";
 "Center of screen" = "画面中央";
 "Original capture position" = "元のキャプチャ位置";
+
+"Default Colors" = "デフォルトの色";
+"The preset swatches in the color picker." = "カラーピッカーのプリセット色。";
+"Add Color" = "色を追加";
+"No default colors." = "デフォルトの色はありません。";

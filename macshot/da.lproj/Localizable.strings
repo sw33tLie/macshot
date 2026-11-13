@@ -868,3 +868,8 @@
 "Pin position:" = "Placering af fastgjort billede:";
 "Center of screen" = "Midt på skærmen";
 "Original capture position" = "Oprindelig optagelsesplacering";
+
+"Default Colors" = "Standardfarver";
+"The preset swatches in the color picker." = "De forudindstillede farvefelter i farvevælgeren.";
+"Add Color" = "Tilføj farve";
+"No default colors." = "Ingen standardfarver.";

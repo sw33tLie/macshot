@@ -868,3 +868,8 @@
 "Pin position:" = "Položaj prikvačene slike:";
 "Center of screen" = "Sredina zaslona";
 "Original capture position" = "Izvorni položaj snimke";
+
+"Default Colors" = "Zadane boje";
+"The preset swatches in the color picker." = "Unaprijed postavljene boje u biraču boja.";
+"Add Color" = "Dodaj boju";
+"No default colors." = "Nema zadanih boja.";

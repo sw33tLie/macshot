@@ -868,3 +868,8 @@
 "Pin position:" = "Umístění připnutí:";
 "Center of screen" = "Střed obrazovky";
 "Original capture position" = "Původní místo snímku";
+
+"Default Colors" = "Výchozí barvy";
+"The preset swatches in the color picker." = "Přednastavené vzorky v nástroji pro výběr barvy.";
+"Add Color" = "Přidat barvu";
+"No default colors." = "Žádné výchozí barvy.";

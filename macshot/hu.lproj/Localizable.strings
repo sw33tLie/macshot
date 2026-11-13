@@ -868,3 +868,8 @@
 "Pin position:" = "Rögzített kép helye:";
 "Center of screen" = "Képernyő közepe";
 "Original capture position" = "Eredeti rögzítési hely";
+
+"Default Colors" = "Alapértelmezett színek";
+"The preset swatches in the color picker." = "A színválasztó előre beállított színei.";
+"Add Color" = "Szín hozzáadása";
+"No default colors." = "Nincsenek alapértelmezett színek.";

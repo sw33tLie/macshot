@@ -870,3 +870,8 @@
 "Pin position:" = "Положај закачене слике:";
 "Center of screen" = "Средина екрана";
 "Original capture position" = "Првобитни положај снимка";
+
+"Default Colors" = "Подразумеване боје";
+"The preset swatches in the color picker." = "Унапред подешене боје у бирачу боја.";
+"Add Color" = "Додај боју";
+"No default colors." = "Нема подразумеваних боја.";

@@ -868,3 +868,8 @@
 "Pin position:" = "Kiinnityksen sijainti:";
 "Center of screen" = "Näytön keskellä";
 "Original capture position" = "Alkuperäinen kaappauskohta";
+
+"Default Colors" = "Oletusvärit";
+"The preset swatches in the color picker." = "Värien esiasetukset värinvalitsimessa.";
+"Add Color" = "Lisää väri";
+"No default colors." = "Ei oletusvärejä.";

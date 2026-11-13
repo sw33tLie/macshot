@@ -870,3 +870,8 @@
 "Pin position:" = "מיקום ההצמדה:";
 "Center of screen" = "מרכז המסך";
 "Original capture position" = "מיקום הלכידה המקורי";
+
+"Default Colors" = "צבעי ברירת מחדל";
+"The preset swatches in the color picker." = "הדוגמיות המוגדרות מראש בבורר הצבעים.";
+"Add Color" = "הוספת צבע";
+"No default colors." = "אין צבעי ברירת מחדל.";

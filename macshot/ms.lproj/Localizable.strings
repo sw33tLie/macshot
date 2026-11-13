@@ -870,3 +870,8 @@
 "Pin position:" = "Kedudukan semat:";
 "Center of screen" = "Tengah skrin";
 "Original capture position" = "Kedudukan tangkapan asal";
+
+"Default Colors" = "Warna Lalai";
+"The preset swatches in the color picker." = "Warna pratetap dalam pemilih warna.";
+"Add Color" = "Tambah Warna";
+"No default colors." = "Tiada warna lalai.";

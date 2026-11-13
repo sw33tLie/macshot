@@ -870,3 +870,8 @@
 "Pin position:" = "موضع التثبيت:";
 "Center of screen" = "وسط الشاشة";
 "Original capture position" = "موضع الالتقاط الأصلي";
+
+"Default Colors" = "الألوان الافتراضية";
+"The preset swatches in the color picker." = "التبديلات المسبقة في منتقي الألوان.";
+"Add Color" = "إضافة لون";
+"No default colors." = "لا توجد ألوان افتراضية.";

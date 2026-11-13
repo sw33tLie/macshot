@@ -870,3 +870,8 @@
 "Pin position:" = "பொருத்தும் இடம்:";
 "Center of screen" = "திரையின் நடுவில்";
 "Original capture position" = "அசல் பிடிப்பு இடம்";
+
+"Default Colors" = "இயல்புநிலை நிறங்கள்";
+"The preset swatches in the color picker." = "நிறத் தேர்வியில் முன்னமைவு நிறங்கள்.";
+"Add Color" = "நிறம் சேர்";
+"No default colors." = "இயல்புநிலை நிறங்கள் இல்லை.";

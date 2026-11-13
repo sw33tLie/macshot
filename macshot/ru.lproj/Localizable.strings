@@ -868,3 +868,8 @@
 "Pin position:" = "Положение закреплённого снимка:";
 "Center of screen" = "Центр экрана";
 "Original capture position" = "Исходное место захвата";
+
+"Default Colors" = "Цвета по умолчанию";
+"The preset swatches in the color picker." = "Предустановленные образцы в палитре цветов.";
+"Add Color" = "Добавить цвет";
+"No default colors." = "Нет цветов по умолчанию.";

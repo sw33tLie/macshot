@@ -868,3 +868,8 @@
 "Pin position:" = "Położenie przypiętego obrazu:";
 "Center of screen" = "Środek ekranu";
 "Original capture position" = "Pierwotne miejsce zrzutu";
+
+"Default Colors" = "Domyślne kolory";
+"The preset swatches in the color picker." = "Gotowe kolory w próbniku kolorów.";
+"Add Color" = "Dodaj kolor";
+"No default colors." = "Brak domyślnych kolorów.";

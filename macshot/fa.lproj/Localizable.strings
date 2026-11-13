@@ -870,3 +870,8 @@
 "Pin position:" = "موقعیت سنجاق:";
 "Center of screen" = "وسط صفحه";
 "Original capture position" = "موقعیت اصلی ضبط";
+
+"Default Colors" = "رنگ‌های پیش‌فرض";
+"The preset swatches in the color picker." = "رنگ‌های از پیش تعیین‌شده در انتخابگر رنگ.";
+"Add Color" = "افزودن رنگ";
+"No default colors." = "هیچ رنگ پیش‌فرضی وجود ندارد.";
