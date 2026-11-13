@@ -51,6 +51,7 @@ macshot/
 │   ├── ScrollCaptureController.swift   # Scroll capture session: frame grabs, manual/auto scroll, HUD callbacks
 │   ├── ScrollFrameMatcher.swift        # Pure: exact scroll shift, ignoring navbars, sidebars, fixed backgrounds, pinned boxes
 │   ├── ScrollStitcher.swift            # Pure: appends new rows; sticky content appears once (tested pixel-exact)
+│   ├── ScrollCaptureStitcher.swift     # Pure: detects vertical vs horizontal (transposed frames), locks the axis
 │   ├── ScrollFrameAnalyzer.swift       # Pure pixel access + frozen header / scrollbar helpers
 │   ├── GIFExporter.swift              # Edited timeline → timestamped GIF frames
 │   ├── GIFEncoder.swift               # Bounded-memory streaming GIF writer
@@ -310,7 +311,7 @@ Copy to clipboard, Save to file (PNG/JPEG/HEIC/WebP), Pin (floating always-on-to
 - **Editor Window:** Standalone resizable window for post-capture editing, full annotation tools, zoom 0.1x–8x via NSScrollView
 - **Video Editor:** Standalone video editor window for trimming, exporting, and uploading recorded videos
 - **Screen Recording:** MP4/GIF, annotation mode during recording, configurable FPS (up to 120fps), mouse click highlighting, system audio capture
-- **Scroll Capture:** Automatic scroll detection + stitching. `ScrollFrameMatcher` matches only the columns that scroll, cancels fixed backgrounds and leaves out navbars (translucent too) and pinned boxes; `ScrollStitcher` shows headers, sidebars and bottom banners once
+- **Scroll Capture:** Automatic scroll detection + stitching. `ScrollFrameMatcher` matches only the columns that scroll, cancels fixed backgrounds and leaves out navbars (translucent too) and pinned boxes; `ScrollStitcher` shows headers, sidebars and bottom banners once. Horizontal scrolling goes through the same code on transposed frames (`ScrollCaptureStitcher` locks the axis on the first append); keep matcher/stitcher changes axis-agnostic
 - **Auto-Redact:** Right-click filled rect → regex patterns (emails, phones, SSN, credit cards, IPs, AWS keys, bearer tokens)
 - **Barcode/QR Detection:** Live Vision detection with decoded payload, open/copy actions
 - **Floating Thumbnail:** Stackable, draggable, auto-dismiss, quick actions
