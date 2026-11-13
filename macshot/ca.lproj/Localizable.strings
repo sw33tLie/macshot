@@ -866,3 +866,7 @@
 "Search emoji" = "Cerca emojis";
 "Hide the bottom toolbar" = "Amagar la barra d'eines inferior";
 "Pick tools with their keyboard shortcuts instead." = "Tria les eines amb les seves dreceres de teclat.";
+
+"Pin position:" = "Posició de la fixació:";
+"Center of screen" = "Centre de la pantalla";
+"Original capture position" = "Posició original de la captura";

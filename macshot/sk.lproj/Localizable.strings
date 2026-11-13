@@ -864,3 +864,7 @@
 "Search emoji" = "Hľadať emoji";
 "Hide the bottom toolbar" = "Skryť spodnú lištu nástrojov";
 "Pick tools with their keyboard shortcuts instead." = "Nástroje vyberajte ich klávesovými skratkami.";
+
+"Pin position:" = "Umiestnenie pripnutia:";
+"Center of screen" = "Stred obrazovky";
+"Original capture position" = "Pôvodné miesto zachytenia";

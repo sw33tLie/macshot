@@ -866,3 +866,7 @@
 "Search emoji" = "이모티콘 검색";
 "Hide the bottom toolbar" = "하단 도구 막대 숨기기";
 "Pick tools with their keyboard shortcuts instead." = "대신 키보드 단축키로 도구를 선택하세요.";
+
+"Pin position:" = "고정 위치:";
+"Center of screen" = "화면 중앙";
+"Original capture position" = "원래 캡처 위치";

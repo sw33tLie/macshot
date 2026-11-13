@@ -864,3 +864,7 @@
 "Search emoji" = "Pretraži emojije";
 "Hide the bottom toolbar" = "Sakrij donju alatnu traku";
 "Pick tools with their keyboard shortcuts instead." = "Alate birajte njihovim tipkovnim prečacima.";
+
+"Pin position:" = "Položaj prikvačene slike:";
+"Center of screen" = "Sredina zaslona";
+"Original capture position" = "Izvorni položaj snimke";

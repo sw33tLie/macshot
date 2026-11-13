@@ -866,3 +866,7 @@
 "Search emoji" = "Maghanap ng emoji";
 "Hide the bottom toolbar" = "Itago ang ibabang toolbar";
 "Pick tools with their keyboard shortcuts instead." = "Pumili ng mga tool gamit ang kanilang mga keyboard shortcut.";
+
+"Pin position:" = "Posisyon ng pin:";
+"Center of screen" = "Gitna ng screen";
+"Original capture position" = "Orihinal na posisyon ng capture";

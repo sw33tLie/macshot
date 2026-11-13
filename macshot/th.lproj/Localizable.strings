@@ -864,3 +864,7 @@
 "Search emoji" = "ค้นหาอีโมจิ";
 "Hide the bottom toolbar" = "ซ่อนแถบเครื่องมือด้านล่าง";
 "Pick tools with their keyboard shortcuts instead." = "เลือกเครื่องมือด้วยปุ่มลัดแป้นพิมพ์แทน";
+
+"Pin position:" = "ตำแหน่งการปักหมุด:";
+"Center of screen" = "กึ่งกลางหน้าจอ";
+"Original capture position" = "ตำแหน่งที่จับภาพเดิม";

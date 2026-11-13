@@ -864,3 +864,7 @@
 "Search emoji" = "絵文字を検索";
 "Hide the bottom toolbar" = "下部ツールバーを非表示";
 "Pick tools with their keyboard shortcuts instead." = "ツールはキーボードショートカットで選択します。";
+
+"Pin position:" = "ピン留めの位置:";
+"Center of screen" = "画面中央";
+"Original capture position" = "元のキャプチャ位置";

@@ -866,3 +866,7 @@
 "Search emoji" = "جستجوی ایموجی";
 "Hide the bottom toolbar" = "پنهان کردن نوار ابزار پایین";
 "Pick tools with their keyboard shortcuts instead." = "به‌جای آن، ابزارها را با میانبرهای صفحه‌کلید انتخاب کنید.";
+
+"Pin position:" = "موقعیت سنجاق:";
+"Center of screen" = "وسط صفحه";
+"Original capture position" = "موقعیت اصلی ضبط";

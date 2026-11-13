@@ -864,3 +864,7 @@
 "Search emoji" = "Emoji keresése";
 "Hide the bottom toolbar" = "Alsó eszközsor elrejtése";
 "Pick tools with their keyboard shortcuts instead." = "Az eszközöket a gyorsbillentyűikkel válaszd ki.";
+
+"Pin position:" = "Rögzített kép helye:";
+"Center of screen" = "Képernyő közepe";
+"Original capture position" = "Eredeti rögzítési hely";

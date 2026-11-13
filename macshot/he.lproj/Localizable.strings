@@ -866,3 +866,7 @@
 "Search emoji" = "חיפוש אמוג׳י";
 "Hide the bottom toolbar" = "הסתר את סרגל הכלים התחתון";
 "Pick tools with their keyboard shortcuts instead." = "בחר כלים באמצעות קיצורי המקלדת שלהם.";
+
+"Pin position:" = "מיקום ההצמדה:";
+"Center of screen" = "מרכז המסך";
+"Original capture position" = "מיקום הלכידה המקורי";

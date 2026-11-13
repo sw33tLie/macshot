@@ -866,3 +866,7 @@
 "Search emoji" = "Αναζήτηση emoji";
 "Hide the bottom toolbar" = "Απόκρυψη κάτω γραμμής εργαλείων";
 "Pick tools with their keyboard shortcuts instead." = "Επιλέξτε εργαλεία με τις συντομεύσεις πληκτρολογίου τους.";
+
+"Pin position:" = "Θέση καρφιτσώματος:";
+"Center of screen" = "Κέντρο οθόνης";
+"Original capture position" = "Αρχική θέση λήψης";

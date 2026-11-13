@@ -866,3 +866,7 @@
 "Search emoji" = "Emoji ara";
 "Hide the bottom toolbar" = "Alt araç çubuğunu gizle";
 "Pick tools with their keyboard shortcuts instead." = "Araçları klavye kısayollarıyla seçin.";
+
+"Pin position:" = "Sabitleme konumu:";
+"Center of screen" = "Ekranın ortası";
+"Original capture position" = "Orijinal yakalama konumu";

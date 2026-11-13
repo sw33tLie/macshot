@@ -864,3 +864,7 @@
 "Search emoji" = "Caută emoji";
 "Hide the bottom toolbar" = "Ascunde instrumentele din partea de jos";
 "Pick tools with their keyboard shortcuts instead." = "Alege instrumentele cu scurtăturile lor de tastatură.";
+
+"Pin position:" = "Poziția imaginii fixate:";
+"Center of screen" = "Centrul ecranului";
+"Original capture position" = "Poziția originală a capturii";

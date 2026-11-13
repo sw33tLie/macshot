@@ -864,3 +864,7 @@
 "Search emoji" = "Пошук емодзі";
 "Hide the bottom toolbar" = "Приховувати нижню панель інструментів";
 "Pick tools with their keyboard shortcuts instead." = "Вибирайте інструменти клавіатурними скороченнями.";
+
+"Pin position:" = "Розташування закріпленого знімка:";
+"Center of screen" = "Центр екрана";
+"Original capture position" = "Початкове місце захоплення";

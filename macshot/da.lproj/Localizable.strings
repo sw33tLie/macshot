@@ -864,3 +864,7 @@
 "Search emoji" = "Søg efter emoji";
 "Hide the bottom toolbar" = "Skjul den nederste værktøjslinje";
 "Pick tools with their keyboard shortcuts instead." = "Vælg værktøjer med deres tastaturgenveje i stedet.";
+
+"Pin position:" = "Placering af fastgjort billede:";
+"Center of screen" = "Midt på skærmen";
+"Original capture position" = "Oprindelig optagelsesplacering";

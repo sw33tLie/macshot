@@ -864,3 +864,7 @@
 "Search emoji" = "Hae emojia";
 "Hide the bottom toolbar" = "Piilota alapalkki";
 "Pick tools with their keyboard shortcuts instead." = "Valitse työkalut niiden pikanäppäimillä.";
+
+"Pin position:" = "Kiinnityksen sijainti:";
+"Center of screen" = "Näytön keskellä";
+"Original capture position" = "Alkuperäinen kaappauskohta";

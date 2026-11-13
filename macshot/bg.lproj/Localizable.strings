@@ -864,3 +864,7 @@
 "Search emoji" = "Търсене на емоджи";
 "Hide the bottom toolbar" = "Скриване на долната лента с инструменти";
 "Pick tools with their keyboard shortcuts instead." = "Избирайте инструментите с клавишните им комбинации.";
+
+"Pin position:" = "Позиция на закачането:";
+"Center of screen" = "Центъра на екрана";
+"Original capture position" = "Първоначалната позиция на заснемане";

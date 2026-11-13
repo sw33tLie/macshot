@@ -866,3 +866,7 @@
 "Search emoji" = "Претражи емоџије";
 "Hide the bottom toolbar" = "Сакриј доњу траку алата";
 "Pick tools with their keyboard shortcuts instead." = "Бирајте алате њиховим пречицама на тастатури.";
+
+"Pin position:" = "Положај закачене слике:";
+"Center of screen" = "Средина екрана";
+"Original capture position" = "Првобитни положај снимка";

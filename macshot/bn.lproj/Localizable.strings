@@ -866,3 +866,7 @@
 "Search emoji" = "ইমোজি খুঁজুন";
 "Hide the bottom toolbar" = "নীচের টুলবার লুকান";
 "Pick tools with their keyboard shortcuts instead." = "এর বদলে কীবোর্ড শর্টকাট দিয়ে টুল বেছে নিন।";
+
+"Pin position:" = "পিনের অবস্থান:";
+"Center of screen" = "স্ক্রিনের মাঝখানে";
+"Original capture position" = "মূল ক্যাপচারের অবস্থান";

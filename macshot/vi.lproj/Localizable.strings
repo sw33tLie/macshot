@@ -864,3 +864,7 @@
 "Search emoji" = "Tìm biểu tượng cảm xúc";
 "Hide the bottom toolbar" = "Ẩn các công cụ phía dưới";
 "Pick tools with their keyboard shortcuts instead." = "Chọn công cụ bằng phím tắt bàn phím.";
+
+"Pin position:" = "Vị trí ghim:";
+"Center of screen" = "Giữa màn hình";
+"Original capture position" = "Vị trí chụp ban đầu";

@@ -866,3 +866,7 @@
 "Search emoji" = "ابحث عن رمز تعبيري";
 "Hide the bottom toolbar" = "إخفاء شريط الأدوات السفلي";
 "Pick tools with their keyboard shortcuts instead." = "اختر الأدوات باستخدام اختصارات لوحة المفاتيح بدلاً من ذلك.";
+
+"Pin position:" = "موضع التثبيت:";
+"Center of screen" = "وسط الشاشة";
+"Original capture position" = "موضع الالتقاط الأصلي";

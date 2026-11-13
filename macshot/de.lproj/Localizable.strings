@@ -866,3 +866,7 @@
 "Search emoji" = "Emoji suchen";
 "Hide the bottom toolbar" = "Untere Werkzeugleiste ausblenden";
 "Pick tools with their keyboard shortcuts instead." = "Werkzeuge stattdessen über ihre Tastaturkurzbefehle wählen.";
+
+"Pin position:" = "Position beim Anheften:";
+"Center of screen" = "Bildschirmmitte";
+"Original capture position" = "Ursprüngliche Aufnahmeposition";
