@@ -2658,8 +2658,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
         let rememberTool = UserDefaults.standard.object(forKey: "rememberLastTool") as? Bool ?? true
         rememberToolCheckbox.state = rememberTool ? .on : .off
-        startCapturesInMoveModeCheckbox.state =
-            (UserDefaults.standard.object(forKey: "startCapturesInMoveMode") as? Bool ?? true) ? .on : .off
+        startCapturesInMoveModeCheckbox.state = OverlayView.startCapturesInMoveModeSetting ? .on : .off
 
         let thumbnail = UserDefaults.standard.object(forKey: "showFloatingThumbnail") as? Bool ?? true
         thumbnailCheckbox.state = thumbnail ? .on : .off
@@ -2859,7 +2858,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         UserDefaults.standard.set(sender.state == .on, forKey: "playCopySound")
     }
     @objc private func startCapturesInMoveModeChanged(_ sender: NSButton) {
-        UserDefaults.standard.set(sender.state == .on, forKey: "startCapturesInMoveMode")
+        UserDefaults.standard.set(sender.state == .on, forKey: OverlayView.startCapturesInMoveModeKey)
     }
     @objc private func rememberToolChanged(_ sender: NSButton) {
         let enabled = sender.state == .on

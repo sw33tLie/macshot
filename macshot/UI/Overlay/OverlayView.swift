@@ -160,7 +160,15 @@ class OverlayView: NSView {
         case selected
     }
 
-    private(set) var state: State = .idle
+    private(set) var state: State = .idle {
+        didSet {
+            // A capture starts when its selection does: read the move-mode
+            // preference then, never during mouse tracking.
+            if oldValue == .idle && state != .idle {
+                moveModeEnabledForCapture = OverlayView.startCapturesInMoveModeSetting
+            }
+        }
+    }
 
     // Zoom — the capture overlay no longer zooms (scroll/pinch zoom was
     // removed). These remain fixed at the identity values so the shared
@@ -286,12 +294,20 @@ class OverlayView: NSView {
         lastUsedTool = .arrow
         UserDefaults.standard.removeObject(forKey: "lastUsedTool")
     }
-    // A capture starts with no annotation tool armed. The remembered tool is
-    // still available to the standalone editor and when move-first is disabled.
+    /// Opt-in "Start captures in move mode": a capture starts with no
+    /// annotation tool armed, so dragging inside the selection moves it until
+    /// a tool is chosen. The remembered tool is still used by the standalone
+    /// editor and whenever the setting is off (the default).
+    static let startCapturesInMoveModeKey = "startCapturesInMoveMode"
+    static var startCapturesInMoveModeSetting: Bool {
+        UserDefaults.standard.object(forKey: startCapturesInMoveModeKey) as? Bool ?? false
+    }
+    /// Snapshot of the preference for the current capture (see `state`).
+    private var moveModeEnabledForCapture = OverlayView.startCapturesInMoveModeSetting
     private var hasChosenCaptureTool = false
     private var startsInSelectionMoveMode: Bool {
-        !isEditorMode && !isRecording && !isScrollCapturing && !hasChosenCaptureTool
-            && (UserDefaults.standard.object(forKey: "startCapturesInMoveMode") as? Bool ?? true)
+        moveModeEnabledForCapture && !hasChosenCaptureTool
+            && !isEditorMode && !isRecording && !isScrollCapturing
     }
     var currentTool: AnnotationTool = {
         OverlayView.initialTool
@@ -5722,7 +5738,7 @@ class OverlayView: NSView {
         // Control-click = right-click for color sampler (supports BetterTouchTool and other tools
         // that simulate right-click via control-click instead of rightMouseDown)
         if event.modifierFlags.contains(.control) && state == .selected
-            && currentTool == .colorSampler
+            && currentTool == .colorSampler && !startsInSelectionMoveMode
         {
             if let result = sampleCanvasColor(at: viewToCanvas(point)) {
                 NSPasteboard.general.clearContents()
@@ -5888,11 +5904,14 @@ class OverlayView: NSView {
             }
 
             // Until a tool is explicitly chosen, dragging inside a fresh
-            // capture moves its bounds instead of creating an annotation.
-            if startsInSelectionMoveMode && pointIsInSelection(point) {
-                isDraggingSelection = true
-                dragOffset = NSPoint(x: point.x - selectionRect.minX, y: point.y - selectionRect.minY)
-                NSCursor.closedHand.set()
+            // capture moves its bounds instead of creating an annotation, and
+            // no tool (e.g. a remembered color sampler) acts on any click.
+            if startsInSelectionMoveMode {
+                if pointIsInSelection(point) {
+                    isDraggingSelection = true
+                    dragOffset = NSPoint(x: point.x - selectionRect.minX, y: point.y - selectionRect.minY)
+                    NSCursor.closedHand.set()
+                }
                 return
             }
 
@@ -7216,7 +7235,7 @@ class OverlayView: NSView {
             }
         }
 
-        if state == .selected && currentTool == .colorSampler {
+        if state == .selected && currentTool == .colorSampler && !startsInSelectionMoveMode {
             // Right-click with color sampler: copy hex to clipboard
             if let result = sampleCanvasColor(at: viewToCanvas(point)) {
                 NSPasteboard.general.clearContents()
@@ -9513,7 +9532,7 @@ class OverlayView: NSView {
         default:
             // Auto-measure: hold "1" = vertical preview, hold "2" = horizontal preview
             if state == .selected && currentTool == .measure && textEditView == nil
-                && !event.modifierFlags.contains(.command)
+                && !startsInSelectionMoveMode && !event.modifierFlags.contains(.command)
             {
                 if let char = event.charactersIgnoringModifiers {
                     if char == "1" || char == "2" {

@@ -5,7 +5,7 @@ import XCTest
 final class SelectionMoveModeTests: XCTestCase {
     private let selection = NSRect(x: 80, y: 60, width: 200, height: 150)
     private let settings: [String: Any?] = [
-        "startCapturesInMoveMode": nil,
+        "startCapturesInMoveMode": true,
         "rememberLastTool": false,
         "boundarySnapEnabled": false,
         "doubleClickToCopy": false,
@@ -103,6 +103,63 @@ final class SelectionMoveModeTests: XCTestCase {
             drag(view, from: NSPoint(x: 140, y: 120), to: NSPoint(x: 175, y: 145))
             XCTAssertEqual(view.selectionRect, selection)
             XCTAssertEqual(view.annotations.first?.tool, .arrow)
+        }
+    }
+
+    func testMoveModeIsOptIn() {
+        withDefaults(settings.merging(["startCapturesInMoveMode": nil]) { _, new in new }) {
+            XCTAssertFalse(OverlayView.startCapturesInMoveModeSetting)
+            let view = makeOverlay()
+            drag(view, from: NSPoint(x: 140, y: 120), to: NSPoint(x: 175, y: 145))
+            XCTAssertEqual(view.selectionRect, selection)
+            XCTAssertEqual(view.annotations.first?.tool, .arrow)
+        }
+    }
+
+    func testSettingIsReadWhenACaptureStarts() {
+        withDefaults(settings) {
+            let view = makeOverlay()
+            // Changing the preference mid-capture does not switch modes.
+            UserDefaults.standard.set(false, forKey: OverlayView.startCapturesInMoveModeKey)
+            drag(view, from: NSPoint(x: 140, y: 120), to: NSPoint(x: 175, y: 145))
+            XCTAssertEqual(view.selectionRect, selection.offsetBy(dx: 35, dy: 25))
+            XCTAssertTrue(view.annotations.isEmpty)
+
+            // The next capture on the same (pooled) view picks it up.
+            view.reset()
+            view.applySelection(selection)
+            drag(view, from: NSPoint(x: 140, y: 120), to: NSPoint(x: 175, y: 145))
+            XCTAssertEqual(view.selectionRect, selection)
+            XCTAssertEqual(view.annotations.first?.tool, .arrow)
+        }
+    }
+
+    func testRememberedColorSamplerDoesNotActUntilChosen() {
+        let values = settings.merging([
+            "rememberLastTool": true, "lastUsedTool": nil, "lastUsedColor": nil,
+            "lastUsedColorOpacity": nil, "customColors": nil,
+        ]) { _, new in new }
+        withDefaults(values) {
+            defer { OverlayView.resetRememberedTool() }
+            let view = makeOverlay()
+            // Remember the color sampler, then start a fresh capture with it.
+            view.currentTool = .colorSampler
+            view.reset()
+            view.applySelection(selection)
+            XCTAssertEqual(view.currentTool, .colorSampler)
+
+            let outside = NSPoint(x: 20, y: 20)
+            view.currentColor = .systemPurple
+            view.mouseDown(with: mouse(.leftMouseDown, at: outside))
+            view.mouseUp(with: mouse(.leftMouseUp, at: outside))
+            XCTAssertEqual(view.currentColor, .systemPurple)
+            XCTAssertEqual(view.selectionRect, selection)
+
+            // Once picked explicitly, the same click samples the screenshot.
+            view.handleToolbarAction(.tool(.colorSampler))
+            view.mouseDown(with: mouse(.leftMouseDown, at: outside))
+            view.mouseUp(with: mouse(.leftMouseUp, at: outside))
+            XCTAssertNotEqual(view.currentColor, .systemPurple)
         }
     }
 
