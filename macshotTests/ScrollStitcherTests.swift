@@ -98,6 +98,25 @@ final class ScrollStitcherTests: XCTestCase {
         assertSameRows(stitched, expected, rows: 0..<total)
     }
 
+    func testAutoScrollKeepsLastMatchedFrameAcrossAlignmentFailures() {
+        let shift = 40
+        let first = image(height: height) { drawPage($0, scroll: 0, height: height) }
+        let blank = image(height: height) { _ in }
+        let next = image(height: height) { drawPage($0, scroll: shift, height: height) }
+        let stitcher = ScrollStitcher(firstFrame: first, handlesPinnedContent: false)
+
+        for _ in 0..<ScrollStitcher.reanchorAfterFailures {
+            XCTAssertEqual(stitcher.add(blank, allowReanchoring: false), .noMatch)
+        }
+        XCTAssertEqual(stitcher.add(next, allowReanchoring: false), .appended)
+
+        let total = height + shift
+        let expected = image(height: total) { drawPage($0, scroll: 0, height: total) }
+        let stitched = stitcher.finish()
+        XCTAssertEqual(stitched.height, total)
+        assertSameRows(stitched, expected, rows: 0..<total)
+    }
+
     /// Scrolling back up and down again must not add those rows twice.
     func testScrollingBackUpAddsNothingTwice() {
         let path = [0, 80, 160, 100, 40, 120, 200, 280]
@@ -106,6 +125,32 @@ final class ScrollStitcherTests: XCTestCase {
         XCTAssertEqual(stitched.height, total)
         let expected = image(height: total) { self.drawPage($0, scroll: 0, height: total) }
         assertSameRows(stitched, expected, rows: 0..<total)
+    }
+
+    func testStationaryEndReplacesElasticOverscroll() {
+        let end = 450
+        let overscroll = 26
+        let total = end + height
+        let first = image(height: height) { drawPage($0, scroll: 0, height: height) }
+        let stitcher = ScrollStitcher(firstFrame: first, handlesPinnedContent: false)
+        for position in [90, 180, 270, 360, end + overscroll] {
+            let frame = image(height: height) { context in
+                drawPage(context, scroll: position, height: height)
+                if position > end {
+                    context.setFillColor(CGColor(gray: 0, alpha: 1))
+                    context.fill(CGRect(x: 0, y: height - overscroll, width: width, height: overscroll))
+                }
+            }
+            XCTAssertEqual(stitcher.add(frame), .appended)
+        }
+        XCTAssertEqual(stitcher.image.height, total + overscroll)
+        let settled = image(height: height) { drawPage($0, scroll: end, height: height) }
+        _ = stitcher.add(settled, includeSmallShift: true)
+        let result = stitcher.finish(at: settled)
+        let expected = image(height: total) { drawPage($0, scroll: 0, height: total) }
+        XCTAssertEqual(result.height, total)
+        guard result.height == total else { return }
+        assertSameRows(result, expected, rows: 0..<total)
     }
 
     /// A translucent navbar stays at the top once; everything below it is the page.
