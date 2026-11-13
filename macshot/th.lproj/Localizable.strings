@@ -636,6 +636,10 @@
 "Background" = "พื้นหลัง";
 "Custom" = "กำหนดเอง";
 "Theme:" = "ธีม:";
+"Toolbar appearance:" = "รูปลักษณ์แถบเครื่องมือ:";
+"Dark" = "มืด";
+"Light" = "สว่าง";
+"Follow System" = "ตามระบบ";
 "Application" = "แอปพลิเคชัน";
 "Capture area and extract text" = "จับภาพพื้นที่และดึงข้อความ";
 "Capture the full screen" = "จับภาพเต็มหน้าจอ";

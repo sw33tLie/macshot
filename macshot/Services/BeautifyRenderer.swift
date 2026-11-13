@@ -42,6 +42,9 @@ struct BeautifyConfig {
     var isWindowSnap: Bool = false  // true = selection came from window snap, skip synthetic title bar
     var customBackgroundImage: NSImage?  // custom image background (nil = use gradient)
     var backgroundBlur: CGFloat = 0     // 0..50 blur radius for custom background
+    /// When false, the padding stays clear and the existing shadow is the only
+    /// thing behind the image. Defaults on so a saved beautify keeps its fill.
+    var backgroundEnabled: Bool = true
     /// Pre-rendered CGImage of custom background (with blur applied). Set via `prepareBackgroundCache()`.
     var cachedBackgroundCGImage: CGImage?
 
@@ -524,6 +527,15 @@ class BeautifyRenderer {
         return min(4 + radius * 0.18, 16)
     }
 
+    /// Fill the beautify canvas, or leave it clear when the background is off.
+    private static func paintCanvasBackground(in rect: NSRect, config: BeautifyConfig, context: CGContext, prerenderedMesh: CGImage?) {
+        guard config.backgroundEnabled else {
+            context.clear(rect)
+            return
+        }
+        drawGradientBackground(in: rect, config: config, context: context, prerenderedMesh: prerenderedMesh)
+    }
+
     /// Draw a rounded-clipped image with its drop shadow cast from the image's
     /// OWN rounded edge — no separate opaque caster fill. This avoids the thin
     /// rim that the fill-a-rounded-rect approach leaves around the screenshot
@@ -754,7 +766,9 @@ class BeautifyRenderer {
         let totalHeight = windowHeight + padding * 2
 
         // Pre-render mesh gradient outside the drawing handler to avoid @MainActor isolation issues
-        let prerenderedMesh = prerenderBackground(config: config, width: Int(totalWidth), height: Int(totalHeight))
+        let prerenderedMesh = config.backgroundEnabled
+            ? prerenderBackground(config: config, width: Int(totalWidth), height: Int(totalHeight))
+            : nil
 
         var success = false
         let result = NSImage(size: NSSize(width: totalWidth, height: totalHeight), flipped: false) { _ in
@@ -762,10 +776,11 @@ class BeautifyRenderer {
                 return true
             }
 
-            // Gradient background — fill entire canvas, no outer rounding
+            // Gradient background — fill entire canvas, no outer rounding.
+            // With the background off, the padding stays clear and the shadow remains.
             let bgRect = NSRect(x: 0, y: 0, width: totalWidth, height: totalHeight)
             context.saveGState()
-            drawGradientBackground(in: bgRect, config: config, context: context, prerenderedMesh: prerenderedMesh)
+            paintCanvasBackground(in: bgRect, config: config, context: context, prerenderedMesh: prerenderedMesh)
             context.restoreGState()
 
             // Window frame position
@@ -855,16 +870,18 @@ class BeautifyRenderer {
         let totalHeight = imgSize.height + padding * 2
 
         // Pre-render mesh gradient outside the drawing handler to avoid @MainActor isolation issues
-        let prerenderedMesh = prerenderBackground(config: config, width: Int(totalWidth), height: Int(totalHeight))
+        let prerenderedMesh = config.backgroundEnabled
+            ? prerenderBackground(config: config, width: Int(totalWidth), height: Int(totalHeight))
+            : nil
 
         var success = false
         let result = NSImage(size: NSSize(width: totalWidth, height: totalHeight), flipped: false) { _ in
             guard let context = NSGraphicsContext.current?.cgContext else { return true }
 
-            // Gradient background
+            // Gradient background. With it off, the window's own alpha shapes the shadow.
             let bgRect = NSRect(x: 0, y: 0, width: totalWidth, height: totalHeight)
             context.saveGState()
-            drawGradientBackground(in: bgRect, config: config, context: context, prerenderedMesh: prerenderedMesh)
+            paintCanvasBackground(in: bgRect, config: config, context: context, prerenderedMesh: prerenderedMesh)
             context.restoreGState()
 
             let imageRect = contentRect(forImageSize: imgSize, config: config)
@@ -911,7 +928,9 @@ class BeautifyRenderer {
         let totalHeight = imgSize.height + padding * 2
 
         // Pre-render mesh gradient outside the drawing handler to avoid @MainActor isolation issues
-        let prerenderedMesh = prerenderBackground(config: config, width: Int(totalWidth), height: Int(totalHeight))
+        let prerenderedMesh = config.backgroundEnabled
+            ? prerenderBackground(config: config, width: Int(totalWidth), height: Int(totalHeight))
+            : nil
 
         var success = false
         let result = NSImage(size: NSSize(width: totalWidth, height: totalHeight), flipped: false) { _ in
@@ -919,10 +938,11 @@ class BeautifyRenderer {
                 return true
             }
 
-            // Gradient background — fill entire canvas, no outer rounding
+            // Gradient background — fill entire canvas, no outer rounding.
+            // With the background off, the padding stays clear and the shadow remains.
             let bgRect = NSRect(x: 0, y: 0, width: totalWidth, height: totalHeight)
             context.saveGState()
-            drawGradientBackground(in: bgRect, config: config, context: context, prerenderedMesh: prerenderedMesh)
+            paintCanvasBackground(in: bgRect, config: config, context: context, prerenderedMesh: prerenderedMesh)
             context.restoreGState()
 
             let imageRect = contentRect(forImageSize: imgSize, config: config)

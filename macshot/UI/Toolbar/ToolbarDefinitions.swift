@@ -236,14 +236,83 @@ enum ToolbarActionPreferences {
     }
 }
 
+/// Toolbar, popover and HUD color scheme (Settings > Appearance > Toolbar appearance).
+/// A missing default stays dark so existing installs keep their look.
+enum HUDAppearance: String, CaseIterable {
+    case dark
+    case light
+    case system
+
+    static let defaultsKey = "hudAppearance"
+
+    static var current: HUDAppearance {
+        HUDAppearance(rawValue: UserDefaults.standard.string(forKey: defaultsKey) ?? "") ?? .dark
+    }
+
+    var settingsTitle: String {
+        switch self {
+        case .dark: return L("Dark")
+        case .light: return L("Light")
+        case .system: return L("Follow System")
+        }
+    }
+
+    /// Dark and light are fixed. System picks between them from the supplied appearance.
+    func resolved(using appearance: NSAppearance) -> HUDAppearance {
+        switch self {
+        case .dark: return .dark
+        case .light: return .light
+        case .system:
+            return appearance.bestMatch(from: [.darkAqua, .aqua]) == .aqua ? .light : .dark
+        }
+    }
+
+    /// Dark or light. Only `.system` reads the app's effective appearance, so the
+    /// fixed modes never touch `NSApp` (nil in headless tests).
+    var resolved: HUDAppearance {
+        guard self == .system, let app = NSApp else { return self == .light ? .light : .dark }
+        return resolved(using: app.effectiveAppearance)
+    }
+}
+
+/// Posts `.toolbarColorsDidChange` when the system switches between light and
+/// dark while the toolbar follows it, so open chrome repaints. Observes
+/// `NSApp.effectiveAppearance` with KVO; the token is released with the owner.
+final class HUDSystemAppearanceObserver {
+    private var observation: NSKeyValueObservation?
+    private var systemIsLight: Bool
+
+    init(application: NSApplication) {
+        systemIsLight = HUDAppearance.system.resolved(using: application.effectiveAppearance) == .light
+        observation = application.observe(\.effectiveAppearance, options: [.new]) { [weak self] _, _ in
+            DispatchQueue.main.async { [weak self] in
+                self?.systemAppearanceMayHaveChanged()
+            }
+        }
+    }
+
+    private func systemAppearanceMayHaveChanged() {
+        guard let app = NSApp else { return }
+        let isLight = HUDAppearance.system.resolved(using: app.effectiveAppearance) == .light
+        guard isLight != systemIsLight else { return }
+        systemIsLight = isLight
+        guard HUDAppearance.current == .system else { return }
+        NotificationCenter.default.post(name: .toolbarColorsDidChange, object: nil)
+    }
+}
+
 class ToolbarLayout {
 
     // Default theme colors (Flameshot purple style)
     static let defaultAccentColor = NSColor(calibratedRed: 0.55, green: 0.30, blue: 0.85, alpha: 1.0)
     static let defaultIconColor = NSColor.white
     static let defaultBgColor = NSColor(white: 0.12, alpha: 1.0)
+    /// Fixed light HUD. Stored theme colors stay put, so a saved dark theme is still there in Dark mode.
+    static let lightBgColor = NSColor(white: 0.96, alpha: 1.0)
+    static let lightIconColor = NSColor(white: 0.15, alpha: 1.0)
 
-    // User-customizable colors — read from UserDefaults with defaults matching the original look
+    // User-customizable colors — read from UserDefaults with defaults matching the original look.
+    // Settings wells read the stored colors. Chrome reads `iconColor` / `bgColor`, which apply the HUD appearance.
     static var accentColor: NSColor {
         if let data = UserDefaults.standard.data(forKey: "toolbarAccentColor"),
            let color = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data) {
@@ -251,20 +320,42 @@ class ToolbarLayout {
         }
         return defaultAccentColor
     }
-    static var iconColor: NSColor {
+    static var storedIconColor: NSColor {
         if let data = UserDefaults.standard.data(forKey: "toolbarIconColor"),
            let color = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data) {
             return color
         }
         return defaultIconColor
     }
-    static var bgColor: NSColor {
+    static var storedBgColor: NSColor {
         if let data = UserDefaults.standard.data(forKey: "toolbarBgColor"),
            let color = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data) {
             return color
         }
         return defaultBgColor
     }
+
+    /// Colors chrome should paint for the current setting and a specific system appearance.
+    static func colors(using systemAppearance: NSAppearance) -> (background: NSColor, icon: NSColor) {
+        palette(for: HUDAppearance.current.resolved(using: systemAppearance))
+    }
+
+    private static func palette(for resolved: HUDAppearance) -> (background: NSColor, icon: NSColor) {
+        switch resolved {
+        case .light:
+            return (lightBgColor, lightIconColor)
+        case .dark, .system:
+            return (storedBgColor, storedIconColor)
+        }
+    }
+
+    /// True while the fixed light palette is in effect (Light, or Follow System in light mode).
+    /// Chrome that keeps hardcoded dark-palette details uses this to switch only in light mode,
+    /// so the dark look stays exactly as it was.
+    static var usesLightPalette: Bool { HUDAppearance.current.resolved == .light }
+
+    static var iconColor: NSColor { palette(for: HUDAppearance.current.resolved).icon }
+    static var bgColor: NSColor { palette(for: HUDAppearance.current.resolved).background }
     static var handleColor: NSColor { accentColor }
     static let cornerRadius: CGFloat = 6
 
@@ -282,13 +373,17 @@ class ToolbarLayout {
         }
     }
 
-    /// Appearance matching the toolbar background brightness.
-    /// Dark background → `.darkAqua`, light background → `.aqua`.
-    static var appearance: NSAppearance? {
-        let color = bgColor.usingColorSpace(.deviceRGB) ?? bgColor
+    /// Appearance matching a toolbar background. Dark background → `.darkAqua`, light background → `.aqua`.
+    static func appearance(matching color: NSColor) -> NSAppearance? {
+        let color = color.usingColorSpace(.deviceRGB) ?? color
         var brightness: CGFloat = 0
         color.getHue(nil, saturation: nil, brightness: &brightness, alpha: nil)
         return NSAppearance(named: brightness > 0.5 ? .aqua : .darkAqua)
+    }
+
+    /// Appearance matching the effective toolbar background brightness.
+    static var appearance: NSAppearance? {
+        appearance(matching: bgColor)
     }
 
     /// Save background color to UserDefaults.

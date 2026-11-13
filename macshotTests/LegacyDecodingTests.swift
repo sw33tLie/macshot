@@ -107,6 +107,7 @@ final class LegacyDecodingTests: XCTestCase {
         XCTAssertEqual(state.beautifyBackgroundBlur, 0, "a field added later takes its default")
         XCTAssertFalse(state.beautifyIsWindowSnap)
         XCTAssertNil(state.customBeautifyBackgroundPNG)
+        XCTAssertTrue(state.beautifyBackgroundEnabled, "a background flag added later stays on")
         XCTAssertEqual(state.effectsBrightness, 0.2, accuracy: 0.0001)
     }
 
@@ -122,6 +123,7 @@ final class LegacyDecodingTests: XCTestCase {
         state.beautifyPadding = 100
         state.beautifyBackgroundBlur = 12
         state.effectsSaturation = 1.4
+        state.beautifyBackgroundEnabled = false
         state.customBeautifyBackgroundPNG = ImageProbe.quadrantImage(width: 8, height: 8)
             .tiffRepresentation.flatMap { NSBitmapImageRep(data: $0)?.representation(using: .png, properties: [:]) }
 
@@ -144,6 +146,7 @@ final class LegacyDecodingTests: XCTestCase {
         XCTAssertEqual(state.beautifyCornerRadius, 0)
         XCTAssertEqual(state.beautifyShadowRadius, 100)
         XCTAssertEqual(state.beautifyBackgroundBlur, 50)
+        XCTAssertTrue(state.beautifyBackgroundEnabled)
         var inMemory = CaptureEditState()
         inMemory.effectsBrightness = .nan
         inMemory.beautifyPadding = .infinity
@@ -153,6 +156,28 @@ final class LegacyDecodingTests: XCTestCase {
         overlay.applyCaptureEditState(inMemory)
         XCTAssertEqual(overlay.effectsBrightness, 0)
         XCTAssertEqual(overlay.beautifyPadding, 48)
+    }
+
+    func testBackgroundDefaultsOnAndCanBeTurnedOff() {
+        var state = CaptureEditState()
+        XCTAssertTrue(state.beautifyBackgroundEnabled)
+        XCTAssertTrue(state.beautifyConfig().backgroundEnabled)
+        state.beautifyBackgroundEnabled = false
+        XCTAssertFalse(state.beautifyConfig().backgroundEnabled)
+    }
+
+    /// Every stored field has to be listed. A new one that is missing from
+    /// `init(from:)` silently drops data saved by the current build.
+    func testEditStateCensusListsEveryStoredProperty() {
+        let actual = Set(Reflect.propertyNames(of: CaptureEditState()))
+        let expected: Set<String> = [
+            "effectsPresetRaw", "effectsBrightness", "effectsContrast", "effectsSaturation", "effectsSharpness",
+            "beautifyEnabled", "beautifyModeRaw", "beautifyStyleIndex", "beautifyPadding",
+            "beautifyCornerRadius", "beautifyShadowRadius", "beautifyBackgroundBlur",
+            "beautifyIsWindowSnap", "customBeautifyBackgroundPNG",
+            "beautifyBackgroundEnabled",
+        ]
+        XCTAssertEqual(actual, expected)
     }
 
     // MARK: - History index

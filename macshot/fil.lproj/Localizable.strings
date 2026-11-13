@@ -636,6 +636,10 @@
 "Background" = "Background";
 "Custom" = "Custom";
 "Theme:" = "Tema:";
+"Toolbar appearance:" = "Hitsura ng toolbar:";
+"Dark" = "Madilim";
+"Light" = "Maliwanag";
+"Follow System" = "Sundin ang system";
 "Application" = "Application";
 "Capture area and extract text" = "Kumuha ng lugar at kunin ang teksto";
 "Capture the full screen" = "Kunan ang buong screen";

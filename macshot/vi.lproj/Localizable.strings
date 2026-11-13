@@ -636,6 +636,10 @@
 "Background" = "Nền";
 "Custom" = "Tùy chỉnh";
 "Theme:" = "Chủ đề:";
+"Toolbar appearance:" = "Giao diện công cụ:";
+"Dark" = "Tối";
+"Light" = "Sáng";
+"Follow System" = "Theo hệ thống";
 "Application" = "Ứng dụng";
 "Capture area and extract text" = "Chụp vùng chọn và trích xuất văn bản";
 "Capture the full screen" = "Chụp toàn bộ màn hình";

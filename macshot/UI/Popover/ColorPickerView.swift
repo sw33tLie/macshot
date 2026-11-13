@@ -374,6 +374,8 @@ class ColorPickerView: NSView, NSTextFieldDelegate {
 
     private func drawHexRow(in rect: NSRect) {
         let bubble = hexBubbleRect
+        // Always a dark chip: the hex field's text is fixed light, so this
+        // stays readable with the light toolbar appearance too.
         NSColor(white: 0.2, alpha: 0.8).setFill()
         NSBezierPath(roundedRect: bubble, xRadius: 4, yRadius: 4).fill()
 

@@ -625,6 +625,10 @@
 "Background" = "Background";
 "Custom" = "Custom";
 "Theme:" = "Theme:";
+"Toolbar appearance:" = "Toolbar appearance:";
+"Dark" = "Dark";
+"Light" = "Light";
+"Follow System" = "Follow System";
 
 /* Settings — shortcuts help text */
 "Application" = "Application";

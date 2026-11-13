@@ -636,6 +636,10 @@
 "Background" = "Pozadí";
 "Custom" = "Vlastní";
 "Theme:" = "Motiv:";
+"Toolbar appearance:" = "Vzhled lišty:";
+"Dark" = "Tmavý";
+"Light" = "Světlý";
+"Follow System" = "Podle systému";
 "Application" = "Aplikace";
 "Capture area and extract text" = "Zachytit oblast a extrahovat text";
 "Capture the full screen" = "Zachytit celou obrazovku";

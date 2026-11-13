@@ -630,6 +630,10 @@
 "Background" = "Fons";
 "Custom" = "Personalitzat";
 "Theme:" = "Tema:";
+"Toolbar appearance:" = "Aparença de la barra:";
+"Dark" = "Fosc";
+"Light" = "Clar";
+"Follow System" = "Segueix el sistema";
 "Application" = "Aplicació";
 "Capture area and extract text" = "Capturar àrea i extreure text";
 "Capture the full screen" = "Capturar la pantalla completa";

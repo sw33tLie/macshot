@@ -638,6 +638,10 @@
 "Background" = "Позадина";
 "Custom" = "Прилагођено";
 "Theme:" = "Тема:";
+"Toolbar appearance:" = "Трака алата:";
+"Dark" = "Тамна";
+"Light" = "Светла";
+"Follow System" = "Прати систем";
 "Application" = "Апликација";
 "Capture area and extract text" = "Сними област и издвоји текст";
 "Capture the full screen" = "Сними цео екран";

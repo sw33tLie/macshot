@@ -626,6 +626,10 @@
 "Background" = "Fundo";
 "Custom" = "Personalizado";
 "Theme:" = "Tema:";
+"Toolbar appearance:" = "Aparência da barra:";
+"Dark" = "Escuro";
+"Light" = "Claro";
+"Follow System" = "Seguir o sistema";
 "Application" = "Aplicação";
 "Capture area and extract text" = "Capturar área e extrair texto";
 "Capture the full screen" = "Capturar o ecrã inteiro";

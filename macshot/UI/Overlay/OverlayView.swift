@@ -495,6 +495,11 @@ class OverlayView: NSView {
         let v = UserDefaults.standard.object(forKey: "beautifyShadowRadius") as? Double
         return v != nil ? CGFloat(v!) : 20
     }()
+    /// Missing key stays on, so an existing beautify keeps its fill.
+    var beautifyBackgroundEnabled: Bool = {
+        guard UserDefaults.standard.object(forKey: "beautifyBackgroundEnabled") != nil else { return true }
+        return UserDefaults.standard.bool(forKey: "beautifyBackgroundEnabled")
+    }()
     private(set) var beautifyBgRadius: CGFloat = {
         let v = UserDefaults.standard.object(forKey: "beautifyBgRadius") as? Double
         return v != nil ? CGFloat(v!) : 8
@@ -544,6 +549,7 @@ class OverlayView: NSView {
             isWindowSnap: selectionIsWindowSnap,
             customBackgroundImage: beautifyStyleIndex == -1 ? customBeautifyBackground : nil,
             backgroundBlur: beautifyBackgroundBlur,
+            backgroundEnabled: beautifyBackgroundEnabled,
             cachedBackgroundCGImage: beautifyStyleIndex == -1 ? cachedBeautifyBgCGImage : nil
         )
     }
@@ -1197,6 +1203,7 @@ class OverlayView: NSView {
         if let tool = toolOptionsRowView?.currentTool {
             toolOptionsRowView?.rebuild(for: tool)
         }
+        editorTooltipView?.needsDisplay = true
         needsDisplay = true
     }
 
@@ -2355,7 +2362,17 @@ class OverlayView: NSView {
     private static let helperFont = NSFont.systemFont(ofSize: 13, weight: .medium)
     private static let helperSmallFont = NSFont.systemFont(ofSize: 12, weight: .regular)
     private static let helperSmallBoldFont = NSFont.systemFont(ofSize: 12, weight: .semibold)
-    private static let helperDimColor = NSColor.white.withAlphaComponent(0.7)
+    // The capture hint pills keep their translucent black look in the dark
+    // palette and switch to the light toolbar palette only when it is active.
+    private var helperPrimaryColor: NSColor {
+        ToolbarLayout.usesLightPalette ? ToolbarLayout.iconColor : .white
+    }
+    private var helperDimColor: NSColor { helperPrimaryColor.withAlphaComponent(0.7) }
+    private var helperPillColor: NSColor {
+        ToolbarLayout.usesLightPalette
+            ? ToolbarLayout.bgColor.withAlphaComponent(0.92)
+            : NSColor.black.withAlphaComponent(0.65)
+    }
 
     private func drawIdleHelperText() {
         let line1: String
@@ -2376,15 +2393,15 @@ class OverlayView: NSView {
 
         let snapColor = snapMode == .off ? NSColor.systemOrange : NSColor.systemGreen
 
-        let attrs1: [NSAttributedString.Key: Any] = [.font: Self.helperFont, .foregroundColor: NSColor.white]
+        let attrs1: [NSAttributedString.Key: Any] = [.font: Self.helperFont, .foregroundColor: helperPrimaryColor]
         let attrs2prefix: [NSAttributedString.Key: Any] = [
-            .font: Self.helperSmallFont, .foregroundColor: Self.helperDimColor,
+            .font: Self.helperSmallFont, .foregroundColor: helperDimColor,
         ]
         let attrs2state: [NSAttributedString.Key: Any] = [
             .font: Self.helperSmallBoldFont, .foregroundColor: snapColor,
         ]
         let attrs2suffix: [NSAttributedString.Key: Any] = [
-            .font: Self.helperSmallFont, .foregroundColor: Self.helperDimColor,
+            .font: Self.helperSmallFont, .foregroundColor: helperDimColor,
         ]
 
         let size1 = (line1 as NSString).size(withAttributes: attrs1)
@@ -2409,7 +2426,7 @@ class OverlayView: NSView {
         let bgY = bounds.midY - bgHeight / 2
         let bgRect = NSRect(x: bgX, y: bgY, width: bgWidth, height: bgHeight)
 
-        NSColor.black.withAlphaComponent(0.65).setFill()
+        helperPillColor.setFill()
         NSBezierPath(roundedRect: bgRect, xRadius: 8, yRadius: 8).fill()
 
         if showPresetButton {
@@ -2441,18 +2458,16 @@ class OverlayView: NSView {
             withAttributes: attrs2suffix)
     }
 
-    private static let helperTextAttrs: [NSAttributedString.Key: Any] = [
-        .font: NSFont.systemFont(ofSize: 12, weight: .medium),
-        .foregroundColor: NSColor.white,
-    ]
-
     private func drawSelectingHelperText() {
         guard selectionRect.width >= 1, selectionRect.height >= 1 else { return }
 
         let text = autoQuickSaveMode
             ? L("Hold Space to move. Release to finish")
             : L("Hold Space to move. Release to annotate and edit")
-        let attrs = Self.helperTextAttrs
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 12, weight: .medium),
+            .foregroundColor: helperPrimaryColor,
+        ]
         let size = (text as NSString).size(withAttributes: attrs)
         let padding: CGFloat = 10
         let bgWidth = size.width + padding * 2
@@ -2470,7 +2485,7 @@ class OverlayView: NSView {
         labelX = max(bounds.minX + 4, min(labelX, bounds.maxX - bgWidth - 4))
 
         let bgRect = NSRect(x: labelX, y: labelY, width: bgWidth, height: bgHeight)
-        NSColor.black.withAlphaComponent(0.65).setFill()
+        helperPillColor.setFill()
         NSBezierPath(roundedRect: bgRect, xRadius: 6, yRadius: 6).fill()
 
         (text as NSString).draw(
@@ -3213,9 +3228,11 @@ class OverlayView: NSView {
             )
         }
 
-        // Clear the dark overlay for the expanded area to make the preview visible
+        // Clear the dark overlay for the expanded area to make the preview visible.
+        // With no background, the saved image is only the padding box, so the
+        // preview must not grow with the shadow radius.
         context.saveGraphicsState()
-        if !isEditorMode {
+        if !isEditorMode && config.backgroundEnabled {
             // Overlay: re-draw the screenshot in the expanded area to erase the dark overlay,
             // then draw the dark overlay back so we have a clean base for the gradient.
             context.cgContext.saveGState()
@@ -3244,13 +3261,24 @@ class OverlayView: NSView {
                 x: innerX, y: innerY, width: selectionRect.width + pad * 2,
                 height: selectionRect.height + pad * 2)
         }
-        context.cgContext.saveGState()
-        let bgPath = NSBezierPath(
-            roundedRect: bgRect, xRadius: config.bgRadius, yRadius: config.bgRadius)
-        bgPath.addClip()
-        BeautifyRenderer.drawGradientBackground(
-            in: bgRect, config: config, context: context.cgContext)
-        context.cgContext.restoreGState()
+        if config.backgroundEnabled {
+            context.cgContext.saveGState()
+            let bgPath = NSBezierPath(
+                roundedRect: bgRect, xRadius: config.bgRadius, yRadius: config.bgRadius)
+            bgPath.addClip()
+            BeautifyRenderer.drawGradientBackground(
+                in: bgRect, config: config, context: context.cgContext)
+            context.cgContext.restoreGState()
+        } else {
+            if !isEditorMode, let image = screenshotImage {
+                context.cgContext.saveGState()
+                NSBezierPath(rect: bgRect).addClip()
+                image.draw(in: bounds, from: .zero, operation: .copy, fraction: 1.0)
+                context.cgContext.restoreGState()
+            }
+            // The shadow stays inside the padding, matching the saved image.
+            NSBezierPath(rect: bgRect).addClip()
+        }
 
         // Compute the image rect inside the expanded frame
         let imageRect: NSRect
@@ -10360,6 +10388,10 @@ class OverlayView: NSView {
             UserDefaults.standard.object(forKey: "beautifyCornerRadius") as? Double ?? 10)
         beautifyShadowRadius = CGFloat(
             UserDefaults.standard.object(forKey: "beautifyShadowRadius") as? Double ?? 20)
+        beautifyBackgroundEnabled = {
+            guard UserDefaults.standard.object(forKey: "beautifyBackgroundEnabled") != nil else { return true }
+            return UserDefaults.standard.bool(forKey: "beautifyBackgroundEnabled")
+        }()
         beautifyBgRadius = CGFloat(
             UserDefaults.standard.object(forKey: "beautifyBgRadius") as? Double ?? 8)
         // The custom-style background is loaded here (not lazily in the
@@ -10507,6 +10539,18 @@ private final class PreSelectionPresetButton: NSButton {
             symbol?.isTemplate = true
             image = symbol
         }
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(hudColorsChanged),
+            name: .toolbarColorsDidChange, object: nil)
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    @objc private func hudColorsChanged() {
+        contentTintColor = activePreset ? ToolbarLayout.accentColor : ToolbarLayout.iconColor.withAlphaComponent(0.88)
+        needsDisplay = true
     }
 
     required init?(coder: NSCoder) { fatalError() }
@@ -10551,6 +10595,8 @@ private final class PreSelectionPresetButton: NSButton {
             bg = ToolbarLayout.accentColor.withAlphaComponent(0.28)
         } else if hovered {
             bg = ToolbarLayout.iconColor.withAlphaComponent(0.14)
+        } else if ToolbarLayout.usesLightPalette {
+            bg = NSColor.black.withAlphaComponent(0.05)
         } else {
             bg = NSColor.white.withAlphaComponent(0.07)
         }

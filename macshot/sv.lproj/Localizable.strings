@@ -636,6 +636,10 @@
 "Background" = "Bakgrund";
 "Custom" = "Anpassad";
 "Theme:" = "Tema:";
+"Toolbar appearance:" = "Verktygsfältets utseende:";
+"Dark" = "Mörkt";
+"Light" = "Ljust";
+"Follow System" = "Följ systemet";
 "Application" = "Applikation";
 "Capture area and extract text" = "Fånga område och extrahera text";
 "Capture the full screen" = "Fånga hela skärmen";

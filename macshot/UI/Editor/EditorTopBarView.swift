@@ -10,6 +10,8 @@ class EditorTopBarView: NSView {
     private var sizeLabel: NSTextField!
     private var zoomButton: NSButton!
     private var doneButton: NSButton?
+    private var toolButtons: [NSButton] = []
+    private let bottomBorder = NSView()
     var onDone: (() -> Void)?
 
     override init(frame: NSRect) {
@@ -26,6 +28,7 @@ class EditorTopBarView: NSView {
         let flipHBtn = makeButton("arrow.left.and.right.righttriangle.left.righttriangle.right", tooltip: L("Flip Horizontal"), action: #selector(flipHClicked))
         let flipVBtn = makeButton("arrow.up.and.down.righttriangle.up.righttriangle.down", tooltip: L("Flip Vertical"), action: #selector(flipVClicked))
         let addCaptureBtn = makeButton("rectangle.badge.plus", tooltip: L("Add Capture"), action: #selector(addCaptureClicked))
+        toolButtons = [cropBtn, flipHBtn, flipVBtn, addCaptureBtn]
 
         // Zoom dropdown button
         zoomButton = NSButton()
@@ -38,9 +41,8 @@ class EditorTopBarView: NSView {
         zoomButton.action = #selector(zoomButtonClicked)
 
         // Bottom border
-        let border = NSView()
+        let border = bottomBorder
         border.wantsLayer = true
-        border.layer?.backgroundColor = NSColor(white: 0.25, alpha: 1.0).cgColor
         border.translatesAutoresizingMaskIntoConstraints = false
         addSubview(border)
 
@@ -89,6 +91,32 @@ class EditorTopBarView: NSView {
             border.bottomAnchor.constraint(equalTo: bottomAnchor),
             border.heightAnchor.constraint(equalToConstant: 0.5),
         ])
+
+        applyHUDColors()
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(hudColorsChanged),
+            name: .toolbarColorsDidChange, object: nil)
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    @objc private func hudColorsChanged() {
+        applyHUDColors()
+    }
+
+    private func applyHUDColors() {
+        layer?.backgroundColor = ToolbarLayout.bgColor.cgColor
+        bottomBorder.layer?.backgroundColor = (ToolbarLayout.usesLightPalette
+            ? NSColor(white: 0.82, alpha: 1.0) : NSColor(white: 0.25, alpha: 1.0)).cgColor
+        sizeLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.45)
+        zoomButton.contentTintColor = ToolbarLayout.iconColor.withAlphaComponent(0.45)
+        for button in toolButtons {
+            button.contentTintColor = ToolbarLayout.iconColor.withAlphaComponent(0.85)
+        }
+        doneButton?.contentTintColor = ToolbarLayout.accentColor
+        dragHandle.needsDisplay = true
     }
 
     required init?(coder: NSCoder) { fatalError() }

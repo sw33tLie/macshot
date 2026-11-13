@@ -638,6 +638,10 @@
 "Background" = "Φόντο";
 "Custom" = "Προσαρμοσμένο";
 "Theme:" = "Θέμα:";
+"Toolbar appearance:" = "Γραμμή εργαλείων:";
+"Dark" = "Σκούρο";
+"Light" = "Ανοιχτό";
+"Follow System" = "Ακολούθηση συστήματος";
 "Application" = "Εφαρμογή";
 "Capture area and extract text" = "Λήψη περιοχής και εξαγωγή κειμένου";
 "Capture the full screen" = "Λήψη πλήρους οθόνης";

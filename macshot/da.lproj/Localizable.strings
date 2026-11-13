@@ -636,6 +636,10 @@
 "Background" = "Baggrund";
 "Custom" = "Tilpasset";
 "Theme:" = "Tema:";
+"Toolbar appearance:" = "Værktøjslinjens udseende:";
+"Dark" = "Mørk";
+"Light" = "Lys";
+"Follow System" = "Følg systemet";
 "Application" = "Applikation";
 "Capture area and extract text" = "Optag omr\U00E5de og udtr\U00E6k tekst";
 "Capture the full screen" = "Optag hele sk\U00E6rmen";

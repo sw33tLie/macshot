@@ -636,6 +636,10 @@
 "Background" = "רקע";
 "Custom" = "מותאם אישית";
 "Theme:" = "ערכת נושא:";
+"Toolbar appearance:" = "מראה סרגל הכלים:";
+"Dark" = "כהה";
+"Light" = "בהיר";
+"Follow System" = "לפי המערכת";
 "Application" = "אפליקציה";
 "Capture area and extract text" = "לכוד אזור וחלץ טקסט";
 "Capture the full screen" = "לכוד את המסך המלא";
