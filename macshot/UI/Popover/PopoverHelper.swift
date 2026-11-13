@@ -7,11 +7,24 @@ enum PopoverHelper {
 
     private static var activePopover: NSPopover?
     private static var anchorView: NSView?
+    /// Created on the first popover so an open popover can follow a later HUD appearance change.
+    private static let hudColorObserver: NSObjectProtocol = {
+        NotificationCenter.default.addObserver(
+            forName: .toolbarColorsDidChange,
+            object: nil,
+            queue: .main
+        ) { _ in
+            MainActor.assumeIsolated {
+                refreshAppearanceIfNeeded()
+            }
+        }
+    }()
     private static var localMouseDownMonitor: Any?
     private static var globalMouseDownMonitor: Any?
 
     /// Show a popover with the given content view, anchored relative to a rect in the given parent view.
     static func show(_ contentView: NSView, size: NSSize, relativeTo rect: NSRect, of view: NSView, preferredEdge: NSRectEdge = .minY) {
+        _ = hudColorObserver
         dismiss()
 
         let popover = NSPopover()
@@ -33,6 +46,7 @@ enum PopoverHelper {
     /// Show a popover anchored to a specific point in a view (for overlay mode where buttons aren't real views).
 
     static func showAtPoint(_ contentView: NSView, size: NSSize, at point: NSPoint, in parentView: NSView, preferredEdge: NSRectEdge = .minY) {
+        _ = hudColorObserver
         dismiss()
 
         // Create a tiny invisible anchor view at the point
@@ -94,6 +108,23 @@ enum PopoverHelper {
     }
 
     static var isVisible: Bool { activePopover?.isShown == true }
+
+    /// Repaint an open popover after the HUD appearance changes.
+    static func refreshAppearanceIfNeeded() {
+        guard let popover = activePopover, popover.isShown,
+              let content = popover.contentViewController?.view else { return }
+        let appearance = ToolbarLayout.appearance
+        popover.appearance = appearance
+        content.appearance = appearance
+        markNeedsDisplay(content)
+    }
+
+    private static func markNeedsDisplay(_ view: NSView) {
+        view.needsDisplay = true
+        for subview in view.subviews {
+            markNeedsDisplay(subview)
+        }
+    }
 
     static var isMouseInsidePopover: Bool {
         guard let popover = activePopover, popover.isShown,
