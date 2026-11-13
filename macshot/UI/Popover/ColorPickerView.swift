@@ -568,7 +568,12 @@ class ColorPickerView: NSView, NSTextFieldDelegate {
     }
 
     func controlTextDidBeginEditing(_ obj: Notification) {
-        (obj.userInfo?["NSFieldEditor"] as? NSTextView)?.insertionPointColor = hexField.textColor ?? .white
+        guard let editor = obj.userInfo?["NSFieldEditor"] as? NSTextView else { return }
+        editor.insertionPointColor = hexField.textColor ?? .white
+        // A seven-character code needs no undo history, and the popover's
+        // field editor must not leave undo actions behind once it's gone
+        // (see "transient NSTextView undo ownership" in CLAUDE.md).
+        editor.allowsUndo = false
     }
 
     func control(_ control: NSControl, textView: NSTextView, doCommandBy selector: Selector) -> Bool {

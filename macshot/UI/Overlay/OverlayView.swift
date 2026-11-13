@@ -9320,6 +9320,11 @@ class OverlayView: NSView {
 
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
         if isRecognizingText { return true }
+        // Typing in a popover's text field over this canvas (hex color code,
+        // emoji search): its shortcuts belong to that field, not the capture.
+        if ForeignTextEditing.isActive(outside: window) {
+            return ForeignTextEditing.keyEquivalentResult(for: event)
+        }
         // The scroll-capture key monitor normally consumes these first; never
         // let ⌘C reach the overlay's own Copy mid-capture (#437).
         if isScrollCapturing, Self.scrollCaptureKeyAction(for: event) == .stopAndCopy {
