@@ -22,12 +22,12 @@ enum PresetColorPalette {
         guard let stored = UserDefaults.standard.array(forKey: defaultsKey) else {
             return defaultColors
         }
-        let parsed = stored.compactMap { ($0 as? String).flatMap(NSColor.init(presetHex:)) }
+        let parsed = stored.compactMap { entry in (entry as? String).flatMap { NSColor(presetHex: $0) } }
         return Array(parsed.prefix(maxCount))
     }
 
     static func save(_ colors: [NSColor]) {
-        UserDefaults.standard.set(colors.prefix(maxCount).compactMap(hex), forKey: defaultsKey)
+        UserDefaults.standard.set(colors.prefix(maxCount).compactMap { hex($0) }, forKey: defaultsKey)
     }
 
     static func reset() {

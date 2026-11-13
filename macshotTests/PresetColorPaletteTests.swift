@@ -15,7 +15,7 @@ final class PresetColorPaletteTests: XCTestCase {
     }
 
     private func withEmptyPalette(_ body: () -> Void) {
-        try? withDefaults([PresetColorPalette.defaultsKey: nil]) { body() }
+        withDefaults([PresetColorPalette.defaultsKey: nil]) { body() }
     }
 
     func testUnsetPaletteUsesTheShippedColors() {
@@ -72,7 +72,7 @@ final class PresetColorPaletteTests: XCTestCase {
 
     func testCorruptEntriesAreDroppedNotSubstituted() {
         withEmptyPalette {
-            try? withDefaults([PresetColorPalette.defaultsKey: ["zzzzzz", "00FF00", "00112233"]]) {
+            withDefaults([PresetColorPalette.defaultsKey: ["zzzzzz", "00FF00", "00112233"]]) {
                 let colors = PresetColorPalette.colors
                 XCTAssertEqual(colors.count, 1)
                 XCTAssertEqual(hex(colors[0]), "00FF00")
@@ -95,19 +95,19 @@ final class PresetColorPaletteTests: XCTestCase {
     func testAnOversizedStoredListIsCappedOnLoad() {
         // An imported settings file or hand-edited plist can carry any length.
         let stored = Array(repeating: "112233", count: PresetColorPalette.maxCount + 5)
-        try? withDefaults([PresetColorPalette.defaultsKey: stored]) {
+        withDefaults([PresetColorPalette.defaultsKey: stored]) {
             XCTAssertEqual(PresetColorPalette.colors.count, PresetColorPalette.maxCount)
         }
     }
 
     func testNonStringEntriesDoNotDiscardTheList() {
-        try? withDefaults([PresetColorPalette.defaultsKey: ["FF0000", 42, "0000FF"] as [Any]]) {
+        withDefaults([PresetColorPalette.defaultsKey: ["FF0000", 42, "0000FF"] as [Any]]) {
             XCTAssertEqual(PresetColorPalette.colors.map(hex), ["FF0000", "0000FF"])
         }
     }
 
     func testAValueThatIsNotAListFallsBackToTheShippedColors() {
-        try? withDefaults([PresetColorPalette.defaultsKey: "FF0000"]) {
+        withDefaults([PresetColorPalette.defaultsKey: "FF0000"]) {
             XCTAssertEqual(PresetColorPalette.colors.count, PresetColorPalette.defaultColors.count)
         }
     }
@@ -123,6 +123,15 @@ final class PresetColorPaletteTests: XCTestCase {
             PresetColorPalette.save([NSColor(srgbRed: 1, green: 0, blue: 0, alpha: 0.3)])
             XCTAssertEqual(PresetColorPalette.colors.first?.alphaComponent, 1)
         }
+    }
+
+    func testPickerAtTheCapStaysCompact() {
+        let picker = ColorPickerView()
+        let twelve = picker.preferredSize.height
+        picker.presetColors = Array(repeating: .systemBlue, count: PresetColorPalette.maxCount)
+        XCTAssertEqual(picker.frame.size, picker.preferredSize, "the picker resizes to its rows")
+        XCTAssertLessThanOrEqual(picker.preferredSize.height, twelve + 2 * 30 + 0.5,
+                                 "the cap allows at most two rows more than the shipped palette")
     }
 
     func testResetClearsTheOverrides() {
