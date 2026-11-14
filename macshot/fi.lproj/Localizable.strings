@@ -251,7 +251,6 @@
 "Enhance browser and Electron element snapping" = "Paranna selaimen ja Electronin elementtien tartuntaa";
 "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Rakentaa kohdeohjelman saavutettavuuspuun Element-tilassa. Poista tämä käytöstä, jos selain tai Electron-sovellus hidastuu tai sillä on input-ongelmia.";
 "Capture mouse cursor in screenshot" = "Kaappaa hiiren osoitin kuvakaappaukseen";
-"Double-click selection to copy" = "Kopioi kaksoisnapsauttamalla valintaa";
 "Hide capture instructions" = "Piilota kuvakaappausohjeet";
 "Use window title in saved filename" = "Käytä ikkunan otsikkoa tiedostonimessä";
 "Hide menu bar icon" = "Piilota valikkopalkin kuvake";
@@ -923,3 +922,8 @@
 "Return to stack when editor closes" = "Palauta pinoon, kun editori suljetaan";
 "  Click on preview:" = "  Esikatselun napsautus:";
 "  When opened in Editor:" = "  Kun avataan editorissa:";
+
+/* Double-click capture action (#512) */
+"Double-click selection to finish capture" = "Viimeistele kaappaus kaksoisnapsauttamalla valintaa";
+"  Double-click action:" = "  Kaksoisnapsautuksen toiminto:";
+"Same as Enter" = "Sama kuin Enter";

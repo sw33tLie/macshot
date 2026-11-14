@@ -6165,8 +6165,7 @@ class OverlayView: NSView {
             return
         }
 
-        if state == .selected
-            && isDoubleClickToCopyEnabled
+        if canFinishWithDoubleClick
             && textEditor.isEditing
             && handleDoubleClickToCopy(event: event, at: point)
         {
@@ -6238,8 +6237,7 @@ class OverlayView: NSView {
         // selection confirm the capture. Annotations the first click added (and any
         // in-progress second-click annotation) are rewound first via the undo stack
         // so the copied image looks like nothing was drawn during the double-click.
-        if state == .selected
-            && isDoubleClickToCopyEnabled
+        if canFinishWithDoubleClick
             && handleDoubleClickToCopy(event: event, at: point)
         {
             return
@@ -7222,7 +7220,7 @@ class OverlayView: NSView {
                 // Outside selection: no drawing occurred — just confirm.
                 doubleClickUndoBaseline = nil
                 textToolDoubleClickCopyDeadline = 0
-                overlayDelegate?.overlayViewDidConfirm()
+                performDoubleClickAction()
                 return true
             }
             // Cancel any in-progress annotation from this second click, and
@@ -7255,6 +7253,13 @@ class OverlayView: NSView {
     /// The second click ended without moving: rewind what the first click
     /// drew and copy.
     private func completeDoubleClickCopy() {
+        // Recording setup may have opened while the second press was held.
+        // Recheck before undoing annotations or delivering the capture.
+        guard canFinishWithDoubleClick else {
+            doubleClickUndoBaseline = nil
+            textToolDoubleClickCopyDeadline = 0
+            return
+        }
         // Rewind the undo stack to the baseline captured on the first click,
         // popping the annotation(s) the first click finished.
         if let baseline = doubleClickUndoBaseline {
@@ -7265,7 +7270,14 @@ class OverlayView: NSView {
         // Clear caches so the confirm renders without the popped annotations.
         cachedCompositedImage = nil
         cachedAnnotationLayer = nil
-        overlayDelegate?.overlayViewDidConfirm()
+        performDoubleClickAction()
+    }
+
+    private func performDoubleClickAction() {
+        switch DoubleClickAction.current {
+        case .copyImage: overlayDelegate?.overlayViewDidConfirm()
+        case .sameAsEnter: overlayDelegate?.overlayViewDidRequestQuickSave()
+        }
     }
 
     /// The second click moved: replay it as an ordinary single click so the
@@ -7285,6 +7297,12 @@ class OverlayView: NSView {
         UserDefaults.standard.object(forKey: "doubleClickToCopy") as? Bool ?? true
     }
 
+    /// Recording setup ignores Return and every output shortcut, so a
+    /// double-click there must not copy or save a screenshot either.
+    private var canFinishWithDoubleClick: Bool {
+        state == .selected && !isRecording && isDoubleClickToCopyEnabled
+    }
+
     private func hasPendingTextToolDoubleClickCopy(for event: NSEvent) -> Bool {
         event.type == .leftMouseDown
             && event.clickCount >= 2
@@ -7292,8 +7310,7 @@ class OverlayView: NSView {
     }
 
     private func shouldRouteTextEditorDoubleClickToCopy(event: NSEvent, at point: NSPoint) -> Bool {
-        guard state == .selected,
-              isDoubleClickToCopyEnabled,
+        guard canFinishWithDoubleClick,
               hasPendingTextToolDoubleClickCopy(for: event),
               let sv = textEditor.scrollView,
               sv.frame.contains(point)

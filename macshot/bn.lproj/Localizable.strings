@@ -241,7 +241,6 @@
 "Show snap alignment guides" = "স্ন্যাপ সারিবদ্ধকরণ গাইড দেখান";
 "Snap selection edges to image boundaries" = "নির্বাচনের প্রান্তগুলি ছবির সীমানায় স্ন্যাপ করুন";
 "Capture mouse cursor in screenshot" = "স্ক্রিনশটে মাউস কার্সর ক্যাপচার করুন";
-"Double-click selection to copy" = "কপি করতে নির্বাচনে ডাবল-ক্লিক করুন";
 "Hide capture instructions" = "ক্যাপচার নির্দেশাবলী লুকান";
 "Disable shadow outside selection" = "নির্বাচনের বাইরে ছায়া নিষ্ক্রিয় করুন";
 "Show shortcuts in tooltips" = "টুলটিপে শর্টকাট দেখান";
@@ -929,3 +928,8 @@
 "Return to stack when editor closes" = "এডিটর বন্ধ হলে স্ট্যাকে ফেরান";
 "  Click on preview:" = "  প্রিভিউতে ক্লিক:";
 "  When opened in Editor:" = "  এডিটরে খোলার সময়:";
+
+/* Double-click capture action (#512) */
+"Double-click selection to finish capture" = "ক্যাপচার শেষ করতে নির্বাচিত অংশে ডাবল-ক্লিক করুন";
+"  Double-click action:" = "  ডাবল-ক্লিকের কাজ:";
+"Same as Enter" = "Enter-এর মতো";

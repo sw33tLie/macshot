@@ -238,7 +238,6 @@
 "Show snap alignment guides" = "הצג קווי הצמדה";
 "Snap selection edges to image boundaries" = "הצמד את קצות הבחירה לגבולות התמונה";
 "Capture mouse cursor in screenshot" = "לכוד סמן עכבר בצילום מסך";
-"Double-click selection to copy" = "לחיצה כפולה על הבחירה להעתקה";
 "Hide capture instructions" = "הסתר הוראות צילום";
 "Disable shadow outside selection" = "השבת הצללה מחוץ לבחירה";
 "Show shortcuts in tooltips" = "הצג קיצורים בתיאורי כלים";
@@ -929,3 +928,8 @@
 "Return to stack when editor closes" = "החזר לערימה כשהעורך נסגר";
 "  Click on preview:" = "  לחיצה על התצוגה המקדימה:";
 "  When opened in Editor:" = "  בעת פתיחה בעורך:";
+
+/* Double-click capture action (#512) */
+"Double-click selection to finish capture" = "לחיצה כפולה על הבחירה לסיום הלכידה";
+"  Double-click action:" = "  פעולת לחיצה כפולה:";
+"Same as Enter" = "כמו Enter";

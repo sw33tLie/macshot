@@ -255,7 +255,6 @@
 "Enhance browser and Electron element snapping" = "Tingkatkan penjepretan elemen browser dan Electron";
 "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Membangun pohon aksesibilitas aplikasi target dalam Mode Elemen. Nonaktifkan ini jika browser atau aplikasi Electron menjadi lambat atau memiliki masalah input.";
 "Capture mouse cursor in screenshot" = "Tangkap kursor mouse di tangkapan layar";
-"Double-click selection to copy" = "Klik dua kali pilihan untuk menyalin";
 "Hide capture instructions" = "Sembunyikan petunjuk pengambilan tangkapan layar";
 "Disable shadow outside selection" = "Nonaktifkan bayangan di luar seleksi";
 "Show shortcuts in tooltips" = "Tampilkan pintasan di tooltip";
@@ -925,3 +924,8 @@
 "Return to stack when editor closes" = "Kembali ke tumpukan saat editor ditutup";
 "  Click on preview:" = "  Klik pada pratinjau:";
 "  When opened in Editor:" = "  Saat dibuka di Editor:";
+
+/* Double-click capture action (#512) */
+"Double-click selection to finish capture" = "Klik dua kali pilihan untuk menyelesaikan tangkapan";
+"  Double-click action:" = "  Tindakan klik dua kali:";
+"Same as Enter" = "Sama seperti Enter";

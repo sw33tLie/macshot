@@ -71,6 +71,7 @@ brew install --cask macshot
 - **Capture delay** — 3/5/10/30 second countdown before capture, set via menu bar. Escape to cancel.
 - **Multi-monitor** — captures all screens simultaneously; drag a selection across screens for a stitched image
 - **Quick save** — `Cmd+Shift+S` to select and save/copy instantly without annotation. Enter key also saves/copies based on preference.
+- **Double-click action** — double-clicking the selection copies it, or does the same as Enter (Settings → Capture).
 - **Quick OCR** — `Cmd+Shift+T` to select and extract text instantly
 - **Move mode (optional)** — turn on **Settings → General → Start captures in move mode** and dragging inside a new selection repositions it until you pick an annotation tool; Space and the Move Selection button move the area at any time
 
