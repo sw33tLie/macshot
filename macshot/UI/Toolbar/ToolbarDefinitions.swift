@@ -402,7 +402,7 @@ class ToolbarLayout {
 
     // Bottom toolbar items (drawing tools + colors + undo/redo + processing actions)
     static func bottomButtons(
-        selectedTool: AnnotationTool, selectedColor: NSColor, beautifyEnabled: Bool = false,
+        selectedTool: AnnotationTool?, selectedColor: NSColor, beautifyEnabled: Bool = false,
         beautifyStyleIndex: Int = 0, hasAnnotations: Bool = false, isRecording: Bool = false,
         effectsActive: Bool = false
     ) -> [ToolbarButton] {
@@ -414,7 +414,7 @@ class ToolbarLayout {
         // Get enabled tools from UserDefaults — migrate: only add tools that are brand-new.
         // Track introduced tools in `knownToolRawValues` so user-disabled tools are never re-enabled.
         let allKnownToolRawValues = AnnotationTool.allCases
-            .filter { $0 != .select && $0 != .translateOverlay }
+            .filter { $0 != .translateOverlay }
             .map { $0.rawValue }
         var enabledRawValues = UserDefaults.standard.array(forKey: "enabledTools") as? [Int]
         let knownToolRawValues = UserDefaults.standard.array(forKey: "knownToolRawValues") as? [Int]
@@ -435,6 +435,7 @@ class ToolbarLayout {
         }
 
         let tools: [(AnnotationTool, String, String)] = [
+            (.select, "cursorarrow", L("Select & Move")),
             (.pencil, "scribble", L("Pencil (Draw)")),
             (.line, "line.diagonal", L("Line")),
             (.arrow, "arrow.up.right", L("Arrow")),
@@ -451,7 +452,7 @@ class ToolbarLayout {
             (.loupe, "magnifyingglass", L("Magnify (Loupe)")),
             (.stamp, "face.smiling", L("Stamp / Emoji")),
             (.colorSampler, "eyedropper", L("Color Picker")),
-            (.measure, "ruler", L("Measure (px)")),
+            (.measure, "ruler", L("Measure")),
         ]
 
         for (tool, symbol, tip) in tools {

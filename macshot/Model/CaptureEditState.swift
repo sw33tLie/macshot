@@ -19,6 +19,8 @@ struct CaptureEditState: Codable, Equatable {
     var customBeautifyBackgroundPNG: Data?
     /// Off leaves the padding clear and keeps beautify's existing shadow.
     var beautifyBackgroundEnabled: Bool = true
+    /// Real-world scale for the measure tool, set from a line of known length.
+    var measureCalibration: MeasureCalibration?
 
     var effectsPreset: ImageEffectPreset {
         ImageEffectPreset(rawValue: effectsPresetRaw) ?? .none
@@ -36,6 +38,9 @@ struct CaptureEditState: Codable, Equatable {
 
     var hasEffects: Bool { !effectsConfig.isIdentity }
     var hasPostProcessing: Bool { hasEffects || beautifyEnabled }
+    /// Anything worth keeping beside the annotations: post-processing, or a
+    /// measure scale (which changes no pixels by itself).
+    var hasEditableState: Bool { hasPostProcessing || measureCalibration != nil }
 
     var beautifyMode: BeautifyMode {
         BeautifyMode(rawValue: beautifyModeRaw) ?? .window
@@ -90,6 +95,7 @@ extension CaptureEditState {
         beautifyIsWindowSnap = c.decode(.beautifyIsWindowSnap, or: false)
         customBeautifyBackgroundPNG = c.decodeOptional(.customBeautifyBackgroundPNG)
         beautifyBackgroundEnabled = c.decode(.beautifyBackgroundEnabled, or: true)
+        measureCalibration = c.decodeOptional(.measureCalibration)
         normalizeValues()
     }
 
@@ -132,7 +138,8 @@ extension OverlayView {
             beautifyBackgroundBlur: Double(beautifyBackgroundBlur),
             beautifyIsWindowSnap: selectionIsWindowSnap,
             customBeautifyBackgroundPNG: customBackgroundData,
-            beautifyBackgroundEnabled: beautifyBackgroundEnabled
+            beautifyBackgroundEnabled: beautifyBackgroundEnabled,
+            measureCalibration: measureCalibration
         )
     }
 
@@ -156,6 +163,10 @@ extension OverlayView {
         selectionIsWindowSnap = state.beautifyIsWindowSnap
         customBeautifyBackground = state.customBeautifyBackground
         beautifyBackgroundEnabled = state.beautifyBackgroundEnabled
+        // Restores the scale without touching the annotations: each measure
+        // line carries the scale it was drawn with.
+        measureCalibration = state.measureCalibration
+        adoptMeasureCalibrationFromAnnotationsIfNeeded()
         if customBeautifyBackground != nil {
             prepareBeautifyBackgroundCache()
         } else {

@@ -5,8 +5,8 @@ import ImageIO
 /// available if a sidecar cannot be restored. These are allocation limits,
 /// independent of the smaller ranges offered by the toolbar controls.
 enum SavedCaptureValidation {
-    static let maximumImagePixels = 128 * 1024 * 1024
-    static let maximumImageBytes = 128 * 1024 * 1024
+    nonisolated static let maximumImagePixels = 128 * 1024 * 1024
+    nonisolated static let maximumImageBytes = 128 * 1024 * 1024
     static let maximumRTFBytes = 4 * 1024 * 1024
     // Far beyond the supported screen/editor sizes, while keeping distances,
     // tessellation counts and pixel conversions in the renderer representable.

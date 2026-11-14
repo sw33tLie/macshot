@@ -206,7 +206,9 @@ class ToolOptionsRowView: NSView {
         // ── Smart marker toggle ──
         if tool == .marker {
             curX = addSeparator(at: curX)
-            curX = addToggle(at: curX, title: L("Smart"), isOn: ov.smartMarkerEnabled) { [weak ov, weak self] isOn in
+            // #497: people didn't find these; say what the toggle and Shift do.
+            curX = addToggle(at: curX, title: L("Smart"), isOn: ov.smartMarkerEnabled,
+                             toolTip: L("Smart snaps the highlighter to lines of text. Hold Shift for a straight line.")) { [weak ov, weak self] isOn in
                 ov?.smartMarkerEnabled = isOn
                 UserDefaults.standard.set(isOn, forKey: "smartMarkerEnabled")
                 ov?.updateCursorForCurrentTool()
@@ -832,9 +834,11 @@ class ToolOptionsRowView: NSView {
         return curX
     }
 
-    private func addToggle(at x: CGFloat, title: String, isOn: Bool, action: @escaping (Bool) -> Void) -> CGFloat {
+    private func addToggle(at x: CGFloat, title: String, isOn: Bool, toolTip: String? = nil,
+                           action: @escaping (Bool) -> Void) -> CGFloat {
         var curX = x
         let btn = NSButton(checkboxWithTitle: title, target: nil, action: nil)
+        btn.toolTip = toolTip
         btn.state = isOn ? .on : .off
         btn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
         btn.contentTintColor = ToolbarLayout.iconColor.withAlphaComponent(0.7)
@@ -1120,15 +1124,40 @@ class ToolOptionsRowView: NSView {
         return curX
     }
 
+    static let measureScaleButtonTag = 960
+
     private func addMeasureToggle(at x: CGFloat, ov: OverlayView) -> CGFloat {
         var curX = x
-        let seg = NSSegmentedControl(labels: ["px", "pt"], trackingMode: .selectOne,
-                                     target: self, action: #selector(measureUnitChanged(_:)))
-        seg.selectedSegment = ov.currentMeasureInPoints ? 1 : 0
-        seg.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: 60, height: 22)
-        (seg.cell as? NSSegmentedCell)?.segmentStyle = .roundRect
-        addSubview(seg)
-        curX += 72
+        if ov.measureCalibration == nil {
+            let seg = NSSegmentedControl(labels: ["px", "pt"], trackingMode: .selectOne,
+                                         target: self, action: #selector(measureUnitChanged(_:)))
+            seg.selectedSegment = ov.currentMeasureInPoints ? 1 : 0
+            seg.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: 60, height: 22)
+            (seg.cell as? NSSegmentedCell)?.segmentStyle = .roundRect
+            addSubview(seg)
+            curX += 68
+        }
+
+        // Real-world scale: "Set Scale..." until one exists, then the scale
+        // itself ("Scale: mm") opens the same popover to change or remove it.
+        let scaleTitle: String
+        if let calibration = ov.measureCalibration {
+            scaleTitle = String(format: L("Scale: %@"), calibration.unit.symbol)
+        } else {
+            scaleTitle = L("Set Scale...")
+        }
+        let scaleButton = NSButton(title: scaleTitle, target: self, action: #selector(measureScaleClicked(_:)))
+        scaleButton.bezelStyle = .roundRect
+        scaleButton.controlSize = .small
+        scaleButton.font = NSFont.systemFont(ofSize: 10, weight: .medium)
+        scaleButton.image = NSImage(systemSymbolName: "ruler", accessibilityDescription: nil)
+        scaleButton.imagePosition = .imageLeading
+        scaleButton.toolTip = L("Measure in mm, cm, m, inches or feet using something of known length in the image")
+        scaleButton.tag = Self.measureScaleButtonTag
+        scaleButton.sizeToFit()
+        scaleButton.frame.origin = NSPoint(x: curX, y: (rowHeight - scaleButton.frame.height) / 2)
+        addSubview(scaleButton)
+        curX += scaleButton.frame.width + 8
 
         curX = addToggle(at: curX, title: L("Limit to selection"), isOn: ov.currentMeasureClampToSelection) { [weak ov] isOn in
             ov?.currentMeasureClampToSelection = isOn
@@ -1709,6 +1738,10 @@ class ToolOptionsRowView: NSView {
     @objc private func italicToggled() { overlayView?.textEditor.toggleItalic(); overlayView.map { $0.applyTextFormattingToSelectedAnnotations(); $0.needsDisplay = true; rebuild(for: $0.currentTool) } }
     @objc private func underlineToggled() { overlayView?.textEditor.toggleUnderline(); overlayView.map { $0.applyTextFormattingToSelectedAnnotations(); $0.needsDisplay = true; rebuild(for: $0.currentTool) } }
     @objc private func strikethroughToggled() { overlayView?.textEditor.toggleStrikethrough(); overlayView.map { $0.applyTextFormattingToSelectedAnnotations(); $0.needsDisplay = true; rebuild(for: $0.currentTool) } }
+
+    @objc private func measureScaleClicked(_ sender: NSButton) {
+        overlayView?.beginMeasureScale(anchorView: sender)
+    }
 
     @objc private func measureUnitChanged(_ sender: NSSegmentedControl) {
         guard let ov = overlayView else { return }

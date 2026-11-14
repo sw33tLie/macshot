@@ -175,7 +175,7 @@ final class LegacyDecodingTests: XCTestCase {
             "beautifyEnabled", "beautifyModeRaw", "beautifyStyleIndex", "beautifyPadding",
             "beautifyCornerRadius", "beautifyShadowRadius", "beautifyBackgroundBlur",
             "beautifyIsWindowSnap", "customBeautifyBackgroundPNG",
-            "beautifyBackgroundEnabled",
+            "beautifyBackgroundEnabled", "measureCalibration",
         ]
         XCTAssertEqual(actual, expected)
     }

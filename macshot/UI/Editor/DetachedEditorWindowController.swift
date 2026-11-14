@@ -47,6 +47,12 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
     private var initialEditState: CaptureEditState?
     /// The output captured when a drag-out started; recorded only if a destination accepts it.
     private var pendingDragSave: HistorySave?
+    /// The `.macshot` project this editor was opened from or last saved to.
+    /// Save Project writes back to it; Save & Close on quit does too.
+    private var projectURL: URL? {
+        didSet { updateWindowTitle() }
+    }
+    private var defaultWindowTitle = ""
 
     /// Optional callbacks for whoever opened the editor (e.g. a floating preview).
     struct Hooks {
@@ -75,8 +81,9 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
     /// here: writing `view.currentTool = .arrow` triggers the didSet that
     /// persists "arrow" globally, wiping the user's last-tool memory across
     /// the whole app.
-    static func open(image: NSImage, tool: AnnotationTool? = nil, color: NSColor? = nil, strokeWidth: CGFloat? = nil, annotations: [Annotation] = [], historyEntryID: String? = nil, fromCapture: Bool = false, disableBeautify: Bool = false, editState: CaptureEditState? = nil, hooks: Hooks = Hooks()) {
+    static func open(image: NSImage, tool: AnnotationTool? = nil, color: NSColor? = nil, strokeWidth: CGFloat? = nil, annotations: [Annotation] = [], historyEntryID: String? = nil, fromCapture: Bool = false, disableBeautify: Bool = false, editState: CaptureEditState? = nil, projectURL: URL? = nil, hooks: Hooks = Hooks()) {
         let controller = DetachedEditorWindowController()
+        controller.projectURL = projectURL
         controller.historyEntryID = historyEntryID
         controller.hooks = hooks
         controller.disableBeautifyOnOpen = disableBeautify
@@ -118,7 +125,8 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         // in the Dock menu, Window menu, and Mission Control.
         let dateFmt = DateFormatter()
         dateFmt.dateFormat = "HH:mm:ss"
-        win.title = "macshot Editor · \(dateFmt.string(from: Date()))"
+        defaultWindowTitle = "macshot Editor · \(dateFmt.string(from: Date()))"
+        win.title = defaultWindowTitle
         win.minSize = NSSize(width: minW, height: minH)
         win.maxSize = NSSize(width: screenFrame.width, height: screenFrame.height)
         win.isReleasedWhenClosed = false
@@ -128,6 +136,7 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         // Create EditorView as the document view inside an NSScrollView
         let view = EditorView()
         view.frame = NSRect(origin: .zero, size: imgSize)
+        view.layoutEditorDocument(forImageSize: imgSize)
         view.autoresizingMask = []  // fixed size — scroll view handles viewport
         view.screenshotImage = image
         view.overlayDelegate = self
@@ -190,6 +199,7 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         // no Done until you draw). Wire the action now; visibility is driven by
         // refreshDoneButtonVisibility() via the view's onContentChanged hook.
         topBar.onDone = { [weak self] in self?.commitToHistory() }
+        topBar.onSaveProject = { [weak self] in self?.saveMacshotProject(nil) }
         topBar.dragHandle.imageProvider = { [weak self] in self?.beginDragOut() }
         topBar.dragHandle.onDragEnded = { [weak self] accepted in self?.finishDragOut(accepted: accepted) }
         topBar.dragHandle.onClick = { [weak self] in
@@ -242,8 +252,18 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         // inset-aware visible area.
         scrollView.layoutSubtreeIfNeeded()
         let visible = scrollView.contentView.bounds.size
-        if imgSize.width > 0, imgSize.height > 0, visible.width > 0, visible.height > 0 {
-            let fitMag = min(visible.width / imgSize.width, visible.height / imgSize.height)
+        let insets = scrollView.contentInsets
+        // The part of the viewport the toolbars don't cover.
+        let usable = NSSize(width: visible.width - insets.left - insets.right,
+                            height: visible.height - insets.top - insets.bottom)
+        // The document is the image plus its margin on every side.
+        let margin = 2 * OverlayView.editorDocumentMargin
+        let docSize = NSSize(width: imgSize.width + margin, height: imgSize.height + margin)
+        if imgSize.width > 0, imgSize.height > 0, usable.width > 0, usable.height > 0 {
+            // An image that fits stays sharp at 1x (its margin just scrolls);
+            // a larger one is fitted with its margin so none of it is hidden.
+            let imageFits = usable.width >= imgSize.width && usable.height >= imgSize.height
+            let fitMag = imageFits ? 1 : min(usable.width / docSize.width, usable.height / docSize.height)
             // Only scale down — leave small images at 1x.
             let initialMag = min(1.0, fitMag)
             // Clamp into the scroll view's allowed range.
@@ -258,11 +278,184 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         // Skipped when we fit-to-window because the centering clip view
         // already presents the whole image in view.
         if let docView = scrollView.documentView, scrollView.magnification >= 0.999 {
-            docView.scroll(NSPoint(x: 0, y: docView.frame.maxY))
+            // Frame the image, not the margin: centered when it fits, else
+            // its top-left corner, within the area the toolbars leave free.
+            let usableW = usable.width
+            let usableH = usable.height
+            let x = imgSize.width <= usableW ? (imgSize.width - usableW) / 2 - insets.left : -insets.left
+            let y = imgSize.height <= usableH
+                ? (imgSize.height - usableH) / 2 - insets.bottom
+                : imgSize.height - usableH - insets.bottom
+            docView.scroll(NSPoint(x: x, y: y))
         }
 
         self.window = win
         self.overlayView = view
+        updateWindowTitle()
+    }
+
+    /// The editor whose project is `url`, brought to the front. Opening a
+    /// project twice would let two windows overwrite each other's saves.
+    static func focusEditor(forProjectURL url: URL) -> Bool {
+        let target = url.standardizedFileURL.resolvingSymlinksInPath()
+        guard let controller = activeControllers.first(where: {
+            $0.projectURL?.standardizedFileURL.resolvingSymlinksInPath() == target
+        }), let window = controller.window else { return false }
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+        return true
+    }
+
+    private func updateWindowTitle() {
+        guard let window else { return }
+        if let projectURL {
+            window.title = projectURL.deletingPathExtension().lastPathComponent
+            window.representedURL = projectURL
+        } else {
+            window.title = defaultWindowTitle
+            window.representedURL = nil
+        }
+        window.isDocumentEdited = projectURL != nil && isDirty()
+    }
+
+    // MARK: - Editable project (.macshot)
+
+    @objc func saveMacshotProject(_ sender: Any?) {
+        saveProject(choosingLocation: projectURL == nil)
+    }
+
+    @objc func saveMacshotProjectAs(_ sender: Any?) {
+        saveProject(choosingLocation: true)
+    }
+
+    /// Capture the editor exactly as it is now (image, editable annotations,
+    /// edit state, flattened output) before any panel can let it change.
+    private func captureProjectSave() -> (MacshotProjectFile.Snapshot, HistorySave)? {
+        guard let view = overlayView else { return nil }
+        view.commitTextFieldIfNeeded()
+        guard let save = captureHistorySave(), let raw = view.captureSelectedRegionRaw() else { return nil }
+        let annotations = view.annotations.filter { $0.isMovable }.map { $0.clone() }
+        do {
+            let snapshot = try MacshotProjectFile.Snapshot(
+                rawImage: raw, flattenedImage: save.image, annotations: annotations,
+                editState: save.editState)
+            return (snapshot, save)
+        } catch {
+            (NSApp.delegate as? AppDelegate)?.showFailureToast(
+                String(format: L("Could not save the project: %@"), error.localizedDescription))
+            return nil
+        }
+    }
+
+    private func saveProject(choosingLocation: Bool, completion: ((Bool) -> Void)? = nil) {
+        guard let (snapshot, save) = captureProjectSave() else { completion?(false); return }
+        // A Save As still in the queue already decided where the project lives.
+        if !choosingLocation, let target = requestedProjectURL ?? projectURL {
+            writeProject(snapshot, save: save, to: target, completion: completion)
+            return
+        }
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [MacshotProjectFile.contentType]
+        panel.canCreateDirectories = true
+        panel.isExtensionHidden = false
+        panel.message = L("Saves the image with every annotation still editable. Open the file in macshot to keep editing.")
+        if let projectURL {
+            panel.directoryURL = projectURL.deletingLastPathComponent()
+            panel.nameFieldStringValue = projectURL.lastPathComponent
+        } else {
+            panel.directoryURL = SaveDirectoryAccess.directoryHint()
+            panel.nameFieldStringValue = FilenameFormatter.defaultImageFilename(
+                fileExtension: MacshotProjectFile.fileExtension)
+        }
+        let handler: (NSApplication.ModalResponse) -> Void = { [weak self] response in
+            guard response == .OK, let url = panel.url else { completion?(false); return }
+            guard let self else { completion?(false); return }
+            self.writeProject(snapshot, save: save, to: url, completion: completion)
+        }
+        if let window {
+            panel.beginSheetModal(for: window, completionHandler: handler)
+        } else {
+            panel.begin(completionHandler: handler)
+        }
+    }
+
+    /// One queued project write; later requests replace an unstarted one.
+    private struct ProjectWrite {
+        let snapshot: MacshotProjectFile.Snapshot
+        let save: HistorySave
+        let url: URL
+        var completions: [(Bool) -> Void]
+    }
+    private var isWritingProject = false
+    private var pendingProjectWrites: [ProjectWrite] = []
+    /// Where the newest submitted save goes (ahead of `projectURL`, which
+    /// changes only when a write completes).
+    private var requestedProjectURL: URL?
+
+    /// Writes are serialized per editor: two quick saves must never let the
+    /// older state land last (and leave the file stale while the editor shows
+    /// clean). A newer request for the same file replaces a queued one and
+    /// every caller hears the outcome of the write that covers its state; a
+    /// request for another file (Save As) queues behind it.
+    private func writeProject(_ snapshot: MacshotProjectFile.Snapshot, save: HistorySave, to url: URL,
+                              completion: ((Bool) -> Void)?) {
+        requestedProjectURL = url
+        var request = ProjectWrite(snapshot: snapshot, save: save, url: url, completions: completion.map { [$0] } ?? [])
+        guard !isWritingProject else {
+            if let last = pendingProjectWrites.last, last.url.standardizedFileURL == url.standardizedFileURL {
+                request.completions = last.completions + request.completions
+                pendingProjectWrites[pendingProjectWrites.count - 1] = request
+            } else {
+                pendingProjectWrites.append(request)
+            }
+            return
+        }
+        startProjectWrite(request)
+    }
+
+    private func startProjectWrite(_ request: ProjectWrite) {
+        isWritingProject = true
+        MacshotProjectFile.write(request.snapshot, to: request.url) { [weak self] result in
+            guard let self else {
+                let succeeded = (try? result.get()) != nil
+                request.completions.forEach { $0(succeeded) }
+                return
+            }
+            self.isWritingProject = false
+            let succeeded: Bool
+            switch result {
+            case .success(let url):
+                succeeded = true
+                NSDocumentController.shared.noteNewRecentDocumentURL(url)
+                self.projectURL = url
+                self.screenshotNeverOutput = false
+                // Clean only if nothing changed while the file was written.
+                if self.overlayView?.undoStateIdentity == request.save.undoState
+                    && self.overlayView?.captureEditState() == request.save.editState {
+                    self.lastSavedUndoState = request.save.undoState
+                    self.lastSavedEditState = request.save.editState
+                }
+                self.refreshDoneButtonVisibility()
+                self.playCopySound()
+                // Like any other output, keep the capture's history entry
+                // (and its thumbnail) in step with what was saved.
+                self.autoSaveToHistoryIfNeeded(request.save)
+            case .failure(let error):
+                succeeded = false
+                // A failed Save As must not redirect later saves to a file
+                // that was never written.
+                if self.pendingProjectWrites.isEmpty { self.requestedProjectURL = self.projectURL }
+                if !(error is CancellationError) {
+                    (NSApp.delegate as? AppDelegate)?.showFailureToast(
+                        String(format: L("Could not save the project: %@"), error.localizedDescription))
+                }
+            }
+            let clean = succeeded && !self.isDirty()
+            request.completions.forEach { $0(clean) }
+            if !self.pendingProjectWrites.isEmpty {
+                self.startProjectWrite(self.pendingProjectWrites.removeFirst())
+            }
+        }
     }
 
     /// Record the current state as the "clean" baseline against which a close
@@ -288,6 +481,7 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         } else {
             topBar?.hideDoneButton()
         }
+        window?.isDocumentEdited = projectURL != nil && isDirty()
     }
 
     // MARK: - NSWindowDelegate
@@ -322,6 +516,15 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
             guard let self = self else { return }
             switch response {
             case .alertFirstButtonReturn:
+                // A project's changes belong in its file; everything else
+                // keeps going to history.
+                if self.projectURL != nil {
+                    self.saveProject(choosingLocation: false) { [weak sender] clean in
+                        guard clean else { return }
+                        sender?.close()
+                    }
+                    return
+                }
                 self.saveToHistory { [weak self, weak sender] success in
                     guard success, let self, !self.isDirty() else { return }
                     sender?.close()
@@ -463,12 +666,12 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         guard let view = overlayView else { return nil }
         let annotations = view.annotations.filter { $0.isMovable }.map { $0.clone() }
         let editState = view.captureEditState()
-        guard !annotations.isEmpty || editState.hasPostProcessing,
+        guard !annotations.isEmpty || editState.hasEditableState,
               let rawImage = view.captureSelectedRegionRaw() else { return nil }
         return CaptureAnnotationData(
             rawImage: rawImage,
             annotations: annotations,
-            editState: editState.hasPostProcessing ? editState : nil
+            editState: editState.hasEditableState ? editState : nil
         )
     }
 

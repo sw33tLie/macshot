@@ -504,7 +504,7 @@ class OverlayWindowController {
         guard let view = overlayView else { return nil }
         let annotations = view.annotations.filter { $0.isMovable }
         let editState = view.captureEditState()
-        guard !annotations.isEmpty || editState.hasPostProcessing else { return nil }
+        guard !annotations.isEmpty || editState.hasEditableState else { return nil }
 
         let sel = view.selectionRect
         let shifted = annotations.map { ann -> Annotation in
@@ -515,7 +515,7 @@ class OverlayWindowController {
         return CaptureAnnotationData(
             rawImage: rawImage,
             annotations: shifted,
-            editState: editState.hasPostProcessing ? editState : nil
+            editState: editState.hasEditableState ? editState : nil
         )
     }
 
@@ -524,7 +524,7 @@ class OverlayWindowController {
         let editState = view.captureEditState()
         let snapWindowImg = view.snappedWindowImage
         let hasAnnotations = view.annotations.contains(where: { $0.isMovable })
-        guard hasAnnotations || editState.hasPostProcessing else { return nil }
+        guard hasAnnotations || editState.hasEditableState else { return nil }
         let rawImage: NSImage? = (editState.beautifyIsWindowSnap && snapWindowImg != nil)
             ? snapWindowImg : view.captureSelectedRegionRaw()
         guard let rawImage else { return nil }
@@ -920,7 +920,7 @@ extension OverlayWindowController: OverlayViewDelegate {
         DetachedEditorWindowController.open(
             image: image, tool: tool, color: color, strokeWidth: stroke,
             annotations: shiftedAnnotations, fromCapture: true,
-            editState: editState.hasPostProcessing ? editState : nil)
+            editState: editState.hasEditableState ? editState : nil)
     }
 
     @available(macOS 14.0, *)

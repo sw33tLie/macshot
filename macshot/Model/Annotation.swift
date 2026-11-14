@@ -206,6 +206,9 @@ class Annotation {
     /// don't update the remembered default stamp size when resized.
     var isCaptureStamp: Bool = false
     var measureInPoints: Bool = false  // true = show pt, false = show px
+    /// Image-wide real-world scale; when set, the label shows mm/cm/m/in/ft
+    /// instead of px/pt. Mirrored from the canvas so the annotation draws alone.
+    var measureCalibration: MeasureCalibration?
     var censorMode: CensorMode = .pixelate
     var textBgColor: NSColor?         // background pill color (nil = no background)
     var textOutlineColor: NSColor?    // text outline/stroke color (nil = no outline)
@@ -269,6 +272,7 @@ class Annotation {
         c.stampImage = stampImage
         c.isCaptureStamp = isCaptureStamp
         c.measureInPoints = measureInPoints
+        c.measureCalibration = measureCalibration
         c.censorMode = censorMode
         c.textBgColor = textBgColor
         c.textOutlineColor = textOutlineColor
@@ -317,17 +321,22 @@ class Annotation {
         anchorPoints = src.anchorPoints
         textDrawRect = src.textDrawRect
         rotation = src.rotation
+        censorMode = src.censorMode
+        // A snapshot's bake already matches the geometry and settings being
+        // restored. Re-baking instead would need `sourceImage`, which censors
+        // restored from history/projects or moved over from the overlay don't
+        // have: the censor would fall back to its translucent preview and
+        // reveal what it was hiding. Only re-bake when there is nothing to reuse.
         if tool == .loupe {
             loupeSourceRect = src.loupeSourceRect
-            bakedBlurNSImage = nil
-            bakeLoupe()
+            bakedBlurNSImage = src.bakedBlurNSImage
+            if bakedBlurNSImage == nil { bakeLoupe() }
         } else if tool == .pixelate || tool == .blur {
-            // Position changed — the baked censor must re-render at the new spot.
-            bakedBlurNSImage = nil
-            bakePixelate()
+            bakedBlurNSImage = src.bakedBlurNSImage
+            if bakedBlurNSImage == nil { bakePixelate() }
         }
         measureInPoints = src.measureInPoints
-        censorMode = src.censorMode
+        measureCalibration = src.measureCalibration
         dimOpacity = src.dimOpacity
     }
 
@@ -1882,18 +1891,29 @@ class Annotation {
         capPath.stroke()
 
         // Dimension label
-        let unit = measureInPoints ? "pt" : "px"
-        let s = measureInPoints ? 1.0 : scale
-        let dispDistance = Int(distance * s)
-        let dispWidth = Int(abs(dx) * s)
-        let dispHeight = Int(abs(dy) * s)
         let labelText: String
-        if dispWidth < 3 {
-            labelText = "\(dispHeight)\(unit)"
-        } else if dispHeight < 3 {
-            labelText = "\(dispWidth)\(unit)"
+        if let calibration = measureCalibration, calibration.isValid {
+            // Same "nearly axis-aligned" rule as the pixel label.
+            if abs(dx) * scale < 3 {
+                labelText = calibration.format(points: abs(dy))
+            } else if abs(dy) * scale < 3 {
+                labelText = calibration.format(points: abs(dx))
+            } else {
+                labelText = "\(calibration.format(points: distance)) (\(calibration.format(points: abs(dx))) × \(calibration.format(points: abs(dy))))"
+            }
         } else {
-            labelText = "\(dispDistance)\(unit) (\(dispWidth) × \(dispHeight))"
+            let unit = measureInPoints ? "pt" : "px"
+            let s = measureInPoints ? 1.0 : scale
+            let dispDistance = Int(distance * s)
+            let dispWidth = Int(abs(dx) * s)
+            let dispHeight = Int(abs(dy) * s)
+            if dispWidth < 3 {
+                labelText = "\(dispHeight)\(unit)"
+            } else if dispHeight < 3 {
+                labelText = "\(dispWidth)\(unit)"
+            } else {
+                labelText = "\(dispDistance)\(unit) (\(dispWidth) × \(dispHeight))"
+            }
         }
 
         let fontSize: CGFloat = 11

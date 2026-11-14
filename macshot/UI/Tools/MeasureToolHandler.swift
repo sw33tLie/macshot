@@ -17,6 +17,7 @@ final class MeasureToolHandler: AnnotationToolHandler {
             strokeWidth: canvas.currentStrokeWidth
         )
         annotation.measureInPoints = canvas.currentMeasureInPoints
+        annotation.measureCalibration = canvas.measureCalibration
         return annotation
     }
 
@@ -53,6 +54,7 @@ final class MeasureToolHandler: AnnotationToolHandler {
             return
         }
         commitAnnotation(annotation, canvas: canvas)
+        canvas.measureLineCommitted(annotation)
     }
 }
 

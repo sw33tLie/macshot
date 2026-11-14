@@ -43,6 +43,7 @@ macshot/
 │
 ├── Model/
 │   ├── Annotation.swift                # Data model + drawing for all annotation types
+│   ├── MeasureCalibration.swift        # Measure scale (mm/cm/m/in/ft), length parser + formatter
 │   └── LenientDecoding.swift           # Backward/forward-compatible Codable helpers
 │
 ├── Capture/
@@ -67,6 +68,7 @@ macshot/
 │
 ├── Services/
 │   ├── ImageEncoder.swift              # PNG/JPEG/HEIC/WebP encoding, clipboard copy, resolution scaling
+│   ├── MacshotProjectFile.swift        # .macshot editable project: snapshot, atomic write, lenient read
 │   ├── BeautifyRenderer.swift          # Gradient frame / background beautification (linear + mesh gradients)
 │   ├── AutoRedactor.swift              # PII regex detection + Vision OCR → redaction annotations
 │   ├── TranslationOverlay.swift        # OCR → translate → overlay annotations
@@ -141,7 +143,8 @@ macshot/
 │   │   ├── ColorPickerView.swift       # Custom color picker: swatches, HSB gradient, opacity, custom slots, hex entry
 │   │   ├── ListPickerView.swift        # Reusable list picker with checkmark selection
 │   │   ├── EmojiPickerView.swift       # Emoji grid with category tabs
-│   │   └── GradientPickerView.swift    # Beautify gradient style swatch grid
+│   │   ├── GradientPickerView.swift    # Beautify gradient style swatch grid
+│   │   └── MeasureScalePopoverView.swift  # Measure tool "Set Scale" popover
 │   │
 │   └── Windows/
 │       ├── PinWindowController.swift          # Floating always-on-top pinned screenshot
@@ -224,9 +227,19 @@ translateOverlay, crop, colorSampler
 
 **Each annotation draws itself** via `draw(in:)`. Has `hitTest(point:threshold:)`, `move(dx:dy:)`, `isMovable`, `boundingRect`, `drawSelectionHighlight()`.
 
+#### Editable projects (`.macshot`)
+- `MacshotProjectFile` writes a binary plist (`MacshotProjectArchive`): raw PNG + point size, annotations JSON (same serializer as history), edit state JSON, flattened PNG. Field names are the file format: add optional fields, never rename them. Every field decodes leniently.
+- Save Project (⇧⌘S) / Save Project As (⌥⇧⌘S) are File-menu actions answered by the editor window's delegate; the top-bar button does the same. Snapshot the editor (`captureProjectSave`) before showing a panel; writes go through `MediaExportCoordinator` + `AtomicMediaSave`.
+- Opening (Finder, Open..., `macshot://open?file=`) decodes off the main thread. If any annotation or the edit state can't be restored, the flattened copy opens unlinked so a save can't overwrite the project with a flat image. One window per project (`focusEditor(forProjectURL:)`).
+- A linked editor shows the file name, proxy icon and dirty dot; Save & Close writes the project instead of history.
+
+#### Measure scale
+- `OverlayView.measureCalibration` is image-wide (stored in `CaptureEditState.measureCalibration`) and mirrored onto each measure annotation's `measureCalibration` so it draws alone. Change it only through `setMeasureCalibration(_:)`: it relabels every measure line and is one `.measureCalibration` undo entry.
+
 #### DetachedEditorWindowController — Standalone Editor
 - Opens from overlay ("Open in Editor Window" button) or from thumbnail/pin "Edit" action
 - Creates: NSScrollView → CenteringClipView → EditorView (documentView)
+- The document view is the image plus `OverlayView.editorDocumentMargin` on every side (bounds origin `(-m, -m)`), so canvas coordinates still equal view coordinates and the image stays at (0, 0). Resize it only with `layoutEditorDocument(forImageSize:)`. Handles past the image edge are clickable there (`pointHitsAnnotationInteraction`), nothing new is drawn outside the image, and annotation content is clipped to the export area (`clipToEditorCanvasContent`).
 - Container view holds scroll view + EditorTopBarView
 - `chromeParentView` set BEFORE `applySelection` so toolbars go in container (not document view)
 - Static `activeControllers[]` array keeps instances alive; switches activation policy to `.regular` when open, `.accessory` when all closed
@@ -250,11 +263,12 @@ The video editor is built around `VideoEditorDocument` (one `VideoProject`: time
 - **Recorded pointer data.** Every take writes `cursor.mstl` (`CursorTelemetry`) beside the MP4. Takes that open in the editor with "Editable pointer" hide the system cursor from ScreenCaptureKit and exclude the click/keystroke/webcam overlay windows; the editor redraws them. Any other destination keeps them in the pixels. Telemetry is host-clock based and anchored to the writer's first frame (`MP4WriterSession` `onSessionStart`); pauses are removed exactly like the writer removes them. Telemetry and camera failures never affect the screen recording.
 - **Time-dependent motion is precomputed and pure.** Cursor smoothing (`CursorMotion`) and the camera path (`CameraPathBuilder`) are sampled deterministically so scrubbing, playback and export produce identical frames. Motion-blur averaging must weight alpha only (Core Image color matrices are unpremultiplied).
 - **Webcam.** When the camera records separately, `VideoCompositionBuilder` adds its track in lockstep with every cut/speed/freeze piece.
+- **Visual checks (screenshot editor).** `scripts/probe-annotation-workflows.sh` builds the real editor into an isolated sandboxed app, drives the Select tool, editing past the canvas edge, measure scale and `.macshot` save/reopen with synthesized events, prints PASS/FAIL, and renders its own windows to PNGs in its container.
 - **Visual checks.** `scripts/probe-video-editor.sh` builds the real editor into an isolated app; with `-D VIDEO_EDITOR_PROBE` it accepts scripted commands (`PROBE_COMMANDS` file) and renders in-process snapshots, including the preview frame. `scripts/make-studio-fixture.swift` generates a synthetic recording with pointer data.
 
 ### Undo/Redo
 
-`UndoEntry` enum: `.added(Annotation)`, `.deleted(Annotation, Int)`, `.imageTransform(...)`. Stacks: `undoStack` / `redoStack`. Batch undo via `groupID` (e.g. auto-redact creates multiple annotations with same groupID, all undone together).
+`UndoEntry` enum: `.added(Annotation)`, `.deleted(Annotation, Int)`, `.propertyChange(...)`, `.imageTransform(...)`, `.measureCalibration(...)`, `.annotationsChange(...)` (several annotations moved together, e.g. a multi-selection drag or nudge: one step). An image transform that moves annotations (crop, flip, canvas growth) must store `annotationSnapshots` taken before it moves them; undo/redo restore them with the image. Stacks: `undoStack` / `redoStack`. Batch undo via `groupID` (e.g. auto-redact creates multiple annotations with same groupID, all undone together).
 
 **CRITICAL — transient `NSTextView` undo ownership:** `UndoManager` keeps undo-operation targets unowned. A disposable editable `NSTextView` that obtains the window's shared undo manager through the responder chain can therefore leave `_undoRedoTextOperation:` entries pointing at a deallocated view; the next Cmd+Z may crash in `_NSUndoStack popAndInvoke`. Every editable app-created text view with `allowsUndo = true` must use `ScopedUndoTextView` (or subclass it), never a plain `NSTextView`. Call `discardUndoHistory()` before removing and releasing an editing session. Read-only text views that cannot register editing actions are exempt. Do not move transient text editing back onto a window-level undo manager.
 
@@ -277,6 +291,7 @@ The video editor is built around `VideoEditorDocument` (one `VideoProject`: time
 - Features: `imgbbAPIKey`, `beautifyEnabled`, `beautifyStyleIndex`, `beautifyMode`, `beautifyPadding`, `beautifyCornerRadius`, `beautifyShadowRadius`, `beautifyBackgroundEnabled` (missing = on), `pencilSmoothEnabled`, `loupeSize`, `stampSize`, `translateTargetLang`
 - Toolbar look: `hudAppearance` (dark/light/system, missing = dark), `toolbarAccentColor`, `toolbarIconColor`, `toolbarBgColor`
 - Styles: `currentLineStyle`, `currentArrowStyle`, `currentRectFillStyle`, `currentRectCornerRadius`
+- Measure: `measureInPoints`, `measureClampToSelection`, `measureScaleUnit` (last unit used in the scale popover)
 - Picker: `presetColors` (hex list for the editable default swatches; unset means the shipped 12; capped at `PresetColorPalette.maxCount` (24) on save and load so the picker popover fits small displays)
 - Upload: `uploadProvider` (imgbb/gdrive), `googleDriveRefreshToken`, `gdriveFolderName` (Drive destination folder, defaults to "macshot"), `uploadConfirmEnabled`
 
@@ -297,8 +312,8 @@ The video editor is built around `VideoEditorDocument` (one `VideoProject`: time
 - Full-screen capture (single click without drag)
 - Remember last selection rectangle
 
-### Annotation Tools (18)
-Pencil, Line, Arrow, Rectangle, Filled Rectangle, Ellipse, Marker/Highlighter, Text (rich formatting), Number (auto-incrementing), Stamp/Emoji, Pixelate, Blur, Measure (pixel ruler), Loupe (2x magnifier), Select & Edit, Translate Overlay, Crop (editor only), Color Sampler
+### Annotation Tools (19)
+Pencil, Line, Arrow, Rectangle, Filled Rectangle, Ellipse, Marker/Highlighter, Text (rich formatting), Number (auto-incrementing), Stamp/Emoji, Pixelate, Blur, Measure (pixel ruler, optional real-world scale), Loupe (2x magnifier), Highlight (spotlight), Select & Move (first toolbar button, V: marquee on empty space, never draws; arrow keys nudge the selection 1 pt / Shift 10 pt, one undo step per run), Translate Overlay, Crop (editor only), Color Sampler
 
 - **Line styles:** Solid, dashed, dotted
 - **Arrow styles:** Single, thick, double, open, tail

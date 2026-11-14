@@ -1742,6 +1742,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
         let annotationTools: [(AnnotationTool, String)] = [
+            (.select, L("Select & Move")),
             (.pencil, L("Pencil")), (.line, L("Line")), (.arrow, L("Arrow")),
             (.rectangle, L("Rectangle")),
             (.ellipse, L("Ellipse")), (.marker, L("Marker")), (.text, L("Text")),
@@ -3187,8 +3188,9 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     }
     @objc private func toggleItemChanged(_ sender: NSButton) {
         let key = sender.identifier?.rawValue ?? "enabledTools"
-        let allTools: [AnnotationTool] = [.pencil, .line, .arrow, .rectangle,
-                                          .ellipse, .marker, .text, .number, .pixelate, .highlight, .loupe, .stamp, .measure]
+        let allTools: [AnnotationTool] = [.select, .pencil, .line, .arrow, .rectangle,
+                                          .ellipse, .marker, .text, .number, .pixelate, .highlight, .loupe, .stamp,
+                                          .colorSampler, .measure]
         let defaultValues: [Int] = key == "enabledTools" ? allTools.map { $0.rawValue } : ToolbarActionPreferences.defaultEnabledRawValues
         var enabled = UserDefaults.standard.array(forKey: key) as? [Int] ?? defaultValues
         if sender.state == .on { if !enabled.contains(sender.tag) { enabled.append(sender.tag) } }

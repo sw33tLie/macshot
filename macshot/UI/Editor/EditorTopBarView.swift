@@ -13,6 +13,7 @@ class EditorTopBarView: NSView {
     private var toolButtons: [NSButton] = []
     private let bottomBorder = NSView()
     var onDone: (() -> Void)?
+    var onSaveProject: (() -> Void)?
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -28,7 +29,9 @@ class EditorTopBarView: NSView {
         let flipHBtn = makeButton("arrow.left.and.right.righttriangle.left.righttriangle.right", tooltip: L("Flip Horizontal"), action: #selector(flipHClicked))
         let flipVBtn = makeButton("arrow.up.and.down.righttriangle.up.righttriangle.down", tooltip: L("Flip Vertical"), action: #selector(flipVClicked))
         let addCaptureBtn = makeButton("rectangle.badge.plus", tooltip: L("Add Capture"), action: #selector(addCaptureClicked))
-        toolButtons = [cropBtn, flipHBtn, flipVBtn, addCaptureBtn]
+        let saveProjectBtn = makeButton("square.and.arrow.down.on.square",
+            tooltip: L("Save as Editable Project (⇧⌘S)"), action: #selector(saveProjectClicked))
+        toolButtons = [cropBtn, flipHBtn, flipVBtn, addCaptureBtn, saveProjectBtn]
 
         // Zoom dropdown button
         zoomButton = NSButton()
@@ -47,7 +50,7 @@ class EditorTopBarView: NSView {
         addSubview(border)
 
         // Layout with constraints
-        for v: NSView in [sizeLabel, cropBtn, flipHBtn, flipVBtn, addCaptureBtn, dragHandle, zoomButton] {
+        for v: NSView in [sizeLabel, cropBtn, flipHBtn, flipVBtn, addCaptureBtn, saveProjectBtn, dragHandle, zoomButton] {
             v.translatesAutoresizingMaskIntoConstraints = false
             addSubview(v)
         }
@@ -77,6 +80,11 @@ class EditorTopBarView: NSView {
             addCaptureBtn.centerYAnchor.constraint(equalTo: centerYAnchor),
             addCaptureBtn.widthAnchor.constraint(equalToConstant: 24),
             addCaptureBtn.heightAnchor.constraint(equalToConstant: 22),
+
+            saveProjectBtn.leadingAnchor.constraint(equalTo: addCaptureBtn.trailingAnchor, constant: 12),
+            saveProjectBtn.centerYAnchor.constraint(equalTo: centerYAnchor),
+            saveProjectBtn.widthAnchor.constraint(equalToConstant: 24),
+            saveProjectBtn.heightAnchor.constraint(equalToConstant: 22),
 
             zoomButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
             zoomButton.centerYAnchor.constraint(equalTo: centerYAnchor),
@@ -265,6 +273,11 @@ class EditorTopBarView: NSView {
 
     @objc private func flipHClicked() { overlayView?.flipImageHorizontally() }
     @objc private func flipVClicked() { overlayView?.flipImageVertically() }
+    @objc private func saveProjectClicked() {
+        overlayView?.commitTextFieldIfNeeded()
+        onSaveProject?()
+    }
+
     @objc private func addCaptureClicked() { overlayView?.overlayDelegate?.overlayViewDidRequestAddCapture() }
 
     override func resetCursorRects() {

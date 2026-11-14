@@ -697,7 +697,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // Standard Close Window (Cmd+W) — routes to NSWindow.performClose(_:) via the
         // responder chain, so it closes whichever window is key (editor, settings, etc.)
         // without any window-specific handling.
+        let openItem = NSMenuItem(title: L("Open..."), action: #selector(openImageFromMenu), keyEquivalent: "o")
+        openItem.target = self
+        fileMenu.addItem(openItem)
+        fileMenu.addItem(NSMenuItem.separator())
         fileMenu.addItem(withTitle: "Close Window", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
+        // Sent up the responder chain; only an editor window's delegate answers.
+        let saveProjectItem = NSMenuItem(title: L("Save Project"),
+            action: #selector(DetachedEditorWindowController.saveMacshotProject(_:)), keyEquivalent: "s")
+        saveProjectItem.keyEquivalentModifierMask = [.command, .shift]
+        fileMenu.addItem(saveProjectItem)
+        let saveProjectAsItem = NSMenuItem(title: L("Save Project As..."),
+            action: #selector(DetachedEditorWindowController.saveMacshotProjectAs(_:)), keyEquivalent: "s")
+        saveProjectAsItem.keyEquivalentModifierMask = [.command, .shift, .option]
+        fileMenu.addItem(saveProjectAsItem)
         fileMenuItem.submenu = fileMenu
 
         let editMenuItem = NSMenuItem()
@@ -991,6 +1004,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         let quitItem = NSMenuItem(title: L("Quit macshot"), action: #selector(quitApp), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
+
+        // While the menu is open, ⌘V opens the clipboard image and ⌘O opens a
+        // file, unless the user gave those items a global shortcut of their own
+        // or another item already claims the chord.
+        Self.applyDefaultMenuKeyEquivalent("v", to: pasteImageItem, in: menu)
+        Self.applyDefaultMenuKeyEquivalent("o", to: openImageItem, in: menu)
 
         menu.delegate = self  // menuWillOpen dismisses any modal + prewarms capture
         statusBarMenu = menu
@@ -2465,6 +2484,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         openImageWithPanel()
     }
 
+    static func applyDefaultMenuKeyEquivalent(_ key: String, to item: NSMenuItem, in menu: NSMenu) {
+        guard item.keyEquivalent.isEmpty else { return }
+        let taken = menu.items.contains {
+            $0 !== item && $0.keyEquivalent.lowercased() == key
+                && $0.keyEquivalentModifierMask.intersection(.deviceIndependentFlagsMask) == .command
+        }
+        guard !taken else { return }
+        item.keyEquivalent = key
+        item.keyEquivalentModifierMask = .command
+    }
+
     @objc private func openImageFromClipboard() {
         let pasteboard = NSPasteboard.general
         guard let image = NSImage(pasteboard: pasteboard), image.isValid,
@@ -2508,16 +2538,63 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = true
-        panel.allowedContentTypes = [.png, .jpeg, .tiff, .bmp, .gif, .heic, .webP, .image]
-        panel.message = "Choose an image to open in macshot editor"
+        panel.allowedContentTypes = [MacshotProjectFile.contentType, .png, .jpeg, .tiff, .bmp, .gif, .heic, .webP, .image]
+        panel.message = L("Choose an image or macshot project to open in the editor")
 
         NSApp.activate(ignoringOtherApps: true)
         panel.begin { response in
             guard response == .OK else { return }
             for url in panel.urls {
-                self.openImageFile(url: url)
+                if MacshotProjectFile.isProjectURL(url) {
+                    self.openProjectFile(url: url)
+                } else {
+                    self.openImageFile(url: url)
+                }
             }
         }
+    }
+
+    /// Open a `.macshot` project with every annotation editable. Decoding runs
+    /// off the main thread; a project whose annotations can't all be restored
+    /// opens its flattened copy instead (and is not linked, so saving can't
+    /// overwrite the original with the flattened version).
+    private func openProjectFile(url: URL) {
+        if DetachedEditorWindowController.focusEditor(forProjectURL: url) { return }
+        let accessing = url.startAccessingSecurityScopedResource()
+        Task { [weak self] in
+            let decoded = await Task.detached(priority: .userInitiated) {
+                Result { try MacshotProjectFile.decode(contentsOf: url) }
+            }.value
+            if accessing { url.stopAccessingSecurityScopedResource() }
+            guard let self else { return }
+            let contents = decoded.flatMap { archive in Result { try MacshotProjectFile.contents(of: archive) } }
+            switch contents {
+            case .failure(let error):
+                self.showProjectOpenFailure(url: url, error: error)
+            case .success(let contents):
+                // A second open request may have arrived while this one decoded.
+                if DetachedEditorWindowController.focusEditor(forProjectURL: url) { return }
+                switch contents {
+                case .editable(let rawImage, let annotations, let editState):
+                    DetachedEditorWindowController.open(
+                        image: rawImage, annotations: annotations, editState: editState, projectURL: url)
+                    NSDocumentController.shared.noteNewRecentDocumentURL(url)
+                case .flattened(let image):
+                    DetachedEditorWindowController.open(image: image, disableBeautify: true)
+                    self.showFailureToast(L("Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged."))
+                }
+            }
+        }
+    }
+
+    private func showProjectOpenFailure(url: URL, error: Error) {
+        let alert = NSAlert()
+        alert.messageText = String(format: L("Could not open “%@”"), url.lastPathComponent)
+        alert.informativeText = error.localizedDescription
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: L("OK"))
+        NSApp.activate(ignoringOtherApps: true)
+        alert.runModal()
     }
 
     private func openImageFile(url: URL) {
@@ -2633,7 +2710,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             // GIFs can be opened in either the image editor or the video
             // editor. Default to image editor (matches prior behavior) — users
             // wanting to trim a GIF use "Open Video..." explicitly.
-            if imageExtensions.contains(ext) {
+            if ext == MacshotProjectFile.fileExtension {
+                openProjectFile(url: url)
+            } else if imageExtensions.contains(ext) {
                 openImageFile(url: url)
             } else if videoExtensions.contains(ext) {
                 openVideoFile(url: url)
@@ -2671,7 +2750,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         case "open":
             if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
                let path = components.queryItems?.first(where: { $0.name == "file" })?.value {
-                openImageFile(url: URL(fileURLWithPath: path))
+                let fileURL = URL(fileURLWithPath: path)
+                if MacshotProjectFile.isProjectURL(fileURL) {
+                    openProjectFile(url: fileURL)
+                } else {
+                    openImageFile(url: fileURL)
+                }
             }
         case "edit":
             if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
@@ -3755,6 +3839,19 @@ extension AppDelegate: OverlayWindowControllerDelegate {
 extension AppDelegate: PinWindowControllerDelegate {
     func pinWindowDidClose(_ controller: PinWindowController) {
         pinControllers.removeAll { $0 === controller }
+    }
+}
+
+// MARK: - Menu validation
+
+extension AppDelegate: NSMenuItemValidation {
+    /// ⌘O would open a panel underneath a capture overlay; the overlay owns
+    /// the keyboard until the capture ends.
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        if menuItem.action == #selector(openImageFromMenu) {
+            return overlayControllers.isEmpty
+        }
+        return true
     }
 }
 
