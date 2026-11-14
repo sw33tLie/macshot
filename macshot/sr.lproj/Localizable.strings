@@ -260,7 +260,6 @@
 "Enhance browser and Electron element snapping" = "Побољшај лепљење елемената у прегледачу и Electron-у";
 "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Гради стабло доступности циљне апликације у режиму елемената. Онемогућите ако прегледач или Electron апликација постане спора или има проблема са уносом.";
 "Capture mouse cursor in screenshot" = "Сними курсор миша на снимку екрана";
-"Double-click selection to copy" = "Копирај двокликом на селекцију";
 "Hide capture instructions" = "Сакриј упутства при снимању";
 "Use window title in saved filename" = "Користи наслов прозора у имену датотеке";
 "Hide menu bar icon" = "Сакриј иконицу у траци менија";
@@ -929,3 +928,8 @@
 "Return to stack when editor closes" = "Врати у гомилу након затварања уређивача";
 "  Click on preview:" = "  Клик на преглед:";
 "  When opened in Editor:" = "  При отварању у уређивачу:";
+
+/* Double-click capture action (#512) */
+"Double-click selection to finish capture" = "Двоклик на избор за завршетак снимања";
+"  Double-click action:" = "  Радња двоклика:";
+"Same as Enter" = "Исто као Enter";

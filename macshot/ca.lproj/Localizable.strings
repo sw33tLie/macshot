@@ -238,7 +238,6 @@
 "Show snap alignment guides" = "Mostrar guies d'alineació";
 "Snap selection edges to image boundaries" = "Ajustar les vores de la selecció als límits de la imatge";
 "Capture mouse cursor in screenshot" = "Capturar el cursor del ratolí a la captura";
-"Double-click selection to copy" = "Doble clic a la selecció per copiar";
 "Hide capture instructions" = "Amagar les instruccions de captura";
 "Disable shadow outside selection" = "Desactivar l'ombra fora de la selecció";
 "Show shortcuts in tooltips" = "Mostrar dreceres als consells d'eina";
@@ -929,3 +928,8 @@
 "Return to stack when editor closes" = "Torna a la pila en tancar l’editor";
 "  Click on preview:" = "  Clic a la previsualització:";
 "  When opened in Editor:" = "  En obrir a l’editor:";
+
+/* Double-click capture action (#512) */
+"Double-click selection to finish capture" = "Doble clic a la selecció per acabar la captura";
+"  Double-click action:" = "  Acció del doble clic:";
+"Same as Enter" = "Igual que Retorn";

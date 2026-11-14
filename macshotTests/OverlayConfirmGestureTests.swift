@@ -10,6 +10,7 @@ final class OverlayConfirmGestureTests: XCTestCase {
     private let settings: [String: Any?] = [
         "captureSnapMode": OverlayView.SnapMode.off.rawValue,
         "doubleClickToCopy": true,
+        DoubleClickAction.userDefaultsKey: nil,
     ]
 
     private func makeSelectedOverlay() -> (OverlayView, RecordingOverlayDelegate) {
@@ -117,6 +118,206 @@ final class OverlayConfirmGestureTests: XCTestCase {
 
             XCTAssertEqual(delegate.confirms, 0)
             XCTAssertEqual(view.annotations.count, 1)
+        }
+    }
+
+    // MARK: - Double-click delivery (#512)
+
+    private func doubleClick(_ view: OverlayView, at point: NSPoint) {
+        view.mouseDown(with: mouse(.leftMouseDown, at: point))
+        view.mouseUp(with: mouse(.leftMouseUp, at: point))
+        view.mouseDown(with: mouse(.leftMouseDown, at: point, clickCount: 2))
+        view.mouseUp(with: mouse(.leftMouseUp, at: point, clickCount: 2))
+    }
+
+    func testMissingOrUnknownActionKeepsCopyOnlyEvenWhenEnterSaves() {
+        for value: Any? in [nil, 99, "sameAsEnter"] {
+            withDefaults(settings.merging([
+                DoubleClickAction.userDefaultsKey: value,
+                QuickCaptureMode.userDefaultsKey: QuickCaptureMode.saveAndCopyImage.rawValue,
+            ], uniquingKeysWith: { _, new in new })) {
+                let (view, delegate) = makeSelectedOverlay()
+                doubleClick(view, at: NSPoint(x: 100, y: 100))
+                XCTAssertEqual(DoubleClickAction.current, .copyImage)
+                XCTAssertEqual(delegate.confirms, 1)
+                XCTAssertEqual(delegate.quickSaveRequests, 0)
+            }
+        }
+    }
+
+    /// The view only asks for the Return action. Which Quick Capture mode
+    /// applies is decided by the delegate, in the same code Return runs.
+    func testSameAsEnterRequestsTheReturnAction() {
+        withDefaults(settings) {
+            DoubleClickAction.current = .sameAsEnter
+            let (view, delegate) = makeSelectedOverlay()
+            view.currentTool = .number
+            doubleClick(view, at: NSPoint(x: 100, y: 100))
+            XCTAssertEqual(delegate.quickSaveRequests, 1)
+            XCTAssertEqual(delegate.confirms, 0)
+            XCTAssertTrue(view.annotations.isEmpty, "rewind the first click before delivering")
+
+            let (returnView, returnDelegate) = makeSelectedOverlay()
+            returnView.keyDown(with: TestKeyEvent.keyDown(characters: "\r", keyCode: TestKeyEvent.Code.returnKey))
+            XCTAssertEqual(returnDelegate.quickSaveRequests, 1)
+            XCTAssertEqual(returnDelegate.confirms, 0)
+        }
+    }
+
+    func testOutsideSelectionDoubleClickUsesTheConfiguredAction() {
+        for action in DoubleClickAction.allCases {
+            withDefaults(settings) {
+                DoubleClickAction.current = action
+                let (view, delegate) = makeSelectedOverlay()
+                view.mouseDown(with: mouse(.leftMouseDown, at: NSPoint(x: 5, y: 150), clickCount: 2))
+                XCTAssertEqual(delegate.confirms, action == .copyImage ? 1 : 0)
+                XCTAssertEqual(delegate.quickSaveRequests, action == .sameAsEnter ? 1 : 0)
+            }
+        }
+    }
+
+    /// The editor shares the gesture. There Return quick-saves without
+    /// closing the window, and "Same as Enter" does exactly that.
+    func testEditorDoubleClickUsesTheConfiguredAction() {
+        for action in DoubleClickAction.allCases {
+            withDefaults(settings) {
+                DoubleClickAction.current = action
+                let editor = EditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+                editor.screenshotImage = ImageProbe.quadrantImage(width: 400, height: 300)
+                editor.applySelection(NSRect(x: 0, y: 0, width: 400, height: 300))
+                let delegate = RecordingOverlayDelegate()
+                editor.overlayDelegate = delegate
+                doubleClick(editor, at: NSPoint(x: 100, y: 100))
+                XCTAssertEqual(delegate.confirms, action == .copyImage ? 1 : 0, "\(action)")
+                XCTAssertEqual(delegate.quickSaveRequests, action == .sameAsEnter ? 1 : 0, "\(action)")
+            }
+        }
+    }
+
+    func testDisabledDoubleClickNeverDeliversTheEnterAction() {
+        withDefaults(settings.merging(["doubleClickToCopy": false], uniquingKeysWith: { _, new in new })) {
+            DoubleClickAction.current = .sameAsEnter
+            let (view, delegate) = makeSelectedOverlay()
+            view.currentTool = .select
+            doubleClick(view, at: NSPoint(x: 100, y: 100))
+            XCTAssertEqual(delegate.quickSaveRequests, 0)
+            XCTAssertEqual(delegate.confirms, 0)
+        }
+    }
+
+    /// Recording setup ignores Return, so a double-click there must not copy
+    /// or save a screenshot either, whichever action is chosen.
+    func testDoubleClickDoesNothingDuringRecordingSetup() {
+        for action in DoubleClickAction.allCases {
+            withDefaults(settings.merging([
+                DoubleClickAction.userDefaultsKey: action.rawValue,
+                "recordMouseHighlight": false, "recordKeystroke": false,
+                "recordMicAudio": false, "recordWebcam": false,
+            ], uniquingKeysWith: { _, new in new })) {
+                let (view, delegate) = makeSelectedOverlay()
+                view.isRecording = true
+                doubleClick(view, at: NSPoint(x: 100, y: 100))
+                view.mouseDown(with: mouse(.leftMouseDown, at: NSPoint(x: 5, y: 150), clickCount: 2))
+                XCTAssertEqual(delegate.confirms, 0, "\(action)")
+                XCTAssertEqual(delegate.quickSaveRequests, 0, "\(action)")
+                XCTAssertTrue(view.isRecording)
+            }
+        }
+    }
+
+    func testSameAsEnterDoesNotFinishADoubleTapDrag() {
+        withDefaults(settings) {
+            DoubleClickAction.current = .sameAsEnter
+            let (view, delegate) = makeSelectedOverlay()
+            view.currentTool = .arrow
+            let start = NSPoint(x: 100, y: 100), end = NSPoint(x: 220, y: 180)
+            view.mouseDown(with: mouse(.leftMouseDown, at: start))
+            view.mouseUp(with: mouse(.leftMouseUp, at: start))
+            view.mouseDown(with: mouse(.leftMouseDown, at: start, clickCount: 2))
+            view.mouseDragged(with: mouse(.leftMouseDragged, at: end, clickCount: 2))
+            view.mouseUp(with: mouse(.leftMouseUp, at: end, clickCount: 2))
+            XCTAssertEqual(delegate.quickSaveRequests, 0)
+            XCTAssertEqual(delegate.confirms, 0)
+            XCTAssertEqual(view.annotations.first?.tool, .arrow)
+        }
+    }
+
+    func testEnteringRecordingSetupCancelsAPendingDoubleClick() {
+        for action in DoubleClickAction.allCases {
+            withDefaults(settings.merging([
+                DoubleClickAction.userDefaultsKey: action.rawValue,
+                "recordMouseHighlight": false, "recordKeystroke": false,
+                "recordMicAudio": false, "recordWebcam": false,
+            ], uniquingKeysWith: { _, new in new })) {
+                let (view, delegate) = makeSelectedOverlay()
+                let point = NSPoint(x: 100, y: 100)
+                view.mouseDown(with: mouse(.leftMouseDown, at: point))
+                view.mouseUp(with: mouse(.leftMouseUp, at: point))
+                view.mouseDown(with: mouse(.leftMouseDown, at: point, clickCount: 2))
+                view.isRecording = true
+                view.mouseUp(with: mouse(.leftMouseUp, at: point, clickCount: 2))
+                XCTAssertEqual(delegate.confirms, 0, "\(action)")
+                XCTAssertEqual(delegate.quickSaveRequests, 0, "\(action)")
+                XCTAssertTrue(view.isRecording)
+            }
+        }
+    }
+
+    func testSameAsEnterLeavesExistingTextAvailableForEditing() {
+        withDefaults(settings) {
+            DoubleClickAction.current = .sameAsEnter
+            let (view, delegate) = makeSelectedOverlay()
+            view.currentTool = .text
+            let annotation = Annotation(tool: .text, startPoint: NSPoint(x: 100, y: 100),
+                                        endPoint: NSPoint(x: 220, y: 150), color: .red, strokeWidth: 3)
+            annotation.text = "Existing text"
+            annotation.textDrawRect = NSRect(x: 100, y: 100, width: 120, height: 50)
+            view.annotations = [annotation]
+            let point = NSPoint(x: annotation.textDrawRect.midX, y: annotation.textDrawRect.midY)
+            doubleClick(view, at: point)
+            XCTAssertEqual(delegate.quickSaveRequests, 0)
+            XCTAssertEqual(delegate.confirms, 0)
+            // Direct headless dispatch has no NSApp.currentEvent to enter edit
+            // mode, but must leave the existing annotation intact.
+            XCTAssertTrue(view.annotations.first === annotation)
+            XCTAssertEqual(view.annotations.count, 1)
+        }
+    }
+
+    func testSameAsEnterDoesNotFinishWhileEditingText() throws {
+        try withDefaults(settings) {
+            DoubleClickAction.current = .sameAsEnter
+            let (view, delegate) = makeSelectedOverlay()
+            view.currentTool = .text
+            let start = NSPoint(x: 100, y: 100)
+            view.mouseDown(with: mouse(.leftMouseDown, at: start, timestamp: 10))
+            view.mouseUp(with: mouse(.leftMouseUp, at: start, timestamp: 10.1))
+            let editor = try XCTUnwrap(view.textEditView)
+            editor.string = "Editing text"
+            let frame = try XCTUnwrap(editor.enclosingScrollView).frame
+            let point = NSPoint(x: frame.midX, y: frame.midY)
+            // A later word-selection double-click is not the initial text-tool
+            // placement gesture that #247 permits to finish a capture.
+            view.mouseDown(with: mouse(.leftMouseDown, at: point, timestamp: 20))
+            view.mouseUp(with: mouse(.leftMouseUp, at: point, timestamp: 20.1))
+            view.mouseDown(with: mouse(.leftMouseDown, at: point, clickCount: 2, timestamp: 20.2))
+            view.mouseUp(with: mouse(.leftMouseUp, at: point, clickCount: 2, timestamp: 20.3))
+            XCTAssertEqual(delegate.quickSaveRequests, 0)
+            XCTAssertEqual(delegate.confirms, 0)
+            XCTAssertTrue(view.textEditView === editor)
+            XCTAssertEqual(editor.string, "Editing text")
+        }
+    }
+
+    func testSameAsEnterCanFinishWithTheTextToolOnEmptySpace() {
+        withDefaults(settings) {
+            DoubleClickAction.current = .sameAsEnter
+            let (view, delegate) = makeSelectedOverlay()
+            view.currentTool = .text
+            doubleClick(view, at: NSPoint(x: 100, y: 100))
+            XCTAssertEqual(delegate.quickSaveRequests, 1)
+            XCTAssertEqual(delegate.confirms, 0)
+            XCTAssertTrue(view.annotations.isEmpty)
         }
     }
 

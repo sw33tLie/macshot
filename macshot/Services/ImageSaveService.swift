@@ -80,6 +80,32 @@ enum QuickCaptureMode: Int, CaseIterable {
     }
 }
 
+/// What double-clicking the selection does (#512). A missing or unknown value
+/// keeps the original copy; "Same as Enter" follows `QuickCaptureMode`.
+enum DoubleClickAction: Int, CaseIterable {
+    case copyImage = 0
+    case sameAsEnter = 1
+
+    static let userDefaultsKey = "doubleClickAction"
+
+    static var current: DoubleClickAction {
+        get {
+            guard let value = UserDefaults.standard.object(forKey: userDefaultsKey) as? Int else {
+                return .copyImage
+            }
+            return DoubleClickAction(rawValue: value) ?? .copyImage
+        }
+        set { UserDefaults.standard.set(newValue.rawValue, forKey: userDefaultsKey) }
+    }
+
+    var title: String {
+        switch self {
+        case .copyImage: return QuickCaptureMode.copyImage.title
+        case .sameAsEnter: return L("Same as Enter")
+        }
+    }
+}
+
 enum ImageSaveService {
     typealias Completion = (Bool) -> Void
 

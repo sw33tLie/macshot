@@ -238,7 +238,6 @@
 "Show snap alignment guides" = "Afișează ghidajele de aliniere";
 "Snap selection edges to image boundaries" = "Aliniază marginile selecției la limitele imaginii";
 "Capture mouse cursor in screenshot" = "Capturează cursorul mouse-ului în captura de ecran";
-"Double-click selection to copy" = "Dublu-clic pe selecție pentru a copia";
 "Hide capture instructions" = "Ascunde instrucțiunile de captură";
 "Disable shadow outside selection" = "Dezactivează umbra în afara selecției";
 "Show shortcuts in tooltips" = "Afișează scurtăturile în sfaturi";
@@ -927,3 +926,8 @@
 "Return to stack when editor closes" = "Revino în stivă la închiderea editorului";
 "  Click on preview:" = "  Clic pe previzualizare:";
 "  When opened in Editor:" = "  La deschiderea în editor:";
+
+/* Double-click capture action (#512) */
+"Double-click selection to finish capture" = "Dublu clic pe selecție pentru a finaliza o captură";
+"  Double-click action:" = "  Acțiune la dublu clic:";
+"Same as Enter" = "La fel ca Enter";

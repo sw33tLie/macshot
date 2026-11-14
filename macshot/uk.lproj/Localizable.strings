@@ -260,7 +260,6 @@
 "Enhance browser and Electron element snapping" = "Покращення прилипання елементів у браузері та Electron";
 "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Будує дерево доступності цільової програми в режимі елементів. Вимкніть, якщо браузер або Electron-програма працює повільно або має проблеми з введенням.";
 "Capture mouse cursor in screenshot" = "Захоплювати курсор миші на знімку екрана";
-"Double-click selection to copy" = "Копіювати подвійним клацанням по виділенню";
 "Hide capture instructions" = "Приховувати підказки під час захоплення";
 "Use window title in saved filename" = "Використовувати заголовок вікна у назві файлу";
 "Hide menu bar icon" = "Сховати іконку в смузі меню";
@@ -927,3 +926,8 @@
 "Return to stack when editor closes" = "Повернути в стос після закриття редактора";
 "  Click on preview:" = "  Клік по превʼю:";
 "  When opened in Editor:" = "  Під час редагування:";
+
+/* Double-click capture action (#512) */
+"Double-click selection to finish capture" = "Подвійне клацання по виділенню завершує захоплення";
+"  Double-click action:" = "  Дія подвійного клацання:";
+"Same as Enter" = "Як Enter";

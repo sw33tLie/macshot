@@ -251,7 +251,6 @@
 "Enhance browser and Electron element snapping" = "Forbedre elementfangst for nettleser og Electron";
 "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Bygger tilgangstr\U00E6t i m\U00E5lappen i Element-modus. Deaktiver dette hvis en nettleser eller Electron-app blir treg eller har innproblemer.";
 "Capture mouse cursor in screenshot" = "Ta med musepeker i skjermbilde";
-"Double-click selection to copy" = "Dobbeltklikk p\U00E5 utvalget for \U00E5 kopiere";
 "Hide capture instructions" = "Skjul instruksjoner ved skjermbilde";
 "Use window title in saved filename" = "Bruk vindustittel i lagret filnavn";
 "Hide menu bar icon" = "Skjul menylinje-ikon";
@@ -923,3 +922,8 @@
 "Return to stack when editor closes" = "Tilbake i stabelen når redigeringsverktøyet lukkes";
 "  Click on preview:" = "  Klikk på forhåndsvisning:";
 "  When opened in Editor:" = "  Når den åpnes i redigering:";
+
+/* Double-click capture action (#512) */
+"Double-click selection to finish capture" = "Dobbeltklikk på utvalget for å fullføre opptaket";
+"  Double-click action:" = "  Handling ved dobbeltklikk:";
+"Same as Enter" = "Samme som Enter";

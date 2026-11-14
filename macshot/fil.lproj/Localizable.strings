@@ -255,7 +255,6 @@
 "Enhance browser and Electron element snapping" = "Pahusayin ang element snapping ng browser at Electron";
 "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Gumagawa ng accessibility tree ng target app sa Element mode. I-disable ito kung mabagal ang browser o Electron app o may mga problema sa input.";
 "Capture mouse cursor in screenshot" = "Isama ang cursor ng mouse sa screenshot";
-"Double-click selection to copy" = "I-double-click ang pinili upang kopyahin";
 "Hide capture instructions" = "Itago ang mga tagubilin sa pagkuha ng screenshot";
 "Disable shadow outside selection" = "I-disable ang anino sa labas ng pinili";
 "Show shortcuts in tooltips" = "Ipakita ang mga shortcut sa mga tooltip";
@@ -927,3 +926,8 @@
 "Return to stack when editor closes" = "Ibalik sa stack kapag isinara ang editor";
 "  Click on preview:" = "  Pag-click sa preview:";
 "  When opened in Editor:" = "  Kapag binuksan sa Editor:";
+
+/* Double-click capture action (#512) */
+"Double-click selection to finish capture" = "I-double click ang seleksyon upang tapusin ang pagkuha";
+"  Double-click action:" = "  Aksyon ng double-click:";
+"Same as Enter" = "Katulad ng Enter";

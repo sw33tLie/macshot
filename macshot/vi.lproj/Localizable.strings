@@ -254,7 +254,6 @@
 "Enhance browser and Electron element snapping" = "Nâng cao bắt dính phần tử trình duyệt và Electron";
 "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Xây dựng cây khả năng truy cập của ứng dụng đích trong Chế độ phần tử. Tắt tính năng này nếu trình duyệt hoặc ứng dụng Electron trở nên chậm hoặc gặp sự cố nhập liệu.";
 "Capture mouse cursor in screenshot" = "Chụp con trỏ chuột trong ảnh";
-"Double-click selection to copy" = "Nhấp đúp vào vùng chọn để sao chép";
 "Hide capture instructions" = "Ẩn hướng dẫn chụp màn hình";
 "Disable shadow outside selection" = "Tắt bóng tối bên ngoài vùng chọn";
 "Show shortcuts in tooltips" = "Hiển thị phím tắt trong chú giải công cụ";
@@ -925,3 +924,8 @@
 "Return to stack when editor closes" = "Trở lại ngăn xếp khi đóng trình chỉnh sửa";
 "  Click on preview:" = "  Nhấp vào bản xem trước:";
 "  When opened in Editor:" = "  Khi mở trong trình chỉnh sửa:";
+
+/* Double-click capture action (#512) */
+"Double-click selection to finish capture" = "Nhấp đúp vùng chọn để hoàn tất chụp";
+"  Double-click action:" = "  Hành động nhấp đúp:";
+"Same as Enter" = "Giống Enter";
