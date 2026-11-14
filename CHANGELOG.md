@@ -1,5 +1,23 @@
 # Changelog
 
+## [4.5.0-beta.2] - 2026-11-14
+
+### New
+
+- **Editable projects**: save a capture as a `.macshot` file with every annotation still editable, and reopen it later from Finder, File > Open... or `macshot://open`, independent of history. Save Project is ⇧⌘S in the Editor (or the new top-bar button), Save Project As is ⌥⇧⌘S. (#497)
+- **Select & Move tool**: the first toolbar button (V) only selects, moves and resizes annotations; dragging on empty space draws a selection box instead of a new annotation. (#497)
+- **Measure in real units**: Set Scale in the Measure tool turns a line along something of known length (`90 mm`, `3 1/2 in`, `6' 2"`) into a scale, and every measurement shows mm, cm, m, inches or feet. The scale is kept in history and in projects. (#497)
+- **Arrow keys nudge** the selected annotations by 1 pt (10 pt with Shift), handy for lining up pasted screenshots; a run of nudges undoes in one step. (#497)
+- With the menu bar menu open, ⌘V opens the clipboard image in the Editor (unless you gave Open from Clipboard its own shortcut) and ⌘O opens a file. (#497)
+
+### Fixed
+
+- Resize handles, the rotate knob and the delete button of an image pasted at the edge of the Editor canvas couldn't be reached. The canvas now has room around it for them. (#497)
+- Undoing a crop, flip or canvas growth in the Editor left annotations shifted or mirrored.
+- Moving several selected annotations took one undo per annotation to put back; it's now one step.
+- Moving a pixelate or blur reopened from history, or carried over from the capture, could drop it to its see-through preview.
+- A magnifier's source area didn't follow the image after a crop or flip, and the Editor's size label could show the old size after an undo.
+
 ## [4.5.0-beta.1] - 2026-11-13
 
 ### New
