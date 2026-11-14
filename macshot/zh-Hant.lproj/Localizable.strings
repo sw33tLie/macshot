@@ -83,6 +83,26 @@
 "Censor (Pixelate / Blur / Solid)" = "遮蔽（馬賽克 / 模糊 / 填色）";
 "Measure" = "測量";
 "Measure (px)" = "測量 (px)";
+"Measure Scale" = "測量比例";
+"Set Scale..." = "設定比例⋯";
+"Set Scale" = "設定比例";
+"Scale: %@" = "比例：%@";
+"Remove Scale" = "移除比例";
+"Show lengths in" = "長度顯示單位";
+"Current scale: 1 %@ = %@ px" = "目前比例：1 %@ = %@ px";
+"Draw Reference Line" = "繪製參考線";
+"Draw a measure line along something whose length you know" = "沿著已知長度的物體繪製測量線";
+"Draw or select a measure line along something whose length you know, then enter that length." = "沿著已知長度的物體繪製或選取一條測量線，然後輸入其長度。";
+"This line is %d px long. How long is it in real life?" = "這條線長 %d px。它的實際長度是多少？";
+"e.g. 90 mm or 3 1/2 in" = "例如 90 mm 或 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "請輸入長度，例如 90 mm、3.5 in 或 3 1/2 in。";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "實際長度僅為估計值，僅對與參考線位於同一平面的物體可靠。";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "利用影像中已知長度的物體，以 mm、cm、m、英吋或英尺測量";
+"Millimeters (mm)" = "公釐 (mm)";
+"Centimeters (cm)" = "公分 (cm)";
+"Meters (m)" = "公尺 (m)";
+"Inches (in)" = "英吋 (in)";
+"Feet (ft)" = "英尺 (ft)";
 "Magnify (Loupe)" = "放大鏡";
 "Highlight" = "聚光";
 "Highlight (Spotlight)" = "聚光（聚光燈）";
@@ -90,6 +110,7 @@
 "Color Sampler" = "顏色取樣器";
 "Color Picker" = "顏色選取器";
 "Select & Edit" = "選取與編輯";
+"Select & Move" = "選取與移動";
 "Color" = "顏色";
 
 /* Toolbar - Actions */
@@ -158,6 +179,7 @@
 "Smooth" = "平滑";
 "Refined" = "精細";
 "Smart" = "智慧型";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "「智慧型」會將螢光筆對齊文字行。按住 Shift 鍵可畫直線。";
 "Padding" = "間距";
 "Shadow" = "陰影";
 "Right-click to add points" = "右鍵點按以加入控制點";
@@ -456,6 +478,22 @@
 "Save As..." = "另存新檔⋯";
 "Choose a folder" = "選擇檔案夾";
 "Save All to Folder…" = "全部儲存至檔案夾⋯";
+
+/* Editable Project */
+"Save Project" = "儲存專案";
+"Save Project As..." = "將專案另存新檔⋯";
+"Save as Editable Project (⇧⌘S)" = "儲存為可編輯專案 (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "儲存影像並保留所有標註的可編輯狀態。在 macshot 中開啟檔案即可繼續編輯。";
+"Open..." = "開啟⋯";
+"Choose an image or macshot project to open in the editor" = "選擇要在編輯器中開啟的影像或 macshot 專案";
+"Could not open “%@”" = "無法開啟「%@」";
+"Could not save the project: %@" = "無法儲存專案：%@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "此專案中的部分標註無法復原，因此已以合併後的影像開啟。原始檔案未變更。";
+"The file is not a macshot project or is damaged." = "此檔案不是 macshot 專案或已損毀。";
+"The project could not be prepared for saving." = "無法準備要儲存的專案。";
+"The image is too large to save as an editable project." = "影像太大，無法儲存為可編輯專案。";
+"The project file is too large to open." = "專案檔案過大，無法開啟。";
+"The project's image could not be read." = "無法讀取專案的影像。";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "自動捲動";

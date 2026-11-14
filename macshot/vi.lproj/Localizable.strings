@@ -83,6 +83,26 @@
 "Censor (Pixelate / Blur / Solid)" = "Che mờ (Khảm / Mờ / Đặc)";
 "Measure" = "Đo";
 "Measure (px)" = "Đo (px)";
+"Measure Scale" = "Tỷ lệ đo";
+"Set Scale..." = "Đặt tỷ lệ...";
+"Set Scale" = "Đặt tỷ lệ";
+"Scale: %@" = "Tỷ lệ: %@";
+"Remove Scale" = "Xóa tỷ lệ";
+"Show lengths in" = "Hiển thị độ dài theo";
+"Current scale: 1 %@ = %@ px" = "Tỷ lệ hiện tại: 1 %@ = %@ px";
+"Draw Reference Line" = "Vẽ đường tham chiếu";
+"Draw a measure line along something whose length you know" = "Vẽ một đường đo dọc theo vật mà bạn biết độ dài";
+"Draw or select a measure line along something whose length you know, then enter that length." = "Vẽ hoặc chọn một đường đo dọc theo vật mà bạn biết độ dài, sau đó nhập độ dài đó.";
+"This line is %d px long. How long is it in real life?" = "Đường này dài %d px. Độ dài thực tế của nó là bao nhiêu?";
+"e.g. 90 mm or 3 1/2 in" = "VD: 90 mm hoặc 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "Nhập độ dài, ví dụ 90 mm, 3.5 in hoặc 3 1/2 in.";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "Độ dài thực tế chỉ là ước tính. Chúng chỉ đáng tin cậy với các vật nằm cùng mặt phẳng với đường tham chiếu.";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "Đo bằng mm, cm, m, inch hoặc feet dựa vào một vật đã biết độ dài trong ảnh";
+"Millimeters (mm)" = "Milimét (mm)";
+"Centimeters (cm)" = "Xentimét (cm)";
+"Meters (m)" = "Mét (m)";
+"Inches (in)" = "Inch (in)";
+"Feet (ft)" = "Feet (ft)";
 "Magnify (Loupe)" = "Phóng đại (Kính lúp)";
 "Highlight" = "Tiêu điểm";
 "Highlight (Spotlight)" = "Tiêu điểm (Đèn rọi)";
@@ -90,6 +110,7 @@
 "Color Sampler" = "Lấy mẫu màu";
 "Color Picker" = "Bộ chọn màu";
 "Select & Edit" = "Chọn & Chỉnh sửa";
+"Select & Move" = "Chọn & Di chuyển";
 "Color" = "Màu";
 
 /* Toolbar - Actions */
@@ -158,6 +179,7 @@
 "Smooth" = "Mượt";
 "Refined" = "Tinh chỉnh";
 "Smart" = "Thông minh";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "Thông minh căn bút đánh dấu theo các dòng chữ. Giữ Shift để vẽ đường thẳng.";
 "Padding" = "Đệm";
 "Shadow" = "Bóng";
 "Right-click to add points" = "Nhấp chuột phải để thêm điểm";
@@ -456,6 +478,22 @@
 "Save As..." = "Lưu thành...";
 "Choose a folder" = "Chọn thư mục";
 "Save All to Folder…" = "Lưu tất cả vào thư mục…";
+
+/* Editable Project */
+"Save Project" = "Lưu dự án";
+"Save Project As..." = "Lưu dự án thành...";
+"Save as Editable Project (⇧⌘S)" = "Lưu thành dự án có thể chỉnh sửa (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "Lưu ảnh với mọi chú thích vẫn có thể chỉnh sửa. Mở tệp trong macshot để tiếp tục chỉnh sửa.";
+"Open..." = "Mở...";
+"Choose an image or macshot project to open in the editor" = "Chọn ảnh hoặc dự án macshot để mở trong trình chỉnh sửa";
+"Could not open “%@”" = "Không thể mở “%@”";
+"Could not save the project: %@" = "Không thể lưu dự án: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "Không thể khôi phục một số chú thích trong dự án này nên dự án được mở dưới dạng ảnh đã gộp lớp. Tệp gốc không bị thay đổi.";
+"The file is not a macshot project or is damaged." = "Tệp này không phải là dự án macshot hoặc đã bị hỏng.";
+"The project could not be prepared for saving." = "Không thể chuẩn bị dự án để lưu.";
+"The image is too large to save as an editable project." = "Hình ảnh quá lớn để lưu thành dự án có thể chỉnh sửa.";
+"The project file is too large to open." = "Tệp dự án quá lớn để mở.";
+"The project's image could not be read." = "Không thể đọc ảnh của dự án.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Tự động cuộn";

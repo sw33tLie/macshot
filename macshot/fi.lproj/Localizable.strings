@@ -83,6 +83,26 @@
 "Censor (Pixelate / Blur / Solid)" = "Sensuroi (Pikseloi / Sumenna / Yhtenäinen)";
 "Measure" = "Mittaa";
 "Measure (px)" = "Mittaa (px)";
+"Measure Scale" = "Mittakaava";
+"Set Scale..." = "Aseta mittakaava...";
+"Set Scale" = "Aseta mittakaava";
+"Scale: %@" = "Mittakaava: %@";
+"Remove Scale" = "Poista mittakaava";
+"Show lengths in" = "Näytä pituudet yksikössä";
+"Current scale: 1 %@ = %@ px" = "Nykyinen mittakaava: 1 %@ = %@ px";
+"Draw Reference Line" = "Piirrä vertailuviiva";
+"Draw a measure line along something whose length you know" = "Piirrä mittaviiva sellaista kohdetta pitkin, jonka pituuden tiedät";
+"Draw or select a measure line along something whose length you know, then enter that length." = "Piirrä tai valitse mittaviiva sellaista kohdetta pitkin, jonka pituuden tiedät, ja syötä sitten pituus.";
+"This line is %d px long. How long is it in real life?" = "Tämä viiva on %d px pitkä. Kuinka pitkä se on todellisuudessa?";
+"e.g. 90 mm or 3 1/2 in" = "esim. 90 mm tai 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "Syötä pituus, esim. 90 mm, 3.5 in tai 3 1/2 in.";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "Todelliset pituudet ovat arvioita. Ne ovat luotettavia vain kohteille, jotka ovat samassa tasossa kuin vertailuviiva.";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "Mittaa yksiköissä mm, cm, m, tuuma tai jalka kuvassa olevan tunnetun pituisen kohteen avulla";
+"Millimeters (mm)" = "Millimetrit (mm)";
+"Centimeters (cm)" = "Senttimetrit (cm)";
+"Meters (m)" = "Metrit (m)";
+"Inches (in)" = "Tuumat (in)";
+"Feet (ft)" = "Jalat (ft)";
 "Magnify (Loupe)" = "Suurenna (Luuppi)";
 "Highlight" = "Korosta";
 "Highlight (Spotlight)" = "Korosta (Kohdevalo)";
@@ -90,6 +110,7 @@
 "Color Sampler" = "Väripoimija";
 "Color Picker" = "Värivalitsin";
 "Select & Edit" = "Valitse ja muokkaa";
+"Select & Move" = "Valitse ja siirrä";
 "Color" = "Väri";
 
 /* Toolbar - Actions */
@@ -163,6 +184,7 @@
 "Smooth" = "Tasoita";
 "Refined" = "Hienosäädetty";
 "Smart" = "Älykäs";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "Älykäs kohdistaa korostuskynän tekstiriveihin. Pidä vaihtonäppäintä painettuna piirtääksesi suoran viivan.";
 "Padding" = "Reunus";
 "Shadow" = "Varjo";
 "Right-click to add points" = "Lisää pisteet hiiren oikealla painikkeella";
@@ -453,6 +475,20 @@
 "Save All to Folder…" = "Tallenna kaikki kansioon…";
 "Could not encode the screenshot." = "Kuvakaappausta ei voitu koodata.";
 "Could not save the screenshot: %@" = "Kuvakaappausta ei voitu tallentaa: %@";
+"Save Project" = "Tallenna projekti";
+"Save Project As..." = "Tallenna projekti nimellä...";
+"Save as Editable Project (⇧⌘S)" = "Tallenna muokattavana projektina (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "Tallentaa kuvan niin, että kaikki merkinnät pysyvät muokattavina. Jatka muokkaamista avaamalla tiedosto macshotissa.";
+"Open..." = "Avaa...";
+"Choose an image or macshot project to open in the editor" = "Valitse kuva tai macshot-projekti avattavaksi editorissa";
+"Could not open “%@”" = "Tiedostoa ”%@” ei voitu avata";
+"Could not save the project: %@" = "Projektia ei voitu tallentaa: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "Joitakin tämän projektin merkintöjä ei voitu palauttaa, joten se avattiin litistettynä kuvana. Alkuperäistä tiedostoa ei ole muutettu.";
+"The file is not a macshot project or is damaged." = "Tiedosto ei ole macshot-projekti tai se on vioittunut.";
+"The project could not be prepared for saving." = "Projektia ei voitu valmistella tallennettavaksi.";
+"The image is too large to save as an editable project." = "Kuva on liian suuri tallennettavaksi muokattavana projektina.";
+"The project file is too large to open." = "Projektitiedosto on liian suuri avattavaksi.";
+"The project's image could not be read." = "Projektin kuvaa ei voitu lukea.";
 "Could not save the screenshot to history." = "Kuvakaappausta ei voitu tallentaa historiaan.";
 
 /* Scroll Capture HUD */

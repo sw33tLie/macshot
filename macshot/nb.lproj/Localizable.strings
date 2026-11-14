@@ -83,6 +83,26 @@
 "Censor (Pixelate / Blur / Solid)" = "Sensur (Pikselering / Uskarphet / Heldekkende)";
 "Measure" = "M\U00E5l";
 "Measure (px)" = "M\U00E5l (px)";
+"Measure Scale" = "Målestokk";
+"Set Scale..." = "Angi målestokk...";
+"Set Scale" = "Angi målestokk";
+"Scale: %@" = "Målestokk: %@";
+"Remove Scale" = "Fjern målestokk";
+"Show lengths in" = "Vis lengder i";
+"Current scale: 1 %@ = %@ px" = "Gjeldende målestokk: 1 %@ = %@ px";
+"Draw Reference Line" = "Tegn referanselinje";
+"Draw a measure line along something whose length you know" = "Tegn en målelinje langs noe med kjent lengde";
+"Draw or select a measure line along something whose length you know, then enter that length." = "Tegn eller velg en målelinje langs noe med kjent lengde, og skriv deretter inn lengden.";
+"This line is %d px long. How long is it in real life?" = "Denne linjen er %d px lang. Hvor lang er den i virkeligheten?";
+"e.g. 90 mm or 3 1/2 in" = "f.eks. 90 mm eller 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "Skriv inn en lengde, f.eks. 90 mm, 3.5 in eller 3 1/2 in.";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "Virkelige lengder er anslag. De er bare pålitelige for ting i samme plan som referanselinjen.";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "Mål i mm, cm, m, tommer eller fot ved hjelp av noe med kjent lengde i bildet";
+"Millimeters (mm)" = "Millimeter (mm)";
+"Centimeters (cm)" = "Centimeter (cm)";
+"Meters (m)" = "Meter (m)";
+"Inches (in)" = "Tommer (in)";
+"Feet (ft)" = "Fot (ft)";
 "Magnify (Loupe)" = "Forst\U00F8rr (Lupe)";
 "Highlight" = "Fokus";
 "Highlight (Spotlight)" = "Fokus (Spotlight)";
@@ -90,6 +110,7 @@
 "Color Sampler" = "Fargevelger";
 "Color Picker" = "Fargevelger";
 "Select & Edit" = "Velg og rediger";
+"Select & Move" = "Velg og flytt";
 "Color" = "Farge";
 
 /* Toolbar - Actions */
@@ -163,6 +184,7 @@
 "Smooth" = "Jevn";
 "Refined" = "Forfinet";
 "Smart" = "Smart";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "Smart fester markøren til tekstlinjer. Hold inne Skift for en rett linje.";
 "Padding" = "Utfylling";
 "Shadow" = "Skygge";
 "Right-click to add points" = "H\U00F8yreklikk for \U00E5 legge til punkter";
@@ -453,6 +475,20 @@
 "Save All to Folder\U2026" = "Lagre alle i mappe\U2026";
 "Could not encode the screenshot." = "Kunne ikke kode skjermbildet.";
 "Could not save the screenshot: %@" = "Kunne ikke lagre skjermbildet: %@";
+"Save Project" = "Lagre prosjekt";
+"Save Project As..." = "Lagre prosjekt som...";
+"Save as Editable Project (⇧⌘S)" = "Lagre som redigerbart prosjekt (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "Lagrer bildet med alle kommentarer fortsatt redigerbare. Åpne filen i macshot for å fortsette redigeringen.";
+"Open..." = "Åpne...";
+"Choose an image or macshot project to open in the editor" = "Velg et bilde eller et macshot-prosjekt som skal åpnes i redigering";
+"Could not open “%@”" = "Kunne ikke åpne «%@»";
+"Could not save the project: %@" = "Kunne ikke lagre prosjektet: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "Noen kommentarer i dette prosjektet kunne ikke gjenopprettes, så det ble åpnet som et flatt bilde. Originalfilen er uendret.";
+"The file is not a macshot project or is damaged." = "Filen er ikke et macshot-prosjekt eller er skadet.";
+"The project could not be prepared for saving." = "Prosjektet kunne ikke klargjøres for lagring.";
+"The image is too large to save as an editable project." = "Bildet er for stort til å lagres som et redigerbart prosjekt.";
+"The project file is too large to open." = "Prosjektfilen er for stor til å åpnes.";
+"The project's image could not be read." = "Kunne ikke lese prosjektets bilde.";
 "Could not save the screenshot to history." = "Kunne ikke lagre skjermbildet i historikken.";
 
 /* Scroll Capture HUD */

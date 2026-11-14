@@ -83,6 +83,26 @@
 "Censor (Pixelate / Blur / Solid)" = "검열 (모자이크 / 흐리게 / 단색)";
 "Measure" = "측정";
 "Measure (px)" = "측정 (px)";
+"Measure Scale" = "측정 축척";
+"Set Scale..." = "축척 설정...";
+"Set Scale" = "축척 설정";
+"Scale: %@" = "축척: %@";
+"Remove Scale" = "축척 제거";
+"Show lengths in" = "길이 표시 단위";
+"Current scale: 1 %@ = %@ px" = "현재 축척: 1 %@ = %@ px";
+"Draw Reference Line" = "기준선 그리기";
+"Draw a measure line along something whose length you know" = "길이를 알고 있는 대상을 따라 측정선을 그리세요";
+"Draw or select a measure line along something whose length you know, then enter that length." = "길이를 알고 있는 대상을 따라 측정선을 그리거나 선택한 다음, 그 길이를 입력하세요.";
+"This line is %d px long. How long is it in real life?" = "이 선의 길이는 %d px입니다. 실제 길이는 얼마입니까?";
+"e.g. 90 mm or 3 1/2 in" = "예: 90 mm 또는 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "90 mm, 3.5 in 또는 3 1/2 in처럼 길이를 입력하세요.";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "실제 길이는 추정값입니다. 기준선과 같은 평면에 있는 대상에 대해서만 신뢰할 수 있습니다.";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "이미지에서 길이를 알고 있는 대상을 이용해 mm, cm, m, 인치 또는 피트로 측정";
+"Millimeters (mm)" = "밀리미터 (mm)";
+"Centimeters (cm)" = "센티미터 (cm)";
+"Meters (m)" = "미터 (m)";
+"Inches (in)" = "인치 (in)";
+"Feet (ft)" = "피트 (ft)";
 "Magnify (Loupe)" = "확대경 (돋보기)";
 "Highlight" = "강조";
 "Highlight (Spotlight)" = "강조 (스포트라이트)";
@@ -90,6 +110,7 @@
 "Color Sampler" = "색상 추출";
 "Color Picker" = "색상 선택기";
 "Select & Edit" = "선택 및 편집";
+"Select & Move" = "선택 및 이동";
 "Color" = "색상";
 
 /* Toolbar - Actions */
@@ -152,6 +173,7 @@
 "Smooth" = "부드럽게";
 "Refined" = "정밀";
 "Smart" = "스마트";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "스마트는 형광펜을 텍스트 줄에 맞춥니다. 직선을 그리려면 Shift 키를 누르고 있으세요.";
 "Padding" = "여백";
 "Shadow" = "그림자";
 "Right-click to add points" = "우클릭으로 포인트 추가";
@@ -445,6 +467,22 @@
 "Save As..." = "다른 이름으로 저장...";
 "Choose a folder" = "폴더 선택";
 "Save All to Folder…" = "모두 폴더에 저장…";
+
+/* Editable Project */
+"Save Project" = "프로젝트 저장";
+"Save Project As..." = "프로젝트를 다른 이름으로 저장...";
+"Save as Editable Project (⇧⌘S)" = "편집 가능한 프로젝트로 저장 (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "모든 주석을 편집 가능한 상태로 유지한 채 이미지를 저장합니다. macshot에서 파일을 열어 계속 편집할 수 있습니다.";
+"Open..." = "열기...";
+"Choose an image or macshot project to open in the editor" = "편집기에서 열 이미지 또는 macshot 프로젝트를 선택하세요";
+"Could not open “%@”" = "“%@”을(를) 열 수 없습니다";
+"Could not save the project: %@" = "프로젝트를 저장할 수 없습니다: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "이 프로젝트의 일부 주석을 복원할 수 없어 병합된 이미지로 열었습니다. 원본 파일은 변경되지 않았습니다.";
+"The file is not a macshot project or is damaged." = "이 파일은 macshot 프로젝트가 아니거나 손상되었습니다.";
+"The project could not be prepared for saving." = "저장할 프로젝트를 준비할 수 없습니다.";
+"The image is too large to save as an editable project." = "이미지가 너무 커서 편집 가능한 프로젝트로 저장할 수 없습니다.";
+"The project file is too large to open." = "프로젝트 파일이 너무 커서 열 수 없습니다.";
+"The project's image could not be read." = "프로젝트의 이미지를 읽을 수 없습니다.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "자동 스크롤";

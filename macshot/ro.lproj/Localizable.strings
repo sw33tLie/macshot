@@ -91,7 +91,30 @@
 "Color Sampler" = "Selector culoare";
 "Color Picker" = "Alegător de culori";
 "Select & Edit" = "Selectează și editează";
+"Select & Move" = "Selectează și mută";
 "Color" = "Culoare";
+
+/* Measure Scale */
+"Measure Scale" = "Scară de măsurare";
+"Set Scale..." = "Setează scara...";
+"Set Scale" = "Setează scara";
+"Scale: %@" = "Scară: %@";
+"Remove Scale" = "Elimină scara";
+"Show lengths in" = "Afișează lungimile în";
+"Current scale: 1 %@ = %@ px" = "Scara curentă: 1 %@ = %@ px";
+"Draw Reference Line" = "Desenează linia de referință";
+"Draw a measure line along something whose length you know" = "Desenează o linie de măsurare de-a lungul unui obiect a cărui lungime o cunoști";
+"Draw or select a measure line along something whose length you know, then enter that length." = "Desenează sau selectează o linie de măsurare de-a lungul unui obiect a cărui lungime o cunoști, apoi introdu acea lungime.";
+"This line is %d px long. How long is it in real life?" = "Această linie are %d px. Cât de lungă este în realitate?";
+"e.g. 90 mm or 3 1/2 in" = "ex. 90 mm sau 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "Introdu o lungime, de exemplu 90 mm, 3.5 in sau 3 1/2 in.";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "Lungimile reale sunt estimări. Sunt fiabile doar pentru obiectele aflate în același plan cu linia de referință.";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "Măsoară în mm, cm, m, inci sau picioare folosind un obiect de lungime cunoscută din imagine";
+"Millimeters (mm)" = "Milimetri (mm)";
+"Centimeters (cm)" = "Centimetri (cm)";
+"Meters (m)" = "Metri (m)";
+"Inches (in)" = "Inci (in)";
+"Feet (ft)" = "Picioare (ft)";
 
 /* Toolbar - Actions */
 "Copy to Clipboard" = "Copiază în clipboard";
@@ -152,6 +175,7 @@
 "Smooth" = "Neted";
 "Refined" = "Rafinat";
 "Smart" = "Inteligent";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "„Inteligent” aliniază markerul la rândurile de text. Ține apăsat Shift pentru o linie orizontală sau verticală.";
 "Padding" = "Spațiere";
 "Shadow" = "Umbră";
 "Right-click to add points" = "Clic dreapta pentru a adăuga puncte";
@@ -449,6 +473,22 @@
 "Could not encode the screenshot." = "Nu s-a putut codifica captura de ecran.";
 "Could not save the screenshot: %@" = "Nu s-a putut salva captura de ecran: %@";
 "Could not save the screenshot to history." = "Nu s-a putut salva captura de ecran în istoric.";
+
+/* Project Files */
+"Save Project" = "Salvează proiectul";
+"Save Project As..." = "Salvează proiectul ca...";
+"Save as Editable Project (⇧⌘S)" = "Salvează ca proiect editabil (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "Salvează imaginea cu toate adnotările încă editabile. Deschide fișierul în macshot pentru a continua editarea.";
+"Open..." = "Deschide...";
+"Choose an image or macshot project to open in the editor" = "Alege o imagine sau un proiect macshot de deschis în editor";
+"Could not open “%@”" = "Nu s-a putut deschide „%@”";
+"Could not save the project: %@" = "Nu s-a putut salva proiectul: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "Unele adnotări din acest proiect nu au putut fi restaurate, așa că s-a deschis aplatizat. Fișierul original nu a fost modificat.";
+"The file is not a macshot project or is damaged." = "Fișierul nu este un proiect macshot sau este deteriorat.";
+"The project could not be prepared for saving." = "Proiectul nu a putut fi pregătit pentru salvare.";
+"The image is too large to save as an editable project." = "Imaginea este prea mare pentru a fi salvată ca proiect editabil.";
+"The project file is too large to open." = "Fișierul proiectului este prea mare pentru a fi deschis.";
+"The project's image could not be read." = "Imaginea proiectului nu a putut fi citită.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Derulare automată";

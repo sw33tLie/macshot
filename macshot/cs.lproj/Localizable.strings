@@ -31,6 +31,7 @@
 "Recent Captures" = "Nedávné snímky";
 "Show History Panel" = "Zobrazit panel historie";
 "Open Image..." = "Otevřít obrázek...";
+"Open..." = "Otevřít...";
 "Open from Clipboard" = "Otevřít ze schránky";
 "Pin from Clipboard" = "Připnout ze schránky";
 "Preferences..." = "Předvolby...";
@@ -90,7 +91,30 @@
 "Color Sampler" = "Kapátko";
 "Color Picker" = "Výběr barvy";
 "Select & Edit" = "Vybrat a upravit";
+"Select & Move" = "Vybrat a přesunout";
 "Color" = "Barva";
+
+/* Measure scale */
+"Measure Scale" = "Měřítko měření";
+"Set Scale..." = "Nastavit měřítko...";
+"Set Scale" = "Nastavit měřítko";
+"Scale: %@" = "Měřítko: %@";
+"Remove Scale" = "Odstranit měřítko";
+"Show lengths in" = "Zobrazit délky v";
+"Current scale: 1 %@ = %@ px" = "Aktuální měřítko: 1 %@ = %@ px";
+"Draw Reference Line" = "Nakreslit referenční čáru";
+"Draw a measure line along something whose length you know" = "Nakreslete měřicí čáru podél něčeho se známou délkou";
+"Draw or select a measure line along something whose length you know, then enter that length." = "Nakreslete nebo vyberte měřicí čáru podél něčeho se známou délkou a poté zadejte tuto délku.";
+"This line is %d px long. How long is it in real life?" = "Tato čára je dlouhá %d px. Jak dlouhá je ve skutečnosti?";
+"e.g. 90 mm or 3 1/2 in" = "např. 90 mm nebo 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "Zadejte délku, např. 90 mm, 3.5 in nebo 3 1/2 in.";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "Skutečné délky jsou odhady. Spolehlivé jsou pouze pro objekty ve stejné rovině jako referenční čára.";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "Měření v mm, cm, m, palcích nebo stopách podle něčeho se známou délkou v obrázku";
+"Millimeters (mm)" = "Milimetry (mm)";
+"Centimeters (cm)" = "Centimetry (cm)";
+"Meters (m)" = "Metry (m)";
+"Inches (in)" = "Palce (in)";
+"Feet (ft)" = "Stopy (ft)";
 
 /* Aspect ratio & resolution presets */
 "Aspect ratio & resolution presets" = "Předvolby poměru stran a rozlišení";
@@ -172,6 +196,7 @@
 "Smooth" = "Vyhlazení";
 "Refined" = "Vyhlazené";
 "Smart" = "Chytrý";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "„Chytrý“ přichytí zvýrazňovač k řádkům textu. Pro rovnou čáru podržte Shift.";
 "Padding" = "Odsazení";
 "Shadow" = "Stín";
 "Right-click to add points" = "Pravým tlačítkem přidat body";
@@ -456,6 +481,21 @@
 "Could not encode the screenshot." = "Nepodařilo se zakódovat snímek obrazovky.";
 "Could not save the screenshot: %@" = "Nepodařilo se uložit snímek obrazovky: %@";
 "Could not save the screenshot to history." = "Nepodařilo se uložit snímek obrazovky do historie.";
+
+/* Editable projects */
+"Save Project" = "Uložit projekt";
+"Save Project As..." = "Uložit projekt jako...";
+"Save as Editable Project (⇧⌘S)" = "Uložit jako upravitelný projekt (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "Uloží obrázek tak, že všechny anotace zůstanou upravitelné. Otevřete soubor v macshot a pokračujte v úpravách.";
+"Choose an image or macshot project to open in the editor" = "Vyberte obrázek nebo projekt macshot k otevření v editoru";
+"Could not open “%@”" = "Nepodařilo se otevřít „%@“";
+"Could not save the project: %@" = "Nepodařilo se uložit projekt: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "Některé anotace v tomto projektu nebylo možné obnovit, proto byl otevřen jako sloučený obrázek. Původní soubor zůstal beze změny.";
+"The file is not a macshot project or is damaged." = "Soubor není projekt macshot nebo je poškozený.";
+"The project could not be prepared for saving." = "Projekt se nepodařilo připravit k uložení.";
+"The image is too large to save as an editable project." = "Obrázek je příliš velký na uložení jako upravitelný projekt.";
+"The project file is too large to open." = "Soubor projektu je příliš velký na otevření.";
+"The project's image could not be read." = "Obrázek projektu se nepodařilo načíst.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Automatické posouvání";

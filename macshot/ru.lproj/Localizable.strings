@@ -31,6 +31,7 @@
 "Recent Captures" = "Недавние снимки";
 "Show History Panel" = "Показать панель истории";
 "Open Image..." = "Открыть изображение...";
+"Open..." = "Открыть...";
 "Open from Clipboard" = "Открыть из буфера обмена";
 "Pin from Clipboard" = "Закрепить из буфера обмена";
 "Preferences..." = "Настройки...";
@@ -90,7 +91,30 @@
 "Color Sampler" = "Пипетка";
 "Color Picker" = "Палитра";
 "Select & Edit" = "Выбрать и изменить";
+"Select & Move" = "Выбрать и переместить";
 "Color" = "Цвет";
+
+/* Measure scale */
+"Measure Scale" = "Масштаб линейки";
+"Set Scale..." = "Задать масштаб...";
+"Set Scale" = "Задать масштаб";
+"Scale: %@" = "Масштаб: %@";
+"Remove Scale" = "Удалить масштаб";
+"Show lengths in" = "Показывать длину в";
+"Current scale: 1 %@ = %@ px" = "Текущий масштаб: 1 %@ = %@ px";
+"Draw Reference Line" = "Провести эталонную линию";
+"Draw a measure line along something whose length you know" = "Проведите линию вдоль объекта известной длины";
+"Draw or select a measure line along something whose length you know, then enter that length." = "Проведите или выберите линию вдоль объекта известной длины, затем введите эту длину.";
+"This line is %d px long. How long is it in real life?" = "Длина этой линии %d px. Какова её реальная длина?";
+"e.g. 90 mm or 3 1/2 in" = "например, 90 mm или 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "Введите длину, например 90 mm, 3.5 in или 3 1/2 in.";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "Реальные длины приблизительны. Они надёжны только для объектов в той же плоскости, что и эталонная линия.";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "Измерение в mm, cm, m, дюймах или футах по объекту известной длины на изображении";
+"Millimeters (mm)" = "Миллиметры (mm)";
+"Centimeters (cm)" = "Сантиметры (cm)";
+"Meters (m)" = "Метры (m)";
+"Inches (in)" = "Дюймы (in)";
+"Feet (ft)" = "Футы (ft)";
 
 /* Aspect ratio & resolution presets */
 "Aspect ratio & resolution presets" = "Пресеты соотношения сторон и разрешения";
@@ -172,6 +196,7 @@
 "Smooth" = "Сглаживание";
 "Refined" = "Точный";
 "Smart" = "Умное";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "«Умное» привязывает маркер к строкам текста. Удерживайте Shift, чтобы провести прямую линию.";
 "Padding" = "Отступ";
 "Shadow" = "Тень";
 "Right-click to add points" = "Нажмите правую кнопку, чтобы добавить точки";
@@ -456,6 +481,21 @@
 "Could not encode the screenshot." = "Не удалось закодировать снимок экрана.";
 "Could not save the screenshot: %@" = "Не удалось сохранить снимок экрана: %@";
 "Could not save the screenshot to history." = "Не удалось сохранить снимок экрана в историю.";
+
+/* Editable projects */
+"Save Project" = "Сохранить проект";
+"Save Project As..." = "Сохранить проект как...";
+"Save as Editable Project (⇧⌘S)" = "Сохранить как редактируемый проект (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "Сохраняет изображение, оставляя все аннотации редактируемыми. Откройте файл в macshot, чтобы продолжить редактирование.";
+"Choose an image or macshot project to open in the editor" = "Выберите изображение или проект macshot для открытия в редакторе";
+"Could not open “%@”" = "Не удалось открыть «%@»";
+"Could not save the project: %@" = "Не удалось сохранить проект: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "Некоторые аннотации в этом проекте не удалось восстановить, поэтому он открыт как плоское изображение. Исходный файл не изменён.";
+"The file is not a macshot project or is damaged." = "Файл не является проектом macshot или повреждён.";
+"The project could not be prepared for saving." = "Не удалось подготовить проект к сохранению.";
+"The image is too large to save as an editable project." = "Изображение слишком большое для сохранения в виде редактируемого проекта.";
+"The project file is too large to open." = "Файл проекта слишком велик для открытия.";
+"The project's image could not be read." = "Не удалось прочитать изображение проекта.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Авто-прокрутка";

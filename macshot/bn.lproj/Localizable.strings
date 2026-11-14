@@ -93,7 +93,30 @@
 "Color Sampler" = "রং নমুনাকারী";
 "Color Picker" = "রং নির্বাচক";
 "Select & Edit" = "নির্বাচন ও সম্পাদনা";
+"Select & Move" = "নির্বাচন ও সরানো";
 "Color" = "রং";
+
+/* Measure Scale */
+"Measure Scale" = "পরিমাপের স্কেল";
+"Set Scale..." = "স্কেল নির্ধারণ...";
+"Set Scale" = "স্কেল নির্ধারণ";
+"Scale: %@" = "স্কেল: %@";
+"Remove Scale" = "স্কেল সরান";
+"Show lengths in" = "দৈর্ঘ্যের একক";
+"Current scale: 1 %@ = %@ px" = "বর্তমান স্কেল: 1 %@ = %@ px";
+"Draw Reference Line" = "রেফারেন্স রেখা আঁকুন";
+"Draw a measure line along something whose length you know" = "জানা দৈর্ঘ্যের কোনো কিছুর বরাবর একটি পরিমাপ রেখা আঁকুন";
+"Draw or select a measure line along something whose length you know, then enter that length." = "যার দৈর্ঘ্য আপনি জানেন এমন কিছুর বরাবর একটি পরিমাপ রেখা আঁকুন বা নির্বাচন করুন, তারপর সেই দৈর্ঘ্য লিখুন।";
+"This line is %d px long. How long is it in real life?" = "এই রেখাটি %d px লম্বা। বাস্তবে এটি কত লম্বা?";
+"e.g. 90 mm or 3 1/2 in" = "যেমন 90 mm বা 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "একটি দৈর্ঘ্য লিখুন, যেমন 90 mm, 3.5 in বা 3 1/2 in।";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "বাস্তব দৈর্ঘ্যগুলো আনুমানিক। এগুলো কেবল রেফারেন্স রেখার একই তলে থাকা জিনিসের জন্য নির্ভরযোগ্য।";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "ছবিতে জানা দৈর্ঘ্যের কোনো কিছু ব্যবহার করে mm, cm, m, ইঞ্চি বা ফুটে পরিমাপ করুন";
+"Millimeters (mm)" = "মিলিমিটার (mm)";
+"Centimeters (cm)" = "সেন্টিমিটার (cm)";
+"Meters (m)" = "মিটার (m)";
+"Inches (in)" = "ইঞ্চি (in)";
+"Feet (ft)" = "ফুট (ft)";
 
 /* Toolbar - Actions */
 "Copy to Clipboard" = "ক্লিপবোর্ডে কপি";
@@ -155,6 +178,7 @@
 "Smooth" = "মসৃণ";
 "Refined" = "পরিমার্জিত";
 "Smart" = "স্মার্ট";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "স্মার্ট হাইলাইটারকে লেখার লাইনের সাথে মিলিয়ে দেয়। সরলরেখার জন্য Shift চেপে ধরুন।";
 "Padding" = "প্যাডিং";
 "Shadow" = "ছায়া";
 "Right-click to add points" = "পয়েন্ট যোগ করতে ডান-ক্লিক করুন";
@@ -457,6 +481,22 @@
 "Could not encode the screenshot." = "স্ক্রিনশট এনকোড করা যায়নি।";
 "Could not save the screenshot: %@" = "স্ক্রিনশট সংরক্ষণ করা যায়নি: %@";
 "Could not save the screenshot to history." = "স্ক্রিনশট ইতিহাসে সংরক্ষণ করা যায়নি।";
+
+/* Project Files */
+"Save Project" = "প্রকল্প সংরক্ষণ";
+"Save Project As..." = "প্রকল্প এইরূপে সংরক্ষণ...";
+"Save as Editable Project (⇧⌘S)" = "সম্পাদনাযোগ্য প্রকল্প হিসেবে সংরক্ষণ (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "প্রতিটি টীকা সম্পাদনাযোগ্য রেখে ছবিটি সংরক্ষণ করে। সম্পাদনা চালিয়ে যেতে ফাইলটি macshot-এ খুলুন।";
+"Open..." = "খুলুন...";
+"Choose an image or macshot project to open in the editor" = "এডিটরে খোলার জন্য একটি ছবি বা macshot প্রকল্প বেছে নিন";
+"Could not open “%@”" = "“%@” খোলা যায়নি";
+"Could not save the project: %@" = "প্রকল্প সংরক্ষণ করা যায়নি: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "এই প্রকল্পের কিছু টীকা পুনরুদ্ধার করা যায়নি, তাই এটি সমতল ছবি হিসেবে খোলা হয়েছে। মূল ফাইলটি অপরিবর্তিত আছে।";
+"The file is not a macshot project or is damaged." = "ফাইলটি macshot প্রকল্প নয় বা ক্ষতিগ্রস্ত।";
+"The project could not be prepared for saving." = "প্রকল্পটি সংরক্ষণের জন্য প্রস্তুত করা যায়নি।";
+"The image is too large to save as an editable project." = "ছবিটি সম্পাদনাযোগ্য প্রকল্প হিসেবে সংরক্ষণ করার জন্য খুব বড়।";
+"The project file is too large to open." = "প্রকল্প ফাইলটি খোলার জন্য অনেক বড়।";
+"The project's image could not be read." = "প্রকল্পের ছবি পড়া যায়নি।";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "স্বয়ংক্রিয় স্ক্রল";

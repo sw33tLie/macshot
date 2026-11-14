@@ -31,6 +31,7 @@
 "Recent Captures" = "Скорошни заснемания";
 "Show History Panel" = "Показване на панела с история";
 "Open Image..." = "Отваряне на изображение...";
+"Open..." = "Отваряне...";
 "Open from Clipboard" = "Отваряне от клипборда";
 "Pin from Clipboard" = "Закачане от клипборда";
 "Preferences..." = "Настройки...";
@@ -90,7 +91,30 @@
 "Color Sampler" = "Пипета за цвят";
 "Color Picker" = "Избор на цвят";
 "Select & Edit" = "Избиране и редактиране";
+"Select & Move" = "Избиране и преместване";
 "Color" = "Цвят";
+
+/* Measure scale */
+"Measure Scale" = "Мащаб на измерването";
+"Set Scale..." = "Задаване на мащаб...";
+"Set Scale" = "Задаване на мащаб";
+"Scale: %@" = "Мащаб: %@";
+"Remove Scale" = "Премахване на мащаба";
+"Show lengths in" = "Показване на дължините в";
+"Current scale: 1 %@ = %@ px" = "Текущ мащаб: 1 %@ = %@ px";
+"Draw Reference Line" = "Начертаване на еталонна линия";
+"Draw a measure line along something whose length you know" = "Начертайте линия за измерване по протежение на нещо с известна дължина";
+"Draw or select a measure line along something whose length you know, then enter that length." = "Начертайте или изберете линия за измерване по протежение на нещо с известна дължина, след което въведете тази дължина.";
+"This line is %d px long. How long is it in real life?" = "Тази линия е дълга %d px. Колко е дълга в действителност?";
+"e.g. 90 mm or 3 1/2 in" = "напр. 90 mm или 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "Въведете дължина, например 90 mm, 3.5 in или 3 1/2 in.";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "Реалните дължини са приблизителни. Те са надеждни само за обекти в същата равнина като еталонната линия.";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "Измерване в mm, cm, m, инчове или футове чрез нещо с известна дължина в изображението";
+"Millimeters (mm)" = "Милиметри (mm)";
+"Centimeters (cm)" = "Сантиметри (cm)";
+"Meters (m)" = "Метри (m)";
+"Inches (in)" = "Инчове (in)";
+"Feet (ft)" = "Футове (ft)";
 
 /* Aspect ratio & resolution presets */
 "Aspect ratio & resolution presets" = "Предварителни настройки за съотношение и резолюция";
@@ -172,6 +196,7 @@
 "Smooth" = "Изглаждане";
 "Refined" = "Прецизно";
 "Smart" = "Интелигентно";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "„Интелигентно“ прилепва маркера към редовете текст. Задръжте Shift за права линия.";
 "Padding" = "Отстъп";
 "Shadow" = "Сянка";
 "Right-click to add points" = "Десен бутон за добавяне на точки";
@@ -456,6 +481,21 @@
 "Could not encode the screenshot." = "Екранната снимка не може да бъде кодирана.";
 "Could not save the screenshot: %@" = "Екранната снимка не може да бъде запазена: %@";
 "Could not save the screenshot to history." = "Екранната снимка не може да бъде запазена в историята.";
+
+/* Editable projects */
+"Save Project" = "Запазване на проекта";
+"Save Project As..." = "Запазване на проекта като...";
+"Save as Editable Project (⇧⌘S)" = "Запазване като редактируем проект (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "Запазва изображението, като всички анотации остават редактируеми. Отворете файла в macshot, за да продължите редактирането.";
+"Choose an image or macshot project to open in the editor" = "Изберете изображение или проект на macshot за отваряне в редактора";
+"Could not open “%@”" = "Не може да се отвори „%@“";
+"Could not save the project: %@" = "Проектът не може да бъде запазен: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "Някои анотации в този проект не можаха да бъдат възстановени, затова той беше отворен като слято изображение. Оригиналният файл не е променен.";
+"The file is not a macshot project or is damaged." = "Файлът не е проект на macshot или е повреден.";
+"The project could not be prepared for saving." = "Проектът не може да бъде подготвен за запазване.";
+"The image is too large to save as an editable project." = "Изображението е твърде голямо, за да бъде запазено като редактируем проект.";
+"The project file is too large to open." = "Файлът на проекта е твърде голям за отваряне.";
+"The project's image could not be read." = "Изображението на проекта не може да бъде прочетено.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Авто-превъртане";

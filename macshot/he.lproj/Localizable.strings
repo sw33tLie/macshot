@@ -92,7 +92,30 @@
 "Color Sampler" = "דוגם צבע";
 "Color Picker" = "בורר צבעים";
 "Select & Edit" = "בחר וערוך";
+"Select & Move" = "בחר והזז";
 "Color" = "צבע";
+
+/* Measure Scale */
+"Measure Scale" = "קנה מידה למדידה";
+"Set Scale..." = "הגדר קנה מידה...";
+"Set Scale" = "הגדר קנה מידה";
+"Scale: %@" = "קנה מידה: %@";
+"Remove Scale" = "הסר קנה מידה";
+"Show lengths in" = "הצג אורכים ביחידות";
+"Current scale: 1 %@ = %@ px" = "קנה מידה נוכחי: 1 %@ = %@ px";
+"Draw Reference Line" = "צייר קו ייחוס";
+"Draw a measure line along something whose length you know" = "צייר קו מדידה לאורך משהו שאורכו ידוע לך";
+"Draw or select a measure line along something whose length you know, then enter that length." = "צייר או בחר קו מדידה לאורך משהו שאורכו ידוע לך, ולאחר מכן הזן את האורך.";
+"This line is %d px long. How long is it in real life?" = "אורך הקו הזה %d px. מה אורכו במציאות?";
+"e.g. 90 mm or 3 1/2 in" = "לדוגמה 90 mm או 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "הזן אורך, למשל 90 mm, 3.5 in או 3 1/2 in.";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "אורכים בעולם האמיתי הם הערכה בלבד. הם אמינים רק עבור עצמים הנמצאים באותו מישור של קו הייחוס.";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "מדוד ב-mm, cm, m, אינצ'ים או רגליים באמצעות משהו שאורכו ידוע בתמונה";
+"Millimeters (mm)" = "מילימטרים (mm)";
+"Centimeters (cm)" = "סנטימטרים (cm)";
+"Meters (m)" = "מטרים (m)";
+"Inches (in)" = "אינצ'ים (in)";
+"Feet (ft)" = "רגל (ft)";
 
 /* Toolbar - Actions */
 "Copy to Clipboard" = "העתק ללוח";
@@ -152,6 +175,7 @@
 "Smooth" = "החלקה";
 "Refined" = "מעודן";
 "Smart" = "חכם";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "מצב חכם מיישר את המרקר לשורות הטקסט. החזק את Shift לקו ישר.";
 "Padding" = "ריפוד";
 "Shadow" = "צל";
 "Right-click to add points" = "לחץ ימני להוספת נקודות";
@@ -449,6 +473,22 @@
 "Could not encode the screenshot." = "לא ניתן היה לקודד את צילום המסך.";
 "Could not save the screenshot: %@" = "לא ניתן היה לשמור את צילום המסך: %@";
 "Could not save the screenshot to history." = "לא ניתן היה לשמור את צילום המסך בהיסטוריה.";
+
+/* Project Files */
+"Save Project" = "שמור פרויקט";
+"Save Project As..." = "שמור פרויקט בשם...";
+"Save as Editable Project (⇧⌘S)" = "שמור כפרויקט הניתן לעריכה (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "שומר את התמונה כשכל ההערות נשארות ניתנות לעריכה. פתח את הקובץ ב-macshot כדי להמשיך לערוך.";
+"Open..." = "פתח...";
+"Choose an image or macshot project to open in the editor" = "בחר תמונה או פרויקט macshot לפתיחה בעורך";
+"Could not open “%@”" = "לא ניתן היה לפתוח את „%@”";
+"Could not save the project: %@" = "לא ניתן היה לשמור את הפרויקט: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "לא ניתן היה לשחזר חלק מההערות בפרויקט זה, ולכן הוא נפתח כתמונה שטוחה. הקובץ המקורי לא השתנה.";
+"The file is not a macshot project or is damaged." = "הקובץ אינו פרויקט macshot או שהוא פגום.";
+"The project could not be prepared for saving." = "לא ניתן היה להכין את הפרויקט לשמירה.";
+"The image is too large to save as an editable project." = "התמונה גדולה מדי לשמירה כפרויקט הניתן לעריכה.";
+"The project file is too large to open." = "קובץ הפרויקט גדול מכדי לפתוח אותו.";
+"The project's image could not be read." = "לא ניתן היה לקרוא את התמונה של הפרויקט.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "גלילה אוטומטית";

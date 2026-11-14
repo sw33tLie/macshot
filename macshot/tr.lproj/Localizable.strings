@@ -92,7 +92,30 @@
 "Color Sampler" = "Renk Örnekleyici";
 "Color Picker" = "Renk Seçici";
 "Select & Edit" = "Seç ve Düzenle";
+"Select & Move" = "Seç ve Taşı";
 "Color" = "Renk";
+
+/* Measure Scale */
+"Measure Scale" = "Ölçüm Ölçeği";
+"Set Scale..." = "Ölçek Ayarla...";
+"Set Scale" = "Ölçek Ayarla";
+"Scale: %@" = "Ölçek: %@";
+"Remove Scale" = "Ölçeği Kaldır";
+"Show lengths in" = "Uzunluk birimi";
+"Current scale: 1 %@ = %@ px" = "Geçerli ölçek: 1 %@ = %@ px";
+"Draw Reference Line" = "Referans Çizgisi Çiz";
+"Draw a measure line along something whose length you know" = "Uzunluğunu bildiğiniz bir şey boyunca ölçüm çizgisi çizin";
+"Draw or select a measure line along something whose length you know, then enter that length." = "Uzunluğunu bildiğiniz bir şey boyunca bir ölçüm çizgisi çizin veya seçin, ardından o uzunluğu girin.";
+"This line is %d px long. How long is it in real life?" = "Bu çizgi %d px uzunluğunda. Gerçekte ne kadar uzun?";
+"e.g. 90 mm or 3 1/2 in" = "ör. 90 mm veya 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "90 mm, 3.5 in veya 3 1/2 in gibi bir uzunluk girin.";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "Gerçek uzunluklar tahminidir. Yalnızca referans çizgisiyle aynı düzlemdeki nesneler için güvenilirdir.";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "Görseldeki uzunluğu bilinen bir şeyle mm, cm, m, inç veya fit cinsinden ölç";
+"Millimeters (mm)" = "Milimetre (mm)";
+"Centimeters (cm)" = "Santimetre (cm)";
+"Meters (m)" = "Metre (m)";
+"Inches (in)" = "İnç (in)";
+"Feet (ft)" = "Fit (ft)";
 
 /* Toolbar - Actions */
 "Copy to Clipboard" = "Panoya Kopyala";
@@ -152,6 +175,7 @@
 "Smooth" = "Yumuşat";
 "Refined" = "İnce";
 "Smart" = "Akıllı";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "Akıllı mod, vurgulayıcıyı metin satırlarına hizalar. Düz bir çizgi için Shift tuşunu basılı tutun.";
 "Padding" = "Dolgu";
 "Shadow" = "Gölge";
 "Right-click to add points" = "Nokta eklemek için sağ tıklayın";
@@ -449,6 +473,22 @@
 "Could not encode the screenshot." = "Ekran görüntüsü kodlanamadı.";
 "Could not save the screenshot: %@" = "Ekran görüntüsü kaydedilemedi: %@";
 "Could not save the screenshot to history." = "Ekran görüntüsü geçmişe kaydedilemedi.";
+
+/* Project Files */
+"Save Project" = "Projeyi Kaydet";
+"Save Project As..." = "Projeyi Farklı Kaydet...";
+"Save as Editable Project (⇧⌘S)" = "Düzenlenebilir Proje Olarak Kaydet (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "Görseli tüm açıklamalar düzenlenebilir kalacak şekilde kaydeder. Düzenlemeye devam etmek için dosyayı macshot'ta açın.";
+"Open..." = "Aç...";
+"Choose an image or macshot project to open in the editor" = "Düzenleyicide açmak için bir görsel veya macshot projesi seçin";
+"Could not open “%@”" = "“%@” açılamadı";
+"Could not save the project: %@" = "Proje kaydedilemedi: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "Bu projedeki bazı açıklamalar geri yüklenemedi, bu yüzden düzleştirilmiş olarak açıldı. Orijinal dosya değişmedi.";
+"The file is not a macshot project or is damaged." = "Dosya bir macshot projesi değil veya hasarlı.";
+"The project could not be prepared for saving." = "Proje kaydetmeye hazırlanamadı.";
+"The image is too large to save as an editable project." = "Görüntü, düzenlenebilir proje olarak kaydedilemeyecek kadar büyük.";
+"The project file is too large to open." = "Proje dosyası açılamayacak kadar büyük.";
+"The project's image could not be read." = "Projenin görseli okunamadı.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Otomatik Kaydır";

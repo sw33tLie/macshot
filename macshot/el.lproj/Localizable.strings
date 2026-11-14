@@ -94,7 +94,30 @@
 "Color Sampler" = "Δειγματολήπτης χρώματος";
 "Color Picker" = "Επιλογέας χρώματος";
 "Select & Edit" = "Επιλογή & Επεξεργασία";
+"Select & Move" = "Επιλογή & Μετακίνηση";
 "Color" = "Χρώμα";
+
+/* Measure Scale */
+"Measure Scale" = "Κλίμακα μέτρησης";
+"Set Scale..." = "Ορισμός κλίμακας...";
+"Set Scale" = "Ορισμός κλίμακας";
+"Scale: %@" = "Κλίμακα: %@";
+"Remove Scale" = "Αφαίρεση κλίμακας";
+"Show lengths in" = "Εμφάνιση μηκών σε";
+"Current scale: 1 %@ = %@ px" = "Τρέχουσα κλίμακα: 1 %@ = %@ px";
+"Draw Reference Line" = "Σχεδίαση γραμμής αναφοράς";
+"Draw a measure line along something whose length you know" = "Σχεδιάστε μια γραμμή μέτρησης κατά μήκος ενός αντικειμένου γνωστού μήκους";
+"Draw or select a measure line along something whose length you know, then enter that length." = "Σχεδιάστε ή επιλέξτε μια γραμμή μέτρησης κατά μήκος ενός αντικειμένου του οποίου γνωρίζετε το μήκος και, στη συνέχεια, εισαγάγετε αυτό το μήκος.";
+"This line is %d px long. How long is it in real life?" = "Αυτή η γραμμή έχει μήκος %d px. Πόσο μεγάλη είναι στην πραγματικότητα;";
+"e.g. 90 mm or 3 1/2 in" = "π.χ. 90 mm ή 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "Εισαγάγετε ένα μήκος, όπως 90 mm, 3.5 in ή 3 1/2 in.";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "Τα πραγματικά μήκη είναι εκτιμήσεις. Είναι αξιόπιστα μόνο για αντικείμενα στο ίδιο επίπεδο με τη γραμμή αναφοράς.";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "Μέτρηση σε mm, cm, m, ίντσες ή πόδια με χρήση ενός αντικειμένου γνωστού μήκους στην εικόνα";
+"Millimeters (mm)" = "Χιλιοστά (mm)";
+"Centimeters (cm)" = "Εκατοστά (cm)";
+"Meters (m)" = "Μέτρα (m)";
+"Inches (in)" = "Ίντσες (in)";
+"Feet (ft)" = "Πόδια (ft)";
 
 /* Toolbar - Actions */
 "Copy to Clipboard" = "Αντιγραφή στο πρόχειρο";
@@ -156,6 +179,7 @@
 "Smooth" = "Εξομάλυνση";
 "Refined" = "Εκλεπτυσμένο";
 "Smart" = "Έξυπνο";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "Το «Έξυπνο» ευθυγραμμίζει τον μαρκαδόρο με τις γραμμές κειμένου. Κρατήστε πατημένο το Shift για ευθεία γραμμή.";
 "Padding" = "Περιθώριο";
 "Shadow" = "Σκιά";
 "Right-click to add points" = "Δεξί κλικ για προσθήκη σημείων";
@@ -457,6 +481,22 @@
 "Could not encode the screenshot." = "Δεν ήταν δυνατή η κωδικοποίηση του στιγμιότυπου.";
 "Could not save the screenshot: %@" = "Δεν ήταν δυνατή η αποθήκευση του στιγμιότυπου: %@";
 "Could not save the screenshot to history." = "Δεν ήταν δυνατή η αποθήκευση του στιγμιότυπου στο ιστορικό.";
+
+/* Project Files */
+"Save Project" = "Αποθήκευση έργου";
+"Save Project As..." = "Αποθήκευση έργου ως...";
+"Save as Editable Project (⇧⌘S)" = "Αποθήκευση ως επεξεργάσιμο έργο (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "Αποθηκεύει την εικόνα με όλες τις επισημάνσεις να παραμένουν επεξεργάσιμες. Ανοίξτε το αρχείο στο macshot για να συνεχίσετε την επεξεργασία.";
+"Open..." = "Άνοιγμα...";
+"Choose an image or macshot project to open in the editor" = "Επιλέξτε μια εικόνα ή ένα έργο macshot για άνοιγμα στον επεξεργαστή";
+"Could not open “%@”" = "Δεν ήταν δυνατό το άνοιγμα του «%@»";
+"Could not save the project: %@" = "Δεν ήταν δυνατή η αποθήκευση του έργου: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "Ορισμένες επισημάνσεις αυτού του έργου δεν ήταν δυνατό να επαναφερθούν, οπότε άνοιξε ως ενιαία εικόνα. Το αρχικό αρχείο δεν έχει αλλάξει.";
+"The file is not a macshot project or is damaged." = "Το αρχείο δεν είναι έργο macshot ή είναι κατεστραμμένο.";
+"The project could not be prepared for saving." = "Δεν ήταν δυνατή η προετοιμασία του έργου για αποθήκευση.";
+"The image is too large to save as an editable project." = "Η εικόνα είναι πολύ μεγάλη για να αποθηκευτεί ως επεξεργάσιμο έργο.";
+"The project file is too large to open." = "Το αρχείο του έργου είναι πολύ μεγάλο για να ανοίξει.";
+"The project's image could not be read." = "Δεν ήταν δυνατή η ανάγνωση της εικόνας του έργου.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Αυτόματη κύλιση";

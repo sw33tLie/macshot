@@ -31,6 +31,7 @@
 "Recent Captures" = "Недавна снимања";
 "Show History Panel" = "Прикажи панел историје";
 "Open Image..." = "Отвори слику...";
+"Open..." = "Отвори...";
 "Open from Clipboard" = "Отвори из оставе";
 "Pin from Clipboard" = "Закачи из оставе";
 "Preferences..." = "Подешавања...";
@@ -90,7 +91,30 @@
 "Color Sampler" = "Узорковање боје";
 "Color Picker" = "Бирач боја";
 "Select & Edit" = "Изабери и уреди";
+"Select & Move" = "Изабери и помери";
 "Color" = "Боја";
+
+/* Measure scale */
+"Measure Scale" = "Размера мерења";
+"Set Scale..." = "Подеси размеру...";
+"Set Scale" = "Подеси размеру";
+"Scale: %@" = "Размера: %@";
+"Remove Scale" = "Уклони размеру";
+"Show lengths in" = "Прикажи дужине у";
+"Current scale: 1 %@ = %@ px" = "Тренутна размера: 1 %@ = %@ px";
+"Draw Reference Line" = "Нацртај референтну линију";
+"Draw a measure line along something whose length you know" = "Нацртајте мерну линију дуж нечега чију дужину знате";
+"Draw or select a measure line along something whose length you know, then enter that length." = "Нацртајте или изаберите мерну линију дуж нечега чију дужину знате, а затим унесите ту дужину.";
+"This line is %d px long. How long is it in real life?" = "Ова линија је дугачка %d px. Колико је дугачка у стварности?";
+"e.g. 90 mm or 3 1/2 in" = "нпр. 90 mm или 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "Унесите дужину, нпр. 90 mm, 3.5 in или 3 1/2 in.";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "Стварне дужине су процене. Поуздане су само за предмете у истој равни као референтна линија.";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "Мерење у mm, cm, m, инчима или стопама помоћу нечега познате дужине на слици";
+"Millimeters (mm)" = "Милиметри (mm)";
+"Centimeters (cm)" = "Центиметри (cm)";
+"Meters (m)" = "Метри (m)";
+"Inches (in)" = "Инчи (in)";
+"Feet (ft)" = "Стопе (ft)";
 
 /* Aspect ratio & resolution presets */
 "Aspect ratio & resolution presets" = "Предефинисани односи и резолуције";
@@ -172,6 +196,7 @@
 "Smooth" = "Глатко";
 "Refined" = "Прецизно";
 "Smart" = "Паметно";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "„Паметно” поравнава маркер са редовима текста. Држите Shift за праву линију.";
 "Padding" = "Размак";
 "Shadow" = "Сенка";
 "Right-click to add points" = "Десни клик за додавање тачака";
@@ -456,6 +481,21 @@
 "Could not encode the screenshot." = "Није могуће кодирати снимак екрана.";
 "Could not save the screenshot: %@" = "Није могуће сачувати снимак екрана: %@";
 "Could not save the screenshot to history." = "Није могуће сачувати снимак екрана у историју.";
+
+/* Editable projects */
+"Save Project" = "Сачувај пројекат";
+"Save Project As..." = "Сачувај пројекат као...";
+"Save as Editable Project (⇧⌘S)" = "Сачувај као пројекат који се може уређивати (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "Чува слику тако да све ознаке остају доступне за уређивање. Отворите датотеку у апликацији macshot да бисте наставили уређивање.";
+"Choose an image or macshot project to open in the editor" = "Изаберите слику или macshot пројекат за отварање у уређивачу";
+"Could not open “%@”" = "Није могуће отворити „%@“";
+"Could not save the project: %@" = "Није могуће сачувати пројекат: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "Неке ознаке у овом пројекту није било могуће вратити, па је отворен као спљоштена слика. Оригинална датотека није промењена.";
+"The file is not a macshot project or is damaged." = "Датотека није macshot пројекат или је оштећена.";
+"The project could not be prepared for saving." = "Пројекат није могуће припремити за чување.";
+"The image is too large to save as an editable project." = "Слика је превелика да би се сачувала као пројекат који се може уређивати.";
+"The project file is too large to open." = "Датотека пројекта је превелика за отварање.";
+"The project's image could not be read." = "Није могуће прочитати слику пројекта.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Аутоматско скроловање";

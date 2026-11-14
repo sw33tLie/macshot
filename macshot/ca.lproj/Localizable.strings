@@ -92,7 +92,30 @@
 "Color Sampler" = "Mostrejador de color";
 "Color Picker" = "Selector de color";
 "Select & Edit" = "Seleccionar i editar";
+"Select & Move" = "Seleccionar i moure";
 "Color" = "Color";
+
+/* Measure Scale */
+"Measure Scale" = "Escala de mesura";
+"Set Scale..." = "Definir l'escala...";
+"Set Scale" = "Definir l'escala";
+"Scale: %@" = "Escala: %@";
+"Remove Scale" = "Eliminar l'escala";
+"Show lengths in" = "Mostrar les longituds en";
+"Current scale: 1 %@ = %@ px" = "Escala actual: 1 %@ = %@ px";
+"Draw Reference Line" = "Dibuixar una línia de referència";
+"Draw a measure line along something whose length you know" = "Dibuixeu una línia de mesura al llarg d'un objecte de longitud coneguda";
+"Draw or select a measure line along something whose length you know, then enter that length." = "Dibuixeu o seleccioneu una línia de mesura al llarg d'un objecte de longitud coneguda i, després, introduïu-ne la longitud.";
+"This line is %d px long. How long is it in real life?" = "Aquesta línia fa %d px. Quant fa en realitat?";
+"e.g. 90 mm or 3 1/2 in" = "p. ex. 90 mm o 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "Introduïu una longitud, com ara 90 mm, 3.5 in o 3 1/2 in.";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "Les longituds reals són estimacions. Només són fiables per a objectes que són al mateix pla que la línia de referència.";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "Mesurar en mm, cm, m, polzades o peus fent servir un objecte de longitud coneguda de la imatge";
+"Millimeters (mm)" = "Mil·límetres (mm)";
+"Centimeters (cm)" = "Centímetres (cm)";
+"Meters (m)" = "Metres (m)";
+"Inches (in)" = "Polzades (in)";
+"Feet (ft)" = "Peus (ft)";
 
 /* Toolbar - Actions */
 "Copy to Clipboard" = "Copiar al porta-retalls";
@@ -152,6 +175,7 @@
 "Smooth" = "Suau";
 "Refined" = "Refinat";
 "Smart" = "Intel·ligent";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "Intel·ligent ajusta el marcador a les línies de text. Mantingueu premuda la tecla Maj per fer una línia recta.";
 "Padding" = "Farciment";
 "Shadow" = "Ombra";
 "Right-click to add points" = "Clic dret per afegir punts";
@@ -449,6 +473,22 @@
 "Could not encode the screenshot." = "No s'ha pogut codificar la captura de pantalla.";
 "Could not save the screenshot: %@" = "No s'ha pogut desar la captura de pantalla: %@";
 "Could not save the screenshot to history." = "No s'ha pogut desar la captura de pantalla a l'historial.";
+
+/* Project Files */
+"Save Project" = "Desar el projecte";
+"Save Project As..." = "Desar el projecte com a...";
+"Save as Editable Project (⇧⌘S)" = "Desar com a projecte editable (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "Desa la imatge amb totes les anotacions encara editables. Obriu el fitxer a macshot per continuar editant.";
+"Open..." = "Obrir...";
+"Choose an image or macshot project to open in the editor" = "Trieu una imatge o un projecte de macshot per obrir-lo a l'editor";
+"Could not open “%@”" = "No s'ha pogut obrir «%@»";
+"Could not save the project: %@" = "No s'ha pogut desar el projecte: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "Algunes anotacions d'aquest projecte no s'han pogut restaurar, de manera que s'ha obert aplanat. El fitxer original no ha canviat.";
+"The file is not a macshot project or is damaged." = "El fitxer no és un projecte de macshot o està malmès.";
+"The project could not be prepared for saving." = "No s'ha pogut preparar el projecte per desar-lo.";
+"The image is too large to save as an editable project." = "La imatge és massa gran per desar-la com a projecte editable.";
+"The project file is too large to open." = "El fitxer del projecte és massa gran per obrir-lo.";
+"The project's image could not be read." = "No s'ha pogut llegir la imatge del projecte.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Desplaçament automàtic";

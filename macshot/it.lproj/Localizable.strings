@@ -67,6 +67,26 @@
 "Censor (Pixelate / Blur / Solid)" = "Censura (Pixelizza / Sfoca / Solido)";
 "Measure" = "Misura";
 "Measure (px)" = "Misura (px)";
+"Measure Scale" = "Scala di misura";
+"Set Scale..." = "Imposta scala...";
+"Set Scale" = "Imposta scala";
+"Scale: %@" = "Scala: %@";
+"Remove Scale" = "Rimuovi scala";
+"Show lengths in" = "Mostra lunghezze in";
+"Current scale: 1 %@ = %@ px" = "Scala attuale: 1 %@ = %@ px";
+"Draw Reference Line" = "Disegna linea di riferimento";
+"Draw a measure line along something whose length you know" = "Disegna una linea di misura lungo qualcosa di cui conosci la lunghezza";
+"Draw or select a measure line along something whose length you know, then enter that length." = "Disegna o seleziona una linea di misura lungo qualcosa di cui conosci la lunghezza, poi inserisci quella lunghezza.";
+"This line is %d px long. How long is it in real life?" = "Questa linea è lunga %d px. Quanto è lunga nella realtà?";
+"e.g. 90 mm or 3 1/2 in" = "es. 90 mm o 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "Inserisci una lunghezza, come 90 mm, 3.5 in o 3 1/2 in.";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "Le lunghezze reali sono stime. Sono affidabili solo per oggetti sullo stesso piano della linea di riferimento.";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "Misura in mm, cm, m, pollici o piedi usando qualcosa di lunghezza nota nell’immagine";
+"Millimeters (mm)" = "Millimetri (mm)";
+"Centimeters (cm)" = "Centimetri (cm)";
+"Meters (m)" = "Metri (m)";
+"Inches (in)" = "Pollici (in)";
+"Feet (ft)" = "Piedi (ft)";
 "Magnify (Loupe)" = "Lente d'ingrandimento";
 "Highlight" = "Evidenzia";
 "Highlight (Spotlight)" = "Evidenzia (Riflettore)";
@@ -74,6 +94,7 @@
 "Color Sampler" = "Campionatore colore";
 "Color Picker" = "Selettore colore";
 "Select & Edit" = "Seleziona e modifica";
+"Select & Move" = "Seleziona e sposta";
 "Color" = "Colore";
 
 /* Toolbar - Actions */
@@ -145,6 +166,7 @@
 "Smooth" = "Smussato";
 "Refined" = "Raffinato";
 "Smart" = "Intelligente";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "Intelligente allinea l’evidenziatore alle righe di testo. Tieni premuto Maiusc per una linea retta.";
 "Padding" = "Margine";
 "Shadow" = "Ombra";
 "Right-click to add points" = "Click destro per multicurva";
@@ -437,6 +459,22 @@
 "Could not encode the screenshot." = "Impossibile codificare lo screenshot.";
 "Could not save the screenshot: %@" = "Impossibile salvare lo screenshot: %@";
 "Could not save the screenshot to history." = "Impossibile salvare lo screenshot nella cronologia.";
+
+/* Editable projects */
+"Save Project" = "Salva progetto";
+"Save Project As..." = "Salva progetto con nome...";
+"Save as Editable Project (⇧⌘S)" = "Salva come progetto modificabile (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "Salva l’immagine mantenendo modificabili tutte le annotazioni. Apri il file in macshot per continuare a modificarlo.";
+"Open..." = "Apri...";
+"Choose an image or macshot project to open in the editor" = "Scegli un’immagine o un progetto macshot da aprire nell’editor";
+"Could not open “%@”" = "Impossibile aprire “%@”";
+"Could not save the project: %@" = "Impossibile salvare il progetto: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "Alcune annotazioni di questo progetto non sono state ripristinate, quindi è stato aperto come immagine appiattita. Il file originale non è stato modificato.";
+"The file is not a macshot project or is damaged." = "Il file non è un progetto macshot o è danneggiato.";
+"The project could not be prepared for saving." = "Impossibile preparare il progetto per il salvataggio.";
+"The image is too large to save as an editable project." = "L’immagine è troppo grande per essere salvata come progetto modificabile.";
+"The project file is too large to open." = "Il file del progetto è troppo grande per essere aperto.";
+"The project's image could not be read." = "Impossibile leggere l’immagine del progetto.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Scorrimento auto";

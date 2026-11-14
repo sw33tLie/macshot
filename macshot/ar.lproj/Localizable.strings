@@ -92,7 +92,30 @@
 "Color Sampler" = "أداة اختيار اللون";
 "Color Picker" = "منتقي الألوان";
 "Select & Edit" = "تحديد وتعديل";
+"Select & Move" = "تحديد ونقل";
 "Color" = "اللون";
+
+/* Measure Scale */
+"Measure Scale" = "مقياس القياس";
+"Set Scale..." = "تعيين المقياس...";
+"Set Scale" = "تعيين المقياس";
+"Scale: %@" = "المقياس: %@";
+"Remove Scale" = "إزالة المقياس";
+"Show lengths in" = "عرض الأطوال بوحدة";
+"Current scale: 1 %@ = %@ px" = "المقياس الحالي: 1 %@ = %@ px";
+"Draw Reference Line" = "رسم خط مرجعي";
+"Draw a measure line along something whose length you know" = "ارسم خط قياس على طول شيء تعرف طوله";
+"Draw or select a measure line along something whose length you know, then enter that length." = "ارسم خط قياس أو حدّده على طول شيء تعرف طوله، ثم أدخل ذلك الطول.";
+"This line is %d px long. How long is it in real life?" = "طول هذا الخط %d px. كم طوله في الواقع؟";
+"e.g. 90 mm or 3 1/2 in" = "مثال: 90 mm أو 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "أدخل طولًا، مثل 90 mm أو 3.5 in أو 3 1/2 in.";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "الأطوال الحقيقية تقديرية. ولا يمكن الاعتماد عليها إلا للأشياء الواقعة في نفس مستوى الخط المرجعي.";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "القياس بـ mm أو cm أو m أو البوصة أو القدم باستخدام شيء معروف الطول في الصورة";
+"Millimeters (mm)" = "مليمترات (mm)";
+"Centimeters (cm)" = "سنتيمترات (cm)";
+"Meters (m)" = "أمتار (m)";
+"Inches (in)" = "بوصات (in)";
+"Feet (ft)" = "أقدام (ft)";
 
 /* Toolbar - Actions */
 "Copy to Clipboard" = "نسخ إلى الحافظة";
@@ -152,6 +175,7 @@
 "Smooth" = "تنعيم";
 "Refined" = "محسّن";
 "Smart" = "ذكي";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "يعمل الوضع الذكي على محاذاة القلم المميز مع أسطر النص. اضغط مع الاستمرار على Shift لرسم خط مستقيم.";
 "Padding" = "حشوة";
 "Shadow" = "ظل";
 "Right-click to add points" = "انقر بزر الفأرة الأيمن لإضافة نقاط";
@@ -449,6 +473,22 @@
 "Could not encode the screenshot." = "تعذّر ترميز لقطة الشاشة.";
 "Could not save the screenshot: %@" = "تعذّر حفظ لقطة الشاشة: %@";
 "Could not save the screenshot to history." = "تعذّر حفظ لقطة الشاشة في السجل.";
+
+/* Project Files */
+"Save Project" = "حفظ المشروع";
+"Save Project As..." = "حفظ المشروع باسم...";
+"Save as Editable Project (⇧⌘S)" = "حفظ كمشروع قابل للتحرير (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "يحفظ الصورة مع إبقاء كل التعليقات التوضيحية قابلة للتحرير. افتح الملف في macshot لمتابعة التحرير.";
+"Open..." = "فتح...";
+"Choose an image or macshot project to open in the editor" = "اختر صورة أو مشروع macshot لفتحه في المحرر";
+"Could not open “%@”" = "تعذّر فتح «%@»";
+"Could not save the project: %@" = "تعذّر حفظ المشروع: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "تعذّرت استعادة بعض التعليقات التوضيحية في هذا المشروع، لذا فُتح كصورة مسطّحة. الملف الأصلي لم يتغير.";
+"The file is not a macshot project or is damaged." = "الملف ليس مشروع macshot أو أنه تالف.";
+"The project could not be prepared for saving." = "تعذّر تجهيز المشروع للحفظ.";
+"The image is too large to save as an editable project." = "الصورة كبيرة جدًا لحفظها كمشروع قابل للتحرير.";
+"The project file is too large to open." = "ملف المشروع كبير جدًا بحيث يتعذّر فتحه.";
+"The project's image could not be read." = "تعذّرت قراءة صورة المشروع.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "تمرير تلقائي";

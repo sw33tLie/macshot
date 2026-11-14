@@ -83,6 +83,26 @@
 "Censor (Pixelate / Blur / Solid)" = "Censur (Pixelera / Oskarp / Solid)";
 "Measure" = "M\U00E4t";
 "Measure (px)" = "M\U00E4t (px)";
+"Measure Scale" = "Mätskala";
+"Set Scale..." = "Ange skala...";
+"Set Scale" = "Ange skala";
+"Scale: %@" = "Skala: %@";
+"Remove Scale" = "Ta bort skala";
+"Show lengths in" = "Visa längder i";
+"Current scale: 1 %@ = %@ px" = "Aktuell skala: 1 %@ = %@ px";
+"Draw Reference Line" = "Rita referenslinje";
+"Draw a measure line along something whose length you know" = "Rita en mätlinje längs något vars längd du känner till";
+"Draw or select a measure line along something whose length you know, then enter that length." = "Rita eller markera en mätlinje längs något vars längd du känner till och ange sedan längden.";
+"This line is %d px long. How long is it in real life?" = "Den här linjen är %d px lång. Hur lång är den i verkligheten?";
+"e.g. 90 mm or 3 1/2 in" = "t.ex. 90 mm eller 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "Ange en längd, t.ex. 90 mm, 3.5 in eller 3 1/2 in.";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "Verkliga längder är uppskattningar. De är bara tillförlitliga för saker i samma plan som referenslinjen.";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "Mät i mm, cm, m, tum eller fot med hjälp av något med känd längd i bilden";
+"Millimeters (mm)" = "Millimeter (mm)";
+"Centimeters (cm)" = "Centimeter (cm)";
+"Meters (m)" = "Meter (m)";
+"Inches (in)" = "Tum (in)";
+"Feet (ft)" = "Fot (ft)";
 "Magnify (Loupe)" = "F\U00F6rstora (Lupp)";
 "Highlight" = "Fokus";
 "Highlight (Spotlight)" = "Fokus (Str\U00E5lkastare)";
@@ -90,6 +110,7 @@
 "Color Sampler" = "F\U00E4rgv\U00E4ljare";
 "Color Picker" = "F\U00E4rgv\U00E4ljare";
 "Select & Edit" = "Markera och redigera";
+"Select & Move" = "Markera och flytta";
 "Color" = "F\U00E4rg";
 
 /* Toolbar - Actions */
@@ -163,6 +184,7 @@
 "Smooth" = "Mjuk";
 "Refined" = "Förfinad";
 "Smart" = "Smart";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "Smart fäster överstrykningspennan vid textrader. Håll ned Skift för en rak linje.";
 "Padding" = "Utfyllnad";
 "Shadow" = "Skugga";
 "Right-click to add points" = "H\U00F6gerklicka f\U00F6r att l\U00E4gga till punkter";
@@ -453,6 +475,20 @@
 "Save All to Folder\U2026" = "Spara alla till mapp\U2026";
 "Could not encode the screenshot." = "Det gick inte att koda sk\U00E4rmbilden.";
 "Could not save the screenshot: %@" = "Det gick inte att spara sk\U00E4rmbilden: %@";
+"Save Project" = "Spara projekt";
+"Save Project As..." = "Spara projekt som...";
+"Save as Editable Project (⇧⌘S)" = "Spara som redigerbart projekt (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "Sparar bilden med alla anteckningar fortfarande redigerbara. Öppna filen i macshot för att fortsätta redigera.";
+"Open..." = "Öppna...";
+"Choose an image or macshot project to open in the editor" = "Välj en bild eller ett macshot-projekt att öppna i redigeraren";
+"Could not open “%@”" = "Det gick inte att öppna ”%@”";
+"Could not save the project: %@" = "Det gick inte att spara projektet: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "Vissa anteckningar i projektet kunde inte återställas, så det öppnades som en platt bild. Originalfilen är oförändrad.";
+"The file is not a macshot project or is damaged." = "Filen är inte ett macshot-projekt eller är skadad.";
+"The project could not be prepared for saving." = "Projektet kunde inte förberedas för att sparas.";
+"The image is too large to save as an editable project." = "Bilden är för stor för att sparas som ett redigerbart projekt.";
+"The project file is too large to open." = "Projektfilen är för stor för att öppnas.";
+"The project's image could not be read." = "Det gick inte att läsa projektets bild.";
 "Could not save the screenshot to history." = "Det gick inte att spara sk\U00E4rmbilden i historiken.";
 
 /* Scroll Capture HUD */

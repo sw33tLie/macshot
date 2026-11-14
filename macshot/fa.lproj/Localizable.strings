@@ -92,7 +92,30 @@
 "Color Sampler" = "نمونه‌بردار رنگ";
 "Color Picker" = "انتخابگر رنگ";
 "Select & Edit" = "انتخاب و ویرایش";
+"Select & Move" = "انتخاب و جابه‌جایی";
 "Color" = "رنگ";
+
+/* Measure Scale */
+"Measure Scale" = "مقیاس اندازه‌گیری";
+"Set Scale..." = "تنظیم مقیاس...";
+"Set Scale" = "تنظیم مقیاس";
+"Scale: %@" = "مقیاس: %@";
+"Remove Scale" = "حذف مقیاس";
+"Show lengths in" = "نمایش طول‌ها بر حسب";
+"Current scale: 1 %@ = %@ px" = "مقیاس فعلی: 1 %@ = %@ px";
+"Draw Reference Line" = "رسم خط مرجع";
+"Draw a measure line along something whose length you know" = "یک خط اندازه‌گیری در امتداد چیزی که طولش را می‌دانید رسم کنید";
+"Draw or select a measure line along something whose length you know, then enter that length." = "یک خط اندازه‌گیری را در امتداد چیزی که طولش را می‌دانید رسم یا انتخاب کنید، سپس آن طول را وارد کنید.";
+"This line is %d px long. How long is it in real life?" = "طول این خط %d px است. طول واقعی آن چقدر است؟";
+"e.g. 90 mm or 3 1/2 in" = "مثلاً 90 mm یا 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "یک طول وارد کنید، مثلاً 90 mm، 3.5 in یا 3 1/2 in.";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "طول‌های واقعی تخمینی هستند. فقط برای چیزهایی که در همان صفحه‌ی خط مرجع قرار دارند قابل اعتمادند.";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "اندازه‌گیری بر حسب mm، cm، m، اینچ یا فوت با استفاده از چیزی با طول معلوم در تصویر";
+"Millimeters (mm)" = "میلی‌متر (mm)";
+"Centimeters (cm)" = "سانتی‌متر (cm)";
+"Meters (m)" = "متر (m)";
+"Inches (in)" = "اینچ (in)";
+"Feet (ft)" = "فوت (ft)";
 
 /* Toolbar - Actions */
 "Copy to Clipboard" = "کپی به کلیپ‌بورد";
@@ -152,6 +175,7 @@
 "Smooth" = "هموار";
 "Refined" = "پالایش‌شده";
 "Smart" = "هوشمند";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "حالت هوشمند ماژیک را با خطوط متن تراز می‌کند. برای خط صاف، Shift را نگه دارید.";
 "Padding" = "فاصله داخلی";
 "Shadow" = "سایه";
 "Right-click to add points" = "کلیک راست برای افزودن نقطه";
@@ -449,6 +473,22 @@
 "Could not encode the screenshot." = "کدگذاری تصویر صفحه ممکن نشد.";
 "Could not save the screenshot: %@" = "ذخیره تصویر صفحه ممکن نشد: %@";
 "Could not save the screenshot to history." = "ذخیره تصویر صفحه در تاریخچه ممکن نشد.";
+
+/* Project Files */
+"Save Project" = "ذخیره پروژه";
+"Save Project As..." = "ذخیره پروژه به عنوان...";
+"Save as Editable Project (⇧⌘S)" = "ذخیره به عنوان پروژه قابل ویرایش (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "تصویر را با همه حاشیه‌نویسی‌ها به صورت قابل ویرایش ذخیره می‌کند. برای ادامه ویرایش، فایل را در macshot باز کنید.";
+"Open..." = "باز کردن...";
+"Choose an image or macshot project to open in the editor" = "یک تصویر یا پروژه macshot را برای باز کردن در ویرایشگر انتخاب کنید";
+"Could not open “%@”" = "باز کردن «%@» ممکن نشد";
+"Could not save the project: %@" = "ذخیره پروژه ممکن نشد: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "برخی از حاشیه‌نویسی‌های این پروژه بازیابی نشدند، بنابراین به صورت تصویر یکپارچه باز شد. فایل اصلی تغییری نکرده است.";
+"The file is not a macshot project or is damaged." = "این فایل پروژه macshot نیست یا آسیب دیده است.";
+"The project could not be prepared for saving." = "آماده‌سازی پروژه برای ذخیره ممکن نشد.";
+"The image is too large to save as an editable project." = "تصویر برای ذخیره به عنوان پروژه قابل ویرایش بیش از حد بزرگ است.";
+"The project file is too large to open." = "فایل پروژه برای باز شدن بیش از حد بزرگ است.";
+"The project's image could not be read." = "خواندن تصویر پروژه ممکن نشد.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "پیمایش خودکار";

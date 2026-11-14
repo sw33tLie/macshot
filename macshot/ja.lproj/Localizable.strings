@@ -83,6 +83,26 @@
 "Censor (Pixelate / Blur / Solid)" = "モザイク (ピクセル化 / ぼかし / 塗りつぶし)";
 "Measure" = "計測";
 "Measure (px)" = "計測 (px)";
+"Measure Scale" = "計測スケール";
+"Set Scale..." = "スケールを設定...";
+"Set Scale" = "スケールを設定";
+"Scale: %@" = "スケール: %@";
+"Remove Scale" = "スケールを削除";
+"Show lengths in" = "長さの表示単位";
+"Current scale: 1 %@ = %@ px" = "現在のスケール: 1 %@ = %@ px";
+"Draw Reference Line" = "基準線を描く";
+"Draw a measure line along something whose length you know" = "長さがわかっているものに沿って計測線を描いてください";
+"Draw or select a measure line along something whose length you know, then enter that length." = "長さがわかっているものに沿って計測線を描くか選択し、その長さを入力してください。";
+"This line is %d px long. How long is it in real life?" = "この線の長さは %d px です。実際の長さはどれくらいですか？";
+"e.g. 90 mm or 3 1/2 in" = "例: 90 mm または 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "90 mm、3.5 in、3 1/2 in のように長さを入力してください。";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "実際の長さは推定値です。基準線と同じ平面上にあるものに対してのみ信頼できます。";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "画像内の長さがわかっているものを使って、mm、cm、m、インチ、フィートで計測";
+"Millimeters (mm)" = "ミリメートル (mm)";
+"Centimeters (cm)" = "センチメートル (cm)";
+"Meters (m)" = "メートル (m)";
+"Inches (in)" = "インチ (in)";
+"Feet (ft)" = "フィート (ft)";
 "Magnify (Loupe)" = "拡大鏡 (ルーペ)";
 "Highlight" = "スポット";
 "Highlight (Spotlight)" = "スポット (スポットライト)";
@@ -90,6 +110,7 @@
 "Color Sampler" = "カラーサンプラー";
 "Color Picker" = "カラーピッカー";
 "Select & Edit" = "選択して編集";
+"Select & Move" = "選択して移動";
 "Color" = "カラー";
 
 /* Toolbar - Actions */
@@ -152,6 +173,7 @@
 "Smooth" = "スムーズ";
 "Refined" = "精密";
 "Smart" = "スマート";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "「スマート」はマーカーをテキストの行に合わせます。Shift キーを押したままにすると直線になります。";
 "Padding" = "余白";
 "Shadow" = "シャドウ";
 "Right-click to add points" = "右クリックでポイントを追加";
@@ -445,6 +467,22 @@
 "Save As..." = "名前を付けて保存...";
 "Choose a folder" = "フォルダを選択";
 "Save All to Folder…" = "すべてフォルダに保存…";
+
+/* Editable Project */
+"Save Project" = "プロジェクトを保存";
+"Save Project As..." = "プロジェクトに名前を付けて保存...";
+"Save as Editable Project (⇧⌘S)" = "編集可能なプロジェクトとして保存 (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "すべての注釈を編集可能なまま画像を保存します。macshot でファイルを開くと編集を続けられます。";
+"Open..." = "開く...";
+"Choose an image or macshot project to open in the editor" = "エディタで開く画像または macshot プロジェクトを選択";
+"Could not open “%@”" = "「%@」を開けませんでした";
+"Could not save the project: %@" = "プロジェクトを保存できませんでした: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "このプロジェクトの一部の注釈を復元できなかったため、統合した画像として開きました。元のファイルは変更されていません。";
+"The file is not a macshot project or is damaged." = "このファイルは macshot プロジェクトではないか、破損しています。";
+"The project could not be prepared for saving." = "保存用にプロジェクトを準備できませんでした。";
+"The image is too large to save as an editable project." = "画像が大きすぎるため、編集可能なプロジェクトとして保存できません。";
+"The project file is too large to open." = "プロジェクトファイルが大きすぎるため開けません。";
+"The project's image could not be read." = "プロジェクトの画像を読み込めませんでした。";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "自動スクロール";

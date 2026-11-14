@@ -93,7 +93,30 @@
 "Color Sampler" = "Színminta";
 "Color Picker" = "Színválasztó";
 "Select & Edit" = "Kiválasztás és szerkesztés";
+"Select & Move" = "Kiválasztás és mozgatás";
 "Color" = "Szín";
+
+/* Measure Scale */
+"Measure Scale" = "Mérési lépték";
+"Set Scale..." = "Lépték beállítása...";
+"Set Scale" = "Lépték beállítása";
+"Scale: %@" = "Lépték: %@";
+"Remove Scale" = "Lépték eltávolítása";
+"Show lengths in" = "Hosszak mértékegysége";
+"Current scale: 1 %@ = %@ px" = "Jelenlegi lépték: 1 %@ = %@ px";
+"Draw Reference Line" = "Referenciavonal rajzolása";
+"Draw a measure line along something whose length you know" = "Rajzolj mérővonalat valami mentén, aminek ismered a hosszát";
+"Draw or select a measure line along something whose length you know, then enter that length." = "Rajzolj vagy jelölj ki egy mérővonalat valami mentén, aminek ismered a hosszát, majd add meg ezt a hosszt.";
+"This line is %d px long. How long is it in real life?" = "Ez a vonal %d px hosszú. Milyen hosszú a valóságban?";
+"e.g. 90 mm or 3 1/2 in" = "pl. 90 mm vagy 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "Adj meg egy hosszt, például 90 mm, 3.5 in vagy 3 1/2 in.";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "A valós hosszak becslések. Csak a referenciavonallal azonos síkban lévő tárgyaknál megbízhatók.";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "Mérés mm, cm, m, hüvelyk vagy láb mértékegységben a képen lévő ismert hosszúságú tárgy alapján";
+"Millimeters (mm)" = "Milliméter (mm)";
+"Centimeters (cm)" = "Centiméter (cm)";
+"Meters (m)" = "Méter (m)";
+"Inches (in)" = "Hüvelyk (in)";
+"Feet (ft)" = "Láb (ft)";
 
 /* Toolbar - Actions */
 "Copy to Clipboard" = "Másolás a vágólapra";
@@ -156,6 +179,7 @@
 "Smooth" = "Simítás";
 "Refined" = "Finomított";
 "Smart" = "Okos";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "Az „Okos” mód a szövegsorokhoz igazítja a kiemelőt. Egyenes vonalhoz tartsd lenyomva a Shift billentyűt.";
 "Padding" = "Margó";
 "Shadow" = "Árnyék";
 "Right-click to add points" = "Jobb kattintás pontok hozzáadásához";
@@ -457,6 +481,22 @@
 "Could not encode the screenshot." = "Nem sikerült kódolni a képernyőképet.";
 "Could not save the screenshot: %@" = "Nem sikerült menteni a képernyőképet: %@";
 "Could not save the screenshot to history." = "Nem sikerült menteni a képernyőképet az előzményekbe.";
+
+/* Project Files */
+"Save Project" = "Projekt mentése";
+"Save Project As..." = "Projekt mentése másként...";
+"Save as Editable Project (⇧⌘S)" = "Mentés szerkeszthető projektként (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "A képet úgy menti, hogy minden jegyzet szerkeszthető marad. A szerkesztés folytatásához nyisd meg a fájlt a macshotban.";
+"Open..." = "Megnyitás...";
+"Choose an image or macshot project to open in the editor" = "Válassz egy képet vagy macshot-projektet a szerkesztőben való megnyitáshoz";
+"Could not open “%@”" = "Nem sikerült megnyitni: „%@”";
+"Could not save the project: %@" = "Nem sikerült menteni a projektet: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "A projekt néhány jegyzetét nem sikerült visszaállítani, ezért egybeolvasztott képként nyílt meg. Az eredeti fájl nem változott.";
+"The file is not a macshot project or is damaged." = "A fájl nem macshot-projekt, vagy sérült.";
+"The project could not be prepared for saving." = "Nem sikerült előkészíteni a projektet a mentéshez.";
+"The image is too large to save as an editable project." = "A kép túl nagy ahhoz, hogy szerkeszthető projektként menthető legyen.";
+"The project file is too large to open." = "A projektfájl túl nagy a megnyitáshoz.";
+"The project's image could not be read." = "Nem sikerült beolvasni a projekt képét.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Automatikus görgetés";

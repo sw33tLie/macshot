@@ -83,6 +83,26 @@
 "Censor (Pixelate / Blur / Solid)" = "Sensura (Pixelate / Blur / Solid)";
 "Measure" = "Sukat";
 "Measure (px)" = "Sukat (px)";
+"Measure Scale" = "Scale ng Pagsukat";
+"Set Scale..." = "Itakda ang Scale...";
+"Set Scale" = "Itakda ang Scale";
+"Scale: %@" = "Scale: %@";
+"Remove Scale" = "Alisin ang Scale";
+"Show lengths in" = "Ipakita ang haba sa";
+"Current scale: 1 %@ = %@ px" = "Kasalukuyang scale: 1 %@ = %@ px";
+"Draw Reference Line" = "Gumuhit ng Reference Line";
+"Draw a measure line along something whose length you know" = "Gumuhit ng linya ng sukat sa kahabaan ng isang bagay na alam mo ang haba";
+"Draw or select a measure line along something whose length you know, then enter that length." = "Gumuhit o pumili ng linya ng sukat sa kahabaan ng isang bagay na alam mo ang haba, pagkatapos ay ilagay ang habang iyon.";
+"This line is %d px long. How long is it in real life?" = "Ang linyang ito ay %d px ang haba. Gaano ito kahaba sa totoong buhay?";
+"e.g. 90 mm or 3 1/2 in" = "hal. 90 mm o 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "Maglagay ng haba, gaya ng 90 mm, 3.5 in o 3 1/2 in.";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "Mga tantiya lamang ang mga totoong haba. Maaasahan lamang ang mga ito para sa mga bagay na nasa parehong plane ng reference line.";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "Sukatin sa mm, cm, m, pulgada o talampakan gamit ang isang bagay na alam ang haba sa larawan";
+"Millimeters (mm)" = "Milimetro (mm)";
+"Centimeters (cm)" = "Sentimetro (cm)";
+"Meters (m)" = "Metro (m)";
+"Inches (in)" = "Pulgada (in)";
+"Feet (ft)" = "Talampakan (ft)";
 "Magnify (Loupe)" = "Palakihin (Loupe)";
 "Highlight" = "Tutok";
 "Highlight (Spotlight)" = "Tutok (Spotlight)";
@@ -90,6 +110,7 @@
 "Color Sampler" = "Tagakuha ng Kulay";
 "Color Picker" = "Tagapili ng Kulay";
 "Select & Edit" = "Pumili at I-edit";
+"Select & Move" = "Pumili at Ilipat";
 "Color" = "Kulay";
 
 /* Toolbar - Actions */
@@ -159,6 +180,7 @@
 "Smooth" = "Makinis";
 "Refined" = "Pinong-pino";
 "Smart" = "Matalino";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "Itinutugma ng Matalino ang highlighter sa mga linya ng text. Pindutin nang matagal ang Shift para sa tuwid na linya.";
 "Padding" = "Padding";
 "Shadow" = "Anino";
 "Right-click to add points" = "I-right-click upang magdagdag ng mga punto";
@@ -456,6 +478,22 @@
 "Save As..." = "I-save Bilang...";
 "Choose a folder" = "Pumili ng folder";
 "Save All to Folder…" = "I-save Lahat sa Folder…";
+
+/* Editable Project */
+"Save Project" = "I-save ang Project";
+"Save Project As..." = "I-save ang Project Bilang...";
+"Save as Editable Project (⇧⌘S)" = "I-save bilang Project na Ma-e-edit (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "Sine-save ang larawan nang nananatiling ma-e-edit ang bawat anotasyon. Buksan ang file sa macshot upang magpatuloy sa pag-edit.";
+"Open..." = "Buksan...";
+"Choose an image or macshot project to open in the editor" = "Pumili ng larawan o macshot project na bubuksan sa editor";
+"Could not open “%@”" = "Hindi mabuksan ang “%@”";
+"Could not save the project: %@" = "Hindi ma-save ang project: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "Hindi ma-restore ang ilang anotasyon sa project na ito, kaya binuksan ito bilang flattened na larawan. Hindi nabago ang orihinal na file.";
+"The file is not a macshot project or is damaged." = "Ang file ay hindi macshot project o sira ito.";
+"The project could not be prepared for saving." = "Hindi maihanda ang project para sa pag-save.";
+"The image is too large to save as an editable project." = "Masyadong malaki ang larawan para i-save bilang project na ma-e-edit.";
+"The project file is too large to open." = "Masyadong malaki ang project file para mabuksan.";
+"The project's image could not be read." = "Hindi mabasa ang larawan ng project.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Auto Scroll";

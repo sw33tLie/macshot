@@ -83,6 +83,26 @@
 "Censor (Pixelate / Blur / Solid)" = "Sensor (Piksel / Kabur / Padu)";
 "Measure" = "Ukur";
 "Measure (px)" = "Ukur (px)";
+"Measure Scale" = "Skala Ukuran";
+"Set Scale..." = "Tetapkan Skala...";
+"Set Scale" = "Tetapkan Skala";
+"Scale: %@" = "Skala: %@";
+"Remove Scale" = "Buang Skala";
+"Show lengths in" = "Tunjukkan panjang dalam";
+"Current scale: 1 %@ = %@ px" = "Skala semasa: 1 %@ = %@ px";
+"Draw Reference Line" = "Lukis Garisan Rujukan";
+"Draw a measure line along something whose length you know" = "Lukis garisan ukur di sepanjang sesuatu yang anda tahu panjangnya";
+"Draw or select a measure line along something whose length you know, then enter that length." = "Lukis atau pilih garisan ukur di sepanjang sesuatu yang anda tahu panjangnya, kemudian masukkan panjang itu.";
+"This line is %d px long. How long is it in real life?" = "Garisan ini panjangnya %d px. Berapakah panjang sebenarnya?";
+"e.g. 90 mm or 3 1/2 in" = "cth. 90 mm atau 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "Masukkan panjang, seperti 90 mm, 3.5 in atau 3 1/2 in.";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "Panjang sebenar ialah anggaran. Ia hanya boleh dipercayai untuk benda dalam satah yang sama dengan garisan rujukan.";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "Ukur dalam mm, cm, m, inci atau kaki menggunakan sesuatu yang diketahui panjangnya dalam imej";
+"Millimeters (mm)" = "Milimeter (mm)";
+"Centimeters (cm)" = "Sentimeter (cm)";
+"Meters (m)" = "Meter (m)";
+"Inches (in)" = "Inci (in)";
+"Feet (ft)" = "Kaki (ft)";
 "Magnify (Loupe)" = "Besarkan (Kanta)";
 "Highlight" = "Sorot";
 "Highlight (Spotlight)" = "Sorot (Lampu Sorot)";
@@ -90,6 +110,7 @@
 "Color Sampler" = "Penyampel Warna";
 "Color Picker" = "Pemilih Warna";
 "Select & Edit" = "Pilih & Sunting";
+"Select & Move" = "Pilih & Alih";
 "Color" = "Warna";
 
 /* Toolbar - Actions */
@@ -159,6 +180,7 @@
 "Smooth" = "Lembut";
 "Refined" = "Diperhalusi";
 "Smart" = "Pintar";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "Pintar melekatkan penyerlah pada baris teks. Tahan Shift untuk garisan lurus.";
 "Padding" = "Pelapik";
 "Shadow" = "Bayang";
 "Right-click to add points" = "Klik kanan untuk tambah titik";
@@ -456,6 +478,22 @@
 "Save As..." = "Simpan Sebagai...";
 "Choose a folder" = "Pilih folder";
 "Save All to Folder…" = "Simpan Semua ke Folder…";
+
+/* Editable Project */
+"Save Project" = "Simpan Projek";
+"Save Project As..." = "Simpan Projek Sebagai...";
+"Save as Editable Project (⇧⌘S)" = "Simpan sebagai Projek Boleh Sunting (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "Menyimpan imej dengan semua anotasi masih boleh disunting. Buka fail dalam macshot untuk terus menyunting.";
+"Open..." = "Buka...";
+"Choose an image or macshot project to open in the editor" = "Pilih imej atau projek macshot untuk dibuka dalam editor";
+"Could not open “%@”" = "Tidak dapat membuka “%@”";
+"Could not save the project: %@" = "Tidak dapat menyimpan projek: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "Sesetengah anotasi dalam projek ini tidak dapat dipulihkan, jadi ia dibuka sebagai imej yang diratakan. Fail asal tidak diubah.";
+"The file is not a macshot project or is damaged." = "Fail ini bukan projek macshot atau telah rosak.";
+"The project could not be prepared for saving." = "Projek tidak dapat disediakan untuk disimpan.";
+"The image is too large to save as an editable project." = "Imej terlalu besar untuk disimpan sebagai projek boleh sunting.";
+"The project file is too large to open." = "Fail projek terlalu besar untuk dibuka.";
+"The project's image could not be read." = "Imej projek tidak dapat dibaca.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Auto Tatal";
