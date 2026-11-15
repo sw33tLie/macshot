@@ -17,6 +17,7 @@ enum ToolbarButtonAction {
     case save
     case pin
     case ocr
+    case tableRecognition
     case autoRedact
     case beautify
     case beautifyStyle
@@ -72,6 +73,7 @@ enum ToolbarCustomAction: Int {
     case invertColors = 1011
     case share = 1012
     case effects = 1013
+    case tableRecognition = 1014
 
     static var allKnownActions: [ToolbarCustomAction] {
         var actions: [ToolbarCustomAction] = []
@@ -81,6 +83,7 @@ enum ToolbarCustomAction: Int {
         actions.append(contentsOf: [
             .pin, .ocr, .beautify, .removeBackground, .autoRedact, .reserved1007,
             .translate, .record, .scrollCapture, .invertColors, .share, .effects,
+            .tableRecognition,
         ])
         return actions
     }
@@ -94,7 +97,7 @@ enum ToolbarCustomAction: Int {
         #if !OFFLINE
         actions.append(.upload)
         #endif
-        actions.append(contentsOf: [.pin, .ocr, .translate, .scrollCapture, .record])
+        actions.append(contentsOf: [.pin, .ocr, .tableRecognition, .translate, .scrollCapture, .record])
         return actions
     }
 
@@ -107,7 +110,9 @@ enum ToolbarCustomAction: Int {
         #if !OFFLINE
         actions.append(.upload)
         #endif
-        actions.append(contentsOf: [.pin, .ocr, .autoRedact, .translate, .record, .scrollCapture, .share])
+        actions.append(contentsOf: [
+            .pin, .ocr, .tableRecognition, .autoRedact, .translate, .record, .scrollCapture, .share,
+        ])
         return actions
     }
 
@@ -118,6 +123,7 @@ enum ToolbarCustomAction: Int {
         #endif
         case .pin: return L("Pin (floating window)")
         case .ocr: return L("OCR & QR")
+        case .tableRecognition: return L("Table Recognition")
         case .beautify: return L("Beautify")
         case .removeBackground: return L("Remove Background")
         case .autoRedact: return L("Auto-Redact sensitive data")
@@ -149,6 +155,13 @@ enum ToolbarCustomAction: Int {
             return ToolbarButton(action: .pin, sfSymbol: "pin.fill", tooltip: L("Pin"))
         case .ocr:
             return ToolbarButton(action: .ocr, sfSymbol: "doc.text.viewfinder", tooltip: L("OCR & QR"))
+        case .tableRecognition:
+            guard !isEditorMode else { return nil }
+            return ToolbarButton(
+                action: .tableRecognition,
+                sfSymbol: "tablecells",
+                tooltip: L("Table Recognition")
+            )
         case .beautify:
             var button = ToolbarButton(action: .beautify, sfSymbol: "sparkles", tooltip: L("Beautify"))
             if beautifyEnabled {
