@@ -92,7 +92,30 @@
 "Color Sampler" = "रंग नमूना";
 "Color Picker" = "रंग चयनकर्ता";
 "Select & Edit" = "चुनें और संपादित करें";
+"Select & Move" = "चुनें और खिसकाएँ";
 "Color" = "रंग";
+
+/* Measure Scale */
+"Measure Scale" = "माप स्केल";
+"Set Scale..." = "स्केल सेट करें...";
+"Set Scale" = "स्केल सेट करें";
+"Scale: %@" = "स्केल: %@";
+"Remove Scale" = "स्केल हटाएँ";
+"Show lengths in" = "लंबाई इसमें दिखाएँ";
+"Current scale: 1 %@ = %@ px" = "वर्तमान स्केल: 1 %@ = %@ px";
+"Draw Reference Line" = "संदर्भ रेखा बनाएँ";
+"Draw a measure line along something whose length you know" = "किसी ज्ञात लंबाई वाली चीज़ के साथ-साथ माप रेखा बनाएँ";
+"Draw or select a measure line along something whose length you know, then enter that length." = "किसी ऐसी चीज़ के साथ-साथ माप रेखा बनाएँ या चुनें जिसकी लंबाई आप जानते हैं, फिर वह लंबाई दर्ज करें।";
+"This line is %d px long. How long is it in real life?" = "यह रेखा %d px लंबी है। वास्तविकता में यह कितनी लंबी है?";
+"e.g. 90 mm or 3 1/2 in" = "जैसे 90 mm या 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "कोई लंबाई दर्ज करें, जैसे 90 mm, 3.5 in या 3 1/2 in।";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "वास्तविक लंबाइयाँ अनुमान हैं। ये केवल उन्हीं चीज़ों के लिए भरोसेमंद हैं जो संदर्भ रेखा के समान तल में हों।";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "चित्र में ज्ञात लंबाई वाली किसी चीज़ का उपयोग करके mm, cm, m, इंच या फ़ुट में मापें";
+"Millimeters (mm)" = "मिलीमीटर (mm)";
+"Centimeters (cm)" = "सेंटीमीटर (cm)";
+"Meters (m)" = "मीटर (m)";
+"Inches (in)" = "इंच (in)";
+"Feet (ft)" = "फ़ुट (ft)";
 
 /* Toolbar - Actions */
 "Copy to Clipboard" = "क्लिपबोर्ड पर कॉपी करें";
@@ -152,6 +175,7 @@
 "Smooth" = "चिकना";
 "Refined" = "परिष्कृत";
 "Smart" = "स्मार्ट";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "स्मार्ट हाइलाइटर को टेक्स्ट की पंक्तियों से जोड़ देता है। सीधी रेखा के लिए Shift दबाए रखें।";
 "Padding" = "पैडिंग";
 "Shadow" = "छाया";
 "Right-click to add points" = "बिंदु जोड़ने के लिए राइट-क्लिक करें";
@@ -208,6 +232,7 @@
 "Play sound on capture" = "कैप्चर पर ध्वनि चलाएं";
 "Play sound on copy" = "कॉपी पर ध्वनि बजाएँ";
 "Remember last selected tool" = "अंतिम चयनित उपकरण याद रखें";
+"Start captures in move mode" = "स्क्रीनशॉट की शुरुआत मूव मोड में करें";
 "Show floating thumbnail after capture" = "कैप्चर के बाद फ़्लोटिंग थंबनेल दिखाएँ";
 "Launch at login" = "लॉगिन पर लॉन्च करें";
 "Show snap alignment guides" = "स्नैप संरेखण गाइड दिखाएँ";
@@ -406,6 +431,9 @@
 "Screen Recording granted!" = "स्क्रीन रिकॉर्डिंग प्रदान की गई!";
 "Enable macshot, then try taking a screenshot" = "macshot सक्षम करें, फिर स्क्रीनशॉट लेने का प्रयास करें";
 "Open Screen Recording Settings" = "स्क्रीन रिकॉर्डिंग सेटिंग्स खोलें";
+"Still not working? Run this command in Terminal, then restart macshot." = "अब भी काम नहीं कर रहा? टर्मिनल में यह कमांड चलाएँ, फिर macshot पुनः लॉन्च करें।";
+"Copy Command" = "कमांड कॉपी करें";
+"Restart macshot" = "macshot पुनः लॉन्च करें";
 "Continue" = "जारी रखें";
 
 /* OCR Window */
@@ -453,6 +481,22 @@
 "Could not encode the screenshot." = "स्क्रीनशॉट को एन्कोड नहीं किया जा सका।";
 "Could not save the screenshot: %@" = "स्क्रीनशॉट सहेजा नहीं जा सका: %@";
 "Could not save the screenshot to history." = "स्क्रीनशॉट इतिहास में सहेजा नहीं जा सका।";
+
+/* Project Files */
+"Save Project" = "प्रोजेक्ट सहेजें";
+"Save Project As..." = "प्रोजेक्ट इस रूप में सहेजें...";
+"Save as Editable Project (⇧⌘S)" = "संपादन योग्य प्रोजेक्ट के रूप में सहेजें (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "चित्र को इस तरह सहेजता है कि हर एनोटेशन संपादन योग्य रहे। संपादन जारी रखने के लिए फ़ाइल को macshot में खोलें।";
+"Open..." = "खोलें...";
+"Choose an image or macshot project to open in the editor" = "संपादक में खोलने के लिए कोई चित्र या macshot प्रोजेक्ट चुनें";
+"Could not open “%@”" = "“%@” खोला नहीं जा सका";
+"Could not save the project: %@" = "प्रोजेक्ट सहेजा नहीं जा सका: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "इस प्रोजेक्ट के कुछ एनोटेशन पुनर्स्थापित नहीं किए जा सके, इसलिए यह समतल चित्र के रूप में खुला। मूल फ़ाइल अपरिवर्तित है।";
+"The file is not a macshot project or is damaged." = "यह फ़ाइल macshot प्रोजेक्ट नहीं है या क्षतिग्रस्त है।";
+"The project could not be prepared for saving." = "प्रोजेक्ट को सहेजने के लिए तैयार नहीं किया जा सका।";
+"The image is too large to save as an editable project." = "छवि संपादन योग्य प्रोजेक्ट के रूप में सहेजने के लिए बहुत बड़ी है।";
+"The project file is too large to open." = "प्रोजेक्ट फ़ाइल खोलने के लिए बहुत बड़ी है।";
+"The project's image could not be read." = "प्रोजेक्ट का चित्र पढ़ा नहीं जा सका।";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "स्वतः स्क्रॉल";
@@ -633,6 +677,10 @@
 "Background" = "पृष्ठभूमि";
 "Custom" = "कस्टम";
 "Theme:" = "थीम:";
+"Toolbar appearance:" = "टूलबार की दिखावट:";
+"Dark" = "गहरा";
+"Light" = "हल्का";
+"Follow System" = "सिस्टम का अनुसरण करें";
 "Application" = "एप्लिकेशन";
 "Capture area and extract text" = "क्षेत्र कैप्चर करें और पाठ निकालें";
 "Capture the full screen" = "पूरी स्क्रीन कैप्चर करें";
@@ -861,3 +909,23 @@
 
 "Snap webcam to corners when moved" = "वेबकैम को खिसकाते समय कोनों से चिपकाएँ";
 "Search emoji" = "इमोजी खोजें";
+"Hide the bottom toolbar" = "निचला टूलबार छिपाएँ";
+"Pick tools with their keyboard shortcuts instead." = "इसके बजाय टूल उनके कीबोर्ड शॉर्टकट से चुनें।";
+
+"Pin position:" = "पिन की स्थिति:";
+"Center of screen" = "स्क्रीन के बीच में";
+"Original capture position" = "मूल कैप्चर स्थिति";
+
+"Default Colors" = "डिफ़ॉल्ट रंग";
+"The preset swatches in the color picker." = "रंग चयनकर्ता में प्रीसेट रंग।";
+"Add Color" = "रंग जोड़ें";
+"No default colors." = "कोई डिफ़ॉल्ट रंग नहीं।";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "बंद करें";
+"Copy & dismiss" = "कॉपी करें और बंद करें";
+"Close preview" = "पूर्वावलोकन बंद करें";
+"Keep in stack" = "स्टैक में रखें";
+"Return to stack when editor closes" = "एडिटर बंद होने पर स्टैक में लौटाएँ";
+"  Click on preview:" = "  पूर्वावलोकन पर क्लिक:";
+"  When opened in Editor:" = "  एडिटर में खोलने पर:";

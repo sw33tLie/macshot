@@ -206,7 +206,9 @@ class ToolOptionsRowView: NSView {
         // ── Smart marker toggle ──
         if tool == .marker {
             curX = addSeparator(at: curX)
-            curX = addToggle(at: curX, title: L("Smart"), isOn: ov.smartMarkerEnabled) { [weak ov, weak self] isOn in
+            // #497: people didn't find these; say what the toggle and Shift do.
+            curX = addToggle(at: curX, title: L("Smart"), isOn: ov.smartMarkerEnabled,
+                             toolTip: L("Smart snaps the highlighter to lines of text. Hold Shift for a straight line.")) { [weak ov, weak self] isOn in
                 ov?.smartMarkerEnabled = isOn
                 UserDefaults.standard.set(isOn, forKey: "smartMarkerEnabled")
                 ov?.updateCursorForCurrentTool()
@@ -832,9 +834,11 @@ class ToolOptionsRowView: NSView {
         return curX
     }
 
-    private func addToggle(at x: CGFloat, title: String, isOn: Bool, action: @escaping (Bool) -> Void) -> CGFloat {
+    private func addToggle(at x: CGFloat, title: String, isOn: Bool, toolTip: String? = nil,
+                           action: @escaping (Bool) -> Void) -> CGFloat {
         var curX = x
         let btn = NSButton(checkboxWithTitle: title, target: nil, action: nil)
+        btn.toolTip = toolTip
         btn.state = isOn ? .on : .off
         btn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
         btn.contentTintColor = ToolbarLayout.iconColor.withAlphaComponent(0.7)
@@ -1120,15 +1124,40 @@ class ToolOptionsRowView: NSView {
         return curX
     }
 
+    static let measureScaleButtonTag = 960
+
     private func addMeasureToggle(at x: CGFloat, ov: OverlayView) -> CGFloat {
         var curX = x
-        let seg = NSSegmentedControl(labels: ["px", "pt"], trackingMode: .selectOne,
-                                     target: self, action: #selector(measureUnitChanged(_:)))
-        seg.selectedSegment = ov.currentMeasureInPoints ? 1 : 0
-        seg.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: 60, height: 22)
-        (seg.cell as? NSSegmentedCell)?.segmentStyle = .roundRect
-        addSubview(seg)
-        curX += 72
+        if ov.measureCalibration == nil {
+            let seg = NSSegmentedControl(labels: ["px", "pt"], trackingMode: .selectOne,
+                                         target: self, action: #selector(measureUnitChanged(_:)))
+            seg.selectedSegment = ov.currentMeasureInPoints ? 1 : 0
+            seg.frame = NSRect(x: curX, y: (rowHeight - 22) / 2, width: 60, height: 22)
+            (seg.cell as? NSSegmentedCell)?.segmentStyle = .roundRect
+            addSubview(seg)
+            curX += 68
+        }
+
+        // Real-world scale: "Set Scale..." until one exists, then the scale
+        // itself ("Scale: mm") opens the same popover to change or remove it.
+        let scaleTitle: String
+        if let calibration = ov.measureCalibration {
+            scaleTitle = String(format: L("Scale: %@"), calibration.unit.symbol)
+        } else {
+            scaleTitle = L("Set Scale...")
+        }
+        let scaleButton = NSButton(title: scaleTitle, target: self, action: #selector(measureScaleClicked(_:)))
+        scaleButton.bezelStyle = .roundRect
+        scaleButton.controlSize = .small
+        scaleButton.font = NSFont.systemFont(ofSize: 10, weight: .medium)
+        scaleButton.image = NSImage(systemSymbolName: "ruler", accessibilityDescription: nil)
+        scaleButton.imagePosition = .imageLeading
+        scaleButton.toolTip = L("Measure in mm, cm, m, inches or feet using something of known length in the image")
+        scaleButton.tag = Self.measureScaleButtonTag
+        scaleButton.sizeToFit()
+        scaleButton.frame.origin = NSPoint(x: curX, y: (rowHeight - scaleButton.frame.height) / 2)
+        addSubview(scaleButton)
+        curX += scaleButton.frame.width + 8
 
         curX = addToggle(at: curX, title: L("Limit to selection"), isOn: ov.currentMeasureClampToSelection) { [weak ov] isOn in
             ov?.currentMeasureClampToSelection = isOn
@@ -1325,12 +1354,30 @@ class ToolOptionsRowView: NSView {
             curX = addBeautifySlider(at: curX, label: L("Radius"), value: ov.beautifyCornerRadius, min: 0, max: 30, isEnabled: controlsEnabled, action: #selector(beautifyCornerChanged(_:)))
         }
 
-        // Shadow slider
+        // Shadow slider. This is the same shadow beautify already draws.
         curX = addBeautifySlider(at: curX, label: L("Shadow"), value: ov.beautifyShadowRadius, min: 0, max: 100, isEnabled: controlsEnabled, action: #selector(beautifyShadowChanged(_:)))
+
+        let backgroundOn = ov.beautifyBackgroundEnabled
+        let bgBtn = NSButton(
+            checkboxWithTitle: L("Background"), target: self,
+            action: #selector(beautifyBackgroundChanged(_:)))
+        bgBtn.state = backgroundOn ? .on : .off
+        bgBtn.isEnabled = controlsEnabled
+        bgBtn.font = NSFont.systemFont(ofSize: 10, weight: .medium)
+        if let cell = bgBtn.cell as? NSButtonCell {
+            cell.attributedTitle = NSAttributedString(string: L("Background"), attributes: [
+                .foregroundColor: ToolbarLayout.iconColor.withAlphaComponent(controlsEnabled ? 0.85 : 0.35),
+                .font: NSFont.systemFont(ofSize: 10, weight: .medium)
+            ])
+        }
+        bgBtn.sizeToFit()
+        bgBtn.frame.origin = NSPoint(x: curX, y: (rowHeight - bgBtn.frame.height) / 2)
+        addSubview(bgBtn)
+        curX += bgBtn.frame.width + 4
 
         // Blur slider — only shown for custom image backgrounds
         if ov.beautifyStyleIndex == -1 {
-            curX = addBeautifySlider(at: curX, label: L("Blur"), value: ov.beautifyBackgroundBlur, min: 0, max: 50, isEnabled: controlsEnabled, action: #selector(beautifyBlurChanged(_:)))
+            curX = addBeautifySlider(at: curX, label: L("Blur"), value: ov.beautifyBackgroundBlur, min: 0, max: 50, isEnabled: controlsEnabled && backgroundOn, action: #selector(beautifyBlurChanged(_:)))
         }
 
         curX = addSeparator(at: curX)
@@ -1345,7 +1392,7 @@ class ToolOptionsRowView: NSView {
         swatchBtn.imageScaling = .scaleProportionallyUpOrDown
         swatchBtn.target = self
         swatchBtn.action = #selector(beautifyGradientClicked(_:))
-        swatchBtn.isEnabled = controlsEnabled
+        swatchBtn.isEnabled = controlsEnabled && ov.beautifyBackgroundEnabled
         swatchBtn.toolTip = L("Gradient Style")
         swatchBtn.tag = 995
         addSubview(swatchBtn)
@@ -1358,7 +1405,7 @@ class ToolOptionsRowView: NSView {
             .withSymbolConfiguration(.init(pointSize: 9, weight: .semibold))
         arrowBtn.target = self
         arrowBtn.action = #selector(beautifyGradientClicked(_:))
-        arrowBtn.isEnabled = controlsEnabled
+        arrowBtn.isEnabled = controlsEnabled && ov.beautifyBackgroundEnabled
         addSubview(arrowBtn)
         arrowBtn.contentTintColor = ToolbarLayout.iconColor.withAlphaComponent(0.6)
         curX += 18
@@ -1409,6 +1456,16 @@ class ToolOptionsRowView: NSView {
         guard let ov = overlayView else { return }
         ov.beautifyCornerRadius = CGFloat(sender.floatValue)
         UserDefaults.standard.set(sender.doubleValue, forKey: "beautifyCornerRadius")
+        ov.needsDisplay = true
+        ov.onContentChanged?()
+    }
+
+    @objc private func beautifyBackgroundChanged(_ sender: NSButton) {
+        guard let ov = overlayView else { return }
+        ov.beautifyBackgroundEnabled = sender.state == .on
+        UserDefaults.standard.set(sender.state == .on, forKey: "beautifyBackgroundEnabled")
+        ov.cachedCompositedImage = nil
+        ov.rebuildToolbarLayout()
         ov.needsDisplay = true
         ov.onContentChanged?()
     }
@@ -1681,6 +1738,10 @@ class ToolOptionsRowView: NSView {
     @objc private func italicToggled() { overlayView?.textEditor.toggleItalic(); overlayView.map { $0.applyTextFormattingToSelectedAnnotations(); $0.needsDisplay = true; rebuild(for: $0.currentTool) } }
     @objc private func underlineToggled() { overlayView?.textEditor.toggleUnderline(); overlayView.map { $0.applyTextFormattingToSelectedAnnotations(); $0.needsDisplay = true; rebuild(for: $0.currentTool) } }
     @objc private func strikethroughToggled() { overlayView?.textEditor.toggleStrikethrough(); overlayView.map { $0.applyTextFormattingToSelectedAnnotations(); $0.needsDisplay = true; rebuild(for: $0.currentTool) } }
+
+    @objc private func measureScaleClicked(_ sender: NSButton) {
+        overlayView?.beginMeasureScale(anchorView: sender)
+    }
 
     @objc private func measureUnitChanged(_ sender: NSSegmentedControl) {
         guard let ov = overlayView else { return }

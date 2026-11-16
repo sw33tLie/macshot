@@ -22,6 +22,8 @@ macshot has two release variants:
 
 The offline build is selected with the `OFFLINE` Swift compilation condition. Use `BuildVariant.isOffline` / `BuildVariant.displayName` for runtime variant checks and display names. Upload and cloud storage integrations must be compiled out of the offline build with `#if !OFFLINE`, including upload UI, upload shortcuts, upload settings, upload context menu items, and uploader implementations.
 
+The variant's bundle ID and product name come from the project-level `MACSHOT_BUNDLE_ID` and `MACSHOT_PRODUCT_NAME` settings; override those, never `PRODUCT_BUNDLE_IDENTIFIER`/`PRODUCT_NAME`, on the command line. Command-line settings apply to every target, and the embedded OCR service derives its own ID (`$(MACSHOT_BUNDLE_ID).ocr`) and keeps its own product name.
+
 The release workflow builds both variants from the same tag. It patches the offline app's `SUFeedURL` to `appcast-offline.xml`, removes the Google OAuth URL scheme from the offline app, signs both apps, packages both DMGs, notarizes both DMGs, and writes both appcasts. Do not point the offline app at the normal appcast or vice versa; Sparkle updates must stay variant-specific so offline users never update into the normal app.
 
 Beta handling is shared: beta items get `<sparkle:channel>beta</sparkle:channel>`, and users opt in through the existing "Check for beta updates" setting. Stable offline releases will appear to offline users through `appcast-offline.xml` once a stable offline item exists.
@@ -41,6 +43,7 @@ macshot/
 │
 ├── Model/
 │   ├── Annotation.swift                # Data model + drawing for all annotation types
+│   ├── MeasureCalibration.swift        # Measure scale (mm/cm/m/in/ft), length parser + formatter
 │   └── LenientDecoding.swift           # Backward/forward-compatible Codable helpers
 │
 ├── Capture/
@@ -66,18 +69,24 @@ macshot/
 │
 ├── Services/
 │   ├── ImageEncoder.swift              # PNG/JPEG/HEIC/WebP encoding, clipboard copy, resolution scaling
+│   ├── MacshotProjectFile.swift        # .macshot editable project: snapshot, atomic write, lenient read
 │   ├── BeautifyRenderer.swift          # Gradient frame / background beautification (linear + mesh gradients)
 │   ├── AutoRedactor.swift              # PII regex detection + Vision OCR → redaction annotations
 │   ├── TranslationOverlay.swift        # OCR → translate → overlay annotations
 │   ├── TranslationService.swift        # Google Translate API wrapper
-│   ├── VisionOCR.swift                 # Vision text recognition request factory
+│   ├── VisionOCR.swift                 # Vision text recognition (compiled into the app AND the OCR service)
+│   ├── VisionOCR+Routing.swift         # App-only OCR entry points: performTextRecognition → OCRServiceClient
+│   ├── OCRServiceClient.swift          # Sends OCR to macshotOCR.xpc; timeouts, fast fallback, service replacement
+│   ├── OCRServiceProtocol.swift        # Shared XPC interface + wire format (also compiled into the service)
 │   ├── HotkeyManager.swift            # Global keyboard shortcut (Carbon RegisterEventHotKey)
 │   ├── KeyboardShortcutMatcher.swift   # Layout-aware character matching for shortcuts
 │   ├── ToolShortcutManager.swift       # Single-key overlay tool shortcuts
 │   ├── EditorCommandShortcutManager.swift  # Configurable undo/redo chords
 │   ├── FilenameFormatter.swift         # Filename templates ({date}, {window}, {random}, …)
 │   ├── SettingsPortability.swift       # Settings export/import + the secret filter
+│   ├── PresetColorPalette.swift        # User-editable preset swatch list for the color picker
 │   ├── LanguageManager.swift           # Locale resolution + L("…") lookup
+│   ├── RelaunchHandoff.swift           # Lets a "Restart macshot" replacement pass the single-instance check
 │   ├── ScreenshotHistory.swift         # Local history in ~/Library/Application Support/
 │   └── SaveDirectoryAccess.swift       # Security-scoped bookmark for save directory
 │
@@ -101,6 +110,7 @@ macshot/
 │   │   ├── EditorView.swift            # OverlayView subclass: NSScrollView mode, no selection chrome
 │   │   ├── DetachedEditorWindowController.swift  # Standalone editor window (resizable, titled)
 │   │   ├── EditorTopBarView.swift      # NSView with crop, flip, zoom buttons
+│   │   ├── EditorDragHandleView.swift  # Top-bar handle: drag the edited image out as a file, click to copy
 │   │   ├── CenteringClipView.swift     # NSClipView subclass that centers document when smaller than clip
 │   │   ├── VideoEditorWindowController(+Export).swift  # Studio video editor window, actions, exports
 │   │   └── Video/                      # Editor document, playback, planner, exporter, inspector, stage, timeline
@@ -131,10 +141,11 @@ macshot/
 │   │
 │   ├── Popover/
 │   │   ├── PopoverHelper.swift         # Static helper for showing/dismissing NSPopovers
-│   │   ├── ColorPickerView.swift       # Custom color picker: swatches, HSB gradient, opacity, custom slots
+│   │   ├── ColorPickerView.swift       # Custom color picker: swatches, HSB gradient, opacity, custom slots, hex entry
 │   │   ├── ListPickerView.swift        # Reusable list picker with checkmark selection
 │   │   ├── EmojiPickerView.swift       # Emoji grid with category tabs
-│   │   └── GradientPickerView.swift    # Beautify gradient style swatch grid
+│   │   ├── GradientPickerView.swift    # Beautify gradient style swatch grid
+│   │   └── MeasureScalePopoverView.swift  # Measure tool "Set Scale" popover
 │   │
 │   └── Windows/
 │       ├── PinWindowController.swift          # Floating always-on-top pinned screenshot
@@ -151,6 +162,10 @@ macshot/
 ├── Info.plist
 ├── Assets.xcassets/
 └── Base.lproj/Main.storyboard
+
+macshotOCRService/                      # macshotOCR.xpc target, embedded in Contents/XPCServices
+├── main.swift                          # NSXPCListener; serial Vision reads; exits on stuck request or dropped connection
+└── Info.plist                          # XPCService / ServiceType = Application
 ```
 
 ### Component Overview
@@ -213,9 +228,19 @@ translateOverlay, crop, colorSampler
 
 **Each annotation draws itself** via `draw(in:)`. Has `hitTest(point:threshold:)`, `move(dx:dy:)`, `isMovable`, `boundingRect`, `drawSelectionHighlight()`.
 
+#### Editable projects (`.macshot`)
+- `MacshotProjectFile` writes a binary plist (`MacshotProjectArchive`): raw PNG + point size, annotations JSON (same serializer as history), edit state JSON, flattened PNG. Field names are the file format: add optional fields, never rename them. Every field decodes leniently.
+- Save Project (⇧⌘S) / Save Project As (⌥⇧⌘S) are File-menu actions answered by the editor window's delegate; the top-bar button does the same. Snapshot the editor (`captureProjectSave`) before showing a panel; writes go through `MediaExportCoordinator` + `AtomicMediaSave`.
+- Opening (Finder, Open..., `macshot://open?file=`) decodes off the main thread. If any annotation or the edit state can't be restored, the flattened copy opens unlinked so a save can't overwrite the project with a flat image. One window per project (`focusEditor(forProjectURL:)`).
+- A linked editor shows the file name, proxy icon and dirty dot; Save & Close writes the project instead of history.
+
+#### Measure scale
+- `OverlayView.measureCalibration` is image-wide (stored in `CaptureEditState.measureCalibration`) and mirrored onto each measure annotation's `measureCalibration` so it draws alone. Change it only through `setMeasureCalibration(_:)`: it relabels every measure line and is one `.measureCalibration` undo entry.
+
 #### DetachedEditorWindowController — Standalone Editor
 - Opens from overlay ("Open in Editor Window" button) or from thumbnail/pin "Edit" action
 - Creates: NSScrollView → CenteringClipView → EditorView (documentView)
+- The document view is the image plus `OverlayView.editorDocumentMargin` on every side (bounds origin `(-m, -m)`), so canvas coordinates still equal view coordinates and the image stays at (0, 0). Resize it only with `layoutEditorDocument(forImageSize:)`. Handles past the image edge are clickable there (`pointHitsAnnotationInteraction`), nothing new is drawn outside the image, and annotation content is clipped to the export area (`clipToEditorCanvasContent`).
 - Container view holds scroll view + EditorTopBarView
 - `chromeParentView` set BEFORE `applySelection` so toolbars go in container (not document view)
 - Static `activeControllers[]` array keeps instances alive; switches activation policy to `.regular` when open, `.accessory` when all closed
@@ -239,11 +264,12 @@ The video editor is built around `VideoEditorDocument` (one `VideoProject`: time
 - **Recorded pointer data.** Every take writes `cursor.mstl` (`CursorTelemetry`) beside the MP4. Takes that open in the editor with "Editable pointer" hide the system cursor from ScreenCaptureKit and exclude the click/keystroke/webcam overlay windows; the editor redraws them. Any other destination keeps them in the pixels. Telemetry is host-clock based and anchored to the writer's first frame (`MP4WriterSession` `onSessionStart`); pauses are removed exactly like the writer removes them. Telemetry and camera failures never affect the screen recording.
 - **Time-dependent motion is precomputed and pure.** Cursor smoothing (`CursorMotion`) and the camera path (`CameraPathBuilder`) are sampled deterministically so scrubbing, playback and export produce identical frames. Motion-blur averaging must weight alpha only (Core Image color matrices are unpremultiplied).
 - **Webcam.** When the camera records separately, `VideoCompositionBuilder` adds its track in lockstep with every cut/speed/freeze piece.
+- **Visual checks (screenshot editor).** `scripts/probe-annotation-workflows.sh` builds the real editor into an isolated sandboxed app, drives the Select tool, editing past the canvas edge, measure scale and `.macshot` save/reopen with synthesized events, prints PASS/FAIL, and renders its own windows to PNGs in its container.
 - **Visual checks.** `scripts/probe-video-editor.sh` builds the real editor into an isolated app; with `-D VIDEO_EDITOR_PROBE` it accepts scripted commands (`PROBE_COMMANDS` file) and renders in-process snapshots, including the preview frame. `scripts/make-studio-fixture.swift` generates a synthetic recording with pointer data.
 
 ### Undo/Redo
 
-`UndoEntry` enum: `.added(Annotation)`, `.deleted(Annotation, Int)`, `.imageTransform(...)`. Stacks: `undoStack` / `redoStack`. Batch undo via `groupID` (e.g. auto-redact creates multiple annotations with same groupID, all undone together).
+`UndoEntry` enum: `.added(Annotation)`, `.deleted(Annotation, Int)`, `.propertyChange(...)`, `.imageTransform(...)`, `.measureCalibration(...)`, `.annotationsChange(...)` (several annotations moved together, e.g. a multi-selection drag or nudge: one step). An image transform that moves annotations (crop, flip, canvas growth) must store `annotationSnapshots` taken before it moves them; undo/redo restore them with the image. Stacks: `undoStack` / `redoStack`. Batch undo via `groupID` (e.g. auto-redact creates multiple annotations with same groupID, all undone together).
 
 **CRITICAL — transient `NSTextView` undo ownership:** `UndoManager` keeps undo-operation targets unowned. A disposable editable `NSTextView` that obtains the window's shared undo manager through the responder chain can therefore leave `_undoRedoTextOperation:` entries pointing at a deallocated view; the next Cmd+Z may crash in `_NSUndoStack popAndInvoke`. Every editable app-created text view with `allowsUndo = true` must use `ScopedUndoTextView` (or subclass it), never a plain `NSTextView`. Call `discardUndoHistory()` before removing and releasing an editing session. Read-only text views that cannot register editing actions are exempt. Do not move transient text editing back onto a window-level undo manager.
 
@@ -256,22 +282,25 @@ The video editor is built around `VideoEditorDocument` (one `VideoProject`: time
 ### Persistence (UserDefaults)
 - Drawing: `currentStrokeWidth`, `numberStrokeWidth`, `markerStrokeWidth`
 - Hotkey: `hotkeyKeyCode`, `hotkeyModifiers`
-- Output: `saveDirectory`, `quickCaptureMode`, `copyPathAfterSave`, `playCopySound`
+- Output: `saveDirectory`, `quickCaptureMode`, `copyPathAfterSave`, `playCopySound`, `pinPlacement` (0 = screen center, 1 = original capture position; only overlay pins have a capture position)
 - Selection: `lastSelectionRect`, `lastSelectionScreenFrame`, `rememberLastSelection`
 - Thumbnails: `showFloatingThumbnail`, `thumbnailStacking`, `thumbnailAutoDismissSeconds`
 - Image: `imageFormat` (png/jpeg/heic/webp/avif), `imageQuality` (0.0–1.0), `downscaleRetina` (bool), `clipboardIncludesImageFormat` (bool, opt-in: adds the configured format ahead of PNG/TIFF on the clipboard)
 - Recording: `recordingFormat` (mp4/gif), `recordingFPS`, `recordingOnStop`
 - History: `historySize`
 - Tools: `enabledTools`, `knownToolRawValues`
-- Features: `imgbbAPIKey`, `beautifyEnabled`, `beautifyStyleIndex`, `beautifyMode`, `beautifyPadding`, `beautifyCornerRadius`, `beautifyShadowRadius`, `pencilSmoothEnabled`, `loupeSize`, `stampSize`, `translateTargetLang`
+- Features: `imgbbAPIKey`, `beautifyEnabled`, `beautifyStyleIndex`, `beautifyMode`, `beautifyPadding`, `beautifyCornerRadius`, `beautifyShadowRadius`, `beautifyBackgroundEnabled` (missing = on), `pencilSmoothEnabled`, `loupeSize`, `stampSize`, `translateTargetLang`
+- Toolbar look: `hudAppearance` (dark/light/system, missing = dark), `toolbarAccentColor`, `toolbarIconColor`, `toolbarBgColor`
 - Styles: `currentLineStyle`, `currentArrowStyle`, `currentRectFillStyle`, `currentRectCornerRadius`
+- Measure: `measureInPoints`, `measureClampToSelection`, `measureScaleUnit` (last unit used in the scale popover)
+- Picker: `presetColors` (hex list for the editable default swatches; unset means the shipped 12; capped at `PresetColorPalette.maxCount` (24) on save and load so the picker popover fits small displays)
 - Upload: `uploadProvider` (imgbb/gdrive), `googleDriveRefreshToken`, `gdriveFolderName` (Drive destination folder, defaults to "macshot"), `uploadConfirmEnabled`
 
 ### Threading Model
 - **Capture:** Displays are captured one at a time, the one under the pointer first (on macOS 26 `replayd` serializes concurrent screenshot requests and charges far more per queued request). Each display's overlay is shown as soon as its capture lands; keyboard focus stays on the display with a selection, else the one under the pointer, and a partial failure falls back only for the displays not yet shown.
 - **Recording:** SCStream output on background thread, main actor for state updates
 - **Scroll capture:** Frames grabbed every 50 ms while scrolling (a mouse wheel animates without events) plus a settled capture after; matching/stitching on main, serialized by `isCapturing`
-- **OCR:** VNImageRequestHandler on background thread, results to main
+- **OCR:** Accurate recognition runs in the `macshotOCR` XPC service, one request at a time; the fast fallback runs in-process on a serial GCD queue. Results to main
 - **Upload:** URLSession background task
 - **GIF:** Frame encoding on background thread
 - **UI:** All drawing, state changes, and user interaction on main thread
@@ -284,8 +313,8 @@ The video editor is built around `VideoEditorDocument` (one `VideoProject`: time
 - Full-screen capture (single click without drag)
 - Remember last selection rectangle
 
-### Annotation Tools (18)
-Pencil, Line, Arrow, Rectangle, Filled Rectangle, Ellipse, Marker/Highlighter, Text (rich formatting), Number (auto-incrementing), Stamp/Emoji, Pixelate, Blur, Measure (pixel ruler), Loupe (2x magnifier), Select & Edit, Translate Overlay, Crop (editor only), Color Sampler
+### Annotation Tools (19)
+Pencil, Line, Arrow, Rectangle, Filled Rectangle, Ellipse, Marker/Highlighter, Text (rich formatting), Number (auto-incrementing), Stamp/Emoji, Pixelate, Blur, Measure (pixel ruler, optional real-world scale), Loupe (2x magnifier), Highlight (spotlight), Select & Move (first toolbar button, V: marquee on empty space, never draws; arrow keys nudge the selection 1 pt / Shift 10 pt, one undo step per run), Translate Overlay, Crop (editor only), Color Sampler
 
 - **Line styles:** Solid, dashed, dotted
 - **Arrow styles:** Single, thick, double, open, tail
@@ -342,12 +371,13 @@ Copy to clipboard, Save to file (PNG/JPEG/HEIC/WebP), Pin (floating always-on-to
 - **Offline bitrate targets differ from capture.** Medium/Low MP4 exports use `VideoExportEncodingPlan`, with source metadata loaded during preparation. Do not apply live-recording bitrate minimums or estimate size by multiplying input bytes by a quality percentage. For comparable H.264 sources with near-uniform cadence, estimates use the same target settings and edited duration as export, including audio. Omit estimates for sparse or unknown cadence, different codecs, High and GIF; fallback encoder budgets are not size predictions. Keep file/track metadata reads out of editor drawing.
 - **Video cadence is not the shortest sample.** Idle heartbeats and final tails produce variable timing. `VideoFrameCadence` stores the intended interval in MP4's supported software metadata field and performs a bounded background timing inspection for unmarked files. Cache that interval during preparation and reuse it for preview, rendering and bitrate targets; preserve it through audio mixing and MP4 exports. Do not derive rendering FPS from a single minimum interval or the average across long idle gaps.
 - **GIF export streams.** Use `GIFExporter` with the processed timeline and an explicit output cadence. `GIFEncoder` consumes presentation timestamps and writes one ImageIO-encoded frame at a time, combining unchanged pixels into holds. Do not accumulate an animation in one ImageIO destination, decimate by guessed source FPS, or spool every frame into scratch PNGs.
+- **OCR goes through the service.** Call `VisionOCR.performTextRecognition` (or `performTextAndQRCodeRecognition`); never run an accurate `RecognizeTextRequest`/`VNRecognizeTextRequest` in the app process. On macOS 27 an accurate request can block forever, ignore `cancel()` and poison every later request in that process (FB25403069), and `RecognizeTextRequest.perform` blocks a Swift concurrency thread while it waits. `OCRServiceClient` gives the service `softTimeout` (10 s) before answering from the in-process fast model, lets the service keep running up to `hardDeadline` (120 s) so a cold model compile (44-66 s) can finish, and replaces the service after an error or an empty result the fast model contradicts. launchd won't relaunch a service younger than 10 s, so a replaced young service is skipped (fast model) until then. The service is unsandboxed (the release workflow fails if any `.xpc` carries a sandbox entitlement) and only decodes pixels it is sent. Files it shares with the app (`VisionOCR.swift`, `OCRServiceProtocol.swift`) must stay free of app state; it gets them through the `macshot` folder's membership exception for the `macshotOCR` target. `scripts/probe-ocr-service.sh` builds the real sandboxed app with `OCR_FAULT_INJECTION` and checks recovery from a hung, failing or silently empty service.
 - **Uploads stream, they don't buffer.** A recording is routinely larger than the memory the app can hold, so uploaders take an `UploadPayload` (`.file` for recordings, `.data` for encoded screenshots). `UploadPayload` chunks, hashes incrementally for SigV4, and `MultipartBodyWriter` writes request bodies straight to a temp file. Don't reintroduce `Data(contentsOf:)` on a recording.
 - **Upload bodies and callbacks belong to one job.** Prepare `PreparedUploadBody` off the main actor, hash the bytes while writing that owned body, and retain it through every retry. Never reread the public source for a retry or put progress on a shared uploader property. `UploadJob` participates in the existing quit drain; completion owns source leases until the request finishes. Drive retries reuse one pre-generated file ID and one multipart body. Account/cache changes stay on the main actor, and stale responses must not restore signed-out credentials or folders. Verify requests with local fixtures, not live cloud uploads.
 - **Keyboard shortcuts:** Character-based commands must go through `KeyboardShortcutMatcher`; do not compare raw letter key codes or read `charactersIgnoringModifiers` directly. The matcher follows the character produced by rearranged Latin layouts such as QWERTZ, AZERTY, and Dvorak, while falling back through the user's ASCII-capable layout for non-Latin input sources such as Russian or Arabic. Use `EditorCommandShortcutManager` for configurable Undo/Redo chords and `ToolShortcutManager` plus `KeyboardShortcutMatcher.toolCharacters(for:)` for single-key overlay tools. Raw `event.keyCode` checks are appropriate only for layout-independent non-character keys such as Escape, Return, Tab, Space, Delete, arrows, and function keys. Global Carbon hotkeys remain physical key-code bindings; translate them only for display with `KeyboardShortcutMatcher.currentLayoutCharacter(for:)`, and disable `NSMenuItem` automatic key-equivalent localization after applying an already-translated physical binding.
 - `autoreleasepool` for overlay teardown to prevent memory spikes
 - Extension files (`OverlayView+Feature.swift`) for self-contained feature code that accesses OverlayView state but is logically separate (recording overlays, scroll capture HUD, window snapping, popovers)
-- **Light/dark mode:** The toolbar and popovers always use a dark background regardless of system appearance. `ToolOptionsRowView` and `PopoverHelper` force `NSAppearance(named: .darkAqua)` so system controls render with light text. Never use system-adaptive colors (`.labelColor`, `.secondaryLabelColor`) for text in toolbar/popover contexts without verifying contrast against the dark background. Always test new toolbar UI elements in both light and dark system appearance.
+- **Light/dark mode:** Toolbar chrome (strips, options row, popovers, resolution box, recording and scroll-capture HUDs, editor top bar, capture hint pills) is independent of the system appearance unless the user picks otherwise. The Settings > Appearance > "Toolbar appearance" choice is `HUDAppearance` (key `hudAppearance`): Dark (the default, also for a missing or unknown value), Light, or Follow System. Dark paints the stored theme colors (`ToolbarLayout.storedBgColor`/`storedIconColor`); Light, and Follow System while macOS is light, paint the fixed `lightBgColor`/`lightIconColor`. Chrome reads `ToolbarLayout.bgColor`/`iconColor`, which apply that choice; Settings color wells read the `stored*` values. `ToolbarLayout.appearance` is `.aqua` or `.darkAqua` from the brightness of the effective `bgColor` (so a custom light theme background also gets `.aqua`); `ToolOptionsRowView`, `PopoverHelper`, `ResolutionBoxView` and `ScrollCaptureHUDView` set it so system controls render readable text. Draw chrome text and icons with `ToolbarLayout.iconColor`, never hardcoded white, and use adaptive colors (`.labelColor`, `.secondaryLabelColor`) only inside a view whose appearance comes from `ToolbarLayout.appearance`. A hardcoded dark-palette detail that must stay exactly as it was in Dark switches on `ToolbarLayout.usesLightPalette`. Changes post `.toolbarColorsDidChange` (from Settings, and from `HUDSystemAppearanceObserver`, a KVO observer of `NSApp.effectiveAppearance`, when following the system); long-lived chrome observes it and repaints. Test new toolbar UI in Dark and Light, under both system appearances, and with a custom light theme background.
 - **Focus management:** macshot is an `LSUIElement` (menu bar app) that temporarily shows windows. All focus return is handled by `AppDelegate.returnFocusIfNeeded()` — one centralized method. Rules:
   - `previousApp` is captured in `startCapture()` before the overlay steals focus. Cleared after single use.
   - `returnFocusIfNeeded()` checks for visible titled windows, switches to `.accessory` policy, activates `previousApp`. When `previousApp` is nil it activates the frontmost non-macshot app instead. It deliberately does **not** call `NSApp.hide(nil)`: that can suspend the Carbon event loop and break global hotkeys.

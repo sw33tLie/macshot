@@ -92,7 +92,30 @@
 "Color Sampler" = "Mostrejador de color";
 "Color Picker" = "Selector de color";
 "Select & Edit" = "Seleccionar i editar";
+"Select & Move" = "Seleccionar i moure";
 "Color" = "Color";
+
+/* Measure Scale */
+"Measure Scale" = "Escala de mesura";
+"Set Scale..." = "Definir l'escala...";
+"Set Scale" = "Definir l'escala";
+"Scale: %@" = "Escala: %@";
+"Remove Scale" = "Eliminar l'escala";
+"Show lengths in" = "Mostrar les longituds en";
+"Current scale: 1 %@ = %@ px" = "Escala actual: 1 %@ = %@ px";
+"Draw Reference Line" = "Dibuixar una línia de referència";
+"Draw a measure line along something whose length you know" = "Dibuixeu una línia de mesura al llarg d'un objecte de longitud coneguda";
+"Draw or select a measure line along something whose length you know, then enter that length." = "Dibuixeu o seleccioneu una línia de mesura al llarg d'un objecte de longitud coneguda i, després, introduïu-ne la longitud.";
+"This line is %d px long. How long is it in real life?" = "Aquesta línia fa %d px. Quant fa en realitat?";
+"e.g. 90 mm or 3 1/2 in" = "p. ex. 90 mm o 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "Introduïu una longitud, com ara 90 mm, 3.5 in o 3 1/2 in.";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "Les longituds reals són estimacions. Només són fiables per a objectes que són al mateix pla que la línia de referència.";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "Mesurar en mm, cm, m, polzades o peus fent servir un objecte de longitud coneguda de la imatge";
+"Millimeters (mm)" = "Mil·límetres (mm)";
+"Centimeters (cm)" = "Centímetres (cm)";
+"Meters (m)" = "Metres (m)";
+"Inches (in)" = "Polzades (in)";
+"Feet (ft)" = "Peus (ft)";
 
 /* Toolbar - Actions */
 "Copy to Clipboard" = "Copiar al porta-retalls";
@@ -152,6 +175,7 @@
 "Smooth" = "Suau";
 "Refined" = "Refinat";
 "Smart" = "Intel·ligent";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "Intel·ligent ajusta el marcador a les línies de text. Mantingueu premuda la tecla Maj per fer una línia recta.";
 "Padding" = "Farciment";
 "Shadow" = "Ombra";
 "Right-click to add points" = "Clic dret per afegir punts";
@@ -208,6 +232,7 @@
 "Play sound on capture" = "Reprodueix un so en capturar";
 "Play sound on copy" = "Reproduir so en copiar";
 "Remember last selected tool" = "Recordar l'última eina seleccionada";
+"Start captures in move mode" = "Inicia les captures en mode de moviment";
 "Show floating thumbnail after capture" = "Mostrar miniatura flotant després de la captura";
 "Launch at login" = "Iniciar en iniciar sessió";
 "Show snap alignment guides" = "Mostrar guies d'alineació";
@@ -399,6 +424,9 @@
 "Screen Recording granted!" = "Gravació de pantalla concedida!";
 "Enable macshot, then try taking a screenshot" = "Activeu macshot i proveu de fer una captura de pantalla";
 "Open Screen Recording Settings" = "Obrir la configuració de gravació de pantalla";
+"Still not working? Run this command in Terminal, then restart macshot." = "Encara no funciona? Executa aquesta ordre al Terminal i després reinicia macshot.";
+"Copy Command" = "Copiar l'ordre";
+"Restart macshot" = "Reiniciar macshot";
 "Continue" = "Continuar";
 
 /* OCR Window */
@@ -445,6 +473,22 @@
 "Could not encode the screenshot." = "No s'ha pogut codificar la captura de pantalla.";
 "Could not save the screenshot: %@" = "No s'ha pogut desar la captura de pantalla: %@";
 "Could not save the screenshot to history." = "No s'ha pogut desar la captura de pantalla a l'historial.";
+
+/* Project Files */
+"Save Project" = "Desar el projecte";
+"Save Project As..." = "Desar el projecte com a...";
+"Save as Editable Project (⇧⌘S)" = "Desar com a projecte editable (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "Desa la imatge amb totes les anotacions encara editables. Obriu el fitxer a macshot per continuar editant.";
+"Open..." = "Obrir...";
+"Choose an image or macshot project to open in the editor" = "Trieu una imatge o un projecte de macshot per obrir-lo a l'editor";
+"Could not open “%@”" = "No s'ha pogut obrir «%@»";
+"Could not save the project: %@" = "No s'ha pogut desar el projecte: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "Algunes anotacions d'aquest projecte no s'han pogut restaurar, de manera que s'ha obert aplanat. El fitxer original no ha canviat.";
+"The file is not a macshot project or is damaged." = "El fitxer no és un projecte de macshot o està malmès.";
+"The project could not be prepared for saving." = "No s'ha pogut preparar el projecte per desar-lo.";
+"The image is too large to save as an editable project." = "La imatge és massa gran per desar-la com a projecte editable.";
+"The project file is too large to open." = "El fitxer del projecte és massa gran per obrir-lo.";
+"The project's image could not be read." = "No s'ha pogut llegir la imatge del projecte.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Desplaçament automàtic";
@@ -627,6 +671,10 @@
 "Background" = "Fons";
 "Custom" = "Personalitzat";
 "Theme:" = "Tema:";
+"Toolbar appearance:" = "Aparença de la barra:";
+"Dark" = "Fosc";
+"Light" = "Clar";
+"Follow System" = "Segueix el sistema";
 "Application" = "Aplicació";
 "Capture area and extract text" = "Capturar àrea i extreure text";
 "Capture the full screen" = "Capturar la pantalla completa";
@@ -861,3 +909,23 @@
 
 "Snap webcam to corners when moved" = "Ajusta la càmera web a les cantonades en moure-la";
 "Search emoji" = "Cerca emojis";
+"Hide the bottom toolbar" = "Amagar la barra d'eines inferior";
+"Pick tools with their keyboard shortcuts instead." = "Tria les eines amb les seves dreceres de teclat.";
+
+"Pin position:" = "Posició de la fixació:";
+"Center of screen" = "Centre de la pantalla";
+"Original capture position" = "Posició original de la captura";
+
+"Default Colors" = "Colors per defecte";
+"The preset swatches in the color picker." = "Els colors predefinits del selector de color.";
+"Add Color" = "Afegeix un color";
+"No default colors." = "Cap color per defecte.";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Tanca";
+"Copy & dismiss" = "Copia i tanca";
+"Close preview" = "Tanca la previsualització";
+"Keep in stack" = "Mantén a la pila";
+"Return to stack when editor closes" = "Torna a la pila en tancar l’editor";
+"  Click on preview:" = "  Clic a la previsualització:";
+"  When opened in Editor:" = "  En obrir a l’editor:";

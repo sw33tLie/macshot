@@ -15,6 +15,10 @@ protocol AnnotationCanvas: AnyObject {
     var currentRectCornerRadius: CGFloat { get }
     var currentMeasureInPoints: Bool { get }
     var currentMeasureClampToSelection: Bool { get }
+    /// Image-wide real-world scale new measure lines are labelled with.
+    var measureCalibration: MeasureCalibration? { get }
+    /// Called after a measure line is committed (it may become a scale reference).
+    func measureLineCommitted(_ annotation: Annotation)
     var currentLoupeSize: CGFloat { get }
     var currentLoupeMagnification: CGFloat { get }
     var currentLoupeOutlineColor: NSColor { get }

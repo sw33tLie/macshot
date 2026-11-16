@@ -167,6 +167,7 @@
 "Smooth" = "Smooth";
 "Refined" = "Refined";
 "Smart" = "Smart";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "Smart snaps the highlighter to lines of text. Hold Shift for a straight line.";
 "Padding" = "Padding";
 "Shadow" = "Shadow";
 "Right-click to add points" = "Right-click to add points";
@@ -216,6 +217,7 @@
 "Capture" = "Capture";
 "Play sound on capture" = "Play sound on capture";
 "Remember last selected tool" = "Remember last selected tool";
+"Start captures in move mode" = "Start captures in move mode";
 "Show floating thumbnail after capture" = "Show floating thumbnail after capture";
 "Launch at login" = "Launch at login";
 "Show snap alignment guides" = "Show snap alignment guides";
@@ -414,6 +416,9 @@
 "Screen Recording granted!" = "Screen Recording granted!";
 "Enable macshot, then try taking a screenshot" = "Enable macshot, then try taking a screenshot";
 "Open Screen Recording Settings" = "Open Screen Recording Settings";
+"Still not working? Run this command in Terminal, then restart macshot." = "Still not working? Run this command in Terminal, then restart macshot.";
+"Copy Command" = "Copy Command";
+"Restart macshot" = "Restart macshot";
 "Continue" = "Continue";
 
 /* OCR Window */
@@ -622,6 +627,10 @@
 "Background" = "Background";
 "Custom" = "Custom";
 "Theme:" = "Theme:";
+"Toolbar appearance:" = "Toolbar appearance:";
+"Dark" = "Dark";
+"Light" = "Light";
+"Follow System" = "Follow System";
 
 /* Settings — shortcuts help text */
 "Application" = "Application";
@@ -860,3 +869,60 @@
 
 "Snap webcam to corners when moved" = "Snap webcam to corners when moved";
 "Search emoji" = "Search emoji";
+"Hide the bottom toolbar" = "Hide the bottom toolbar";
+"Pick tools with their keyboard shortcuts instead." = "Pick tools with their keyboard shortcuts instead.";
+
+"Pin position:" = "Pin position:";
+"Center of screen" = "Center of screen";
+"Original capture position" = "Original capture position";
+
+"Default Colors" = "Default Colors";
+"The preset swatches in the color picker." = "The preset swatches in the color picker.";
+"Add Color" = "Add Color";
+"No default colors." = "No default colors.";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Dismiss";
+"Copy & dismiss" = "Copy & dismiss";
+"Close preview" = "Close preview";
+"Keep in stack" = "Keep in stack";
+"Return to stack when editor closes" = "Return to stack when editor closes";
+"  Click on preview:" = "  Click on preview:";
+"  When opened in Editor:" = "  When opened in Editor:";
+
+/* Editable projects, Select tool, measure scale (#497) */
+"Centimeters (cm)" = "Centimeters (cm)";
+"Choose an image or macshot project to open in the editor" = "Choose an image or macshot project to open in the editor";
+"Could not open “%@”" = "Could not open “%@”";
+"Could not save the project: %@" = "Could not save the project: %@";
+"Current scale: 1 %@ = %@ px" = "Current scale: 1 %@ = %@ px";
+"Draw Reference Line" = "Draw Reference Line";
+"Draw a measure line along something whose length you know" = "Draw a measure line along something whose length you know";
+"Draw or select a measure line along something whose length you know, then enter that length." = "Draw or select a measure line along something whose length you know, then enter that length.";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "Enter a length, like 90 mm, 3.5 in or 3 1/2 in.";
+"Feet (ft)" = "Feet (ft)";
+"Inches (in)" = "Inches (in)";
+"Measure Scale" = "Measure Scale";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "Measure in mm, cm, m, inches or feet using something of known length in the image";
+"Meters (m)" = "Meters (m)";
+"Millimeters (mm)" = "Millimeters (mm)";
+"Open..." = "Open...";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line.";
+"Remove Scale" = "Remove Scale";
+"Save Project" = "Save Project";
+"Save Project As..." = "Save Project As...";
+"Save as Editable Project (⇧⌘S)" = "Save as Editable Project (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "Saves the image with every annotation still editable. Open the file in macshot to keep editing.";
+"Scale: %@" = "Scale: %@";
+"Select & Move" = "Select & Move";
+"Set Scale" = "Set Scale";
+"Set Scale..." = "Set Scale...";
+"Show lengths in" = "Show lengths in";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged.";
+"The file is not a macshot project or is damaged." = "The file is not a macshot project or is damaged.";
+"The project could not be prepared for saving." = "The project could not be prepared for saving.";
+"The image is too large to save as an editable project." = "The image is too large to save as an editable project.";
+"The project file is too large to open." = "The project file is too large to open.";
+"The project's image could not be read." = "The project's image could not be read.";
+"This line is %d px long. How long is it in real life?" = "This line is %d px long. How long is it in real life?";
+"e.g. 90 mm or 3 1/2 in" = "e.g. 90 mm or 3 1/2 in";

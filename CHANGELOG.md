@@ -1,5 +1,51 @@
 # Changelog
 
+## [4.5.0-beta.2] - 2026-11-14
+
+### New
+
+- **Editable projects**: save a capture as a `.macshot` file with every annotation still editable, and reopen it later from Finder, File > Open... or `macshot://open`, independent of history. Save Project is ⇧⌘S in the Editor (or the new top-bar button), Save Project As is ⌥⇧⌘S. (#497)
+- **Select & Move tool**: the first toolbar button (V) only selects, moves and resizes annotations; dragging on empty space draws a selection box instead of a new annotation. (#497)
+- **Measure in real units**: Set Scale in the Measure tool turns a line along something of known length (`90 mm`, `3 1/2 in`, `6' 2"`) into a scale, and every measurement shows mm, cm, m, inches or feet. The scale is kept in history and in projects. (#497)
+- **Arrow keys nudge** the selected annotations by 1 pt (10 pt with Shift), handy for lining up pasted screenshots; a run of nudges undoes in one step. (#497)
+- With the menu bar menu open, ⌘V opens the clipboard image in the Editor (unless you gave Open from Clipboard its own shortcut) and ⌘O opens a file. (#497)
+
+### Fixed
+
+- Resize handles, the rotate knob and the delete button of an image pasted at the edge of the Editor canvas couldn't be reached. The canvas now has room around it for them. (#497)
+- Undoing a crop, flip or canvas growth in the Editor left annotations shifted or mirrored.
+- Moving several selected annotations took one undo per annotation to put back; it's now one step.
+- Moving a pixelate or blur reopened from history, or carried over from the capture, could drop it to its see-through preview.
+- A magnifier's source area didn't follow the image after a crop or flip, and the Editor's size label could show the old size after an undo.
+
+## [4.5.0-beta.1] - 2026-11-13
+
+### New
+
+- **Drag the edited image out of the Editor**: the handle next to the zoom menu drops the image, with annotations and beautify, into Finder, Messages or any app that takes files. Click it to copy. (#514)
+- **Pins can open where they were captured**, on top of the original content. Settings > Capture > Pin position. Thanks @yohey03518. (#331, #465)
+- **Toolbar appearance**: Dark (the default, as before), Light or Follow System. Settings > General. Thanks @RyanStarFox. (#427, #459)
+- **Beautify without a background**: turn off Background to keep the padding transparent with the shadow on it. JPEG fills it with white. Thanks @RyanStarFox. (#460)
+- **Default colors**: choose the swatches the color picker offers. Settings > Tools. Thanks @cktgh. (#494)
+- **Type a hex color code** in the color picker. Thanks @cktgh. (#489)
+- **Hide the bottom toolbar** and pick tools with their keyboard shortcuts instead. Settings > Tools. Thanks @tnrich. (#490, #491)
+- **Floating preview options**: choose what clicking a preview does, and whether it stays, waits or closes while its capture is open in the Editor. Settings > Capture. Thanks @stepanenko3. (#492)
+- **Start captures in move mode** (off by default): dragging inside a new selection moves it until you pick a tool. Settings > Capture. Thanks @morefreefg. (#502)
+
+### Improved
+
+- **OCR runs in its own helper process.** On macOS 27, a recognition that gets stuck no longer makes later OCR slow or empty until macshot restarts; the fast model answers meanwhile and the helper is replaced. (#508)
+- **Screen Recording that won't come back after the signature change**: the "Turn Screen Recording back on" window shows the exact reset command with Copy and Restart buttons. (#496)
+- macshot no longer asks for Screen Recording again and again while access is being repaired, and new users no longer see the "Welcome back" version of the permission window. Thanks @newtonlorenz. (#493)
+
+### Fixed
+
+- Main display captures coming out as a 1x image in the corner of a 2x canvas on some macOS 27 setups. Thanks @daresTheDevil. (#499, #500)
+- The menu bar menu opening behind full-screen apps on macOS 27. Thanks @Romain04240. (#511)
+- Scroll capture auto-scrolling up instead of down with Mac Mouse Fix's reversed scrolling. Thanks @Saafo. (#510)
+- Pipes (`|`) from window titles in filenames, which SharePoint and Teams reject. Thanks @AwaleSagar. (#487, #505)
+- "Restart macshot" and "Relaunch Now" after a settings import sometimes leaving no copy of macshot running.
+
 ## [4.4.0] - 2026-11-01
 
 ### Before you update

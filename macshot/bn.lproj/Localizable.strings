@@ -93,7 +93,30 @@
 "Color Sampler" = "রং নমুনাকারী";
 "Color Picker" = "রং নির্বাচক";
 "Select & Edit" = "নির্বাচন ও সম্পাদনা";
+"Select & Move" = "নির্বাচন ও সরানো";
 "Color" = "রং";
+
+/* Measure Scale */
+"Measure Scale" = "পরিমাপের স্কেল";
+"Set Scale..." = "স্কেল নির্ধারণ...";
+"Set Scale" = "স্কেল নির্ধারণ";
+"Scale: %@" = "স্কেল: %@";
+"Remove Scale" = "স্কেল সরান";
+"Show lengths in" = "দৈর্ঘ্যের একক";
+"Current scale: 1 %@ = %@ px" = "বর্তমান স্কেল: 1 %@ = %@ px";
+"Draw Reference Line" = "রেফারেন্স রেখা আঁকুন";
+"Draw a measure line along something whose length you know" = "জানা দৈর্ঘ্যের কোনো কিছুর বরাবর একটি পরিমাপ রেখা আঁকুন";
+"Draw or select a measure line along something whose length you know, then enter that length." = "যার দৈর্ঘ্য আপনি জানেন এমন কিছুর বরাবর একটি পরিমাপ রেখা আঁকুন বা নির্বাচন করুন, তারপর সেই দৈর্ঘ্য লিখুন।";
+"This line is %d px long. How long is it in real life?" = "এই রেখাটি %d px লম্বা। বাস্তবে এটি কত লম্বা?";
+"e.g. 90 mm or 3 1/2 in" = "যেমন 90 mm বা 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "একটি দৈর্ঘ্য লিখুন, যেমন 90 mm, 3.5 in বা 3 1/2 in।";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "বাস্তব দৈর্ঘ্যগুলো আনুমানিক। এগুলো কেবল রেফারেন্স রেখার একই তলে থাকা জিনিসের জন্য নির্ভরযোগ্য।";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "ছবিতে জানা দৈর্ঘ্যের কোনো কিছু ব্যবহার করে mm, cm, m, ইঞ্চি বা ফুটে পরিমাপ করুন";
+"Millimeters (mm)" = "মিলিমিটার (mm)";
+"Centimeters (cm)" = "সেন্টিমিটার (cm)";
+"Meters (m)" = "মিটার (m)";
+"Inches (in)" = "ইঞ্চি (in)";
+"Feet (ft)" = "ফুট (ft)";
 
 /* Toolbar - Actions */
 "Copy to Clipboard" = "ক্লিপবোর্ডে কপি";
@@ -155,6 +178,7 @@
 "Smooth" = "মসৃণ";
 "Refined" = "পরিমার্জিত";
 "Smart" = "স্মার্ট";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "স্মার্ট হাইলাইটারকে লেখার লাইনের সাথে মিলিয়ে দেয়। সরলরেখার জন্য Shift চেপে ধরুন।";
 "Padding" = "প্যাডিং";
 "Shadow" = "ছায়া";
 "Right-click to add points" = "পয়েন্ট যোগ করতে ডান-ক্লিক করুন";
@@ -211,6 +235,7 @@
 "Play sound on capture" = "ক্যাপচারে শব্দ বাজান";
 "Play sound on copy" = "কপিতে শব্দ বাজান";
 "Remember last selected tool" = "শেষ নির্বাচিত টুল মনে রাখুন";
+"Start captures in move mode" = "স্ক্রিনশট নেওয়ার শুরুতে সরানোর মোড ব্যবহার করুন";
 "Show floating thumbnail after capture" = "ক্যাপচারের পর ভাসমান থাম্বনেইল দেখান";
 "Launch at login" = "লগইনে চালু করুন";
 "Show snap alignment guides" = "স্ন্যাপ সারিবদ্ধকরণ গাইড দেখান";
@@ -403,6 +428,9 @@
 "Screen Recording granted!" = "স্ক্রিন রেকর্ডিং অনুমতি দেওয়া হয়েছে!";
 "Enable macshot, then try taking a screenshot" = "macshot সক্রিয় করুন, তারপর স্ক্রিনশট নেওয়ার চেষ্টা করুন";
 "Open Screen Recording Settings" = "স্ক্রিন রেকর্ডিং সেটিংস খুলুন";
+"Still not working? Run this command in Terminal, then restart macshot." = "এখনও কাজ করছে না? টার্মিনালে এই কমান্ডটি চালান, তারপর macshot পুনরায় চালু করুন।";
+"Copy Command" = "কমান্ড কপি";
+"Restart macshot" = "macshot পুনরায় চালু করুন";
 "Continue" = "চালিয়ে যান";
 
 /* OCR Window */
@@ -453,6 +481,22 @@
 "Could not encode the screenshot." = "স্ক্রিনশট এনকোড করা যায়নি।";
 "Could not save the screenshot: %@" = "স্ক্রিনশট সংরক্ষণ করা যায়নি: %@";
 "Could not save the screenshot to history." = "স্ক্রিনশট ইতিহাসে সংরক্ষণ করা যায়নি।";
+
+/* Project Files */
+"Save Project" = "প্রকল্প সংরক্ষণ";
+"Save Project As..." = "প্রকল্প এইরূপে সংরক্ষণ...";
+"Save as Editable Project (⇧⌘S)" = "সম্পাদনাযোগ্য প্রকল্প হিসেবে সংরক্ষণ (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "প্রতিটি টীকা সম্পাদনাযোগ্য রেখে ছবিটি সংরক্ষণ করে। সম্পাদনা চালিয়ে যেতে ফাইলটি macshot-এ খুলুন।";
+"Open..." = "খুলুন...";
+"Choose an image or macshot project to open in the editor" = "এডিটরে খোলার জন্য একটি ছবি বা macshot প্রকল্প বেছে নিন";
+"Could not open “%@”" = "“%@” খোলা যায়নি";
+"Could not save the project: %@" = "প্রকল্প সংরক্ষণ করা যায়নি: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "এই প্রকল্পের কিছু টীকা পুনরুদ্ধার করা যায়নি, তাই এটি সমতল ছবি হিসেবে খোলা হয়েছে। মূল ফাইলটি অপরিবর্তিত আছে।";
+"The file is not a macshot project or is damaged." = "ফাইলটি macshot প্রকল্প নয় বা ক্ষতিগ্রস্ত।";
+"The project could not be prepared for saving." = "প্রকল্পটি সংরক্ষণের জন্য প্রস্তুত করা যায়নি।";
+"The image is too large to save as an editable project." = "ছবিটি সম্পাদনাযোগ্য প্রকল্প হিসেবে সংরক্ষণ করার জন্য খুব বড়।";
+"The project file is too large to open." = "প্রকল্প ফাইলটি খোলার জন্য অনেক বড়।";
+"The project's image could not be read." = "প্রকল্পের ছবি পড়া যায়নি।";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "স্বয়ংক্রিয় স্ক্রল";
@@ -635,6 +679,10 @@
 "Background" = "পটভূমি";
 "Custom" = "কাস্টম";
 "Theme:" = "থিম:";
+"Toolbar appearance:" = "টুলবারের চেহারা:";
+"Dark" = "গাঢ়";
+"Light" = "হালকা";
+"Follow System" = "সিস্টেম অনুসরণ করুন";
 "Application" = "অ্যাপ্লিকেশন";
 "Capture area and extract text" = "এলাকা ক্যাপচার করুন এবং টেক্সট বের করুন";
 "Capture the full screen" = "পূর্ণ স্ক্রিন ক্যাপচার করুন";
@@ -861,3 +909,23 @@
 
 "Snap webcam to corners when moved" = "সরানোর সময় ওয়েবক্যামকে কোণায় আটকে দিন";
 "Search emoji" = "ইমোজি খুঁজুন";
+"Hide the bottom toolbar" = "নীচের টুলবার লুকান";
+"Pick tools with their keyboard shortcuts instead." = "এর বদলে কীবোর্ড শর্টকাট দিয়ে টুল বেছে নিন।";
+
+"Pin position:" = "পিনের অবস্থান:";
+"Center of screen" = "স্ক্রিনের মাঝখানে";
+"Original capture position" = "মূল ক্যাপচারের অবস্থান";
+
+"Default Colors" = "ডিফল্ট রঙ";
+"The preset swatches in the color picker." = "রঙ নির্বাচকে প্রিসেট রংসমূহ।";
+"Add Color" = "রঙ যোগ করুন";
+"No default colors." = "কোনো ডিফল্ট রঙ নেই।";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "বন্ধ করুন";
+"Copy & dismiss" = "কপি করে বন্ধ করুন";
+"Close preview" = "প্রিভিউ বন্ধ করুন";
+"Keep in stack" = "স্ট্যাকে রাখুন";
+"Return to stack when editor closes" = "এডিটর বন্ধ হলে স্ট্যাকে ফেরান";
+"  Click on preview:" = "  প্রিভিউতে ক্লিক:";
+"  When opened in Editor:" = "  এডিটরে খোলার সময়:";

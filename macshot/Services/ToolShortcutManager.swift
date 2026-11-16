@@ -7,6 +7,8 @@ enum ToolShortcutManager {
 
     /// All configurable overlay shortcut actions with their default keys.
     enum Action: String, CaseIterable {
+        // First so a user-assigned key on any later action wins a clash.
+        case select
         case pencil
         case arrow
         case line
@@ -39,6 +41,7 @@ enum ToolShortcutManager {
 
         var label: String {
             switch self {
+            case .select: return L("Select & Move")
             case .pencil: return L("Pencil")
             case .arrow: return L("Arrow")
             case .line: return L("Line")
@@ -73,6 +76,7 @@ enum ToolShortcutManager {
 
         var defaultKey: String {
             switch self {
+            case .select: return "v"
             case .pencil: return "p"
             case .arrow: return "a"
             case .line: return "l"
@@ -141,6 +145,7 @@ enum ToolShortcutManager {
             let k = key(for: action)
             guard !k.isEmpty else { continue }
             switch action {
+            case .select: lookup[k] = .tool(.select)
             case .pencil: lookup[k] = .tool(.pencil)
             case .arrow: lookup[k] = .tool(.arrow)
             case .line: lookup[k] = .tool(.line)
@@ -189,6 +194,7 @@ enum ToolShortcutManager {
         switch toolbarAction {
         case .tool(let tool):
             switch tool {
+            case .select: action = .select
             case .pencil: action = .pencil
             case .arrow: action = .arrow
             case .line: action = .line

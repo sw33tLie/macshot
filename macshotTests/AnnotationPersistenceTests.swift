@@ -70,6 +70,7 @@ final class AnnotationPersistenceTests: XCTestCase {
         "loupeOutlineEnabled": .persisted,
         // Misc
         "measureInPoints": .persisted,
+        "measureCalibration": .persisted,
         "groupID": .persisted,
         "randomSeed": .persisted,
         "dimOpacity": .persisted,
@@ -136,6 +137,7 @@ final class AnnotationPersistenceTests: XCTestCase {
         ann.loupeSourceRect = NSRect(x: 5, y: 6, width: 70, height: 70)
         ann.loupeOutlineEnabled = true
         ann.measureInPoints = true
+        ann.measureCalibration = MeasureCalibration(pointsPerUnit: 3.25, unit: .inches)
         ann.groupID = UUID(uuidString: "11111111-2222-3333-4444-555555555555")
         ann.randomSeed = 123_456_789
         ann.dimOpacity = 0.42

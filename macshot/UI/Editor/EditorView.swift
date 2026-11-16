@@ -55,16 +55,18 @@ class EditorView: OverlayView {
     // MARK: - Cursor (arrow outside image, tool cursor inside)
 
     override func resetCursorRects() {
-        // Arrow cursor for the full document view; updateCursorForPoint overrides
-        // this with the tool cursor only when the mouse is over the image area.
+        // Arrow cursor for the full document view (image plus margin);
+        // updateCursorForPoint overrides it over the image and annotation controls.
         addCursorRect(bounds, cursor: .arrow)
     }
 
     override func mouseMoved(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
-        if selectionRect.contains(point) {
-            super.mouseMoved(with: event)
-        } else {
+        // The base also clears drawing/stamp previews once the pointer leaves
+        // the image, so it always runs; the empty margin keeps a plain arrow
+        // unless an annotation's controls or body are under the pointer.
+        super.mouseMoved(with: event)
+        if !selectionRect.contains(point) && !pointHitsAnnotationInteraction(point) {
             NSCursor.arrow.set()
         }
     }

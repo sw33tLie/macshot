@@ -5,7 +5,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 probe_directory=$(mktemp -d "${TMPDIR:-/tmp}/macshot-history-editor-probe.XXXXXX")
-cp -R macshot macshot.xcodeproj "$probe_directory/"
+cp -R macshot macshotOCRService macshot.xcodeproj "$probe_directory/"
 cp scripts/probe-history-editor.swift "$probe_directory/macshot/main.swift"
 python3 - "$probe_directory" <<'PY'
 import pathlib, sys
@@ -34,7 +34,7 @@ echo "PROBE DIRECTORY: $probe_directory"
 xcodebuild -project "$probe_directory/macshot.xcodeproj" -scheme macshot -configuration Release \
   -derivedDataPath "$probe_directory/build" -destination 'platform=macOS' \
   CODE_SIGNING_ALLOWED=YES CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= \
-  PRODUCT_BUNDLE_IDENTIFIER=com.macshot.history-editor-probe \
+  MACSHOT_BUNDLE_ID=com.macshot.history-editor-probe \
   'SWIFT_ACTIVE_COMPILATION_CONDITIONS=$(inherited) OFFLINE' \
   build > "$probe_directory/build.log" 2>&1
 probe_bundle="$probe_directory/build/Build/Products/Release/macshot.app"

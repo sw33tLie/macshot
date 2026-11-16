@@ -72,6 +72,7 @@ brew install --cask macshot
 - **Multi-monitor** — captures all screens simultaneously; drag a selection across screens for a stitched image
 - **Quick save** — `Cmd+Shift+S` to select and save/copy instantly without annotation. Enter key also saves/copies based on preference.
 - **Quick OCR** — `Cmd+Shift+T` to select and extract text instantly
+- **Move mode (optional)** — turn on **Settings → General → Start captures in move mode** and dragging inside a new selection repositions it until you pick an annotation tool; Space and the Move Selection button move the area at any time
 
 ### Annotation Tools
 - **Arrow** — 5 styles: single, thick/banner, double, open, tail; flip direction toggle; right-click to add anchor points for complex curves
@@ -195,7 +196,9 @@ brew install --cask macshot
 
 ## Permissions
 
-macshot requires **Screen Recording** permission. macOS will prompt you on first capture.
+macshot requires **Screen Recording** permission. On first launch, click **Open Screen Recording Settings** in macshot and enable it in System Settings. If macOS asks, choose **Quit & Reopen** before trying to capture again.
+
+If captures stop working after an update even though macshot is switched on, macshot shows a **Turn Screen Recording back on** window: remove macshot from the list and add it again. If that doesn't help, run the Terminal command shown in that window, which resets macshot's privacy entries, and restart macshot.
 
 ---
 

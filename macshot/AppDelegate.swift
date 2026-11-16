@@ -194,10 +194,13 @@ private final class CaptureTimingTrace: @unchecked Sendable {
 class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
     private var statusItem: NSStatusItem!
+    private var hudAppearanceObserver: HUDSystemAppearanceObserver?
     private var updaterController: SPUStandardUpdaterController!
     private var overlayControllers: [OverlayWindowController] = []
     private var settingsController: SettingsWindowController?
     private var onboardingController: PermissionOnboardingController?
+    // Snapshot before Sparkle starts and can mark this as a previous launch.
+    private let hasUsedMacshotBefore = PermissionOnboardingController.isReturningUser()
     private var pinControllers: [PinWindowController] = []
     private var thumbnailControllers: [FloatingThumbnailController] = []
     private var ocrController: OCRResultController?
@@ -242,10 +245,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     /// capture can be torn down by `rebuildOverlayPool()` later in startup.
     private var isReadyForOpenRequests = false
     private var pendingOpenURLs: [URL] = []
-    /// Capture/record URL actions additionally wait for Screen Recording
-    /// permission. Non-capture actions (settings, history, file opens, etc.)
-    /// remain usable while the onboarding window is shown.
-    private var isReadyForScreenCaptureURLs = false
+    /// Capture and record actions wait for Screen Recording permission.
+    /// URL actions are queued during onboarding; non-capture actions remain usable.
+    private var isReadyForScreenCapture = false
     private var pendingScreenCaptureURLs: [URL] = []
     /// App Nap suppression assertion. Held for the app's lifetime so global
     /// hotkeys respond instantly instead of paying a wake-up penalty when
@@ -258,7 +260,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // Prevent multiple instances — if already running, activate the existing one and quit
         let bundleID = Bundle.main.bundleIdentifier ?? "com.sw33tlie.macshot.macshot"
         let running = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
-        if running.count > 1 {
+        let ownPID = ProcessInfo.processInfo.processIdentifier
+        let otherPIDs = running.map(\.processIdentifier).filter { $0 != ownPID }
+        // A replacement started by `relaunchApp()` overlaps the instance that
+        // launched it until that one quits; it must not quit itself as a duplicate.
+        let isReplacement = RelaunchHandoff.claim(otherPIDs: otherPIDs)
+        if !otherPIDs.isEmpty && !isReplacement {
             // Tell the existing instance to show its icon and open Settings
             DistributedNotificationCenter.default().postNotificationName(
                 .init("com.sw33tlie.macshot.showAndOpenPrefs"),
@@ -362,7 +369,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             guard let self = self else { return }
             if granted {
                 PermissionOnboardingController.rememberGranted()
-                self.markScreenCaptureURLsReady()
+                self.markScreenCaptureReady()
             } else {
                 self.showOnboarding()
             }
@@ -387,11 +394,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             existing.show()
             return
         }
-        let oc = PermissionOnboardingController()
+        let oc = PermissionOnboardingController(returningUser: hasUsedMacshotBefore || isReadyForScreenCapture)
         oc.onPermissionGranted = { [weak self] in
             guard let self = self else { return }
             self.onboardingController = nil
-            self.markScreenCaptureURLsReady()
+            self.markScreenCaptureReady()
         }
         oc.onClose = { [weak self, weak oc] in
             guard let self = self, self.onboardingController === oc else { return }
@@ -414,15 +421,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         rebuildOverlayPool()
     }
 
-    private func markScreenCaptureURLsReady() {
-        guard !isReadyForScreenCaptureURLs else { return }
+    private func markScreenCaptureReady() {
+        guard !isReadyForScreenCapture else { return }
         // Do not rebuild underneath a capture started through another entry
         // point. A later capture can create any missing pooled controller on
         // demand.
         if !isCapturing && recordingEngine == nil {
             prewarmCapturePath()
         }
-        isReadyForScreenCaptureURLs = true
+        isReadyForScreenCapture = true
         let urls = pendingScreenCaptureURLs
         pendingScreenCaptureURLs.removeAll()
         handleOpenURLs(urls)
@@ -462,12 +469,23 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
 
     @objc private func systemDidWake() {
         guard !isCapturing, recordingEngine == nil else { return }
-        prewarmCapturePath()
+        refreshCapturePathAfterSystemChange()
     }
 
     @objc private func screenParametersDidChange() {
         guard !isCapturing, recordingEngine == nil else { return }
-        prewarmCapturePath()
+        refreshCapturePathAfterSystemChange()
+    }
+
+    /// The overlay pool never touches ScreenCaptureKit, so it keeps following
+    /// display changes; the ScreenCaptureKit prewarm waits for access because
+    /// it can raise the system prompt.
+    private func refreshCapturePathAfterSystemChange() {
+        if isReadyForScreenCapture {
+            prewarmCapturePath()
+        } else {
+            rebuildOverlayPool()
+        }
     }
 
     /// Captured at the very start of every hotkey callback (before main thread
@@ -679,7 +697,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // Standard Close Window (Cmd+W) — routes to NSWindow.performClose(_:) via the
         // responder chain, so it closes whichever window is key (editor, settings, etc.)
         // without any window-specific handling.
+        let openItem = NSMenuItem(title: L("Open..."), action: #selector(openImageFromMenu), keyEquivalent: "o")
+        openItem.target = self
+        fileMenu.addItem(openItem)
+        fileMenu.addItem(NSMenuItem.separator())
         fileMenu.addItem(withTitle: "Close Window", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
+        // Sent up the responder chain; only an editor window's delegate answers.
+        let saveProjectItem = NSMenuItem(title: L("Save Project"),
+            action: #selector(DetachedEditorWindowController.saveMacshotProject(_:)), keyEquivalent: "s")
+        saveProjectItem.keyEquivalentModifierMask = [.command, .shift]
+        fileMenu.addItem(saveProjectItem)
+        let saveProjectAsItem = NSMenuItem(title: L("Save Project As..."),
+            action: #selector(DetachedEditorWindowController.saveMacshotProjectAs(_:)), keyEquivalent: "s")
+        saveProjectAsItem.keyEquivalentModifierMask = [.command, .shift, .option]
+        fileMenu.addItem(saveProjectAsItem)
         fileMenuItem.submenu = fileMenu
 
         let editMenuItem = NSMenuItem()
@@ -710,6 +741,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         applyNormalStatusBarIcon()
         rebuildStatusBarMenu()
+        // Lets "Follow System" toolbars repaint when macOS switches light/dark.
+        if hudAppearanceObserver == nil {
+            hudAppearanceObserver = HUDSystemAppearanceObserver(application: NSApp)
+        }
     }
 
     // User-customizable menu bar icon (see Settings → General → Appearance).
@@ -720,14 +755,57 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     private func applyNormalStatusBarIcon() {
         if let button = statusItem.button {
             applyPreferredIconImage(to: button)
-            // Use the NATIVE status-item menu (no custom click action). Showing
-            // the menu by synthesizing a click from the button's mouse-down
-            // action re-enters AppKit's mouse-tracking loop and can hang the main
-            // thread (which also kills the global hotkey). The menu's delegate
-            // handles modal dismissal + prewarm in menuWillOpen instead.
-            button.target = nil
-            button.action = nil
-            statusItem.menu = statusBarMenu
+            if #available(macOS 27.0, *) {
+                // macOS 27 can open the native status-item menu behind an app
+                // in a fullscreen Space (#511). Pop the same menu up ourselves
+                // after the click (see `showStatusBarMenu`). Right-click and
+                // Control-click open it too, as they do with the native menu.
+                button.target = self
+                button.action = #selector(showStatusBarMenu(_:))
+                button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+            } else {
+                // Use the NATIVE status-item menu (no custom click action).
+                // Showing the menu by synthesizing a click from the button's
+                // mouse-down action re-enters AppKit's mouse-tracking loop and
+                // can hang the main thread (which also kills the global hotkey).
+                // The menu's delegate handles modal dismissal + prewarm in
+                // menuWillOpen instead.
+                button.target = nil
+                button.action = nil
+                statusItem.menu = statusBarMenu
+            }
+        }
+    }
+
+    /// macOS 27+: a status-bar click is waiting for its menu to pop up.
+    private var isStatusBarMenuPopUpPending = false
+
+    /// macOS 27+ only. Runs on mouse-up, once the button has finished tracking,
+    /// and pops the menu up on a later run-loop turn, so the menu's tracking
+    /// loop never nests inside the click (the hang described in
+    /// `applyNormalStatusBarIcon`). `menuWillOpen` still runs for a pop-up menu.
+    @objc private func showStatusBarMenu(_ button: NSStatusBarButton) {
+        guard !isStatusBarMenuPopUpPending, let window = button.window else { return }
+        let bottom = button.isFlipped ? button.bounds.maxY : button.bounds.minY
+        let leading = NSApp.userInterfaceLayoutDirection == .rightToLeft
+            ? button.bounds.maxX : button.bounds.minX
+        let anchor = window.convertPoint(toScreen: button.convert(
+            NSPoint(x: leading, y: bottom), to: nil
+        ))
+
+        // Use a screen-space anchor so AppKit does not attach the menu to
+        // the status item's window in a different Space. Wait for the click
+        // to finish before starting the menu's own mouse-tracking loop.
+        isStatusBarMenuPopUpPending = true
+        RunLoop.main.perform(inModes: [.default, .modalPanel]) { [weak self, weak button] in
+            MainActor.assumeIsolated {
+                self?.isStatusBarMenuPopUpPending = false
+                guard let self, let button, self.recordingEngine == nil,
+                      let menu = self.statusBarMenu else { return }
+                button.highlight(true)
+                defer { button.highlight(false) }
+                menu.popUp(positioning: nil, at: anchor, in: nil)
+            }
         }
     }
 
@@ -794,11 +872,21 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     /// instance via NSWorkspace (no shell, no sleep), then terminates this one once the
     /// new copy is up. `createsNewApplicationInstance` lets the replacement start before
     /// this process exits, so there's no window where no instance is running.
+    /// `RelaunchHandoff` keeps the single-instance check at launch from making the
+    /// replacement quit while this one is still alive. If the launch fails, this
+    /// instance keeps running rather than leaving none.
     static func relaunchApp() {
         let config = NSWorkspace.OpenConfiguration()
         config.createsNewApplicationInstance = true
-        NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: config) { _, _ in
-            DispatchQueue.main.async { NSApp.terminate(nil) }
+        RelaunchHandoff.record()
+        NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: config) { app, _ in
+            DispatchQueue.main.async {
+                guard app != nil else {
+                    RelaunchHandoff.clear()
+                    return
+                }
+                NSApp.terminate(nil)
+            }
         }
     }
 
@@ -917,11 +1005,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         quitItem.target = self
         menu.addItem(quitItem)
 
+        // While the menu is open, ⌘V opens the clipboard image and ⌘O opens a
+        // file, unless the user gave those items a global shortcut of their own
+        // or another item already claims the chord.
+        Self.applyDefaultMenuKeyEquivalent("v", to: pasteImageItem, in: menu)
+        Self.applyDefaultMenuKeyEquivalent("o", to: openImageItem, in: menu)
+
         menu.delegate = self  // menuWillOpen dismisses any modal + prewarms capture
         statusBarMenu = menu
         // Re-attach to the status item unless we're in recording mode (which owns
-        // the icon and uses a custom stop action with no menu).
-        if recordingEngine == nil {
+        // the icon and uses a custom stop action with no menu). macOS 27 pops the
+        // menu up from the button action instead (see `applyNormalStatusBarIcon`).
+        if #unavailable(macOS 27.0), recordingEngine == nil {
             statusItem?.menu = menu
         }
     }
@@ -1108,6 +1203,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func beginCaptureArea(fromMenu: Bool) {
+        guard prepareToStartCapture() else { return }
         startCapture(fromMenu: fromMenu)
     }
 
@@ -1120,7 +1216,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func beginCaptureFullScreen(fromMenu: Bool) {
-        guard canStartCapture else { return }
+        guard prepareToStartCapture() else { return }
         pendingFullScreen = true
         startCapture(fromMenu: fromMenu)
     }
@@ -1148,7 +1244,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func beginCaptureOCR(fromMenu: Bool) {
-        guard canStartCapture else { return }
+        guard prepareToStartCapture() else { return }
         pendingOCRMode = true
         startCapture(fromMenu: fromMenu)
     }
@@ -1157,7 +1253,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     /// original text on the screenshot (macshot://ocr-translate). `target` nil
     /// uses the saved default language.
     private func beginCaptureTranslate(target: String?, fromMenu: Bool) {
-        guard canStartCapture else { return }
+        guard prepareToStartCapture() else { return }
         pendingTranslateOverlayMode = true
         pendingTranslateOverlayLang = target
         startCapture(fromMenu: fromMenu)
@@ -1172,7 +1268,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func beginQuickCapture(fromMenu: Bool) {
-        guard canStartCapture else { return }
+        guard prepareToStartCapture() else { return }
         pendingQuickCaptureMode = true
         startCapture(fromMenu: fromMenu)
     }
@@ -1186,7 +1282,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func beginScrollCapture(fromMenu: Bool) {
-        guard canStartCapture else { return }
+        guard prepareToStartCapture() else { return }
         pendingScrollCaptureMode = true
         startCapture(fromMenu: fromMenu)
     }
@@ -1202,7 +1298,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func beginCaptureLastArea(fromMenu: Bool) {
-        guard canStartCapture else { return }
+        guard prepareToStartCapture() else { return }
         pendingRestoreLastArea = true
         startCapture(fromMenu: fromMenu)
     }
@@ -1219,7 +1315,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func beginRecordArea(fromMenu: Bool, asGIF: Bool = false) {
-        guard canStartCapture else { return }
+        guard prepareToStartCapture() else { return }
         pendingRecordMode = true
         startCapture(fromMenu: fromMenu, recordingAsGIF: asGIF)
     }
@@ -1242,7 +1338,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func beginRecordFullScreen(fromMenu: Bool) {
-        guard canStartCapture else { return }
+        guard prepareToStartCapture() else { return }
         pendingFullScreenRecord = true
         if UserDefaults.standard.integer(forKey: "captureDelaySeconds") > 0 {
             pendingFullScreenRecordAutoStart = true
@@ -1265,19 +1361,43 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     /// calling `startCapture`. If `startCapture` were to bail at its guards after
     /// the flag was set, the flag would strand and get applied to the *next*
     /// capture — e.g. a stranded `pendingOCRMode` makes a later screenshot spawn
-    /// an unexpected OCR window (issue #276). So each `begin*` checks this FIRST
-    /// and only sets its flag when a capture will actually run. We must not clear
-    /// the flags inside `startCapture`'s `!isCapturing` guard, because during a
-    /// delay-capture countdown `isCapturing` is already true and the pending mode
-    /// belongs to that accepted (not-yet-consumed) capture.
+    /// an unexpected OCR window (issue #276). So each `begin*` checks
+    /// `prepareToStartCapture()` FIRST and only sets its flag when a capture will
+    /// actually run. We must not clear the flags inside `startCapture`'s
+    /// `!isCapturing` guard, because during a delay-capture countdown
+    /// `isCapturing` is already true and the pending mode belongs to that
+    /// accepted (not-yet-consumed) capture.
     private var canStartCapture: Bool {
         !isCapturing && recordingEngine == nil
     }
 
+    /// `canStartCapture`, plus the permission gate. While access is missing,
+    /// menu and hotkey actions open onboarding instead of asking
+    /// ScreenCaptureKit, which would raise the system prompt again (#493).
+    /// The preflight can lag behind a grant the capture itself would accept,
+    /// so once the user has been sent to Settings from onboarding, a capture
+    /// may try anyway; if it fails it lands on onboarding as before.
+    private func prepareToStartCapture() -> Bool {
+        guard canStartCapture else { return false }
+        if !isReadyForScreenCapture {
+            if PermissionOnboardingController.hasScreenRecordingPermission() {
+                // Granted since launch without onboarding noticing (e.g. it
+                // was closed). This also replays capture URLs queued behind
+                // onboarding, which may have started a capture already.
+                markScreenCaptureReady()
+                guard canStartCapture else { return false }
+            } else if !PermissionOnboardingController.didOpenScreenRecordingSettings {
+                showOnboarding()
+                return false
+            }
+        }
+        return true
+    }
+
     private func startCapture(fromMenu: Bool = false, recordingAsGIF: Bool = false) {
-        guard !isCapturing else { return }
-        // Don't allow captures while recording
-        guard recordingEngine == nil else { return }
+        // Every caller checked `prepareToStartCapture()`; keep the guards so a
+        // future caller can't start a second capture over a running one.
+        guard canStartCapture else { return }
         nextRecordingIsGIF = recordingAsGIF
         let trace = makeCaptureTimingTrace()
         captureTimingTrace = trace
@@ -1513,13 +1633,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                         if !isFirst { self.refocusOverlay(among: controllers, installed: progressive.installed) }
                     })
             }
-            if let captures, progressive.shownAny {
+            let remaining = controllers.filter { !progressive.installed.contains(ObjectIdentifier($0)) }
+            if let captures, progressive.shownAny, remaining.isEmpty {
                 trace?.mark("background screenshot end count=\(captures.count) (progressive)")
                 return
             }
             // No SCK result, or some displays failed after others were already
-            // shown: capture the rest with the fallback and install only those.
-            let remaining = controllers.filter { !progressive.installed.contains(ObjectIdentifier($0)) }
+            // shown (SCK may still have captured them through its content-filter
+            // path): install only the displays not yet shown.
             let finalCaptures = captures ?? ScreenCaptureManager.captureAllScreensImmediately(
                 context: captureContext,
                 timing: { label in trace?.mark(label) })
@@ -1528,15 +1649,26 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                 guard let self = self, self.isCapturing,
                       self.captureSessionID == sessionID else { return }
                 if progressive.shownAny {
+                    // Only displays this fallback actually captured. With none,
+                    // keep the overlays already shown: an empty install would
+                    // end the capture the user is working in.
+                    let fallback = finalCaptures.filter { capture in remaining.contains { $0.screen == capture.screen } }
+                    let covered = remaining.filter { controller in fallback.contains { $0.screen == controller.screen } }
+                    guard !covered.isEmpty else {
+                        trace?.mark("fallback covered none of the remaining displays")
+                        return
+                    }
                     self.installAndShowOverlays(
-                        captures: finalCaptures.filter { capture in remaining.contains { $0.screen == capture.screen } },
-                        controllers: remaining,
+                        captures: fallback,
+                        controllers: covered,
                         mouseScreen: mouseScreen,
                         applyFullScreen: didApplyFullScreen,
                         applyFullScreenRecord: didApplyFullScreenRecord,
                         autoStartRecord: didApplyFullScreenRecordAutoStart,
                         markInteractive: false)
-                    self.refocusOverlay(among: controllers, installed: nil)
+                    // Only overlays that are actually showing a capture may take focus.
+                    self.refocusOverlay(among: controllers,
+                                        installed: progressive.installed.union(covered.map { ObjectIdentifier($0) }))
                     return
                 }
                 self.installAndShowOverlays(
@@ -1906,11 +2038,24 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         let enabled = UserDefaults.standard.object(forKey: "showFloatingThumbnail") as? Bool ?? true
         guard enabled else { return }
 
+        // The editor re-shows its capture on Done/Copy/Save. If that capture's
+        // preview is still in the stack (kept or waiting while editing), update
+        // it in place instead of stacking a duplicate. Replace mode still
+        // closes every other preview.
         let stacking = UserDefaults.standard.object(forKey: "thumbnailStacking") as? Bool ?? true
-        if !stacking {
-            // Replace mode: dismiss all existing thumbnails
-            thumbnailControllers.forEach { $0.dismiss() }
-            thumbnailControllers.removeAll()
+        let plan = FloatingThumbnailStackPlan(
+            existingEntryIDs: thumbnailControllers.map { $0.canUpdateInPlace ? $0.historyEntryID : nil },
+            newEntryID: historyEntryID, stacking: stacking)
+        let existing = plan.updateIndex.map { thumbnailControllers[$0] }
+        let replaced = plan.dismissIndices.map { thumbnailControllers[$0] }
+        if !replaced.isEmpty {
+            thumbnailControllers.removeAll { controller in replaced.contains { $0 === controller } }
+            replaced.forEach { $0.dismiss() }
+        }
+        if let existing {
+            existing.updateImage(image, annotationData: annotationData)
+            existing.restartAutoDismiss()
+            return
         }
 
         guard let screen = NSScreen.preferred else { return }
@@ -1921,18 +2066,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         let thumbSize = FloatingThumbnailController.currentThumbnailSize()
         let xOrigin = thumbnailX(for: thumbSize.width, in: screenFrame, corner: corner, padding: padding)
 
-        // Compute Y: bottom corners stack upward, top corners stack downward.
-        var yOrigin = corner.isTop ? screenFrame.maxY - thumbSize.height - padding : screenFrame.minY + padding
-        if let topController = thumbnailControllers.last {
-            let topFrame = topController.windowFrame
-            yOrigin = corner.isTop ? topFrame.minY - thumbSize.height - gap : topFrame.maxY + gap
-        }
+        let yOrigin = nextThumbnailY(height: thumbSize.height, in: screenFrame, corner: corner, padding: padding, gap: gap)
 
         let controller = FloatingThumbnailController(image: image)
         controller.historyEntryID = historyEntryID
         controller.annotationData = annotationData
         controller.onDismiss = { [weak self] in
             self?.thumbnailControllers.removeAll { $0 === controller }
+            self?.reflowThumbnails()
+        }
+        controller.onSuspended = { [weak self] in
             self?.reflowThumbnails()
         }
         controller.onCopy = { [weak controller] in
@@ -1959,16 +2102,28 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             )
             self.showPin(image: image)
         }
-        controller.onEdit = { [weak controller] in
+        controller.onEdit = { [weak self, weak controller] in
             guard let controller else { return }
             let image = controller.image
             let id = controller.historyEntryID ?? historyEntryID
+            let hooks = DetachedEditorWindowController.Hooks(
+                onSaved: { [weak controller] savedImage, savedData, savedID in
+                    guard let controller else { return }
+                    if let savedID { controller.historyEntryID = savedID }
+                    controller.updateImage(savedImage, annotationData: savedData)
+                },
+                onClose: { [weak self, weak controller] in
+                    guard let self, let controller else { return }
+                    self.thumbnailEditorDidClose(controller)
+                }
+            )
             if let data = controller.annotationData {
                 DetachedEditorWindowController.open(
                     image: data.rawImage,
                     annotations: data.annotations,
                     historyEntryID: id,
-                    editState: data.editState
+                    editState: data.editState,
+                    hooks: hooks
                 )
                 return
             }
@@ -1979,12 +2134,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                     image: editable.rawImage,
                     annotations: editable.annotations,
                     historyEntryID: id,
-                    editState: editable.editState
+                    editState: editable.editState,
+                    hooks: hooks
                 )
                 return
             }
             // Image already has beautify/effects baked in — disable to avoid double-applying
-            DetachedEditorWindowController.open(image: image, historyEntryID: id, disableBeautify: true)
+            DetachedEditorWindowController.open(image: image, historyEntryID: id, disableBeautify: true, hooks: hooks)
         }
         #if !OFFLINE
         controller.onUpload = { [weak self, weak controller] in
@@ -2016,9 +2172,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         }
         controller.onCloseAll = { [weak self] in
             guard let self = self else { return }
-            let all = self.thumbnailControllers
-            self.thumbnailControllers.removeAll()
-            for c in all { c.dismiss() }
+            // A preview hidden while its editor is open isn't on screen; it
+            // stays so it can come back when that editor closes.
+            let visible = self.thumbnailControllers.filter { !$0.isSuspended }
+            self.thumbnailControllers.removeAll { controller in visible.contains { $0 === controller } }
+            for c in visible { c.dismiss() }
         }
         controller.onSaveAll = { [weak self] in
             self?.saveAllThumbnailsToFolder()
@@ -2028,7 +2186,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
     }
 
     private func saveAllThumbnailsToFolder() {
-        let images = thumbnailControllers.map { $0.image }
+        // Only what the user can see: not a preview hidden while it's edited.
+        let images = thumbnailControllers.filter { !$0.isSuspended }.map { $0.image }
         guard !images.isEmpty else { return }
 
         let panel = NSOpenPanel()
@@ -2057,10 +2216,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                         try? data.write(to: fileURL)
                     }
                     DispatchQueue.main.async {
-                        self?.playCopySound()
-                        let all = self?.thumbnailControllers ?? []
-                        self?.thumbnailControllers.removeAll()
-                        for c in all { c.dismiss() }
+                        guard let self else { return }
+                        self.playCopySound()
+                        let saved = self.thumbnailControllers.filter { !$0.isSuspended }
+                        self.thumbnailControllers.removeAll { controller in saved.contains { $0 === controller } }
+                        for c in saved { c.dismiss() }
                     }
                 }
             }
@@ -2075,7 +2235,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         let frame = screen.visibleFrame
         let corner = thumbnailCorner()
         var y = corner.isTop ? frame.maxY - padding : frame.minY + padding
-        for c in thumbnailControllers {
+        for c in thumbnailControllers where !c.isSuspended {
             let size = c.windowFrame.size
             let x = thumbnailX(for: size.width, in: frame, corner: corner, padding: padding)
             let yOrigin: CGFloat
@@ -2089,6 +2249,44 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             }
             c.moveTo(origin: NSPoint(x: x, y: yOrigin))
         }
+    }
+
+    /// Y origin of the next free slot on top of the visible stack.
+    private func nextThumbnailY(
+        height: CGFloat,
+        in frame: NSRect,
+        corner: FloatingThumbnailCorner,
+        padding: CGFloat,
+        gap: CGFloat
+    ) -> CGFloat {
+        guard let top = thumbnailControllers.last(where: { !$0.isSuspended }) else {
+            return corner.isTop ? frame.maxY - height - padding : frame.minY + padding
+        }
+        let topFrame = top.windowFrame
+        return corner.isTop ? topFrame.minY - height - gap : topFrame.maxY + gap
+    }
+
+    /// An editor opened from a floating preview closed. A preview that waited
+    /// off-screen ("return after editor closes") goes back on top of the stack.
+    private func thumbnailEditorDidClose(_ controller: FloatingThumbnailController) {
+        guard thumbnailControllers.contains(where: { $0 === controller }) else { return }
+        // Only reposition when this close actually brings the preview back;
+        // another editor opened from it may still be open.
+        guard controller.returnsToStackOnNextEditorClose, let screen = NSScreen.preferred else {
+            controller.editorDidClose(returnTo: nil)
+            return
+        }
+        thumbnailControllers.removeAll { $0 === controller }
+        reflowThumbnails()
+        let frame = screen.visibleFrame
+        let corner = thumbnailCorner()
+        let size = controller.windowFrame.size
+        let origin = NSPoint(
+            x: thumbnailX(for: size.width, in: frame, corner: corner, padding: 16),
+            y: nextThumbnailY(height: size.height, in: frame, corner: corner, padding: 16, gap: 8)
+        )
+        thumbnailControllers.append(controller)
+        controller.editorDidClose(returnTo: origin)
     }
 
     private func thumbnailCorner() -> FloatingThumbnailCorner {
@@ -2286,6 +2484,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         openImageWithPanel()
     }
 
+    static func applyDefaultMenuKeyEquivalent(_ key: String, to item: NSMenuItem, in menu: NSMenu) {
+        guard item.keyEquivalent.isEmpty else { return }
+        let taken = menu.items.contains {
+            $0 !== item && $0.keyEquivalent.lowercased() == key
+                && $0.keyEquivalentModifierMask.intersection(.deviceIndependentFlagsMask) == .command
+        }
+        guard !taken else { return }
+        item.keyEquivalent = key
+        item.keyEquivalentModifierMask = .command
+    }
+
     @objc private func openImageFromClipboard() {
         let pasteboard = NSPasteboard.general
         guard let image = NSImage(pasteboard: pasteboard), image.isValid,
@@ -2329,16 +2538,63 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = true
-        panel.allowedContentTypes = [.png, .jpeg, .tiff, .bmp, .gif, .heic, .webP, .image]
-        panel.message = "Choose an image to open in macshot editor"
+        panel.allowedContentTypes = [MacshotProjectFile.contentType, .png, .jpeg, .tiff, .bmp, .gif, .heic, .webP, .image]
+        panel.message = L("Choose an image or macshot project to open in the editor")
 
         NSApp.activate(ignoringOtherApps: true)
         panel.begin { response in
             guard response == .OK else { return }
             for url in panel.urls {
-                self.openImageFile(url: url)
+                if MacshotProjectFile.isProjectURL(url) {
+                    self.openProjectFile(url: url)
+                } else {
+                    self.openImageFile(url: url)
+                }
             }
         }
+    }
+
+    /// Open a `.macshot` project with every annotation editable. Decoding runs
+    /// off the main thread; a project whose annotations can't all be restored
+    /// opens its flattened copy instead (and is not linked, so saving can't
+    /// overwrite the original with the flattened version).
+    private func openProjectFile(url: URL) {
+        if DetachedEditorWindowController.focusEditor(forProjectURL: url) { return }
+        let accessing = url.startAccessingSecurityScopedResource()
+        Task { [weak self] in
+            let decoded = await Task.detached(priority: .userInitiated) {
+                Result { try MacshotProjectFile.decode(contentsOf: url) }
+            }.value
+            if accessing { url.stopAccessingSecurityScopedResource() }
+            guard let self else { return }
+            let contents = decoded.flatMap { archive in Result { try MacshotProjectFile.contents(of: archive) } }
+            switch contents {
+            case .failure(let error):
+                self.showProjectOpenFailure(url: url, error: error)
+            case .success(let contents):
+                // A second open request may have arrived while this one decoded.
+                if DetachedEditorWindowController.focusEditor(forProjectURL: url) { return }
+                switch contents {
+                case .editable(let rawImage, let annotations, let editState):
+                    DetachedEditorWindowController.open(
+                        image: rawImage, annotations: annotations, editState: editState, projectURL: url)
+                    NSDocumentController.shared.noteNewRecentDocumentURL(url)
+                case .flattened(let image):
+                    DetachedEditorWindowController.open(image: image, disableBeautify: true)
+                    self.showFailureToast(L("Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged."))
+                }
+            }
+        }
+    }
+
+    private func showProjectOpenFailure(url: URL, error: Error) {
+        let alert = NSAlert()
+        alert.messageText = String(format: L("Could not open “%@”"), url.lastPathComponent)
+        alert.informativeText = error.localizedDescription
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: L("OK"))
+        NSApp.activate(ignoringOtherApps: true)
+        alert.runModal()
     }
 
     private func openImageFile(url: URL) {
@@ -2433,11 +2689,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                 let urlSchemeEnabled = UserDefaults.standard.object(forKey: "urlSchemeEnabled") as? Bool ?? true
                 guard urlSchemeEnabled else { continue }
                 if Self.screenCaptureURLActions.contains(url.host ?? "") {
-                    if !isReadyForScreenCaptureURLs,
+                    if !isReadyForScreenCapture,
                        PermissionOnboardingController.hasScreenRecordingPermission() {
-                        markScreenCaptureURLsReady()
+                        markScreenCaptureReady()
                     }
-                    if !isReadyForScreenCaptureURLs {
+                    // Same way through as the menu and hotkeys: once the user
+                    // has opened Screen Recording settings from onboarding, let
+                    // the capture try even if the preflight still says no.
+                    if !isReadyForScreenCapture,
+                       !PermissionOnboardingController.didOpenScreenRecordingSettings {
                         pendingScreenCaptureURLs.append(url)
                         showOnboarding()
                         continue
@@ -2450,7 +2710,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             // GIFs can be opened in either the image editor or the video
             // editor. Default to image editor (matches prior behavior) — users
             // wanting to trim a GIF use "Open Video..." explicitly.
-            if imageExtensions.contains(ext) {
+            if ext == MacshotProjectFile.fileExtension {
+                openProjectFile(url: url)
+            } else if imageExtensions.contains(ext) {
                 openImageFile(url: url)
             } else if videoExtensions.contains(ext) {
                 openVideoFile(url: url)
@@ -2488,7 +2750,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         case "open":
             if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
                let path = components.queryItems?.first(where: { $0.name == "file" })?.value {
-                openImageFile(url: URL(fileURLWithPath: path))
+                let fileURL = URL(fileURLWithPath: path)
+                if MacshotProjectFile.isProjectURL(fileURL) {
+                    openProjectFile(url: fileURL)
+                } else {
+                    openImageFile(url: fileURL)
+                }
             }
         case "edit":
             if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
@@ -2651,7 +2918,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         return NSImage(cgImage: cgImage, size: globalRect.size)
     }
 
-    func overlayDidRequestPin(_ controller: OverlayWindowController, image: NSImage, annotationData: CaptureAnnotationData?) {
+    func overlayDidRequestPin(_ controller: OverlayWindowController, image: NSImage, annotationData: CaptureAnnotationData?, source: PinSource?) {
         ScreenshotHistory.shared.add(
             image: image,
             rawImage: annotationData?.rawImage,
@@ -2660,7 +2927,7 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         )
         let appToRefocus = previousApp
         dismissOverlays(refocusPreviousApp: false)
-        let pin = PinWindowController(image: image)
+        let pin = PinWindowController(image: image, source: source)
         pin.delegate = self
         pin.show()
         pinControllers.append(pin)
@@ -3054,6 +3321,11 @@ extension AppDelegate: OverlayWindowControllerDelegate {
         statusItem.menu = nil
         statusItem.button?.target = self
         statusItem.button?.action = #selector(stopRecording)
+        if #available(macOS 27.0, *) {
+            // The normal macOS 27 icon also acts on right-click; stopping a take
+            // stays left-click only, as on earlier versions.
+            statusItem.button?.sendAction(on: .leftMouseUp)
+        }
     }
 
     private func exitRecordingMenuBarMode() {
@@ -3570,6 +3842,19 @@ extension AppDelegate: PinWindowControllerDelegate {
     }
 }
 
+// MARK: - Menu validation
+
+extension AppDelegate: NSMenuItemValidation {
+    /// ⌘O would open a panel underneath a capture overlay; the overlay owns
+    /// the keyboard until the capture ends.
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        if menuItem.action == #selector(openImageFromMenu) {
+            return overlayControllers.isEmpty
+        }
+        return true
+    }
+}
+
 // MARK: - NSMenuDelegate (status bar menu + Recent Captures submenu)
 
 extension AppDelegate: NSMenuDelegate {
@@ -3578,7 +3863,9 @@ extension AppDelegate: NSMenuDelegate {
         // menuNeedsUpdate). Dismiss any active modal before the menu shows, and
         // pre-warm ScreenCaptureKit content while the user browses.
         guard menu === statusBarMenu else { return }
-        ScreenCaptureManager.prewarm()
+        if isReadyForScreenCapture {
+            ScreenCaptureManager.prewarm()
+        }
         if let modalWin = NSApp.modalWindow {
             NSApp.stopModal()
             modalWin.close()

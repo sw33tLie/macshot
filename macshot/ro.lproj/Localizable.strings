@@ -91,7 +91,30 @@
 "Color Sampler" = "Selector culoare";
 "Color Picker" = "Alegător de culori";
 "Select & Edit" = "Selectează și editează";
+"Select & Move" = "Selectează și mută";
 "Color" = "Culoare";
+
+/* Measure Scale */
+"Measure Scale" = "Scară de măsurare";
+"Set Scale..." = "Setează scara...";
+"Set Scale" = "Setează scara";
+"Scale: %@" = "Scară: %@";
+"Remove Scale" = "Elimină scara";
+"Show lengths in" = "Afișează lungimile în";
+"Current scale: 1 %@ = %@ px" = "Scara curentă: 1 %@ = %@ px";
+"Draw Reference Line" = "Desenează linia de referință";
+"Draw a measure line along something whose length you know" = "Desenează o linie de măsurare de-a lungul unui obiect a cărui lungime o cunoști";
+"Draw or select a measure line along something whose length you know, then enter that length." = "Desenează sau selectează o linie de măsurare de-a lungul unui obiect a cărui lungime o cunoști, apoi introdu acea lungime.";
+"This line is %d px long. How long is it in real life?" = "Această linie are %d px. Cât de lungă este în realitate?";
+"e.g. 90 mm or 3 1/2 in" = "ex. 90 mm sau 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "Introdu o lungime, de exemplu 90 mm, 3.5 in sau 3 1/2 in.";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "Lungimile reale sunt estimări. Sunt fiabile doar pentru obiectele aflate în același plan cu linia de referință.";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "Măsoară în mm, cm, m, inci sau picioare folosind un obiect de lungime cunoscută din imagine";
+"Millimeters (mm)" = "Milimetri (mm)";
+"Centimeters (cm)" = "Centimetri (cm)";
+"Meters (m)" = "Metri (m)";
+"Inches (in)" = "Inci (in)";
+"Feet (ft)" = "Picioare (ft)";
 
 /* Toolbar - Actions */
 "Copy to Clipboard" = "Copiază în clipboard";
@@ -152,6 +175,7 @@
 "Smooth" = "Neted";
 "Refined" = "Rafinat";
 "Smart" = "Inteligent";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "„Inteligent” aliniază markerul la rândurile de text. Ține apăsat Shift pentru o linie orizontală sau verticală.";
 "Padding" = "Spațiere";
 "Shadow" = "Umbră";
 "Right-click to add points" = "Clic dreapta pentru a adăuga puncte";
@@ -208,6 +232,7 @@
 "Play sound on capture" = "Redă sunet la captură";
 "Play sound on copy" = "Redă sunet la copiere";
 "Remember last selected tool" = "Reține ultimul instrument selectat";
+"Start captures in move mode" = "Începe capturile în modul de mutare";
 "Show floating thumbnail after capture" = "Afișează miniatura flotantă după captură";
 "Launch at login" = "Pornește la autentificare";
 "Show snap alignment guides" = "Afișează ghidajele de aliniere";
@@ -399,6 +424,9 @@
 "Screen Recording granted!" = "Înregistrarea ecranului a fost acordată!";
 "Enable macshot, then try taking a screenshot" = "Activează macshot, apoi încearcă să faci o captură de ecran";
 "Open Screen Recording Settings" = "Deschide setările de înregistrare a ecranului";
+"Still not working? Run this command in Terminal, then restart macshot." = "Tot nu funcționează? Rulează această comandă în Terminal, apoi relansează macshot.";
+"Copy Command" = "Copiază comanda";
+"Restart macshot" = "Relansează macshot";
 "Continue" = "Continuă";
 
 /* OCR Window */
@@ -445,6 +473,22 @@
 "Could not encode the screenshot." = "Nu s-a putut codifica captura de ecran.";
 "Could not save the screenshot: %@" = "Nu s-a putut salva captura de ecran: %@";
 "Could not save the screenshot to history." = "Nu s-a putut salva captura de ecran în istoric.";
+
+/* Project Files */
+"Save Project" = "Salvează proiectul";
+"Save Project As..." = "Salvează proiectul ca...";
+"Save as Editable Project (⇧⌘S)" = "Salvează ca proiect editabil (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "Salvează imaginea cu toate adnotările încă editabile. Deschide fișierul în macshot pentru a continua editarea.";
+"Open..." = "Deschide...";
+"Choose an image or macshot project to open in the editor" = "Alege o imagine sau un proiect macshot de deschis în editor";
+"Could not open “%@”" = "Nu s-a putut deschide „%@”";
+"Could not save the project: %@" = "Nu s-a putut salva proiectul: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "Unele adnotări din acest proiect nu au putut fi restaurate, așa că s-a deschis aplatizat. Fișierul original nu a fost modificat.";
+"The file is not a macshot project or is damaged." = "Fișierul nu este un proiect macshot sau este deteriorat.";
+"The project could not be prepared for saving." = "Proiectul nu a putut fi pregătit pentru salvare.";
+"The image is too large to save as an editable project." = "Imaginea este prea mare pentru a fi salvată ca proiect editabil.";
+"The project file is too large to open." = "Fișierul proiectului este prea mare pentru a fi deschis.";
+"The project's image could not be read." = "Imaginea proiectului nu a putut fi citită.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Derulare automată";
@@ -633,6 +677,10 @@
 "Background" = "Fundal";
 "Custom" = "Personalizat";
 "Theme:" = "Tema:";
+"Toolbar appearance:" = "Aspectul barei:";
+"Dark" = "Întunecat";
+"Light" = "Deschis";
+"Follow System" = "Urmează sistemul";
 "Application" = "Aplicație";
 "Capture area and extract text" = "Capturează zona și extrage textul";
 "Capture the full screen" = "Capturează ecranul complet";
@@ -859,3 +907,23 @@
 
 "Snap webcam to corners when moved" = "Aliniază webcamul la colțuri când este mutat";
 "Search emoji" = "Caută emoji";
+"Hide the bottom toolbar" = "Ascunde instrumentele din partea de jos";
+"Pick tools with their keyboard shortcuts instead." = "Alege instrumentele cu scurtăturile lor de tastatură.";
+
+"Pin position:" = "Poziția imaginii fixate:";
+"Center of screen" = "Centrul ecranului";
+"Original capture position" = "Poziția originală a capturii";
+
+"Default Colors" = "Culori implicite";
+"The preset swatches in the color picker." = "Culorile prestabilite din selectorul de culori.";
+"Add Color" = "Adaugă o culoare";
+"No default colors." = "Nicio culoare implicită.";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Închide";
+"Copy & dismiss" = "Copiază și închide";
+"Close preview" = "Închide previzualizarea";
+"Keep in stack" = "Păstrează în stivă";
+"Return to stack when editor closes" = "Revino în stivă la închiderea editorului";
+"  Click on preview:" = "  Clic pe previzualizare:";
+"  When opened in Editor:" = "  La deschiderea în editor:";

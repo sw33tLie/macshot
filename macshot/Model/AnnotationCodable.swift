@@ -65,6 +65,7 @@ struct CodableAnnotation: Codable {
 
     // Misc
     var measureInPoints: Bool = false
+    var measureCalibration: MeasureCalibration?
     var censorMode: Int = 0
     var groupID: String?  // UUID string
     var randomSeed: UInt32 = 0  // 0 = legacy capture, regenerate at decode
@@ -142,6 +143,7 @@ struct CodableAnnotation: Codable {
         loupeOutlineEnabled = c.decode(.loupeOutlineEnabled, or: false)
 
         measureInPoints = c.decode(.measureInPoints, or: false)
+        measureCalibration = c.decodeOptional(.measureCalibration)
         censorMode = c.decode(.censorMode, or: 0)
         groupID = c.decodeOptional(.groupID)
         randomSeed = c.decode(.randomSeed, or: 0)
@@ -226,6 +228,7 @@ extension Annotation {
 
         // Misc
         c.measureInPoints = measureInPoints
+        c.measureCalibration = measureCalibration
         c.censorMode = censorMode.rawValue
         if let gid = groupID { c.groupID = gid.uuidString }
         c.randomSeed = randomSeed
@@ -327,6 +330,7 @@ extension Annotation {
 
         // Misc
         ann.measureInPoints = c.measureInPoints
+        ann.measureCalibration = c.measureCalibration.flatMap { $0.isValid ? $0 : nil }
         ann.censorMode = CensorMode(rawValue: c.censorMode) ?? .pixelate
         // Highlight dim strength; older captures lack the field (decodes to the
         // struct default 0.55). Guard against a zero/invalid value.

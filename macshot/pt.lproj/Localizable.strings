@@ -83,6 +83,26 @@
 "Censor (Pixelate / Blur / Solid)" = "Censurar (Pixelizar / Desfocar / Sólido)";
 "Measure" = "Medir";
 "Measure (px)" = "Medir (px)";
+"Measure Scale" = "Escala de Medição";
+"Set Scale..." = "Definir Escala...";
+"Set Scale" = "Definir Escala";
+"Scale: %@" = "Escala: %@";
+"Remove Scale" = "Remover Escala";
+"Show lengths in" = "Mostrar comprimentos em";
+"Current scale: 1 %@ = %@ px" = "Escala atual: 1 %@ = %@ px";
+"Draw Reference Line" = "Desenhar Linha de Referência";
+"Draw a measure line along something whose length you know" = "Desenhe uma linha de medição ao longo de algo cujo comprimento conhece";
+"Draw or select a measure line along something whose length you know, then enter that length." = "Desenhe ou selecione uma linha de medição ao longo de algo cujo comprimento conhece e, depois, introduza esse comprimento.";
+"This line is %d px long. How long is it in real life?" = "Esta linha tem %d px. Qual é o seu comprimento real?";
+"e.g. 90 mm or 3 1/2 in" = "p. ex., 90 mm ou 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "Introduza um comprimento, como 90 mm, 3.5 in ou 3 1/2 in.";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "Os comprimentos reais são estimativas. Só são fiáveis para objetos no mesmo plano da linha de referência.";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "Medir em mm, cm, m, polegadas ou pés usando algo de comprimento conhecido na imagem";
+"Millimeters (mm)" = "Milímetros (mm)";
+"Centimeters (cm)" = "Centímetros (cm)";
+"Meters (m)" = "Metros (m)";
+"Inches (in)" = "Polegadas (in)";
+"Feet (ft)" = "Pés (ft)";
 "Magnify (Loupe)" = "Ampliar (Lupa)";
 "Highlight" = "Destacar";
 "Highlight (Spotlight)" = "Destacar (Holofote)";
@@ -90,6 +110,7 @@
 "Color Sampler" = "Amostrador de Cor";
 "Color Picker" = "Seletor de Cor";
 "Select & Edit" = "Selecionar e Editar";
+"Select & Move" = "Selecionar e Mover";
 "Color" = "Cor";
 
 /* Toolbar - Actions */
@@ -159,6 +180,7 @@
 "Smooth" = "Suavizar";
 "Refined" = "Refinado";
 "Smart" = "Inteligente";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "Inteligente encaixa o marcador nas linhas de texto. Mantenha Shift premido para uma linha reta.";
 "Padding" = "Margem";
 "Shadow" = "Sombra";
 "Right-click to add points" = "Clique direito para adicionar pontos";
@@ -213,6 +235,7 @@
 "Play sound on capture" = "Reproduzir som ao capturar";
 "Play sound on copy" = "Reproduzir som ao copiar";
 "Remember last selected tool" = "Recordar última ferramenta selecionada";
+"Start captures in move mode" = "Iniciar capturas no modo de deslocação";
 "Show shortcuts in tooltips" = "Mostrar atalhos nas descrições";
 "Show floating thumbnail after capture" = "Mostrar miniatura flutuante após captura";
 "Launch at login" = "Iniciar ao arrancar";
@@ -396,6 +419,9 @@
 "Screen Recording granted!" = "Gravação de Ecrã concedida!";
 "Enable macshot, then try taking a screenshot" = "Ative o macshot e tente fazer uma captura de ecrã";
 "Open Screen Recording Settings" = "Abrir Definições de Gravação de Ecrã";
+"Still not working? Run this command in Terminal, then restart macshot." = "Continua a não funcionar? Execute este comando no Terminal e, em seguida, reinicie o macshot.";
+"Copy Command" = "Copiar Comando";
+"Restart macshot" = "Reiniciar macshot";
 "Continue" = "Continuar";
 
 /* OCR Window */
@@ -443,6 +469,22 @@
 "Could not encode the screenshot." = "Não foi possível codificar a captura de ecrã.";
 "Could not save the screenshot: %@" = "Não foi possível guardar a captura de ecrã: %@";
 "Could not save the screenshot to history." = "Não foi possível guardar a captura de ecrã no histórico.";
+
+/* Editable projects */
+"Save Project" = "Guardar Projeto";
+"Save Project As..." = "Guardar Projeto Como...";
+"Save as Editable Project (⇧⌘S)" = "Guardar como Projeto Editável (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "Guarda a imagem com todas as anotações ainda editáveis. Abra o ficheiro no macshot para continuar a editar.";
+"Open..." = "Abrir...";
+"Choose an image or macshot project to open in the editor" = "Escolha uma imagem ou um projeto do macshot para abrir no editor";
+"Could not open “%@”" = "Não foi possível abrir “%@”";
+"Could not save the project: %@" = "Não foi possível guardar o projeto: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "Não foi possível restaurar algumas anotações deste projeto, pelo que foi aberto como imagem achatada. O ficheiro original não foi alterado.";
+"The file is not a macshot project or is damaged." = "O ficheiro não é um projeto do macshot ou está danificado.";
+"The project could not be prepared for saving." = "Não foi possível preparar o projeto para ser guardado.";
+"The image is too large to save as an editable project." = "A imagem é demasiado grande para ser guardada como projeto editável.";
+"The project file is too large to open." = "O ficheiro do projeto é demasiado grande para ser aberto.";
+"The project's image could not be read." = "Não foi possível ler a imagem do projeto.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Deslocamento Automático";
@@ -623,6 +665,10 @@
 "Background" = "Fundo";
 "Custom" = "Personalizado";
 "Theme:" = "Tema:";
+"Toolbar appearance:" = "Aparência da barra:";
+"Dark" = "Escuro";
+"Light" = "Claro";
+"Follow System" = "Seguir o sistema";
 "Application" = "Aplicação";
 "Capture area and extract text" = "Capturar área e extrair texto";
 "Capture the full screen" = "Capturar o ecrã inteiro";
@@ -861,3 +907,23 @@
 
 "Snap webcam to corners when moved" = "Alinhar a webcam com os cantos ao mover";
 "Search emoji" = "Procurar emoji";
+"Hide the bottom toolbar" = "Ocultar a barra de ferramentas inferior";
+"Pick tools with their keyboard shortcuts instead." = "Escolha as ferramentas pelos atalhos de teclado.";
+
+"Pin position:" = "Posição ao fixar:";
+"Center of screen" = "Centro do ecrã";
+"Original capture position" = "Posição original da captura";
+
+"Default Colors" = "Cores predefinidas";
+"The preset swatches in the color picker." = "As amostras predefinidas no seletor de cores.";
+"Add Color" = "Adicionar cor";
+"No default colors." = "Sem cores predefinidas.";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Fechar";
+"Copy & dismiss" = "Copiar e fechar";
+"Close preview" = "Fechar pré-visualização";
+"Keep in stack" = "Manter na pilha";
+"Return to stack when editor closes" = "Voltar à pilha ao fechar o editor";
+"  Click on preview:" = "  Clique na pré-visualização:";
+"  When opened in Editor:" = "  Ao abrir no editor:";

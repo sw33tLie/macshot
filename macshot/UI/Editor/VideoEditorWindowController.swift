@@ -600,6 +600,11 @@ final class VideoEditorWindowController: NSWindowController, NSWindowDelegate {
 
     func handleKeyEquivalent(_ event: NSEvent) -> Bool {
         if let responder = window?.firstResponder as? NSTextView, responder.isEditable { return false }
+        // A popover's text field over the editor (e.g. a color picker's hex
+        // code): ⌘C must copy the typed text, not the video.
+        if ForeignTextEditing.isActive(outside: window) {
+            return ForeignTextEditing.keyEquivalentResult(for: event)
+        }
         switch EditorCommandShortcutManager.action(for: event) {
         case .undo?: undoAction(); return true
         case .redo?: redoAction(); return true

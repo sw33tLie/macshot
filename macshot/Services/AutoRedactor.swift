@@ -96,7 +96,7 @@ enum AutoRedactor {
         let censorMode = CensorMode(rawValue: UserDefaults.standard.integer(forKey: "censorMode")) ?? .pixelate
 
         DispatchQueue.global(qos: .userInitiated).async {
-            VisionOCR.performTextRecognition(cgImage: cgImage) { observations, _ in
+            VisionOCR.performTextRecognition(cgImage: cgImage, includeCharacterBoxes: true) { observations, _ in
                 let annotations = buildPIIRedactions(
                     observations: observations, selectionRect: selectionRect,
                     redactTool: redactTool, color: color,

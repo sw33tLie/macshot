@@ -90,6 +90,7 @@ final class SettingsPortabilityTests: XCTestCase {
             "historySize", "enabledTools", "beautifyEnabled", "beautifyStyleIndex",
             "currentStrokeWidth", "filenameTemplate", "appLanguage", "autoCopyToClipboard",
             "overlayToolShortcuts", "hotkeyKeyCode", "hotkeyModifiers",
+            "presetColors",
         ]
         for key in settings {
             XCTAssertTrue(SettingsPortability.isPortable(key), "`\(key)` is a normal setting and should transfer")

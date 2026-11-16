@@ -1,14 +1,19 @@
 import Cocoa
 
 /// Real NSView top bar for the editor window. Pinned to top of container.
-/// Contains: pixel dimensions, crop/flip/add-capture buttons, zoom dropdown.
+/// Contains: pixel dimensions, crop/flip/add-capture buttons, drag-out handle, zoom dropdown.
 class EditorTopBarView: NSView {
 
     weak var overlayView: OverlayView?
+    /// Drags the current image into other apps; the editor controller supplies the image.
+    let dragHandle = EditorDragHandleView()
     private var sizeLabel: NSTextField!
     private var zoomButton: NSButton!
     private var doneButton: NSButton?
+    private var toolButtons: [NSButton] = []
+    private let bottomBorder = NSView()
     var onDone: (() -> Void)?
+    var onSaveProject: (() -> Void)?
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -24,6 +29,9 @@ class EditorTopBarView: NSView {
         let flipHBtn = makeButton("arrow.left.and.right.righttriangle.left.righttriangle.right", tooltip: L("Flip Horizontal"), action: #selector(flipHClicked))
         let flipVBtn = makeButton("arrow.up.and.down.righttriangle.up.righttriangle.down", tooltip: L("Flip Vertical"), action: #selector(flipVClicked))
         let addCaptureBtn = makeButton("rectangle.badge.plus", tooltip: L("Add Capture"), action: #selector(addCaptureClicked))
+        let saveProjectBtn = makeButton("square.and.arrow.down.on.square",
+            tooltip: L("Save as Editable Project (⇧⌘S)"), action: #selector(saveProjectClicked))
+        toolButtons = [cropBtn, flipHBtn, flipVBtn, addCaptureBtn, saveProjectBtn]
 
         // Zoom dropdown button
         zoomButton = NSButton()
@@ -36,14 +44,13 @@ class EditorTopBarView: NSView {
         zoomButton.action = #selector(zoomButtonClicked)
 
         // Bottom border
-        let border = NSView()
+        let border = bottomBorder
         border.wantsLayer = true
-        border.layer?.backgroundColor = NSColor(white: 0.25, alpha: 1.0).cgColor
         border.translatesAutoresizingMaskIntoConstraints = false
         addSubview(border)
 
         // Layout with constraints
-        for v: NSView in [sizeLabel, cropBtn, flipHBtn, flipVBtn, addCaptureBtn, zoomButton] {
+        for v: NSView in [sizeLabel, cropBtn, flipHBtn, flipVBtn, addCaptureBtn, saveProjectBtn, dragHandle, zoomButton] {
             v.translatesAutoresizingMaskIntoConstraints = false
             addSubview(v)
         }
@@ -74,14 +81,50 @@ class EditorTopBarView: NSView {
             addCaptureBtn.widthAnchor.constraint(equalToConstant: 24),
             addCaptureBtn.heightAnchor.constraint(equalToConstant: 22),
 
+            saveProjectBtn.leadingAnchor.constraint(equalTo: addCaptureBtn.trailingAnchor, constant: 12),
+            saveProjectBtn.centerYAnchor.constraint(equalTo: centerYAnchor),
+            saveProjectBtn.widthAnchor.constraint(equalToConstant: 24),
+            saveProjectBtn.heightAnchor.constraint(equalToConstant: 22),
+
             zoomButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
             zoomButton.centerYAnchor.constraint(equalTo: centerYAnchor),
+
+            dragHandle.trailingAnchor.constraint(equalTo: zoomButton.leadingAnchor, constant: -10),
+            dragHandle.centerYAnchor.constraint(equalTo: centerYAnchor),
+            dragHandle.widthAnchor.constraint(equalToConstant: 40),
+            dragHandle.heightAnchor.constraint(equalToConstant: 22),
 
             border.leadingAnchor.constraint(equalTo: leadingAnchor),
             border.trailingAnchor.constraint(equalTo: trailingAnchor),
             border.bottomAnchor.constraint(equalTo: bottomAnchor),
             border.heightAnchor.constraint(equalToConstant: 0.5),
         ])
+
+        applyHUDColors()
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(hudColorsChanged),
+            name: .toolbarColorsDidChange, object: nil)
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    @objc private func hudColorsChanged() {
+        applyHUDColors()
+    }
+
+    private func applyHUDColors() {
+        layer?.backgroundColor = ToolbarLayout.bgColor.cgColor
+        bottomBorder.layer?.backgroundColor = (ToolbarLayout.usesLightPalette
+            ? NSColor(white: 0.82, alpha: 1.0) : NSColor(white: 0.25, alpha: 1.0)).cgColor
+        sizeLabel.textColor = ToolbarLayout.iconColor.withAlphaComponent(0.45)
+        zoomButton.contentTintColor = ToolbarLayout.iconColor.withAlphaComponent(0.45)
+        for button in toolButtons {
+            button.contentTintColor = ToolbarLayout.iconColor.withAlphaComponent(0.85)
+        }
+        doneButton?.contentTintColor = ToolbarLayout.accentColor
+        dragHandle.needsDisplay = true
     }
 
     required init?(coder: NSCoder) { fatalError() }
@@ -207,7 +250,7 @@ class EditorTopBarView: NSView {
         btn.translatesAutoresizingMaskIntoConstraints = false
         addSubview(btn)
         NSLayoutConstraint.activate([
-            btn.trailingAnchor.constraint(equalTo: zoomButton.leadingAnchor, constant: -12),
+            btn.trailingAnchor.constraint(equalTo: dragHandle.leadingAnchor, constant: -12),
             btn.centerYAnchor.constraint(equalTo: centerYAnchor),
         ])
         doneButton = btn
@@ -230,6 +273,11 @@ class EditorTopBarView: NSView {
 
     @objc private func flipHClicked() { overlayView?.flipImageHorizontally() }
     @objc private func flipVClicked() { overlayView?.flipImageVertically() }
+    @objc private func saveProjectClicked() {
+        overlayView?.commitTextFieldIfNeeded()
+        onSaveProject?()
+    }
+
     @objc private func addCaptureClicked() { overlayView?.overlayDelegate?.overlayViewDidRequestAddCapture() }
 
     override func resetCursorRects() {

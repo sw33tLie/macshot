@@ -64,7 +64,7 @@ private final class ScreenshotOverlayRootView: NSView {
 protocol OverlayWindowControllerDelegate: AnyObject {
     func overlayDidCancel(_ controller: OverlayWindowController)
     func overlayDidConfirm(_ controller: OverlayWindowController, capturedImage: NSImage?, annotationData: CaptureAnnotationData?)
-    func overlayDidRequestPin(_ controller: OverlayWindowController, image: NSImage, annotationData: CaptureAnnotationData?)
+    func overlayDidRequestPin(_ controller: OverlayWindowController, image: NSImage, annotationData: CaptureAnnotationData?, source: PinSource?)
     func overlayDidRequestOCR(_ controller: OverlayWindowController, result: OCRScanResult, image: NSImage?)
     func overlayDidRequestUpload(_ controller: OverlayWindowController, image: NSImage, annotationData: CaptureAnnotationData?)
     func overlayDidRequestStartRecording(
@@ -504,7 +504,7 @@ class OverlayWindowController {
         guard let view = overlayView else { return nil }
         let annotations = view.annotations.filter { $0.isMovable }
         let editState = view.captureEditState()
-        guard !annotations.isEmpty || editState.hasPostProcessing else { return nil }
+        guard !annotations.isEmpty || editState.hasEditableState else { return nil }
 
         let sel = view.selectionRect
         let shifted = annotations.map { ann -> Annotation in
@@ -515,7 +515,7 @@ class OverlayWindowController {
         return CaptureAnnotationData(
             rawImage: rawImage,
             annotations: shifted,
-            editState: editState.hasPostProcessing ? editState : nil
+            editState: editState.hasEditableState ? editState : nil
         )
     }
 
@@ -524,7 +524,7 @@ class OverlayWindowController {
         let editState = view.captureEditState()
         let snapWindowImg = view.snappedWindowImage
         let hasAnnotations = view.annotations.contains(where: { $0.isMovable })
-        guard hasAnnotations || editState.hasPostProcessing else { return nil }
+        guard hasAnnotations || editState.hasEditableState else { return nil }
         let rawImage: NSImage? = (editState.beautifyIsWindowSnap && snapWindowImg != nil)
             ? snapWindowImg : view.captureSelectedRegionRaw()
         guard let rawImage else { return nil }
@@ -553,6 +553,18 @@ class OverlayWindowController {
             return true
         }
         return result
+    }
+
+    /// Where a pin of the current selection came from. Read before dismiss()
+    /// resets the selection. A cross-screen capture is stitched from the
+    /// unsnapped rect, at most half a point from this one.
+    private func pinSource(capturedSize: NSSize) -> PinSource? {
+        guard let view = overlayView else { return nil }
+        let rect = view.pixelSnappedSelectionRect.offsetBy(dx: screen.frame.minX, dy: screen.frame.minY)
+        let contentOrigin = view.beautifyEnabled
+            ? BeautifyRenderer.contentRect(forImageSize: capturedSize, config: view.beautifyConfig).origin
+            : nil
+        return PinSource(rect: rect, contentOrigin: contentOrigin)
     }
 
     private func applyBeautifyIfNeeded(_ image: NSImage?) -> NSImage? {
@@ -670,10 +682,11 @@ extension OverlayWindowController: OverlayViewDelegate {
     func overlayViewDidRequestPin() {
         guard var image = captureRegion() else { return }
         let annotationData = currentAnnotationDataForHistory()
+        let source = pinSource(capturedSize: image.size)
         image = applyBeautifyIfNeeded(image) ?? image
         playCopySound()
         dismiss()
-        overlayDelegate?.overlayDidRequestPin(self, image: image, annotationData: annotationData)
+        overlayDelegate?.overlayDidRequestPin(self, image: image, annotationData: annotationData, source: source)
     }
 
     func overlayViewDidRequestOCR() {
@@ -907,7 +920,7 @@ extension OverlayWindowController: OverlayViewDelegate {
         DetachedEditorWindowController.open(
             image: image, tool: tool, color: color, strokeWidth: stroke,
             annotations: shiftedAnnotations, fromCapture: true,
-            editState: editState.hasPostProcessing ? editState : nil)
+            editState: editState.hasEditableState ? editState : nil)
     }
 
     @available(macOS 14.0, *)

@@ -80,6 +80,26 @@
 "Censor (Pixelate / Blur / Solid)" = "Censureren (Pixelen / Vervagen / Effen)";
 "Measure" = "Meten";
 "Measure (px)" = "Meten (px)";
+"Measure Scale" = "Meetschaal";
+"Set Scale..." = "Schaal instellen...";
+"Set Scale" = "Schaal instellen";
+"Scale: %@" = "Schaal: %@";
+"Remove Scale" = "Schaal verwijderen";
+"Show lengths in" = "Lengtes tonen in";
+"Current scale: 1 %@ = %@ px" = "Huidige schaal: 1 %@ = %@ px";
+"Draw Reference Line" = "Referentielijn tekenen";
+"Draw a measure line along something whose length you know" = "Teken een meetlijn langs iets waarvan je de lengte weet";
+"Draw or select a measure line along something whose length you know, then enter that length." = "Teken of selecteer een meetlijn langs iets waarvan je de lengte weet en voer die lengte daarna in.";
+"This line is %d px long. How long is it in real life?" = "Deze lijn is %d px lang. Hoe lang is hij in werkelijkheid?";
+"e.g. 90 mm or 3 1/2 in" = "bijv. 90 mm of 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "Voer een lengte in, zoals 90 mm, 3.5 in of 3 1/2 in.";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "Werkelijke lengtes zijn schattingen. Ze zijn alleen betrouwbaar voor dingen in hetzelfde vlak als de referentielijn.";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "Meet in mm, cm, m, inches of voet met iets van bekende lengte in de afbeelding";
+"Millimeters (mm)" = "Millimeter (mm)";
+"Centimeters (cm)" = "Centimeter (cm)";
+"Meters (m)" = "Meter (m)";
+"Inches (in)" = "Inch (in)";
+"Feet (ft)" = "Voet (ft)";
 "Magnify (Loupe)" = "Vergroten (Loep)";
 "Highlight" = "Uitlichten";
 "Highlight (Spotlight)" = "Uitlichten (Spotlight)";
@@ -87,6 +107,7 @@
 "Color Sampler" = "Kleurpipet";
 "Color Picker" = "Kleurkiezer";
 "Select & Edit" = "Selecteren en bewerken";
+"Select & Move" = "Selecteren en verplaatsen";
 "Color" = "Kleur";
 
 /* Toolbar - Actions */
@@ -158,6 +179,7 @@
 "Smooth" = "Vloeiend";
 "Refined" = "Verfijnd";
 "Smart" = "Slim";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "Slim lijnt de markeerstift uit op tekstregels. Houd Shift ingedrukt voor een rechte lijn.";
 "Padding" = "Opvulling";
 "Shadow" = "Schaduw";
 "Right-click to add points" = "Rechtsklik om punten toe te voegen";
@@ -212,6 +234,7 @@
 "Play sound on capture" = "Geluid afspelen bij opname";
 "Play sound on copy" = "Geluid afspelen bij kopiëren";
 "Remember last selected tool" = "Laatst geselecteerd gereedschap onthouden";
+"Start captures in move mode" = "Opnamen starten in verplaatsmodus";
 "Show floating thumbnail after capture" = "Zwevende miniatuur tonen na opname";
 "Launch at login" = "Open bij inloggen";
 "Show snap alignment guides" = "Uitlijnhulplijnen tonen";
@@ -395,6 +418,9 @@
 "Screen Recording granted!" = "Schermopname toegestaan!";
 "Enable macshot, then try taking a screenshot" = "Schakel macshot in en probeer een schermafbeelding te maken";
 "Open Screen Recording Settings" = "Open schermopname-instellingen";
+"Still not working? Run this command in Terminal, then restart macshot." = "Werkt het nog steeds niet? Voer deze opdracht uit in Terminal en start macshot daarna opnieuw.";
+"Copy Command" = "Kopieer opdracht";
+"Restart macshot" = "Start macshot opnieuw";
 "Continue" = "Ga door";
 
 /* OCR Window */
@@ -442,6 +468,22 @@
 "Could not encode the screenshot." = "Kon de schermafbeelding niet coderen.";
 "Could not save the screenshot: %@" = "Kon de schermafbeelding niet opslaan: %@";
 "Could not save the screenshot to history." = "Kon de schermafbeelding niet opslaan in de geschiedenis.";
+
+/* Editable projects */
+"Save Project" = "Bewaar project";
+"Save Project As..." = "Bewaar project als...";
+"Save as Editable Project (⇧⌘S)" = "Bewaar als bewerkbaar project (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "Bewaart de afbeelding met alle annotaties nog bewerkbaar. Open het bestand in macshot om verder te bewerken.";
+"Open..." = "Open...";
+"Choose an image or macshot project to open in the editor" = "Kies een afbeelding of macshot-project om te openen in de editor";
+"Could not open “%@”" = "Kon ‘%@’ niet openen";
+"Could not save the project: %@" = "Kon het project niet opslaan: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "Sommige annotaties in dit project konden niet worden hersteld, dus is het als platte afbeelding geopend. Het originele bestand is niet gewijzigd.";
+"The file is not a macshot project or is damaged." = "Het bestand is geen macshot-project of is beschadigd.";
+"The project could not be prepared for saving." = "Het project kon niet worden voorbereid om op te slaan.";
+"The image is too large to save as an editable project." = "De afbeelding is te groot om als bewerkbaar project te bewaren.";
+"The project file is too large to open." = "Het projectbestand is te groot om te openen.";
+"The project's image could not be read." = "De afbeelding van het project kon niet worden gelezen.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "Automatisch scrollen";
@@ -622,6 +664,10 @@
 "Background" = "Achtergrond";
 "Custom" = "Aangepast";
 "Theme:" = "Thema:";
+"Toolbar appearance:" = "Weergave werkbalk:";
+"Dark" = "Donker";
+"Light" = "Licht";
+"Follow System" = "Systeem volgen";
 "Application" = "Applicatie";
 "Capture area and extract text" = "Gebied vastleggen en tekst extraheren";
 "Capture the full screen" = "Volledig scherm vastleggen";
@@ -861,3 +907,23 @@
 
 "Snap webcam to corners when moved" = "Webcam bij verplaatsen aan hoeken vastklikken";
 "Search emoji" = "Emoji zoeken";
+"Hide the bottom toolbar" = "Onderste werkbalk verbergen";
+"Pick tools with their keyboard shortcuts instead." = "Kies gereedschappen met hun sneltoetsen.";
+
+"Pin position:" = "Positie van vastgepinde afbeelding:";
+"Center of screen" = "Midden van het scherm";
+"Original capture position" = "Oorspronkelijke opnamepositie";
+
+"Default Colors" = "Standaardkleuren";
+"The preset swatches in the color picker." = "De vooraf ingestelde kleuren in de kleurkiezer.";
+"Add Color" = "Kleur toevoegen";
+"No default colors." = "Geen standaardkleuren.";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "Sluiten";
+"Copy & dismiss" = "Kopiëren en sluiten";
+"Close preview" = "Voorvertoning sluiten";
+"Keep in stack" = "In stapel houden";
+"Return to stack when editor closes" = "Terug in stapel na sluiten editor";
+"  Click on preview:" = "  Klik op voorvertoning:";
+"  When opened in Editor:" = "  Bij openen in editor:";

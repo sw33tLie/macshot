@@ -8,7 +8,7 @@ enum FilenameSanitizer {
         var cleaned = ""
         for scalar in value.unicodeScalars {
             switch scalar {
-            case "/", ":", "\0": cleaned.append("-")
+            case "/", ":", "|", "\0": cleaned.append("-")
             default:
                 // C0/C1 controls are not useful in names or XML manifests.
                 // Preserve format characters such as the joiners in emoji.

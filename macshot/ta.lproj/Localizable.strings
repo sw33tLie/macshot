@@ -94,7 +94,30 @@
 "Color Sampler" = "நிற மாதிரி";
 "Color Picker" = "நிறத் தேர்வி";
 "Select & Edit" = "தேர்வு & திருத்து";
+"Select & Move" = "தேர்வு & நகர்த்து";
 "Color" = "நிறம்";
+
+/* Measure Scale */
+"Measure Scale" = "அளவீட்டு அளவுகோல்";
+"Set Scale..." = "அளவுகோலை அமை...";
+"Set Scale" = "அளவுகோலை அமை";
+"Scale: %@" = "அளவுகோல்: %@";
+"Remove Scale" = "அளவுகோலை நீக்கு";
+"Show lengths in" = "நீளங்களைக் காட்டும் அலகு";
+"Current scale: 1 %@ = %@ px" = "தற்போதைய அளவுகோல்: 1 %@ = %@ px";
+"Draw Reference Line" = "குறிப்புக் கோட்டை வரை";
+"Draw a measure line along something whose length you know" = "நீளம் தெரிந்த ஒன்றின் வழியே ஓர் அளவீட்டுக் கோட்டை வரையவும்";
+"Draw or select a measure line along something whose length you know, then enter that length." = "நீளம் உங்களுக்குத் தெரிந்த ஒன்றின் வழியே ஓர் அளவீட்டுக் கோட்டை வரையவும் அல்லது தேர்ந்தெடுக்கவும், பின்னர் அந்த நீளத்தை உள்ளிடவும்.";
+"This line is %d px long. How long is it in real life?" = "இந்தக் கோடு %d px நீளம். உண்மையில் இது எவ்வளவு நீளம்?";
+"e.g. 90 mm or 3 1/2 in" = "எ.கா. 90 mm அல்லது 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "ஒரு நீளத்தை உள்ளிடவும், எ.கா. 90 mm, 3.5 in அல்லது 3 1/2 in.";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "உண்மையான நீளங்கள் மதிப்பீடுகள் மட்டுமே. குறிப்புக் கோட்டின் அதே தளத்தில் உள்ளவற்றுக்கு மட்டுமே இவை நம்பகமானவை.";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "படத்தில் நீளம் தெரிந்த ஒன்றைப் பயன்படுத்தி mm, cm, m, அங்குலம் அல்லது அடியில் அளவிடு";
+"Millimeters (mm)" = "மில்லிமீட்டர் (mm)";
+"Centimeters (cm)" = "சென்டிமீட்டர் (cm)";
+"Meters (m)" = "மீட்டர் (m)";
+"Inches (in)" = "அங்குலம் (in)";
+"Feet (ft)" = "அடி (ft)";
 
 /* Toolbar - Actions */
 "Copy to Clipboard" = "ஒட்டுப்பலகையில் நகலெடு";
@@ -156,6 +179,7 @@
 "Smooth" = "மென்மை";
 "Refined" = "நுணுக்கமான";
 "Smart" = "புத்திசாலி";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "புத்திசாலி பயன்முறை ஹைலைட்டரை உரையின் வரிகளுடன் சீரமைக்கிறது. நேர்கோட்டுக்கு Shift ஐ அழுத்திப் பிடிக்கவும்.";
 "Padding" = "இடைவெளி";
 "Shadow" = "நிழல்";
 "Right-click to add points" = "புள்ளிகளைச் சேர்க்க வலது கிளிக் செய்";
@@ -212,6 +236,7 @@
 "Play sound on capture" = "படமெடுக்கும்போது ஒலி எழுப்பு";
 "Play sound on copy" = "நகலெடுக்கும்போது ஒலி எழுப்பு";
 "Remember last selected tool" = "கடைசி தேர்ந்தெடுத்த கருவியை நினைவில் கொள்";
+"Start captures in move mode" = "திரைப்பிடிப்புகளை நகர்த்தும் பயன்முறையில் தொடங்கு";
 "Show floating thumbnail after capture" = "பிடிப்புக்குப் பிறகு மிதக்கும் சிறுபடத்தைக் காட்டு";
 "Launch at login" = "உள்நுழையும்போது தொடங்கு";
 "Show snap alignment guides" = "ஒட்டு சீரமைப்பு வழிகாட்டிகளைக் காட்டு";
@@ -404,6 +429,9 @@
 "Screen Recording granted!" = "திரைப் பதிவு வழங்கப்பட்டது!";
 "Enable macshot, then try taking a screenshot" = "macshot ஐ இயக்கி, திரைப்பிடிப்பு எடுக்க முயற்சிக்கவும்";
 "Open Screen Recording Settings" = "திரைப் பதிவு அமைப்புகளைத் திற";
+"Still not working? Run this command in Terminal, then restart macshot." = "இன்னும் வேலை செய்யவில்லையா? டெர்மினலில் இந்தக் கட்டளையை இயக்கி, பின்னர் macshot-ஐ மீண்டும் தொடங்குங்கள்.";
+"Copy Command" = "கட்டளையை நகலெடு";
+"Restart macshot" = "macshot-ஐ மீண்டும் தொடங்கு";
 "Continue" = "தொடரவும்";
 
 /* OCR Window */
@@ -453,6 +481,22 @@
 "Could not encode the screenshot." = "திரைப்பிடிப்பைக் குறியாக்கம் செய்ய முடியவில்லை.";
 "Could not save the screenshot: %@" = "திரைப்பிடிப்பைச் சேமிக்க முடியவில்லை: %@";
 "Could not save the screenshot to history." = "திரைப்பிடிப்பை வரலாற்றில் சேமிக்க முடியவில்லை.";
+
+/* Project Files */
+"Save Project" = "திட்டத்தைச் சேமி";
+"Save Project As..." = "திட்டத்தை இவ்வாறு சேமி...";
+"Save as Editable Project (⇧⌘S)" = "திருத்தக்கூடிய திட்டமாகச் சேமி (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "ஒவ்வொரு குறிப்பும் திருத்தக்கூடியதாக இருக்கும்படி படத்தைச் சேமிக்கும். தொடர்ந்து திருத்த, கோப்பை macshot-இல் திறக்கவும்.";
+"Open..." = "திற...";
+"Choose an image or macshot project to open in the editor" = "திருத்தியில் திறக்க ஒரு படம் அல்லது macshot திட்டத்தைத் தேர்ந்தெடுக்கவும்";
+"Could not open “%@”" = "“%@” ஐத் திறக்க முடியவில்லை";
+"Could not save the project: %@" = "திட்டத்தைச் சேமிக்க முடியவில்லை: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "இந்தத் திட்டத்தில் உள்ள சில குறிப்புகளை மீட்டெடுக்க முடியவில்லை, எனவே இது தட்டையான படமாகத் திறக்கப்பட்டது. அசல் கோப்பு மாற்றப்படவில்லை.";
+"The file is not a macshot project or is damaged." = "இந்தக் கோப்பு macshot திட்டம் அல்ல அல்லது சேதமடைந்துள்ளது.";
+"The project could not be prepared for saving." = "திட்டத்தைச் சேமிப்பதற்குத் தயார்செய்ய முடியவில்லை.";
+"The image is too large to save as an editable project." = "திருத்தக்கூடிய திட்டமாகச் சேமிக்க படம் மிகப் பெரியது.";
+"The project file is too large to open." = "திட்டக் கோப்பு திறக்க முடியாத அளவுக்குப் பெரியது.";
+"The project's image could not be read." = "திட்டத்தின் படத்தைப் படிக்க முடியவில்லை.";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "தானியங்கு உருள்தல்";
@@ -635,6 +679,10 @@
 "Background" = "பின்னணி";
 "Custom" = "தனிப்பயன்";
 "Theme:" = "தீம்:";
+"Toolbar appearance:" = "கருவிப்பட்டி தோற்றம்:";
+"Dark" = "இருண்ட";
+"Light" = "வெளிர்";
+"Follow System" = "கணினியைப் பின்பற்று";
 "Application" = "பயன்பாடு";
 "Capture area and extract text" = "பகுதியைப் பிடித்து உரையைப் பிரித்தெடு";
 "Capture the full screen" = "முழுத் திரையையும் பிடி";
@@ -861,3 +909,23 @@
 
 "Snap webcam to corners when moved" = "நகர்த்தும்போது வெப்கேமைக் மூலைகளில் பொருத்து";
 "Search emoji" = "எமோஜியைத் தேடு";
+"Hide the bottom toolbar" = "கீழ் கருவிப்பட்டியை மறை";
+"Pick tools with their keyboard shortcuts instead." = "பதிலாக விசைப்பலகை குறுக்குவழிகளால் கருவிகளைத் தேர்ந்தெடுக்கவும்.";
+
+"Pin position:" = "பொருத்தும் இடம்:";
+"Center of screen" = "திரையின் நடுவில்";
+"Original capture position" = "அசல் பிடிப்பு இடம்";
+
+"Default Colors" = "இயல்புநிலை நிறங்கள்";
+"The preset swatches in the color picker." = "நிறத் தேர்வியில் முன்னமைவு நிறங்கள்.";
+"Add Color" = "நிறம் சேர்";
+"No default colors." = "இயல்புநிலை நிறங்கள் இல்லை.";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "மூடு";
+"Copy & dismiss" = "நகலெடுத்து மூடு";
+"Close preview" = "முன்னோட்டத்தை மூடு";
+"Keep in stack" = "அடுக்கில் வைத்திரு";
+"Return to stack when editor closes" = "எடிட்டர் மூடியதும் அடுக்கிற்குத் திருப்பு";
+"  Click on preview:" = "  முன்னோட்டத்தில் கிளிக்:";
+"  When opened in Editor:" = "  எடிட்டரில் திறக்கும்போது:";

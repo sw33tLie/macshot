@@ -58,13 +58,17 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var saveActionPopup: NSPopUpButton!
     private var copyPathAfterSaveCheckbox: NSButton!
     private var ocrActionPopup: NSPopUpButton!
+    private var pinPlacementPopup: NSPopUpButton!
     private var copySoundCheckbox: NSButton!
     // rememberSelectionCheckbox removed — selection is always saved for "Capture Last Area"
     private var rememberToolCheckbox: NSButton!
+    private var startCapturesInMoveModeCheckbox: NSButton!
     private var thumbnailCheckbox: NSButton!
     private var thumbnailAutoDismissStepper: NSStepper!
     private var thumbnailAutoDismissField: NSTextField!
     private var thumbnailStackingPopup: NSPopUpButton!
+    private var thumbnailClickActionPopup: NSPopUpButton!
+    private var thumbnailEditBehaviorPopup: NSPopUpButton!
     private var thumbnailCornerPopup: NSPopUpButton!
     private var thumbnailLetterboxCheckbox: NSButton!
     private var historyUnlimitedCheckbox: NSButton!
@@ -100,7 +104,10 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var accentColorWell: NSColorWell!
     private var iconColorWell: NSColorWell!
     private var bgColorWell: NSColorWell!
+    private var presetColorStack: NSStackView?
+    private weak var presetColorAddButton: NSButton?
     private var themePresetPopup: NSPopUpButton!
+    private var hudAppearancePopup: NSPopUpButton!
     private var quickModePopup: NSPopUpButton!
     private var quickCaptureOpenEditorCheckbox: NSButton!
     private var openEditorAfterSelectionCheckbox: NSButton!
@@ -523,6 +530,18 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.addArrangedSubview(sectionHeader(L("Appearance")))
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
+        hudAppearancePopup = NSPopUpButton()
+        for mode in HUDAppearance.allCases {
+            hudAppearancePopup.addItem(withTitle: mode.settingsTitle)
+        }
+        hudAppearancePopup.target = self
+        hudAppearancePopup.action = #selector(hudAppearanceChanged(_:))
+        if let index = HUDAppearance.allCases.firstIndex(of: HUDAppearance.current) {
+            hudAppearancePopup.selectItem(at: index)
+        }
+        stack.addArrangedSubview(labeledRow(L("Toolbar appearance:"), controls: [hudAppearancePopup]))
+        stack.setCustomSpacing(12, after: stack.arrangedSubviews.last!)
+
         // Theme preset dropdown
         themePresetPopup = NSPopUpButton()
         for preset in ThemePreset.all {
@@ -531,7 +550,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         themePresetPopup.addItem(withTitle: L("Custom"))
         themePresetPopup.target = self
         themePresetPopup.action = #selector(themePresetChanged(_:))
-        stack.addArrangedSubview(indented(labeledRow(L("Theme:"), controls: [themePresetPopup])))
+        stack.addArrangedSubview(labeledRow(L("Theme:"), controls: [themePresetPopup]))
         stack.setCustomSpacing(12, after: stack.arrangedSubviews.last!)
 
         // Three color wells in a single row with labels underneath
@@ -541,12 +560,12 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         accentColorWell.action = #selector(accentColorChanged(_:))
 
         iconColorWell = NSColorWell(frame: NSRect(x: 0, y: 0, width: 44, height: 32))
-        iconColorWell.color = ToolbarLayout.iconColor
+        iconColorWell.color = ToolbarLayout.storedIconColor
         iconColorWell.target = self
         iconColorWell.action = #selector(iconColorChanged(_:))
 
         bgColorWell = NSColorWell(frame: NSRect(x: 0, y: 0, width: 44, height: 32))
-        bgColorWell.color = ToolbarLayout.bgColor
+        bgColorWell.color = ToolbarLayout.storedBgColor
         bgColorWell.target = self
         bgColorWell.action = #selector(bgColorChanged(_:))
 
@@ -559,6 +578,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         colorsRow.alignment = .top
         colorsRow.spacing = 20
         stack.addArrangedSubview(indented(colorsRow))
+        updateThemeColorWellsEnabled()
         stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // Sync preset popup to current colors
@@ -769,6 +789,18 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.addArrangedSubview(indented(closeEditorAfterCopyCheckbox))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
+        // Where pins from the capture overlay open
+        pinPlacementPopup = NSPopUpButton()
+        for placement in PinPlacement.allCases {
+            pinPlacementPopup.addItem(withTitle: placement.title)
+            pinPlacementPopup.lastItem?.representedObject = placement.rawValue
+        }
+        pinPlacementPopup.target = self
+        pinPlacementPopup.action = #selector(pinPlacementChanged(_:))
+
+        stack.addArrangedSubview(labeledRow(L("Pin position:"), controls: [pinPlacementPopup]))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
         // OCR & QR action dropdown
         ocrActionPopup = NSPopUpButton()
         ocrActionPopup.addItems(withTitles: [
@@ -786,6 +818,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         openEditorAfterSelectionCheckbox = NSButton(checkboxWithTitle: L("Open in Editor right after selection"), target: self, action: #selector(openEditorAfterSelectionChanged(_:)))
         copySoundCheckbox = NSButton(checkboxWithTitle: L("Play sound on capture"), target: self, action: #selector(copySoundChanged(_:)))
         rememberToolCheckbox = NSButton(checkboxWithTitle: L("Remember last selected tool"), target: self, action: #selector(rememberToolChanged(_:)))
+        startCapturesInMoveModeCheckbox = NSButton(checkboxWithTitle: L("Start captures in move mode"), target: self, action: #selector(startCapturesInMoveModeChanged(_:)))
         thumbnailCheckbox = NSButton(checkboxWithTitle: L("Show floating thumbnail after capture"), target: self, action: #selector(thumbnailChanged(_:)))
         snapGuidesCheckbox = NSButton(checkboxWithTitle: L("Show snap alignment guides"), target: self, action: #selector(snapGuidesChanged(_:)))
         boundarySnapCheckbox = NSButton(checkboxWithTitle: L("Snap selection edges to image boundaries"), target: self, action: #selector(boundarySnapChanged(_:)))
@@ -811,7 +844,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         filenameTemplatePreview.textColor = .secondaryLabelColor
         filenameTemplatePreview.lineBreakMode = .byTruncatingMiddle
 
-        for cb in [openEditorAfterSelectionCheckbox!, copySoundCheckbox!, rememberToolCheckbox!, thumbnailCheckbox!] {
+        for cb in [openEditorAfterSelectionCheckbox!, copySoundCheckbox!, startCapturesInMoveModeCheckbox!, rememberToolCheckbox!, thumbnailCheckbox!] {
             stack.addArrangedSubview(indented(cb))
             stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
         }
@@ -844,6 +877,39 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         thumbnailStackingPopup.action = #selector(thumbnailStackingChanged(_:))
 
         stack.addArrangedSubview(indented(labeledRow(L("  Multiple previews:"), controls: [thumbnailStackingPopup!])))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        // Click on the preview image itself
+        thumbnailClickActionPopup = NSPopUpButton()
+        let clickTitles: [(ThumbnailClickAction, String)] = [
+            (.dismiss, L("Dismiss")),
+            (.openEditor, L("Open in Editor")),
+            (.copy, L("Copy & dismiss")),
+            (.nothing, L("Do nothing")),
+        ]
+        for (action, title) in clickTitles {
+            thumbnailClickActionPopup.addItem(withTitle: title)
+            thumbnailClickActionPopup.lastItem?.representedObject = action.rawValue
+        }
+        thumbnailClickActionPopup.target = self
+        thumbnailClickActionPopup.action = #selector(thumbnailClickActionChanged(_:))
+        stack.addArrangedSubview(indented(labeledRow(L("  Click on preview:"), controls: [thumbnailClickActionPopup!])))
+        stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
+
+        // What happens to the preview while it is open in the editor
+        thumbnailEditBehaviorPopup = NSPopUpButton()
+        let editTitles: [(ThumbnailEditBehavior, String)] = [
+            (.dismiss, L("Close preview")),
+            (.keep, L("Keep in stack")),
+            (.returnAfterClose, L("Return to stack when editor closes")),
+        ]
+        for (behavior, title) in editTitles {
+            thumbnailEditBehaviorPopup.addItem(withTitle: title)
+            thumbnailEditBehaviorPopup.lastItem?.representedObject = behavior.rawValue
+        }
+        thumbnailEditBehaviorPopup.target = self
+        thumbnailEditBehaviorPopup.action = #selector(thumbnailEditBehaviorChanged(_:))
+        stack.addArrangedSubview(indented(labeledRow(L("  When opened in Editor:"), controls: [thumbnailEditBehaviorPopup!])))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         thumbnailCornerPopup = NSPopUpButton()
@@ -1644,7 +1710,26 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.alignment = .leading
         stack.spacing = 0
         stack.translatesAutoresizingMaskIntoConstraints = false
-        stack.edgeInsets = NSEdgeInsets(top: 0, left: 20, bottom: 16, right: 20)
+        // A checkbox leads this tab rather than a small section header, so it
+        // needs some room under the toolbar's separator line.
+        stack.edgeInsets = NSEdgeInsets(top: 12, left: 20, bottom: 16, right: 20)
+
+        // ── Hide the whole bottom toolbar (#490) ─────────────
+        let hideBottomToolbarCheckbox = NSButton(
+            checkboxWithTitle: L("Hide the bottom toolbar"),
+            target: self,
+            action: #selector(hideBottomToolbarChanged(_:)))
+        hideBottomToolbarCheckbox.state =
+            UserDefaults.standard.bool(forKey: OverlayView.hideBottomToolbarKey) ? .on : .off
+        stack.addArrangedSubview(hideBottomToolbarCheckbox)
+        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+
+        let hideBottomToolbarNote = NSTextField(
+            labelWithString: L("Pick tools with their keyboard shortcuts instead."))
+        hideBottomToolbarNote.font = NSFont.systemFont(ofSize: 11)
+        hideBottomToolbarNote.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(hideBottomToolbarNote)
+        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
 
         // ── Annotation Tools ─────────────────────────────────
         stack.addArrangedSubview(sectionHeader(L("Annotation Tools")))
@@ -1657,6 +1742,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
         let annotationTools: [(AnnotationTool, String)] = [
+            (.select, L("Select & Move")),
             (.pencil, L("Pencil")), (.line, L("Line")), (.arrow, L("Arrow")),
             (.rectangle, L("Rectangle")),
             (.ellipse, L("Ellipse")), (.marker, L("Marker")), (.text, L("Text")),
@@ -1708,6 +1794,35 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
                                               defaultsKey: "enabledActions", enabledValues: enabledActions)
         stack.addArrangedSubview(rightActionsGrid)
         rightActionsGrid.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -40).isActive = true
+        stack.setCustomSpacing(20, after: stack.arrangedSubviews.last!)
+
+        // ── Default Colors ───────────────────────────────────
+        stack.addArrangedSubview(sectionHeader(L("Default Colors")))
+        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+
+        let colorsNote = NSTextField(labelWithString: L("The preset swatches in the color picker."))
+        colorsNote.font = NSFont.systemFont(ofSize: 11)
+        colorsNote.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(colorsNote)
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        stack.addArrangedSubview(makeDefaultColorsGrid())
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        let addColorBtn = NSButton(title: L("Add Color"), target: self, action: #selector(addPresetColor(_:)))
+        addColorBtn.bezelStyle = .rounded
+        presetColorAddButton = addColorBtn
+        updatePresetColorAddButton()
+        let resetColorsBtn = NSButton(title: L("Reset to default"), target: self,
+                                      action: #selector(resetPresetColorsClicked(_:)))
+        resetColorsBtn.bezelStyle = .inline
+        resetColorsBtn.controlSize = .small
+
+        let colorsButtonsRow = NSStackView(views: [addColorBtn, resetColorsBtn])
+        colorsButtonsRow.orientation = .horizontal
+        colorsButtonsRow.spacing = 8
+        colorsButtonsRow.alignment = .centerY
+        stack.addArrangedSubview(colorsButtonsRow)
 
         let clipView = scroll.contentView
         scroll.documentView = stack
@@ -2646,6 +2761,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
             UserDefaults.standard.set(legacyAutoCopy ? 0 : 1, forKey: "ocrAction")
         }
         ocrActionPopup.selectItem(at: UserDefaults.standard.integer(forKey: "ocrAction"))
+        pinPlacementPopup.selectItem(at: pinPlacementPopup.indexOfItem(withRepresentedObject: PinPlacement.current.rawValue))
         captureMenuOrder = CaptureMenuItemID.orderedItems()
         rebuildCaptureMenuOrderRows()
 
@@ -2656,6 +2772,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
         let rememberTool = UserDefaults.standard.object(forKey: "rememberLastTool") as? Bool ?? true
         rememberToolCheckbox.state = rememberTool ? .on : .off
+        startCapturesInMoveModeCheckbox.state = OverlayView.startCapturesInMoveModeSetting ? .on : .off
 
         let thumbnail = UserDefaults.standard.object(forKey: "showFloatingThumbnail") as? Bool ?? true
         thumbnailCheckbox.state = thumbnail ? .on : .off
@@ -2667,6 +2784,15 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
         let stacking = UserDefaults.standard.object(forKey: "thumbnailStacking") as? Bool ?? true
         thumbnailStackingPopup.selectItem(at: stacking ? 0 : 1)
+
+        let clickAction = ThumbnailClickAction.current.rawValue
+        if let item = thumbnailClickActionPopup.itemArray.first(where: { $0.representedObject as? String == clickAction }) {
+            thumbnailClickActionPopup.select(item)
+        }
+        let editBehavior = ThumbnailEditBehavior.current.rawValue
+        if let item = thumbnailEditBehaviorPopup.itemArray.first(where: { $0.representedObject as? String == editBehavior }) {
+            thumbnailEditBehaviorPopup.select(item)
+        }
 
         let thumbnailCorner = UserDefaults.standard.string(forKey: "thumbnailCorner") ?? "bottomRight"
         switch thumbnailCorner {
@@ -2710,8 +2836,12 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         betaUpdateCheckbox.state = UserDefaults.standard.bool(forKey: "betaUpdatesEnabled") ? .on : .off
 
         accentColorWell.color = ToolbarLayout.accentColor
-        iconColorWell.color = ToolbarLayout.iconColor
-        bgColorWell.color = ToolbarLayout.bgColor
+        iconColorWell.color = ToolbarLayout.storedIconColor
+        bgColorWell.color = ToolbarLayout.storedBgColor
+        if let index = HUDAppearance.allCases.firstIndex(of: HUDAppearance.current) {
+            hudAppearancePopup.selectItem(at: index)
+        }
+        updateThemeColorWellsEnabled()
 
         let historySize = UserDefaults.standard.object(forKey: "historySize") as? Int ?? 10
         historySizeField.integerValue = historySize
@@ -2848,11 +2978,19 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
               let action = SaveActionPreference(rawValue: raw) else { return }
         SaveActionPreference.current = action
     }
+    @objc private func pinPlacementChanged(_ sender: NSPopUpButton) {
+        guard let raw = sender.selectedItem?.representedObject as? Int,
+              let placement = PinPlacement(rawValue: raw) else { return }
+        PinPlacement.current = placement
+    }
     @objc private func copyPathAfterSaveChanged(_ sender: NSButton) {
         ImageSaveService.copyPathAfterSave = sender.state == .on
     }
     @objc private func copySoundChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "playCopySound")
+    }
+    @objc private func startCapturesInMoveModeChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: OverlayView.startCapturesInMoveModeKey)
     }
     @objc private func rememberToolChanged(_ sender: NSButton) {
         let enabled = sender.state == .on
@@ -2882,6 +3020,16 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
     @objc private func thumbnailStackingChanged(_ sender: NSPopUpButton) {
         UserDefaults.standard.set(sender.indexOfSelectedItem == 0, forKey: "thumbnailStacking")
+    }
+    @objc private func thumbnailClickActionChanged(_ sender: NSPopUpButton) {
+        guard let raw = sender.selectedItem?.representedObject as? String,
+              ThumbnailClickAction(rawValue: raw) != nil else { return }
+        UserDefaults.standard.set(raw, forKey: ThumbnailClickAction.userDefaultsKey)
+    }
+    @objc private func thumbnailEditBehaviorChanged(_ sender: NSPopUpButton) {
+        guard let raw = sender.selectedItem?.representedObject as? String,
+              ThumbnailEditBehavior(rawValue: raw) != nil else { return }
+        UserDefaults.standard.set(raw, forKey: ThumbnailEditBehavior.userDefaultsKey)
     }
     @objc private func thumbnailCornerChanged(_ sender: NSPopUpButton) {
         let values = ["bottomRight", "bottomLeft", "topRight", "topLeft"]
@@ -3040,8 +3188,9 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     }
     @objc private func toggleItemChanged(_ sender: NSButton) {
         let key = sender.identifier?.rawValue ?? "enabledTools"
-        let allTools: [AnnotationTool] = [.pencil, .line, .arrow, .rectangle,
-                                          .ellipse, .marker, .text, .number, .pixelate, .highlight, .loupe, .stamp, .measure]
+        let allTools: [AnnotationTool] = [.select, .pencil, .line, .arrow, .rectangle,
+                                          .ellipse, .marker, .text, .number, .pixelate, .highlight, .loupe, .stamp,
+                                          .colorSampler, .measure]
         let defaultValues: [Int] = key == "enabledTools" ? allTools.map { $0.rawValue } : ToolbarActionPreferences.defaultEnabledRawValues
         var enabled = UserDefaults.standard.array(forKey: key) as? [Int] ?? defaultValues
         if sender.state == .on { if !enabled.contains(sender.tag) { enabled.append(sender.tag) } }
@@ -3113,6 +3262,24 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         return col
     }
 
+    @objc private func hudAppearanceChanged(_ sender: NSPopUpButton) {
+        let modes = HUDAppearance.allCases
+        let index = sender.indexOfSelectedItem
+        guard index >= 0, index < modes.count else { return }
+        UserDefaults.standard.set(modes[index].rawValue, forKey: HUDAppearance.defaultsKey)
+        updateThemeColorWellsEnabled()
+        notifyToolbarColorChange()
+    }
+
+    /// The Light appearance uses its own icon and background colors, so the
+    /// theme's would seem to do nothing there. Follow System keeps them: they
+    /// apply whenever the system is dark.
+    private func updateThemeColorWellsEnabled() {
+        let usesThemeColors = HUDAppearance.current != .light
+        iconColorWell?.isEnabled = usesThemeColors
+        bgColorWell?.isEnabled = usesThemeColors
+    }
+
     @objc private func themePresetChanged(_ sender: NSPopUpButton) {
         let idx = sender.indexOfSelectedItem
         // indexOfSelectedItem is -1 with no selection, which passes "< count".
@@ -3133,7 +3300,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
     private func updateThemePresetSelection() {
         guard let popup = themePresetPopup else { return }
-        let current = (ToolbarLayout.accentColor, ToolbarLayout.iconColor, ToolbarLayout.bgColor)
+        let current = (ToolbarLayout.accentColor, ToolbarLayout.storedIconColor, ToolbarLayout.storedBgColor)
         for (i, preset) in ThemePreset.all.enumerated() {
             if colorsClose(current.0, preset.accent) &&
                colorsClose(current.1, preset.icon) &&
@@ -3158,6 +3325,125 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private func notifyToolbarColorChange() {
         NotificationCenter.default.post(name: .toolbarColorsDidChange, object: nil)
     }
+
+    // MARK: - Default colors
+
+    private func makeDefaultColorsGrid() -> NSView {
+        let stack = NSStackView()
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 10
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        presetColorStack = stack
+        rebuildPresetColorRows()
+        return stack
+    }
+
+    private func rebuildPresetColorRows() {
+        guard let stack = presetColorStack else { return }
+        // Release the shared color panel from a well that is about to go away; otherwise
+        // the panel keeps driving a removed well whose tag now names a different swatch.
+        deactivatePresetColorWells(in: stack)
+        stack.arrangedSubviews.forEach {
+            stack.removeArrangedSubview($0)
+            $0.removeFromSuperview()
+        }
+        updatePresetColorAddButton()
+
+        let colors = PresetColorPalette.colors
+        guard !colors.isEmpty else {
+            let empty = NSTextField(labelWithString: L("No default colors."))
+            empty.font = NSFont.systemFont(ofSize: 11)
+            empty.textColor = .secondaryLabelColor
+            stack.addArrangedSubview(empty)
+            return
+        }
+
+        for start in stride(from: 0, to: colors.count, by: Self.presetColorsPerRow) {
+            var cells: [NSView] = []
+            for index in start..<min(start + Self.presetColorsPerRow, colors.count) {
+                let well = OpaqueColorWell(frame: NSRect(x: 0, y: 0, width: 44, height: 32))
+                well.color = colors[index]
+                well.tag = index
+                well.target = self
+                well.action = #selector(presetColorChanged(_:))
+
+                let remove = NSButton(title: "", target: self, action: #selector(removePresetColor(_:)))
+                remove.image = NSImage(systemSymbolName: "minus.circle.fill", accessibilityDescription: L("Delete"))
+                remove.isBordered = false
+                remove.imagePosition = .imageOnly
+                remove.contentTintColor = .secondaryLabelColor
+                remove.toolTip = L("Delete")
+                remove.tag = index
+                remove.translatesAutoresizingMaskIntoConstraints = false
+                remove.widthAnchor.constraint(equalToConstant: 16).isActive = true
+                remove.heightAnchor.constraint(equalToConstant: 16).isActive = true
+
+                let cell = NSStackView(views: [well, remove])
+                cell.orientation = .horizontal
+                cell.spacing = 0
+                cell.alignment = .centerY
+                cells.append(cell)
+            }
+
+            let row = NSStackView(views: cells)
+            row.orientation = .horizontal
+            row.spacing = 12
+            row.alignment = .centerY
+            stack.addArrangedSubview(row)
+        }
+    }
+
+    /// Kept in step with `ColorPickerView`, so the settings grid folds the same way.
+    private static let presetColorsPerRow = 6
+
+    private func updatePresetColorAddButton() {
+        presetColorAddButton?.isEnabled = PresetColorPalette.colors.count < PresetColorPalette.maxCount
+    }
+
+    private func deactivatePresetColorWells(in view: NSView) {
+        for subview in view.subviews {
+            if let well = subview as? NSColorWell, well.isActive { well.deactivate() }
+            deactivatePresetColorWells(in: subview)
+        }
+    }
+
+    @objc private func presetColorChanged(_ sender: NSColorWell) {
+        var colors = PresetColorPalette.colors
+        // Swatches are stored as opaque sRGB hex; a color without an sRGB form (a pattern)
+        // can't be stored, so the well goes back to the saved swatch instead.
+        guard sender.tag < colors.count, PresetColorPalette.hex(sender.color) != nil else {
+            if sender.tag < colors.count { sender.color = colors[sender.tag] }
+            return
+        }
+        colors[sender.tag] = sender.color.withAlphaComponent(1)
+        PresetColorPalette.save(colors)
+    }
+
+    @objc private func addPresetColor(_ sender: NSButton) {
+        var colors = PresetColorPalette.colors
+        guard colors.count < PresetColorPalette.maxCount else {
+            updatePresetColorAddButton()
+            return
+        }
+        colors.append(colors.last ?? .systemRed)
+        PresetColorPalette.save(colors)
+        rebuildPresetColorRows()
+    }
+
+    @objc private func removePresetColor(_ sender: NSButton) {
+        var colors = PresetColorPalette.colors
+        guard sender.tag < colors.count else { return }
+        colors.remove(at: sender.tag)
+        PresetColorPalette.save(colors)
+        rebuildPresetColorRows()
+    }
+
+    @objc private func resetPresetColorsClicked(_ sender: NSButton) {
+        PresetColorPalette.reset()
+        rebuildPresetColorRows()
+    }
+
     @objc private func copyUploadURL(_ sender: NSButton) {
         guard let id = sender.identifier?.rawValue, id.hasPrefix("link::") else { return }
         let url = String(id.dropFirst(6))
@@ -3184,6 +3470,10 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     @objc private func doubleClickToCopyChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "doubleClickToCopy")
     }
+    @objc private func hideBottomToolbarChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: OverlayView.hideBottomToolbarKey)
+    }
+
     @objc private func hideCaptureInstructionsChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "hideCaptureInstructions")
     }
@@ -3571,5 +3861,39 @@ extension SettingsWindowController {
         popover.behavior = .transient
         popover.show(relativeTo: sourceView.bounds, of: sourceView, preferredEdge: .maxY)
         filenameTemplateInfoPopover = popover
+    }
+}
+
+/// A color well for the opaque preset swatches: the color panel hides its opacity slider
+/// while this well drives it, since the swatches are stored as 6-digit hex.
+private final class OpaqueColorWell: NSColorWell {
+    private var panelShowedAlpha: Bool?
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        if #available(macOS 14.0, *) { supportsAlpha = false }
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        if #available(macOS 14.0, *) { supportsAlpha = false }
+    }
+
+    override func activate(_ exclusive: Bool) {
+        super.activate(exclusive)
+        if #available(macOS 14.0, *) { return }
+        // Before macOS 14 the panel's alpha setting is global; restore it for the
+        // toolbar theme wells, which do keep alpha.
+        let panel = NSColorPanel.shared
+        if panelShowedAlpha == nil { panelShowedAlpha = panel.showsAlpha }
+        panel.showsAlpha = false
+    }
+
+    override func deactivate() {
+        super.deactivate()
+        if let showed = panelShowedAlpha {
+            NSColorPanel.shared.showsAlpha = showed
+            panelShowedAlpha = nil
+        }
     }
 }

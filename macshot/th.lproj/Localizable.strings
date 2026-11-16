@@ -83,6 +83,26 @@
 "Censor (Pixelate / Blur / Solid)" = "ปิดบัง (พิกเซล / เบลอ / ทึบ)";
 "Measure" = "วัด";
 "Measure (px)" = "วัด (px)";
+"Measure Scale" = "มาตราส่วนการวัด";
+"Set Scale..." = "ตั้งมาตราส่วน...";
+"Set Scale" = "ตั้งมาตราส่วน";
+"Scale: %@" = "มาตราส่วน: %@";
+"Remove Scale" = "ลบมาตราส่วน";
+"Show lengths in" = "แสดงความยาวเป็น";
+"Current scale: 1 %@ = %@ px" = "มาตราส่วนปัจจุบัน: 1 %@ = %@ px";
+"Draw Reference Line" = "วาดเส้นอ้างอิง";
+"Draw a measure line along something whose length you know" = "วาดเส้นวัดตามสิ่งที่คุณทราบความยาว";
+"Draw or select a measure line along something whose length you know, then enter that length." = "วาดหรือเลือกเส้นวัดตามสิ่งที่คุณทราบความยาว แล้วป้อนความยาวนั้น";
+"This line is %d px long. How long is it in real life?" = "เส้นนี้ยาว %d px ในความเป็นจริงยาวเท่าใด";
+"e.g. 90 mm or 3 1/2 in" = "เช่น 90 mm หรือ 3 1/2 in";
+"Enter a length, like 90 mm, 3.5 in or 3 1/2 in." = "ป้อนความยาว เช่น 90 mm, 3.5 in หรือ 3 1/2 in";
+"Real-world lengths are estimates. They are only reliable for things in the same plane as the reference line." = "ความยาวจริงเป็นค่าประมาณ เชื่อถือได้เฉพาะกับสิ่งที่อยู่ในระนาบเดียวกับเส้นอ้างอิงเท่านั้น";
+"Measure in mm, cm, m, inches or feet using something of known length in the image" = "วัดเป็น mm, cm, m, นิ้ว หรือฟุต โดยใช้สิ่งที่ทราบความยาวในรูปภาพ";
+"Millimeters (mm)" = "มิลลิเมตร (mm)";
+"Centimeters (cm)" = "เซนติเมตร (cm)";
+"Meters (m)" = "เมตร (m)";
+"Inches (in)" = "นิ้ว (in)";
+"Feet (ft)" = "ฟุต (ft)";
 "Magnify (Loupe)" = "ขยาย (แว่นขยาย)";
 "Highlight" = "เน้นจุด";
 "Highlight (Spotlight)" = "เน้นจุด (สปอตไลต์)";
@@ -90,6 +110,7 @@
 "Color Sampler" = "ตัวดูดสี";
 "Color Picker" = "ตัวเลือกสี";
 "Select & Edit" = "เลือกและแก้ไข";
+"Select & Move" = "เลือกและย้าย";
 "Color" = "สี";
 
 /* Toolbar - Actions */
@@ -158,6 +179,7 @@
 "Smooth" = "เรียบ";
 "Refined" = "ประณีต";
 "Smart" = "อัจฉริยะ";
+"Smart snaps the highlighter to lines of text. Hold Shift for a straight line." = "อัจฉริยะจะจัดปากกาเน้นข้อความให้ตรงกับบรรทัดข้อความ กด Shift ค้างไว้เพื่อลากเส้นตรง";
 "Padding" = "ระยะห่าง";
 "Shadow" = "เงา";
 "Right-click to add points" = "คลิกขวาเพื่อเพิ่มจุด";
@@ -224,6 +246,7 @@
 "Play sound on capture" = "เล่นเสียงเมื่อจับภาพ";
 "Play sound on copy" = "เล่นเสียงเมื่อคัดลอก";
 "Remember last selected tool" = "จำเครื่องมือที่เลือกล่าสุด";
+"Start captures in move mode" = "เริ่มจับภาพในโหมดเคลื่อนย้าย";
 "Show floating thumbnail after capture" = "แสดงภาพขนาดย่อลอยหลังจับภาพ";
 "Launch at login" = "เปิดเมื่อเข้าสู่ระบบ";
 "Show snap alignment guides" = "แสดงเส้นจัดแนว";
@@ -405,6 +428,9 @@
 "Screen Recording granted!" = "อนุญาตการบันทึกหน้าจอแล้ว!";
 "Enable macshot, then try taking a screenshot" = "เปิดใช้งาน macshot แล้วลองจับภาพหน้าจอ";
 "Open Screen Recording Settings" = "เปิดการตั้งค่าการบันทึกหน้าจอ";
+"Still not working? Run this command in Terminal, then restart macshot." = "ยังใช้งานไม่ได้ใช่ไหม เรียกใช้คำสั่งนี้ในเทอร์มินัล แล้วเปิด macshot ใหม่";
+"Copy Command" = "คัดลอกคำสั่ง";
+"Restart macshot" = "เปิด macshot ใหม่";
 "Continue" = "ดำเนินการต่อ";
 
 /* OCR Window */
@@ -452,6 +478,22 @@
 "Save As..." = "บันทึกเป็น...";
 "Choose a folder" = "เลือกโฟลเดอร์";
 "Save All to Folder…" = "บันทึกทั้งหมดไปยังโฟลเดอร์…";
+
+/* Editable Project */
+"Save Project" = "บันทึกโปรเจกต์";
+"Save Project As..." = "บันทึกโปรเจกต์เป็น...";
+"Save as Editable Project (⇧⌘S)" = "บันทึกเป็นโปรเจกต์ที่แก้ไขได้ (⇧⌘S)";
+"Saves the image with every annotation still editable. Open the file in macshot to keep editing." = "บันทึกรูปภาพโดยที่คำอธิบายประกอบทั้งหมดยังแก้ไขได้ เปิดไฟล์ใน macshot เพื่อแก้ไขต่อ";
+"Open..." = "เปิด...";
+"Choose an image or macshot project to open in the editor" = "เลือกรูปภาพหรือโปรเจกต์ macshot เพื่อเปิดในตัวแก้ไข";
+"Could not open “%@”" = "ไม่สามารถเปิด “%@” ได้";
+"Could not save the project: %@" = "ไม่สามารถบันทึกโปรเจกต์ได้: %@";
+"Some annotations in this project could not be restored, so it opened flattened. The original file is unchanged." = "ไม่สามารถกู้คืนคำอธิบายประกอบบางรายการในโปรเจกต์นี้ได้ จึงเปิดเป็นภาพแบบรวมเลเยอร์ ไฟล์ต้นฉบับไม่มีการเปลี่ยนแปลง";
+"The file is not a macshot project or is damaged." = "ไฟล์นี้ไม่ใช่โปรเจกต์ macshot หรือไฟล์เสียหาย";
+"The project could not be prepared for saving." = "ไม่สามารถเตรียมโปรเจกต์สำหรับการบันทึกได้";
+"The image is too large to save as an editable project." = "ภาพมีขนาดใหญ่เกินกว่าจะบันทึกเป็นโปรเจกต์ที่แก้ไขได้";
+"The project file is too large to open." = "ไฟล์โปรเจกต์มีขนาดใหญ่เกินกว่าจะเปิดได้";
+"The project's image could not be read." = "ไม่สามารถอ่านรูปภาพของโปรเจกต์ได้";
 
 /* Scroll Capture HUD */
 "Auto Scroll" = "เลื่อนอัตโนมัติ";
@@ -633,6 +675,10 @@
 "Background" = "พื้นหลัง";
 "Custom" = "กำหนดเอง";
 "Theme:" = "ธีม:";
+"Toolbar appearance:" = "รูปลักษณ์แถบเครื่องมือ:";
+"Dark" = "มืด";
+"Light" = "สว่าง";
+"Follow System" = "ตามระบบ";
 "Application" = "แอปพลิเคชัน";
 "Capture area and extract text" = "จับภาพพื้นที่และดึงข้อความ";
 "Capture the full screen" = "จับภาพเต็มหน้าจอ";
@@ -859,3 +905,23 @@
 
 "Snap webcam to corners when moved" = "จัดเว็บแคมให้ชิดมุมเมื่อย้าย";
 "Search emoji" = "ค้นหาอีโมจิ";
+"Hide the bottom toolbar" = "ซ่อนแถบเครื่องมือด้านล่าง";
+"Pick tools with their keyboard shortcuts instead." = "เลือกเครื่องมือด้วยปุ่มลัดแป้นพิมพ์แทน";
+
+"Pin position:" = "ตำแหน่งการปักหมุด:";
+"Center of screen" = "กึ่งกลางหน้าจอ";
+"Original capture position" = "ตำแหน่งที่จับภาพเดิม";
+
+"Default Colors" = "สีเริ่มต้น";
+"The preset swatches in the color picker." = "สีที่ตั้งไว้ล่วงหน้าในตัวเลือกสี";
+"Add Color" = "เพิ่มสี";
+"No default colors." = "ไม่มีสีเริ่มต้น";
+
+/* Floating preview: click action & editor behavior */
+"Dismiss" = "ปิด";
+"Copy & dismiss" = "คัดลอกและปิด";
+"Close preview" = "ปิดภาพตัวอย่าง";
+"Keep in stack" = "เก็บไว้ในกอง";
+"Return to stack when editor closes" = "กลับเข้ากองเมื่อปิดตัวแก้ไข";
+"  Click on preview:" = "  คลิกที่ภาพตัวอย่าง:";
+"  When opened in Editor:" = "  เมื่อเปิดในตัวแก้ไข:";
