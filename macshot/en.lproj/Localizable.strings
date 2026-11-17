@@ -926,3 +926,12 @@
 "The project's image could not be read." = "The project's image could not be read.";
 "This line is %d px long. How long is it in real life?" = "This line is %d px long. How long is it in real life?";
 "e.g. 90 mm or 3 1/2 in" = "e.g. 90 mm or 3 1/2 in";
+"Custom Uploader (images + videos)" = "Custom Uploader (images + videos)";
+"Custom Uploader" = "Custom Uploader";
+"Uploader:" = "Uploader:";
+"Import .sxcu File…" = "Import .sxcu File…";
+"Remove Uploader" = "Remove Uploader";
+"No uploader imported" = "No uploader imported";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports.";
+"Upload to %@?" = "Upload to %@?";
+"Import a custom uploader in Settings" = "Import a custom uploader in Settings";

@@ -927,3 +927,12 @@
 "Return to stack when editor closes" = "Kembali ke timbunan apabila editor ditutup";
 "  Click on preview:" = "  Klik pada pratonton:";
 "  When opened in Editor:" = "  Apabila dibuka dalam Editor:";
+"Custom Uploader (images + videos)" = "Pemuat naik tersuai (imej + video)";
+"Custom Uploader" = "Pemuat naik tersuai";
+"Uploader:" = "Pemuat naik:";
+"Import .sxcu File…" = "Import fail .sxcu…";
+"Remove Uploader" = "Buang pemuat naik";
+"No uploader imported" = "Tiada pemuat naik diimport";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "Import fail pemuat naik tersuai ShareX (.sxcu) daripada perkhidmatan hos sendiri seperti Zipline, XBackBone atau Chibisafe. Fail mungkin mengandungi token akses anda, jadi ia tidak pernah disertakan dalam eksport tetapan.";
+"Upload to %@?" = "Muat naik ke %@?";
+"Import a custom uploader in Settings" = "Import pemuat naik tersuai dalam Tetapan";

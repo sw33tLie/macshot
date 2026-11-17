@@ -929,3 +929,12 @@
 "Return to stack when editor closes" = "Επιστροφή στη στοίβα όταν κλείσει ο επεξεργαστής";
 "  Click on preview:" = "  Κλικ στην προεπισκόπηση:";
 "  When opened in Editor:" = "  Όταν ανοίγει στον επεξεργαστή:";
+"Custom Uploader (images + videos)" = "Προσαρμοσμένη υπηρεσία (εικόνες + βίντεο)";
+"Custom Uploader" = "Προσαρμοσμένη υπηρεσία μεταφόρτωσης";
+"Uploader:" = "Υπηρεσία:";
+"Import .sxcu File…" = "Εισαγωγή αρχείου .sxcu…";
+"Remove Uploader" = "Αφαίρεση υπηρεσίας";
+"No uploader imported" = "Δεν έχει εισαχθεί υπηρεσία";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "Εισαγάγετε ένα αρχείο προσαρμοσμένης μεταφόρτωσης ShareX (.sxcu) από μια αυτοφιλοξενούμενη υπηρεσία όπως Zipline, XBackBone ή Chibisafe. Το αρχείο μπορεί να περιέχει το διακριτικό πρόσβασής σας, γι’ αυτό δεν περιλαμβάνεται ποτέ στις εξαγωγές ρυθμίσεων.";
+"Upload to %@?" = "Μεταφόρτωση στο %@;";
+"Import a custom uploader in Settings" = "Εισαγάγετε μια προσαρμοσμένη υπηρεσία μεταφόρτωσης στις Ρυθμίσεις";

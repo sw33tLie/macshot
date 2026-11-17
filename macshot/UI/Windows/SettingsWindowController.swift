@@ -140,6 +140,8 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var s3PublicReadCheckbox: NSButton!
     private var s3TestBtn: NSButton!
     private var s3StatusLabel: NSTextField!
+    private var customUploaderStatusLabel: NSTextField!
+    private var customUploaderRemoveBtn: NSButton!
     #endif
     // Recording tab controls
     private var recordingFPSPopup: NSPopUpButton!
@@ -2067,11 +2069,12 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
         providerPopup = NSPopUpButton()
-        providerPopup.addItems(withTitles: [L("imgbb (images only)"), L("Google Drive (images + videos)"), L("S3-Compatible (images + videos)")])
+        providerPopup.addItems(withTitles: [L("imgbb (images only)"), L("Google Drive (images + videos)"), L("S3-Compatible (images + videos)"), L("Custom Uploader (images + videos)")])
         let currentProvider = UserDefaults.standard.string(forKey: "uploadProvider") ?? "imgbb"
         switch currentProvider {
         case "gdrive": providerPopup.selectItem(at: 1)
         case "s3": providerPopup.selectItem(at: 2)
+        case "custom": providerPopup.selectItem(at: 3)
         default: providerPopup.selectItem(at: 0)
         }
         providerPopup.target = self
@@ -2214,6 +2217,32 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         s3Note.font = NSFont.systemFont(ofSize: 10)
         s3Note.textColor = .secondaryLabelColor
         stack.addArrangedSubview(indented(s3Note))
+        stack.setCustomSpacing(16, after: stack.arrangedSubviews.last!)
+
+        stack.addArrangedSubview(sectionHeader(L("Custom Uploader")))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        customUploaderStatusLabel = NSTextField(labelWithString: "")
+        customUploaderStatusLabel.font = NSFont.systemFont(ofSize: 11)
+        customUploaderStatusLabel.lineBreakMode = .byTruncatingMiddle
+        stack.addArrangedSubview(labeledRow(L("Uploader:"), controls: [customUploaderStatusLabel]))
+
+        let customUploaderImportBtn = NSButton(title: L("Import .sxcu File…"), target: self, action: #selector(customUploaderImportTapped(_:)))
+        customUploaderImportBtn.bezelStyle = .rounded
+        customUploaderRemoveBtn = NSButton(title: L("Remove Uploader"), target: self, action: #selector(customUploaderRemoveTapped(_:)))
+        customUploaderRemoveBtn.bezelStyle = .rounded
+        updateCustomUploaderStatus()
+
+        let customUploaderRow = NSStackView(views: [customUploaderImportBtn, customUploaderRemoveBtn])
+        customUploaderRow.orientation = .horizontal
+        customUploaderRow.spacing = 8
+        stack.addArrangedSubview(indented(customUploaderRow))
+        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+
+        let customUploaderNote = NSTextField(wrappingLabelWithString: L("Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports."))
+        customUploaderNote.font = NSFont.systemFont(ofSize: 10)
+        customUploaderNote.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(indented(customUploaderNote))
         stack.setCustomSpacing(16, after: stack.arrangedSubviews.last!)
 
         // ── imgbb ──
@@ -2434,6 +2463,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         switch sender.indexOfSelectedItem {
         case 1: provider = "gdrive"
         case 2: provider = "s3"
+        case 3: provider = "custom"
         default: provider = "imgbb"
         }
         UserDefaults.standard.set(provider, forKey: "uploadProvider")
@@ -2508,6 +2538,47 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
                 self.s3StatusLabel.textColor = .systemRed
             }
         }
+    }
+
+    private func updateCustomUploaderStatus() {
+        if let config = CustomUploader.shared.config {
+            customUploaderStatusLabel?.stringValue = config.name == config.host ? config.host : "\(config.name) · \(config.host)"
+            customUploaderStatusLabel?.textColor = .labelColor
+            customUploaderRemoveBtn?.isEnabled = true
+        } else {
+            customUploaderStatusLabel?.stringValue = L("No uploader imported")
+            customUploaderStatusLabel?.textColor = .secondaryLabelColor
+            customUploaderRemoveBtn?.isEnabled = false
+        }
+    }
+
+    @objc private func customUploaderImportTapped(_ sender: NSButton) {
+        guard let window else { return }
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.allowedContentTypes = [UTType(filenameExtension: "sxcu") ?? .json, .json]
+        panel.beginSheetModal(for: window) { [weak self] response in
+            guard let self, response == .OK, let url = panel.url else { return }
+            do {
+                try CustomUploader.importFile(at: url)
+                UserDefaults.standard.set("custom", forKey: "uploadProvider")
+                self.providerPopup.selectItem(at: 3)
+                self.updateCustomUploaderStatus()
+            } catch {
+                self.presentBackupError(error, title: L("Import failed"))
+            }
+        }
+    }
+
+    @objc private func customUploaderRemoveTapped(_ sender: NSButton) {
+        CustomUploader.remove()
+        if UserDefaults.standard.string(forKey: "uploadProvider") == "custom" {
+            UserDefaults.standard.set("imgbb", forKey: "uploadProvider")
+            providerPopup.selectItem(at: 0)
+        }
+        updateCustomUploaderStatus()
     }
 
     private func reloadUploadsTab() {

@@ -925,3 +925,12 @@
 "Return to stack when editor closes" = "エディタを閉じたらスタックに戻す";
 "  Click on preview:" = "  プレビューをクリック:";
 "  When opened in Editor:" = "  エディタで開いたとき:";
+"Custom Uploader (images + videos)" = "カスタムアップローダ（画像 + 動画）";
+"Custom Uploader" = "カスタムアップローダ";
+"Uploader:" = "アップローダ:";
+"Import .sxcu File…" = ".sxcu ファイルを読み込む…";
+"Remove Uploader" = "アップローダを削除";
+"No uploader imported" = "アップローダが読み込まれていません";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "Zipline、XBackBone、Chibisafe などのセルフホスト型サービスの ShareX カスタムアップローダファイル（.sxcu）を読み込みます。ファイルにはアクセストークンが含まれる場合があるため、設定の書き出しには含まれません。";
+"Upload to %@?" = "%@ にアップロードしますか？";
+"Import a custom uploader in Settings" = "設定でカスタムアップローダを読み込んでください";
