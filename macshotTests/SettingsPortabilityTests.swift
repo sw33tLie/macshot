@@ -12,7 +12,7 @@ final class SettingsPortabilityTests: XCTestCase {
             "imgbbAPIKey", "googleDriveRefreshToken", "googleDriveAccessToken",
             "s3AccessKey", "s3SecretKey", "s3Bucket", "s3Endpoint", "s3Region",
             "saveDirectoryBookmark", "recordingSaveDirectoryBookmark",
-            "translationApiKey", "userPassword", "someCredential",
+            "translationApiKey", "userPassword", "someCredential", "customUploaderConfig",
         ]
         for key in credentials {
             XCTAssertFalse(SettingsPortability.isPortable(key), "`\(key)` must never be exported")
