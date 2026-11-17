@@ -929,3 +929,12 @@
 "Return to stack when editor closes" = "Врати у гомилу након затварања уређивача";
 "  Click on preview:" = "  Клик на преглед:";
 "  When opened in Editor:" = "  При отварању у уређивачу:";
+"Custom Uploader (images + videos)" = "Прилагођени отпремач (слике + видео)";
+"Custom Uploader" = "Прилагођени отпремач";
+"Uploader:" = "Отпремач:";
+"Import .sxcu File…" = "Увези .sxcu датотеку…";
+"Remove Uploader" = "Уклони отпремач";
+"No uploader imported" = "Ниједан отпремач није увезен";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "Увезите датотеку прилагођеног отпремача за ShareX (.sxcu) са самостално хостованог сервиса као што су Zipline, XBackBone или Chibisafe. Датотека може да садржи ваш приступни токен, па се никада не укључује у извозе подешавања.";
+"Upload to %@?" = "Отпреми на %@?";
+"Import a custom uploader in Settings" = "Увезите прилагођени отпремач у Подешавањима";

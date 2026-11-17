@@ -927,3 +927,12 @@
 "Return to stack when editor closes" = "關閉編輯器後返回堆疊";
 "  Click on preview:" = "  按一下預覽:";
 "  When opened in Editor:" = "  在編輯器中開啟時:";
+"Custom Uploader (images + videos)" = "自訂上傳器（圖片 + 影片）";
+"Custom Uploader" = "自訂上傳器";
+"Uploader:" = "上傳器：";
+"Import .sxcu File…" = "輸入 .sxcu 檔案…";
+"Remove Uploader" = "移除上傳器";
+"No uploader imported" = "尚未輸入上傳器";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "從 Zipline、XBackBone 或 Chibisafe 等自架服務輸入 ShareX 自訂上傳器檔案（.sxcu）。該檔案可能包含你的存取權杖，因此絕不會包含在設定輸出中。";
+"Upload to %@?" = "上傳到 %@？";
+"Import a custom uploader in Settings" = "請在設定中輸入自訂上傳器";

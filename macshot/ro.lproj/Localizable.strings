@@ -927,3 +927,12 @@
 "Return to stack when editor closes" = "Revino în stivă la închiderea editorului";
 "  Click on preview:" = "  Clic pe previzualizare:";
 "  When opened in Editor:" = "  La deschiderea în editor:";
+"Custom Uploader (images + videos)" = "Încărcător personalizat (imagini + videoclipuri)";
+"Custom Uploader" = "Încărcător personalizat";
+"Uploader:" = "Încărcător:";
+"Import .sxcu File…" = "Importă fișier .sxcu…";
+"Remove Uploader" = "Elimină încărcătorul";
+"No uploader imported" = "Niciun încărcător importat";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "Importă un fișier de încărcător personalizat ShareX (.sxcu) de la un serviciu găzduit de tine, precum Zipline, XBackBone sau Chibisafe. Fișierul poate conține tokenul tău de acces, așa că nu este inclus niciodată în exporturile de configurări.";
+"Upload to %@?" = "Încarci pe %@?";
+"Import a custom uploader in Settings" = "Importă un încărcător personalizat în Configurări";

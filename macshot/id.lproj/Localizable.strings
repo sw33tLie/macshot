@@ -925,3 +925,12 @@
 "Return to stack when editor closes" = "Kembali ke tumpukan saat editor ditutup";
 "  Click on preview:" = "  Klik pada pratinjau:";
 "  When opened in Editor:" = "  Saat dibuka di Editor:";
+"Custom Uploader (images + videos)" = "Pengunggah kustom (gambar + video)";
+"Custom Uploader" = "Pengunggah kustom";
+"Uploader:" = "Pengunggah:";
+"Import .sxcu File…" = "Impor file .sxcu…";
+"Remove Uploader" = "Hapus pengunggah";
+"No uploader imported" = "Belum ada pengunggah yang diimpor";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "Impor file pengunggah kustom ShareX (.sxcu) dari layanan yang dihosting sendiri seperti Zipline, XBackBone, atau Chibisafe. File dapat berisi token akses Anda, sehingga tidak pernah disertakan dalam ekspor pengaturan.";
+"Upload to %@?" = "Unggah ke %@?";
+"Import a custom uploader in Settings" = "Impor pengunggah kustom di Pengaturan";

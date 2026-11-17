@@ -927,3 +927,12 @@
 "Return to stack when editor closes" = "편집기를 닫으면 스택으로 복귀";
 "  Click on preview:" = "  미리보기 클릭 시:";
 "  When opened in Editor:" = "  편집기에서 열 때:";
+"Custom Uploader (images + videos)" = "사용자 지정 업로더(이미지 + 동영상)";
+"Custom Uploader" = "사용자 지정 업로더";
+"Uploader:" = "업로더:";
+"Import .sxcu File…" = ".sxcu 파일 가져오기…";
+"Remove Uploader" = "업로더 제거";
+"No uploader imported" = "가져온 업로더 없음";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "Zipline, XBackBone, Chibisafe 같은 셀프 호스팅 서비스의 ShareX 사용자 지정 업로더 파일(.sxcu)을 가져옵니다. 파일에 액세스 토큰이 포함될 수 있으므로 설정 내보내기에는 포함되지 않습니다.";
+"Upload to %@?" = "%@에 업로드하시겠습니까?";
+"Import a custom uploader in Settings" = "설정에서 사용자 지정 업로더를 가져오세요";

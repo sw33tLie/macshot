@@ -923,3 +923,12 @@
 "Return to stack when editor closes" = "Tillbaka till stapeln när redigeraren stängs";
 "  Click on preview:" = "  Klick på förhandsvisning:";
 "  When opened in Editor:" = "  När den öppnas i redigeraren:";
+"Custom Uploader (images + videos)" = "Anpassad uppladdare (bilder + videor)";
+"Custom Uploader" = "Anpassad uppladdare";
+"Uploader:" = "Uppladdare:";
+"Import .sxcu File…" = "Importera .sxcu-fil…";
+"Remove Uploader" = "Ta bort uppladdare";
+"No uploader imported" = "Ingen uppladdare importerad";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "Importera en ShareX-fil för anpassad uppladdning (.sxcu) från en självhostad tjänst som Zipline, XBackBone eller Chibisafe. Filen kan innehålla din åtkomsttoken och tas därför aldrig med i exporter av inställningar.";
+"Upload to %@?" = "Ladda upp till %@?";
+"Import a custom uploader in Settings" = "Importera en anpassad uppladdare i Inställningar";

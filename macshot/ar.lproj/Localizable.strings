@@ -929,3 +929,12 @@
 "Return to stack when editor closes" = "إعادة إلى المكدس عند إغلاق المحرر";
 "  Click on preview:" = "  النقر على المعاينة:";
 "  When opened in Editor:" = "  عند الفتح في المحرر:";
+"Custom Uploader (images + videos)" = "رافع مخصص (صور + فيديو)";
+"Custom Uploader" = "رافع مخصص";
+"Uploader:" = "الرافع:";
+"Import .sxcu File…" = "استيراد ملف ‎.sxcu…";
+"Remove Uploader" = "إزالة الرافع";
+"No uploader imported" = "لم يتم استيراد أي رافع";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "استورد ملف رافع مخصص من ShareX ‏(‎.sxcu) من خدمة مستضافة ذاتيًا مثل Zipline أو XBackBone أو Chibisafe. قد يحتوي الملف على رمز الوصول الخاص بك، لذلك لا يُضمَّن أبدًا في تصدير الإعدادات.";
+"Upload to %@?" = "الرفع إلى %@؟";
+"Import a custom uploader in Settings" = "استورد رافعًا مخصصًا من الإعدادات";

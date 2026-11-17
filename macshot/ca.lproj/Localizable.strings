@@ -929,3 +929,12 @@
 "Return to stack when editor closes" = "Torna a la pila en tancar l’editor";
 "  Click on preview:" = "  Clic a la previsualització:";
 "  When opened in Editor:" = "  En obrir a l’editor:";
+"Custom Uploader (images + videos)" = "Carregador personalitzat (imatges + vídeos)";
+"Custom Uploader" = "Carregador personalitzat";
+"Uploader:" = "Carregador:";
+"Import .sxcu File…" = "Importa un fitxer .sxcu…";
+"Remove Uploader" = "Elimina el carregador";
+"No uploader imported" = "Cap carregador importat";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "Importa un fitxer de carregador personalitzat de ShareX (.sxcu) d’un servei autoallotjat com Zipline, XBackBone o Chibisafe. El fitxer pot contenir el teu testimoni d’accés, de manera que mai s’inclou en les exportacions de la configuració.";
+"Upload to %@?" = "Vols pujar a %@?";
+"Import a custom uploader in Settings" = "Importa un carregador personalitzat a la Configuració";

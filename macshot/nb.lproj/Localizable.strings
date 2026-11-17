@@ -923,3 +923,12 @@
 "Return to stack when editor closes" = "Tilbake i stabelen når redigeringsverktøyet lukkes";
 "  Click on preview:" = "  Klikk på forhåndsvisning:";
 "  When opened in Editor:" = "  Når den åpnes i redigering:";
+"Custom Uploader (images + videos)" = "Egendefinert opplaster (bilder + videoer)";
+"Custom Uploader" = "Egendefinert opplaster";
+"Uploader:" = "Opplaster:";
+"Import .sxcu File…" = "Importer .sxcu-fil…";
+"Remove Uploader" = "Fjern opplaster";
+"No uploader imported" = "Ingen opplaster importert";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "Importer en ShareX-fil for egendefinert opplasting (.sxcu) fra en selvhostet tjeneste som Zipline, XBackBone eller Chibisafe. Filen kan inneholde tilgangstokenet ditt, så den tas aldri med i eksporter av innstillinger.";
+"Upload to %@?" = "Laste opp til %@?";
+"Import a custom uploader in Settings" = "Importer en egendefinert opplaster i Innstillinger";

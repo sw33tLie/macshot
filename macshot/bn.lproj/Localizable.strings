@@ -929,3 +929,12 @@
 "Return to stack when editor closes" = "এডিটর বন্ধ হলে স্ট্যাকে ফেরান";
 "  Click on preview:" = "  প্রিভিউতে ক্লিক:";
 "  When opened in Editor:" = "  এডিটরে খোলার সময়:";
+"Custom Uploader (images + videos)" = "কাস্টম আপলোডার (ছবি + ভিডিও)";
+"Custom Uploader" = "কাস্টম আপলোডার";
+"Uploader:" = "আপলোডার:";
+"Import .sxcu File…" = ".sxcu ফাইল ইম্পোর্ট করুন…";
+"Remove Uploader" = "আপলোডার সরান";
+"No uploader imported" = "কোনো আপলোডার ইম্পোর্ট করা হয়নি";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "Zipline, XBackBone বা Chibisafe-এর মতো সেলফ-হোস্টেড সার্ভিস থেকে ShareX কাস্টম আপলোডার ফাইল (.sxcu) ইম্পোর্ট করুন। ফাইলে আপনার অ্যাক্সেস টোকেন থাকতে পারে, তাই এটি কখনও সেটিংস এক্সপোর্টে অন্তর্ভুক্ত হয় না।";
+"Upload to %@?" = "%@-এ আপলোড করবেন?";
+"Import a custom uploader in Settings" = "সেটিংসে একটি কাস্টম আপলোডার ইম্পোর্ট করুন";

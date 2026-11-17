@@ -908,3 +908,12 @@
 "Return to stack when editor closes" = "Torna nella pila alla chiusura dell’editor";
 "  Click on preview:" = "  Clic sull’anteprima:";
 "  When opened in Editor:" = "  All’apertura nell’editor:";
+"Custom Uploader (images + videos)" = "Uploader personalizzato (immagini + video)";
+"Custom Uploader" = "Uploader personalizzato";
+"Uploader:" = "Uploader:";
+"Import .sxcu File…" = "Importa file .sxcu…";
+"Remove Uploader" = "Rimuovi uploader";
+"No uploader imported" = "Nessun uploader importato";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "Importa un file di uploader personalizzato ShareX (.sxcu) da un servizio self-hosted come Zipline, XBackBone o Chibisafe. Il file può contenere il tuo token di accesso, quindi non viene mai incluso nelle esportazioni delle impostazioni.";
+"Upload to %@?" = "Caricare su %@?";
+"Import a custom uploader in Settings" = "Importa un uploader personalizzato nelle Impostazioni";

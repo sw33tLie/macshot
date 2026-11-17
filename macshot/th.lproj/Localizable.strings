@@ -925,3 +925,12 @@
 "Return to stack when editor closes" = "กลับเข้ากองเมื่อปิดตัวแก้ไข";
 "  Click on preview:" = "  คลิกที่ภาพตัวอย่าง:";
 "  When opened in Editor:" = "  เมื่อเปิดในตัวแก้ไข:";
+"Custom Uploader (images + videos)" = "ตัวอัปโหลดกำหนดเอง (รูปภาพ + วิดีโอ)";
+"Custom Uploader" = "ตัวอัปโหลดกำหนดเอง";
+"Uploader:" = "ตัวอัปโหลด:";
+"Import .sxcu File…" = "นำเข้าไฟล์ .sxcu…";
+"Remove Uploader" = "ลบตัวอัปโหลด";
+"No uploader imported" = "ยังไม่ได้นำเข้าตัวอัปโหลด";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "นำเข้าไฟล์ตัวอัปโหลดกำหนดเองของ ShareX (.sxcu) จากบริการที่โฮสต์เอง เช่น Zipline, XBackBone หรือ Chibisafe ไฟล์อาจมีโทเค็นการเข้าถึงของคุณ จึงไม่ถูกรวมในการส่งออกการตั้งค่า";
+"Upload to %@?" = "อัปโหลดไปยัง %@ หรือไม่";
+"Import a custom uploader in Settings" = "นำเข้าตัวอัปโหลดกำหนดเองในการตั้งค่า";

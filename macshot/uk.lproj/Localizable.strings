@@ -927,3 +927,12 @@
 "Return to stack when editor closes" = "Повернути в стос після закриття редактора";
 "  Click on preview:" = "  Клік по превʼю:";
 "  When opened in Editor:" = "  Під час редагування:";
+"Custom Uploader (images + videos)" = "Власний завантажувач (зображення + відео)";
+"Custom Uploader" = "Власний завантажувач";
+"Uploader:" = "Завантажувач:";
+"Import .sxcu File…" = "Імпортувати файл .sxcu…";
+"Remove Uploader" = "Вилучити завантажувач";
+"No uploader imported" = "Завантажувач не імпортовано";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "Імпортуйте файл власного завантажувача ShareX (.sxcu) із власного сервісу, наприклад Zipline, XBackBone або Chibisafe. Файл може містити ваш токен доступу, тому він ніколи не включається до експорту налаштувань.";
+"Upload to %@?" = "Вивантажити на %@?";
+"Import a custom uploader in Settings" = "Імпортуйте власний завантажувач у Налаштуваннях";
