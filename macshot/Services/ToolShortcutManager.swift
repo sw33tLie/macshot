@@ -5,7 +5,7 @@ import Cocoa
 /// An empty string means the shortcut is disabled (None).
 enum ToolShortcutManager {
 
-    /// All configurable overlay shortcut actions with their default keys.
+    /// All configurable overlay and editor shortcut actions with their default keys.
     enum Action: String, CaseIterable {
         // First so a user-assigned key on any later action wins a clash.
         case select
@@ -38,6 +38,7 @@ enum ToolShortcutManager {
         case invertColors
         case removeBackground
         case translate
+        case crop
 
         var label: String {
             switch self {
@@ -71,6 +72,7 @@ enum ToolShortcutManager {
             case .invertColors: return L("Invert Colors")
             case .removeBackground: return L("Remove Background")
             case .translate: return L("Translate")
+            case .crop: return L("Crop")
             }
         }
 
@@ -105,7 +107,7 @@ enum ToolShortcutManager {
             case .beautify: return ""
             case .invertColors: return ""
             case .removeBackground: return ""
-            case .translate: return ""
+            case .translate, .crop: return ""
             }
         }
     }
@@ -132,12 +134,15 @@ enum ToolShortcutManager {
 
     /// Build a reverse lookup: character → ToolbarButtonAction.
     /// Cached and invalidated when shortcuts change.
-    static func lookupAction(for character: String) -> ToolbarButtonAction? {
+    static func lookupAction(for character: String, inEditor: Bool = false) -> ToolbarButtonAction? {
         if _cachedLookup == nil { rebuildCache() }
-        return _cachedLookup?[character]
+        if inEditor, !character.isEmpty, character == _cachedLookup?.cropKey {
+            return .tool(.crop)
+        }
+        return _cachedLookup?.shared[character]
     }
 
-    private static var _cachedLookup: [String: ToolbarButtonAction]?
+    private static var _cachedLookup: (shared: [String: ToolbarButtonAction], cropKey: String)?
 
     private static func rebuildCache() {
         var lookup: [String: ToolbarButtonAction] = [:]
@@ -175,9 +180,10 @@ enum ToolShortcutManager {
             case .invertColors: lookup[k] = .invertColors
             case .removeBackground: lookup[k] = .removeBackground
             case .translate: lookup[k] = .translate
+            case .crop: break // Editor-only; a shared binding still works in the capture overlay.
             }
         }
-        _cachedLookup = lookup
+        _cachedLookup = (lookup, key(for: .crop))
     }
 
     /// Display string for a key (for UI).
