@@ -265,10 +265,7 @@ class EditorTopBarView: NSView {
     @objc private func doneClicked() { onDone?() }
 
     @objc private func cropClicked() {
-        guard let ov = overlayView else { return }
-        ov.currentTool = ov.currentTool == .crop ? .arrow : .crop
-        ov.rebuildToolbarLayout()
-        ov.needsDisplay = true
+        overlayView?.handleToolbarAction(.tool(.crop))
     }
 
     @objc private func flipHClicked() { overlayView?.flipImageHorizontally() }
