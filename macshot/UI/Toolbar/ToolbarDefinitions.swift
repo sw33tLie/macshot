@@ -54,6 +54,9 @@ struct ToolbarButton {
     var selectedTintColor: NSColor? = nil  // optional status tint that remains visible while selected
     var bgColor: NSColor? = nil  // for color swatches
     var hasContextMenu: Bool = false  // draw small corner triangle to indicate right-click options
+    /// SF Symbol point size. Most glyphs read a little large in the 32pt
+    /// buttons; individual buttons can override it.
+    var iconPointSize: CGFloat = ToolbarLayout.defaultIconPointSize
 }
 
 enum ToolbarCustomAction: Int {
@@ -303,6 +306,9 @@ final class HUDSystemAppearanceObserver {
 
 class ToolbarLayout {
 
+    /// SF Symbol point size drawn inside every toolbar button.
+    static let defaultIconPointSize: CGFloat = 12
+
     // Default theme colors (Flameshot purple style)
     static let defaultAccentColor = NSColor(calibratedRed: 0.55, green: 0.30, blue: 0.85, alpha: 1.0)
     static let defaultIconColor = NSColor.white
@@ -495,6 +501,15 @@ class ToolbarLayout {
                 buttons.append(button)
             }
         }
+
+        // Confirm / cancel sit at the end of the tool row, after the Beautify
+        // and effect tools: ✓ copies the capture to the clipboard and finishes,
+        // ✕ discards the capture without saving it. Both reuse the same actions
+        // as the right strip, so shortcut hints and behavior stay consistent.
+        buttons.append(
+            ToolbarButton(action: .copy, sfSymbol: "checkmark", tooltip: L("Copy")))
+        buttons.append(
+            ToolbarButton(action: .cancel, sfSymbol: "xmark", tooltip: L("Cancel")))
 
         return buttons
     }
