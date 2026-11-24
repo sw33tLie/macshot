@@ -260,7 +260,6 @@
 "Enhance browser and Electron element snapping" = "Zlepšiť prichytenie prvkov v prehliadači a Electron";
 "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Vytvára strom dostupnosti cieľovej aplikácie v režime prvkov. Zakážte, ak sa prehliadač alebo Electron aplikácia stane pomalým alebo má problémy s vstupom.";
 "Capture mouse cursor in screenshot" = "Zachytiť kurzor myši na snímke obrazovky";
-"Double-click selection to copy" = "Kopírovať dvojklikom na výber";
 "Hide capture instructions" = "Skryť pokyny pri snímaní";
 "Use window title in saved filename" = "Použiť názov okna v názve súboru";
 "Hide menu bar icon" = "Skryť ikonu v lište menu";
@@ -927,3 +926,8 @@
 "Return to stack when editor closes" = "Vrátiť do zásobníka po zatvorení editora";
 "  Click on preview:" = "  Kliknutie na náhľad:";
 "  When opened in Editor:" = "  Pri otvorení v editore:";
+
+/* Double-click capture action (#512) */
+"Double-click selection to finish capture" = "Dvojklikom na výber dokončiť zachytenie";
+"  Double-click action:" = "  Akcia dvojkliku:";
+"Same as Enter" = "Rovnako ako Enter";

@@ -237,7 +237,6 @@
 "Enhance browser and Electron element snapping" = "ブラウザと Electron の要素スナップを強化";
 "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "要素モードで対象アプリのアクセシビリティツリーを構築します。ブラウザまたは Electron アプリが動作中に遅くなる場合や入力に問題がある場合は無効にしてください。";
 "Capture mouse cursor in screenshot" = "スクリーンショットにマウスカーソルを含める";
-"Double-click selection to copy" = "選択範囲をダブルクリックでコピー";
 "Hide capture instructions" = "撮影時の操作説明を非表示";
 "Use window title in saved filename" = "保存ファイル名にウインドウタイトルを使用";
 "Hide menu bar icon" = "メニューバーアイコンを隠す";
@@ -925,3 +924,8 @@
 "Return to stack when editor closes" = "エディタを閉じたらスタックに戻す";
 "  Click on preview:" = "  プレビューをクリック:";
 "  When opened in Editor:" = "  エディタで開いたとき:";
+
+/* Double-click capture action (#512) */
+"Double-click selection to finish capture" = "選択範囲をダブルクリックしてキャプチャを完了";
+"  Double-click action:" = "  ダブルクリックの動作:";
+"Same as Enter" = "Enterと同じ";

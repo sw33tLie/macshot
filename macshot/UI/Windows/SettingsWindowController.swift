@@ -93,6 +93,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var browserElementSnapCheckbox: NSButton!
     private var captureCursorCheckbox: NSButton!
     private var doubleClickToCopyCheckbox: NSButton!
+    private var doubleClickActionPopup: NSPopUpButton!
     private var hideCaptureInstructionsCheckbox: NSButton!
     private var disableSelectionShadowCheckbox: NSButton!
     private var filenameTemplateField: NSTextField!
@@ -827,7 +828,14 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
             target: self,
             action: #selector(browserElementSnapChanged(_:)))
         captureCursorCheckbox = NSButton(checkboxWithTitle: L("Capture mouse cursor in screenshot"), target: self, action: #selector(captureCursorChanged(_:)))
-        doubleClickToCopyCheckbox = NSButton(checkboxWithTitle: L("Double-click selection to copy"), target: self, action: #selector(doubleClickToCopyChanged(_:)))
+        doubleClickToCopyCheckbox = NSButton(checkboxWithTitle: L("Double-click selection to finish capture"), target: self, action: #selector(doubleClickToCopyChanged(_:)))
+        doubleClickActionPopup = NSPopUpButton()
+        for action in DoubleClickAction.allCases {
+            doubleClickActionPopup.addItem(withTitle: action.title)
+            doubleClickActionPopup.lastItem?.representedObject = action.rawValue
+        }
+        doubleClickActionPopup.target = self
+        doubleClickActionPopup.action = #selector(doubleClickActionChanged(_:))
         hideCaptureInstructionsCheckbox = NSButton(checkboxWithTitle: L("Hide capture instructions"), target: self, action: #selector(hideCaptureInstructionsChanged(_:)))
         disableSelectionShadowCheckbox = NSButton(checkboxWithTitle: L("Disable shadow outside selection"), target: self, action: #selector(disableSelectionShadowChanged(_:)))
         filenameTemplateField = NSTextField()
@@ -954,6 +962,8 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
         stack.addArrangedSubview(indented(doubleClickToCopyCheckbox))
+        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
+        stack.addArrangedSubview(indented(labeledRow(L("  Double-click action:"), controls: [doubleClickActionPopup])))
         stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
 
         stack.addArrangedSubview(indented(hideCaptureInstructionsCheckbox))
@@ -2823,6 +2833,8 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
         captureCursorCheckbox.state = UserDefaults.standard.bool(forKey: "captureCursor") ? .on : .off
         doubleClickToCopyCheckbox.state = (UserDefaults.standard.object(forKey: "doubleClickToCopy") as? Bool ?? true) ? .on : .off
+        doubleClickActionPopup.selectItem(at: DoubleClickAction.allCases.firstIndex(of: .current) ?? 0)
+        doubleClickActionPopup.isEnabled = doubleClickToCopyCheckbox.state == .on
         hideCaptureInstructionsCheckbox.state = UserDefaults.standard.bool(forKey: "hideCaptureInstructions") ? .on : .off
         disableSelectionShadowCheckbox.state = UserDefaults.standard.bool(forKey: "disableSelectionOutsideShadow") ? .on : .off
         filenameTemplateField.stringValue = UserDefaults.standard.string(forKey: FilenameFormatter.userDefaultsKey) ?? FilenameFormatter.defaultTemplate
@@ -3469,6 +3481,12 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     }
     @objc private func doubleClickToCopyChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "doubleClickToCopy")
+        doubleClickActionPopup.isEnabled = sender.state == .on
+    }
+    @objc private func doubleClickActionChanged(_ sender: NSPopUpButton) {
+        guard let value = sender.selectedItem?.representedObject as? Int,
+              let action = DoubleClickAction(rawValue: value) else { return }
+        DoubleClickAction.current = action
     }
     @objc private func hideBottomToolbarChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: OverlayView.hideBottomToolbarKey)

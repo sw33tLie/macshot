@@ -243,7 +243,6 @@
 "Enhance browser and Electron element snapping" = "Ulepsz przyciąganie elementów przeglądarki i Electron";
 "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Buduje drzewo dostępności aplikacji docelowej w trybie Element. Wyłączaj, jeśli przeglądarka lub aplikacja Electron zwalnia lub ma problemy z wprowadzaniem.";
 "Capture mouse cursor in screenshot" = "Uwzględnij kursor myszy na zrzucie";
-"Double-click selection to copy" = "Kliknij dwukrotnie zaznaczenie, aby skopiować";
 "Hide capture instructions" = "Ukryj instrukcje przechwytywania";
 "Disable shadow outside selection" = "Wyłącz przyciemnienie poza zaznaczeniem";
 "Show shortcuts in tooltips" = "Pokazuj skróty w podpowiedziach";
@@ -925,3 +924,8 @@
 "Return to stack when editor closes" = "Przywróć do stosu po zamknięciu edytora";
 "  Click on preview:" = "  Kliknięcie podglądu:";
 "  When opened in Editor:" = "  Po otwarciu w edytorze:";
+
+/* Double-click capture action (#512) */
+"Double-click selection to finish capture" = "Kliknij dwukrotnie zaznaczenie, aby zakończyć przechwytywanie";
+"  Double-click action:" = "  Działanie dwukrotnego kliknięcia:";
+"Same as Enter" = "Tak samo jak Enter";

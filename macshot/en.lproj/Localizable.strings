@@ -225,7 +225,6 @@
 "Enhance browser and Electron element snapping" = "Enhance browser and Electron element snapping";
 "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues.";
 "Capture mouse cursor in screenshot" = "Capture mouse cursor in screenshot";
-"Double-click selection to copy" = "Double-click selection to copy";
 "Hide capture instructions" = "Hide capture instructions";
 "Disable shadow outside selection" = "Disable shadow outside selection";
 "Use window title in saved filename" = "Use window title in saved filename";
@@ -926,3 +925,8 @@
 "The project's image could not be read." = "The project's image could not be read.";
 "This line is %d px long. How long is it in real life?" = "This line is %d px long. How long is it in real life?";
 "e.g. 90 mm or 3 1/2 in" = "e.g. 90 mm or 3 1/2 in";
+
+/* Double-click capture action (#512) */
+"Double-click selection to finish capture" = "Double-click selection to finish capture";
+"  Double-click action:" = "  Double-click action:";
+"Same as Enter" = "Same as Enter";

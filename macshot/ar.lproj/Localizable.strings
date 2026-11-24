@@ -238,7 +238,6 @@
 "Show snap alignment guides" = "عرض خطوط المحاذاة";
 "Snap selection edges to image boundaries" = "محاذاة حواف التحديد إلى حدود الصورة";
 "Capture mouse cursor in screenshot" = "التقاط مؤشر الفأرة في لقطة الشاشة";
-"Double-click selection to copy" = "النقر المزدوج على التحديد للنسخ";
 "Hide capture instructions" = "إخفاء تعليمات الالتقاط";
 "Disable shadow outside selection" = "تعطيل الظل خارج التحديد";
 "Show shortcuts in tooltips" = "عرض الاختصارات في التلميحات";
@@ -929,3 +928,8 @@
 "Return to stack when editor closes" = "إعادة إلى المكدس عند إغلاق المحرر";
 "  Click on preview:" = "  النقر على المعاينة:";
 "  When opened in Editor:" = "  عند الفتح في المحرر:";
+
+/* Double-click capture action (#512) */
+"Double-click selection to finish capture" = "انقر نقرًا مزدوجًا على التحديد لإنهاء الالتقاط";
+"  Double-click action:" = "  إجراء النقر المزدوج:";
+"Same as Enter" = "مثل مفتاح Enter";

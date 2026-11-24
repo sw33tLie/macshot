@@ -237,7 +237,6 @@
 "Enhance browser and Electron element snapping" = "增强浏览器和 Electron 元素吸附";
 "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "在元素模式下构建目标应用的辅助功能树。如果浏览器或 Electron 应用变慢或出现输入问题，请关闭此选项。";
 "Capture mouse cursor in screenshot" = "在截图中捕获鼠标指针";
-"Double-click selection to copy" = "双击选区以复制";
 "Hide capture instructions" = "隐藏截图操作提示";
 "Use window title in saved filename" = "在保存文件名中使用窗口标题";
 "Hide menu bar icon" = "隐藏菜单栏图标";
@@ -927,3 +926,8 @@
 "Return to stack when editor closes" = "关闭编辑器后返回堆叠";
 "  Click on preview:" = "  点击预览:";
 "  When opened in Editor:" = "  在编辑器中打开时:";
+
+/* Double-click capture action (#512) */
+"Double-click selection to finish capture" = "双击选区完成截图";
+"  Double-click action:" = "  双击操作：";
+"Same as Enter" = "与 Enter 相同";

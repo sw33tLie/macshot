@@ -237,7 +237,6 @@
 "Enhance browser and Electron element snapping" = "브라우저 및 Electron 요소 스냅 향상";
 "Builds the target app's accessibility tree in Element mode. Disable this if a browser or Electron app becomes slow or has input issues." = "요소 모드에서 대상 앱의 접근성 트리를 구축합니다. 브라우저 또는 Electron 앱이 느려지거나 입력 문제가 있는 경우 비활성화하세요.";
 "Capture mouse cursor in screenshot" = "스크린샷에 마우스 커서 포함";
-"Double-click selection to copy" = "선택 영역 더블 클릭으로 복사";
 "Hide capture instructions" = "캡처 안내 숨기기";
 "Use window title in saved filename" = "저장 파일명에 윈도우 제목 사용";
 "Hide menu bar icon" = "메뉴 막대 아이콘 숨기기";
@@ -927,3 +926,8 @@
 "Return to stack when editor closes" = "편집기를 닫으면 스택으로 복귀";
 "  Click on preview:" = "  미리보기 클릭 시:";
 "  When opened in Editor:" = "  편집기에서 열 때:";
+
+/* Double-click capture action (#512) */
+"Double-click selection to finish capture" = "선택 영역을 더블 클릭하여 캡처 완료";
+"  Double-click action:" = "  더블 클릭 동작:";
+"Same as Enter" = "Enter와 동일";

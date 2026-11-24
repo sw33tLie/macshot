@@ -242,7 +242,6 @@
 "Show snap alignment guides" = "ஒட்டு சீரமைப்பு வழிகாட்டிகளைக் காட்டு";
 "Snap selection edges to image boundaries" = "தேர்வின் விளிம்புகளைப் படத்தின் எல்லைகளுக்கு ஒட்டவை";
 "Capture mouse cursor in screenshot" = "திரைப்பிடிப்பில் சுட்டியைப் பிடி";
-"Double-click selection to copy" = "நகலெடுக்க தேர்வில் இருமுறை கிளிக் செய்க";
 "Hide capture instructions" = "பிடிப்பு வழிமுறைகளை மறை";
 "Use window title in saved filename" = "சேமிக்கும் கோப்புப் பெயரில் சாளரத் தலைப்பைப் பயன்படுத்து";
 "Disable shadow outside selection" = "தேர்வுக்கு வெளியே நிழலை முடக்கு";
@@ -929,3 +928,8 @@
 "Return to stack when editor closes" = "எடிட்டர் மூடியதும் அடுக்கிற்குத் திருப்பு";
 "  Click on preview:" = "  முன்னோட்டத்தில் கிளிக்:";
 "  When opened in Editor:" = "  எடிட்டரில் திறக்கும்போது:";
+
+/* Double-click capture action (#512) */
+"Double-click selection to finish capture" = "பிடிப்பை முடிக்கத் தேர்வை இருமுறை கிளிக் செய்யவும்";
+"  Double-click action:" = "  இருமுறை கிளிக் செயல்:";
+"Same as Enter" = "Enter போலவே";

@@ -238,7 +238,6 @@
 "Show snap alignment guides" = "نمایش خطوط راهنمای تراز";
 "Snap selection edges to image boundaries" = "چسباندن لبه‌های انتخاب به مرزهای تصویر";
 "Capture mouse cursor in screenshot" = "ضبط نشانگر موس در تصویر صفحه";
-"Double-click selection to copy" = "دوبار کلیک روی انتخاب برای کپی";
 "Hide capture instructions" = "پنهان کردن راهنمای تصویربرداری";
 "Disable shadow outside selection" = "غیرفعال کردن سایه خارج از انتخاب";
 "Show shortcuts in tooltips" = "نمایش میانبرها در راهنمای ابزار";
@@ -929,3 +928,8 @@
 "Return to stack when editor closes" = "بازگشت به پشته پس از بستن ویرایشگر";
 "  Click on preview:" = "  کلیک روی پیش‌نمایش:";
 "  When opened in Editor:" = "  هنگام باز شدن در ویرایشگر:";
+
+/* Double-click capture action (#512) */
+"Double-click selection to finish capture" = "برای پایان گرفتن تصویر روی انتخاب دوبار کلیک کنید";
+"  Double-click action:" = "  عمل دوبار کلیک:";
+"Same as Enter" = "همانند Enter";
