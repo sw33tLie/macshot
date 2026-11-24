@@ -2,6 +2,12 @@
 
 > [!IMPORTANT]
 > **Updating to 4.4.0 from 4.3.x or earlier?** macshot's developer signature changed in 4.4.0, so macOS may require you to grant permissions again. If Screen Recording looks enabled but capture fails, remove macshot with the minus button (−) in System Settings, then add it back from Applications with the plus button (+). Re-enable Accessibility or Input Monitoring if prompted. Your settings, history and recordings are preserved. If you already restored permissions on a 4.4.0 beta (beta.3 or later), you don't need to do this again.
+>
+> If adding macshot back does not fix it, run the following command in Terminal, then relaunch macshot and grant the permissions again. This fully resets macOS permissions for macshot and will resolve the issue:
+>
+> ```bash
+> tccutil reset All com.sw33tlie.macshot.macshot
+> ```
 
 <p align="center">
   <img src="assets/logo.svg" alt="macshot logo" width="200"/>
