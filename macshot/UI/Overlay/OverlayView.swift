@@ -286,7 +286,7 @@ class OverlayView: NSView {
     /// Last tool the user explicitly picked — persisted across app launches.
     private static var lastUsedTool: AnnotationTool = {
         if let raw = UserDefaults.standard.object(forKey: "lastUsedTool") as? Int,
-           let tool = AnnotationTool(rawValue: raw) {
+           let tool = AnnotationTool(rawValue: raw), tool != .crop {
             return tool
         }
         return .arrow
@@ -323,7 +323,7 @@ class OverlayView: NSView {
             hasChosenCaptureTool = true
             if currentTool != .measure { isAwaitingMeasureReference = false }
             // Persist drawing tool choices; skip transient/mode tools
-            if OverlayView.shouldRememberLastTool && currentTool != .select && currentTool != .loupe {
+            if OverlayView.shouldRememberLastTool && currentTool != .select && currentTool != .loupe && currentTool != .crop {
                 OverlayView.lastUsedTool = currentTool
                 UserDefaults.standard.set(currentTool.rawValue, forKey: "lastUsedTool")
             }
@@ -8750,6 +8750,11 @@ class OverlayView: NSView {
 
     func handleToolbarAction(_ action: ToolbarButtonAction, mousePoint: NSPoint = .zero) {
         switch action {
+        case .tool(.crop):
+            guard isEditorMode else { return }
+            currentTool = currentTool == .crop ? .arrow : .crop
+            rebuildToolbarLayout()
+            needsDisplay = true
         case .tool(let tool):
             commitTextFieldIfNeeded()
             showBeautifyInOptionsRow = false  // switch back to tool options
@@ -9886,7 +9891,7 @@ class OverlayView: NSView {
             // The reposition feature only owns Space during an active drag, so an
             // idle press must go through the same dispatch as every other key (#292).
             if !event.isARepeat, state == .selected,
-               let action = ToolShortcutManager.lookupAction(for: " ") {
+               let action = ToolShortcutManager.lookupAction(for: " ", inEditor: isEditorMode) {
                 switch action {
                 case .moveSelection:
                     if !isKeyboardMoveSelectionActive {
@@ -9986,9 +9991,10 @@ class OverlayView: NSView {
             {
                 let action = KeyboardShortcutMatcher.toolCharacters(for: event)
                     .lazy
-                    .compactMap { ToolShortcutManager.lookupAction(for: $0) }
+                    .compactMap { [isEditorMode] in ToolShortcutManager.lookupAction(for: $0, inEditor: isEditorMode) }
                     .first
                 if let action {
+                    if case .tool(.crop) = action, event.isARepeat { return }
                     switch action {
                     case .moveSelection:
                         if !isKeyboardMoveSelectionActive {

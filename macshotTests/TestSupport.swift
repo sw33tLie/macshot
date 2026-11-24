@@ -234,6 +234,7 @@ enum TestKeyEvent {
         static let v: UInt16 = 9
         static let w: UInt16 = 13
         static let one: UInt16 = 18
+        static let space: UInt16 = 49
         static let escape: UInt16 = 53
         static let returnKey: UInt16 = 36
     }
@@ -241,7 +242,8 @@ enum TestKeyEvent {
     static func keyDown(
         characters: String,
         keyCode: UInt16,
-        modifiers: NSEvent.ModifierFlags = []
+        modifiers: NSEvent.ModifierFlags = [],
+        isARepeat: Bool = false
     ) -> NSEvent {
         // `characters` doubles as charactersIgnoringModifiers: the matcher only
         // reads the latter, and tests care about the layout's base character.
@@ -254,7 +256,7 @@ enum TestKeyEvent {
             context: nil,
             characters: characters,
             charactersIgnoringModifiers: characters,
-            isARepeat: false,
+            isARepeat: isARepeat,
             keyCode: keyCode
         ) else {
             fatalError("could not synthesize key event for \(characters)")

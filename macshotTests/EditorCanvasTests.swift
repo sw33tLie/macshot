@@ -31,6 +31,51 @@ final class EditorCanvasTests: XCTestCase {
         XCTAssertFalse(overlay.isInsideScrollView)
     }
 
+    func testCropShortcutTogglesInTheEditorAndKeepsTheOverlayBinding() {
+        withDefaults(["overlayToolShortcuts": nil, "rememberLastTool": false]) {
+            let editor = makeEditor()
+            let overlay = OverlayView(frame: editor.bounds)
+            overlay.applySelection(editor.selectionRect)
+            overlay.currentTool = .pencil
+            let press = TestKeyEvent.keyDown(characters: "a", keyCode: TestKeyEvent.Code.a)
+
+            ToolShortcutManager.setKey("a", for: .crop)
+            defer { ToolShortcutManager.setKey("", for: .crop) }
+
+            editor.keyDown(with: press)
+            XCTAssertEqual(editor.currentTool, .crop)
+
+            editor.keyDown(with: TestKeyEvent.keyDown(
+                characters: "a", keyCode: TestKeyEvent.Code.a, isARepeat: true))
+            XCTAssertEqual(editor.currentTool, .crop)
+
+            overlay.keyDown(with: press)
+            XCTAssertEqual(overlay.currentTool, .arrow)
+
+            editor.keyDown(with: press)
+            XCTAssertEqual(editor.currentTool, .arrow)
+
+            ToolShortcutManager.setKey("", for: .crop)
+            editor.keyDown(with: press)
+            XCTAssertEqual(editor.currentTool, .arrow)
+        }
+    }
+
+    func testSpaceCanBeAssignedToCropInTheEditor() {
+        withDefaults(["overlayToolShortcuts": nil, "rememberLastTool": false]) {
+            ToolShortcutManager.setKey(" ", for: .crop)
+            defer { ToolShortcutManager.setKey("", for: .crop) }
+
+            let editor = makeEditor()
+            let press = TestKeyEvent.keyDown(characters: " ", keyCode: TestKeyEvent.Code.space)
+            editor.keyDown(with: press)
+            XCTAssertEqual(editor.currentTool, .crop)
+
+            editor.keyDown(with: press)
+            XCTAssertEqual(editor.currentTool, .arrow)
+        }
+    }
+
     // MARK: - Coordinate rules
 
     func testCaptureDrawRectFollowsTheSelectionNotTheViewBounds() {
