@@ -42,6 +42,7 @@ final class OpenEditorAfterSelectionTests: XCTestCase {
     func testCaptureModesWithTheirOwnActionDoNotOpenTheEditor() {
         let modes: [(String, (OverlayView) -> Void)] = [
             ("OCR", { $0.autoOCRMode = true }),
+            ("quick translation", { $0.autoQuickTranslationMode = true }),
             ("quick save", { $0.autoQuickSaveMode = true }),
             ("scroll capture", { $0.autoScrollCaptureMode = true }),
             ("add capture", { $0.autoConfirmMode = true }),
@@ -68,6 +69,7 @@ private final class SelectionDelegate: OverlayViewDelegate {
     func overlayViewDidRequestSaveAs() {}
     func overlayViewDidRequestPin() {}
     func overlayViewDidRequestOCR() {}
+    func overlayViewDidRequestQuickTranslation() {}
     func overlayViewDidRequestQuickSave() {}
     func overlayViewDidRequestFileSave() {}
     func overlayViewDidRequestUpload() {}
