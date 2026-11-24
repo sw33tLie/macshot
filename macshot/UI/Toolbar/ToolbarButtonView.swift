@@ -9,6 +9,7 @@ class ToolbarButtonView: NSView {
     var isOn: Bool = false { didSet { if oldValue != isOn { cachedIcon = nil; needsDisplay = true } } }
     var tintColor: NSColor = ToolbarLayout.iconColor { didSet { cachedIcon = nil; cachedIconIsOn = nil; needsDisplay = true } }
     var selectedTintColor: NSColor? { didSet { cachedIcon = nil; cachedIconIsOn = nil; needsDisplay = true } }
+    var iconPointSize: CGFloat = ToolbarLayout.defaultIconPointSize { didSet { if oldValue != iconPointSize { cachedIcon = nil; cachedIconIsOn = nil; needsDisplay = true } } }
     var swatchColor: NSColor? { didSet { needsDisplay = true } }
     var hasContextMenu: Bool = false
     /// Mic input level (0–1). When > 0, draws a green fill from the bottom of the button.
@@ -22,14 +23,14 @@ class ToolbarButtonView: NSView {
     private var cachedIconIsOn: Bool?       // the isOn state when icon was cached
 
     /// Shared cross-instance cache: avoids re-rasterizing SF Symbols when toolbar is rebuilt.
-    /// Key: "symbolName|isOn|colorHex"
+    /// Key: "symbolName|isOn|colorHex|pointSize"
     private static var iconCache: [String: NSImage] = [:]
 
-    private static func cacheKey(name: String, isOn: Bool, color: NSColor) -> String {
+    private static func cacheKey(name: String, isOn: Bool, color: NSColor, pointSize: CGFloat) -> String {
         let rgb = color.usingColorSpace(.sRGB) ?? color
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0
         rgb.getRed(&r, green: &g, blue: &b, alpha: nil)
-        return "\(name)|\(isOn)|\(Int(r*255)),\(Int(g*255)),\(Int(b*255))"
+        return "\(name)|\(isOn)|\(Int(r*255)),\(Int(g*255)),\(Int(b*255))|\(pointSize)"
     }
 
     var onClick: ((ToolbarButtonAction) -> Void)?
@@ -56,6 +57,7 @@ class ToolbarButtonView: NSView {
         isOn = data.isSelected
         tintColor = data.tintColor
         selectedTintColor = data.selectedTintColor
+        iconPointSize = data.iconPointSize
         swatchColor = data.bgColor
         sfSymbol = data.sfSymbol
         tooltipText = data.tooltip
@@ -120,18 +122,18 @@ class ToolbarButtonView: NSView {
         let currentIsOn = isOn
         if cachedIcon == nil || cachedIconIsOn != currentIsOn {
             let color = currentIsOn ? (selectedTintColor ?? ToolbarLayout.iconColor) : tintColor
-            let key = Self.cacheKey(name: name, isOn: currentIsOn, color: color)
+            let key = Self.cacheKey(name: name, isOn: currentIsOn, color: color, pointSize: iconPointSize)
             if let cached = Self.iconCache[key] {
                 cachedIcon = cached
                 cachedIconIsOn = currentIsOn
             } else {
                 let img: NSImage?
                 if name == "_custom.checkerboard" {
-                    img = Self.checkerboardIcon(color: color)
+                    img = Self.checkerboardIcon(color: color, pointSize: iconPointSize)
                 } else if name == "_custom.text" {
-                    img = Self.textIcon(color: color)
+                    img = Self.textIcon(color: color, pointSize: iconPointSize)
                 } else {
-                    let cfg = NSImage.SymbolConfiguration(pointSize: 14, weight: .medium)
+                    let cfg = NSImage.SymbolConfiguration(pointSize: iconPointSize, weight: .medium)
                     if let symbol = NSImage(systemSymbolName: name, accessibilityDescription: nil)?
                             .withSymbolConfiguration(cfg) {
                         img = NSImage(size: symbol.size, flipped: false) { r in
@@ -311,11 +313,13 @@ class ToolbarButtonView: NSView {
 
     /// Bold "T" like WeChat's text tool. SF Symbol "textformat" is locale-sensitive
     /// and renders as a CJK glyph on Chinese/Japanese systems.
-    private static func textIcon(color: NSColor) -> NSImage {
-        let size: CGFloat = 16
+    private static func textIcon(color: NSColor, pointSize: CGFloat) -> NSImage {
+        let scale = pointSize / 14
+        let size: CGFloat = 16 * scale
+        let fontSize = 17 * scale
         return NSImage(size: NSSize(width: size, height: size), flipped: false) { rect in
             let attrs: [NSAttributedString.Key: Any] = [
-                .font: NSFont.systemFont(ofSize: 17, weight: .bold),
+                .font: NSFont.systemFont(ofSize: fontSize, weight: .bold),
                 .foregroundColor: color,
             ]
             let text = NSAttributedString(string: "T", attributes: attrs)
@@ -327,10 +331,11 @@ class ToolbarButtonView: NSView {
 
     /// Generate a checkerboard icon matching the style of SF Symbols, tinted with the given color.
     /// The result is a rounded square with a 4x4 checkerboard pattern.
-    private static func checkerboardIcon(color: NSColor) -> NSImage {
-        let size: CGFloat = 16
+    private static func checkerboardIcon(color: NSColor, pointSize: CGFloat) -> NSImage {
+        let scale = pointSize / 14
+        let size: CGFloat = 16 * scale
         let img = NSImage(size: NSSize(width: size, height: size), flipped: false) { _ in
-            let cornerRadius: CGFloat = 3
+            let cornerRadius: CGFloat = 3 * scale
             let cellSize = size / 4
             let clip = NSBezierPath(roundedRect: NSRect(x: 0, y: 0, width: size, height: size),
                                     xRadius: cornerRadius, yRadius: cornerRadius)
