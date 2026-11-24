@@ -2428,7 +2428,27 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             return
         }
 
-        if provider == "gdrive" {
+        if provider == "custom" && !CustomUploader.shared.isConfigured {
+            toast.showError(message: "Custom uploader not configured. Check Settings.")
+            return
+        }
+
+        if provider == "custom" {
+            CustomUploader.shared.uploadImage(image, progress: { fraction in
+                toast.updateProgress(fraction)
+            }) { [weak self] result in
+                switch result {
+                case .success(let uploadResult):
+                    let pasteboard = NSPasteboard.general
+                    pasteboard.clearContents()
+                    pasteboard.setString(uploadResult.link, forType: .string)
+                    if !uploadResult.deleteURL.isEmpty { self?.recordUpload(uploadResult) }
+                    toast.showSuccess(link: uploadResult.link, deleteURL: uploadResult.deleteURL)
+                case .failure(let error):
+                    toast.showError(message: error.localizedDescription)
+                }
+            }
+        } else if provider == "gdrive" {
             GoogleDriveUploader.shared.uploadImage(image) { result in
                 switch result {
                 case .success(let link):
@@ -2455,26 +2475,28 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
                 }
             }
         } else {
-            ImageUploader.upload(image: image) { result in
+            ImageUploader.upload(image: image) { [weak self] result in
                 switch result {
                 case .success(let uploadResult):
                     let pasteboard = NSPasteboard.general
                     pasteboard.clearContents()
                     pasteboard.setString(uploadResult.link, forType: .string)
-
-                    var uploads = UserDefaults.standard.array(forKey: "imgbbUploads") as? [[String: String]] ?? []
-                    uploads.append([
-                        "deleteURL": uploadResult.deleteURL,
-                        "link": uploadResult.link,
-                    ])
-                    UserDefaults.standard.set(uploads, forKey: "imgbbUploads")
-
+                    self?.recordUpload(uploadResult)
                     toast.showSuccess(link: uploadResult.link, deleteURL: uploadResult.deleteURL)
                 case .failure(let error):
                     toast.showError(message: error.localizedDescription)
                 }
             }
         }
+    }
+
+    private func recordUpload(_ result: ImageUploadResult) {
+        var uploads = UserDefaults.standard.array(forKey: "imgbbUploads") as? [[String: String]] ?? []
+        uploads.append([
+            "deleteURL": result.deleteURL,
+            "link": result.link,
+        ])
+        UserDefaults.standard.set(uploads, forKey: "imgbbUploads")
     }
     #endif
 

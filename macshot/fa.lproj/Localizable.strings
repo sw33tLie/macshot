@@ -929,3 +929,12 @@
 "Return to stack when editor closes" = "بازگشت به پشته پس از بستن ویرایشگر";
 "  Click on preview:" = "  کلیک روی پیش‌نمایش:";
 "  When opened in Editor:" = "  هنگام باز شدن در ویرایشگر:";
+"Custom Uploader (images + videos)" = "بارگذار سفارشی (تصویر + ویدیو)";
+"Custom Uploader" = "بارگذار سفارشی";
+"Uploader:" = "بارگذار:";
+"Import .sxcu File…" = "وارد کردن فایل ‎.sxcu…";
+"Remove Uploader" = "حذف بارگذار";
+"No uploader imported" = "هیچ بارگذاری وارد نشده است";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "یک فایل بارگذار سفارشی ShareX ‏(‎.sxcu) را از سرویسی خودمیزبان مانند Zipline،‏ XBackBone یا Chibisafe وارد کنید. این فایل ممکن است توکن دسترسی شما را داشته باشد، بنابراین هرگز در خروجی تنظیمات قرار نمی‌گیرد.";
+"Upload to %@?" = "در %@ بارگذاری شود؟";
+"Import a custom uploader in Settings" = "یک بارگذار سفارشی را در تنظیمات وارد کنید";

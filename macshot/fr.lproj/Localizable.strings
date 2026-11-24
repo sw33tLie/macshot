@@ -925,3 +925,12 @@
 "Return to stack when editor closes" = "Remettre dans la pile à la fermeture de l’éditeur";
 "  Click on preview:" = "  Clic sur l’aperçu :";
 "  When opened in Editor:" = "  À l’ouverture dans l’éditeur :";
+"Custom Uploader (images + videos)" = "Service personnalisé (images + vidéos)";
+"Custom Uploader" = "Service d’envoi personnalisé";
+"Uploader:" = "Service :";
+"Import .sxcu File…" = "Importer un fichier .sxcu…";
+"Remove Uploader" = "Supprimer le service";
+"No uploader imported" = "Aucun service importé";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "Importez un fichier de service personnalisé ShareX (.sxcu) depuis un service auto-hébergé comme Zipline, XBackBone ou Chibisafe. Le fichier peut contenir votre jeton d’accès ; il n’est donc jamais inclus dans les exports de réglages.";
+"Upload to %@?" = "Envoyer vers %@ ?";
+"Import a custom uploader in Settings" = "Importez un service d’envoi personnalisé dans les Réglages";

@@ -923,3 +923,12 @@
 "Return to stack when editor closes" = "Palauta pinoon, kun editori suljetaan";
 "  Click on preview:" = "  Esikatselun napsautus:";
 "  When opened in Editor:" = "  Kun avataan editorissa:";
+"Custom Uploader (images + videos)" = "Mukautettu lähetyspalvelu (kuvat + videot)";
+"Custom Uploader" = "Mukautettu lähetyspalvelu";
+"Uploader:" = "Lähetyspalvelu:";
+"Import .sxcu File…" = "Tuo .sxcu-tiedosto…";
+"Remove Uploader" = "Poista lähetyspalvelu";
+"No uploader imported" = "Lähetyspalvelua ei ole tuotu";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "Tuo ShareX-muotoinen mukautetun lähetyspalvelun tiedosto (.sxcu) itse ylläpidetystä palvelusta, kuten Zipline, XBackBone tai Chibisafe. Tiedosto voi sisältää käyttöoikeustunnuksesi, joten sitä ei koskaan sisällytetä asetusten vienteihin.";
+"Upload to %@?" = "Lähetetäänkö palveluun %@?";
+"Import a custom uploader in Settings" = "Tuo mukautettu lähetyspalvelu asetuksissa";

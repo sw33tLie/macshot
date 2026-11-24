@@ -65,6 +65,7 @@ enum SettingsPortability {
         // Account PII / history that isn't credential-named but shouldn't leave the machine.
         "gdriveUserEmail",
         "imgbbUploads",   // uploaded image links + delete URLs
+        "customUploaderConfig",
     ]
 
     /// Prefixes of OS/framework key families macOS injects into every app's domain. Stable —

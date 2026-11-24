@@ -257,10 +257,18 @@ extension VideoEditorWindowController {
         if provider == "s3" && !S3Uploader.shared.isConfigured {
             showStatus(L("Configure S3 in Settings"), isError: true); return
         }
-        if provider != "gdrive" && provider != "s3" {
+        if provider == "custom" && !CustomUploader.shared.isConfigured {
+            showStatus(L("Import a custom uploader in Settings"), isError: true); return
+        }
+        if !["gdrive", "s3", "custom"].contains(provider) {
             showStatus(L("Video upload requires Google Drive or S3"), isError: true); return
         }
-        let label = provider == "s3" ? "S3" : "Drive"
+        let label: String
+        switch provider {
+        case "s3": label = "S3"
+        case "custom": label = CustomUploader.shared.config?.name ?? L("Custom Uploader")
+        default: label = "Drive"
+        }
         let progress: @MainActor @Sendable (Double) -> Void = { [weak self] fraction in
             self?.showStatus(String(format: L("Uploading to %@... %d%%"), label, Int(fraction * 100)), persist: true)
         }
@@ -275,7 +283,9 @@ extension VideoEditorWindowController {
             }
         }
         let upload: (URL) -> Void = { url in
-            if provider == "s3" {
+            if provider == "custom" {
+                CustomUploader.shared.uploadVideo(url: url, progress: progress) { finish($0.map(\.link)) }
+            } else if provider == "s3" {
                 S3Uploader.shared.uploadVideo(url: url, progress: progress, completion: finish)
             } else {
                 GoogleDriveUploader.shared.uploadVideo(url: url, progress: progress, completion: finish)

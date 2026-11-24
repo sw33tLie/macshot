@@ -47,6 +47,28 @@ final class PreparedUploadBody: Sendable {
         sha256 = ""
     }
 
+    nonisolated init(formFile payload: UploadPayload, fieldName: String, filename: String, contentType: String,
+                     fields: [(name: String, value: String)], boundary: String) throws {
+        url = FileManager.default.temporaryDirectory.appendingPathComponent("macshot_upload_\(UUID().uuidString).tmp")
+        try MultipartBodyWriter.write(to: url) { append in
+            for field in fields {
+                try append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"\(Self.quoted(field.name))\"\r\n\r\n\(field.value)\r\n".utf8))
+            }
+            try append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"\(Self.quoted(fieldName))\"; filename=\"\(Self.quoted(filename))\"\r\nContent-Type: \(contentType)\r\n\r\n".utf8))
+            try payload.forEachChunk(append)
+            try append(Data("\r\n--\(boundary)--\r\n".utf8))
+        }
+        do { byteCount = try url.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0 }
+        catch { try? FileManager.default.removeItem(at: url); throw error }
+        sha256 = ""
+    }
+
+    nonisolated private static func quoted(_ value: String) -> String {
+        value.replacingOccurrences(of: "\r", with: "")
+            .replacingOccurrences(of: "\n", with: "")
+            .replacingOccurrences(of: "\"", with: "%22")
+    }
+
     deinit { try? FileManager.default.removeItem(at: url) }
 }
 

@@ -929,3 +929,12 @@
 "Return to stack when editor closes" = "Düzenleyici kapanınca yığına geri dön";
 "  Click on preview:" = "  Önizlemeye tıklama:";
 "  When opened in Editor:" = "  Düzenleyicide açıldığında:";
+"Custom Uploader (images + videos)" = "Özel yükleyici (görseller + videolar)";
+"Custom Uploader" = "Özel yükleyici";
+"Uploader:" = "Yükleyici:";
+"Import .sxcu File…" = ".sxcu dosyasını içe aktar…";
+"Remove Uploader" = "Yükleyiciyi kaldır";
+"No uploader imported" = "İçe aktarılmış yükleyici yok";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "Zipline, XBackBone veya Chibisafe gibi kendi barındırdığınız bir hizmetten ShareX özel yükleyici dosyasını (.sxcu) içe aktarın. Dosya erişim belirtecinizi içerebileceğinden ayar dışa aktarımlarına asla dahil edilmez.";
+"Upload to %@?" = "%@ hizmetine yüklensin mi?";
+"Import a custom uploader in Settings" = "Ayarlar’da özel bir yükleyici içe aktarın";

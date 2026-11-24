@@ -927,3 +927,12 @@
 "Return to stack when editor closes" = "Terug in stapel na sluiten editor";
 "  Click on preview:" = "  Klik op voorvertoning:";
 "  When opened in Editor:" = "  Bij openen in editor:";
+"Custom Uploader (images + videos)" = "Aangepaste uploader (afbeeldingen + video’s)";
+"Custom Uploader" = "Aangepaste uploader";
+"Uploader:" = "Uploader:";
+"Import .sxcu File…" = ".sxcu-bestand importeren…";
+"Remove Uploader" = "Uploader verwijderen";
+"No uploader imported" = "Geen uploader geïmporteerd";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "Importeer een ShareX-bestand voor aangepaste uploaders (.sxcu) van een zelfgehoste dienst zoals Zipline, XBackBone of Chibisafe. Het bestand kan je toegangstoken bevatten en wordt daarom nooit opgenomen in exports van instellingen.";
+"Upload to %@?" = "Uploaden naar %@?";
+"Import a custom uploader in Settings" = "Importeer een aangepaste uploader in Instellingen";

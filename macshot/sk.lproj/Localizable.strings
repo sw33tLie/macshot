@@ -927,3 +927,12 @@
 "Return to stack when editor closes" = "Vrátiť do zásobníka po zatvorení editora";
 "  Click on preview:" = "  Kliknutie na náhľad:";
 "  When opened in Editor:" = "  Pri otvorení v editore:";
+"Custom Uploader (images + videos)" = "Vlastná nahrávacia služba (obrázky + videá)";
+"Custom Uploader" = "Vlastná nahrávacia služba";
+"Uploader:" = "Služba:";
+"Import .sxcu File…" = "Importovať súbor .sxcu…";
+"Remove Uploader" = "Odstrániť službu";
+"No uploader imported" = "Žiadna služba nie je importovaná";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "Importujte súbor vlastnej nahrávacej služby ShareX (.sxcu) zo služby na vlastnom serveri, napríklad Zipline, XBackBone alebo Chibisafe. Súbor môže obsahovať váš prístupový token, preto sa nikdy nezahŕňa do exportov nastavení.";
+"Upload to %@?" = "Nahrať do %@?";
+"Import a custom uploader in Settings" = "Importujte vlastnú nahrávaciu službu v Nastaveniach";

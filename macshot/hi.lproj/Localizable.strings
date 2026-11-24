@@ -929,3 +929,12 @@
 "Return to stack when editor closes" = "एडिटर बंद होने पर स्टैक में लौटाएँ";
 "  Click on preview:" = "  पूर्वावलोकन पर क्लिक:";
 "  When opened in Editor:" = "  एडिटर में खोलने पर:";
+"Custom Uploader (images + videos)" = "कस्टम अपलोडर (इमेज + वीडियो)";
+"Custom Uploader" = "कस्टम अपलोडर";
+"Uploader:" = "अपलोडर:";
+"Import .sxcu File…" = ".sxcu फ़ाइल इंपोर्ट करें…";
+"Remove Uploader" = "अपलोडर हटाएँ";
+"No uploader imported" = "कोई अपलोडर इंपोर्ट नहीं किया गया";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "Zipline, XBackBone या Chibisafe जैसी सेल्फ़-होस्टेड सेवा से ShareX कस्टम अपलोडर फ़ाइल (.sxcu) इंपोर्ट करें। फ़ाइल में आपका एक्सेस टोकन हो सकता है, इसलिए इसे सेटिंग्स एक्सपोर्ट में कभी शामिल नहीं किया जाता।";
+"Upload to %@?" = "%@ पर अपलोड करें?";
+"Import a custom uploader in Settings" = "सेटिंग्स में कस्टम अपलोडर इंपोर्ट करें";

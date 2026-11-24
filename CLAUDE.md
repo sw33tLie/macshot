@@ -93,7 +93,8 @@ macshot/
 │   ├── UploadPayload.swift             # Streamed upload bodies (chunking, incremental SHA256, multipart on disk)
 │   ├── ImgbbUploader.swift             # imgbb image upload
 │   ├── GoogleDriveUploader.swift       # Google Drive OAuth2 upload
-│   └── S3Uploader.swift               # S3-compatible upload
+│   ├── S3Uploader.swift               # S3-compatible upload
+│   └── CustomUploader.swift           # ShareX custom uploader (.sxcu): request builder + response placeholders
 │
 ├── UI/
 │   ├── Overlay/
@@ -293,7 +294,7 @@ The video editor is built around `VideoEditorDocument` (one `VideoProject`: time
 - Styles: `currentLineStyle`, `currentArrowStyle`, `currentRectFillStyle`, `currentRectCornerRadius`
 - Measure: `measureInPoints`, `measureClampToSelection`, `measureScaleUnit` (last unit used in the scale popover)
 - Picker: `presetColors` (hex list for the editable default swatches; unset means the shipped 12; capped at `PresetColorPalette.maxCount` (24) on save and load so the picker popover fits small displays)
-- Upload: `uploadProvider` (imgbb/gdrive), `googleDriveRefreshToken`, `gdriveFolderName` (Drive destination folder, defaults to "macshot"), `uploadConfirmEnabled`
+- Upload: `uploadProvider` (imgbb/gdrive/s3/custom), `customUploaderConfig` (raw imported `.sxcu`, may hold a token: excluded from settings export), `googleDriveRefreshToken`, `gdriveFolderName` (Drive destination folder, defaults to "macshot"), `uploadConfirmEnabled`
 
 ### Threading Model
 - **Capture:** Displays are captured one at a time, the one under the pointer first (on macOS 26 `replayd` serializes concurrent screenshot requests and charges far more per queued request). Each display's overlay is shown as soon as its capture lands; keyboard focus stays on the display with a selection, else the one under the pointer, and a partial failure falls back only for the displays not yet shown.

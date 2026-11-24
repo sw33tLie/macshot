@@ -925,3 +925,12 @@
 "Return to stack when editor closes" = "Trở lại ngăn xếp khi đóng trình chỉnh sửa";
 "  Click on preview:" = "  Nhấp vào bản xem trước:";
 "  When opened in Editor:" = "  Khi mở trong trình chỉnh sửa:";
+"Custom Uploader (images + videos)" = "Trình tải lên tùy chỉnh (ảnh + video)";
+"Custom Uploader" = "Trình tải lên tùy chỉnh";
+"Uploader:" = "Trình tải lên:";
+"Import .sxcu File…" = "Nhập tệp .sxcu…";
+"Remove Uploader" = "Xóa trình tải lên";
+"No uploader imported" = "Chưa nhập trình tải lên nào";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "Nhập tệp trình tải lên tùy chỉnh của ShareX (.sxcu) từ một dịch vụ tự lưu trữ như Zipline, XBackBone hoặc Chibisafe. Tệp có thể chứa mã truy cập của bạn nên không bao giờ được đưa vào bản xuất cài đặt.";
+"Upload to %@?" = "Tải lên %@?";
+"Import a custom uploader in Settings" = "Nhập trình tải lên tùy chỉnh trong Cài đặt";

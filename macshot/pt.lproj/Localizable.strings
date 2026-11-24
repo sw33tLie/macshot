@@ -927,3 +927,12 @@
 "Return to stack when editor closes" = "Voltar à pilha ao fechar o editor";
 "  Click on preview:" = "  Clique na pré-visualização:";
 "  When opened in Editor:" = "  Ao abrir no editor:";
+"Custom Uploader (images + videos)" = "Carregador personalizado (imagens + vídeos)";
+"Custom Uploader" = "Carregador personalizado";
+"Uploader:" = "Carregador:";
+"Import .sxcu File…" = "Importar ficheiro .sxcu…";
+"Remove Uploader" = "Remover carregador";
+"No uploader imported" = "Nenhum carregador importado";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "Importe um ficheiro de carregador personalizado do ShareX (.sxcu) de um serviço auto-hospedado como Zipline, XBackBone ou Chibisafe. O ficheiro pode conter o seu token de acesso, por isso nunca é incluído nas exportações de definições.";
+"Upload to %@?" = "Carregar para %@?";
+"Import a custom uploader in Settings" = "Importe um carregador personalizado nas Definições";

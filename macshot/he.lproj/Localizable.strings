@@ -929,3 +929,12 @@
 "Return to stack when editor closes" = "החזר לערימה כשהעורך נסגר";
 "  Click on preview:" = "  לחיצה על התצוגה המקדימה:";
 "  When opened in Editor:" = "  בעת פתיחה בעורך:";
+"Custom Uploader (images + videos)" = "מעלה מותאם אישית (תמונות + סרטונים)";
+"Custom Uploader" = "מעלה מותאם אישית";
+"Uploader:" = "מעלה:";
+"Import .sxcu File…" = "ייבוא קובץ ‎.sxcu…";
+"Remove Uploader" = "הסרת המעלה";
+"No uploader imported" = "לא יובא מעלה";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "ייבאו קובץ מעלה מותאם אישית של ShareX ‏(‎.sxcu) משירות באירוח עצמי כמו Zipline,‏ XBackBone או Chibisafe. הקובץ עשוי להכיל את אסימון הגישה שלכם, ולכן הוא לעולם אינו נכלל בייצוא ההגדרות.";
+"Upload to %@?" = "להעלות אל %@?";
+"Import a custom uploader in Settings" = "ייבאו מעלה מותאם אישית בהגדרות";

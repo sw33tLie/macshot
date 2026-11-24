@@ -929,3 +929,12 @@
 "Return to stack when editor closes" = "எடிட்டர் மூடியதும் அடுக்கிற்குத் திருப்பு";
 "  Click on preview:" = "  முன்னோட்டத்தில் கிளிக்:";
 "  When opened in Editor:" = "  எடிட்டரில் திறக்கும்போது:";
+"Custom Uploader (images + videos)" = "தனிப்பயன் பதிவேற்றி (படங்கள் + வீடியோக்கள்)";
+"Custom Uploader" = "தனிப்பயன் பதிவேற்றி";
+"Uploader:" = "பதிவேற்றி:";
+"Import .sxcu File…" = ".sxcu கோப்பை இறக்குமதி செய்…";
+"Remove Uploader" = "பதிவேற்றியை அகற்று";
+"No uploader imported" = "எந்தப் பதிவேற்றியும் இறக்குமதி செய்யப்படவில்லை";
+"Import a ShareX custom uploader file (.sxcu) from a self-hosted service such as Zipline, XBackBone or Chibisafe. The file may contain your access token, so it is never included in settings exports." = "Zipline, XBackBone அல்லது Chibisafe போன்ற சுய-ஹோஸ்ட் சேவையிலிருந்து ShareX தனிப்பயன் பதிவேற்றி கோப்பை (.sxcu) இறக்குமதி செய்யவும். கோப்பில் உங்கள் அணுகல் டோக்கன் இருக்கலாம், எனவே அது அமைப்புகள் ஏற்றுமதியில் ஒருபோதும் சேர்க்கப்படாது.";
+"Upload to %@?" = "%@-க்கு பதிவேற்றவா?";
+"Import a custom uploader in Settings" = "அமைப்புகளில் தனிப்பயன் பதிவேற்றியை இறக்குமதி செய்யவும்";
