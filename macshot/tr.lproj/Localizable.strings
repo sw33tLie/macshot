@@ -21,6 +21,7 @@
 "Quick Capture" = "Hızlı Yakalama";
 "Scroll Capture" = "Kaydırmalı Yakalama";
 "Capture Last Area" = "Son Alanı Yakala";
+"Edit Last Capture" = "Son Yakalamayı Düzenle";
 "Capture Delay" = "Gecikmeli Yakalama";
 "None" = "Yok";
 "%d seconds" = "%d saniye";
@@ -562,6 +563,7 @@
 "Also open in Editor" = "Düzenleyicide de aç";
 "Open in Editor right after selection" = "Seçimden hemen sonra düzenleyicide aç";
 "Close editor after copying" = "Kopyaladıktan sonra düzenleyiciyi kapat";
+"Copy to clipboard when closing the editor" = "Düzenleyici kapatılırken panoya kopyala";
 "Hide controls" = "Kontrolleri gizle";
 "Hide recording controls" = "Kayıt kontrollerini gizle";
 "Stop recording from the menu bar icon instead." = "Bunun yerine menü çubuğu simgesinden kaydı durdurun.";

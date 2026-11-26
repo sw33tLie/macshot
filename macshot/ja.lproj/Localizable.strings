@@ -23,6 +23,7 @@
 "Quick Capture" = "クイックキャプチャ";
 "Scroll Capture" = "スクロールキャプチャ";
 "Capture Last Area" = "前回のエリアをキャプチャ";
+"Edit Last Capture" = "最後のキャプチャを編集";
 "Capture Delay" = "キャプチャ遅延";
 "None" = "なし";
 "%d seconds" = "%d 秒";
@@ -557,6 +558,7 @@
 "Also open in Editor" = "エディタでも開く";
 "Open in Editor right after selection" = "選択直後にエディタで開く";
 "Close editor after copying" = "コピー後にエディタを閉じる";
+"Copy to clipboard when closing the editor" = "エディタを閉じるときにクリップボードにコピー";
 "Hide controls" = "コントロールを隠す";
 "Hide recording controls" = "録画コントロールを隠す";
 "Stop recording from the menu bar icon instead." = "代わりにメニューバーアイコンから録画を停止してください。";

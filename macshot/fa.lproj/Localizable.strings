@@ -21,6 +21,7 @@
 "Quick Capture" = "ضبط سریع";
 "Scroll Capture" = "ضبط پیمایشی";
 "Capture Last Area" = "ضبط آخرین ناحیه";
+"Edit Last Capture" = "ویرایش آخرین تصویر";
 "Capture Delay" = "تاخیر ضبط";
 "None" = "هیچ";
 "%d seconds" = "%d ثانیه";
@@ -561,6 +562,7 @@
 "Also open in Editor" = "باز کردن در ویرایشگر نیز";
 "Open in Editor right after selection" = "باز کردن در ویرایشگر بلافاصله پس از انتخاب";
 "Close editor after copying" = "بستن ویرایشگر پس از کپی";
+"Copy to clipboard when closing the editor" = "کپی به کلیپ‌بورد هنگام بستن ویرایشگر";
 "Hide controls" = "پنهان کردن کنترل‌ها";
 "Hide recording controls" = "پنهان کردن کنترل‌های ضبط ویدیو";
 "Stop recording from the menu bar icon instead." = "به جای آن، ضبط ویدیو را از آیکون نوار منو متوقف کنید.";

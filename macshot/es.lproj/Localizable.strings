@@ -21,6 +21,7 @@
 "Quick Capture" = "Captura rápida";
 "Scroll Capture" = "Captura con desplazamiento";
 "Capture Last Area" = "Capturar última área";
+"Edit Last Capture" = "Editar última captura";
 "Capture Delay" = "Captura con retraso";
 "None" = "Ninguno";
 "%d seconds" = "%d segundos";
@@ -557,6 +558,7 @@
 "Also open in Editor" = "Abrir también en el editor";
 "Open in Editor right after selection" = "Abrir en el editor justo después de seleccionar";
 "Close editor after copying" = "Cerrar el editor después de copiar";
+"Copy to clipboard when closing the editor" = "Copiar al portapapeles al cerrar el editor";
 "Hide controls" = "Ocultar controles";
 "Hide recording controls" = "Ocultar controles de grabación";
 "Stop recording from the menu bar icon instead." = "Detener la grabación desde el icono de la barra de menú.";

@@ -328,6 +328,13 @@ final class HotkeyManagerTests: XCTestCase {
         }
     }
 
+    /// A new slot must not take a chord existing users may already rely on.
+    func testEditLastCaptureShipsUnbound() {
+        let slot = HotkeyManager.HotkeySlot.editLastCapture
+        XCTAssertEqual(slot.defaultKeyCode, 0)
+        XCTAssertEqual(slot.defaultModifiers, 0)
+    }
+
     func testDisablingAHotkeyReportsNoBinding() {
         let slot = HotkeyManager.HotkeySlot.recordArea
         withDefaults([slot.keyCodeKey: nil, slot.modifiersKey: nil, slot.disabledKey: nil]) {

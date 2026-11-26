@@ -23,6 +23,7 @@
 "Quick Capture" = "빠른 캡처";
 "Scroll Capture" = "스크롤 캡처";
 "Capture Last Area" = "마지막 영역 캡처";
+"Edit Last Capture" = "마지막 캡처 편집";
 "Capture Delay" = "지연 캡처";
 "None" = "없음";
 "%d seconds" = "%d초";
@@ -557,6 +558,7 @@
 "Also open in Editor" = "편집기에서도 열기";
 "Open in Editor right after selection" = "선택 직후 편집기에서 열기";
 "Close editor after copying" = "복사 후 편집기 닫기";
+"Copy to clipboard when closing the editor" = "편집기를 닫을 때 클립보드에 복사";
 "Hide controls" = "컨트롤 숨기기";
 "Hide recording controls" = "녹화 컨트롤 숨기기";
 "Stop recording from the menu bar icon instead." = "대신 메뉴 막대 아이콘에서 녹화를 중지하세요.";

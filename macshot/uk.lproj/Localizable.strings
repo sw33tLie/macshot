@@ -23,6 +23,7 @@
 "Quick Capture" = "Швидке захоплення";
 "Scroll Capture" = "Захоплення з прокруткою";
 "Capture Last Area" = "Захопити останню область";
+"Edit Last Capture" = "Редагувати останній знімок";
 "Capture Delay" = "Затримка захоплення";
 "None" = "Немає";
 "%d seconds" = "%d секунд";
@@ -569,6 +570,7 @@
 "Also open in Editor" = "Також відкрити в редакторі";
 "Open in Editor right after selection" = "Відкрити в редакторі одразу після виділення";
 "Close editor after copying" = "Закривати редактор після копіювання";
+"Copy to clipboard when closing the editor" = "Копіювати до буфера обміну під час закриття редактора";
 "Hide controls" = "Сховати елементи керування";
 "Hide recording controls" = "Сховати елементи керування записом";
 "Stop recording from the menu bar icon instead." = "Зупиніть запис через іконку в смузі меню.";

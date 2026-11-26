@@ -23,6 +23,7 @@
 "Quick Capture" = "Rýchle zachytenie";
 "Scroll Capture" = "Zachytiť posun";
 "Capture Last Area" = "Zachytiť poslednú oblasť";
+"Edit Last Capture" = "Upraviť poslednú snímku";
 "Capture Delay" = "Oneskorenie zachytenia";
 "None" = "Žiadne";
 "%d seconds" = "%d sekund";
@@ -569,6 +570,7 @@
 "Also open in Editor" = "Otvoriť aj v editore";
 "Open in Editor right after selection" = "Otvoriť v editore hneď po výbere";
 "Close editor after copying" = "Zavrieť editor po skopírovaní";
+"Copy to clipboard when closing the editor" = "Pri zatvorení editora skopírovať do schránky";
 "Hide controls" = "Skryť ovládacie prvky";
 "Hide recording controls" = "Skryť ovládacie prvky nahrávania";
 "Stop recording from the menu bar icon instead." = "Zastavte nahrávanie pomocou ikony v lište menu.";

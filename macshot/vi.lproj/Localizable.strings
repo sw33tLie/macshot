@@ -23,6 +23,7 @@
 "Quick Capture" = "Chụp nhanh";
 "Scroll Capture" = "Chụp cuộn trang";
 "Capture Last Area" = "Chụp vùng cuối cùng";
+"Edit Last Capture" = "Chỉnh sửa ảnh chụp gần nhất";
 "Capture Delay" = "Chụp hẹn giờ";
 "None" = "Không";
 "%d seconds" = "%d giây";
@@ -567,6 +568,7 @@
 "Also open in Editor" = "Đồng thời mở trong trình chỉnh sửa";
 "Open in Editor right after selection" = "Mở trong trình chỉnh sửa ngay sau khi chọn";
 "Close editor after copying" = "Đóng trình chỉnh sửa sau khi sao chép";
+"Copy to clipboard when closing the editor" = "Sao chép vào bộ nhớ tạm khi đóng trình chỉnh sửa";
 "Hide controls" = "Ẩn điều khiển";
 "Hide recording controls" = "Ẩn điều khiển quay";
 "Stop recording from the menu bar icon instead." = "Dừng quay từ biểu tượng thanh menu thay thế.";

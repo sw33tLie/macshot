@@ -21,6 +21,7 @@
 "Quick Capture" = "Snelle opname";
 "Scroll Capture" = "Scrollopname";
 "Capture Last Area" = "Laatste gebied vastleggen";
+"Edit Last Capture" = "Laatste opname bewerken";
 "Capture Delay" = "Opnamevertraging";
 "None" = "Geen";
 "%d seconds" = "%d seconden";
@@ -557,6 +558,7 @@
 "Also open in Editor" = "Ook openen in editor";
 "Open in Editor right after selection" = "Direct na selectie openen in editor";
 "Close editor after copying" = "Editor sluiten na kopiëren";
+"Copy to clipboard when closing the editor" = "Kopiëren naar klembord bij sluiten van de editor";
 "Hide controls" = "Bedieningselementen verbergen";
 "Hide recording controls" = "Opnamebediening verbergen";
 "Stop recording from the menu bar icon instead." = "Stop de opname via het menubalkpictogram.";

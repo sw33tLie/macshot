@@ -23,6 +23,7 @@
 "Quick Capture" = "Hurtigopptak";
 "Scroll Capture" = "Rulleopptak";
 "Capture Last Area" = "Ta bilde av siste område";
+"Edit Last Capture" = "Rediger siste skjermbilde";
 "Capture Delay" = "Forsinket opptak";
 "None" = "Ingen";
 "%d seconds" = "%d sekunder";
@@ -565,6 +566,7 @@
 "Also open in Editor" = "\U00C5pne ogs\U00E5 i redigering";
 "Open in Editor right after selection" = "\U00C5pne i redigering rett etter markering";
 "Close editor after copying" = "Lukk redigeringsvinduet etter kopiering";
+"Copy to clipboard when closing the editor" = "Kopier til utklippstavlen når redigeringsvinduet lukkes";
 "Hide controls" = "Skjul kontroller";
 "Hide recording controls" = "Skjul opptakskontroller";
 "Stop recording from the menu bar icon instead." = "Stopp opptaket fra menylinjeikonen i stedet.";

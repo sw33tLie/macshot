@@ -23,6 +23,7 @@
 "Quick Capture" = "Brzo snimanje";
 "Scroll Capture" = "Snimanje pomicanjem";
 "Capture Last Area" = "Snimi zadnje područje";
+"Edit Last Capture" = "Uredi zadnju snimku";
 "Capture Delay" = "Odgoda snimanja";
 "None" = "Nema";
 "%d seconds" = "%d sekundi";
@@ -570,6 +571,7 @@
 "Also open in Editor" = "Otvori i u uređivaču";
 "Open in Editor right after selection" = "Otvori u uređivaču odmah nakon odabira";
 "Close editor after copying" = "Zatvori uređivač nakon kopiranja";
+"Copy to clipboard when closing the editor" = "Kopiraj u međuspremnik pri zatvaranju uređivača";
 "Hide controls" = "Sakrij kontrole";
 "Hide recording controls" = "Sakrij kontrole snimanja";
 "Stop recording from the menu bar icon instead." = "Umjesto toga zaustavite snimanje putem ikone u traci izbornika.";

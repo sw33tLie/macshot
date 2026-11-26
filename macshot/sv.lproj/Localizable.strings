@@ -23,6 +23,7 @@
 "Quick Capture" = "Snabbf\U00E5ngst";
 "Scroll Capture" = "Rullf\U00E5ngst";
 "Capture Last Area" = "Fånga senaste området";
+"Edit Last Capture" = "Redigera senaste skärmbilden";
 "Capture Delay" = "F\U00F6rdr\U00F6jning";
 "None" = "Ingen";
 "%d seconds" = "%d sekunder";
@@ -564,6 +565,7 @@
 "Also open in Editor" = "\U00D6ppna \U00E4ven i redigeraren";
 "Open in Editor right after selection" = "\U00D6ppna i redigeraren direkt efter markering";
 "Close editor after copying" = "Stäng redigeraren efter kopiering";
+"Copy to clipboard when closing the editor" = "Kopiera till urklipp när redigeraren stängs";
 "Hide controls" = "D\U00F6lj kontroller";
 "Hide recording controls" = "D\U00F6lj inspelningskontroller";
 "Stop recording from the menu bar icon instead." = "Stoppa inspelningen fr\U00E5n menyradsikonen ist\U00E4llet.";

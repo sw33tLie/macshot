@@ -23,6 +23,7 @@
 "Quick Capture" = "Tangkapan Pantas";
 "Scroll Capture" = "Tangkapan Tatal";
 "Capture Last Area" = "Tangkap Kawasan Terakhir";
+"Edit Last Capture" = "Edit Tangkapan Terakhir";
 "Capture Delay" = "Lengah Tangkapan";
 "None" = "Tiada";
 "%d seconds" = "%d saat";
@@ -568,6 +569,7 @@
 "Also open in Editor" = "Buka juga dalam Editor";
 "Open in Editor right after selection" = "Buka dalam Editor sejurus selepas memilih";
 "Close editor after copying" = "Tutup editor selepas menyalin";
+"Copy to clipboard when closing the editor" = "Salin ke papan keratan apabila menutup editor";
 "Hide controls" = "Sembunyikan kawalan";
 "Hide recording controls" = "Sembunyikan kawalan rakaman";
 "Stop recording from the menu bar icon instead." = "Hentikan rakaman dari ikon bar menu sebaliknya.";

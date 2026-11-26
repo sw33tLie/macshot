@@ -21,6 +21,7 @@
 "Quick Capture" = "Captură rapidă";
 "Scroll Capture" = "Captură cu derulare";
 "Capture Last Area" = "Captură ultima zonă";
+"Edit Last Capture" = "Editează ultima captură";
 "Capture Delay" = "Întârziere captură";
 "None" = "Fără";
 "%d seconds" = "%d secunde";
@@ -562,6 +563,7 @@
 "Also open in Editor" = "Deschide și în editor";
 "Open in Editor right after selection" = "Deschide în editor imediat după selecție";
 "Close editor after copying" = "Închide editorul după copiere";
+"Copy to clipboard when closing the editor" = "Copiază în clipboard la închiderea editorului";
 "Hide controls" = "Ascunde controalele";
 "Hide recording controls" = "Ascunde controalele de înregistrare";
 "Stop recording from the menu bar icon instead." = "Oprește înregistrarea din pictograma barei de meniu.";

@@ -23,6 +23,7 @@
 "Quick Capture" = "快速捕获";
 "Scroll Capture" = "滚动捕获";
 "Capture Last Area" = "捕获上次区域";
+"Edit Last Capture" = "编辑上次截图";
 "Capture Delay" = "延时捕获";
 "None" = "无";
 "%d seconds" = "%d 秒";
@@ -556,6 +557,7 @@
 "Also open in Editor" = "同时在编辑器中打开";
 "Open in Editor right after selection" = "选择后立即在编辑器中打开";
 "Close editor after copying" = "复制后关闭编辑器";
+"Copy to clipboard when closing the editor" = "关闭编辑器时拷贝到剪贴板";
 "Hide controls" = "隐藏控制";
 "Hide recording controls" = "隐藏录制控制";
 "Stop recording from the menu bar icon instead." = "改为从菜单栏图标停止录制。";

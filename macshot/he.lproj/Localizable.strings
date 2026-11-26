@@ -21,6 +21,7 @@
 "Quick Capture" = "לכידה מהירה";
 "Scroll Capture" = "לכידת גלילה";
 "Capture Last Area" = "לכוד אזור אחרון";
+"Edit Last Capture" = "ערוך את הצילום האחרון";
 "Capture Delay" = "השהיית לכידה";
 "None" = "ללא";
 "%d seconds" = "%d שניות";
@@ -561,6 +562,7 @@
 "Also open in Editor" = "פתח גם בעורך";
 "Open in Editor right after selection" = "פתח בעורך מיד לאחר הבחירה";
 "Close editor after copying" = "סגור את העורך לאחר ההעתקה";
+"Copy to clipboard when closing the editor" = "העתק ללוח בעת סגירת העורך";
 "Hide controls" = "הסתר פקדים";
 "Hide recording controls" = "הסתר פקדי הקלטה";
 "Stop recording from the menu bar icon instead." = "עצור הקלטה מסמל שורת התפריטים במקום.";

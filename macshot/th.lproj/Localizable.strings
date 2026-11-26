@@ -23,6 +23,7 @@
 "Quick Capture" = "จับภาพด่วน";
 "Scroll Capture" = "จับภาพแบบเลื่อน";
 "Capture Last Area" = "จับภาพพื้นที่ล่าสุด";
+"Edit Last Capture" = "แก้ไขภาพล่าสุด";
 "Capture Delay" = "หน่วงเวลาจับภาพ";
 "None" = "ไม่มี";
 "%d seconds" = "%d วินาที";
@@ -567,6 +568,7 @@
 "Also open in Editor" = "เปิดในตัวแก้ไขด้วย";
 "Open in Editor right after selection" = "เปิดในตัวแก้ไขทันทีหลังเลือก";
 "Close editor after copying" = "ปิดตัวแก้ไขหลังคัดลอก";
+"Copy to clipboard when closing the editor" = "คัดลอกไปยังคลิปบอร์ดเมื่อปิดตัวแก้ไข";
 "Hide controls" = "ซ่อนตัวควบคุม";
 "Hide recording controls" = "ซ่อนตัวควบคุมการบันทึก";
 "Stop recording from the menu bar icon instead." = "หยุดบันทึกจากไอคอนแถบเมนูแทน";

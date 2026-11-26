@@ -325,4 +325,19 @@ final class ScreenshotHistoryTests: XCTestCase {
                                      pixelWidth: 1, pixelHeight: 1, hasAnnotations: false, thumbnail: nil)
         XCTAssertEqual(untouched.effectiveSortDate, created)
     }
+
+    /// "Edit Last Capture" opens the newest capture, even when the history is
+    /// ordered by last edit and an older capture was edited more recently.
+    func testNewestIsTheLatestCaptureNotTheLatestEdit() {
+        func entry(_ id: String, taken: TimeInterval, edited: TimeInterval?) -> HistoryEntry {
+            HistoryEntry(id: id, fileExtension: "png", timestamp: Date(timeIntervalSince1970: taken),
+                         lastEditedAt: edited.map { Date(timeIntervalSince1970: $0) },
+                         pixelWidth: 1, pixelHeight: 1, hasAnnotations: false, thumbnail: nil)
+        }
+        let editedOld = entry("old", taken: 1_000, edited: 5_000)
+        let newest = entry("new", taken: 2_000, edited: nil)
+        XCTAssertEqual(HistoryEntry.newest(in: [editedOld, newest])?.id, "new")
+        XCTAssertEqual(HistoryEntry.newest(in: [newest, editedOld])?.id, "new")
+        XCTAssertNil(HistoryEntry.newest(in: []))
+    }
 }

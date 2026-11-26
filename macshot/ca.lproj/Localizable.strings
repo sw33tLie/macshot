@@ -21,6 +21,7 @@
 "Quick Capture" = "Captura ràpida";
 "Scroll Capture" = "Captura amb desplaçament";
 "Capture Last Area" = "Captura l'última àrea";
+"Edit Last Capture" = "Edita l'última captura";
 "Capture Delay" = "Retard de captura";
 "None" = "Cap";
 "%d seconds" = "%d segons";
@@ -562,6 +563,7 @@
 "Also open in Editor" = "Obrir també a l'editor";
 "Open in Editor right after selection" = "Obrir a l'editor just després de seleccionar";
 "Close editor after copying" = "Tanca l'editor després de copiar";
+"Copy to clipboard when closing the editor" = "Copia al porta-retalls en tancar l'editor";
 "Hide controls" = "Amagar controls";
 "Hide recording controls" = "Amagar controls de gravació";
 "Stop recording from the menu bar icon instead." = "Atureu la gravació des de la icona de la barra de menús.";

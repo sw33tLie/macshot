@@ -7,6 +7,7 @@
 "Quick Capture" = "Cattura rapida";
 "Scroll Capture" = "Cattura a scorrimento";
 "Capture Last Area" = "Cattura ultima area";
+"Edit Last Capture" = "Modifica ultima cattura";
 "Capture Delay" = "Ritardo cattura";
 "None" = "Nessuno";
 "%d seconds" = "%d secondi";
@@ -549,6 +550,7 @@
 "Also open in Editor" = "Apri anche nell'editor";
 "Open in Editor right after selection" = "Apri nell'editor subito dopo la selezione";
 "Close editor after copying" = "Chiudi l'editor dopo la copia";
+"Copy to clipboard when closing the editor" = "Copia negli appunti alla chiusura dell'editor";
 "Hide controls" = "Nascondi controlli";
 "Hide recording controls" = "Nascondi controlli di registrazione";
 "Stop recording from the menu bar icon instead." = "Interrompi la registrazione dall'icona nella barra dei menu.";
