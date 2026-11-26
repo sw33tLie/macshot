@@ -23,6 +23,7 @@
 "Quick Capture" = "Быстрый захват";
 "Scroll Capture" = "Захват прокрутки";
 "Capture Last Area" = "Захват последней области";
+"Edit Last Capture" = "Редактировать последний снимок";
 "Capture Delay" = "Захват с задержкой";
 "None" = "Нет";
 "%d seconds" = "%d сек.";

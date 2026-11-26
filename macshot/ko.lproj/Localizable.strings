@@ -23,6 +23,7 @@
 "Quick Capture" = "빠른 캡처";
 "Scroll Capture" = "스크롤 캡처";
 "Capture Last Area" = "마지막 영역 캡처";
+"Edit Last Capture" = "마지막 캡처 편집";
 "Capture Delay" = "지연 캡처";
 "None" = "없음";
 "%d seconds" = "%d초";

@@ -23,6 +23,7 @@
 "Quick Capture" = "Бързо заснемане";
 "Scroll Capture" = "Заснемане с превъртане";
 "Capture Last Area" = "Заснемане на последната област";
+"Edit Last Capture" = "Редактиране на последната снимка";
 "Capture Delay" = "Забавено заснемане";
 "None" = "Няма";
 "%d seconds" = "%d секунди";

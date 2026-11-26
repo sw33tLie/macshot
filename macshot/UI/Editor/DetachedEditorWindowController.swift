@@ -298,10 +298,18 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
     /// project twice would let two windows overwrite each other's saves.
     static func focusEditor(forProjectURL url: URL) -> Bool {
         let target = url.standardizedFileURL.resolvingSymlinksInPath()
-        guard let controller = activeControllers.first(where: {
-            $0.projectURL?.standardizedFileURL.resolvingSymlinksInPath() == target
-        }), let window = controller.window else { return false }
+        return focusEditor { $0.projectURL?.standardizedFileURL.resolvingSymlinksInPath() == target }
+    }
+
+    /// Keep the current edits when the last capture is already open.
+    static func focusEditor(forHistoryEntryID id: String) -> Bool {
+        focusEditor { $0.historyEntryID == id }
+    }
+
+    private static func focusEditor(matching predicate: (DetachedEditorWindowController) -> Bool) -> Bool {
+        guard let window = activeControllers.first(where: predicate)?.window else { return false }
         NSApp.activate(ignoringOtherApps: true)
+        window.deminiaturize(nil)
         window.makeKeyAndOrderFront(nil)
         return true
     }

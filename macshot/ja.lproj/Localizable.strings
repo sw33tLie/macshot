@@ -23,6 +23,7 @@
 "Quick Capture" = "クイックキャプチャ";
 "Scroll Capture" = "スクロールキャプチャ";
 "Capture Last Area" = "前回のエリアをキャプチャ";
+"Edit Last Capture" = "最後のキャプチャを編集";
 "Capture Delay" = "キャプチャ遅延";
 "None" = "なし";
 "%d seconds" = "%d 秒";

@@ -956,6 +956,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         HotkeyManager.applyMenuShortcut(for: .historyOverlay, to: historyOverlayItem)
         menu.addItem(historyOverlayItem)
 
+        let editLastItem = NSMenuItem(title: L("Edit Last Capture"), action: #selector(editLastCapture), keyEquivalent: "")
+        editLastItem.target = self
+        editLastItem.image = NSImage(systemSymbolName: "pencil.and.outline", accessibilityDescription: nil)
+        HotkeyManager.applyMenuShortcut(for: .editLastCapture, to: editLastItem)
+        menu.addItem(editLastItem)
+
         menu.addItem(NSMenuItem.separator())
 
         let openImageItem = NSMenuItem(title: L("Open Image..."), action: #selector(openImageFromMenu), keyEquivalent: "")
@@ -1098,6 +1104,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
             recordGIF: { [weak self] in
                 stamp()
                 self?.perform(#selector(AppDelegate.recordGIFFromHotkey))
+            },
+            editLastCapture: { [weak self] in
+                DispatchQueue.main.async { self?.editLastCapture() }
             }
         )
     }
@@ -2632,6 +2641,21 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         // Fall back to the flattened image — beautify already baked in.
         guard let image = ScreenshotHistory.shared.loadImage(for: entry) else { return }
         DetachedEditorWindowController.open(image: image, historyEntryID: id, disableBeautify: true)
+    }
+
+    /// Reopen the newest capture in the editor, annotations still editable.
+    @objc private func editLastCapture() {
+        Task { @MainActor in
+            let history = ScreenshotHistory.shared
+            // A just-finished capture or edit may still be writing its history files.
+            await history.waitUntilIdle()
+            guard let entry = HistoryEntry.newest(in: history.entries) else {
+                NSSound.beep()
+                return
+            }
+            if DetachedEditorWindowController.focusEditor(forHistoryEntryID: entry.id) { return }
+            openHistoryEntryInEditor(id: entry.id)
+        }
     }
 
     @objc private func showRecordingsInFinder() {

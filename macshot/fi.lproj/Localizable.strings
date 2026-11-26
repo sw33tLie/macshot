@@ -23,6 +23,7 @@
 "Quick Capture" = "Pikakaappaus";
 "Scroll Capture" = "Vierityskaappaus";
 "Capture Last Area" = "Kaappaa viimeinen alue";
+"Edit Last Capture" = "Muokkaa viimeisintä kaappausta";
 "Capture Delay" = "Kaappausviive";
 "None" = "Ei mitään";
 "%d seconds" = "%d sekuntia";

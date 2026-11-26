@@ -21,6 +21,7 @@
 "Quick Capture" = "Capture rapide";
 "Scroll Capture" = "Capture par défilement";
 "Capture Last Area" = "Capturer la dernière zone";
+"Edit Last Capture" = "Modifier la dernière capture";
 "Capture Delay" = "Délai de capture";
 "None" = "Aucun";
 "%d seconds" = "%d secondes";

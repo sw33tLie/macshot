@@ -23,6 +23,7 @@
 "Quick Capture" = "快速擷取";
 "Scroll Capture" = "捲動擷取";
 "Capture Last Area" = "擷取上次區域";
+"Edit Last Capture" = "編輯上次擷取";
 "Capture Delay" = "延遲擷取";
 "None" = "無";
 "%d seconds" = "%d 秒";

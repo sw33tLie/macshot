@@ -488,6 +488,7 @@
 /* Hotkey Labels */
 "History" = "History";
 "Capture Last Area" = "Capture Last Area";
+"Edit Last Capture" = "Edit Last Capture";
 
 /* Preferences - Shortcuts note */
 "Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut." = "Click \"Record\" and press a key combination with at least one modifier (⌘, ⌥, ⌃, ⇧) to set a shortcut.";

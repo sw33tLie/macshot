@@ -15,6 +15,11 @@ struct HistoryEntry {
     /// The time used for "order by last edit": the most recent of edit/creation.
     var effectiveSortDate: Date { lastEditedAt ?? timestamp }
 
+    /// The most recently taken capture, whatever order the history is shown in.
+    static func newest(in entries: [HistoryEntry]) -> HistoryEntry? {
+        entries.max { $0.timestamp < $1.timestamp }
+    }
+
     var timeAgoString: String {
         guard timestamp.timeIntervalSinceReferenceDate.isFinite,
               timestamp >= .distantPast, timestamp <= .distantFuture else { return "-" }
