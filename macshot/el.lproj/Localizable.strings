@@ -571,7 +571,6 @@
 "Also open in Editor" = "Άνοιγμα και σε επεξεργαστή";
 "Open in Editor right after selection" = "Άνοιγμα σε επεξεργαστή αμέσως μετά την επιλογή";
 "Close editor after copying" = "Κλείσιμο του επεξεργαστή μετά την αντιγραφή";
-"Copy to clipboard when closing the editor" = "Αντιγραφή στο πρόχειρο κατά το κλείσιμο του επεξεργαστή";
 "Hide controls" = "Απόκρυψη χειριστηρίων";
 "Hide recording controls" = "Απόκρυψη χειριστηρίων εγγραφής";
 "Stop recording from the menu bar icon instead." = "Σταματήστε την εγγραφή από το εικονίδιο στη γραμμή μενού.";

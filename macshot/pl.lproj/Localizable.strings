@@ -562,7 +562,6 @@
 "Also open in Editor" = "Otwórz też w edytorze";
 "Open in Editor right after selection" = "Otwórz w edytorze zaraz po zaznaczeniu";
 "Close editor after copying" = "Zamknij edytor po skopiowaniu";
-"Copy to clipboard when closing the editor" = "Kopiuj do schowka przy zamykaniu edytora";
 "Hide controls" = "Ukryj kontrolki";
 "Hide recording controls" = "Ukryj kontrolki nagrywania";
 "Stop recording from the menu bar icon instead." = "Zatrzymaj nagrywanie z ikony na pasku menu.";

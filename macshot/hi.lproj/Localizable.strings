@@ -570,7 +570,6 @@
 "Also open in Editor" = "संपादक में भी खोलें";
 "Open in Editor right after selection" = "चयन के तुरंत बाद संपादक में खोलें";
 "Close editor after copying" = "कॉपी करने के बाद संपादक बंद करें";
-"Copy to clipboard when closing the editor" = "संपादक बंद करते समय क्लिपबोर्ड पर कॉपी करें";
 "Hide controls" = "नियंत्रण छिपाएँ";
 "Hide recording controls" = "रिकॉर्डिंग नियंत्रण छिपाएँ";
 "Stop recording from the menu bar icon instead." = "इसके बजाय मेनू बार आइकन से रिकॉर्डिंग बंद करें।";

@@ -562,7 +562,6 @@
 "Also open in Editor" = "פתח גם בעורך";
 "Open in Editor right after selection" = "פתח בעורך מיד לאחר הבחירה";
 "Close editor after copying" = "סגור את העורך לאחר ההעתקה";
-"Copy to clipboard when closing the editor" = "העתק ללוח בעת סגירת העורך";
 "Hide controls" = "הסתר פקדים";
 "Hide recording controls" = "הסתר פקדי הקלטה";
 "Stop recording from the menu bar icon instead." = "עצור הקלטה מסמל שורת התפריטים במקום.";

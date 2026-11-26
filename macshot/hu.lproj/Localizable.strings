@@ -572,7 +572,6 @@
 "Also open in Editor" = "Megnyitás a szerkesztőben is";
 "Open in Editor right after selection" = "Megnyitás a szerkesztőben közvetlenül a kijelölés után";
 "Close editor after copying" = "Szerkesztő bezárása másolás után";
-"Copy to clipboard when closing the editor" = "Másolás a vágólapra a szerkesztő bezárásakor";
 "Hide controls" = "Vezérlők elrejtése";
 "Hide recording controls" = "Felvételi vezérlők elrejtése";
 "Stop recording from the menu bar icon instead." = "Állítsd le a felvételt a menüsor ikonjából.";

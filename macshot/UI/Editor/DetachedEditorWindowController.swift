@@ -42,10 +42,6 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
     /// True if the image has never been output (copied, saved, etc.) — closing would lose the capture.
     /// Set to false on first output action. Editors opened from files start false.
     private var screenshotNeverOutput: Bool = true
-    /// UserDefaults key: copy the edited image to the clipboard whenever the editor closes.
-    static let copyOnCloseKey = "copyEditorImageOnClose"
-    /// Set by "Discard" in the close prompt: discarded edits must not reach the clipboard.
-    private var skipCopyOnClose = false
     /// When true, force beautify off on open (image already has beautify baked in).
     private var disableBeautifyOnOpen: Bool = false
     private var initialEditState: CaptureEditState?
@@ -543,7 +539,6 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
                 }
             case .alertSecondButtonReturn:
                 // Discard — close without saving, suppress re-triggering the warning
-                self.skipCopyOnClose = true
                 self.historyEntryID = nil
                 self.screenshotNeverOutput = false
                 self.captureCleanBaseline(view)
@@ -556,10 +551,6 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
     }
 
     func windowWillClose(_ notification: Notification) {
-        if !skipCopyOnClose, UserDefaults.standard.bool(forKey: Self.copyOnCloseKey),
-           let composited = overlayView?.captureSelectedRegion() {
-            ImageEncoder.copyToClipboard(applyPostProcessing(composited))
-        }
         NotificationCenter.default.removeObserver(self)
         overlayView?.reset()
         overlayView?.overlayDelegate = nil
@@ -721,7 +712,6 @@ extension DetachedEditorWindowController: OverlayViewDelegate {
         playCopySound()
         autoSaveToHistoryIfNeeded(save)
         if UserDefaults.standard.bool(forKey: "closeEditorAfterCopy") {
-            skipCopyOnClose = true
             window?.close()
         }
         (NSApp.delegate as? AppDelegate)?.showFloatingThumbnail(image: save.image, annotationData: save.annotationData, historyEntryID: historyEntryID)

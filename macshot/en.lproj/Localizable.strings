@@ -518,7 +518,6 @@
 "Also open in Editor" = "Also open in Editor";
 "Open in Editor right after selection" = "Open in Editor right after selection";
 "Close editor after copying" = "Close editor after copying";
-"Copy to clipboard when closing the editor" = "Copy to clipboard when closing the editor";
 "Hide controls" = "Hide controls";
 "Hide recording controls" = "Hide recording controls";
 "Stop recording from the menu bar icon instead." = "Stop recording from the menu bar icon instead.";

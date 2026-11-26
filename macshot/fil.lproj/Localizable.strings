@@ -567,7 +567,6 @@
 "Also open in Editor" = "Buksan din sa Editor";
 "Open in Editor right after selection" = "Buksan sa Editor agad pagkatapos pumili";
 "Close editor after copying" = "Isara ang editor pagkatapos kumopya";
-"Copy to clipboard when closing the editor" = "Kopyahin sa clipboard kapag isinara ang editor";
 "Hide controls" = "Itago ang mga kontrol";
 "Hide recording controls" = "Itago ang mga kontrol sa pag-record";
 "Stop recording from the menu bar icon instead." = "Ihinto ang pag-record mula sa icon sa menu bar.";

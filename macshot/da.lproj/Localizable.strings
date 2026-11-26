@@ -565,7 +565,6 @@
 "Also open in Editor" = "\U00C5bn ogs\U00E5 i redigering";
 "Open in Editor right after selection" = "\U00C5bn i redigering lige efter markering";
 "Close editor after copying" = "Luk editoren efter kopiering";
-"Copy to clipboard when closing the editor" = "Kopiér til udklipsholder, når editoren lukkes";
 "Hide controls" = "Skjul kontroller";
 "Hide recording controls" = "Skjul optagelseskontroller";
 "Stop recording from the menu bar icon instead." = "Stop optagelsen fra menulinjeikonen i stedet.";

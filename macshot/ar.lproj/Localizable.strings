@@ -563,7 +563,6 @@
 "Also open in Editor" = "فتح في المحرر أيضًا";
 "Open in Editor right after selection" = "فتح في المحرر فور التحديد";
 "Close editor after copying" = "إغلاق المحرر بعد النسخ";
-"Copy to clipboard when closing the editor" = "النسخ إلى الحافظة عند إغلاق المحرر";
 "Hide controls" = "إخفاء عناصر التحكم";
 "Hide recording controls" = "إخفاء عناصر تحكم التسجيل";
 "Stop recording from the menu bar icon instead." = "أوقف التسجيل من أيقونة شريط القوائم بدلًا من ذلك.";

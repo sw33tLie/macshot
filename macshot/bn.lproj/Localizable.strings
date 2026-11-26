@@ -571,7 +571,6 @@
 "Also open in Editor" = "এডিটরেও খুলুন";
 "Open in Editor right after selection" = "নির্বাচনের পরপরই এডিটরে খুলুন";
 "Close editor after copying" = "কপি করার পরে এডিটর বন্ধ করুন";
-"Copy to clipboard when closing the editor" = "এডিটর বন্ধ করার সময় ক্লিপবোর্ডে কপি করুন";
 "Hide controls" = "নিয়ন্ত্রণ লুকান";
 "Hide recording controls" = "রেকর্ডিং নিয়ন্ত্রণ লুকান";
 "Stop recording from the menu bar icon instead." = "পরিবর্তে মেনু বার আইকন থেকে রেকর্ডিং বন্ধ করুন।";

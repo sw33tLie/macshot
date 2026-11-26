@@ -112,7 +112,6 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var quickCaptureOpenEditorCheckbox: NSButton!
     private var openEditorAfterSelectionCheckbox: NSButton!
     private var closeEditorAfterCopyCheckbox: NSButton!
-    private var copyOnEditorCloseCheckbox: NSButton!
     private var imageFormatPopup: NSPopUpButton!
     private var clipboardFormatCheckbox: NSButton!
     private var qualitySlider: NSSlider!
@@ -788,10 +787,6 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
 
         closeEditorAfterCopyCheckbox = NSButton(checkboxWithTitle: L("Close editor after copying"), target: self, action: #selector(closeEditorAfterCopyChanged(_:)))
         stack.addArrangedSubview(indented(closeEditorAfterCopyCheckbox))
-        stack.setCustomSpacing(6, after: stack.arrangedSubviews.last!)
-
-        copyOnEditorCloseCheckbox = NSButton(checkboxWithTitle: L("Copy to clipboard when closing the editor"), target: self, action: #selector(copyOnEditorCloseChanged(_:)))
-        stack.addArrangedSubview(indented(copyOnEditorCloseCheckbox))
         stack.setCustomSpacing(8, after: stack.arrangedSubviews.last!)
 
         // Where pins from the capture overlay open
@@ -2870,7 +2865,6 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         quickCaptureOpenEditorCheckbox.state = UserDefaults.standard.bool(forKey: "quickCaptureOpenEditor") ? .on : .off
         openEditorAfterSelectionCheckbox.state = UserDefaults.standard.bool(forKey: "openEditorAfterSelection") ? .on : .off
         closeEditorAfterCopyCheckbox.state = UserDefaults.standard.bool(forKey: "closeEditorAfterCopy") ? .on : .off
-        copyOnEditorCloseCheckbox.state = UserDefaults.standard.bool(forKey: DetachedEditorWindowController.copyOnCloseKey) ? .on : .off
 
         selectImageFormat(ImageEncoder.format)
         clipboardFormatCheckbox.state = ImageEncoder.clipboardIncludesImageFormat ? .on : .off
@@ -3054,9 +3048,6 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     }
     @objc private func closeEditorAfterCopyChanged(_ sender: NSButton) {
         UserDefaults.standard.set(sender.state == .on, forKey: "closeEditorAfterCopy")
-    }
-    @objc private func copyOnEditorCloseChanged(_ sender: NSButton) {
-        UserDefaults.standard.set(sender.state == .on, forKey: DetachedEditorWindowController.copyOnCloseKey)
     }
     @objc private func languageChanged(_ sender: NSPopUpButton) {
         let languages = LanguageManager.availableLanguages

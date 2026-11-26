@@ -565,7 +565,6 @@
 "Also open in Editor" = "\U00D6ppna \U00E4ven i redigeraren";
 "Open in Editor right after selection" = "\U00D6ppna i redigeraren direkt efter markering";
 "Close editor after copying" = "Stäng redigeraren efter kopiering";
-"Copy to clipboard when closing the editor" = "Kopiera till urklipp när redigeraren stängs";
 "Hide controls" = "D\U00F6lj kontroller";
 "Hide recording controls" = "D\U00F6lj inspelningskontroller";
 "Stop recording from the menu bar icon instead." = "Stoppa inspelningen fr\U00E5n menyradsikonen ist\U00E4llet.";
