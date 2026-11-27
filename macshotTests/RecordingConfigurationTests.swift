@@ -10,15 +10,36 @@ final class RecordingConfigurationTests: XCTestCase {
             microphoneDeviceID: "selected-device", excludedWindows: [123], filename: "Test recording")
     }
 
-    func testPixelDimensionsAreEvenAndCropKeepsTheSelectedRegion() throws {
+    func testPixelDimensionsAreEvenAndTheCropMatchesThemOneToOne() throws {
+        // An odd side drops its last pixel, keeping the top-left corner, so
+        // the crop is exactly the output size and nothing gets resampled.
         let config = try make()
-        XCTAssertEqual(config.sourceRect, CGRect(x: 20, y: 767, width: 321, height: 213))
         XCTAssertEqual(config.pixelWidth, 320)
         XCTAssertEqual(config.pixelHeight, 212)
+        XCTAssertEqual(config.sourceRect, CGRect(x: 20, y: 767, width: 320, height: 212))
+        XCTAssertEqual(config.capturedRect, CGRect(x: 20, y: 101, width: 320, height: 212))
         let retina = try make(scale: 2)
         XCTAssertEqual(retina.pixelWidth, 642)
         XCTAssertEqual(retina.pixelHeight, 426)
-        XCTAssertEqual(retina.sourceRect, config.sourceRect)
+        XCTAssertEqual(retina.sourceRect, CGRect(x: 20, y: 767, width: 321, height: 213))
+    }
+
+    func testFractionalSelectionSnapsToWholePixels() throws {
+        let config = try make(rect: CGRect(x: 20.4, y: 100.3, width: 300.6, height: 200.2))
+        XCTAssertEqual(config.pixelWidth, 300)
+        XCTAssertEqual(config.pixelHeight, 200)
+        for v in [config.sourceRect.minX, config.sourceRect.minY, config.sourceRect.width, config.sourceRect.height] {
+            XCTAssertEqual(v, v.rounded(), "crop edge off the pixel grid: \(config.sourceRect)")
+        }
+        XCTAssertEqual(config.sourceRect.width, CGFloat(config.pixelWidth))
+        XCTAssertEqual(config.sourceRect.height, CGFloat(config.pixelHeight))
+    }
+
+    func testSnappedAreaStaysOnTheDisplay() throws {
+        let config = try make(rect: CGRect(x: 1619.6, y: 0, width: 300.4, height: 1080))
+        XCTAssertLessThanOrEqual(config.capturedRect.maxX, 1920)
+        XCTAssertGreaterThanOrEqual(config.capturedRect.minY, 0)
+        XCTAssertEqual(config.sourceRect.width, CGFloat(config.pixelWidth))
     }
 
     func testSecondaryDisplayGeometryIsDisplayLocal() throws {
