@@ -110,7 +110,7 @@ final class RecordingEngine: NSObject {
                 microphone: defaults.bool(forKey: "recordMicAudio"), systemAudio: defaults.bool(forKey: "recordSystemAudio"),
                 microphoneDeviceID: defaults.string(forKey: "selectedMicDeviceUID"), excludedWindows: excludeWindowNumbers,
                 filename: Self.takeFilename(template: template, appName: appName))
-            configuration.pointerRegion = CursorTelemetryRecorder.globalRegion(forAppKitRect: rect)
+            configuration.pointerRegion = CursorTelemetryRecorder.globalRegion(forAppKitRect: configuration.capturedRect)
             configuration.hidesCursor = editablePointer
             configuration.overlaysInTelemetry = editablePointer
             configuration.cameraWindowID = cameraWindowID

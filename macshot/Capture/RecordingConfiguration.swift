@@ -6,6 +6,9 @@ import Foundation
 struct RecordingConfiguration {
     let displayID: CGDirectDisplayID
     let sourceRect: CGRect
+    /// The recorded area in global AppKit coordinates, snapped to whole
+    /// pixels with even pixel sides: exactly what lands in the video.
+    let capturedRect: CGRect
     let pixelWidth: Int
     let pixelHeight: Int
     let frameRate: Int
@@ -43,9 +46,21 @@ struct RecordingConfiguration {
             throw ConfigurationError.invalidRegionOrFrameRate
         }
         self.displayID = displayID
-        self.sourceRect = CGRect(x: rect.minX - displayBounds.minX,
-                                 y: displayBounds.maxY - rect.maxY, width: rect.width, height: rect.height)
+        // Snap the area to whole pixels with even pixel sides (the encoders
+        // need even sides) and crop exactly that. When sourceRect kept the odd
+        // or fractional selection while the output was rounded to even,
+        // ScreenCaptureKit resampled every frame and blurred all text.
         (pixelWidth, pixelHeight) = VideoEncodingSettings.evenDimensions(width: width, height: height)
+        let snappedWidth = CGFloat(pixelWidth) / backingScale
+        let snappedHeight = CGFloat(pixelHeight) / backingScale
+        var left = (rect.minX * backingScale).rounded() / backingScale
+        var top = (rect.maxY * backingScale).rounded() / backingScale
+        left = min(max(left, displayBounds.minX), displayBounds.maxX - snappedWidth)
+        top = max(min(top, displayBounds.maxY), displayBounds.minY + snappedHeight)
+        self.capturedRect = CGRect(x: left, y: top - snappedHeight, width: snappedWidth, height: snappedHeight)
+        self.sourceRect = CGRect(x: capturedRect.minX - displayBounds.minX,
+                                 y: displayBounds.maxY - capturedRect.maxY,
+                                 width: capturedRect.width, height: capturedRect.height)
         self.frameRate = frameRate
         self.microphone = microphone
         self.systemAudio = systemAudio
