@@ -261,6 +261,8 @@
 "Use window title in saved filename" = "在儲存的檔案名稱中使用視窗標題";
 "Hide menu bar icon" = "隱藏選單列圖像";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "快捷鍵仍可使用。若要再次顯示圖像，請重新啟動 macshot。";
+"Hide Dock icon" = "隱藏 Dock 圖像";
+"macshot stays out of the Dock and the app switcher, even while Settings or an editor is open." = "即使開啟了設定或編輯器，macshot 也不會出現在 Dock 和 App 切換器中。";
 "Menu bar icon:" = "選單列圖像：";
 "Default" = "預設";
 "Custom symbol" = "自訂符號";

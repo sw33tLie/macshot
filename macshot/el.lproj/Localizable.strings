@@ -261,6 +261,8 @@
 "Default" = "Προεπιλογή";
 "Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "Εισαγάγετε οποιοδήποτε όνομα SF Symbol (π.χ. camera.fill) ή επιλέξτε μια προεπιλογή. Περιηγηθείτε στα ονόματα στην εφαρμογή SF Symbols της Apple. Τα μη έγκυρα ονόματα επιστρέφουν στο προεπιλεγμένο εικονίδιο.";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Τα πλήκτρα συντόμευσης λειτουργούν ακόμα. Για εμφάνιση του εικονιδίου, επανεκκινήστε το macshot.";
+"Hide Dock icon" = "Απόκρυψη εικονιδίου Dock";
+"macshot stays out of the Dock and the app switcher, even while Settings or an editor is open." = "Το macshot δεν εμφανίζεται στο Dock και στην εναλλαγή εφαρμογών, ακόμη και όταν είναι ανοιχτές οι Ρυθμίσεις ή ένας επεξεργαστής.";
 "Check for updates automatically" = "Αυτόματος έλεγχος ενημερώσεων";
 "Check for beta updates" = "Έλεγχος για ενημερώσεις beta";
 "Thumbnail" = "Μικρογραφία";

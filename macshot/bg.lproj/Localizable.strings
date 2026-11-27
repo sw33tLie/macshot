@@ -265,6 +265,8 @@
 "Use window title in saved filename" = "Използване на заглавието на прозореца в името на файла";
 "Hide menu bar icon" = "Скриване на иконата в лентата с менюта";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Бързите клавиши продължават да работят. За да покажете иконата отново, рестартирайте macshot.";
+"Hide Dock icon" = "Скриване на иконата в Dock";
+"macshot stays out of the Dock and the app switcher, even while Settings or an editor is open." = "macshot не се показва в Dock и в превключвателя на приложения, дори докато настройките или редакторът са отворени.";
 "Check for updates automatically" = "Автоматична проверка за обновления";
 "Check for beta updates" = "Проверка за бета обновления";
 "Thumbnail" = "Миниатюр";

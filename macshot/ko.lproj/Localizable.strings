@@ -242,6 +242,8 @@
 "Use window title in saved filename" = "저장 파일명에 윈도우 제목 사용";
 "Hide menu bar icon" = "메뉴 막대 아이콘 숨기기";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "단축키는 계속 작동합니다. 아이콘을 다시 표시하려면 macshot을 재실행하세요.";
+"Hide Dock icon" = "Dock 아이콘 숨기기";
+"macshot stays out of the Dock and the app switcher, even while Settings or an editor is open." = "설정이나 편집기가 열려 있어도 macshot이 Dock과 앱 전환기에 표시되지 않습니다.";
 "Menu Bar Order" = "메뉴 막대 순서";
 "Choose the order of capture actions in the macshot menu bar menu." = "macshot 메뉴 막대 메뉴에서 캡처 작업의 순서를 선택하세요.";
 "Move up" = "위로 이동";

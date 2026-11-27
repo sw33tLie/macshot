@@ -242,6 +242,8 @@
 "Use window title in saved filename" = "保存ファイル名にウインドウタイトルを使用";
 "Hide menu bar icon" = "メニューバーアイコンを隠す";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "ホットキーは引き続き使用できます。アイコンを再表示するには、macshot を再起動してください。";
+"Hide Dock icon" = "Dockアイコンを隠す";
+"macshot stays out of the Dock and the app switcher, even while Settings or an editor is open." = "設定やエディタを開いていても、macshotはDockとアプリスイッチャーに表示されません。";
 "Menu Bar Order" = "メニューバーの順序";
 "Choose the order of capture actions in the macshot menu bar menu." = "macshot メニューバーメニューでのキャプチャアクションの順序を選択します。";
 "Move up" = "上へ移動";

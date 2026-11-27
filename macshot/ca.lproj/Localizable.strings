@@ -245,6 +245,8 @@
 "Use window title in saved filename" = "Utilitzar el títol de la finestra al nom del fitxer";
 "Hide menu bar icon" = "Amagar la icona de la barra de menús";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Les dreceres segueixen funcionant. Per mostrar la icona de nou, reinicieu macshot.";
+"Hide Dock icon" = "Amagar la icona del Dock";
+"macshot stays out of the Dock and the app switcher, even while Settings or an editor is open." = "El macshot no apareix al Dock ni al selector d'apps, ni tan sols amb la configuració o un editor oberts.";
 "Check for updates automatically" = "Cercar actualitzacions automàticament";
 "Check for beta updates" = "Cercar actualitzacions beta";
 "Thumbnail" = "Miniatura";

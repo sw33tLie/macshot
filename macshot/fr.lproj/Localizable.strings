@@ -257,6 +257,8 @@
 "Use window title in saved filename" = "Utiliser le titre de la fenêtre dans le nom du fichier";
 "Hide menu bar icon" = "Masquer l'icône de la barre des menus";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Les raccourcis restent actifs. Pour réafficher l'icône, relancez macshot.";
+"Hide Dock icon" = "Masquer l'icône du Dock";
+"macshot stays out of the Dock and the app switcher, even while Settings or an editor is open." = "macshot n'apparaît ni dans le Dock ni dans le sélecteur d'apps, même quand les réglages ou un éditeur sont ouverts.";
 "Check for updates automatically" = "Rechercher les mises à jour automatiquement";
 "Check for beta updates" = "Rechercher les mises à jour bêta";
 "Thumbnail" = "Vignette";

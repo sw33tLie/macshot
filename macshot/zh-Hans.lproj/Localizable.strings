@@ -242,6 +242,8 @@
 "Use window title in saved filename" = "在保存文件名中使用窗口标题";
 "Hide menu bar icon" = "隐藏菜单栏图标";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "快捷键仍可使用。若要再次显示图标，请重新启动 macshot。";
+"Hide Dock icon" = "隐藏程序坞图标";
+"macshot stays out of the Dock and the app switcher, even while Settings or an editor is open." = "即使打开了设置或编辑器，macshot 也不会出现在程序坞和应用切换器中。";
 "Menu Bar Order" = "菜单栏顺序";
 "Choose the order of capture actions in the macshot menu bar menu." = "选择 macshot 菜单栏菜单中捕获操作的顺序。";
 "Move up" = "上移";
