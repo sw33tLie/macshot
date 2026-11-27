@@ -262,6 +262,8 @@
 "Use window title in saved filename" = "Gamitin ang pamagat ng window sa na-save na filename";
 "Hide menu bar icon" = "Itago ang icon sa menu bar";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Gumagana pa rin ang mga hotkey. Upang ipakita muli ang icon, i-restart ang macshot.";
+"Hide Dock icon" = "Itago ang icon sa Dock";
+"macshot stays out of the Dock and the app switcher, even while Settings or an editor is open." = "Hindi lalabas ang macshot sa Dock at sa app switcher, kahit bukas ang Settings o isang editor.";
 "Menu Bar Order" = "Pagkakasunod-sunod ng Menu Bar";
 "Choose the order of capture actions in the macshot menu bar menu." = "Piliin ang pagkakasunod-sunod ng mga aksyon sa pagkuha sa menu ng menu bar ng macshot.";
 "Move up" = "Ilipat pataas";

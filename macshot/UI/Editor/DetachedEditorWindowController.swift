@@ -93,7 +93,7 @@ class DetachedEditorWindowController: NSObject, NSWindowDelegate {
         controller.show(image: image, tool: tool, color: color, strokeWidth: strokeWidth, annotations: annotations)
         activeControllers.append(controller)
         if activeControllers.count == 1 {
-            NSApp.setActivationPolicy(.regular)
+            DockIconPolicy.applyForOpenWindow()
         }
     }
 

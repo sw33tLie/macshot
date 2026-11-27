@@ -261,6 +261,8 @@
 "Use window title in saved filename" = "ใช้ชื่อหน้าต่างในชื่อไฟล์ที่บันทึก";
 "Hide menu bar icon" = "ซ่อนไอคอนแถบเมนู";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "ปุ่มลัดยังใช้งานได้ เปิด macshot ใหม่เพื่อแสดงไอคอนอีกครั้ง";
+"Hide Dock icon" = "ซ่อนไอคอนใน Dock";
+"macshot stays out of the Dock and the app switcher, even while Settings or an editor is open." = "macshot จะไม่แสดงใน Dock และตัวสลับแอป แม้ขณะเปิดการตั้งค่าหรือตัวแก้ไขอยู่";
 "Menu bar icon:" = "ไอคอนแถบเมนู:";
 "Default" = "ค่าเริ่มต้น";
 "Custom symbol" = "สัญลักษณ์กำหนดเอง";

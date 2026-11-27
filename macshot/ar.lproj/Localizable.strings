@@ -245,6 +245,8 @@
 "Use window title in saved filename" = "استخدام عنوان النافذة في اسم الملف المحفوظ";
 "Hide menu bar icon" = "إخفاء أيقونة شريط القوائم";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "الاختصارات لا تزال تعمل. لإظهار الأيقونة مجددًا، أعد تشغيل macshot.";
+"Hide Dock icon" = "إخفاء أيقونة Dock";
+"macshot stays out of the Dock and the app switcher, even while Settings or an editor is open." = "يبقى macshot خارج Dock ومبدّل التطبيقات، حتى أثناء فتح الإعدادات أو المحرر.";
 "Menu bar icon:" = "أيقونة شريط القوائم:";
 "Default" = "افتراضي";
 "Custom symbol" = "رمز مخصص";

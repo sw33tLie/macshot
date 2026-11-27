@@ -252,6 +252,8 @@
 "Default" = "ডিফল্ট";
 "Enter any SF Symbol name (e.g. camera.fill) or pick a preset. Browse names in Apple's SF Symbols app. Invalid names fall back to the default icon." = "যেকোনো SF Symbol নাম লিখুন (যেমন camera.fill) বা একটি প্রিসেট বেছে নিন। Apple-এর SF Symbols অ্যাপে নাম ব্রাউজ করুন। অবৈধ নাম ডিফল্ট আইকনে ফিরে যায়।";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "হটকি এখনও কাজ করে। আইকন আবার দেখাতে macshot পুনরায় চালু করুন।";
+"Hide Dock icon" = "Dock আইকন লুকান";
+"macshot stays out of the Dock and the app switcher, even while Settings or an editor is open." = "সেটিংস বা এডিটর খোলা থাকলেও macshot Dock ও অ্যাপ সুইচারে দেখা যাবে না।";
 "Check for updates automatically" = "স্বয়ংক্রিয়ভাবে আপডেট পরীক্ষা করুন";
 "Check for beta updates" = "বিটা আপডেট পরীক্ষা করুন";
 "Thumbnail" = "থাম্বনেইল";

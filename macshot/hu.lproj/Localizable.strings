@@ -257,6 +257,8 @@
 "Use window title in saved filename" = "Ablakcím használata a mentett fájlnévben";
 "Hide menu bar icon" = "Menüsor ikon elrejtése";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "A gyorsbillentyűk továbbra is működnek. Az ikon újbóli megjelenítéséhez indítsd újra a macshot-ot.";
+"Hide Dock icon" = "Dock ikon elrejtése";
+"macshot stays out of the Dock and the app switcher, even while Settings or an editor is open." = "A macshot nem jelenik meg a Dockban és az alkalmazásváltóban, akkor sem, ha a Beállítások vagy egy szerkesztő nyitva van.";
 "Check for updates automatically" = "Frissítések automatikus keresése";
 "Check for beta updates" = "Béta frissítések keresése";
 "Thumbnail" = "Bélyegkép";

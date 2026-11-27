@@ -76,6 +76,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     private var thumbnailScaleLabel: NSTextField!
     private var launchAtLoginCheckbox: NSButton!
     private var hideMenuBarIconCheckbox: NSButton!
+    private var hideDockIconCheckbox: NSButton!
     private var menuBarIconModePopup: NSPopUpButton!
     private var menuBarIconPresetPopup: NSPopUpButton!
     private var menuBarIconSymbolField: NSTextField!
@@ -455,6 +456,16 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         hideNote.font = NSFont.systemFont(ofSize: 10)
         hideNote.textColor = .secondaryLabelColor
         stack.addArrangedSubview(indented(hideNote))
+        stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
+
+        hideDockIconCheckbox = NSButton(checkboxWithTitle: L("Hide Dock icon"), target: self, action: #selector(hideDockIconChanged(_:)))
+        stack.addArrangedSubview(indented(hideDockIconCheckbox))
+        stack.setCustomSpacing(4, after: stack.arrangedSubviews.last!)
+
+        let dockNote = NSTextField(wrappingLabelWithString: L("macshot stays out of the Dock and the app switcher, even while Settings or an editor is open."))
+        dockNote.font = NSFont.systemFont(ofSize: 10)
+        dockNote.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(indented(dockNote))
         stack.setCustomSpacing(10, after: stack.arrangedSubviews.last!)
 
         // Menu bar icon: keep the bundled icon or pick any SF Symbol.
@@ -2806,6 +2817,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         launchAtLoginCheckbox.state = launchAtLogin ? .on : .off
 
         hideMenuBarIconCheckbox.state = UserDefaults.standard.bool(forKey: "hideMenuBarIcon") ? .on : .off
+        hideDockIconCheckbox.state = UserDefaults.standard.bool(forKey: DockIconPolicy.hideKey) ? .on : .off
 
         let iconMode = UserDefaults.standard.string(forKey: AppDelegate.statusBarIconModeKey) ?? "default"
         menuBarIconModePopup.selectItem(at: iconMode == "symbol" ? 1 : 0)
@@ -3656,6 +3668,13 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         urlSchemeInfoPopover = popover
     }
 
+    @objc private func hideDockIconChanged(_ sender: NSButton) {
+        UserDefaults.standard.set(sender.state == .on, forKey: DockIconPolicy.hideKey)
+        // Settings is open right now, so apply the choice without waiting for the next window.
+        DockIconPolicy.applyForOpenWindow()
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
     @objc private func hideMenuBarIconChanged(_ sender: NSButton) {
         let hidden = sender.state == .on
         UserDefaults.standard.set(hidden, forKey: "hideMenuBarIcon")
@@ -3720,7 +3739,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
         loadSettings()
         window?.center()
         window?.makeKeyAndOrderFront(nil)
-        NSApp.setActivationPolicy(.regular)
+        DockIconPolicy.applyForOpenWindow()
         NSApp.activate(ignoringOtherApps: true)
     }
 

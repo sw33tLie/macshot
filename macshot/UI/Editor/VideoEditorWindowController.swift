@@ -43,7 +43,7 @@ final class VideoEditorWindowController: NSWindowController, NSWindowDelegate {
         let controller = VideoEditorWindowController(window: nil)
         if let exportFormat { controller.exportSettings.format = exportFormat }
         activeControllers.append(controller)
-        if activeControllers.count == 1 { NSApp.setActivationPolicy(.regular) }
+        if activeControllers.count == 1 { DockIconPolicy.applyForOpenWindow() }
         controller.prepare(url: url, deleteOnClose: deleteOnClose)
     }
 

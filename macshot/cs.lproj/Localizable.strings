@@ -265,6 +265,8 @@
 "Use window title in saved filename" = "Použít název okna v uloženém souboru";
 "Hide menu bar icon" = "Skrýt ikonu v liště";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "Klávesové zkratky stále fungují. Pro opětovné zobrazení ikony znovu spusťte macshot.";
+"Hide Dock icon" = "Skrýt ikonu v Docku";
+"macshot stays out of the Dock and the app switcher, even while Settings or an editor is open." = "macshot se nezobrazí v Docku ani v přepínači aplikací, ani když jsou otevřené Nastavení nebo editor.";
 "Check for updates automatically" = "Automaticky kontrolovat aktualizace";
 "Check for beta updates" = "Kontrolovat beta aktualizace";
 "Thumbnail" = "Náhled";

@@ -245,6 +245,8 @@
 "Use window title in saved filename" = "استفاده از عنوان پنجره در نام فایل ذخیره‌شده";
 "Hide menu bar icon" = "پنهان کردن آیکون نوار منو";
 "Hotkeys still work. To show the icon again, re-launch macshot." = "کلیدهای میانبر همچنان کار می‌کنند. برای نمایش مجدد آیکون، macshot را دوباره اجرا کنید.";
+"Hide Dock icon" = "پنهان کردن آیکون Dock";
+"macshot stays out of the Dock and the app switcher, even while Settings or an editor is open." = "macshot حتی وقتی تنظیمات یا ویرایشگر باز است، در Dock و تعویض‌گر برنامه‌ها دیده نمی‌شود.";
 "Menu bar icon:" = "آیکون نوار منو:";
 "Default" = "پیش‌فرض";
 "Custom symbol" = "نماد سفارشی";
