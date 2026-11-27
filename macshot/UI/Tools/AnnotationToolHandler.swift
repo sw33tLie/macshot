@@ -79,6 +79,9 @@ protocol AnnotationCanvas: AnyObject {
     var annotationLayerCache: NSImage? { get }
     /// Incrementally add a newly committed annotation to the cached annotation layer.
     func appendToAnnotationCache(_ annotation: Annotation, previousCache: NSImage)
+
+    /// Select an annotation a tool just committed, so the next drag moves it.
+    func selectCommittedAnnotation(_ annotation: Annotation)
 }
 
 /// Protocol for extracted annotation tool logic.

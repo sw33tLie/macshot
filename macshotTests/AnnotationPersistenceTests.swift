@@ -68,6 +68,7 @@ final class AnnotationPersistenceTests: XCTestCase {
         "loupeMagnification": .persisted,
         "loupeSourceRect": .persisted,
         "loupeOutlineEnabled": .persisted,
+        "moveSourceRect": .persisted,
         // Misc
         "measureInPoints": .persisted,
         "measureCalibration": .persisted,
@@ -136,6 +137,7 @@ final class AnnotationPersistenceTests: XCTestCase {
         ann.loupeMagnification = 3.5
         ann.loupeSourceRect = NSRect(x: 5, y: 6, width: 70, height: 70)
         ann.loupeOutlineEnabled = true
+        ann.moveSourceRect = NSRect(x: 9, y: 10, width: 40, height: 30)
         ann.measureInPoints = true
         ann.measureCalibration = MeasureCalibration(pointsPerUnit: 3.25, unit: .inches)
         ann.groupID = UUID(uuidString: "11111111-2222-3333-4444-555555555555")
