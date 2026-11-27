@@ -20,6 +20,7 @@ enum AnnotationTool: Int, CaseIterable {
     case colorSampler    // pick color from screen
     case stamp           // emoji or image stamp
     case highlight       // spotlight: dims everything outside the drawn rect
+    case moveArea        // cut a region of the screenshot and move it elsewhere
 }
 
 enum LineStyle: Int, CaseIterable {
@@ -168,6 +169,11 @@ class Annotation {
     /// bright. The dim is rendered globally (union of all highlight rects), not
     /// baked per-annotation.
     var dimOpacity: CGFloat = 0.55
+    /// For .moveArea: where the moved pixels were cut from. The annotation's own
+    /// rect (startPoint/endPoint) is where they are shown now. Like a loupe's
+    /// source circle, it stays put when the annotation is dragged. The hole
+    /// left behind is `bakedBlurNSImage`; the moved pixels are `stampImage`.
+    var moveSourceRect: NSRect?
 
     var supportsRotation: Bool {
         switch tool {
@@ -285,6 +291,7 @@ class Annotation {
         c.loupeSourceRect = loupeSourceRect
         c.loupeOutlineEnabled = loupeOutlineEnabled
         c.dimOpacity = dimOpacity
+        c.moveSourceRect = moveSourceRect
         return c
     }
 
@@ -334,6 +341,10 @@ class Annotation {
         } else if tool == .pixelate || tool == .blur {
             bakedBlurNSImage = src.bakedBlurNSImage
             if bakedBlurNSImage == nil { bakePixelate() }
+        } else if tool == .moveArea {
+            moveSourceRect = src.moveSourceRect
+            bakedBlurNSImage = src.bakedBlurNSImage
+            stampImage = src.stampImage
         }
         measureInPoints = src.measureInPoints
         measureCalibration = src.measureCalibration
@@ -477,7 +488,7 @@ class Annotation {
             guard pointerDistance > 4 else { return false }
             let pointerThreshold = max(threshold, strokeWidth * 2)
             return distanceToLineSegment(point: point, from: startPoint, to: endPoint) < pointerThreshold
-        case .stamp, .pixelate, .blur, .highlight:
+        case .stamp, .pixelate, .blur, .highlight, .moveArea:
             return boundingRect.insetBy(dx: -threshold, dy: -threshold).contains(point)
         default:
             return false
@@ -663,6 +674,8 @@ class Annotation {
             drawStamp()
         case .highlight:
             drawHighlight()
+        case .moveArea:
+            drawMoveArea()
         }
 
         if rotation != 0 && supportsRotation {
@@ -1950,9 +1963,13 @@ class Annotation {
     /// Render the source image region matching boundingRect into a new NSImage.
     /// Uses NSImage drawing which handles all coordinate transforms correctly.
     private func cropRegionFromSource() -> NSImage? {
-        guard let sourceImage = sourceImage else { return nil }
         let rect = boundingRect
         guard rect.width > 4, rect.height > 4 else { return nil }
+        return cropSourceRegion(rect)
+    }
+
+    private func cropSourceRegion(_ rect: NSRect) -> NSImage? {
+        guard let sourceImage = sourceImage else { return nil }
 
         let srcBounds = sourceImageBounds
         let regionImage = NSImage(size: rect.size, flipped: false) { _ in
@@ -2076,6 +2093,48 @@ class Annotation {
         border.stroke()
     }
 
+    // MARK: - Move area
+
+    /// Drawn with the censors, under the shapes: first the filled hole where
+    /// the pixels were cut from, then the pixels at their new place.
+    var rendersInImageLayer: Bool { tool == .pixelate || tool == .moveArea }
+
+    /// Cut the pixels under `moveSourceRect` out of `sourceImage` and bake the
+    /// hole they leave, filled from the colors around it (same fill as the
+    /// censor's erase mode). Keeps the current bake when there is no source,
+    /// e.g. for an annotation reopened from history without one.
+    func bakeMoveArea() {
+        guard tool == .moveArea, let source = moveSourceRect,
+              source.width > 2, source.height > 2, sourceImage != nil else { return }
+        stampImage = cropSourceRegion(source)
+        bakedBlurNSImage = bakeErase(rect: source)
+    }
+
+    private func drawMoveArea() {
+        if let source = moveSourceRect {
+            if let hole = bakedBlurNSImage {
+                hole.draw(in: source, from: .zero, operation: .copy, fraction: 1.0)
+            }
+        }
+        let rect = boundingRect
+        guard rect.width > 1, rect.height > 1 else { return }
+        if let pixels = stampImage {
+            pixels.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1.0)
+        } else {
+            // While the area is being drawn: just its outline.
+            let border = NSBezierPath(rect: rect)
+            border.lineWidth = 1.5
+            border.setLineDash([4, 4], count: 2, phase: 0)
+            NSColor.white.withAlphaComponent(0.8).setStroke()
+            border.stroke()
+            let inner = NSBezierPath(rect: rect)
+            inner.lineWidth = 1.5
+            inner.setLineDash([4, 4], count: 2, phase: 4)
+            NSColor.black.withAlphaComponent(0.5).setStroke()
+            inner.stroke()
+        }
+    }
+
     /// Highlight (spotlight) only draws its own thin border — the dimming of the
     /// area OUTSIDE the rect is rendered globally as a single union pass (see
     /// `Annotation.drawHighlightDim`), so overlapping highlights don't stack.
@@ -2153,8 +2212,11 @@ class Annotation {
     /// Per-row left/right colors and per-column top/bottom colors are blended
     /// so gradients and solid colors are both reproduced perfectly.
     private func bakeErase() -> NSImage? {
+        bakeErase(rect: boundingRect)
+    }
+
+    private func bakeErase(rect: NSRect) -> NSImage? {
         guard let src = sourceImage, let srcBounds = sourceImageBounds as NSRect? else { return nil }
-        let rect = boundingRect
         guard rect.width > 2, rect.height > 2 else { return nil }
 
         // Render the source region with some padding into a bitmap for pixel sampling

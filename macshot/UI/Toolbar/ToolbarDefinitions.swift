@@ -449,6 +449,7 @@ class ToolbarLayout {
             (.number, "1.circle.fill", L("Number")),
             (.pixelate, "_custom.checkerboard", L("Censor (Pixelate / Blur / Solid)")),
             (.highlight, "sun.max", L("Highlight (Spotlight)")),
+            (.moveArea, "arrow.up.and.down.and.arrow.left.and.right", L("Move Area")),
             (.loupe, "magnifyingglass", L("Magnify (Loupe)")),
             (.stamp, "face.smiling", L("Stamp / Emoji")),
             (.colorSampler, "eyedropper", L("Color Picker")),

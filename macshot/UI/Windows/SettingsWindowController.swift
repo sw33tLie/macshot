@@ -1747,7 +1747,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
             (.rectangle, L("Rectangle")),
             (.ellipse, L("Ellipse")), (.marker, L("Marker")), (.text, L("Text")),
             (.number, L("Number / Counter")), (.pixelate, L("Censor")),
-            (.highlight, L("Highlight (Spotlight)")),
+            (.highlight, L("Highlight (Spotlight)")), (.moveArea, L("Move Area")),
             (.loupe, L("Magnify (Loupe)")), (.stamp, L("Stamp / Emoji")), (.colorSampler, L("Color Picker")), (.measure, L("Measure")),
         ]
         let enabledTools = UserDefaults.standard.array(forKey: "enabledTools") as? [Int]
@@ -3189,7 +3189,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate, NSWindowD
     @objc private func toggleItemChanged(_ sender: NSButton) {
         let key = sender.identifier?.rawValue ?? "enabledTools"
         let allTools: [AnnotationTool] = [.select, .pencil, .line, .arrow, .rectangle,
-                                          .ellipse, .marker, .text, .number, .pixelate, .highlight, .loupe, .stamp,
+                                          .ellipse, .marker, .text, .number, .pixelate, .highlight, .moveArea, .loupe, .stamp,
                                           .colorSampler, .measure]
         let defaultValues: [Int] = key == "enabledTools" ? allTools.map { $0.rawValue } : ToolbarActionPreferences.defaultEnabledRawValues
         var enabled = UserDefaults.standard.array(forKey: key) as? [Int] ?? defaultValues

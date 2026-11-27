@@ -543,11 +543,11 @@ class OverlayWindowController {
             ctx.cgContext.translateBy(x: -sel.origin.x, y: -sel.origin.y)
             // Match the live order: censor, then the spotlight dim (union of
             // highlight rects, clipped to the selection), then shapes on top.
-            for annotation in annotations where annotation.tool == .pixelate {
+            for annotation in annotations where annotation.rendersInImageLayer {
                 annotation.draw(in: ctx)
             }
             Annotation.drawHighlightDim(for: annotations, in: sel)
-            for annotation in annotations where annotation.tool != .pixelate {
+            for annotation in annotations where !annotation.rendersInImageLayer {
                 annotation.draw(in: ctx)
             }
             return true

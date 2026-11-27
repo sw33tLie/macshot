@@ -280,6 +280,7 @@ class OverlayView: NSView {
             NumberToolHandler(),
             StampToolHandler(),
             HighlightToolHandler(),
+            MoveAreaToolHandler(),
         ]
         return Dictionary(uniqueKeysWithValues: handlers.map { ($0.tool, $0) })
     }()
@@ -2030,7 +2031,7 @@ class OverlayView: NSView {
                         // do not appear thinner while dragging.
                         context.saveGraphicsState()
                         applyCanvasTransform(to: context)
-                        for annotation in annotations where annotation.tool == .pixelate {
+                        for annotation in annotations where annotation.rendersInImageLayer {
                             annotation.draw(in: context)
                         }
                     } else {
@@ -2060,7 +2061,7 @@ class OverlayView: NSView {
                     // selection controls drawn later in this outer state.
                     context.saveGraphicsState()
                     clipToEditorCanvasContent()
-                    for annotation in annotations where annotation.tool != .translateOverlay && annotation.tool == .pixelate {
+                    for annotation in annotations where annotation.tool != .translateOverlay && annotation.rendersInImageLayer {
                         annotation.draw(in: context)
                     }
                     // Skip the committed-highlight dim while a new highlight is
@@ -2069,7 +2070,7 @@ class OverlayView: NSView {
                     // re-dimmed by the preview pass.
                     if !drawingHighlightPreview {
                         Annotation.drawHighlightDim(for: annotations, in: highlightDimBounds)
-                        for annotation in annotations where annotation.tool != .translateOverlay && annotation.tool != .pixelate {
+                        for annotation in annotations where annotation.tool != .translateOverlay && !annotation.rendersInImageLayer {
                             annotation.draw(in: context)
                         }
                     }
@@ -2090,7 +2091,7 @@ class OverlayView: NSView {
             clipToEditorCanvasContent()
             if let cur = currentAnnotation, cur.tool == .highlight {
                 Annotation.drawHighlightDim(for: annotations, extra: cur, in: highlightDimBounds)
-                for annotation in annotations where annotation.tool != .pixelate {
+                for annotation in annotations where !annotation.rendersInImageLayer {
                     if isEditorMode && annotation.tool == .translateOverlay { continue }
                     annotation.draw(in: context)
                 }
@@ -2266,9 +2267,9 @@ class OverlayView: NSView {
                 let effectsImage = effectsProcessedScreenshot(screenshot)
                 effectsImage.draw(in: captureDrawRect, from: .zero, operation: .copy, fraction: 1.0)
                 // Re-draw annotations on top (censor first, then everything else)
-                for annotation in annotations where annotation.tool == .pixelate { annotation.draw(in: context) }
+                for annotation in annotations where annotation.rendersInImageLayer { annotation.draw(in: context) }
                 Annotation.drawHighlightDim(for: annotations, extra: currentAnnotation, in: highlightDimBounds)
-                for annotation in annotations where annotation.tool != .pixelate { annotation.draw(in: context) }
+                for annotation in annotations where !annotation.rendersInImageLayer { annotation.draw(in: context) }
                 currentAnnotation?.draw(in: context)
                 context.restoreGraphicsState()
 
@@ -3510,11 +3511,11 @@ class OverlayView: NSView {
             if dx != 0 || dy != 0 {
                 context.cgContext.translateBy(x: dx, y: dy)
             }
-            for annotation in annotations where annotation.tool == .pixelate {
+            for annotation in annotations where annotation.rendersInImageLayer {
                 annotation.draw(in: context)
             }
             Annotation.drawHighlightDim(for: annotations, extra: currentAnnotation, in: selectionRect)
-            for annotation in annotations where annotation.tool != .pixelate {
+            for annotation in annotations where !annotation.rendersInImageLayer {
                 annotation.draw(in: context)
             }
             currentAnnotation?.draw(in: context)
@@ -3595,11 +3596,11 @@ class OverlayView: NSView {
             if dx != 0 || dy != 0 {
                 context.cgContext.translateBy(x: dx, y: dy)
             }
-            for annotation in annotations where annotation.tool == .pixelate {
+            for annotation in annotations where annotation.rendersInImageLayer {
                 annotation.draw(in: context)
             }
             Annotation.drawHighlightDim(for: annotations, extra: currentAnnotation, in: selectionRect)
-            for annotation in annotations where annotation.tool != .pixelate {
+            for annotation in annotations where !annotation.rendersInImageLayer {
                 annotation.draw(in: context)
             }
             currentAnnotation?.draw(in: context)
@@ -3625,11 +3626,11 @@ class OverlayView: NSView {
             if dx != 0 || dy != 0 {
                 context.cgContext.translateBy(x: dx, y: dy)
             }
-            for annotation in annotations where annotation.tool == .pixelate {
+            for annotation in annotations where annotation.rendersInImageLayer {
                 annotation.draw(in: context)
             }
             Annotation.drawHighlightDim(for: annotations, extra: currentAnnotation, in: selectionRect)
-            for annotation in annotations where annotation.tool != .pixelate {
+            for annotation in annotations where !annotation.rendersInImageLayer {
                 annotation.draw(in: context)
             }
             currentAnnotation?.draw(in: context)
@@ -3864,6 +3865,10 @@ class OverlayView: NSView {
                 ann.loupeSourceRect = NSRect(x: selectionRect.minX + (selectionRect.maxX - source.maxX),
                                              y: source.minY, width: source.width, height: source.height)
             }
+            if let source = ann.moveSourceRect {
+                ann.moveSourceRect = NSRect(x: selectionRect.minX + (selectionRect.maxX - source.maxX),
+                                            y: source.minY, width: source.width, height: source.height)
+            }
         }
         rebindEffectSourcesToCanvas()
 
@@ -3915,6 +3920,10 @@ class OverlayView: NSView {
             if let source = ann.loupeSourceRect {
                 ann.loupeSourceRect = NSRect(x: source.minX, y: selectionRect.minY + (selectionRect.maxY - source.maxY),
                                              width: source.width, height: source.height)
+            }
+            if let source = ann.moveSourceRect {
+                ann.moveSourceRect = NSRect(x: source.minX, y: selectionRect.minY + (selectionRect.maxY - source.maxY),
+                                            width: source.width, height: source.height)
             }
         }
         rebindEffectSourcesToCanvas()
@@ -4059,6 +4068,11 @@ class OverlayView: NSView {
             if ann.tool == .loupe, let source = ann.loupeSourceRect {
                 ann.loupeSourceRect = source.offsetBy(dx: dx, dy: dy)
             }
+            // The moved pixels and the hole move with the canvas; their bakes
+            // stay valid (stampImage and the hole are untouched by move()).
+            if let source = ann.moveSourceRect {
+                ann.moveSourceRect = source.offsetBy(dx: dx, dy: dy)
+            }
             // Loupes always keep a source and are re-baked by
             // `rebindEffectSourcesToCanvas`, so a crop can't leave one showing
             // pixels that were cut away.
@@ -4079,6 +4093,8 @@ class OverlayView: NSView {
                 ann.bakedBlurNSImage = nil
                 ann.bakeLoupe()
             }
+            // A flip mirrors the pixels under the area: cut them again.
+            if ann.tool == .moveArea { ann.bakeMoveArea() }
         }
     }
 
@@ -10205,6 +10221,7 @@ class OverlayView: NSView {
         if (a.anchorPoints ?? []) != (b.anchorPoints ?? []) { return true }
         if a.textDrawRect != b.textDrawRect { return true }
         if a.loupeSourceRect != b.loupeSourceRect { return true }
+        if a.moveSourceRect != b.moveSourceRect { return true }
         if abs(a.loupeMagnification - b.loupeMagnification) > 0.0001 { return true }
         return false
     }
@@ -10446,7 +10463,7 @@ class OverlayView: NSView {
         let nsCtx = NSGraphicsContext(cgContext: cgCtx, flipped: false)
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.current = nsCtx
-        for annotation in annotations where annotation.tool == .pixelate {
+        for annotation in annotations where annotation.rendersInImageLayer {
             annotation.draw(in: nsCtx)
         }
         // Spotlight dim: a single union pass over all highlight rects, after the
@@ -10455,7 +10472,7 @@ class OverlayView: NSView {
         if !skipHighlightDim {
             Annotation.drawHighlightDim(for: annotations, in: highlightDimBounds)
         }
-        for annotation in annotations where annotation.tool != .pixelate {
+        for annotation in annotations where !annotation.rendersInImageLayer {
             annotation.draw(in: nsCtx)
         }
         NSGraphicsContext.restoreGraphicsState()
@@ -10487,11 +10504,11 @@ class OverlayView: NSView {
             // Translate so annotations at selectionRect coords render correctly
             context.cgContext.translateBy(x: -drawRect.origin.x, y: -drawRect.origin.y)
             // Censor annotations render first so other annotations appear on top
-            for annotation in annotationsCopy where annotation.tool == .pixelate {
+            for annotation in annotationsCopy where annotation.rendersInImageLayer {
                 annotation.draw(in: context)
             }
             Annotation.drawHighlightDim(for: annotationsCopy, in: dimBounds)
-            for annotation in annotationsCopy where annotation.tool != .pixelate {
+            for annotation in annotationsCopy where !annotation.rendersInImageLayer {
                 annotation.draw(in: context)
             }
             success = true
@@ -10600,11 +10617,11 @@ class OverlayView: NSView {
             // Match the live draw order: censor effects first, then the spotlight
             // dim (union of highlight rects), then the regular shape annotations
             // on top — so the exported image matches what's on screen.
-            for annotation in annotations where annotation.tool == .pixelate {
+            for annotation in annotations where annotation.rendersInImageLayer {
                 annotation.draw(in: nsContext)
             }
             Annotation.drawHighlightDim(for: annotations, in: highlightDimBounds)
-            for annotation in annotations where annotation.tool != .pixelate {
+            for annotation in annotations where !annotation.rendersInImageLayer {
                 annotation.draw(in: nsContext)
             }
         }
@@ -10652,7 +10669,7 @@ class OverlayView: NSView {
                 // Every censor gets a source, not just unbaked ones: moving or
                 // resizing it later re-bakes, and without a source it would drop
                 // to its translucent preview. An existing bake is kept.
-                if ann.tool == .loupe || ann.tool == .pixelate || ann.tool == .blur {
+                if ann.tool == .loupe || ann.tool == .pixelate || ann.tool == .blur || ann.tool == .moveArea {
                     ann.sourceImage = img
                     ann.sourceImageBounds = bounds
                     if ann.tool == .loupe { ann.bakeLoupe() }
@@ -11023,6 +11040,15 @@ extension OverlayView: AnnotationCanvas {
     }
 
     func setNeedsDisplay() {
+        needsDisplay = true
+    }
+
+    func selectCommittedAnnotation(_ annotation: Annotation) {
+        selectedAnnotation = annotation
+        // The incremental cache append draws on top of everything; a move area
+        // belongs under the shapes, so rebuild the layer in render order.
+        cachedAnnotationLayer = nil
+        cachedCompositedImage = nil
         needsDisplay = true
     }
 }

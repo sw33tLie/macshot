@@ -63,6 +63,9 @@ struct CodableAnnotation: Codable {
     var loupeSourceRect: [CGFloat]?      // [x, y, w, h] for the rooted source circle
     var loupeOutlineEnabled: Bool = false
 
+    // Move area
+    var moveSourceRect: [CGFloat]?       // [x, y, w, h] the moved pixels were cut from
+
     // Misc
     var measureInPoints: Bool = false
     var measureCalibration: MeasureCalibration?
@@ -141,6 +144,8 @@ struct CodableAnnotation: Codable {
         loupeMagnification = c.decodeOptional(.loupeMagnification)
         loupeSourceRect = c.decodeOptional(.loupeSourceRect)
         loupeOutlineEnabled = c.decode(.loupeOutlineEnabled, or: false)
+
+        moveSourceRect = c.decodeOptional(.moveSourceRect)
 
         measureInPoints = c.decode(.measureInPoints, or: false)
         measureCalibration = c.decodeOptional(.measureCalibration)
@@ -225,6 +230,11 @@ extension Annotation {
             c.loupeSourceRect = [r.origin.x, r.origin.y, r.size.width, r.size.height]
         }
         c.loupeOutlineEnabled = loupeOutlineEnabled
+
+        // Move area
+        if let r = moveSourceRect {
+            c.moveSourceRect = [r.origin.x, r.origin.y, r.size.width, r.size.height]
+        }
 
         // Misc
         c.measureInPoints = measureInPoints
@@ -327,6 +337,9 @@ extension Annotation {
         ann.loupeMagnification = SavedCaptureValidation.bounded(c.loupeMagnification ?? 2, 0.1...100, fallback: 2)
         if let r = c.loupeSourceRect { ann.loupeSourceRect = SavedCaptureValidation.rect(r) }
         ann.loupeOutlineEnabled = c.loupeOutlineEnabled
+
+        // Move area
+        if let r = c.moveSourceRect { ann.moveSourceRect = SavedCaptureValidation.rect(r) }
 
         // Misc
         ann.measureInPoints = c.measureInPoints
